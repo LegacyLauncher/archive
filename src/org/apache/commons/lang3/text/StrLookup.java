@@ -2,59 +2,54 @@ package org.apache.commons.lang3.text;
 
 import java.util.Map;
 
-public abstract class StrLookup<V> {
-    private static final StrLookup<String> NONE_LOOKUP;
-    private static final StrLookup<String> SYSTEM_PROPERTIES_LOOKUP;
-    static {
-        NONE_LOOKUP = new MapStrLookup<String>(null);
-        StrLookup<String> lookup = null;
-        try {
-            final Map<?, ?> propMap = System.getProperties();
-            @SuppressWarnings("unchecked") // System property keys and values are always Strings
-            final Map<String, String> properties = (Map<String, String>) propMap;
-            lookup = new MapStrLookup<String>(properties);
-        } catch (SecurityException ex) {
-            lookup = NONE_LOOKUP;
-        }
-        SYSTEM_PROPERTIES_LOOKUP = lookup;
-    }
-    
-    public static StrLookup<?> noneLookup() {
-        return NONE_LOOKUP;
-    }
+public abstract class StrLookup {
+   private static final StrLookup NONE_LOOKUP = new StrLookup.MapStrLookup((Map)null);
+   private static final StrLookup SYSTEM_PROPERTIES_LOOKUP;
 
-    public static StrLookup<String> systemPropertiesLookup() {
-        return SYSTEM_PROPERTIES_LOOKUP;
-    }
+   static {
+      Object lookup = null;
 
-    public static <V> StrLookup<V> mapLookup(Map<String, V> map) {
-        return new MapStrLookup<V>(map);
-    }
+      try {
+         Map propMap = System.getProperties();
+         lookup = new StrLookup.MapStrLookup(propMap);
+      } catch (SecurityException var3) {
+         lookup = NONE_LOOKUP;
+      }
 
-    protected StrLookup() {
-        super();
-    }
+      SYSTEM_PROPERTIES_LOOKUP = (StrLookup)lookup;
+   }
 
-    public abstract String lookup(String key);
-    
-    static class MapStrLookup<V> extends StrLookup<V> {
+   public static StrLookup noneLookup() {
+      return NONE_LOOKUP;
+   }
 
-        private final Map<String, V> map;
+   public static StrLookup systemPropertiesLookup() {
+      return SYSTEM_PROPERTIES_LOOKUP;
+   }
 
-        MapStrLookup(Map<String, V> map) {
-            this.map = map;
-        }
+   public static StrLookup mapLookup(Map map) {
+      return new StrLookup.MapStrLookup(map);
+   }
 
-        @Override
-        public String lookup(String key) {
-            if (map == null) {
-                return null;
-            }
-            Object obj = map.get(key);
-            if (obj == null) {
-                return null;
-            }
-            return obj.toString();
-        }
-    }
+   protected StrLookup() {
+   }
+
+   public abstract String lookup(String var1);
+
+   static class MapStrLookup extends StrLookup {
+      private final Map map;
+
+      MapStrLookup(Map map) {
+         this.map = map;
+      }
+
+      public String lookup(String key) {
+         if (this.map == null) {
+            return null;
+         } else {
+            Object obj = this.map.get(key);
+            return obj == null ? null : obj.toString();
+         }
+      }
+   }
 }
