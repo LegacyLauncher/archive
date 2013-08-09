@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,7 +31,6 @@ public class Updater {
    private final URL url;
    private List listeners = new ArrayList();
    private Downloadable update_download;
-   private File update_destination;
    private Settings update_settings;
    private double found_version;
    private URL found_link;
@@ -38,7 +39,7 @@ public class Updater {
    private File replace;
 
    public Updater(TLauncher t) {
-      this.d = t.silent_downloader;
+      this.d = t.downloader;
       this.type = Wrapper.isAvailable() ? Updater.Package.EXE : Updater.Package.JAR;
       this.replace = FileUtil.getRunningJar();
 
@@ -52,7 +53,7 @@ public class Updater {
    }
 
    public Updater(TLauncher t, Updater.Package type) {
-      this.d = t.silent_downloader;
+      this.d = t.downloader;
       this.type = type;
 
       try {
@@ -71,29 +72,41 @@ public class Updater {
    }
 
    public void findUpdate() {
+      try {
+         this.findUpdate_();
+      } catch (Exception var2) {
+         this.onUpdateNotifierError(var2);
+      }
+
+   }
+
+   private void findUpdate_() throws IOException {
       this.onUpdaterRequests();
-      this.update_destination = new File(MinecraftUtil.getWorkingDirectory(), "update.ini");
-      this.update_destination.deleteOnExit();
-      this.update_download = new Downloadable(this.url, this.update_destination);
-      this.update_download.setHandler(new DownloadableHandler() {
-         public void onStart() {
-         }
-
-         public void onCompleteError() {
-            Updater.this.onUpdateNotifierError(Updater.this.update_download.getError());
-         }
-
-         public void onComplete() {
-            try {
-               Updater.this.onUpdateNotifierDownloaded();
-            } catch (Exception var2) {
-               Updater.this.onUpdateNotifierError(var2);
+      this.update_download = new Downloadable(this.url);
+      HttpURLConnection connection = this.update_download.makeConnection();
+      int code = connection.getResponseCode();
+      switch(code) {
+      case 200:
+         InputStream is = connection.getInputStream();
+         this.update_settings = new Settings(is);
+         connection.disconnect();
+         this.found_version = this.update_settings.getDouble("last-version");
+         if (this.found_version <= 0.0D) {
+            throw new IllegalStateException("Settings file is invalid!");
+         } else {
+            if (0.12D >= this.found_version) {
+               this.noUpdateFound();
+               return;
             }
 
+            String current_link = this.update_settings.get(this.type.toLowerCase());
+            this.found_link = new URL(current_link);
+            this.onUpdateFound(this.type == Updater.Package.JAR);
+            return;
          }
-      });
-      this.d.add(this.update_download);
-      this.d.launch();
+      default:
+         throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
+      }
    }
 
    public void downloadUpdate() {
@@ -117,7 +130,16 @@ public class Updater {
       this.d.launch();
    }
 
-   public void saveUpdate() throws IOException {
+   public void saveUpdate() {
+      try {
+         this.saveUpdate_();
+      } catch (Exception var2) {
+         this.onProcessError(var2);
+      }
+
+   }
+
+   private void saveUpdate_() throws IOException {
       FileInputStream in = new FileInputStream(this.launcher_destination);
       FileOutputStream out = new FileOutputStream(this.replace);
       byte[] buffer = new byte[65536];
@@ -145,20 +167,6 @@ public class Updater {
       } catch (URISyntaxException var2) {
          var2.printStackTrace();
          return null;
-      }
-   }
-
-   private void onUpdateNotifierDownloaded() throws Exception {
-      this.update_settings = new Settings(this.update_destination);
-      this.found_version = this.update_settings.getDouble("last-version");
-      if (this.found_version <= 0.0D) {
-         throw new IllegalStateException("Settings file is invalid!");
-      } else if (0.11D >= this.found_version) {
-         this.noUpdateFound();
-      } else {
-         String current_link = this.update_settings.get(this.type.toLowerCase());
-         this.found_link = new URL(current_link);
-         this.onUpdateFound(this.type == Updater.Package.JAR);
       }
    }
 
@@ -228,6 +236,16 @@ public class Updater {
       while(var3.hasNext()) {
          UpdaterListener l = (UpdaterListener)var3.next();
          l.onUpdaterDownloadError(this, e);
+      }
+
+   }
+
+   private void onProcessError(Throwable e) {
+      Iterator var3 = this.listeners.iterator();
+
+      while(var3.hasNext()) {
+         UpdaterListener l = (UpdaterListener)var3.next();
+         l.onUpdaterProcessError(this, e);
       }
 
    }

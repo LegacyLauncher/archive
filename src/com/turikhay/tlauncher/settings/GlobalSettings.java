@@ -2,6 +2,7 @@ package com.turikhay.tlauncher.settings;
 
 import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,11 +10,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class GlobalSettings extends Settings {
+   public static final File file = MinecraftUtil.getNativeOptionsFile();
+   public static final boolean firstRun;
    private Map d = new HashMap();
    private double version = 0.1D;
 
+   static {
+      firstRun = !file.exists();
+   }
+
    public GlobalSettings() throws IOException {
-      super(MinecraftUtil.getNativeOptionsFile());
+      super(file);
       this.d.put("settings.version", this.version);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 5);

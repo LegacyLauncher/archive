@@ -18,7 +18,6 @@ public class Sun {
    private double percent;
    private Color bgcolor;
    private boolean cancelled;
-   private boolean sameY;
 
    public Sun(MainContainer mc) {
       this.f = mc.f;
@@ -29,6 +28,8 @@ public class Sun {
       this.percent = U.doubleRandom();
       if (this.percent < 0.0D) {
          this.percent += 0.5D;
+      } else {
+         this.percent -= 0.5D;
       }
 
       if (this.allowed()) {
@@ -60,24 +61,8 @@ public class Sun {
          this.percent = 1.0D;
       }
 
-      if (this.sameY) {
-         this.sameY = false;
-      }
-
-      if (!this.sameY && this.percent < 0.1D && this.percent > -0.1D) {
-         this.sameY = true;
-      }
-
       this.x = (int)((double)w * this.percent);
-      if (!this.sameY) {
-         this.y = h / 2 - this.height / 2;
-         if (this.percent > 0.0D) {
-            this.y = (int)((double)this.y + this.percent * 100.0D);
-         } else {
-            this.y = (int)((double)this.y - this.percent * 100.0D);
-         }
-      }
-
+      this.y = h - 360;
    }
 
    public void onPaint(int w, int h, Graphics g) {

@@ -159,6 +159,38 @@ public class U {
       }
    }
 
+   public static String w(String string, int normal, char newline, boolean rude) {
+      char[] c = string.toCharArray();
+      int len = c.length;
+      int remaining = normal;
+      String ret = "";
+
+      for(int x = 0; x < len; ++x) {
+         --remaining;
+         char cur = c[x];
+         if (c[x] == newline) {
+            remaining = normal;
+         }
+
+         if (remaining < 1 && cur == ' ') {
+            remaining = normal;
+            ret = ret + newline;
+         } else {
+            ret = ret + cur;
+            if (remaining <= 0 && rude) {
+               remaining = normal;
+               ret = ret + newline;
+            }
+         }
+      }
+
+      return ret;
+   }
+
+   public static String w(String string, int max) {
+      return w(string, max, '\n', false);
+   }
+
    public static String setFractional(double d, int fractional) {
       NumberFormat nf = NumberFormat.getInstance();
       nf.setMaximumFractionDigits(fractional);

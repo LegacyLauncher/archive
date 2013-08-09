@@ -10,8 +10,6 @@ import java.net.URL;
 public class Downloadable {
    private URL url;
    private File destination;
-   private String md5;
-   private String filename;
    private Throwable error;
    private DownloadableContainer container;
    private DownloadableHandler handler;
@@ -29,12 +27,20 @@ public class Downloadable {
       this.forced = force;
    }
 
+   public Downloadable(URL url, boolean force) {
+      this.url = url;
+   }
+
    public Downloadable(URL url, File destination) {
       this(url, destination, false);
    }
 
    public Downloadable(String url, File destination) throws MalformedURLException {
       this(url, destination, false);
+   }
+
+   public Downloadable(URL url) {
+      this(url, false);
    }
 
    public URL getURL() {
@@ -46,11 +52,11 @@ public class Downloadable {
    }
 
    public String getMD5() {
-      return this.md5 == null ? (this.md5 = FileUtil.getMD5Checksum(this.destination)) : this.md5;
+      return FileUtil.getMD5Checksum(this.destination);
    }
 
    public String getFilename() {
-      return this.filename == null ? (this.filename = FileUtil.getFilename(this.url)) : this.filename;
+      return FileUtil.getFilename(this.url);
    }
 
    public Throwable getError() {
@@ -102,15 +108,34 @@ public class Downloadable {
       this.container = newcontainer;
    }
 
-   HttpURLConnection makeConnection() throws IOException {
+   public void setURL(URL newurl) {
+      this.url = newurl;
+   }
+
+   public void setURL(String newurl) throws MalformedURLException {
+      this.url = new URL(newurl);
+   }
+
+   public void setDestination(File newdestination) {
+      this.destination = newdestination;
+   }
+
+   public void setForced(boolean newforced) {
+      this.forced = newforced;
+   }
+
+   public HttpURLConnection makeConnection() throws IOException {
+      String md5 = this.getMD5();
       HttpURLConnection connection = (HttpURLConnection)this.url.openConnection();
+      connection.setConnectTimeout(30000);
+      connection.setReadTimeout(10000);
       connection.setUseCaches(false);
       connection.setDefaultUseCaches(false);
       connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
       connection.setRequestProperty("Expires", "0");
       connection.setRequestProperty("Pragma", "no-cache");
-      if (this.getMD5() != null) {
-         connection.setRequestProperty("If-None-Match", this.md5);
+      if (md5 != null) {
+         connection.setRequestProperty("If-None-Match", md5);
       }
 
       connection.connect();
