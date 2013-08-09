@@ -8,7 +8,9 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.security.MessageDigest;
 
 public class FileUtil {
@@ -76,7 +78,9 @@ public class FileUtil {
    }
 
    public static String getMD5Checksum(File file) {
-      if (!file.exists()) {
+      if (file == null) {
+         return null;
+      } else if (!file.exists()) {
          return null;
       } else {
          byte[] b = createChecksum(file);
@@ -104,6 +108,11 @@ public class FileUtil {
    }
 
    public static File getRunningJar() {
-      return new File(FileUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+      try {
+         return new File(URLDecoder.decode(FileUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8"));
+      } catch (UnsupportedEncodingException var1) {
+         var1.printStackTrace();
+         return null;
+      }
    }
 }

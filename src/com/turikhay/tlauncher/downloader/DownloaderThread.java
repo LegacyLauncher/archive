@@ -105,6 +105,20 @@ public class DownloaderThread extends Thread {
       this.log("Got reply in " + reply + " ms.");
       int code = connection.getResponseCode();
       switch(code) {
+      case 301:
+      case 302:
+      case 303:
+      case 307:
+         String newurl = connection.getHeaderField("Location");
+         connection.disconnect();
+         if (newurl == null) {
+            throw new DownloaderError("Redirection is required but field \"Location\" is empty", true);
+         }
+
+         this.log("Responce code is " + code + ". Redirecting to: " + newurl);
+         d.setURL(newurl);
+         this.download(d);
+         return;
       case 304:
          if (!d.isForced()) {
             this.log("File is not modified (304)");
@@ -157,6 +171,7 @@ public class DownloaderThread extends Thread {
          downloaded = System.currentTimeMillis() - downloaded_s;
          in.close();
          out.close();
+         connection.disconnect();
          this.log("Successfully downloaded " + fn + " in " + downloaded / 1000L + " s!");
          this.onComplete(d);
       } else {

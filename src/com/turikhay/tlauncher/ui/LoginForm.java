@@ -1,26 +1,18 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.util.AsyncThread;
 import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
-import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Checkbox;
 import java.awt.Choice;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.Insets;
-import java.awt.Label;
-import java.awt.LayoutManager;
 import java.awt.Panel;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
@@ -34,7 +26,6 @@ import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 import java.util.Iterator;
 import java.util.List;
-import javax.swing.BoxLayout;
 import net.minecraft.launcher_.OperatingSystem;
 import net.minecraft.launcher_.events.RefreshedVersionsListener;
 import net.minecraft.launcher_.updater.VersionFilter;
@@ -42,40 +33,16 @@ import net.minecraft.launcher_.updater.VersionManager;
 import net.minecraft.launcher_.updater.VersionSyncInfo;
 import net.minecraft.launcher_.versions.Version;
 
-public class LoginForm extends Panel implements RefreshedVersionsListener, MinecraftLauncherListener {
+public class LoginForm extends CenterPanel implements RefreshedVersionsListener, MinecraftLauncherListener {
    private static final long serialVersionUID = 6768252827144456302L;
-   private Insets insets = new Insets(5, 24, 18, 24);
    final LoginForm instance = this;
-   final TLauncher t;
-   final TLauncherFrame f;
-   final Settings s;
-   final Settings l;
    final VersionManager vm;
-   Color gray = Color.getHSBColor(0.0F, 0.0F, 0.4F);
-   Color darkgray = Color.getHSBColor(0.0F, 0.0F, 0.25F);
-   Color green = Color.getHSBColor(0.25F, 0.66F, 0.66F);
-   Color red = Color.getHSBColor(0.0F, 0.66F, 0.66F);
-   Color border = Color.getHSBColor(0.25F, 0.66F, 0.66F);
-   Font font;
-   Font font_italic;
-   Font font_bold;
-   Font font_error;
-   Font font_small;
-   int fontsize;
-   String fontname;
    Panel error;
    Panel maininput;
    Panel versionchoice;
    Panel autologin;
    Panel forceupdate;
    Panel enter;
-   LayoutManager g_zero = new GridLayout(0, 1);
-   LayoutManager g_single = new GridLayout(1, 1);
-   LayoutManager g_double = new GridLayout(1, 2);
-   FlowLayout g_line = new FlowLayout();
-   FlowLayout g_line_center = new FlowLayout();
-   BorderLayout g_enter = new BorderLayout();
-   Label error_l;
    TextField username_i;
    boolean username_i_edit;
    String username;
@@ -91,21 +58,10 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
    boolean settings_b_pressed;
 
    LoginForm(TLauncherFrame fd) {
-      this.f = fd;
-      this.t = this.f.t;
-      this.s = this.t.settings;
-      this.l = this.f.lang;
+      super(fd);
       this.vm = this.t.vm;
       this.username = this.s.get("login.username");
       this.version = this.s.get("login.version");
-      this.init();
-      LayoutManager layout = new BoxLayout(this, 3);
-      this.setLayout(layout);
-      this.setBackground(this.gray);
-      this.error_l = new Label("");
-      this.error_l.setFont(this.font_bold);
-      this.error_l.setAlignment(1);
-      this.error_l.setForeground(new Color(8388608));
       this.maininput = new Panel(this.g_single);
       this.username_i_edit = this.username != null;
       this.username_i = new TextField(this.username_i_edit ? this.username : this.l.get("username"), 20);
@@ -149,7 +105,7 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
       }
 
       this.maininput.add(this.username_i);
-      this.versionchoice = new Panel(this.g_double);
+      this.versionchoice = new Panel(this.g_single);
       this.version_dm = new Choice();
       this.version_dm.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
@@ -173,7 +129,7 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
          }
       });
       this.autologin.add(this.forceupdate_f);
-      this.enter = new Panel(this.g_enter);
+      this.enter = new Panel(this.g_save);
       this.login_b = new Button(this.l.get("enter"));
       this.login_b.setFont(this.font_bold);
       this.login_b.addActionListener(new ActionListener() {
@@ -299,27 +255,6 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
       this.version_dm.setEnabled(true);
    }
 
-   private void init() {
-      this.g_line.setVgap(0);
-      this.g_line_center.setVgap(0);
-      this.g_line.setHgap(0);
-      this.g_line_center.setHgap(0);
-      this.g_line.setAlignment(3);
-      this.g_line_center.setAlignment(1);
-      this.g_enter.setVgap(2);
-      this.g_enter.setHgap(3);
-      this.font = this.getFont();
-      if (this.font == null) {
-         this.font = new Font("", 0, 12);
-      }
-
-      this.fontsize = this.font.getSize();
-      this.fontname = this.font.getName();
-      this.font_italic = new Font(this.fontname, 2, this.fontsize);
-      this.font_bold = new Font(this.fontname, 1, this.fontsize);
-      this.font_small = new Font(this.fontname, 0, this.fontsize > 5 ? this.fontsize - 2 : this.fontsize);
-   }
-
    public void callLogin() {
       this.defocus();
       if (!this.login_blocked) {
@@ -375,24 +310,6 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
       this.cancelautologin_b.setLabel(this.l.get("autologin.cancel", "i", s));
    }
 
-   public Insets getInsets() {
-      return this.insets;
-   }
-
-   public void update(Graphics g) {
-      this.paint(g);
-   }
-
-   public void paint(Graphics g) {
-      super.paint(g);
-      g.setColor(this.border);
-
-      for(int x = 1; x < 4; ++x) {
-         g.drawRect(x - 1, x - 1, this.getWidth() - 2 * x, this.getHeight() - 2 * x);
-      }
-
-   }
-
    public void setError(String message) {
       if (message == null) {
          this.border = this.green;
@@ -405,21 +322,13 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
       }
    }
 
-   private Panel del(int aligment) {
-      return new Del(2, aligment, this.darkgray);
-   }
-
-   private void defocus() {
-      this.requestFocusInWindow();
-   }
-
-   private void block() {
+   protected void block() {
       this.username_i.setEnabled(false);
       this.version_dm.setEnabled(false);
       this.blockLogin();
    }
 
-   private void unblock() {
+   protected void unblock() {
       this.username_i.setEnabled(true);
       this.version_dm.setEnabled(true);
       this.unblockLogin();
@@ -514,7 +423,31 @@ public class LoginForm extends Panel implements RefreshedVersionsListener, Minec
    }
 
    public void onMinecraftWarning(String message, String replace) {
-      String prefix = "launcher.warning.";
-      Alert.showWarning(this.l.get(prefix + "title"), this.l.get(prefix + message, "r", replace));
+   }
+
+   public void onUpdaterRequesting(Updater u) {
+   }
+
+   public void onUpdaterRequestError(Updater u, Throwable e) {
+   }
+
+   public void onUpdaterFoundUpdate(Updater u, boolean canBeInstalledAutomatically) {
+   }
+
+   public void onUpdaterNotFoundUpdate(Updater u) {
+   }
+
+   public void onUpdaterDownloading(Updater u) {
+   }
+
+   public void onUpdaterDownloadSuccess(Updater u) {
+      this.block();
+   }
+
+   public void onUpdaterDownloadError(Updater u, Throwable e) {
+   }
+
+   public void onUpdaterProcessError(Updater u, Throwable e) {
+      this.unblock();
    }
 }

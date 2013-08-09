@@ -14,4 +14,6 @@ public interface UpdaterListener {
    void onUpdaterDownloadSuccess(Updater var1);
 
    void onUpdaterDownloadError(Updater var1, Throwable var2);
+
+   void onUpdaterProcessError(Updater var1, Throwable var2);
 }
