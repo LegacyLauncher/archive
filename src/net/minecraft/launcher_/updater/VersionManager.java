@@ -393,20 +393,9 @@ public class VersionManager {
             if (node.getNodeType() == 1) {
                Element element = (Element)node;
                String key = element.getElementsByTagName("Key").item(0).getChildNodes().item(0).getNodeValue();
-               String etag = element.getElementsByTagName("ETag") != null ? element.getElementsByTagName("ETag").item(0).getChildNodes().item(0).getNodeValue() : "-";
                long size = Long.parseLong(element.getElementsByTagName("Size").item(0).getChildNodes().item(0).getNodeValue());
                if (size > 0L) {
                   File file = new File(baseDirectory, "assets/" + key);
-                  if (etag.length() > 1) {
-                     etag = Downloadable.getEtag(etag);
-                     if (file.isFile() && file.length() == size) {
-                        String localMd5 = FileUtil.getMD5Checksum(file);
-                        if (localMd5.equals(etag)) {
-                           continue;
-                        }
-                     }
-                  }
-
                   if (!file.exists() || force) {
                      result.add(new Downloadable("https://s3.amazonaws.com/Minecraft.Resources/" + key, file, false));
                   }
@@ -426,8 +415,8 @@ public class VersionManager {
          long end = System.nanoTime();
          long delta = end - start;
          U.log("Delta time to compare resources: " + delta / 1000000L + " ms ");
-      } catch (Exception var22) {
-         U.log("Couldn't download resources", (Throwable)var22);
+      } catch (Exception var20) {
+         U.log("Couldn't download resources", (Throwable)var20);
       }
 
       return result;

@@ -3,8 +3,8 @@ package com.turikhay.tlauncher.updater;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.TLauncherException;
 import com.turikhay.tlauncher.downloader.Downloadable;
-import com.turikhay.tlauncher.downloader.DownloadableHandler;
 import com.turikhay.tlauncher.downloader.Downloader;
+import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.MinecraftUtil;
@@ -94,7 +94,7 @@ public class Updater {
          if (this.found_version <= 0.0D) {
             throw new IllegalStateException("Settings file is invalid!");
          } else {
-            if (0.12D >= this.found_version) {
+            if (0.13D >= this.found_version) {
                this.noUpdateFound();
                return;
             }

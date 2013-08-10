@@ -18,7 +18,7 @@ public class U {
 
    public static void log(Object what0, Object what1) {
       System.out.print("[TLauncher] ");
-      System.out.print(what0);
+      System.out.print(what0 + " ");
       System.out.println(what1);
    }
 
@@ -195,5 +195,38 @@ public class U {
       NumberFormat nf = NumberFormat.getInstance();
       nf.setMaximumFractionDigits(fractional);
       return nf.format(d).replace(",", ".");
+   }
+
+   public static String stackTrace(Throwable e) {
+      String t = e.toString();
+      if (t == null) {
+         t = "";
+      }
+
+      StackTraceElement[] elems = e.getStackTrace();
+
+      for(int x = 0; x < elems.length; ++x) {
+         t = t + "\nat " + elems[x].toString();
+         if (x >= 5) {
+            t = t + "\n... and " + (elems.length - x - 1) + " more";
+            break;
+         }
+      }
+
+      Throwable cause = e.getCause();
+      if (cause != null) {
+         t = t + "\nCaused by: " + cause.toString();
+         StackTraceElement[] causeelems = cause.getStackTrace();
+
+         for(int x = 0; x < causeelems.length; ++x) {
+            t = t + "\nat " + causeelems[x].toString();
+            if (x >= 5) {
+               t = t + "\n... and " + (causeelems.length - x - 1) + " more";
+               break;
+            }
+         }
+      }
+
+      return t;
    }
 }

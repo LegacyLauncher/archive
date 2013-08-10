@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.downloader;
 
+import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;

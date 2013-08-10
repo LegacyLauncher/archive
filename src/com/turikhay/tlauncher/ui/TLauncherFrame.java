@@ -67,13 +67,13 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
          throw new TLauncherException("Cannot load language file!", var3);
       }
 
+      this.width = this.global.getInteger("minecraft.width");
+      this.height = this.global.getInteger("minecraft.height");
+      this.prepareFrame();
       if (GlobalSettings.firstRun) {
          Alert.showWarning(this.lang.get("firstrun.title"), U.w(this.lang.get("firstrun"), 90));
       }
 
-      this.width = this.global.getInteger("minecraft.width");
-      this.height = this.global.getInteger("minecraft.height");
-      this.prepareFrame();
       this.setVisible(true);
       this.requestFocusInWindow();
       this.d.addListener(this);

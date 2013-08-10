@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.downloader;
+package com.turikhay.tlauncher.handlers;
 
 public interface DownloadableHandler {
    void onStart();

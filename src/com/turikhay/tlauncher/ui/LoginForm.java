@@ -51,6 +51,8 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
    String version;
    Checkbox forceupdate_f;
    boolean forceupdate_e;
+   Checkbox console_f;
+   boolean console;
    private boolean login_blocked;
    Button login_b;
    Button settings_b;
@@ -62,6 +64,7 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
       this.vm = this.t.vm;
       this.username = this.s.get("login.username");
       this.version = this.s.get("login.version");
+      this.console = this.s.getBoolean("login.debug");
       this.maininput = new Panel(this.g_single);
       this.username_i_edit = this.username != null;
       this.username_i = new TextField(this.username_i_edit ? this.username : this.l.get("username"), 20);
@@ -115,6 +118,21 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
       });
       this.versionchoice.add(this.version_dm);
       this.autologin = new Panel(this.g_zero);
+      this.console_f = new Checkbox(this.l.get("debug-console"));
+      this.console_f.setState(this.console);
+      this.console_f.addItemListener(new ItemListener() {
+         public void itemStateChanged(ItemEvent e) {
+            switch(e.getStateChange()) {
+            case 1:
+               LoginForm.this.console = true;
+               break;
+            case 2:
+               LoginForm.this.console = false;
+            }
+
+         }
+      });
+      this.autologin.add(this.console_f);
       this.forceupdate_f = new Checkbox(this.l.get("forceupdate"));
       this.forceupdate_f.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
@@ -207,6 +225,7 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
       U.log("save");
       this.s.set("login.username", this.username);
       this.s.set("login.version", this.version);
+      this.s.set("login.debug", this.console);
    }
 
    private void editUsername() {
@@ -271,7 +290,7 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
             } else {
                this.setError((String)null);
                this.save();
-               this.t.launch(this, this.username, this.version, this.forceupdate_e);
+               this.t.launch(this, this.username, this.version, this.forceupdate_e, this.console);
             }
          }
       }
@@ -398,8 +417,8 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
 
    public void onMinecraftLaunch() {
       this.unblock();
-      this.vm.asyncRefresh();
       this.f.mc.sun.suspend();
+      this.vm.asyncRefresh();
    }
 
    public void onMinecraftClose() {
