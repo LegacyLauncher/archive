@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.tlauncher.util.U;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -11,7 +12,7 @@ public class Alert {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
-         String t_message = message + (e != null ? "\n" + stackTrace(e) : "");
+         String t_message = message + (e != null ? "\n" + U.stackTrace(e) : "");
          frame.requestFocus();
          JOptionPane.showMessageDialog(frame, t_message, t_title, 0);
          show = false;
@@ -73,38 +74,5 @@ public class Alert {
          show = false;
          return result;
       }
-   }
-
-   private static String stackTrace(Throwable e) {
-      String t = e.toString();
-      if (t == null) {
-         t = "";
-      }
-
-      StackTraceElement[] elems = e.getStackTrace();
-
-      for(int x = 0; x < elems.length; ++x) {
-         t = t + "\nat " + elems[x].toString();
-         if (x >= 5) {
-            t = t + "\n... and " + (elems.length - x - 1) + " more";
-            break;
-         }
-      }
-
-      Throwable cause = e.getCause();
-      if (cause != null) {
-         t = t + "\nCaused by: " + cause.toString();
-         StackTraceElement[] causeelems = cause.getStackTrace();
-
-         for(int x = 0; x < causeelems.length; ++x) {
-            t = t + "\nat " + causeelems[x].toString();
-            if (x >= 5) {
-               t = t + "\n... and " + (causeelems.length - x - 1) + " more";
-               break;
-            }
-         }
-      }
-
-      return t;
    }
 }

@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.downloader;
 
+import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.util.FileUtil;
 import java.io.File;
 import java.io.IOException;

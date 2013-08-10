@@ -1,6 +1,5 @@
 package net.minecraft.launcher_.process;
 
-import com.turikhay.tlauncher.util.U;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,9 +22,10 @@ public class ProcessMonitorThread extends Thread {
 
       while(this.process.isRunning()) {
          try {
-            while((line = buf.readLine()) != null) {
-               U.plog("> " + line);
-               this.process.getSysOutLines().add(line);
+            for(; (line = buf.readLine()) != null; this.process.getSysOutLines().add(line)) {
+               if (listener != null) {
+                  listener.onJavaProcessLog(this.process, line);
+               }
             }
          } catch (IOException var15) {
             Logger.getLogger(ProcessMonitorThread.class.getName()).log(Level.SEVERE, (String)null, var15);

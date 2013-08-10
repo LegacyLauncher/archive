@@ -3,8 +3,8 @@ package com.turikhay.tlauncher;
 import LZMA.LzmaInputStream;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.DownloadableContainer;
-import com.turikhay.tlauncher.downloader.DownloadableHandler;
 import com.turikhay.tlauncher.downloader.Downloader;
+import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
@@ -31,7 +31,8 @@ import net.minecraft.launcher_.updater.RemoteVersionList;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher extends Thread {
-   public static final double VERSION = 0.12D;
+   private static TLauncher instance;
+   public static final double VERSION = 0.13D;
    private boolean isAvaiable = true;
    private String[] args;
    public final Settings settings;
@@ -42,6 +43,7 @@ public class TLauncher extends Thread {
    public final VersionManager vm;
 
    public TLauncher(String[] args) throws Exception {
+      instance = this;
       Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
       U.setWorkingTo(this);
       this.args = args;
@@ -63,8 +65,8 @@ public class TLauncher extends Thread {
       this.updater.findUpdate();
    }
 
-   public void launch(MinecraftLauncherListener listener, String username, String version, boolean forceupdate) {
-      MinecraftLauncher launcher = new MinecraftLauncher(this, listener, version, forceupdate, username, this.args);
+   public void launch(MinecraftLauncherListener listener, String username, String version, boolean forceupdate, boolean console) {
+      MinecraftLauncher launcher = new MinecraftLauncher(this, listener, version, forceupdate, username, this.args, console);
       launcher.run();
    }
 
@@ -153,7 +155,7 @@ public class TLauncher extends Thread {
          U.log("All arguments will be passed in Minecraft directly");
       }
 
-      U.log("Starting version 0.12...");
+      U.log("Starting version 0.13...");
       TLauncher l = new TLauncher(args);
       l.start();
       U.log("Started!");
@@ -167,5 +169,13 @@ public class TLauncher extends Thread {
       }
 
       U.linelog("Good bye!");
+   }
+
+   public static TLauncher getInstance() {
+      if (instance != null) {
+         return instance;
+      } else {
+         throw new TLauncherException("Instance is not defined!");
+      }
    }
 }
