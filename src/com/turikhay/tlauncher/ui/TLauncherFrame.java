@@ -49,7 +49,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    private boolean pb_started;
 
    public TLauncherFrame(TLauncher tlauncher) {
-      super("TLauncher");
+      super("TLauncher 0.14");
       this.t = tlauncher;
       this.global = this.t.settings;
       this.d = this.t.downloader;

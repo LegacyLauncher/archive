@@ -7,10 +7,12 @@ import java.awt.Point;
 public class Console {
    private final ConsoleFrame cf;
    private final Console instance;
+   private String del;
    private boolean killed;
 
    public Console(String name) {
       this.instance = this;
+      this.del = null;
       this.cf = new ConsoleFrame(name);
    }
 
@@ -54,30 +56,25 @@ public class Console {
       return !this.cf.isShowing();
    }
 
-   public void plog(Object obj) {
-      this.check();
-      this.cf.print("" + obj);
-   }
-
    public void log(Object obj) {
       this.check();
-      this.cf.println("" + obj);
+      this.cf.print(this.del + obj);
    }
 
    public void log(Object obj0, Object obj1) {
       this.check();
-      this.cf.println(obj0 + " " + obj1);
+      this.cf.print(this.del + obj0 + " " + obj1);
    }
 
    public void log(Object obj, Throwable e) {
       this.check();
-      this.cf.println("" + obj);
-      this.cf.println(U.stackTrace(e));
+      this.cf.println(this.del + obj);
+      this.cf.print(U.stackTrace(e));
    }
 
    public void log(Throwable e) {
       this.check();
-      this.cf.println(U.stackTrace(e));
+      this.cf.print(this.del + U.stackTrace(e));
    }
 
    public Point getPositionPoint() {
@@ -105,6 +102,13 @@ public class Console {
    private void check() {
       if (this.killed) {
          throw new IllegalStateException("Console is already killed!");
+      } else {
+         if (this.del == null) {
+            this.del = "";
+         } else if (this.del == "") {
+            this.del = "\n";
+         }
+
       }
    }
 }
