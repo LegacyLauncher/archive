@@ -103,7 +103,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                return;
             }
 
-            this.installed = true;
+            this.installed = this.syncInfo.isInstalled() && this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
             if (!this.version.appliesToCurrentEnvironment()) {
                this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
             }
@@ -453,8 +453,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       }
 
       if (this.con != null) {
-         this.con.plog("Minecraft closed successfully. Logger will vanish in 5 seconds.");
-         this.con.killIn(5000L);
+         this.con.log((Object)"Minecraft closed successfully.");
+         this.con.kill();
       }
    }
 

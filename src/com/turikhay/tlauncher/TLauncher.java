@@ -32,7 +32,7 @@ import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher extends Thread {
    private static TLauncher instance;
-   public static final double VERSION = 0.13D;
+   public static final double VERSION = 0.14D;
    private boolean isAvaiable = true;
    private String[] args;
    public final Settings settings;
@@ -155,7 +155,7 @@ public class TLauncher extends Thread {
          U.log("All arguments will be passed in Minecraft directly");
       }
 
-      U.log("Starting version 0.13...");
+      U.log("Starting version 0.14...");
       TLauncher l = new TLauncher(args);
       l.start();
       U.log("Started!");

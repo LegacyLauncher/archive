@@ -1,7 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.util.U;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -22,7 +21,6 @@ import javax.swing.text.Document;
 public class ConsoleFrame extends JFrame {
    private static final long serialVersionUID = 5667131709333334581L;
    private Font font;
-   private int fontsize;
    private boolean scroll = true;
    private Dimension sizes = new Dimension(620, 400);
    private final JTextArea textArea;
@@ -35,8 +33,6 @@ public class ConsoleFrame extends JFrame {
       this.favicon = TLauncher.getInstance().frame.favicon;
       this.output = new StringBuilder();
       this.font = new Font("DialogInput", 0, 14);
-      this.fontsize = this.font.getSize();
-      U.log(this.fontsize);
       this.textArea = new JTextArea();
       this.textArea.setLineWrap(true);
       this.textArea.setEditable(false);
