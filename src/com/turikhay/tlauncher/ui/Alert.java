@@ -6,13 +6,14 @@ import javax.swing.JOptionPane;
 
 public class Alert {
    private static boolean show = false;
+   private static final int wrap = 70;
 
    public static void showError(String title, String message, Throwable e, boolean exit) {
       if (!show) {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
-         String t_message = U.w(message, 80) + (e != null ? "\n" + U.stackTrace(e) : "");
+         String t_message = U.w(message, 70) + (e != null ? "\n" + U.stackTrace(e) : "");
          frame.requestFocus();
          JOptionPane.showMessageDialog(frame, t_message, t_title, 0);
          show = false;
@@ -56,7 +57,7 @@ public class Alert {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
-         String t_message = U.w(message, 80);
+         String t_message = U.w(message, 70);
          frame.requestFocus();
          JOptionPane.showMessageDialog(frame, t_message, t_title, 2);
          show = false;
