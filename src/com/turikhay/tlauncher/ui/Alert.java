@@ -12,7 +12,7 @@ public class Alert {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
-         String t_message = message + (e != null ? "\n" + U.stackTrace(e) : "");
+         String t_message = U.w(message, 80) + (e != null ? "\n" + U.stackTrace(e) : "");
          frame.requestFocus();
          JOptionPane.showMessageDialog(frame, t_message, t_title, 0);
          show = false;
@@ -56,8 +56,9 @@ public class Alert {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
+         String t_message = U.w(message, 80);
          frame.requestFocus();
-         JOptionPane.showMessageDialog(frame, message, t_title, 2);
+         JOptionPane.showMessageDialog(frame, t_message, t_title, 2);
          show = false;
       }
    }

@@ -32,6 +32,10 @@ public class U {
       System.out.println(what);
    }
 
+   public static void plog(Object what0, Object what1) {
+      System.out.println(what0 + " " + what1);
+   }
+
    public static void setWorkingTo(TLauncher to) {
       if (t == null) {
          t = to;

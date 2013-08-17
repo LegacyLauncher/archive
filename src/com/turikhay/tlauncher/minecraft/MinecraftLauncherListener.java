@@ -13,5 +13,5 @@ public interface MinecraftLauncherListener {
 
    void onMinecraftError(Throwable var1);
 
-   void onMinecraftWarning(String var1, String var2);
+   void onMinecraftWarning(String var1, Object var2);
 }

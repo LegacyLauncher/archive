@@ -109,13 +109,13 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             }
 
             if (this.version.getMinimumLauncherVersion() > 7) {
-               this.showWarning("Current version of using launcher is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
+               this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
             }
 
             if (!this.forceupdate && this.installed) {
                this.prepare_();
             } else {
-               this.log("Downloading libraries and " + this.version_name + ".jar");
+               this.log("Downloading classpath files for version " + this.version_name + "...");
 
                try {
                   this.vm.downloadVersion(this.syncInfo, this.jar);
@@ -402,7 +402,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
    }
 
-   void showWarning(String message, String langpath, String replace) {
+   void showWarning(String message, String langpath, Object replace) {
       this.log("[WARNING] " + message);
       if (this.listener != null) {
          this.listener.onMinecraftWarning(langpath, replace);
@@ -411,7 +411,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    void showWarning(String message, String langpath) {
-      this.showWarning(message, langpath, (String)null);
+      this.showWarning(message, langpath, (Object)null);
    }
 
    void onError(MinecraftLauncherException e) {
@@ -454,7 +454,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
       if (this.con != null) {
          this.con.log((Object)"Minecraft closed successfully.");
-         this.con.kill();
+         this.con.killIn(2000L);
       }
    }
 
@@ -472,7 +472,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    public void onJavaProcessLog(JavaProcess jp, String line) {
-      U.log(">", (Object)line);
+      U.plog(">", line);
       if (this.con != null) {
          this.con.log((Object)line);
       }
