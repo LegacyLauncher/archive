@@ -36,6 +36,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    Image bgimage;
    Image favicon;
    Image settings;
+   Image vk;
    Image sun;
    URL langfile;
    Settings global;
@@ -49,7 +50,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    private boolean pb_started;
 
    public TLauncherFrame(TLauncher tlauncher) {
-      super("TLauncher 0.142");
+      super("TLauncher 0.143");
       this.t = tlauncher;
       this.global = this.t.settings;
       this.d = this.t.downloader;
@@ -115,6 +116,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
       this.favicon = ImageIO.read(TLauncherFrame.class.getResource("favicon.png"));
       this.settings = ImageIO.read(TLauncherFrame.class.getResource("folder.png"));
       this.sun = ImageIO.read(TLauncherFrame.class.getResource("sun.png"));
+      this.vk = ImageIO.read(TLauncherFrame.class.getResource("vk.png"));
       this.langfile = TLauncherFrame.class.getResource("/lang.ini");
    }
 

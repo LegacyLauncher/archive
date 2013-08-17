@@ -446,14 +446,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       }
    }
 
-   public void onJavaProcessEnded(JavaProcess paramJavaProcess) {
+   public void onJavaProcessEnded(JavaProcess jp) {
       this.t.show();
       if (this.listener != null) {
          this.listener.onMinecraftClose();
       }
 
       if (this.con != null) {
-         this.con.log((Object)"Minecraft closed successfully.");
+         this.con.log((Object)("Minecraft closed successfully (exit code: " + jp.getExitCode() + ")"));
          this.con.killIn(2000L);
       }
    }

@@ -11,6 +11,7 @@ import java.awt.Checkbox;
 import java.awt.Choice;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Panel;
@@ -24,6 +25,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
+import java.net.URI;
+import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import net.minecraft.launcher_.OperatingSystem;
@@ -53,11 +56,15 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
    boolean forceupdate_e;
    Checkbox console_f;
    boolean console;
+   String ad_url;
+   URI ad_uri;
    private boolean login_blocked;
    Button login_b;
    Button settings_b;
    Button cancelautologin_b;
+   Button ad_b;
    boolean settings_b_pressed;
+   boolean ad_b_pressed;
 
    LoginForm(TLauncherFrame fd) {
       super(fd);
@@ -210,8 +217,64 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
             LoginForm.this.callSettings();
          }
       });
+      this.ad_b = new Button(this.l.get("ad.title")) {
+         private static final long serialVersionUID = -5584173346960560987L;
+         private Image img;
+
+         {
+            this.img = LoginForm.this.instance.f.vk;
+         }
+
+         public void update(Graphics g) {
+            this.paint(g);
+         }
+
+         public void paint(Graphics g) {
+            FontMetrics fm = g.getFontMetrics();
+            g.setFont(LoginForm.this.font);
+            int offset = LoginForm.this.ad_b_pressed ? 1 : 0;
+            int twidth = fm.stringWidth(this.getLabel());
+            int iwidth = this.img.getWidth((ImageObserver)null);
+            int iheight = this.img.getHeight((ImageObserver)null);
+            int ix = this.getWidth() / 2 - twidth / 2 - iwidth - 5 + offset;
+            int iy = this.getHeight() / 2 - iheight / 2;
+            g.drawImage(this.img, ix, iy, (ImageObserver)null);
+            LoginForm.this.ad_b_pressed = false;
+         }
+      };
+      this.ad_b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            LoginForm.this.callAd();
+         }
+      });
+      this.ad_b.addMouseListener(new MouseListener() {
+         public void mouseClicked(MouseEvent e) {
+         }
+
+         public void mouseEntered(MouseEvent e) {
+         }
+
+         public void mouseExited(MouseEvent e) {
+         }
+
+         public void mousePressed(MouseEvent e) {
+            LoginForm.this.ad_b_pressed = true;
+         }
+
+         public void mouseReleased(MouseEvent e) {
+         }
+      });
+      this.ad_url = this.l.get("ad.url");
+
+      try {
+         this.ad_uri = (new URL(this.ad_url)).toURI();
+      } catch (Exception var3) {
+         var3.printStackTrace();
+      }
+
       this.enter.add("Center", this.login_b);
       this.enter.add("East", this.settings_b);
+      this.enter.add("South", this.ad_b);
       this.add(this.error_l);
       this.add(this.maininput);
       this.add(this.versionchoice);
@@ -309,6 +372,19 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
          public void run() {
             if (!OperatingSystem.openFile(MinecraftUtil.getWorkingDirectory())) {
                Alert.showError(LoginForm.this.l.get("settings.error.folder.title"), LoginForm.this.l.get("settings.error.folder", "d", MinecraftUtil.getWorkingDirectory()));
+            }
+
+         }
+      });
+   }
+
+   public void callAd() {
+      this.defocus();
+      U.log("ad");
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            if (!OperatingSystem.openLink(LoginForm.this.ad_uri)) {
+               Alert.showError(LoginForm.this.l.get("ad.cannotopen.title"), LoginForm.this.l.get("ad.cannotopen", "u", LoginForm.this.ad_url));
             }
 
          }
