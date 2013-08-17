@@ -441,7 +441,8 @@ public class LoginForm extends CenterPanel implements RefreshedVersionsListener,
       Alert.showError(this.l.get("launcher.error.title"), this.l.get(knownError.getLangpath(), "r", knownError.getReplace()));
    }
 
-   public void onMinecraftWarning(String message, String replace) {
+   public void onMinecraftWarning(String langpath, Object replace) {
+      Alert.showWarning(this.l.get("launcher.warning.title"), this.l.get("launcher.warning." + langpath, "r", replace));
    }
 
    public void onUpdaterRequesting(Updater u) {

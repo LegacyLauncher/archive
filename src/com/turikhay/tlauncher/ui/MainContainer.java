@@ -55,7 +55,7 @@ public class MainContainer extends Panel {
          long e = System.currentTimeMillis();
          long diff = e - s;
          if (diff > 1L) {
-            if (this.lagmeter > 5) {
+            if (this.lagmeter > 20) {
                this.sun.cancel();
                this.f.lf.setError(this.f.lang.get("sun.stopped"));
                this.drawSun = false;
