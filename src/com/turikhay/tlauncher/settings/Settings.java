@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.settings;
 
 import com.turikhay.tlauncher.util.FileUtil;
+import com.turikhay.tlauncher.util.U;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -148,6 +149,16 @@ public class Settings {
    public String get(String key) {
       String r = (String)this.s.get(key);
       return r == "" ? key : r;
+   }
+
+   public String getRand(String key) {
+      String r = (String)this.s.get(key);
+      if (r == "") {
+         return key;
+      } else {
+         String[] v = r.split("\\|");
+         return v[U.random(0, v.length)];
+      }
    }
 
    public String get(String key, String replace, Object with) {

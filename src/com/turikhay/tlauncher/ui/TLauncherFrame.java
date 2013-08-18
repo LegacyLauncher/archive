@@ -35,8 +35,6 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    Color bgcolor = new Color(141, 189, 233);
    Image bgimage;
    Image favicon;
-   Image settings;
-   Image vk;
    Image sun;
    URL langfile;
    Settings global;
@@ -46,11 +44,10 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    MainContainer mc;
    ProgressBar pb;
    LoginForm lf;
-   SettingsPanel sp;
    private boolean pb_started;
 
    public TLauncherFrame(TLauncher tlauncher) {
-      super("TLauncher 0.143");
+      super("TLauncher 0.145");
       this.t = tlauncher;
       this.global = this.t.settings;
       this.d = this.t.downloader;
@@ -103,7 +100,6 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
          }
       });
       this.lf = new LoginForm(this);
-      this.sp = new SettingsPanel(this);
       this.pb = new ProgressBar(this);
       this.mc = new MainContainer(this);
       this.add(this.mc);
@@ -114,9 +110,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    private void loadResources() throws IOException {
       this.bgimage = ImageIO.read(TLauncherFrame.class.getResource("grass.png"));
       this.favicon = ImageIO.read(TLauncherFrame.class.getResource("favicon.png"));
-      this.settings = ImageIO.read(TLauncherFrame.class.getResource("folder.png"));
       this.sun = ImageIO.read(TLauncherFrame.class.getResource("sun.png"));
-      this.vk = ImageIO.read(TLauncherFrame.class.getResource("vk.png"));
       this.langfile = TLauncherFrame.class.getResource("/lang.ini");
    }
 
@@ -187,7 +181,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
             AsyncThread.execute(new Runnable() {
                public void run() {
                   if (!OperatingSystem.openLink(u.getFoundLinkAsURI())) {
-                     Alert.showError(TLauncherFrame.this.lang.get("updater.found.cannotopen.title"), TLauncherFrame.this.lang.get("updater.found.cannotopen", "u", u.getFoundLink().toString()));
+                     Alert.showError(TLauncherFrame.this.lang.get("updater.found.cannotopen.title"), TLauncherFrame.this.lang.get("updater.found.cannotopen"), (Object)u.getFoundLink().toString());
                   }
 
                }

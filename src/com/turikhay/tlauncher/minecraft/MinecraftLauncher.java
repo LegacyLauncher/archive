@@ -237,6 +237,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    private void launch_() throws MinecraftLauncherException {
+      U.gc();
       this.log("Starting Minecraft " + this.version_name + "...");
 
       try {
@@ -453,7 +454,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       }
 
       if (this.con != null) {
-         this.con.log((Object)("Minecraft closed successfully (exit code: " + jp.getExitCode() + ")"));
+         this.log("Minecraft closed with exit code: " + jp.getExitCode());
          this.con.killIn(2000L);
       }
    }
