@@ -14,7 +14,7 @@ import java.awt.LayoutManager;
 import java.awt.Panel;
 import javax.swing.BoxLayout;
 
-public abstract class CenterPanel extends Panel {
+public abstract class CenterPanel extends BlockablePanel {
    private static final long serialVersionUID = 3304521794866297004L;
    protected Insets insets = new Insets(5, 24, 18, 24);
    final CenterPanel instance = this;
@@ -34,7 +34,7 @@ public abstract class CenterPanel extends Panel {
    Font font_small;
    int fontsize;
    String fontname;
-   Label error_l;
+   Label error;
    LayoutManager g_zero = new GridLayout(0, 1);
    LayoutManager g_single = new GridLayout(1, 1);
    LayoutManager g_double = new GridLayout(0, 2);
@@ -72,10 +72,10 @@ public abstract class CenterPanel extends Panel {
       this.font_italic = new Font(this.fontname, 2, this.fontsize);
       this.font_bold = new Font(this.fontname, 1, this.fontsize);
       this.font_small = new Font(this.fontname, 0, this.fontsize > 5 ? this.fontsize - 2 : this.fontsize);
-      this.error_l = new Label("");
-      this.error_l.setFont(this.font_bold);
-      this.error_l.setAlignment(1);
-      this.error_l.setForeground(new Color(8388608));
+      this.error = new Label("");
+      this.error.setFont(this.font_bold);
+      this.error.setAlignment(1);
+      this.error.setForeground(new Color(8388608));
    }
 
    public void update(Graphics g) {
@@ -100,11 +100,11 @@ public abstract class CenterPanel extends Panel {
       if (message == null) {
          this.border = this.green;
          this.repaint();
-         this.error_l.setText("");
+         this.error.setText("");
       } else {
          this.border = this.red;
          this.repaint();
-         this.error_l.setText(message);
+         this.error.setText(message);
       }
    }
 
@@ -115,8 +115,4 @@ public abstract class CenterPanel extends Panel {
    protected void defocus() {
       this.requestFocusInWindow();
    }
-
-   protected abstract void block();
-
-   protected abstract void unblock();
 }

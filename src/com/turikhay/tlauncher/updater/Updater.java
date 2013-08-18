@@ -41,7 +41,7 @@ public class Updater {
    public Updater(TLauncher t) {
       this.d = t.downloader;
       this.type = Wrapper.isAvailable() ? Updater.Package.EXE : Updater.Package.JAR;
-      this.replace = FileUtil.getRunningJar();
+      this.replace = Wrapper.isAvailable() ? Wrapper.getExecutable() : FileUtil.getRunningJar();
 
       try {
          this.url = new URL("https://dl.dropboxusercontent.com/u/6204017/minecraft/tlauncher/update.ini");
@@ -81,6 +81,11 @@ public class Updater {
    }
 
    private void findUpdate_() throws IOException {
+      if (this.type == Updater.Package.EXE) {
+         File oldfile = new File(Wrapper.getExecutable().getAbsolutePath() + ".replace");
+         oldfile.delete();
+      }
+
       this.onUpdaterRequests();
       this.update_download = new Downloadable(this.url);
       HttpURLConnection connection = this.update_download.makeConnection();
@@ -94,14 +99,14 @@ public class Updater {
          if (this.found_version <= 0.0D) {
             throw new IllegalStateException("Settings file is invalid!");
          } else {
-            if (0.143D >= this.found_version) {
+            if (0.145D >= this.found_version) {
                this.noUpdateFound();
                return;
             }
 
             String current_link = this.update_settings.get(this.type.toLowerCase());
             this.found_link = new URL(current_link);
-            this.onUpdateFound(this.type == Updater.Package.JAR);
+            this.onUpdateFound(true);
             return;
          }
       default:
@@ -140,6 +145,12 @@ public class Updater {
    }
 
    private void saveUpdate_() throws IOException {
+      if (this.type == Updater.Package.EXE) {
+         File oldfile = new File(this.replace.getAbsolutePath());
+         File newfile = new File(this.replace.getAbsolutePath() + ".replace");
+         oldfile.renameTo(newfile);
+      }
+
       FileInputStream in = new FileInputStream(this.launcher_destination);
       FileOutputStream out = new FileOutputStream(this.replace);
       byte[] buffer = new byte[65536];

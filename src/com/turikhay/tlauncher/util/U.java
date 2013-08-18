@@ -233,4 +233,19 @@ public class U {
 
       return t;
    }
+
+   public static long getFreeSpace() {
+      return Runtime.getRuntime().freeMemory() / 1048576L;
+   }
+
+   public static long getTotalSpace() {
+      return Runtime.getRuntime().totalMemory() / 1048576L;
+   }
+
+   public static void gc() {
+      long total = getTotalSpace();
+      log("Starting garbage collector: " + getFreeSpace() + " / " + total + " MB");
+      System.gc();
+      log("Garbage collector completed: " + getFreeSpace() + " / " + total + " MB");
+   }
 }

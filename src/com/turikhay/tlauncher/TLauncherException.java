@@ -6,7 +6,6 @@ public class TLauncherException extends RuntimeException {
    public TLauncherException(String message, Throwable e) {
       super(message, e);
       e.printStackTrace();
-      this.setStackTrace(e.getStackTrace());
    }
 
    public TLauncherException(String message) {

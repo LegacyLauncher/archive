@@ -32,7 +32,7 @@ import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher extends Thread {
    private static TLauncher instance;
-   public static final double VERSION = 0.143D;
+   public static final double VERSION = 0.145D;
    private boolean isAvaiable = true;
    private String[] args;
    public final Settings settings;
@@ -59,7 +59,7 @@ public class TLauncher extends Thread {
 
    private void init() throws IOException {
       LoginForm lf = this.frame.getLoginForm();
-      this.vm.addRefreshedVersionsListener(lf);
+      this.vm.addRefreshedVersionsListener(lf.versionchoice);
       this.vm.asyncRefresh();
       this.updater.addListener(this.frame);
       this.updater.findUpdate();
@@ -155,7 +155,7 @@ public class TLauncher extends Thread {
          U.log("All arguments will be passed in Minecraft directly");
       }
 
-      U.log("Starting version 0.143...");
+      U.log("Starting version 0.145...");
       TLauncher l = new TLauncher(args);
       l.start();
       U.log("Started!");
