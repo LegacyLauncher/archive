@@ -13,7 +13,7 @@ public class GlobalSettings extends Settings {
    public static final File file = MinecraftUtil.getNativeOptionsFile();
    public static final boolean firstRun;
    private Map d = new HashMap();
-   private double version = 0.1D;
+   private double version = 0.11D;
 
    static {
       firstRun = !file.exists();
@@ -23,7 +23,7 @@ public class GlobalSettings extends Settings {
       super(file);
       this.d.put("settings.version", this.version);
       this.d.put("login.auto", false);
-      this.d.put("login.auto.timeout", 5);
+      this.d.put("login.auto.timeout", 3);
       this.d.put("minecraft.width", 925);
       this.d.put("minecraft.height", 525);
       this.d.put("minecraft.versions.snapshots", true);

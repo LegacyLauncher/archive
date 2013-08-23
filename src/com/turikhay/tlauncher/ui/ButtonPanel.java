@@ -11,6 +11,7 @@ public class ButtonPanel extends BlockablePanel {
    private final LoginForm lf;
    private final Settings l;
    Button enter;
+   Button cancel;
    SettingsButton settings;
    SupportButton support;
 
@@ -28,15 +29,32 @@ public class ButtonPanel extends BlockablePanel {
             ButtonPanel.this.lf.callLogin();
          }
       });
+      this.cancel = new Button(this.l.get("loginform.cancel", "t", this.lf.autologin.timeout));
+      this.cancel.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            ButtonPanel.this.lf.setAutoLogin(false);
+         }
+      });
       this.settings = new SettingsButton(this.lf);
       this.support = new SupportButton(this.lf);
       this.add("Center", this.enter);
       this.add("East", this.settings);
-      this.add("South", this.support);
+      if (this.lf.autologin.enabled) {
+         this.add("South", this.cancel);
+      } else {
+         this.add("South", this.support);
+      }
+
    }
 
    void toggleEnterButton(boolean play) {
       this.enter.setLabel(this.l.get("loginform.enter" + (!play ? ".install" : "")));
+   }
+
+   void toggleSouthButton() {
+      this.remove(this.cancel);
+      this.add("South", this.support);
+      this.validate();
    }
 
    protected void blockElement(Object reason) {

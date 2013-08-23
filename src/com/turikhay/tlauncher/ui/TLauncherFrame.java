@@ -10,7 +10,6 @@ import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.timer.Timer;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
-import com.turikhay.tlauncher.util.AsyncThread;
 import com.turikhay.tlauncher.util.U;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -24,7 +23,6 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
-import net.minecraft.launcher_.OperatingSystem;
 
 public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterListener {
    private final TLauncherFrame instance = this;
@@ -47,7 +45,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    private boolean pb_started;
 
    public TLauncherFrame(TLauncher tlauncher) {
-      super("TLauncher 0.145");
+      super("TLauncher 0.147");
       this.t = tlauncher;
       this.global = this.t.settings;
       this.d = this.t.downloader;
@@ -171,23 +169,11 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
       U.log("Error occurred while getting update:", (Throwable)e);
    }
 
-   public void onUpdaterFoundUpdate(final Updater u, boolean canBeInstalledAutomatically) {
+   public void onUpdaterFoundUpdate(Updater u) {
       double found_version = u.getFoundVersion();
       boolean yes = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", found_version), true);
       if (yes) {
-         if (canBeInstalledAutomatically) {
-            u.downloadUpdate();
-         } else {
-            AsyncThread.execute(new Runnable() {
-               public void run() {
-                  if (!OperatingSystem.openLink(u.getFoundLinkAsURI())) {
-                     Alert.showError(TLauncherFrame.this.lang.get("updater.found.cannotopen.title"), TLauncherFrame.this.lang.get("updater.found.cannotopen"), (Object)u.getFoundLink().toString());
-                  }
-
-               }
-            });
-         }
-
+         u.downloadUpdate();
       }
    }
 
