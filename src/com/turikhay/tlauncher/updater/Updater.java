@@ -99,14 +99,14 @@ public class Updater {
          if (this.found_version <= 0.0D) {
             throw new IllegalStateException("Settings file is invalid!");
          } else {
-            if (0.145D >= this.found_version) {
+            if (0.147D >= this.found_version) {
                this.noUpdateFound();
                return;
             }
 
             String current_link = this.update_settings.get(this.type.toLowerCase());
             this.found_link = new URL(current_link);
-            this.onUpdateFound(true);
+            this.onUpdateFound();
             return;
          }
       default:
@@ -211,12 +211,12 @@ public class Updater {
 
    }
 
-   private void onUpdateFound(boolean canBeInstalledAutomatically) {
-      Iterator var3 = this.listeners.iterator();
+   private void onUpdateFound() {
+      Iterator var2 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var3.next();
-         l.onUpdaterFoundUpdate(this, canBeInstalledAutomatically);
+      while(var2.hasNext()) {
+         UpdaterListener l = (UpdaterListener)var2.next();
+         l.onUpdaterFoundUpdate(this);
       }
 
    }

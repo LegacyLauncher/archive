@@ -63,7 +63,7 @@ public class Timer extends Thread {
 
    public void add(String name, TimerTask task) {
       while(!this.tasks_) {
-         this.sleepFor(100L);
+         this.sleepFor(10L);
       }
 
       this.tasks_ = false;
@@ -77,7 +77,7 @@ public class Timer extends Thread {
 
    public void remove(String name) {
       while(!this.tasks_) {
-         this.sleepFor(100L);
+         this.sleepFor(10L);
       }
 
       this.tasks_ = false;

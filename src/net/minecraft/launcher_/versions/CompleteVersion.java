@@ -29,40 +29,35 @@ public class CompleteVersion implements Version {
    public CompleteVersion() {
    }
 
-   public CompleteVersion(String id, Date releaseTime, Date updateTime, ReleaseType type, String mainClass, String minecraftArguments) {
-      if (id != null && id.length() != 0) {
-         if (releaseTime == null) {
-            throw new IllegalArgumentException("Release time cannot be null");
-         } else if (updateTime == null) {
-            throw new IllegalArgumentException("Update time cannot be null");
-         } else if (type == null) {
-            throw new IllegalArgumentException("Release type cannot be null");
-         } else if (mainClass != null && mainClass.length() != 0) {
-            if (minecraftArguments == null) {
-               throw new IllegalArgumentException("Process arguments cannot be null or empty");
-            } else {
-               this.id = id;
-               this.releaseTime = releaseTime;
-               this.time = updateTime;
-               this.type = type;
-               this.mainClass = mainClass;
-               this.libraries = new ArrayList();
-               this.minecraftArguments = minecraftArguments;
-            }
+   public CompleteVersion(Date releaseTime, Date updateTime, ReleaseType type, String mainClass, String minecraftArguments) {
+      if (releaseTime == null) {
+         throw new IllegalArgumentException("Release time cannot be null");
+      } else if (updateTime == null) {
+         throw new IllegalArgumentException("Update time cannot be null");
+      } else if (type == null) {
+         throw new IllegalArgumentException("Release type cannot be null");
+      } else if (mainClass != null && mainClass.length() != 0) {
+         if (minecraftArguments == null) {
+            throw new IllegalArgumentException("Process arguments cannot be null or empty");
          } else {
-            throw new IllegalArgumentException("Main class cannot be null or empty");
+            this.releaseTime = releaseTime;
+            this.time = updateTime;
+            this.type = type;
+            this.mainClass = mainClass;
+            this.libraries = new ArrayList();
+            this.minecraftArguments = minecraftArguments;
          }
       } else {
-         throw new IllegalArgumentException("ID cannot be null or empty");
+         throw new IllegalArgumentException("Main class cannot be null or empty");
       }
    }
 
    public CompleteVersion(CompleteVersion version) {
-      this(version.getId(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), version.getMainClass(), version.getMinecraftArguments());
+      this(version.getReleaseTime(), version.getUpdatedTime(), version.getType(), version.getMainClass(), version.getMinecraftArguments());
    }
 
    public CompleteVersion(Version version, String mainClass, String minecraftArguments) {
-      this(version.getId(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), mainClass, minecraftArguments);
+      this(version.getReleaseTime(), version.getUpdatedTime(), version.getType(), mainClass, minecraftArguments);
    }
 
    public String getId() {
@@ -227,6 +222,14 @@ public class CompleteVersion implements Version {
 
    public String getMinecraftArguments() {
       return this.minecraftArguments;
+   }
+
+   public void setId(String id) {
+      if (id != null && id.length() != 0) {
+         this.id = id;
+      } else {
+         throw new IllegalArgumentException("ID cannot be null or empty");
+      }
    }
 
    public void setMinecraftArguments(String minecraftArguments) {

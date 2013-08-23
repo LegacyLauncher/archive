@@ -159,7 +159,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       } else {
          this.launching = true;
          this.onPrepare();
-         this.nativeDir = new File(MinecraftUtil.getWorkingDirectory(), "versions/" + this.version.getId() + "/" + this.version.getId() + "-natives");
+         this.nativeDir = new File(MinecraftUtil.getWorkingDirectory(), "versions/" + this.version.getId() + "/" + "natives");
          if (!this.nativeDir.isDirectory()) {
             this.nativeDir.mkdirs();
          }

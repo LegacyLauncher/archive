@@ -12,15 +12,20 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
    public final VersionChoicePanel versionchoice;
    public final CheckBoxPanel checkbox;
    public final ButtonPanel buttons;
+   public final Autologin autologin;
 
    LoginForm(TLauncherFrame fd) {
       super(fd);
       String username = this.s.get("login.username");
       String version = this.s.get("login.version");
+      boolean autologin = this.s.getBoolean("login.auto");
       boolean console = this.s.getBoolean("login.debug");
+      int timeout = this.s.getInteger("login.auto.timeout");
+      this.autologin = new Autologin(this, autologin, timeout);
+      this.autologin.enabled = false;
       this.maininput = new MainInputPanel(this, username);
       this.versionchoice = new VersionChoicePanel(this, version);
-      this.checkbox = new CheckBoxPanel(this, console);
+      this.checkbox = new CheckBoxPanel(this, autologin, console);
       this.buttons = new ButtonPanel(this);
       this.add(this.error);
       this.add(this.maininput);
@@ -54,6 +59,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
             } else {
                this.setError((String)null);
                this.save();
+               this.postAutoLogin();
                this.t.launch(this, this.maininput.username, this.versionchoice.version, this.checkbox.forceupdate, this.checkbox.console);
             }
          }
@@ -66,10 +72,34 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
       this.unblock("launcher");
    }
 
-   void callAutoLogin() {
+   void setAutoLogin(boolean enabled) {
+      if (!enabled) {
+         this.cancelAutoLogin();
+      } else {
+         this.autologin.enabled = true;
+      }
+
+      this.s.set("login.auto", this.autologin.enabled);
    }
 
-   void cancelAutoLogin() {
+   private void cancelAutoLogin() {
+      this.autologin.enabled = false;
+      this.autologin.stopLogin();
+      this.checkbox.uncheckAutologin();
+      this.buttons.toggleSouthButton();
+      if (this.autologin.active) {
+         this.versionchoice.asyncRefresh();
+      }
+
+   }
+
+   private void postAutoLogin() {
+      if (this.autologin.enabled) {
+         U.log(this.autologin.enabled);
+         this.autologin.stopLogin();
+         this.autologin.active = false;
+         this.buttons.toggleSouthButton();
+      }
    }
 
    public void setError(String message) {
@@ -104,11 +134,11 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
 
    public void onMinecraftPrepare() {
       this.block("launcher");
+      this.f.mc.sun.suspend();
    }
 
    public void onMinecraftLaunch() {
       this.unblock("launcher");
-      this.f.mc.sun.suspend();
       this.versionchoice.asyncRefresh();
    }
 
@@ -120,16 +150,19 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
    public void onMinecraftError(Throwable e) {
       this.unblock("launcher");
       Alert.showError(this.l.get("launcher.error.title"), this.l.get("launcher.error.unknown"), e);
+      this.f.mc.sun.resume();
    }
 
    public void onMinecraftError(String message) {
       this.unblock("launcher");
       Alert.showError(this.l.get("launcher.error.title"), this.l.get(message));
+      this.f.mc.sun.resume();
    }
 
    public void onMinecraftError(MinecraftLauncherException knownError) {
       this.unblock("launcher");
       Alert.showError(this.l.get("launcher.error.title"), this.l.get(knownError.getLangpath()), knownError.getReplace());
+      this.f.mc.sun.resume();
    }
 
    public void onMinecraftWarning(String langpath, Object replace) {

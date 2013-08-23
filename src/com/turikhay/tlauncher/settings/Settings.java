@@ -29,7 +29,7 @@ public class Settings {
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$settings$Settings$InputType;
 
-   public Settings() {
+   protected Settings() {
       this.s = new HashMap();
       throw new SettingsException("This constructor mustn't be called.");
    }
@@ -275,7 +275,7 @@ public class Settings {
          curen = (Entry)var3.next();
       }
 
-      return r.length() > 0 ? r.substring(1) : "";
+      return r.length() > 0 ? r.substring(this.NEWLINE_CHAR.length()) : "";
    }
 
    public void save() throws IOException {
