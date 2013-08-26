@@ -1,28 +1,39 @@
 package com.turikhay.tlauncher.ui;
 
 import java.awt.Panel;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public abstract class BlockablePanel extends Panel implements Blockable {
    private static final long serialVersionUID = 1L;
    public static final Object UNIVERSAL_UNBLOCK = "lol, nigga";
    private boolean blocked;
-   private Object reason = new Object();
+   private List reasons = Collections.synchronizedList(new ArrayList());
 
    public void block(Object reason) {
       if (reason == null) {
          throw new IllegalArgumentException("Reason cannot be NULL!");
-      } else if (!this.blocked) {
-         this.blocked = true;
-         this.reason = reason;
-         this.blockElement(reason);
+      } else {
+         this.reasons.add(reason);
+         if (!this.blocked) {
+            this.blocked = true;
+            this.blockElement(reason);
+         }
       }
    }
 
    public void unblock(Object reason) {
-      if (this.blocked && (reason.equals(this.reason) || reason.equals(UNIVERSAL_UNBLOCK))) {
-         this.blocked = false;
-         this.reason = new Object();
-         this.unblockElement(reason);
+      if (this.blocked && (this.reasons.contains(reason) || reason.equals(UNIVERSAL_UNBLOCK))) {
+         this.reasons.remove(reason);
+         if (reason.equals(UNIVERSAL_UNBLOCK)) {
+            this.reasons.clear();
+         }
+
+         if (this.reasons.isEmpty()) {
+            this.blocked = false;
+            this.unblockElement(reason);
+         }
       }
    }
 

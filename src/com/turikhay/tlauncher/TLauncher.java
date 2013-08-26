@@ -31,7 +31,7 @@ import net.minecraft.launcher_.updater.RemoteVersionList;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher extends Thread {
-   public static final double VERSION = 0.147D;
+   public static final double VERSION = 0.149D;
    private static TLauncher instance;
    private boolean isAvaiable = true;
    private String[] args;
@@ -59,7 +59,7 @@ public class TLauncher extends Thread {
 
    private void init() throws IOException {
       LoginForm lf = this.frame.getLoginForm();
-      this.vm.addRefreshedVersionsListener(lf.versionchoice);
+      this.vm.addRefreshedListener(lf.versionchoice);
       if (lf.autologin.isEnabled()) {
          this.vm.refreshVersions(true);
          lf.autologin.startLogin();
@@ -67,13 +67,14 @@ public class TLauncher extends Thread {
          this.vm.asyncRefresh();
       }
 
+      this.vm.asyncRefreshResources();
       this.updater.addListener(this.frame);
       this.updater.findUpdate();
    }
 
    public void launch(MinecraftLauncherListener listener, String username, String version, boolean forceupdate, boolean console) {
       MinecraftLauncher launcher = new MinecraftLauncher(this, listener, version, forceupdate, username, this.args, console);
-      launcher.run();
+      launcher.start();
    }
 
    public void runDefaultLauncher() {
@@ -161,7 +162,7 @@ public class TLauncher extends Thread {
          U.log("All arguments will be passed in Minecraft directly");
       }
 
-      U.log("Starting version 0.147...");
+      U.log("Starting version 0.149...");
       TLauncher l = new TLauncher(args);
       l.start();
       U.log("Started!");

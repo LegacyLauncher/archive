@@ -248,4 +248,13 @@ public class U {
       System.gc();
       log("Garbage collector completed: " + getFreeSpace() + " / " + total + " MB");
    }
+
+   public static void sleepFor(long millis) {
+      try {
+         Thread.sleep(millis);
+      } catch (Exception var3) {
+         var3.printStackTrace();
+      }
+
+   }
 }

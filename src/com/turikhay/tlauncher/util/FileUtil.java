@@ -22,7 +22,8 @@ public class FileUtil {
    }
 
    public static String readFile(File file) throws IOException {
-      String toret = "";
+      StringBuilder toret = new StringBuilder();
+      boolean first = true;
       FileReader file_r = new FileReader(file);
       BufferedReader buff = new BufferedReader(file_r);
       boolean eof = false;
@@ -31,17 +32,16 @@ public class FileUtil {
          String line = buff.readLine();
          if (line == null) {
             eof = true;
+         } else if (!first) {
+            toret.append("\n" + line);
          } else {
-            toret = toret + "\n" + line;
+            toret.append(line);
+            first = false;
          }
       }
 
       buff.close();
-      if (toret.length() > 0) {
-         toret = toret.substring(1);
-      }
-
-      return toret;
+      return toret.toString();
    }
 
    public static String getFilename(URL url) {

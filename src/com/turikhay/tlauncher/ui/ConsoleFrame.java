@@ -10,6 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -73,15 +74,28 @@ public class ConsoleFrame extends JFrame {
    public void print(String string) {
       this.output.append(string);
       Document document = this.textArea.getDocument();
-      JScrollBar scrollBar = this.scrollPane.getVerticalScrollBar();
-      if (this.scroll) {
-         scrollBar.setValue(scrollBar.getMaximum());
-      }
+      this.scrollBottom();
 
       try {
          document.insertString(document.getLength(), string, (AttributeSet)null);
-      } catch (BadLocationException var5) {
+      } catch (BadLocationException var4) {
       }
 
+   }
+
+   public void scrollBottom() {
+      final JScrollBar scrollBar = this.scrollPane.getVerticalScrollBar();
+      if (this.scroll) {
+         SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+               scrollBar.setValue(scrollBar.getMaximum());
+            }
+         });
+      }
+
+   }
+
+   public String getOutput() {
+      return this.output.toString();
    }
 }

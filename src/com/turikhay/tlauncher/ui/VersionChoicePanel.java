@@ -11,19 +11,20 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.launcher_.events.RefreshedVersionsListener;
+import net.minecraft.launcher_.events.RefreshedListener;
 import net.minecraft.launcher_.updater.VersionFilter;
 import net.minecraft.launcher_.updater.VersionManager;
 import net.minecraft.launcher_.updater.VersionSyncInfo;
 import net.minecraft.launcher_.versions.ReleaseType;
 import net.minecraft.launcher_.versions.Version;
 
-public class VersionChoicePanel extends BlockablePanel implements RefreshedVersionsListener {
+public class VersionChoicePanel extends BlockablePanel implements RefreshedListener {
    private static final long serialVersionUID = -1838948772565245249L;
    private final LoginForm lf;
    private final Settings l;
    private final VersionManager vm;
    String version;
+   VersionSyncInfo selected;
    Map list;
    Choice choice;
    boolean foundlocal;
@@ -49,14 +50,15 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedVersi
    }
 
    void onVersionChanged() {
-      VersionSyncInfo selected = this.vm.getVersionSyncInfo(this.version);
-      boolean play = selected.isInstalled();
+      this.foundlocal = true;
+      this.selected = this.vm.getVersionSyncInfo(this.version);
+      boolean play = this.selected.isInstalled();
       this.lf.buttons.toggleEnterButton(play);
       this.unblock("refresh");
    }
 
    void refreshVersions(VersionManager vm, boolean local) {
-      this.lf.unblock("refresh");
+      this.lf.unblock("version_refresh");
       this.choice.removeAll();
       this.list.clear();
       VersionFilter vf = MinecraftUtil.getVersionFilter();
@@ -88,6 +90,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedVersi
          if (id.equals(this.version)) {
             this.version = id;
             this.choice.select(dId);
+            this.onVersionChanged();
             exists = true;
          }
       }
@@ -100,7 +103,6 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedVersi
          }
 
          this.onVersionChanged();
-         this.foundlocal = true;
       }
    }
 
@@ -125,7 +127,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedVersi
       this.choice.setEnabled(false);
       this.choice.removeAll();
       this.choice.add(this.l.get("versions.loading"));
-      this.lf.block("refresh");
+      this.lf.block("version_refresh");
    }
 
    public void refresh() {
@@ -134,6 +136,18 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedVersi
 
    public void asyncRefresh() {
       this.vm.asyncRefresh();
+   }
+
+   public VersionSyncInfo getSyncVersionInfo() {
+      return this.selected;
+   }
+
+   public void onResourcesRefreshing(VersionManager vm) {
+      this.lf.block("resource_refresh");
+   }
+
+   public void onResourcesRefreshed(VersionManager vm) {
+      this.lf.unblock("resource_refresh");
    }
 
    // $FF: synthetic method

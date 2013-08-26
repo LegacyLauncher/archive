@@ -82,6 +82,10 @@ public class Sun {
       this.f.ti.remove("sun");
    }
 
+   public boolean cancelled() {
+      return this.cancelled;
+   }
+
    public void resume() {
       if (this.allowed()) {
          U.log("The sun is resumed.");

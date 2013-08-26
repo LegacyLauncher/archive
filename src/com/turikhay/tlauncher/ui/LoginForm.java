@@ -2,7 +2,6 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
-import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.util.U;
 
 public class LoginForm extends CenterPanel implements MinecraftLauncherListener {
@@ -58,6 +57,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
 
             } else {
                this.setError((String)null);
+               if (this.checkbox.forceupdate && !this.versionchoice.getSyncVersionInfo().isOnRemote()) {
+                  Alert.showWarning(this.l.get("forceupdate.onlylibraries.title"), this.l.get("forceupdate.onlylibraries"));
+               }
+
                this.save();
                this.postAutoLogin();
                this.t.launch(this, this.maininput.username, this.versionchoice.version, this.checkbox.forceupdate, this.checkbox.console);
@@ -95,7 +98,6 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
 
    private void postAutoLogin() {
       if (this.autologin.enabled) {
-         U.log(this.autologin.enabled);
          this.autologin.stopLogin();
          this.autologin.active = false;
          this.buttons.toggleSouthButton();
@@ -116,16 +118,18 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
 
    protected void blockElement(Object reason) {
       this.defocus();
-      this.maininput.block(reason);
-      this.versionchoice.block(reason);
-      this.buttons.block(reason);
+      this.maininput.blockElement(reason);
+      this.versionchoice.blockElement(reason);
+      this.checkbox.blockElement(reason);
+      this.buttons.blockElement(reason);
    }
 
    protected void unblockElement(Object reason) {
       this.defocus();
-      this.maininput.unblock(reason);
-      this.versionchoice.unblock(reason);
-      this.buttons.unblock(reason);
+      this.maininput.unblockElement(reason);
+      this.versionchoice.unblockElement(reason);
+      this.checkbox.unblockElement(reason);
+      this.buttons.unblockElement(reason);
    }
 
    public void onMinecraftCheck() {
@@ -150,48 +154,31 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
    public void onMinecraftError(Throwable e) {
       this.unblock("launcher");
       Alert.showError(this.l.get("launcher.error.title"), this.l.get("launcher.error.unknown"), e);
-      this.f.mc.sun.resume();
+      if (this.f.mc.sun.cancelled()) {
+         this.f.mc.sun.resume();
+      }
+
    }
 
    public void onMinecraftError(String message) {
       this.unblock("launcher");
       Alert.showError(this.l.get("launcher.error.title"), this.l.get(message));
-      this.f.mc.sun.resume();
+      if (this.f.mc.sun.cancelled()) {
+         this.f.mc.sun.resume();
+      }
+
    }
 
    public void onMinecraftError(MinecraftLauncherException knownError) {
       this.unblock("launcher");
       Alert.showError(this.l.get("launcher.error.title"), this.l.get(knownError.getLangpath()), knownError.getReplace());
-      this.f.mc.sun.resume();
+      if (this.f.mc.sun.cancelled()) {
+         this.f.mc.sun.resume();
+      }
+
    }
 
    public void onMinecraftWarning(String langpath, Object replace) {
       Alert.showWarning(this.l.get("launcher.warning.title"), this.l.get("launcher.warning." + langpath, "r", replace));
-   }
-
-   public void onUpdaterRequesting(Updater u) {
-   }
-
-   public void onUpdaterRequestError(Updater u, Throwable e) {
-   }
-
-   public void onUpdaterFoundUpdate(Updater u, boolean canBeInstalledAutomatically) {
-   }
-
-   public void onUpdaterNotFoundUpdate(Updater u) {
-   }
-
-   public void onUpdaterDownloading(Updater u) {
-   }
-
-   public void onUpdaterDownloadSuccess(Updater u) {
-      this.block("updater");
-   }
-
-   public void onUpdaterDownloadError(Updater u, Throwable e) {
-   }
-
-   public void onUpdaterProcessError(Updater u, Throwable e) {
-      this.unblock("updater");
    }
 }

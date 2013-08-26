@@ -143,6 +143,10 @@ public class Downloadable {
       return connection;
    }
 
+   public String toString() {
+      return this.url != null ? this.url.toExternalForm() : null;
+   }
+
    public static String getEtag(String etag) {
       if (etag == null) {
          etag = "-";
