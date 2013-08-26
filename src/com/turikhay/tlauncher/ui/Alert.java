@@ -17,7 +17,7 @@ public class Alert {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
-         String t_message = message != null ? U.w("<html><div align=\"justify\">" + message.replace("\n", "<br/>") + "</div></html>", 90) : null;
+         String t_message = message != null ? U.w("<html><div align=\"justify\">" + U.w(message, 90).replace("\n", "<br/>") + "</div></html>", 90) : null;
          String t_throwable = e != null ? U.stackTrace(e) : null;
          String t_textarea = textarea != null ? textarea.toString() : null;
          AlertPanel panel = new AlertPanel(t_message);
@@ -78,8 +78,9 @@ public class Alert {
          show = true;
          JFrame frame = new JFrame();
          String t_title = "TLauncher : " + title;
+         String t_message = U.w(message, 90);
          frame.requestFocus();
-         boolean result = JOptionPane.showConfirmDialog(frame, message, t_title, 0) == 0;
+         boolean result = JOptionPane.showConfirmDialog(frame, t_message, t_title, 0) == 0;
          show = false;
          return result;
       }

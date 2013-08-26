@@ -25,6 +25,7 @@ public class Console {
       this.check();
       this.cf.setVisible(true);
       this.cf.toFront();
+      this.cf.scrollBottom();
    }
 
    public void hide() {
@@ -97,6 +98,10 @@ public class Console {
       this.check();
       Dimension d = this.getDimension();
       return new int[]{d.width, d.height};
+   }
+
+   public String getOutput() {
+      return this.cf.getOutput();
    }
 
    private void check() {

@@ -11,7 +11,6 @@ public class DownloadableContainer {
    private boolean available = true;
    private int remain;
    private int errors;
-   Downloadable error_elem;
    List elems = new ArrayList();
 
    public void addAll(Downloadable[] c) {
@@ -87,10 +86,6 @@ public class DownloadableContainer {
          }
 
       }
-   }
-
-   public Throwable getError() {
-      return this.error_elem != null ? this.error_elem.getError() : null;
    }
 
    public int getErrors() {

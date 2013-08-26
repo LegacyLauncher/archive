@@ -68,10 +68,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.forceupdate = forceupdate;
       this.username = username;
       this.args = args;
-      if (console) {
-         this.con = new Console("Minecraft Logger", true);
-      }
-
+      this.con = new Console("Minecraft Logger", console);
       this.log("Minecraft Launcher v7 is started!");
    }
 
@@ -115,7 +112,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             if (!this.forceupdate && this.installed) {
                this.prepare_();
             } else {
-               this.log("Downloading classpath files for version " + this.version_name + "...");
+               this.log("Downloading version " + this.version_name + "...");
 
                try {
                   this.vm.downloadVersion(this.syncInfo, this.jar);
@@ -174,7 +171,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher = new JavaProcessLauncher(this.os.getJavaDir(), new String[0]);
          this.processLauncher.directory(this.gameDir);
          this.assetsDir = new File(MinecraftUtil.getWorkingDirectory(), "assets");
-         boolean resourcesAreReady = this.vm.checkResources();
+         boolean resourcesAreReady = this.compareResources();
          if (this.os.equals(OperatingSystem.OSX)) {
             this.processLauncher.addCommand("-Xdock:icon=" + (new File(this.assetsDir, "icons/minecraft.icns")).getAbsolutePath(), "-Xdock:name=Minecraft");
          }
@@ -191,7 +188,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommands(this.args);
          this.processLauncher.addCommand("--width", this.t.settings.get("minecraft.width"));
          this.processLauncher.addCommand("--height", this.t.settings.get("minecraft.height"));
-         if (!this.forceupdate && resourcesAreReady) {
+         if (resourcesAreReady) {
             this.launch_();
          } else {
             try {
@@ -267,6 +264,16 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
    private void removeNatives() {
       this.nativeDir.delete();
+   }
+
+   private boolean compareResources() {
+      this.log("Comparing resources...");
+      long start = System.nanoTime();
+      boolean result = this.vm.checkResources(true);
+      long end = System.nanoTime();
+      long delta = end - start;
+      this.log("Delta time to compare resources: " + delta / 1000000L + " ms.");
+      return result;
    }
 
    private void unpackNatives(boolean force) throws IOException {
@@ -432,40 +439,44 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    private void log(Object w) {
-      if (this.con != null) {
-         this.con.log("[MinecraftLauncher]", (Object)w);
-      }
-
+      this.con.log("[MinecraftLauncher]", (Object)w);
       U.log("[MinecraftLauncher]", (Object)w);
    }
 
    private void logerror(Throwable e) {
       e.printStackTrace();
-      if (this.con != null) {
-         this.con.log("[MinecraftLauncher]", (Object)"Error occurred. Logger won't vanish automatically.");
-         this.con.log(e);
-      }
+      this.con.log("[MinecraftLauncher]", (Object)"Error occurred. Logger won't vanish automatically.");
+      this.con.log(e);
    }
 
    public void onJavaProcessEnded(JavaProcess jp) {
       this.t.show();
+      int exit = jp.getExitCode();
       if (this.listener != null) {
          this.listener.onMinecraftClose();
       }
 
-      if (this.con != null) {
-         this.log("Minecraft closed with exit code: " + jp.getExitCode());
+      this.log("Minecraft closed with exit code: " + exit);
+      if (exit != 0) {
+         this.handleCrash(exit);
+      } else {
          this.con.killIn(2000L);
+      }
+
+   }
+
+   private void handleCrash(int exit) {
+      this.con.show();
+      if (this.listener != null) {
+         MinecraftLauncherException ex = new MinecraftLauncherException("Minecraft exited with illegal code.", "exit-code");
+         this.listener.onMinecraftError(ex);
       }
    }
 
    public void onJavaProcessError(JavaProcess jp, Throwable e) {
       e.printStackTrace();
       this.t.show();
-      if (this.con != null) {
-         this.con.log("Error has occurred:", (Throwable)e);
-      }
-
+      this.con.log("Error has occurred:", (Throwable)e);
       if (this.listener != null) {
          this.listener.onMinecraftError(e);
       }
@@ -474,10 +485,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
    public void onJavaProcessLog(JavaProcess jp, String line) {
       U.plog(">", line);
-      if (this.con != null) {
-         this.con.log((Object)line);
-      }
-
+      this.con.log((Object)line);
    }
 
    public Console getConsole() {

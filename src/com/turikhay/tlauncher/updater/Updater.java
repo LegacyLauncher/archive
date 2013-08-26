@@ -25,7 +25,7 @@ import java.util.List;
 import jsmooth.Wrapper;
 
 public class Updater {
-   public final String link = "https://dl.dropboxusercontent.com/u/6204017/minecraft/tlauncher/update.ini";
+   public final String link = "http://u.to/tlauncher-update/ixhQBA";
    public final Updater.Package type;
    private final Downloader d;
    private final URL url;
@@ -44,7 +44,7 @@ public class Updater {
       this.replace = Wrapper.isAvailable() ? Wrapper.getExecutable() : FileUtil.getRunningJar();
 
       try {
-         this.url = new URL("https://dl.dropboxusercontent.com/u/6204017/minecraft/tlauncher/update.ini");
+         this.url = new URL("http://u.to/tlauncher-update/ixhQBA");
       } catch (MalformedURLException var3) {
          throw new TLauncherException("Cannot create update link!", var3);
       }
@@ -57,7 +57,7 @@ public class Updater {
       this.type = type;
 
       try {
-         this.url = new URL("https://dl.dropboxusercontent.com/u/6204017/minecraft/tlauncher/update.ini");
+         this.url = new URL("http://u.to/tlauncher-update/ixhQBA");
       } catch (MalformedURLException var4) {
          throw new TLauncherException("Cannot create update link!", var4);
       }
@@ -99,7 +99,7 @@ public class Updater {
          if (this.found_version <= 0.0D) {
             throw new IllegalStateException("Settings file is invalid!");
          } else {
-            if (0.147D >= this.found_version) {
+            if (0.149D >= this.found_version) {
                this.noUpdateFound();
                return;
             }

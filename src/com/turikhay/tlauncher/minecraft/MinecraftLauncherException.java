@@ -3,7 +3,7 @@ package com.turikhay.tlauncher.minecraft;
 public class MinecraftLauncherException extends Exception {
    private static final long serialVersionUID = 7704448719401222348L;
    private String langpath = "launcher.error.";
-   private Object replace = "";
+   private Object replace = null;
 
    public MinecraftLauncherException(String message, String langpath) {
       super(message);
