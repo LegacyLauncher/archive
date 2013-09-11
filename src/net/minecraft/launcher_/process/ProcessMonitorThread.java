@@ -28,10 +28,6 @@ public class ProcessMonitorThread extends Thread {
                }
             }
          } catch (IOException var15) {
-            Logger.getLogger(ProcessMonitorThread.class.getName()).log(Level.SEVERE, (String)null, var15);
-            if (listener != null) {
-               listener.onJavaProcessError(this.process, var15);
-            }
          } finally {
             try {
                buf.close();

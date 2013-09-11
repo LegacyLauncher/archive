@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import net.minecraft.launcher_.OperatingSystem;
 
@@ -38,21 +39,27 @@ public class JavaProcessLauncher {
       return this.commands;
    }
 
-   public void addCommand(String command) {
-      this.commands.add(command);
+   public void addCommand(Object command) {
+      this.commands.add(command.toString());
    }
 
-   public void addCommand(String key, String value) {
-      this.commands.add(key);
-      this.commands.add(value);
+   public void addCommand(Object key, Object value) {
+      this.commands.add(key.toString());
+      this.commands.add(value.toString());
    }
 
-   public void addCommands(String[] commands) {
-      this.commands.addAll(Arrays.asList(commands));
+   public void addCommands(Object[] commands) {
+      Iterator var3 = Arrays.asList(commands).iterator();
+
+      while(var3.hasNext()) {
+         Object c = var3.next();
+         this.commands.add(c.toString());
+      }
+
    }
 
-   public void addSplitCommands(String commands) {
-      this.addCommands(commands.split(" "));
+   public void addSplitCommands(Object commands) {
+      this.addCommands(commands.toString().split(" "));
    }
 
    public JavaProcessLauncher directory(File directory) {

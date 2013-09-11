@@ -1,12 +1,13 @@
 package com.turikhay.tlauncher.settings;
 
-import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.U;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -148,7 +149,7 @@ public class Settings {
 
    public String get(String key) {
       String r = (String)this.s.get(key);
-      return r == "" ? key : r;
+      return r != "" && r != null ? r : key;
    }
 
    public String getRand(String key) {
@@ -268,14 +269,20 @@ public class Settings {
    }
 
    public String createString() {
-      String r = "";
+      StringBuilder r = new StringBuilder();
+      boolean first = true;
 
       Entry curen;
-      for(Iterator var3 = this.s.entrySet().iterator(); var3.hasNext(); r = r + this.NEWLINE_CHAR + (String)curen.getKey() + this.DELIMITER_CHAR + ((String)curen.getValue()).replace(this.NEWLINE_CHAR, "\\" + this.NEWLINE_CHAR)) {
-         curen = (Entry)var3.next();
+      for(Iterator var4 = this.s.entrySet().iterator(); var4.hasNext(); r.append((String)curen.getKey() + this.DELIMITER_CHAR + ((String)curen.getValue()).replace(this.NEWLINE_CHAR, "\\" + this.NEWLINE_CHAR))) {
+         curen = (Entry)var4.next();
+         if (!first) {
+            r.append(this.NEWLINE_CHAR);
+         } else {
+            first = false;
+         }
       }
 
-      return r.length() > 0 ? r.substring(this.NEWLINE_CHAR.length()) : "";
+      return r.toString();
    }
 
    public void save() throws IOException {
@@ -283,11 +290,14 @@ public class Settings {
       case 1:
          File file = (File)this.input;
          String towrite = this.createString();
-         FileUtil.saveFile(file, towrite);
+         FileOutputStream os = new FileOutputStream(file);
+         OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
+         ow.write(towrite);
+         ow.close();
       default:
          return;
       case 2:
-         throw new SettingsException("Cannot write in input stream!");
+         throw new SettingsException("Cannot write to input stream!");
       }
    }
 

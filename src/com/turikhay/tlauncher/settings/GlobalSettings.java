@@ -13,7 +13,7 @@ public class GlobalSettings extends Settings {
    public static final File file = MinecraftUtil.getNativeOptionsFile();
    public static final boolean firstRun;
    private Map d = new HashMap();
-   private double version = 0.11D;
+   private double version = 0.12D;
 
    static {
       firstRun = !file.exists();
@@ -24,8 +24,8 @@ public class GlobalSettings extends Settings {
       this.d.put("settings.version", this.version);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 3);
-      this.d.put("minecraft.width", 925);
-      this.d.put("minecraft.height", 525);
+      this.d.put("minecraft.size.width", 925);
+      this.d.put("minecraft.size.height", 525);
       this.d.put("minecraft.versions.snapshots", true);
       this.d.put("minecraft.versions.beta", true);
       this.d.put("minecraft.versions.alpha", true);
@@ -66,6 +66,51 @@ public class GlobalSettings extends Settings {
    public String get(String key) {
       String r = (String)this.s.get(key);
       return r == "" ? null : r;
+   }
+
+   public String getDefault(String key) {
+      String r = "" + this.d.get(key);
+      return r == "" ? null : r;
+   }
+
+   public int getDefaultInteger(String key) {
+      try {
+         return Integer.parseInt("" + this.d.get(key));
+      } catch (Exception var3) {
+         return 0;
+      }
+   }
+
+   public long getDefaultLong(String key) {
+      try {
+         return Long.parseLong("" + this.d.get(key));
+      } catch (Exception var3) {
+         return 0L;
+      }
+   }
+
+   public double getDefaultDouble(String key) {
+      try {
+         return Double.parseDouble("" + this.d.get(key));
+      } catch (Exception var3) {
+         return 0.0D;
+      }
+   }
+
+   public float getDefaultFloat(String key) {
+      try {
+         return Float.parseFloat("" + this.d.get(key));
+      } catch (Exception var3) {
+         return 0.0F;
+      }
+   }
+
+   public boolean getDefaultBoolean(String key) {
+      try {
+         return Boolean.parseBoolean("" + this.d.get(key));
+      } catch (Exception var3) {
+         return false;
+      }
    }
 
    private boolean parseBoolean(String b) throws Exception {

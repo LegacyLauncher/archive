@@ -409,7 +409,7 @@ public class VersionManager {
             remote = this.getRemoteResourceFilesList();
             this.resourcesCalled = true;
          } catch (Exception var5) {
-            U.log("Cannot get remote resource files list. Trying to use local list.", (Throwable)var5);
+            U.log("Cannot get remote resource files list. Trying to use local list.", var5);
          }
       }
 
@@ -419,7 +419,7 @@ public class VersionManager {
          try {
             this.saveLocalResourceFilesList(baseDirectory, remote);
          } catch (Exception var4) {
-            U.log("Cannot save resource files list locally.", (Throwable)var4);
+            U.log("Cannot save resource files list locally.", var4);
          }
 
          return remote;

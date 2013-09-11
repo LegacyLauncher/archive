@@ -8,6 +8,6 @@ public class Wrapper {
    }
 
    public static File getExecutable() {
-      return new File(Native.getExecutablePath() + Native.getExecutableName());
+      return new File(Native.getExecutableName());
    }
 }

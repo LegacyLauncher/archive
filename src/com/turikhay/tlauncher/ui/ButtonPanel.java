@@ -8,14 +8,16 @@ import java.awt.event.ActionListener;
 
 public class ButtonPanel extends BlockablePanel {
    private static final long serialVersionUID = 5873050319650201358L;
-   private final LoginForm lf;
-   private final Settings l;
+   public static final int ENTERBUTTON_INSTALL = -1;
+   public static final int ENTERBUTTON_PLAY = 0;
+   public static final int ENTERBUTTON_REINSTALL = 1;
+   final LoginForm lf;
+   final Settings l;
    Button enter;
    Button cancel;
-   SettingsButton settings;
-   SupportButton support;
+   AdditionalButtonsPanel addbuttons;
 
-   public ButtonPanel(LoginForm loginform) {
+   ButtonPanel(LoginForm loginform) {
       this.lf = loginform;
       this.l = this.lf.l;
       BorderLayout lm = new BorderLayout();
@@ -35,33 +37,64 @@ public class ButtonPanel extends BlockablePanel {
             ButtonPanel.this.lf.setAutoLogin(false);
          }
       });
-      this.settings = new SettingsButton(this.lf);
-      this.support = new SupportButton(this.lf);
+      this.addbuttons = new AdditionalButtonsPanel(this);
       this.add("Center", this.enter);
-      this.add("East", this.settings);
       if (this.lf.autologin.enabled) {
          this.add("South", this.cancel);
       } else {
-         this.add("South", this.support);
+         this.add("South", this.addbuttons);
       }
 
    }
 
-   void toggleEnterButton(boolean play) {
-      this.enter.setLabel(this.l.get("loginform.enter" + (!play ? ".install" : "")));
+   void updateEnterButton() {
+      if (this.lf.versionchoice.selected != null) {
+         boolean play = this.lf.versionchoice.selected.isInstalled();
+         boolean force = this.lf.checkbox.forceupdate;
+         int status = true;
+         byte status;
+         if (play) {
+            if (force) {
+               status = 1;
+            } else {
+               status = 0;
+            }
+         } else {
+            status = -1;
+         }
+
+         String s = ".";
+         switch(status) {
+         case -1:
+            s = s + "install";
+            break;
+         case 0:
+            s = "";
+            break;
+         case 1:
+            s = s + "reinstall";
+            break;
+         default:
+            throw new IllegalArgumentException("Status is invalid! Use ButtonPanel.ENTERBUTTON_* variables.");
+         }
+
+         this.enter.setLabel(this.l.get("loginform.enter" + s));
+      }
    }
 
    void toggleSouthButton() {
       this.remove(this.cancel);
-      this.add("South", this.support);
+      this.add("South", this.addbuttons);
       this.validate();
    }
 
    protected void blockElement(Object reason) {
       this.enter.setEnabled(false);
+      this.addbuttons.blockElement(reason);
    }
 
    protected void unblockElement(Object reason) {
       this.enter.setEnabled(true);
+      this.addbuttons.unblockElement(reason);
    }
 }

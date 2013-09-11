@@ -49,7 +49,11 @@ public class Updater {
          throw new TLauncherException("Cannot create update link!", var3);
       }
 
-      U.log("Updater enabled. Package type: " + this.type);
+      this.log("Updater enabled. Package type: " + this.type);
+      if (this.type == Updater.Package.EXE) {
+         this.log("Working directory always MUST BE the same as launcher directory.");
+      }
+
    }
 
    public Updater(TLauncher t, Updater.Package type) {
@@ -75,15 +79,19 @@ public class Updater {
       try {
          this.findUpdate_();
       } catch (Exception var2) {
+         this.log("Error on searching for update", var2);
          this.onUpdateNotifierError(var2);
       }
 
    }
 
    private void findUpdate_() throws IOException {
+      this.log("Searching for update...");
       if (this.type == Updater.Package.EXE) {
          File oldfile = new File(Wrapper.getExecutable().getAbsolutePath() + ".replace");
-         oldfile.delete();
+         if (oldfile.delete()) {
+            this.log("Old version has been deleted (.replace)");
+         }
       }
 
       this.onUpdaterRequests();
@@ -99,7 +107,11 @@ public class Updater {
          if (this.found_version <= 0.0D) {
             throw new IllegalStateException("Settings file is invalid!");
          } else {
-            if (0.149D >= this.found_version) {
+            if (0.161D >= this.found_version) {
+               if (0.161D > this.found_version) {
+                  this.log("Running version is newer than found (" + this.found_version + ")");
+               }
+
                this.noUpdateFound();
                return;
             }
@@ -115,6 +127,7 @@ public class Updater {
    }
 
    public void downloadUpdate() {
+      this.log("Downloading update...");
       this.onUpdaterDownloads();
       this.launcher_destination = new File(MinecraftUtil.getWorkingDirectory(), "tlauncher.updated");
       this.launcher_destination.deleteOnExit();
@@ -135,6 +148,10 @@ public class Updater {
       this.d.launch();
    }
 
+   public URL getLink() {
+      return this.found_link;
+   }
+
    public void saveUpdate() {
       try {
          this.saveUpdate_();
@@ -145,9 +162,10 @@ public class Updater {
    }
 
    private void saveUpdate_() throws IOException {
+      this.log("Saving update... Launcher will be closed.");
       if (this.type == Updater.Package.EXE) {
-         File oldfile = new File(this.replace.getAbsolutePath());
-         File newfile = new File(this.replace.getAbsolutePath() + ".replace");
+         File oldfile = new File(this.replace.toString());
+         File newfile = new File(this.replace.toString() + ".replace");
          oldfile.renameTo(newfile);
       }
 
@@ -257,6 +275,17 @@ public class Updater {
       while(var3.hasNext()) {
          UpdaterListener l = (UpdaterListener)var3.next();
          l.onUpdaterProcessError(this, e);
+      }
+
+   }
+
+   private void log(Object... obj) {
+      Object[] var5 = obj;
+      int var4 = obj.length;
+
+      for(int var3 = 0; var3 < var4; ++var3) {
+         Object cobj = var5[var3];
+         U.log("[Updater]", cobj);
       }
 
    }
