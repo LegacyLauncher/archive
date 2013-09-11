@@ -32,6 +32,20 @@ public class MainContainer extends Panel {
       this.add(f.lf);
    }
 
+   private void setContent(Panel pan) {
+      this.removeAll();
+      this.add(pan);
+      this.validate();
+   }
+
+   public void showLogin() {
+      this.setContent(this.f.lf);
+   }
+
+   public void showSettings() {
+      this.setContent(this.f.sf);
+   }
+
    public void update(Graphics g) {
       this.paint(g);
    }

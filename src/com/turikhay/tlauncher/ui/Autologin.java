@@ -4,6 +4,8 @@ import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.util.AsyncThread;
 
 public class Autologin {
+   public static final int DEFAULT_TIMEOUT = 3;
+   public static final int MAX_TIMEOUT = 10;
    private final LoginForm lf;
    private final Settings l;
    public final int timeout;

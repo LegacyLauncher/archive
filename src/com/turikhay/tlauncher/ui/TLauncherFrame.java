@@ -19,7 +19,6 @@ import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -34,7 +33,6 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    Image bgimage;
    Image favicon;
    Image sun;
-   URL langfile;
    Settings global;
    Settings lang;
    Downloader d;
@@ -42,38 +40,42 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    MainContainer mc;
    ProgressBar pb;
    LoginForm lf;
+   SettingsForm sf;
    private boolean pb_started;
 
    public TLauncherFrame(TLauncher tlauncher) {
-      super("TLauncher 0.149");
+      super("TLauncher 0.161");
       this.t = tlauncher;
       this.global = this.t.settings;
+      this.lang = this.t.lang;
       this.d = this.t.downloader;
       this.ti = this.t.timer;
 
       try {
          this.loadResources();
-      } catch (Exception var4) {
-         throw new TLauncherException("Cannot load required resource!", var4);
-      }
-
-      try {
-         this.lang = new Settings(this.langfile);
       } catch (Exception var3) {
-         throw new TLauncherException("Cannot load language file!", var3);
+         throw new TLauncherException("Cannot load required resource!", var3);
       }
 
-      this.width = this.global.getInteger("minecraft.width");
-      this.height = this.global.getInteger("minecraft.height");
+      this.width = this.global.getInteger("minecraft.size.width");
+      this.height = this.global.getInteger("minecraft.size.height");
       this.prepareFrame();
-      if (GlobalSettings.firstRun) {
-         Alert.showWarning(this.lang.get("firstrun.title"), U.w(this.lang.get("firstrun"), 90));
-      }
-
       this.setVisible(true);
       this.requestFocusInWindow();
+      if (GlobalSettings.firstRun) {
+         Alert.showAsyncWarning(this.lang.get("firstrun.title"), U.w(this.lang.get("firstrun"), 90));
+      }
+
       this.d.addListener(this);
       this.ti.start();
+   }
+
+   public void resizeWindow(int w, int h) {
+      Dimension sizes = new Dimension(this.width = w, this.height = h);
+      this.setPreferredSize(sizes);
+      this.setMinimumSize(sizes);
+      this.setLocationRelativeTo((Component)null);
+      this.setLayout(new BorderLayout());
    }
 
    private void prepareFrame() {
@@ -84,12 +86,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
          var2.printStackTrace();
       }
 
-      Dimension sizes = new Dimension(this.width, this.height);
-      this.setDefaultCloseOperation(3);
-      this.setSize(sizes);
-      this.setMinimumSize(sizes);
-      this.setLocationRelativeTo((Component)null);
-      this.setLayout(new BorderLayout());
+      this.resizeWindow(this.width, this.height);
       this.setIconImage(this.favicon);
       this.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
@@ -97,6 +94,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
             TLauncherFrame.this.t.kill();
          }
       });
+      this.sf = new SettingsForm(this);
       this.lf = new LoginForm(this);
       this.pb = new ProgressBar(this);
       this.mc = new MainContainer(this);
@@ -109,7 +107,6 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
       this.bgimage = ImageIO.read(TLauncherFrame.class.getResource("grass.png"));
       this.favicon = ImageIO.read(TLauncherFrame.class.getResource("favicon.png"));
       this.sun = ImageIO.read(TLauncherFrame.class.getResource("sun.png"));
-      this.langfile = TLauncherFrame.class.getResource("/lang.ini");
    }
 
    public LoginForm getLoginForm() {
@@ -162,23 +159,28 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    }
 
    public void onUpdaterRequesting(Updater u) {
-      U.log("Searching for update...");
    }
 
    public void onUpdaterRequestError(Updater u, Throwable e) {
-      U.log("Error occurred while getting update:", (Throwable)e);
+      U.log("Error occurred while getting update:", e);
    }
 
    public void onUpdaterFoundUpdate(Updater u) {
       double found_version = u.getFoundVersion();
-      boolean yes = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", found_version), true);
-      if (yes) {
-         u.downloadUpdate();
+      if (this.global.getDouble("updater.disallow") == found_version) {
+         U.log("User cancelled updating to this version.");
+      } else {
+         boolean yes = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", found_version), true);
+         if (yes) {
+            u.downloadUpdate();
+         } else {
+            U.log("You don't want to update? Oh, okay... I will not disturb you with this version anymore.");
+            this.global.set("updater.disallow", found_version);
+         }
       }
    }
 
    public void onUpdaterNotFoundUpdate(Updater u) {
-      U.log("No update found.");
    }
 
    public void onUpdaterDownloading(Updater u) {

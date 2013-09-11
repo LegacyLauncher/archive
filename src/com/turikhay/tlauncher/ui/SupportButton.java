@@ -22,11 +22,10 @@ public class SupportButton extends ImageButton {
       this.lf = loginform;
       this.l = this.lf.l;
       this.image = loadImage("vk.png");
-      this.rotation = ImageButton.ImageRotation.LEFT;
+      this.rotation = ImageButton.ImageRotation.CENTER;
       this.path = this.l.get("support.url");
-      this.url = makeURL(this.path);
-      this.uri = makeURI(this.url);
-      this.setLabel(this.l.getRand("support.label"));
+      this.url = U.makeURL(this.path);
+      this.uri = U.makeURI(this.url);
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             SupportButton.this.instance.openURL();
@@ -44,23 +43,5 @@ public class SupportButton extends ImageButton {
 
          }
       });
-   }
-
-   private static URL makeURL(String p) {
-      try {
-         return new URL(p);
-      } catch (Exception var2) {
-         U.log("Cannot make URL from string: " + p + ". Check out lang.ini", (Throwable)var2);
-         return null;
-      }
-   }
-
-   private static URI makeURI(URL url) {
-      try {
-         return url.toURI();
-      } catch (Exception var2) {
-         U.log("Cannot make URI from URL: " + url + ". Check out lang.ini", (Throwable)var2);
-         return null;
-      }
    }
 }

@@ -95,14 +95,14 @@ public class Sun {
    }
 
    public void cancel() {
-      this.suspend();
       this.f.t.settings.set("gui.sun", false);
+      this.suspend();
       U.log("The sun is stopped.");
    }
 
    public void allow() {
       this.f.t.settings.set("gui.sun", true);
-      U.log("The sun is resumed.");
+      this.resume();
    }
 
    private boolean allowed() {

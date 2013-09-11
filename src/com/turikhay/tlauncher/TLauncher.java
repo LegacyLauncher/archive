@@ -30,12 +30,13 @@ import net.minecraft.launcher_.updater.LocalVersionList;
 import net.minecraft.launcher_.updater.RemoteVersionList;
 import net.minecraft.launcher_.updater.VersionManager;
 
-public class TLauncher extends Thread {
-   public static final double VERSION = 0.149D;
+public class TLauncher {
+   public static final double VERSION = 0.161D;
    private static TLauncher instance;
    private boolean isAvaiable = true;
    private String[] args;
-   public final Settings settings;
+   public final Settings lang;
+   public final GlobalSettings settings;
    public final Downloader downloader;
    public final Updater updater;
    public final TLauncherFrame frame;
@@ -43,11 +44,14 @@ public class TLauncher extends Thread {
    public final VersionManager vm;
 
    public TLauncher(String[] args) throws Exception {
+      long start = System.currentTimeMillis();
       instance = this;
       Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
       U.setWorkingTo(this);
       this.args = args;
       this.settings = new GlobalSettings();
+      this.lang = new Settings(TLauncher.class.getResource("/lang.ini"));
+      Alert.prepareLocal();
       this.downloader = new Downloader(10);
       this.updater = new Updater(this);
       this.timer = new Timer();
@@ -55,6 +59,9 @@ public class TLauncher extends Thread {
       this.frame = new TLauncherFrame(this);
       this.downloader.launch();
       this.init();
+      long end = System.currentTimeMillis();
+      long diff = end - start;
+      U.log("Started! (" + diff + " ms.)");
    }
 
    private void init() throws IOException {
@@ -65,15 +72,16 @@ public class TLauncher extends Thread {
          lf.autologin.startLogin();
       } else {
          this.vm.asyncRefresh();
+         this.vm.asyncRefreshResources();
       }
 
-      this.vm.asyncRefreshResources();
       this.updater.addListener(this.frame);
       this.updater.findUpdate();
+      U.gc();
    }
 
-   public void launch(MinecraftLauncherListener listener, String username, String version, boolean forceupdate, boolean console) {
-      MinecraftLauncher launcher = new MinecraftLauncher(this, listener, version, forceupdate, username, this.args, console);
+   public void launch(MinecraftLauncherListener listener, boolean forceupdate) {
+      MinecraftLauncher launcher = new MinecraftLauncher(this, listener, this.args, forceupdate);
       launcher.start();
    }
 
@@ -129,7 +137,7 @@ public class TLauncher extends Thread {
    }
 
    public void kill() {
-      this.isAvaiable = false;
+      System.exit(0);
    }
 
    public void hide() {
@@ -148,7 +156,6 @@ public class TLauncher extends Thread {
 
       try {
          launch(args);
-         System.exit(0);
       } catch (Throwable var3) {
          var3.printStackTrace();
          Alert.showError(var3, true);
@@ -162,20 +169,8 @@ public class TLauncher extends Thread {
          U.log("All arguments will be passed in Minecraft directly");
       }
 
-      U.log("Starting version 0.149...");
-      TLauncher l = new TLauncher(args);
-      l.start();
-      U.log("Started!");
-
-      while(l.isAvailable()) {
-         try {
-            Thread.sleep(500L);
-         } catch (InterruptedException var3) {
-            throw new TLauncherException("Runner cannot sleep.", var3);
-         }
-      }
-
-      U.linelog("Good bye!");
+      U.log("Starting version 0.161...");
+      new TLauncher(args);
    }
 
    public static TLauncher getInstance() {

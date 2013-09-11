@@ -1,39 +1,56 @@
 package com.turikhay.tlauncher.util;
 
 import com.turikhay.tlauncher.TLauncher;
+import java.net.URI;
+import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Random;
 
 public class U {
+   private static final String PREFIX = "[TLauncher]";
    private static TLauncher t;
 
    public static void linelog(Object what) {
       System.out.print(what);
    }
 
-   public static void log(Object what) {
-      System.out.print("[TLauncher] ");
-      System.out.println(what);
+   public static void log(Object... what) {
+      hlog("[TLauncher]", what);
    }
 
-   public static void log(Object what0, Object what1) {
-      System.out.print("[TLauncher] ");
-      System.out.print(what0 + " ");
-      System.out.println(what1);
+   public static void plog(Object... what) {
+      hlog((String)null, what);
    }
 
-   public static void log(Object what, Throwable e) {
-      log(what);
-      log(e.toString());
-      e.printStackTrace();
-   }
+   private static void hlog(String prefix, Object[] append) {
+      StringBuilder b = new StringBuilder();
+      boolean first = true;
+      if (prefix != null) {
+         b.append(prefix);
+         first = false;
+      }
 
-   public static void plog(Object what) {
-      System.out.println(what);
-   }
+      Object[] var7 = append;
+      int var6 = append.length;
 
-   public static void plog(Object what0, Object what1) {
-      System.out.println(what0 + " " + what1);
+      for(int var5 = 0; var5 < var6; ++var5) {
+         Object e = var7[var5];
+         if (e instanceof Throwable) {
+            b.append("\n");
+            b.append(stackTrace((Throwable)e));
+            b.append("\n");
+         } else {
+            if (first) {
+               first = false;
+            } else {
+               b.append(" ");
+            }
+
+            b.append(e);
+         }
+      }
+
+      System.out.println(b.toString());
    }
 
    public static void setWorkingTo(TLauncher to) {
@@ -212,7 +229,10 @@ public class U {
       for(int x = 0; x < elems.length; ++x) {
          t = t + "\nat " + elems[x].toString();
          if (x >= 5) {
-            t = t + "\n... and " + (elems.length - x - 1) + " more";
+            int remain = elems.length - x - 1;
+            if (remain != 0) {
+               t = t + "\n... and " + remain + " more";
+            }
             break;
          }
       }
@@ -225,7 +245,10 @@ public class U {
          for(int x = 0; x < causeelems.length; ++x) {
             t = t + "\nat " + causeelems[x].toString();
             if (x >= 5) {
-               t = t + "\n... and " + (causeelems.length - x - 1) + " more";
+               int remain = causeelems.length - x - 1;
+               if (remain != 0) {
+                  t = t + "\n... and " + remain + " more";
+               }
                break;
             }
          }
@@ -256,5 +279,23 @@ public class U {
          var3.printStackTrace();
       }
 
+   }
+
+   public static URL makeURL(String p) {
+      try {
+         return new URL(p);
+      } catch (Exception var2) {
+         log("Cannot make URL from string: " + p + ". Check out lang.ini", var2);
+         return null;
+      }
+   }
+
+   public static URI makeURI(URL url) {
+      try {
+         return url.toURI();
+      } catch (Exception var2) {
+         log("Cannot make URI from URL: " + url + ". Check out lang.ini", var2);
+         return null;
+      }
    }
 }

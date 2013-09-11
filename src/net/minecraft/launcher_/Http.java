@@ -31,7 +31,7 @@ public class Http {
          try {
             builder.append(URLEncoder.encode((String)entry.getKey(), "UTF-8"));
          } catch (UnsupportedEncodingException var6) {
-            U.log("Unexpected exception building query", (Throwable)var6);
+            U.log("Unexpected exception building query", var6);
          }
 
          if (entry.getValue() != null) {
@@ -40,7 +40,7 @@ public class Http {
             try {
                builder.append(URLEncoder.encode(entry.getValue().toString(), "UTF-8"));
             } catch (UnsupportedEncodingException var5) {
-               U.log("Unexpected exception building query", (Throwable)var5);
+               U.log("Unexpected exception building query", var5);
             }
          }
       }

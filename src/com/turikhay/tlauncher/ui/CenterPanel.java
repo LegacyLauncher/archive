@@ -1,32 +1,34 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
-import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Label;
 import java.awt.LayoutManager;
-import java.awt.Panel;
 import javax.swing.BoxLayout;
 
 public abstract class CenterPanel extends BlockablePanel {
-   private static final long serialVersionUID = 3304521794866297004L;
+   private static final long serialVersionUID = 1L;
    protected Insets insets = new Insets(5, 24, 18, 24);
    final CenterPanel instance = this;
    final TLauncher t;
    final TLauncherFrame f;
-   final Settings s;
+   final GlobalSettings s;
    final Settings l;
    Color gray = Color.getHSBColor(0.0F, 0.0F, 0.4F);
    Color darkgray = Color.getHSBColor(0.0F, 0.0F, 0.25F);
    Color green = Color.getHSBColor(0.25F, 0.66F, 0.66F);
    Color red = Color.getHSBColor(0.0F, 0.66F, 0.66F);
    Color border = Color.getHSBColor(0.25F, 0.66F, 0.66F);
+   Color white;
+   Color black;
+   Color pink;
    Font font;
    Font font_italic;
    Font font_bold;
@@ -35,15 +37,11 @@ public abstract class CenterPanel extends BlockablePanel {
    int fontsize;
    String fontname;
    Label error;
-   LayoutManager g_zero = new GridLayout(0, 1);
-   LayoutManager g_single = new GridLayout(1, 1);
-   LayoutManager g_double = new GridLayout(0, 2);
-   FlowLayout g_line = new FlowLayout();
-   FlowLayout g_line_center = new FlowLayout();
-   FlowLayout g_line_right = new FlowLayout();
-   BorderLayout g_save = new BorderLayout();
 
    public CenterPanel(TLauncherFrame f) {
+      this.white = Color.white;
+      this.black = Color.black;
+      this.pink = Color.pink;
       LayoutManager layout = new BoxLayout(this, 3);
       this.setLayout(layout);
       this.setBackground(this.gray);
@@ -51,17 +49,6 @@ public abstract class CenterPanel extends BlockablePanel {
       this.t = this.f.t;
       this.s = this.t.settings;
       this.l = f.lang;
-      this.g_line.setVgap(0);
-      this.g_line_center.setVgap(0);
-      this.g_line_right.setVgap(0);
-      this.g_line.setHgap(0);
-      this.g_line_center.setHgap(0);
-      this.g_line_right.setHgap(0);
-      this.g_line.setAlignment(3);
-      this.g_line_center.setAlignment(1);
-      this.g_line_right.setAlignment(2);
-      this.g_save.setVgap(2);
-      this.g_save.setHgap(3);
       this.font = this.getFont();
       if (this.font == null) {
          this.font = new Font("", 0, 12);
@@ -78,7 +65,16 @@ public abstract class CenterPanel extends BlockablePanel {
       this.error.setForeground(new Color(8388608));
    }
 
+   protected FlowLayout getDefaultFlowLayout(int aligment) {
+      FlowLayout t = new FlowLayout();
+      t.setVgap(0);
+      t.setHgap(0);
+      t.setAlignment(aligment);
+      return t;
+   }
+
    public void update(Graphics g) {
+      super.update(g);
       this.paint(g);
    }
 
@@ -96,20 +92,39 @@ public abstract class CenterPanel extends BlockablePanel {
       return this.insets;
    }
 
-   public void setError(String message) {
+   public boolean setError(String message) {
+      boolean repaint = false;
       if (message == null) {
+         if (this.border != this.green) {
+            repaint = true;
+         }
+
          this.border = this.green;
-         this.repaint();
          this.error.setText("");
       } else {
+         if (this.border != this.red) {
+            repaint = true;
+         }
+
          this.border = this.red;
-         this.repaint();
          this.error.setText(message);
       }
+
+      if (repaint) {
+         this.repaint();
+      }
+
+      return false;
    }
 
-   protected Panel del(int aligment) {
+   protected Del del(int aligment) {
       return new Del(2, aligment, this.darkgray);
+   }
+
+   protected Del cdel(int aligment, int width, int height) {
+      Del del = this.del(aligment);
+      del.setPreferredSize(new Dimension(width, height));
+      return del;
    }
 
    protected void defocus() {

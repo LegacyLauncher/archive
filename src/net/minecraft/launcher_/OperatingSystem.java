@@ -99,4 +99,8 @@ public enum OperatingSystem {
          }
       }
    }
+
+   public static int getRecommendedMemory() {
+      return is32Bit() ? 512 : 1024;
+   }
 }

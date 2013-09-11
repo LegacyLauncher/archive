@@ -4,6 +4,7 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.DownloadableContainer;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
+import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.util.Console;
 import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
@@ -37,6 +38,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private final String prefix = "[MinecraftLauncher]";
    private final OperatingSystem os = OperatingSystem.getCurrentPlatform();
    private TLauncher t;
+   private Settings s;
    private Downloader d;
    private VersionManager vm;
    private Console con;
@@ -49,7 +51,10 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private CompleteVersion version;
    private String username;
    private String version_name;
+   private String sargs;
    private String[] args;
+   private int width;
+   private int height;
    private DownloadableContainer jar = new DownloadableContainer();
    private DownloadableContainer resources = new DownloadableContainer();
    private JavaProcessLauncher processLauncher;
@@ -57,18 +62,26 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private File gameDir;
    private File assetsDir;
 
-   public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, String version_name, boolean forceupdate, String username, String[] args, boolean console) {
+   public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, String[] args, boolean forceupdate) {
       Thread.setDefaultUncaughtExceptionHandler(new MinecraftLauncherExceptionHandler(this));
       this.t = t;
+      this.s = t.settings;
       this.d = this.t.downloader;
       this.vm = this.t.vm;
       this.listener = listener;
-      this.version_name = version_name;
-      this.syncInfo = this.vm.getVersionSyncInfo(version_name);
+      this.version_name = this.s.get("login.version");
+      this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
       this.forceupdate = forceupdate;
-      this.username = username;
+      this.username = this.s.get("login.username");
+      this.sargs = this.s.get("minecraft.args");
+      if (this.sargs == null) {
+         this.sargs = "";
+      }
+
       this.args = args;
-      this.con = new Console("Minecraft Logger", console);
+      this.width = this.s.getInteger("minecraft.size.width");
+      this.height = this.s.getInteger("minecraft.size.height");
+      this.con = new Console("Minecraft Logger", this.s.getBoolean("gui.console"));
       this.log("Minecraft Launcher v7 is started!");
    }
 
@@ -156,7 +169,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       } else {
          this.launching = true;
          this.onPrepare();
-         this.nativeDir = new File(MinecraftUtil.getWorkingDirectory(), "versions/" + this.version.getId() + "/" + "natives");
+         this.gameDir = new File(this.s.get("minecraft.gamedir"));
+         this.nativeDir = new File(this.gameDir, "versions/" + this.version.getId() + "/" + "natives");
          if (!this.nativeDir.isDirectory()) {
             this.nativeDir.mkdirs();
          }
@@ -167,10 +181,9 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var4);
          }
 
-         this.gameDir = MinecraftUtil.getWorkingDirectory();
          this.processLauncher = new JavaProcessLauncher(this.os.getJavaDir(), new String[0]);
          this.processLauncher.directory(this.gameDir);
-         this.assetsDir = new File(MinecraftUtil.getWorkingDirectory(), "assets");
+         this.assetsDir = new File(this.gameDir, "assets");
          boolean resourcesAreReady = this.compareResources();
          if (this.os.equals(OperatingSystem.OSX)) {
             this.processLauncher.addCommand("-Xdock:icon=" + (new File(this.assetsDir, "icons/minecraft.icns")).getAbsolutePath(), "-Xdock:name=Minecraft");
@@ -185,9 +198,10 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommand("-cp", this.constructClassPath(this.version));
          this.processLauncher.addCommand(this.version.getMainClass());
          this.processLauncher.addCommands(this.getMinecraftArguments());
+         this.processLauncher.addCommand("--width", this.width);
+         this.processLauncher.addCommand("--height", this.height);
          this.processLauncher.addCommands(this.args);
-         this.processLauncher.addCommand("--width", this.t.settings.get("minecraft.width"));
-         this.processLauncher.addCommand("--height", this.t.settings.get("minecraft.height"));
+         this.processLauncher.addCommands(this.sargs.split(" "));
          if (resourcesAreReady) {
             this.launch_();
          } else {
@@ -440,7 +454,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
    private void log(Object w) {
       this.con.log("[MinecraftLauncher]", (Object)w);
-      U.log("[MinecraftLauncher]", (Object)w);
+      U.log("[MinecraftLauncher]", w);
    }
 
    private void logerror(Throwable e) {
@@ -458,18 +472,40 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
       this.log("Minecraft closed with exit code: " + exit);
       if (exit != 0) {
-         this.handleCrash(exit);
+         this.handleCrash();
       } else {
          this.con.killIn(2000L);
       }
 
+      U.gc();
    }
 
-   private void handleCrash(int exit) {
-      this.con.show();
-      if (this.listener != null) {
-         MinecraftLauncherException ex = new MinecraftLauncherException("Minecraft exited with illegal code.", "exit-code");
-         this.listener.onMinecraftError(ex);
+   private void handleCrash() {
+      String crash_report = null;
+      String output = this.con.getOutput();
+      String[] var6;
+      int var5 = (var6 = output.split("\n")).length;
+
+      for(int var4 = 0; var4 < var5; ++var4) {
+         String line = var6[var4];
+         if (line.startsWith("#@!@#")) {
+            String[] line_split = line.split("#@!@#");
+            if (line_split.length != 3) {
+               crash_report = "/* MISSING_PATH */";
+            } else {
+               crash_report = line_split[2];
+            }
+            break;
+         }
+      }
+
+      if (crash_report != null) {
+         this.log("Crash report found. Console won't vanish automatically.");
+         this.con.show();
+         if (this.listener != null) {
+            MinecraftLauncherException ex = new MinecraftLauncherException("Minecraft exited with illegal code.", "exit-code", crash_report);
+            this.listener.onMinecraftError(ex);
+         }
       }
    }
 
