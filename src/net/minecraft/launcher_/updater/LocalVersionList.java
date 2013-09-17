@@ -14,6 +14,7 @@ import net.minecraft.launcher_.OperatingSystem;
 import net.minecraft.launcher_.versions.CompleteVersion;
 import net.minecraft.launcher_.versions.ReleaseType;
 import net.minecraft.launcher_.versions.Version;
+import net.minecraft.launcher_.versions.VersionSource;
 
 public class LocalVersionList extends FileBasedVersionList {
    private final File baseDirectory;
@@ -115,5 +116,9 @@ public class LocalVersionList extends FileBasedVersionList {
       }
 
       return true;
+   }
+
+   public VersionSource getRepositoryType() {
+      return VersionSource.LOCAL;
    }
 }

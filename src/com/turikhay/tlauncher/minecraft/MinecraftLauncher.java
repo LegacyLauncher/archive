@@ -51,7 +51,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private CompleteVersion version;
    private String username;
    private String version_name;
-   private String sargs;
+   private String margs;
+   private String jargs;
    private String[] args;
    private int width;
    private int height;
@@ -73,9 +74,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
       this.forceupdate = forceupdate;
       this.username = this.s.get("login.username");
-      this.sargs = this.s.get("minecraft.args");
-      if (this.sargs == null) {
-         this.sargs = "";
+      this.jargs = this.s.get("minecraft.javaargs");
+      if (this.jargs == null) {
+         this.jargs = "";
+      }
+
+      this.margs = this.s.get("minecraft.args");
+      if (this.margs == null) {
+         this.margs = "";
       }
 
       this.args = args;
@@ -196,12 +202,13 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommand(OperatingSystem.is32Bit() ? "-Xmx512M" : "-Xmx1G");
          this.processLauncher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
          this.processLauncher.addCommand("-cp", this.constructClassPath(this.version));
+         this.processLauncher.addCommand(this.jargs);
          this.processLauncher.addCommand(this.version.getMainClass());
          this.processLauncher.addCommands(this.getMinecraftArguments());
          this.processLauncher.addCommand("--width", this.width);
          this.processLauncher.addCommand("--height", this.height);
          this.processLauncher.addCommands(this.args);
-         this.processLauncher.addCommands(this.sargs.split(" "));
+         this.processLauncher.addCommands(this.margs.split(" "));
          if (resourcesAreReady) {
             this.launch_();
          } else {

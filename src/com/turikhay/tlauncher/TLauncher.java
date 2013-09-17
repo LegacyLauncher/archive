@@ -23,15 +23,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
+import java.util.Locale;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Pack200;
 import javax.swing.JFrame;
-import net.minecraft.launcher_.updater.LocalVersionList;
-import net.minecraft.launcher_.updater.RemoteVersionList;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher {
-   public static final double VERSION = 0.161D;
+   public static final double VERSION = 0.166D;
+   public static final Locale DEFAULT_LOCALE;
+   public static final String[] SUPPORTED_LOCALE;
+   public final Locale locale;
    private static TLauncher instance;
    private boolean isAvaiable = true;
    private String[] args;
@@ -43,6 +45,11 @@ public class TLauncher {
    public final Timer timer;
    public final VersionManager vm;
 
+   static {
+      DEFAULT_LOCALE = Locale.US;
+      SUPPORTED_LOCALE = new String[]{"ru_RU", "en_US"};
+   }
+
    public TLauncher(String[] args) throws Exception {
       long start = System.currentTimeMillis();
       instance = this;
@@ -50,12 +57,14 @@ public class TLauncher {
       U.setWorkingTo(this);
       this.args = args;
       this.settings = new GlobalSettings();
-      this.lang = new Settings(TLauncher.class.getResource("/lang.ini"));
+      this.locale = this.settings.getLocale();
+      U.log("Selected locale: " + this.locale);
+      this.lang = new Settings(TLauncher.class.getResource("/lang/" + this.locale + ".ini"));
       Alert.prepareLocal();
       this.downloader = new Downloader(10);
       this.updater = new Updater(this);
       this.timer = new Timer();
-      this.vm = new VersionManager(new LocalVersionList(MinecraftUtil.getWorkingDirectory()), new RemoteVersionList());
+      this.vm = new VersionManager();
       this.frame = new TLauncherFrame(this);
       this.downloader.launch();
       this.init();
@@ -169,7 +178,7 @@ public class TLauncher {
          U.log("All arguments will be passed in Minecraft directly");
       }
 
-      U.log("Starting version 0.161...");
+      U.log("Starting version 0.166...");
       new TLauncher(args);
    }
 
@@ -179,5 +188,21 @@ public class TLauncher {
       } else {
          throw new TLauncherException("Instance is not defined!");
       }
+   }
+
+   public static Locale getSupported() {
+      Locale using = Locale.getDefault();
+      String using_name = using.toString();
+      String[] var5;
+      int var4 = (var5 = SUPPORTED_LOCALE).length;
+
+      for(int var3 = 0; var3 < var4; ++var3) {
+         String supported = var5[var3];
+         if (supported.equals(using_name)) {
+            return using;
+         }
+      }
+
+      return Locale.US;
    }
 }

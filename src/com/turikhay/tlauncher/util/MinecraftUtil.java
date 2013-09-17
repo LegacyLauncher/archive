@@ -78,12 +78,11 @@ public class MinecraftUtil {
 
       try {
          url_r = new URL(url);
+         return new Downloadable(url, getFile(FileUtil.getFilename(url_r)), force);
       } catch (Exception var4) {
          var4.printStackTrace();
          return null;
       }
-
-      return new Downloadable(url_r, getFile(FileUtil.getFilename(url_r)), force);
    }
 
    public static Downloadable getDownloadable(String url) {

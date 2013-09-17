@@ -7,8 +7,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import net.minecraft.launcher_.Http;
 
 public class Downloadable {
+   public static final int CONNECTION_TIMEOUT = 30000;
+   public static final int READ_TIMEOUT = 10000;
    private URL url;
    private File destination;
    private Throwable error;
@@ -16,24 +19,14 @@ public class Downloadable {
    private DownloadableHandler handler;
    private boolean forced;
 
-   public Downloadable(URL url, File destination, boolean force) {
-      this.url = url;
-      this.destination = destination;
-      this.forced = force;
-   }
-
    public Downloadable(String url, File destination, boolean force) throws MalformedURLException {
-      this.url = new URL(url);
+      this.url = new URL(Http.encode(url));
       this.destination = destination;
       this.forced = force;
    }
 
    public Downloadable(URL url, boolean force) {
       this.url = url;
-   }
-
-   public Downloadable(URL url, File destination) {
-      this(url, destination, false);
    }
 
    public Downloadable(String url, File destination) throws MalformedURLException {
@@ -57,7 +50,7 @@ public class Downloadable {
    }
 
    public String getFilename() {
-      return FileUtil.getFilename(this.url);
+      return Http.decode(FileUtil.getFilename(this.url));
    }
 
    public Throwable getError() {

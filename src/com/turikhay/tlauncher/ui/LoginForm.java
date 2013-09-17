@@ -6,6 +6,7 @@ import com.turikhay.tlauncher.util.U;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import net.minecraft.launcher_.updater.VersionSyncInfo;
 
 public class LoginForm extends CenterPanel implements MinecraftLauncherListener {
    private static final long serialVersionUID = 6768252827144456302L;
@@ -65,10 +66,11 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
 
             } else {
                this.setError((String)null);
-               boolean official = this.versionchoice.getSyncVersionInfo().isOnRemote();
-               boolean installed = this.versionchoice.getSyncVersionInfo().isInstalled();
-               if (this.checkbox.forceupdate) {
-                  if (!official) {
+               VersionSyncInfo syncInfo = this.versionchoice.getSyncVersionInfo();
+               boolean supporting = syncInfo.isOnRemote();
+               boolean installed = syncInfo.isInstalled();
+               if (this.checkbox.getForceUpdate()) {
+                  if (!supporting) {
                      Alert.showWarning("forceupdate.onlylibraries");
                   } else if (installed && !Alert.showQuestion("forceupdate.question", true)) {
                      return;
@@ -77,7 +79,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
 
                this.save();
                this.listenerOnLogin();
-               this.t.launch(this, this.checkbox.forceupdate);
+               this.t.launch(this, this.checkbox.getForceUpdate());
             }
          }
       }

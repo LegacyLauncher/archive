@@ -8,16 +8,17 @@ import net.minecraft.launcher_.OperatingSystem;
 import net.minecraft.launcher_.versions.CompleteVersion;
 import net.minecraft.launcher_.versions.VersionSource;
 
-public class RemoteVersionList extends VersionList {
-   public boolean hasAllFiles(CompleteVersion version, OperatingSystem os) {
+public class ExtraVersionList extends VersionList {
+   public boolean hasAllFiles(CompleteVersion paramCompleteVersion, OperatingSystem paramOperatingSystem) {
       return true;
    }
 
    protected String getUrl(String uri) throws IOException {
-      return Http.performGet(new URL("https://s3.amazonaws.com/Minecraft.Download/" + uri), Proxy.NO_PROXY);
+      String url = this.getRepositoryType().getDownloadPath() + Http.encode(uri);
+      return Http.performGet(new URL(url), Proxy.NO_PROXY);
    }
 
    public VersionSource getRepositoryType() {
-      return VersionSource.REMOTE;
+      return VersionSource.EXTRA;
    }
 }

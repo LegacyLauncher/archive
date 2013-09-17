@@ -25,6 +25,19 @@ public class Library {
       }
    }
 
+   public Library(String name, String url) {
+      if (name != null && name.length() != 0) {
+         if (url != null && url.length() != 0) {
+            this.name = name;
+            this.url = url;
+         } else {
+            throw new IllegalArgumentException("Library url cannot be null or empty");
+         }
+      } else {
+         throw new IllegalArgumentException("Library name cannot be null or empty");
+      }
+   }
+
    public String getName() {
       return this.name;
    }

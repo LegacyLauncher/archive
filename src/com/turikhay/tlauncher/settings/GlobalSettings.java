@@ -1,11 +1,13 @@
 package com.turikhay.tlauncher.settings;
 
+import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,7 +15,7 @@ public class GlobalSettings extends Settings {
    public static final File file = MinecraftUtil.getNativeOptionsFile();
    public static final boolean firstRun;
    private Map d = new HashMap();
-   private double version = 0.12D;
+   private double version = 0.13D;
 
    static {
       firstRun = !file.exists();
@@ -30,6 +32,7 @@ public class GlobalSettings extends Settings {
       this.d.put("minecraft.versions.beta", true);
       this.d.put("minecraft.versions.alpha", true);
       this.d.put("gui.sun", true);
+      this.d.put("locale", TLauncher.getSupported());
       boolean forcedrepair = this.getDouble("settings.version") != this.version;
       Iterator var3 = this.d.entrySet().iterator();
 
@@ -111,6 +114,28 @@ public class GlobalSettings extends Settings {
       } catch (Exception var3) {
          return false;
       }
+   }
+
+   public Locale getLocale() {
+      String locale = this.get("locale");
+      Locale[] var5;
+      int var4 = (var5 = Locale.getAvailableLocales()).length;
+
+      for(int var3 = 0; var3 < var4; ++var3) {
+         Locale lookup = var5[var3];
+         String lookup_name = lookup.toString();
+         String[] var10;
+         int var9 = (var10 = TLauncher.SUPPORTED_LOCALE).length;
+
+         for(int var8 = 0; var8 < var9; ++var8) {
+            String curloc = var10[var8];
+            if (lookup_name.equals(curloc) && curloc.equals(locale)) {
+               return lookup;
+            }
+         }
+      }
+
+      return TLauncher.DEFAULT_LOCALE;
    }
 
    private boolean parseBoolean(String b) throws Exception {

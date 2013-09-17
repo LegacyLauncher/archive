@@ -90,7 +90,7 @@ public class Alert {
       showWarning(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE));
    }
 
-   public static boolean showQuestion(String title, String message, boolean force) {
+   public static boolean showQuestion(String title, String message, Object textarea, boolean force) {
       if (!force && show) {
          return false;
       } else {
@@ -98,16 +98,26 @@ public class Alert {
          prepareLocal();
          JFrame frame = new JFrame();
          String t_title = PREFIX + title;
-         String t_message = U.w(message, 90);
+         String t_message = message != null ? U.w("<html><div align=\"justify\">" + U.w(message, 90).replace("\n", "<br/>") + "</div></html>", 90) : null;
+         String t_textarea = textarea != null ? textarea.toString() : null;
+         AlertPanel panel = new AlertPanel(t_message);
+         if (t_textarea != null) {
+            panel.addTextArea(t_textarea);
+         }
+
          frame.requestFocus();
-         boolean result = JOptionPane.showConfirmDialog(frame, t_message, t_title, 0) == 0;
+         boolean result = JOptionPane.showConfirmDialog(frame, panel, t_title, 0) == 0;
          show = false;
          return result;
       }
    }
 
+   public static boolean showQuestion(String path, Object textarea, boolean force) {
+      return showQuestion(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), textarea, force);
+   }
+
    public static boolean showQuestion(String path, boolean force) {
-      return showQuestion(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), force);
+      return showQuestion(path, (Object)null, force);
    }
 
    public static void showMessage(String title, String message, Object textarea) {

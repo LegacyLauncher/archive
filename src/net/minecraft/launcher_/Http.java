@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Iterator;
@@ -54,6 +55,8 @@ public class Http {
 
    public static String performGet(URL url, Proxy proxy) throws IOException {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
+      connection.setConnectTimeout(15000);
+      connection.setReadTimeout(60000);
       connection.setRequestMethod("GET");
       BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       StringBuilder response = new StringBuilder();
@@ -76,7 +79,7 @@ public class Http {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
       byte[] paramAsBytes = parameters.getBytes(Charset.forName("UTF-8"));
       connection.setConnectTimeout(15000);
-      connection.setReadTimeout(15000);
+      connection.setReadTimeout(60000);
       connection.setRequestMethod("POST");
       connection.setRequestProperty("Content-Type", contentType + "; charset=utf-8");
       connection.setRequestProperty("Content-Length", "" + paramAsBytes.length);
@@ -122,6 +125,22 @@ public class Http {
          return new URL(input);
       } catch (MalformedURLException var2) {
          throw new Error(var2);
+      }
+   }
+
+   public static String encode(String s) {
+      try {
+         return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20").replaceAll("\\%3A", ":").replaceAll("\\%2F", "/").replaceAll("\\%21", "!").replaceAll("\\%27", "'").replaceAll("\\%28", "(").replaceAll("\\%29", ")").replaceAll("\\%7E", "~");
+      } catch (UnsupportedEncodingException var2) {
+         return s;
+      }
+   }
+
+   public static String decode(String s) {
+      try {
+         return URLDecoder.decode(s, "UTF-8");
+      } catch (UnsupportedEncodingException var2) {
+         return s;
       }
    }
 }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -54,26 +55,29 @@ public class DownloaderThread extends Thread {
          Downloadable d = (Downloadable)var3.next();
          this.error = null;
          this.onStart(d);
-         String fn = d.getFilename();
          int attempt = 0;
 
          while(attempt < 10) {
             ++attempt;
-            this.log("Attempting to download " + fn + " [" + attempt + "/" + 10 + "]...");
+            this.log("Attempting to download " + d.getURL() + " [" + attempt + "/" + 10 + "]...");
 
             try {
                this.download(d);
+               this.log("Downloaded! [" + attempt + "/" + 10 + "]");
                break;
-            } catch (DownloaderError var7) {
-               if (var7.isSerious()) {
-                  var7.printStackTrace();
-                  this.onError(d, var7);
+            } catch (DownloaderError var6) {
+               if (var6.isSerious()) {
+                  var6.printStackTrace();
+                  this.onError(d, var6);
                   break;
                }
 
-               if (var7.hasTimeout()) {
-                  this.sleepFor((long)var7.getTimeout());
+               if (var6.hasTimeout()) {
+                  this.sleepFor((long)var6.getTimeout());
                }
+            } catch (SocketTimeoutException var7) {
+               this.log("Timeout exception. Retrying.");
+               this.sleepFor(5000L);
             } catch (Exception var8) {
                this.log("Unknown error occurred.");
                var8.printStackTrace();
@@ -268,7 +272,7 @@ public class DownloaderThread extends Thread {
    }
 
    private void log(Object message) {
-      U.log("[" + this.name + "DT #" + this.id + "] " + message);
+      U.log("[" + this.name + "DT #" + this.id + "] ", message);
    }
 
    private void check() {
