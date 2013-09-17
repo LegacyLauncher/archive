@@ -3,7 +3,6 @@ package net.minecraft.launcher_.versions;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -187,8 +186,8 @@ public class CompleteVersion implements Version {
 
       while(true) {
          Library library;
+         String url;
          File local;
-         URL url;
          do {
             String file;
             do {
@@ -199,16 +198,16 @@ public class CompleteVersion implements Version {
                library = (Library)var6.next();
                file = null;
                if (library.getNatives() != null) {
-                  String natives = (String)library.getNatives().get(os);
-                  if (natives != null) {
-                     file = library.getArtifactPath(natives);
+                  url = (String)library.getNatives().get(os);
+                  if (url != null) {
+                     file = library.getArtifactPath(url);
                   }
                } else {
                   file = library.getArtifactPath();
                }
             } while(file == null);
 
-            url = new URL(library.getDownloadUrl() + file);
+            url = library.getDownloadUrl() + file;
             local = new File(targetDirectory, "libraries/" + file);
          } while(local.isFile() && library.hasCustomUrl());
 

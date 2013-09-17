@@ -33,7 +33,7 @@ public class Updater {
    private Downloadable update_download;
    private Settings update_settings;
    private double found_version;
-   private URL found_link;
+   private String found_link;
    private Downloadable launcher_download;
    private File launcher_destination;
    private File replace;
@@ -107,8 +107,8 @@ public class Updater {
          if (this.found_version <= 0.0D) {
             throw new IllegalStateException("Settings file is invalid!");
          } else {
-            if (0.161D >= this.found_version) {
-               if (0.161D > this.found_version) {
+            if (0.166D >= this.found_version) {
+               if (0.166D > this.found_version) {
                   this.log("Running version is newer than found (" + this.found_version + ")");
                }
 
@@ -117,7 +117,7 @@ public class Updater {
             }
 
             String current_link = this.update_settings.get(this.type.toLowerCase());
-            this.found_link = new URL(current_link);
+            this.found_link = current_link;
             this.onUpdateFound();
             return;
          }
@@ -127,6 +127,15 @@ public class Updater {
    }
 
    public void downloadUpdate() {
+      try {
+         this.downloadUpdate_();
+      } catch (Exception var2) {
+         this.onUpdateError(var2);
+      }
+
+   }
+
+   private void downloadUpdate_() throws MalformedURLException {
       this.log("Downloading update...");
       this.onUpdaterDownloads();
       this.launcher_destination = new File(MinecraftUtil.getWorkingDirectory(), "tlauncher.updated");
@@ -148,7 +157,7 @@ public class Updater {
       this.d.launch();
    }
 
-   public URL getLink() {
+   public String getLink() {
       return this.found_link;
    }
 
@@ -186,13 +195,9 @@ public class Updater {
       return this.found_version;
    }
 
-   public URL getFoundLink() {
-      return this.found_link;
-   }
-
    public URI getFoundLinkAsURI() {
       try {
-         return this.found_link.toURI();
+         return new URI(this.found_link);
       } catch (URISyntaxException var2) {
          var2.printStackTrace();
          return null;

@@ -2,11 +2,14 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.util.MinecraftUtil;
+import com.turikhay.tlauncher.util.U;
 import java.awt.Choice;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,25 +66,35 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
       VersionFilter vf = MinecraftUtil.getVersionFilter();
       List listver = local ? vm.getInstalledVersions(vf) : vm.getVersions(vf);
       boolean exists = false;
-      Iterator var7 = listver.iterator();
+      String add = "";
+      Iterator var8 = listver.iterator();
 
-      while(var7.hasNext()) {
-         VersionSyncInfo curv = (VersionSyncInfo)var7.next();
+      while(var8.hasNext()) {
+         VersionSyncInfo curv = (VersionSyncInfo)var8.next();
          Version ver = curv.getLatestVersion();
          String id = ver.getId();
-         String dId = null;
-         switch($SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType()[ver.getType().ordinal()]) {
-         case 1:
-            dId = this.l.get("version.snapshot", "v", id);
-            break;
-         case 2:
-            dId = this.l.get("version.release", "v", id);
-            break;
-         case 3:
-            dId = this.l.get("version.beta", "v", id.substring(1));
-            break;
-         case 4:
-            dId = this.l.get("version.alpha", "v", id.startsWith("a") ? id.substring(1) : id);
+         String dId = id;
+         if (id.length() < 18) {
+            switch($SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType()[ver.getType().ordinal()]) {
+            case 1:
+               dId = this.l.get("version.snapshot", "v", id);
+               break;
+            case 2:
+               dId = this.l.get("version.release", "v", id);
+               break;
+            case 3:
+               dId = this.l.get("version.beta", "v", id.substring(1));
+               break;
+            case 4:
+               dId = this.l.get("version.alpha", "v", id.startsWith("a") ? id.substring(1) : id);
+            }
+         } else {
+            if (add.length() > 2) {
+               add = "";
+            }
+
+            add = add + "~";
+            dId = U.t(id, 16) + add;
          }
 
          this.choice.add(dId);
@@ -147,6 +160,23 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
 
    public void onResourcesRefreshed(VersionManager vm) {
       this.lf.unblock("resource_refresh");
+   }
+
+   public void handleUpdate(boolean ok) {
+      VersionSyncInfo syncInfo;
+      if (!ok) {
+         syncInfo = this.getSyncVersionInfo();
+         syncInfo.getLocalVersion().setUpdatedTime(new Date());
+      } else {
+         syncInfo = this.vm.getVersionSyncInfo(this.version);
+      }
+
+      try {
+         this.vm.getLocalVersionList().saveVersion(this.vm.getLatestCompleteVersion(syncInfo));
+      } catch (IOException var4) {
+         var4.printStackTrace();
+      }
+
    }
 
    // $FF: synthetic method

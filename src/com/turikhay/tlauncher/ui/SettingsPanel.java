@@ -71,7 +71,7 @@ public class SettingsPanel extends Panel {
       this.add(this.sf.argsCustom, constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
-      this.add(this.sf.argsCustomField, constraints);
+      this.add(this.sf.argsPan, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;
@@ -86,6 +86,13 @@ public class SettingsPanel extends Panel {
       constraints.fill = 2;
       constraints.weightx = 1.0D;
       this.add(this.sf.autologinField, constraints);
+      ++constraints.gridy;
+      constraints.weightx = 0.0D;
+      constraints.fill = 0;
+      this.add(this.sf.langCustom, constraints);
+      constraints.fill = 2;
+      constraints.weightx = 1.0D;
+      this.add(this.sf.langChoice, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;

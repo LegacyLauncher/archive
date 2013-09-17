@@ -4,7 +4,11 @@ import com.turikhay.tlauncher.TLauncher;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.Map.Entry;
 
 public class U {
    private static final String PREFIX = "[TLauncher]";
@@ -35,19 +39,45 @@ public class U {
 
       for(int var5 = 0; var5 < var6; ++var5) {
          Object e = var7[var5];
-         if (e instanceof Throwable) {
-            b.append("\n");
-            b.append(stackTrace((Throwable)e));
-            b.append("\n");
-         } else {
-            if (first) {
-               first = false;
-            } else {
-               b.append(" ");
+         if (e != null) {
+            if (e instanceof Throwable) {
+               b.append("\n");
+               b.append(stackTrace((Throwable)e));
+               b.append("\n");
+               continue;
             }
 
-            b.append(e);
+            Iterator var10;
+            if (e instanceof Collection) {
+               Collection col = (Collection)e;
+               var10 = col.iterator();
+
+               while(var10.hasNext()) {
+                  Object obj = var10.next();
+                  b.append("\n");
+                  b.append(obj);
+               }
+            } else if (e instanceof Map) {
+               Map col = (Map)e;
+               var10 = col.entrySet().iterator();
+
+               while(var10.hasNext()) {
+                  Entry obj = (Entry)var10.next();
+                  b.append("\n");
+                  b.append(obj.getKey());
+                  b.append(" : ");
+                  b.append(obj.getValue());
+               }
+            }
          }
+
+         if (first) {
+            first = false;
+         } else {
+            b.append(" ");
+         }
+
+         b.append(e);
       }
 
       System.out.println(b.toString());
@@ -180,6 +210,15 @@ public class U {
       }
    }
 
+   public static String t(String string, int max) {
+      if (string == null) {
+         return null;
+      } else {
+         int len = string.length();
+         return len <= max ? string : string.substring(0, max) + "...";
+      }
+   }
+
    public static String w(String string, int normal, char newline, boolean rude) {
       char[] c = string.toCharArray();
       int len = c.length;
@@ -285,7 +324,7 @@ public class U {
       try {
          return new URL(p);
       } catch (Exception var2) {
-         log("Cannot make URL from string: " + p + ". Check out lang.ini", var2);
+         log("Cannot make URL from string: " + p + ". Check out language file", var2);
          return null;
       }
    }
@@ -294,7 +333,7 @@ public class U {
       try {
          return url.toURI();
       } catch (Exception var2) {
-         log("Cannot make URI from URL: " + url + ". Check out lang.ini", var2);
+         log("Cannot make URI from URL: " + url + ". Check out language file", var2);
          return null;
       }
    }

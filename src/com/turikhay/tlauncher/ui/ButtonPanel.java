@@ -50,7 +50,7 @@ public class ButtonPanel extends BlockablePanel {
    void updateEnterButton() {
       if (this.lf.versionchoice.selected != null) {
          boolean play = this.lf.versionchoice.selected.isInstalled();
-         boolean force = this.lf.checkbox.forceupdate;
+         boolean force = this.lf.checkbox.getForceUpdate();
          int status = true;
          byte status;
          if (play) {

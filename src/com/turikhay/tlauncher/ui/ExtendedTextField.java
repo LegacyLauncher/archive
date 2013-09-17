@@ -151,6 +151,7 @@ public abstract class ExtendedTextField extends TextField {
       if (!this.edit) {
          this.edit = true;
          this.setFont(this.parent.font);
+         this.setForeground(this.parent.black);
       }
    }
 

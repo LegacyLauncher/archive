@@ -14,6 +14,8 @@ public class ResolutionField extends BlockablePanel {
       this.setLayout(layout);
       this.w = new TextField();
       this.h = new TextField();
+      this.w.addFocusListener(sf.restart);
+      this.h.addFocusListener(sf.restart);
       this.add(this.w);
       this.add(this.h);
    }

@@ -13,7 +13,7 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
    private final Settings l;
    Checkbox autologinbox;
    Checkbox forceupdatebox;
-   boolean forceupdate;
+   private boolean forceupdate;
 
    CheckBoxPanel(LoginForm loginform, boolean autologin_enabled, boolean console_enabled) {
       this.lf = loginform;
@@ -40,8 +40,18 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
       this.add(this.forceupdatebox);
    }
 
+   public void setForceUpdate(boolean s) {
+      this.forceupdate = s;
+      this.onForceUpdateChanged();
+   }
+
+   public boolean getForceUpdate() {
+      return this.forceupdate;
+   }
+
    private void onForceUpdateChanged() {
       this.lf.buttons.updateEnterButton();
+      this.forceupdatebox.setState(this.forceupdate);
    }
 
    void uncheckAutologin() {
