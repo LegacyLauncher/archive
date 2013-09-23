@@ -1,161 +1,123 @@
 package com.turikhay.tlauncher.settings;
 
-import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.util.MinecraftUtil;
-import com.turikhay.tlauncher.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.util.MinecraftUtil;
+import com.turikhay.tlauncher.util.U;
+
 public class GlobalSettings extends Settings {
-   public static final File file = MinecraftUtil.getNativeOptionsFile();
-   public static final boolean firstRun;
-   private Map d = new HashMap();
-   private double version = 0.13D;
+	public final static File file = MinecraftUtil.getNativeOptionsFile();
+	public final static boolean firstRun = !file.exists();
+	
+	private Map<String, Object> d = new HashMap<String, Object>(); // defaults
+	private double version = 0.13;
+	
+	public GlobalSettings() throws IOException {
+		super(file);
+		
+		d.put("settings.version", version);
+		
+		d.put("login.auto", false);
+		d.put("login.auto.timeout", 3);
+		
+		d.put("minecraft.size.width", 925);
+		d.put("minecraft.size.height", 525);
+		d.put("minecraft.versions.snapshots", true);
+		d.put("minecraft.versions.beta", true);
+		d.put("minecraft.versions.alpha", true);
+		
+		d.put("gui.sun", true);
+		
+		d.put("locale", TLauncher.getSupported());
+		
+		boolean forcedrepair = this.getDouble("settings.version") != version;
+		
+		for(Entry<String, Object> curen : d.entrySet()){
+			String key = curen.getKey(), value = s.get(key); Object defvalue = d.get(key);			
+			if(forcedrepair || value == null){ repair(key, defvalue); continue; }
+			try {
+				
+				if(defvalue instanceof Integer) Integer.parseInt(value);
+				else if(defvalue instanceof Boolean) this.parseBoolean(value);
+				else if(defvalue instanceof Double) Double.parseDouble(value);
+				else if(defvalue instanceof Long) Long.parseLong(value);
+				
+				continue;
+			}catch(Exception e){}
+			
+			repair(key, defvalue);
+		}
+		
+		this.save();
+	}
+	
+	public String get(String key){
+		String r = s.get(key);
+		if(r == "") return null;
+		return r;
+	}
+	
+	public String getDefault(String key){
+		String r = d.get(key) + "";
+		if(r == "") return null;
+		return r;
+	}
+	
+	public int getDefaultInteger(String key){
+		try{ return Integer.parseInt(d.get(key)+""); }catch(Exception e){ return 0; }
+	}
+	
+	public long getDefaultLong(String key){
+		try{ return Long.parseLong(d.get(key)+""); }catch(Exception e){ return 0; }
+	}
+	
+	public double getDefaultDouble(String key){
+		try{ return Double.parseDouble(d.get(key)+""); }catch(Exception e){ return 0; }
+	}
+	
+	public float getDefaultFloat(String key){
+		try{ return Float.parseFloat(d.get(key)+""); }catch(Exception e){ return 0; }
+	}
+	
+	public boolean getDefaultBoolean(String key){
+		try{ return Boolean.parseBoolean(d.get(key)+""); }catch(Exception e){ return false; }
+	}
+	
+	public Locale getLocale(){
+		String locale = get("locale");
+		
+		for(Locale lookup : Locale.getAvailableLocales()){
+			String lookup_name = lookup.toString();
+			for(String curloc : TLauncher.SUPPORTED_LOCALE){
+				if(!lookup_name.equals(curloc)) continue;
+				if(!curloc.equals(locale)) continue;
+				// Selected locale is supported
+				return lookup;
+			}
+		}
+		
+		return TLauncher.DEFAULT_LOCALE;
+	}
+	
+	private boolean parseBoolean(String b) throws Exception {
+		switch(b){
+		case "true": return true;
+		case "false": return false;
+		}
+		
+		throw new Exception();
+	}
+	
+	private void repair(String key, Object value) throws IOException {
+		U.log("Field \""+key+"\" in GlobalSettings is invalid.");		
+		
+		set(key, value, false);
+	}
 
-   static {
-      firstRun = !file.exists();
-   }
-
-   public GlobalSettings() throws IOException {
-      super(file);
-      this.d.put("settings.version", this.version);
-      this.d.put("login.auto", false);
-      this.d.put("login.auto.timeout", 3);
-      this.d.put("minecraft.size.width", 925);
-      this.d.put("minecraft.size.height", 525);
-      this.d.put("minecraft.versions.snapshots", true);
-      this.d.put("minecraft.versions.beta", true);
-      this.d.put("minecraft.versions.alpha", true);
-      this.d.put("gui.sun", true);
-      this.d.put("locale", TLauncher.getSupported());
-      boolean forcedrepair = this.getDouble("settings.version") != this.version;
-      Iterator var3 = this.d.entrySet().iterator();
-
-      while(true) {
-         while(var3.hasNext()) {
-            Entry curen = (Entry)var3.next();
-            String key = (String)curen.getKey();
-            String value = (String)this.s.get(key);
-            Object defvalue = this.d.get(key);
-            if (!forcedrepair && value != null) {
-               try {
-                  if (defvalue instanceof Integer) {
-                     Integer.parseInt(value);
-                  } else if (defvalue instanceof Boolean) {
-                     this.parseBoolean(value);
-                  } else if (defvalue instanceof Double) {
-                     Double.parseDouble(value);
-                  } else if (defvalue instanceof Long) {
-                     Long.parseLong(value);
-                  }
-               } catch (Exception var8) {
-                  this.repair(key, defvalue);
-               }
-            } else {
-               this.repair(key, defvalue);
-            }
-         }
-
-         this.save();
-         return;
-      }
-   }
-
-   public String get(String key) {
-      String r = (String)this.s.get(key);
-      return r == "" ? null : r;
-   }
-
-   public String getDefault(String key) {
-      String r = "" + this.d.get(key);
-      return r == "" ? null : r;
-   }
-
-   public int getDefaultInteger(String key) {
-      try {
-         return Integer.parseInt("" + this.d.get(key));
-      } catch (Exception var3) {
-         return 0;
-      }
-   }
-
-   public long getDefaultLong(String key) {
-      try {
-         return Long.parseLong("" + this.d.get(key));
-      } catch (Exception var3) {
-         return 0L;
-      }
-   }
-
-   public double getDefaultDouble(String key) {
-      try {
-         return Double.parseDouble("" + this.d.get(key));
-      } catch (Exception var3) {
-         return 0.0D;
-      }
-   }
-
-   public float getDefaultFloat(String key) {
-      try {
-         return Float.parseFloat("" + this.d.get(key));
-      } catch (Exception var3) {
-         return 0.0F;
-      }
-   }
-
-   public boolean getDefaultBoolean(String key) {
-      try {
-         return Boolean.parseBoolean("" + this.d.get(key));
-      } catch (Exception var3) {
-         return false;
-      }
-   }
-
-   public Locale getLocale() {
-      String locale = this.get("locale");
-      Locale[] var5;
-      int var4 = (var5 = Locale.getAvailableLocales()).length;
-
-      for(int var3 = 0; var3 < var4; ++var3) {
-         Locale lookup = var5[var3];
-         String lookup_name = lookup.toString();
-         String[] var10;
-         int var9 = (var10 = TLauncher.SUPPORTED_LOCALE).length;
-
-         for(int var8 = 0; var8 < var9; ++var8) {
-            String curloc = var10[var8];
-            if (lookup_name.equals(curloc) && curloc.equals(locale)) {
-               return lookup;
-            }
-         }
-      }
-
-      return TLauncher.DEFAULT_LOCALE;
-   }
-
-   private boolean parseBoolean(String b) throws Exception {
-      switch(b.hashCode()) {
-      case 3569038:
-         if (b.equals("true")) {
-            return true;
-         }
-         break;
-      case 97196323:
-         if (b.equals("false")) {
-            return false;
-         }
-      }
-
-      throw new Exception();
-   }
-
-   private void repair(String key, Object value) throws IOException {
-      U.log("Field \"" + key + "\" in GlobalSettings is invalid.");
-      this.set(key, value, false);
-   }
 }

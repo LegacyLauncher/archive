@@ -2,75 +2,80 @@ package net.minecraft.launcher_.process;
 
 import java.util.List;
 
-public class JavaProcess {
-   private static final int MAX_SYSOUT_LINES = 5;
-   private final List commands;
-   private final Process process;
-   private final LimitedCapacityList sysOutLines = new LimitedCapacityList(String.class, 5);
-   private JavaProcessListener onExit;
-   private ProcessMonitorThread monitor = new ProcessMonitorThread(this);
+public class JavaProcess
+{
+  private static final int MAX_SYSOUT_LINES = 5;
+  private final List<String> commands;
+  private final Process process;
+  private final LimitedCapacityList<String> sysOutLines = new LimitedCapacityList<String>(String.class, MAX_SYSOUT_LINES);
+  private JavaProcessListener onExit;
+  private ProcessMonitorThread monitor = new ProcessMonitorThread(this);
 
-   public JavaProcess(List commands, Process process) {
-      this.commands = commands;
-      this.process = process;
-      this.monitor.start();
-   }
+  public JavaProcess(List<String> commands, Process process) {
+    this.commands = commands;
+    this.process = process;
 
-   public Process getRawProcess() {
-      return this.process;
-   }
+    this.monitor.start();
+  }
 
-   public List getStartupCommands() {
-      return this.commands;
-   }
+  public Process getRawProcess() {
+    return this.process;
+  }
 
-   public String getStartupCommand() {
-      return this.process.toString();
-   }
+  public List<String> getStartupCommands() {
+    return this.commands;
+  }
 
-   public LimitedCapacityList getSysOutLines() {
-      return this.sysOutLines;
-   }
+  public String getStartupCommand() {
+    return this.process.toString();
+  }
 
-   public boolean isRunning() {
-      try {
-         this.process.exitValue();
-         return false;
-      } catch (IllegalThreadStateException var2) {
-         return true;
-      }
-   }
+  public LimitedCapacityList<String> getSysOutLines() {
+    return this.sysOutLines;
+  }
 
-   public void setExitRunnable(JavaProcessListener runnable) {
-      this.onExit = runnable;
-   }
+  public boolean isRunning() {
+    try {
+      this.process.exitValue();
+    } catch (IllegalThreadStateException ex) {
+      return true;
+    }
 
-   public void safeSetExitRunnable(JavaProcessListener runnable) {
-      this.setExitRunnable(runnable);
-      if (!this.isRunning() && runnable != null) {
-         runnable.onJavaProcessEnded(this);
-      }
+    return false;
+  }
 
-   }
+  public void setExitRunnable(JavaProcessListener runnable) {
+    this.onExit = runnable;
+  }
 
-   public JavaProcessListener getExitRunnable() {
-      return this.onExit;
-   }
+  public void safeSetExitRunnable(JavaProcessListener runnable) {
+    setExitRunnable(runnable);
 
-   public int getExitCode() {
-      try {
-         return this.process.exitValue();
-      } catch (IllegalThreadStateException var2) {
-         var2.fillInStackTrace();
-         throw var2;
-      }
-   }
+    if ((!isRunning()) && 
+      (runnable != null))
+      runnable.onJavaProcessEnded(this);
+  }
 
-   public String toString() {
-      return "JavaProcess[commands=" + this.commands + ", isRunning=" + this.isRunning() + "]";
-   }
+  public JavaProcessListener getExitRunnable()
+  {
+    return this.onExit;
+  }
 
-   public void stop() {
-      this.process.destroy();
-   }
+  public int getExitCode() {
+    try {
+      return this.process.exitValue();
+    } catch (IllegalThreadStateException ex) {
+      ex.fillInStackTrace();
+      throw ex;
+    }
+  }
+
+  public String toString()
+  {
+    return "JavaProcess[commands=" + this.commands + ", isRunning=" + isRunning() + "]";
+  }
+
+  public void stop() {
+    this.process.destroy();
+  }
 }

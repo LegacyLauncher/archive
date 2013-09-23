@@ -1,13 +1,9 @@
 package com.turikhay.tlauncher.downloader;
 
 public interface DownloadListener {
-   void onDownloaderStart(Downloader var1, int var2);
-
-   void onDownloaderError(Downloader var1, Downloadable var2, Throwable var3);
-
-   void onDownloaderProgress(Downloader var1, int var2);
-
-   void onDownloaderFileComplete(Downloader var1, Downloadable var2);
-
-   void onDownloaderComplete(Downloader var1);
+	public void onDownloaderStart(Downloader d, int files);
+	public void onDownloaderError(Downloader d, Downloadable file, Throwable error);
+	public void onDownloaderProgress(Downloader d, int progress);
+	public void onDownloaderFileComplete(Downloader d, Downloadable file);
+	public void onDownloaderComplete(Downloader d);
 }

@@ -1,147 +1,172 @@
 package org.apache.commons.lang3.text;
 
 import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class StrMatcher {
-   private static final StrMatcher COMMA_MATCHER = new StrMatcher.CharMatcher(',');
-   private static final StrMatcher TAB_MATCHER = new StrMatcher.CharMatcher('\t');
-   private static final StrMatcher SPACE_MATCHER = new StrMatcher.CharMatcher(' ');
-   private static final StrMatcher SPLIT_MATCHER = new StrMatcher.CharSetMatcher(" \t\n\r\f".toCharArray());
-   private static final StrMatcher TRIM_MATCHER = new StrMatcher.TrimMatcher();
-   private static final StrMatcher SINGLE_QUOTE_MATCHER = new StrMatcher.CharMatcher('\'');
-   private static final StrMatcher DOUBLE_QUOTE_MATCHER = new StrMatcher.CharMatcher('"');
-   private static final StrMatcher QUOTE_MATCHER = new StrMatcher.CharSetMatcher("'\"".toCharArray());
-   private static final StrMatcher NONE_MATCHER = new StrMatcher.NoMatcher();
 
-   public static StrMatcher commaMatcher() {
-      return COMMA_MATCHER;
-   }
+    private static final StrMatcher COMMA_MATCHER = new CharMatcher(',');
+    private static final StrMatcher TAB_MATCHER = new CharMatcher('\t');
+    private static final StrMatcher SPACE_MATCHER = new CharMatcher(' ');
+    private static final StrMatcher SPLIT_MATCHER = new CharSetMatcher(" \t\n\r\f".toCharArray());
+    private static final StrMatcher TRIM_MATCHER = new TrimMatcher();
+    private static final StrMatcher SINGLE_QUOTE_MATCHER = new CharMatcher('\'');
+    private static final StrMatcher DOUBLE_QUOTE_MATCHER = new CharMatcher('"');
+    private static final StrMatcher QUOTE_MATCHER = new CharSetMatcher("'\"".toCharArray());
+    private static final StrMatcher NONE_MATCHER = new NoMatcher();
+    
+    public static StrMatcher commaMatcher() {
+        return COMMA_MATCHER;
+    }
 
-   public static StrMatcher tabMatcher() {
-      return TAB_MATCHER;
-   }
+    public static StrMatcher tabMatcher() {
+        return TAB_MATCHER;
+    }
 
-   public static StrMatcher spaceMatcher() {
-      return SPACE_MATCHER;
-   }
+    public static StrMatcher spaceMatcher() {
+        return SPACE_MATCHER;
+    }
 
-   public static StrMatcher splitMatcher() {
-      return SPLIT_MATCHER;
-   }
+    public static StrMatcher splitMatcher() {
+        return SPLIT_MATCHER;
+    }
 
-   public static StrMatcher trimMatcher() {
-      return TRIM_MATCHER;
-   }
+    public static StrMatcher trimMatcher() {
+        return TRIM_MATCHER;
+    }
 
-   public static StrMatcher singleQuoteMatcher() {
-      return SINGLE_QUOTE_MATCHER;
-   }
+    public static StrMatcher singleQuoteMatcher() {
+        return SINGLE_QUOTE_MATCHER;
+    }
 
-   public static StrMatcher doubleQuoteMatcher() {
-      return DOUBLE_QUOTE_MATCHER;
-   }
+    public static StrMatcher doubleQuoteMatcher() {
+        return DOUBLE_QUOTE_MATCHER;
+    }
 
-   public static StrMatcher quoteMatcher() {
-      return QUOTE_MATCHER;
-   }
+    public static StrMatcher quoteMatcher() {
+        return QUOTE_MATCHER;
+    }
 
-   public static StrMatcher noneMatcher() {
-      return NONE_MATCHER;
-   }
+    public static StrMatcher noneMatcher() {
+        return NONE_MATCHER;
+    }
 
-   public static StrMatcher charMatcher(char ch) {
-      return new StrMatcher.CharMatcher(ch);
-   }
+    public static StrMatcher charMatcher(char ch) {
+        return new CharMatcher(ch);
+    }
 
-   public static StrMatcher charSetMatcher(char... chars) {
-      if (chars != null && chars.length != 0) {
-         return (StrMatcher)(chars.length == 1 ? new StrMatcher.CharMatcher(chars[0]) : new StrMatcher.CharSetMatcher(chars));
-      } else {
-         return NONE_MATCHER;
-      }
-   }
+    public static StrMatcher charSetMatcher(char... chars) {
+        if (chars == null || chars.length == 0) {
+            return NONE_MATCHER;
+        }
+        if (chars.length == 1) {
+            return new CharMatcher(chars[0]);
+        }
+        return new CharSetMatcher(chars);
+    }
 
-   public static StrMatcher charSetMatcher(String chars) {
-      if (chars != null && chars.length() != 0) {
-         return (StrMatcher)(chars.length() == 1 ? new StrMatcher.CharMatcher(chars.charAt(0)) : new StrMatcher.CharSetMatcher(chars.toCharArray()));
-      } else {
-         return NONE_MATCHER;
-      }
-   }
+    public static StrMatcher charSetMatcher(String chars) {
+        if (chars == null || chars.length() == 0) {
+            return NONE_MATCHER;
+        }
+        if (chars.length() == 1) {
+            return new CharMatcher(chars.charAt(0));
+        }
+        return new CharSetMatcher(chars.toCharArray());
+    }
 
-   public static StrMatcher stringMatcher(String str) {
-      return (StrMatcher)(StringUtils.isEmpty(str) ? NONE_MATCHER : new StrMatcher.StringMatcher(str));
-   }
+    public static StrMatcher stringMatcher(String str) {
+        if (StringUtils.isEmpty(str)) {
+            return NONE_MATCHER;
+        }
+        return new StringMatcher(str);
+    }
 
-   protected StrMatcher() {
-   }
+    protected StrMatcher() {
+        super();
+    }
 
-   public abstract int isMatch(char[] var1, int var2, int var3, int var4);
+    public abstract int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd);
 
-   public int isMatch(char[] buffer, int pos) {
-      return this.isMatch(buffer, pos, 0, buffer.length);
-   }
+    public int isMatch(char[] buffer, int pos) {
+        return isMatch(buffer, pos, 0, buffer.length);
+    }
 
-   static final class CharMatcher extends StrMatcher {
-      private final char ch;
+    static final class CharSetMatcher extends StrMatcher {
+        private final char[] chars;
 
-      CharMatcher(char ch) {
-         this.ch = ch;
-      }
+        CharSetMatcher(char chars[]) {
+            super();
+            this.chars = chars.clone();
+            Arrays.sort(this.chars);
+        }
+        
+        @Override
+        public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
+            return Arrays.binarySearch(chars, buffer[pos]) >= 0 ? 1 : 0;
+        }
+    }
 
-      public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
-         return this.ch == buffer[pos] ? 1 : 0;
-      }
-   }
+    static final class CharMatcher extends StrMatcher {
+        private final char ch;
 
-   static final class CharSetMatcher extends StrMatcher {
-      private final char[] chars;
+        CharMatcher(char ch) {
+            super();
+            this.ch = ch;
+        }
 
-      CharSetMatcher(char[] chars) {
-         this.chars = (char[])chars.clone();
-         Arrays.sort(this.chars);
-      }
+        @Override
+        public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
+            return ch == buffer[pos] ? 1 : 0;
+        }
+    }
 
-      public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
-         return Arrays.binarySearch(this.chars, buffer[pos]) >= 0 ? 1 : 0;
-      }
-   }
+    static final class StringMatcher extends StrMatcher {
+        private final char[] chars;
 
-   static final class NoMatcher extends StrMatcher {
-      public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
-         return 0;
-      }
-   }
+        StringMatcher(String str) {
+            super();
+            chars = str.toCharArray();
+        }
 
-   static final class StringMatcher extends StrMatcher {
-      private final char[] chars;
-
-      StringMatcher(String str) {
-         this.chars = str.toCharArray();
-      }
-
-      public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
-         int len = this.chars.length;
-         if (pos + len > bufferEnd) {
-            return 0;
-         } else {
-            for(int i = 0; i < this.chars.length; ++pos) {
-               if (this.chars[i] != buffer[pos]) {
-                  return 0;
-               }
-
-               ++i;
+        @Override
+        public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
+            int len = chars.length;
+            if (pos + len > bufferEnd) {
+                return 0;
             }
-
+            for (int i = 0; i < chars.length; i++, pos++) {
+                if (chars[i] != buffer[pos]) {
+                    return 0;
+                }
+            }
             return len;
-         }
-      }
-   }
+        }
+    }
 
-   static final class TrimMatcher extends StrMatcher {
-      public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
-         return buffer[pos] <= ' ' ? 1 : 0;
-      }
-   }
+    static final class NoMatcher extends StrMatcher {
+
+        NoMatcher() {
+            super();
+        }
+
+        @Override
+        public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
+            return 0;
+        }
+    }
+
+    static final class TrimMatcher extends StrMatcher {
+
+        TrimMatcher() {
+            super();
+        }
+
+        @Override
+        public int isMatch(char[] buffer, int pos, int bufferStart, int bufferEnd) {
+            return buffer[pos] <= 32 ? 1 : 0;
+        }
+    }
+
 }
