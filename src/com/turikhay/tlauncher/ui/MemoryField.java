@@ -3,32 +3,29 @@ package com.turikhay.tlauncher.ui;
 import net.minecraft.launcher_.OperatingSystem;
 
 public class MemoryField extends ExtendedTextField {
-   private static final long serialVersionUID = 104141941185197117L;
-   private long maxMB = Runtime.getRuntime().maxMemory() / 1024L / 1024L;
+	private static final long serialVersionUID = 104141941185197117L;
+	private long maxMB = Runtime.getRuntime().maxMemory() / 1024 / 1024;
 
-   MemoryField(SettingsForm settingsform) {
-      super((CenterPanel)settingsform);
-   }
+	MemoryField(SettingsForm settingsform){		
+		super(settingsform);
+	}
 
-   protected boolean check(String text) {
-      if (text != null && !text.equals("")) {
-         boolean var2 = true;
+	protected boolean check(String text) {
+		if(text == null || text.equals("")) return true;
+		
+		int cur = -1;
+		try{ cur = Integer.parseInt(text); }catch(Exception e){ return setError(l.get("settings.java.memory.parse")); }
+		
+		if(cur < 0 || cur > maxMB) return setError(l.get("settings.java.memory.incorrect", "s", maxMB));
+		
+		return true;
+	}
+	
+	public int getSpecialValue(){		
+		String val = getValue();
+		if(val == null || val.equals("")) return OperatingSystem.getRecommendedMemory();
+		
+		return Integer.parseInt(val);
+	}
 
-         int cur;
-         try {
-            cur = Integer.parseInt(text);
-         } catch (Exception var4) {
-            return this.setError(this.l.get("settings.java.memory.parse"));
-         }
-
-         return cur >= 0 && (long)cur <= this.maxMB ? true : this.setError(this.l.get("settings.java.memory.incorrect", "s", this.maxMB));
-      } else {
-         return true;
-      }
-   }
-
-   public int getSpecialValue() {
-      String val = this.getValue();
-      return val != null && !val.equals("") ? Integer.parseInt(val) : OperatingSystem.getRecommendedMemory();
-   }
 }
