@@ -1,30 +1,37 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.tlauncher.util.MinecraftUtil;
 import java.io.File;
 
-import com.turikhay.tlauncher.util.MinecraftUtil;
+public class GameDirectoryField extends ExtendedTextField implements SettingsField {
+   private static final long serialVersionUID = 9048714882203326864L;
 
-public class GameDirectoryField extends ExtendedTextField {
-	private static final long serialVersionUID = 9048714882203326864L;
-	
-	GameDirectoryField(SettingsForm settingsform){		
-		super(settingsform);
-	}
-	
-	public void setText(String dir){
-		if(dir == null || !new File(dir).isDirectory())
-			dir = MinecraftUtil.getWorkingDirectory().toString();
-		
-		super.setText(dir);
-	}
+   GameDirectoryField(SettingsForm settingsform) {
+      super((CenterPanel)settingsform);
+   }
 
-	protected boolean check(String text) {
-		File f = new File(text);
-		
-		if(f.exists())
-			if(!f.canRead() || !f.canWrite())
-				return false;
-		
-		return true;
-	}
+   public void setValue(String dir) {
+      if (dir == null || !(new File(dir)).isDirectory()) {
+         dir = MinecraftUtil.getDefaultWorkingDirectory().toString();
+      }
+
+      super.setText(dir);
+   }
+
+   protected boolean check(String text) {
+      File f = new File(text);
+      return !f.exists() || f.canRead() && f.canWrite();
+   }
+
+   public String getSettingsPath() {
+      return "minecraft.gamedir";
+   }
+
+   public boolean isValueValid() {
+      return this.getValue() != null;
+   }
+
+   public void setToDefault() {
+      this.setValue((String)null);
+   }
 }

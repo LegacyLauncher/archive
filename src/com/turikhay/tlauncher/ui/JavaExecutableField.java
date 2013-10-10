@@ -1,31 +1,37 @@
 package com.turikhay.tlauncher.ui;
 
 import java.io.File;
-
 import net.minecraft.launcher_.OperatingSystem;
 
-public class JavaExecutableField extends ExtendedTextField {
-	private static final long serialVersionUID = 2221135591155035960L;
-	
-	JavaExecutableField(SettingsForm settingsform){		
-		super(settingsform);
-	}
+public class JavaExecutableField extends ExtendedTextField implements SettingsField {
+   private static final long serialVersionUID = 2221135591155035960L;
 
-	public void setText(String dir){
-		if(dir == null || !new File(dir).isFile())
-			dir = OperatingSystem.getCurrentPlatform().getJavaDir();
-		
-		super.setText(dir);
-	}
+   JavaExecutableField(SettingsForm settingsform) {
+      super((CenterPanel)settingsform);
+   }
 
-	protected boolean check(String text) {
-		File f = new File(text);
-		
-		if(f.exists())
-			if(!f.canRead() || !f.canWrite())
-				return false;
-		
-		return true;
-	}
+   public void setText(String dir) {
+      if (dir == null || !(new File(dir)).isFile()) {
+         dir = OperatingSystem.getCurrentPlatform().getJavaDir();
+      }
 
+      super.setText(dir);
+   }
+
+   protected boolean check(String text) {
+      File f = new File(text);
+      return !f.exists() || f.canRead() && f.canWrite();
+   }
+
+   public String getSettingsPath() {
+      return "minecraft.javadir";
+   }
+
+   public boolean isValueValid() {
+      return this.getValue() != null;
+   }
+
+   public void setToDefault() {
+      this.setValue((String)null);
+   }
 }

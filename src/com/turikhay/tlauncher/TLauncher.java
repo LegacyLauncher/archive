@@ -1,28 +1,10 @@
 package com.turikhay.tlauncher;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.Proxy;
-import java.net.PasswordAuthentication;
-import java.net.URL;
-import java.util.Locale;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Pack200;
-
-import javax.swing.JFrame;
-
-import net.minecraft.launcher_.updater.VersionManager;
-import LZMA.LzmaInputStream;
-
-import com.turikhay.tlauncher.downloader.Downloadable;
-import com.turikhay.tlauncher.downloader.DownloadableContainer;
 import com.turikhay.tlauncher.downloader.Downloader;
-import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
+import com.turikhay.tlauncher.settings.ArgumentParser;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.ui.Alert;
@@ -30,175 +12,205 @@ import com.turikhay.tlauncher.ui.Localizable;
 import com.turikhay.tlauncher.ui.LoginForm;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.updater.Updater;
-import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.Locale;
+import joptsimple.OptionSet;
+import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher {
-	public final static double VERSION = 0.169;
-	public final static Locale DEFAULT_LOCALE = Locale.US;
-	public final static String[] SUPPORTED_LOCALE = new String[]{"ru_RU", "en_US", "uk_UA"};
-	
-	private Locale locale;
-	private static TLauncher instance;
-	
-	private String[] args;
-	
-	private Settings lang;
-	private GlobalSettings settings;
-	private Downloader downloader;
-	private Updater updater;
-	private TLauncherFrame frame;
-	
-	private VersionManager vm;
-	
-	public TLauncher(String[] args) throws Exception {
-		TLauncher.instance = this;
-		
-		Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
-		U.setWorkingTo(this);
-		
-		this.args = args;
-		
-		long start = System.currentTimeMillis();
-		
-		settings = new GlobalSettings(); reloadLocale();
-		downloader = new Downloader(10);
-		updater = new Updater(this);
-		vm = new VersionManager();
-		
-		frame = new TLauncherFrame(this);
-		downloader.launch();
-		
-		init();
-		
-		long end = System.currentTimeMillis(), diff = end - start;
-		U.log("Started! ("+diff+" ms.)");
-	}
-	
-	private void init() throws IOException {
-		final LoginForm lf = frame.getLoginForm();
-		
-		vm.addRefreshedListener(lf.versionchoice);
-		if(lf.autologin.isEnabled()){
-			vm.refreshVersions(true);
-			lf.autologin.startLogin();
-		} else {
-			vm.asyncRefresh();
-			vm.asyncRefreshResources();
-		}
-		
-		updater.addListener(frame);
-		updater.asyncFindUpdate();
-	}
-	
-	public Downloader getDownloader(){ return downloader; }
-	public TLauncherFrame getFrame(){ return frame; }
-	public Settings getLang(){ return lang; }
-	public GlobalSettings getSettings(){ return settings; }
-	public Locale getLocale(){ return locale; }
-	public VersionManager getVersionManager(){ return vm; }
-	
-	public void reloadLocale() throws IOException {
-		locale = settings.getLocale(); U.log("Selected locale: "+locale);
-		
-		URL url = TLauncher.class.getResource("/lang/"+ locale +".ini");
-		if(lang == null) lang = new Settings(url); else lang.reload(url);
-		
-		Alert.prepareLocal();
-		Localizable.setLang(lang);
-	}
-	
-	public void launch(MinecraftLauncherListener listener, boolean forceupdate) {
-		MinecraftLauncher launcher = new MinecraftLauncher(this, listener, args, forceupdate);
-		launcher.start();
-	}
-	
-	public void runDefaultLauncher(){		
-		Class<?>[] classes = new Class<?>[]{ JFrame.class, File.class, Proxy.class, PasswordAuthentication.class, String[].class, Integer.class };
-		Object[] objects = new Object[]{ frame, MinecraftUtil.getWorkingDirectory(), Proxy.NO_PROXY, null, new String[0], Integer.valueOf(5)};
-		
-		MinecraftUtil.startLauncher(MinecraftUtil.getFile("launcher.jar"), classes, objects);
-	}
-	
-	public void createDefaultLauncher(final boolean run) {
-		final DownloadableContainer c = new DownloadableContainer();
-		final Downloadable d = MinecraftUtil.getDownloadable("https://s3.amazonaws.com/Minecraft.Download/launcher/launcher.pack.lzma", false);
-		
-		c.setHandler(new DownloadableHandler(){
-			public void onComplete(){ try {				
-				LzmaInputStream in = new LzmaInputStream(new FileInputStream( d.getDestination() ));
-				FileOutputStream out = new FileOutputStream(MinecraftUtil.getFile("launcher.pack"));
-				
-				byte[] buffer = new byte[65536];
+   public static final double VERSION = 0.1699D;
+   private static TLauncher instance;
+   private TLauncher.TLauncherState state;
+   private Settings lang;
+   private GlobalSettings settings;
+   private Downloader downloader;
+   private Updater updater;
+   private TLauncherFrame frame;
+   private TLauncherNoGraphics loader;
+   private VersionManager vm;
+   private OptionSet args;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
-				int read = in.read(buffer);
-				while (read >= 1) {
-					out.write(buffer, 0, read);
-					read = in.read(buffer);
-				}
-				
-				in.close(); out.close();
-				
-				JarOutputStream jarOutputStream = null;
-				jarOutputStream = new JarOutputStream(new FileOutputStream(MinecraftUtil.getFile("launcher.jar")));
-				Pack200.newUnpacker().unpack(MinecraftUtil.getFile("launcher.pack"), jarOutputStream);
-				
-				jarOutputStream.close();
-				
-				if(run) runDefaultLauncher();
-			}catch(Exception e){ e.printStackTrace(); } }
-			
-			public void onCompleteError(){
-				frame.getLoginForm().cancelLogin();
-			}
-			public void onStart() {}
-		});
-		
-		c.add(d);
-		downloader.add(c);
-		downloader.launch();
-	}
-	public void kill(){ System.exit(0); }
-	public void hide(){ U.log("Hiding..."); frame.setVisible(false); }
-	public void show(){ U.log("Here I am!"); frame.setVisible(true); }
-	
-	/*___________________________________*/
-	
-	public static void main(String[] args){
-		ExceptionHandler handler = new ExceptionHandler();
-		Thread.setDefaultUncaughtExceptionHandler(handler);
-		
-		try { launch(args); }
-		catch(Throwable e){
-			e.printStackTrace();
-			
-			Alert.showError(e, true);
-		}
-	}
-	private static void launch(String[] args) throws Exception {
-		
-		U.log("Hello!");
-		
-		if(args.length > 0)
-			U.log("All arguments will be passed in Minecraft directly");
-		
-		U.log("Starting version "+ VERSION +"...");
-		
-		new TLauncher(args);
-	}
-	
-	public static TLauncher getInstance(){
-		if(instance != null) return instance;
-		throw new TLauncherException("Instance is not defined!");
-	}
-	public static Locale getSupported(){
-		Locale using = Locale.getDefault();
-		String using_name = using.toString();
-		
-		for(String supported : SUPPORTED_LOCALE)
-			if(supported.equals(using_name))
-				return using;
-		
-		return Locale.US;
-	}
+   public TLauncher(TLauncher.TLauncherState state, OptionSet set) throws IOException {
+      Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
+      if (state == null) {
+         throw new IllegalArgumentException("TLauncherState can't be NULL!");
+      } else {
+         U.log("State:", state);
+         instance = this;
+         this.state = state;
+         this.args = set;
+         long start = System.currentTimeMillis();
+         this.settings = GlobalSettings.createInstance(set);
+         this.reloadLocale();
+         this.vm = new VersionManager();
+         this.init();
+         long end = System.currentTimeMillis();
+         long diff = end - start;
+         U.log("Started! (" + diff + " ms.)");
+      }
+   }
+
+   private void init() {
+      switch($SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState()[this.state.ordinal()]) {
+      case 1:
+         this.downloader = new Downloader(10);
+         this.updater = new Updater(this);
+         this.frame = new TLauncherFrame(this);
+         LoginForm lf = this.frame.getLoginForm();
+         this.vm.addRefreshedListener(lf.versionchoice);
+         this.updater.addListener(this.frame);
+         if (lf.autologin.isEnabled()) {
+            this.vm.refreshVersions(true);
+            lf.autologin.startLogin();
+         } else {
+            this.vm.asyncRefresh();
+            this.vm.asyncRefreshResources();
+            this.updater.asyncFindUpdate();
+         }
+         break;
+      case 2:
+         this.downloader = new Downloader(1);
+         this.loader = new TLauncherNoGraphics(this);
+      }
+
+      this.downloader.launch();
+   }
+
+   public Downloader getDownloader() {
+      return this.downloader;
+   }
+
+   public Settings getLang() {
+      return this.lang;
+   }
+
+   public GlobalSettings getSettings() {
+      return this.settings;
+   }
+
+   public VersionManager getVersionManager() {
+      return this.vm;
+   }
+
+   public Updater getUpdater() {
+      return this.updater;
+   }
+
+   public OptionSet getArguments() {
+      return this.args;
+   }
+
+   public TLauncherFrame getFrame() {
+      return this.frame;
+   }
+
+   public TLauncherNoGraphics getLoader() {
+      return this.loader;
+   }
+
+   public void reloadLocale() throws IOException {
+      Locale locale = this.settings.getLocale();
+      U.log("Selected locale: " + locale);
+      URL url = TLauncher.class.getResource("/lang/" + locale + ".ini");
+      if (this.lang == null) {
+         this.lang = new Settings(url);
+      } else {
+         this.lang.reload(url);
+      }
+
+      Alert.prepareLocal();
+      Localizable.setLang(this.lang);
+   }
+
+   public void launch(MinecraftLauncherListener listener, boolean forceupdate) {
+      MinecraftLauncher launcher = new MinecraftLauncher(this, listener, forceupdate, true);
+      launcher.start();
+   }
+
+   public static void kill() {
+      U.log("Good bye!");
+      System.exit(0);
+   }
+
+   public void hide() {
+      U.log("Hiding...");
+      this.frame.setVisible(false);
+   }
+
+   public void show() {
+      U.log("Here I am!");
+      this.frame.setVisible(true);
+   }
+
+   public static void main(String[] args) {
+      ExceptionHandler handler = new ExceptionHandler();
+      Thread.setDefaultUncaughtExceptionHandler(handler);
+
+      try {
+         launch(args);
+      } catch (Throwable var3) {
+         var3.printStackTrace();
+         Alert.showError(var3, true);
+      }
+
+   }
+
+   private static void launch(String[] args) throws Exception {
+      U.log("Hello!");
+      U.log("TLauncher mustn't be used for profit, guys. I hope you understand.");
+      U.log("---");
+      U.log("Starting version 0.1699...");
+      OptionSet set = ArgumentParser.parseArgs(args);
+      if (set == null) {
+         new TLauncher(TLauncher.TLauncherState.FULL, (OptionSet)null);
+      } else {
+         if (set.has("help")) {
+            ArgumentParser.getParser().printHelpOn((OutputStream)System.out);
+         }
+
+         TLauncher.TLauncherState state = TLauncher.TLauncherState.FULL;
+         if (set.has("nogui")) {
+            state = TLauncher.TLauncherState.MINIMAL;
+         }
+
+         new TLauncher(state, set);
+      }
+   }
+
+   public static TLauncher getInstance() {
+      return instance;
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState() {
+      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[TLauncher.TLauncherState.values().length];
+
+         try {
+            var0[TLauncher.TLauncherState.FULL.ordinal()] = 1;
+         } catch (NoSuchFieldError var2) {
+         }
+
+         try {
+            var0[TLauncher.TLauncherState.MINIMAL.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState = var0;
+         return var0;
+      }
+   }
+
+   public static enum TLauncherState {
+      FULL,
+      MINIMAL;
+   }
 }
