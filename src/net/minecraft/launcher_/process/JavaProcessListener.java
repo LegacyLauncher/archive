@@ -1,8 +1,9 @@
 package net.minecraft.launcher_.process;
 
-public abstract interface JavaProcessListener
-{
-  public abstract void onJavaProcessLog(JavaProcess jp, String line);
-  public abstract void onJavaProcessEnded(JavaProcess jp);
-  public abstract void onJavaProcessError(JavaProcess jp, Throwable e);
+public interface JavaProcessListener {
+   void onJavaProcessLog(JavaProcess var1, String var2);
+
+   void onJavaProcessEnded(JavaProcess var1);
+
+   void onJavaProcessError(JavaProcess var1, Throwable var2);
 }

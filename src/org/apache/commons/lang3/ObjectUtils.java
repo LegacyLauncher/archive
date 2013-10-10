@@ -2,18 +2,13 @@ package org.apache.commons.lang3;
 
 import java.io.Serializable;
 
-public class ObjectUtils
-{
-  public static final Null NULL = new Null();
+public class ObjectUtils {
+   public static final ObjectUtils.Null NULL = new ObjectUtils.Null();
 
-  public static String toString(Object obj)
-  {
-    return obj == null ? "" : obj.toString();
-  }
+   public static String toString(Object obj) {
+      return obj == null ? "" : obj.toString();
+   }
 
-  @SuppressWarnings("serial")
-public static class Null
-    implements Serializable
-  {
-  }
+   public static class Null implements Serializable {
+   }
 }

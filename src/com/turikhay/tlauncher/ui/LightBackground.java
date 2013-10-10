@@ -1,59 +1,55 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.tlauncher.util.U;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-
-import com.turikhay.tlauncher.util.U;
+import java.awt.image.ImageObserver;
 
 public class LightBackground extends Background {
-	protected BufferedImage
-		grass = loadImage("grass.png"),
-		sun = loadImage("sun.png");
-	
-	protected final int
-		grassW, grassH, sunW, sunH;
-	protected double sunLocation;
-	
-	public LightBackground(DecoratedPanel comp, double loc) {
-		super(comp);
-		
-		grassW = grass.getWidth(null);
-		grassH = grass.getHeight(null);
-		
-		sunW = sun.getWidth(null);
-		sunH = sun.getHeight(null);
-		
-		relativeSize = 0.5; 
-		
-		sunLocation = (loc <= 0)? U.doubleRandom() : loc;
-		if(sunLocation <= 0) sunLocation += 0.5;
-	}
+   protected BufferedImage grass = loadImage("grass.png");
+   protected BufferedImage sun = loadImage("sun.png");
+   protected final int grassW;
+   protected final int grassH;
+   protected final int sunW;
+   protected final int sunH;
+   protected double sunLocation;
 
-	public void draw(Graphics2D g, boolean force) {
-		if(force)
-			drawGrass(g);
-		drawSun(g);
-	}
-	
-	public void drawGrass(Graphics2D g){
-		for(int rw = 0; rw <= width;) {
-			g.drawImage(grass, rw, height - grassH, null);
-			
-			rw += grassW;
-		}
-	}
-	
-	public void drawSun(Graphics2D g){		
-		int
-			x = (int) (width * sunLocation - sunW / 2), //((Math.abs((sunW - width)) * (sunLocation + 1)) / 2), //(width / 2 - sunW / 2 + (width / 2 - sunW / 2) * sunLocation),
-			y = (int) (height - grassH - sunH);
-		g.drawImage(sun, x, y, sunW, sunH, null);
-		
-		g.setColor(comp.getBackground());
-		
-		g.fillRect(0, 0, x, height - grassH);
-		g.fillRect(0, 0, width, y);
-		g.fillRect(x + sunW, y, sunW, sunH);
-	}
+   public LightBackground(DecoratedPanel comp, double loc) {
+      super(comp);
+      this.grassW = this.grass.getWidth((ImageObserver)null);
+      this.grassH = this.grass.getHeight((ImageObserver)null);
+      this.sunW = this.sun.getWidth((ImageObserver)null);
+      this.sunH = this.sun.getHeight((ImageObserver)null);
+      this.relativeSize = 0.5D;
+      this.sunLocation = loc <= 0.0D ? U.doubleRandom() : loc;
+      if (this.sunLocation <= 0.0D) {
+         this.sunLocation += 0.5D;
+      }
 
+   }
+
+   public void draw(Graphics2D g, boolean force) {
+      if (force) {
+         this.drawGrass(g);
+      }
+
+      this.drawSun(g);
+   }
+
+   public void drawGrass(Graphics2D g) {
+      for(int rw = 0; rw <= this.width; rw += this.grassW) {
+         g.drawImage(this.grass, rw, this.height - this.grassH, (ImageObserver)null);
+      }
+
+   }
+
+   public void drawSun(Graphics2D g) {
+      int x = (int)((double)this.width * this.sunLocation - (double)(this.sunW / 2));
+      int y = this.height - this.grassH - this.sunH;
+      g.drawImage(this.sun, x, y, this.sunW, this.sunH, (ImageObserver)null);
+      g.setColor(this.comp.getBackground());
+      g.fillRect(0, 0, x, this.height - this.grassH);
+      g.fillRect(0, 0, this.width, y);
+      g.fillRect(x + this.sunW, y, this.sunW, this.sunH);
+   }
 }

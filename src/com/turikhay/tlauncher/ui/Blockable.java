@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 public interface Blockable {
-	public void block(Object reason);
-	public void unblock(Object reason);
+   void block(Object var1);
+
+   void unblock(Object var1);
 }
