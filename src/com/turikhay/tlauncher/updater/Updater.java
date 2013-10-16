@@ -35,6 +35,7 @@ public class Updater {
    private Downloadable update_download;
    private Settings update_settings;
    private double found_version;
+   private String found_description;
    private String found_link;
    private Downloadable launcher_download;
    private File launcher_destination;
@@ -116,12 +117,15 @@ public class Updater {
             this.update_settings = new Settings(is);
             connection.disconnect();
             this.found_version = this.update_settings.getDouble("last-version");
+            this.found_description = this.update_settings.get("description");
             if (this.found_version <= 0.0D) {
                throw new IllegalStateException("Settings file is invalid!");
             } else {
-               if (0.1699D >= this.found_version) {
-                  if (0.1699D > this.found_version) {
+               if (0.177D >= this.found_version) {
+                  if (0.177D > this.found_version) {
                      this.log("Running version is newer than found (" + this.found_version + ")");
+                  } else {
+                     this.log("No update found.");
                   }
 
                   this.noUpdateFound();
@@ -217,6 +221,10 @@ public class Updater {
          var2.printStackTrace();
          return null;
       }
+   }
+
+   public String getDescription() {
+      return this.found_description;
    }
 
    private void onUpdaterRequests() {

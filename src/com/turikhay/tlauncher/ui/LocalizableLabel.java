@@ -12,6 +12,10 @@ public class LocalizableLabel extends Label implements LocalizableComponent {
    private Object w0;
    private Object w1;
 
+   public LocalizableLabel() {
+      this.setText();
+   }
+
    public LocalizableLabel(String path) {
       this.path = path;
       this.setText();
@@ -20,6 +24,11 @@ public class LocalizableLabel extends Label implements LocalizableComponent {
    public LocalizableLabel(String path, int aligment) {
       super("", aligment);
       this.path = path;
+      this.setText();
+   }
+
+   public LocalizableLabel(int aligment) {
+      super("", aligment);
       this.setText();
    }
 

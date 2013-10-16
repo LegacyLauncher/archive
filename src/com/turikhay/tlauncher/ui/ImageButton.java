@@ -25,12 +25,14 @@ public class ImageButton extends Button {
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation;
 
    protected ImageButton() {
+      this.rotation = ImageButton.ImageRotation.CENTER;
       this.margin = 4;
       this.initListeners();
    }
 
    public ImageButton(String label, Image image, ImageButton.ImageRotation rotation, int margin) {
       super(label);
+      this.rotation = ImageButton.ImageRotation.CENTER;
       this.margin = 4;
       this.image = image;
       this.rotation = rotation;
@@ -76,48 +78,49 @@ public class ImageButton extends Button {
    }
 
    public void paint(Graphics g0) {
-      super.paint(g0);
-      Graphics2D g = (Graphics2D)g0;
-      String text = this.getLabel();
-      boolean drawtext = text != null && text.length() > 0;
-      FontMetrics fm = g.getFontMetrics();
-      float opacity = this.isEnabled() ? 1.0F : 0.5F;
-      int width = this.getWidth();
-      int height = this.getHeight();
-      int rmargin = this.margin;
-      int offset = this.pressed ? 1 : 0;
-      int iwidth = this.image.getWidth((ImageObserver)null);
-      int iheight = this.image.getHeight((ImageObserver)null);
-      int ix = false;
-      int iy = height / 2 - iheight / 2;
-      int twidth;
-      if (drawtext) {
-         twidth = fm.stringWidth(text);
-      } else {
-         rmargin = 0;
-         twidth = 0;
-      }
+      if (this.image != null) {
+         Graphics2D g = (Graphics2D)g0;
+         String text = this.getLabel();
+         boolean drawtext = text != null && text.length() > 0;
+         FontMetrics fm = g.getFontMetrics();
+         float opacity = this.isEnabled() ? 1.0F : 0.5F;
+         int width = this.getWidth();
+         int height = this.getHeight();
+         int rmargin = this.margin;
+         int offset = this.pressed ? 1 : 0;
+         int iwidth = this.image.getWidth((ImageObserver)null);
+         int iheight = this.image.getHeight((ImageObserver)null);
+         int ix = false;
+         int iy = height / 2 - iheight / 2;
+         int twidth;
+         if (drawtext) {
+            twidth = fm.stringWidth(text);
+         } else {
+            rmargin = 0;
+            twidth = 0;
+         }
 
-      int ix;
-      switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation()[this.rotation.ordinal()]) {
-      case 1:
-         ix = width / 2 - twidth / 2 - iwidth - rmargin;
-         break;
-      case 2:
-         ix = width / 2 - iwidth / 2;
-         break;
-      case 3:
-         ix = width / 2 + twidth / 2 + rmargin;
-         break;
-      default:
-         throw new IllegalStateException("Unknown rotation!");
-      }
+         int ix;
+         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation()[this.rotation.ordinal()]) {
+         case 1:
+            ix = width / 2 - twidth / 2 - iwidth - rmargin;
+            break;
+         case 2:
+            ix = width / 2 - iwidth / 2;
+            break;
+         case 3:
+            ix = width / 2 + twidth / 2 + rmargin;
+            break;
+         default:
+            throw new IllegalStateException("Unknown rotation!");
+         }
 
-      Composite c = g.getComposite();
-      g.setComposite(AlphaComposite.getInstance(3, opacity));
-      g.drawImage(this.image, ix + offset, iy + offset, (ImageObserver)null);
-      g.setComposite(c);
-      this.pressed = false;
+         Composite c = g.getComposite();
+         g.setComposite(AlphaComposite.getInstance(3, opacity));
+         g.drawImage(this.image, ix + offset, iy + offset, (ImageObserver)null);
+         g.setComposite(c);
+         this.pressed = false;
+      }
    }
 
    protected static Image loadImage(String path) {

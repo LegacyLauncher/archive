@@ -15,7 +15,7 @@ public abstract class BlockablePanel extends Panel implements Blockable {
    public void block(Object reason) {
       if (reason == null) {
          throw new IllegalArgumentException("Reason cannot be NULL!");
-      } else {
+      } else if (!this.reasons.contains(reason)) {
          this.reasons.add(reason);
          if (!this.blocked) {
             this.blocked = true;

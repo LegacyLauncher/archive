@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.minecraft;
 
+import com.turikhay.tlauncher.util.U;
+
 public class MinecraftLauncherException extends Exception {
    private static final long serialVersionUID = 7704448719401222348L;
    private String langpath = "launcher.error.";
@@ -18,18 +20,7 @@ public class MinecraftLauncherException extends Exception {
    public MinecraftLauncherException(String message, String langpath, Object replace) {
       super(message);
       this.langpath = this.langpath + langpath;
-      this.replace = replace;
-   }
-
-   public MinecraftLauncherException(String message, String langpath, Throwable e) {
-      super(message, e);
-      this.langpath = this.langpath + langpath;
-   }
-
-   public MinecraftLauncherException(String message, String langpath, Object replace, Throwable e) {
-      super(message, e);
-      this.langpath = this.langpath + langpath;
-      this.replace = replace;
+      this.replace = replace instanceof Throwable ? U.stackTrace((Throwable)replace) : replace;
    }
 
    public String getLangpath() {

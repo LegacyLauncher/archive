@@ -65,7 +65,7 @@ public class IntegerArray {
       if (val == null) {
          throw new ParseException("String cannot be NULL!");
       } else if (val.length() <= 1) {
-         throw new ParseException("String mustn't equal or be less to delimiter!");
+         throw new ParseException("String mustn't equal or be less than delimiter!");
       } else {
          String[] ints = val.split("\\" + del);
          int l = ints.length;

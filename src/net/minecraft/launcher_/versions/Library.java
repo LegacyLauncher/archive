@@ -12,6 +12,7 @@ public class Library {
    private List rules;
    private Map natives;
    private ExtractRules extract;
+   private String exact_url;
    private String url;
 
    public Library() {
@@ -148,6 +149,14 @@ public class Library {
 
    public boolean hasCustomUrl() {
       return this.url != null;
+   }
+
+   public boolean hasExactUrl() {
+      return this.exact_url != null;
+   }
+
+   public String getExactDownloadUrl() {
+      return this.exact_url;
    }
 
    public String getDownloadUrl() {

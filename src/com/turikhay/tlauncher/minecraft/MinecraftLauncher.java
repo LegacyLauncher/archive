@@ -144,9 +144,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             } else {
                try {
                   this.version = this.vm.getLatestCompleteVersion(this.syncInfo);
-               } catch (IOException var3) {
-                  var3.printStackTrace();
-                  return;
+               } catch (Exception var3) {
+                  throw new MinecraftLauncherException("Cannot get version info!", "version-info", var3);
                }
 
                if (!this.check) {
@@ -552,7 +551,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       if (!U.interval(0, 1, exit)) {
          this.handleCrash();
       } else if (this.con != null) {
-         this.con.killIn(2000L);
+         this.con.killIn(5000L);
       }
 
       U.gc();

@@ -14,12 +14,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
       return instance;
    }
 
-   public ExceptionHandler() {
-      if (instance != null) {
-         throw new IllegalStateException("Use method ExceptionHandler.getInstance() instead of creating new instance.");
-      } else {
-         instance = this;
-      }
+   private ExceptionHandler() {
    }
 
    public void uncaughtException(Thread t, Throwable e) {

@@ -51,26 +51,32 @@ public class U {
 
          for(int var5 = 0; var5 < var6; ++var5) {
             Object e = var7[var5];
-            if (e != null) {
-               if (e instanceof Throwable) {
-                  if (!first) {
-                     b.append("\n");
-                  }
-
-                  b.append(stackTrace((Throwable)e));
-                  b.append("\n");
-                  continue;
+            if (e != null && e.getClass().isArray()) {
+               if (!first) {
+                  b.append(" ");
                }
 
+               if (e instanceof Object[]) {
+                  b.append(toLog((Object[])e));
+               } else {
+                  b.append(arrayToLog(e));
+               }
+            } else if (e instanceof Throwable) {
+               if (!first) {
+                  b.append("\n");
+               }
+
+               b.append(stackTrace((Throwable)e));
+               b.append("\n");
+            } else {
                if (!first) {
                   b.append(" ");
                }
 
                b.append(e);
-            }
-
-            if (first) {
-               first = false;
+               if (first) {
+                  first = false;
+               }
             }
          }
       } else {
@@ -82,6 +88,153 @@ public class U {
 
    public static String toLog(Object... append) {
       return toLog((String)null, append);
+   }
+
+   public static String arrayToLog(Object e) {
+      if (!e.getClass().isArray()) {
+         throw new IllegalArgumentException("Given object is not an array!");
+      } else {
+         StringBuilder b = new StringBuilder();
+         boolean first = true;
+         int var4;
+         int var5;
+         if (e instanceof Object[]) {
+            Object[] var6;
+            var5 = (var6 = (Object[])e).length;
+
+            for(var4 = 0; var4 < var5; ++var4) {
+               Object i = var6[var4];
+               if (!first) {
+                  b.append(" ");
+               } else {
+                  first = false;
+               }
+
+               b.append(i);
+            }
+         } else if (e instanceof int[]) {
+            int[] var16;
+            var5 = (var16 = (int[])e).length;
+
+            for(var4 = 0; var4 < var5; ++var4) {
+               int i = var16[var4];
+               if (!first) {
+                  b.append(" ");
+               } else {
+                  first = false;
+               }
+
+               b.append(i);
+            }
+         } else if (e instanceof boolean[]) {
+            boolean[] var17;
+            var5 = (var17 = (boolean[])e).length;
+
+            for(var4 = 0; var4 < var5; ++var4) {
+               boolean i = var17[var4];
+               if (!first) {
+                  b.append(" ");
+               } else {
+                  first = false;
+               }
+
+               b.append(i);
+            }
+         } else {
+            int var18;
+            if (e instanceof long[]) {
+               long[] var7;
+               var18 = (var7 = (long[])e).length;
+
+               for(var5 = 0; var5 < var18; ++var5) {
+                  long i = var7[var5];
+                  if (!first) {
+                     b.append(" ");
+                  } else {
+                     first = false;
+                  }
+
+                  b.append(i);
+               }
+            } else if (e instanceof float[]) {
+               float[] var19;
+               var5 = (var19 = (float[])e).length;
+
+               for(var4 = 0; var4 < var5; ++var4) {
+                  float i = var19[var4];
+                  if (!first) {
+                     b.append(" ");
+                  } else {
+                     first = false;
+                  }
+
+                  b.append(i);
+               }
+            } else if (e instanceof double[]) {
+               double[] var20;
+               var18 = (var20 = (double[])e).length;
+
+               for(var5 = 0; var5 < var18; ++var5) {
+                  double i = var20[var5];
+                  if (!first) {
+                     b.append(" ");
+                  } else {
+                     first = false;
+                  }
+
+                  b.append(i);
+               }
+            } else if (e instanceof byte[]) {
+               byte[] var21;
+               var5 = (var21 = (byte[])e).length;
+
+               for(var4 = 0; var4 < var5; ++var4) {
+                  byte i = var21[var4];
+                  if (!first) {
+                     b.append(" ");
+                  } else {
+                     first = false;
+                  }
+
+                  b.append(i);
+               }
+            } else if (e instanceof short[]) {
+               short[] var22;
+               var5 = (var22 = (short[])e).length;
+
+               for(var4 = 0; var4 < var5; ++var4) {
+                  short i = var22[var4];
+                  if (!first) {
+                     b.append(" ");
+                  } else {
+                     first = false;
+                  }
+
+                  b.append(i);
+               }
+            } else if (e instanceof char[]) {
+               char[] var23;
+               var5 = (var23 = (char[])e).length;
+
+               for(var4 = 0; var4 < var5; ++var4) {
+                  char i = var23[var4];
+                  if (!first) {
+                     b.append(" ");
+                  } else {
+                     first = false;
+                  }
+
+                  b.append(i);
+               }
+            }
+         }
+
+         if (b.length() == 0) {
+            throw new UnknownError("Unknown array type given.");
+         } else {
+            return b.toString();
+         }
+      }
    }
 
    public static double doubleRandom() {
@@ -257,10 +410,16 @@ public class U {
       }
 
       StackTraceElement[] elems = e.getStackTrace();
+      boolean found_out = false;
 
       for(int x = 0; x < elems.length; ++x) {
-         t = t + "\nat " + elems[x].toString();
-         if (x >= 5) {
+         String elem = elems[x].toString();
+         t = t + "\nat " + elem;
+         if (!found_out) {
+            found_out = elem.startsWith("com.turikhay");
+         }
+
+         if (x >= 5 && found_out) {
             int remain = elems.length - x - 1;
             if (remain != 0) {
                t = t + "\n... and " + remain + " more";
@@ -273,10 +432,16 @@ public class U {
       if (cause != null) {
          t = t + "\nCaused by: " + cause.toString();
          StackTraceElement[] causeelems = cause.getStackTrace();
+         boolean found_out_cause = false;
 
          for(int x = 0; x < causeelems.length; ++x) {
-            t = t + "\nat " + causeelems[x].toString();
-            if (x >= 5) {
+            String causeelem = causeelems[x].toString();
+            t = t + "\nat " + causeelem;
+            if (!found_out) {
+               found_out = causeelem.startsWith("com.turikhay");
+            }
+
+            if (x >= 5 && found_out_cause) {
                int remain = causeelems.length - x - 1;
                if (remain != 0) {
                   t = t + "\n... and " + remain + " more";
@@ -320,7 +485,7 @@ public class U {
       try {
          return new URL(p);
       } catch (Exception var2) {
-         log("Cannot make URL from string: " + p + ". Check out language file", var2);
+         log("Cannot make URL from string: " + p + ".", var2);
          return null;
       }
    }
@@ -329,7 +494,7 @@ public class U {
       try {
          return url.toURI();
       } catch (Exception var2) {
-         log("Cannot make URI from URL: " + url + ". Check out language file", var2);
+         log("Cannot make URI from URL: " + url + ".", var2);
          return null;
       }
    }

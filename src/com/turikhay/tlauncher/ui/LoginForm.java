@@ -63,11 +63,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
                this.versionchoice.refresh();
                this.unblock("refresh");
                if (!this.versionchoice.foundlocal) {
-                  this.setError(this.l.get("versions.notfound"));
+                  Alert.showError("versions.notfound");
                }
 
             } else {
-               this.setError((String)null);
                VersionSyncInfo syncInfo = this.versionchoice.getSyncVersionInfo();
                boolean supporting = syncInfo.isOnRemote();
                boolean installed = syncInfo.isInstalled();
@@ -182,7 +181,6 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener 
    }
 
    public void onMinecraftPrepare() {
-      this.block("launch");
       this.f.mc.suspendBackground();
    }
 

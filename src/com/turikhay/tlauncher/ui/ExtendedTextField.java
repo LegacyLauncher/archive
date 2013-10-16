@@ -1,6 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.TextField;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -15,15 +17,33 @@ public abstract class ExtendedTextField extends TextField implements Localizable
    protected String placeholder;
    protected boolean edit;
    private String error;
+   protected Font placeholder_font;
+   protected Font default_font;
+   protected Color ok_background;
+   protected Color ok_foreground;
+   protected Color wrong_background;
+   protected Color wrong_foreground;
    protected FocusListener focusListener;
    protected TextListener textListener;
 
    protected ExtendedTextField() {
+      this.placeholder_font = new Font("", 2, 12);
+      this.default_font = new Font("", 0, 12);
+      this.ok_background = Color.white;
+      this.ok_foreground = Color.black;
+      this.wrong_background = Color.pink;
+      this.wrong_foreground = Color.black;
       this.initListeners();
    }
 
    public ExtendedTextField(CenterPanel parentPanel, String placeholder, String text, int columns) {
       super(columns);
+      this.placeholder_font = new Font("", 2, 12);
+      this.default_font = new Font("", 0, 12);
+      this.ok_background = Color.white;
+      this.ok_foreground = Color.black;
+      this.wrong_background = Color.pink;
+      this.wrong_foreground = Color.black;
       this.parent = parentPanel;
       this.l = this.parent != null ? this.parent.l : null;
       this.placeholder = placeholder;
@@ -58,11 +78,9 @@ public abstract class ExtendedTextField extends TextField implements Localizable
    public void setPlaceholder() {
       super.setText(this.placeholder);
       this.ok();
-      if (this.parent != null) {
-         this.setBackground(this.parent.textBackground);
-         this.setForeground(this.parent.panelColor);
-         this.setFont(this.parent.font_italic);
-      }
+      this.setBackground(this.parent == null ? this.ok_background : this.parent.textBackground);
+      this.setForeground(this.parent == null ? this.ok_foreground : this.parent.panelColor);
+      this.setFont(this.parent == null ? this.placeholder_font : this.parent.font_italic);
    }
 
    public void setPlaceholder(String placeholder) {
@@ -117,28 +135,24 @@ public abstract class ExtendedTextField extends TextField implements Localizable
    }
 
    protected boolean wrong(String reason) {
-      if (this.parent == null) {
-         return false;
-      } else {
-         this.setBackground(this.parent.wrongColor);
-         if (reason != null && reason != null) {
-            this.parent.setError(reason);
-         }
-
-         return false;
+      this.setBackground(this.parent == null ? this.wrong_background : this.parent.wrongColor);
+      this.setForeground(this.parent == null ? this.wrong_foreground : this.parent.textForeground);
+      if (this.parent != null && reason != null) {
+         this.parent.setError(reason);
       }
+
+      return false;
    }
 
    protected boolean ok() {
-      if (this.parent == null) {
-         return true;
-      } else {
-         this.setBackground(this.parent.textBackground);
-         this.setForeground(this.parent.textForeground);
-         this.setFont(this.parent.font);
+      this.setBackground(this.parent == null ? this.ok_background : this.parent.textBackground);
+      this.setForeground(this.parent == null ? this.ok_foreground : this.parent.textForeground);
+      this.setFont(this.parent == null ? this.default_font : this.parent.font);
+      if (this.parent != null) {
          this.parent.setError((String)null);
-         return true;
       }
+
+      return true;
    }
 
    protected void onFocusGained(FocusEvent e) {
@@ -169,8 +183,8 @@ public abstract class ExtendedTextField extends TextField implements Localizable
    protected void onChangePrepare() {
       if (!this.edit) {
          this.edit = true;
-         this.setFont(this.parent.font);
-         this.setForeground(this.parent.textForeground);
+         this.setFont(this.parent == null ? this.default_font : this.parent.font);
+         this.setForeground(this.parent == null ? this.ok_foreground : this.parent.textForeground);
       }
    }
 

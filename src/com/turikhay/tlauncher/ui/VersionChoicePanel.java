@@ -184,6 +184,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
             this.onVersionChanged();
          }
       } else {
+         this.foundlocal = false;
          this.choice.add(this.l.get("versions.notfound.tip"));
       }
    }
