@@ -27,6 +27,37 @@ public class StringUtil {
       }
    }
 
+   public static String addSlashes(String str) {
+      if (str == null) {
+         return "";
+      } else {
+         StringBuffer s = new StringBuffer(str);
+         int i = 0;
+
+         while(i < s.length()) {
+            switch(s.charAt(i)) {
+            case '"':
+            case '\'':
+            case '(':
+            case ')':
+            case '*':
+            case '+':
+            case ':':
+            case '?':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+               s.insert(i++, '\\');
+            default:
+               ++i;
+            }
+         }
+
+         return s.toString();
+      }
+   }
+
    public static String iconv(String inChar, String outChar, String str) {
       Charset in = Charset.forName(inChar);
       Charset out = Charset.forName(outChar);

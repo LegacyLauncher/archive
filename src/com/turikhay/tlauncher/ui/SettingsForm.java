@@ -189,20 +189,16 @@ public class SettingsForm extends CenterPanel {
    }
 
    public void updateValues() {
-      U.log("Updating values...");
       Iterator var5 = this.findFields().iterator();
 
       while(var5.hasNext()) {
          Component c = (Component)var5.next();
          if (c instanceof SettingsField) {
-            U.log("> Filling " + c.getClass().getName() + "...");
             SettingsField sf = (SettingsField)c;
             String key = sf.getSettingsPath();
             String val = this.s.get(key);
-            U.log("Key:", key, "Value:", val);
             sf.setValue(val);
             if (!this.s.isSaveable(key)) {
-               U.log("Field is unsaveable!");
                c.setEnabled(false);
             } else {
                c.setEnabled(true);
@@ -236,19 +232,14 @@ public class SettingsForm extends CenterPanel {
       while(var3.hasNext()) {
          Component c = (Component)var3.next();
          if (c instanceof SettingsField) {
-            U.log("> Checking " + c.getClass().getSimpleName() + "...");
             SettingsField sf = (SettingsField)c;
             if (!sf.isValueValid()) {
-               U.log("Invalid!");
                c.setBackground(this.wrongColor);
                return false;
             }
 
-            if (!c.isEnabled()) {
-               U.log("Is insaveable!");
-            } else {
+            if (c.isEnabled()) {
                this.s.set(sf.getSettingsPath(), sf.getValue(), false);
-               U.log("Saved (", sf.getSettingsPath(), ":", sf.getValue(), ")");
             }
          }
       }

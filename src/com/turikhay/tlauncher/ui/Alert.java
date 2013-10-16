@@ -69,6 +69,10 @@ public class Alert {
       showError(title, message, (Object)null, (Throwable)null, false);
    }
 
+   public static void showError(String path) {
+      showError(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE));
+   }
+
    public static void showWarning(String title, String message) {
       if (!show) {
          show = true;

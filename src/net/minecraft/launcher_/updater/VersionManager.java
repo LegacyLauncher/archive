@@ -452,12 +452,17 @@ public class VersionManager {
       File baseDirectory = this.localVersionList.getBaseDirectory();
       job.addAll((Collection)version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), baseDirectory, force));
       if (syncInfo.isOnRemote()) {
+         String url = version.getUrl();
          String id = version.getId();
          String o_id = version.getOriginalID();
          String jarFile = "versions/";
          String saveFile = jarFile;
          String downloadPath;
-         if (o_id != null) {
+         if (url != null) {
+            downloadPath = version.getUrl();
+            jarFile = "";
+            saveFile = saveFile + id + "/" + id + ".jar";
+         } else if (o_id != null) {
             downloadPath = VersionSource.REMOTE.getDownloadPath();
             jarFile = jarFile + o_id + "/" + o_id + ".jar";
             saveFile = saveFile + id + "/" + id + ".jar";

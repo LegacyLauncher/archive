@@ -56,7 +56,7 @@ public class Http {
    public static String performGet(URL url, Proxy proxy) throws IOException {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
       connection.setConnectTimeout(15000);
-      connection.setReadTimeout(60000);
+      connection.setReadTimeout(15000);
       connection.setRequestMethod("GET");
       BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       StringBuilder response = new StringBuilder();
@@ -79,7 +79,7 @@ public class Http {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
       byte[] paramAsBytes = parameters.getBytes(Charset.forName("UTF-8"));
       connection.setConnectTimeout(15000);
-      connection.setReadTimeout(60000);
+      connection.setReadTimeout(15000);
       connection.setRequestMethod("POST");
       connection.setRequestProperty("Content-Type", contentType + "; charset=utf-8");
       connection.setRequestProperty("Content-Length", "" + paramAsBytes.length);

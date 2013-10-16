@@ -3,6 +3,7 @@ package com.turikhay.tlauncher.util;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.ui.ConsoleFrame;
+import com.turikhay.tlauncher.ui.SearchPrefs;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.WindowEvent;
@@ -15,7 +16,6 @@ public class Console {
    private static List frames = new ArrayList();
    private final GlobalSettings global;
    private final ConsoleFrame cf;
-   private final Console instance;
    private String del;
    private boolean killed;
    private Console.CloseAction close;
@@ -27,16 +27,15 @@ public class Console {
    }
 
    public Console(GlobalSettings global, String name) {
-      this.instance = this;
       this.del = null;
-      this.cf = new ConsoleFrame(name);
+      this.cf = new ConsoleFrame(this, global, name);
       this.global = global;
       this.cf.addWindowListener(new WindowListener() {
          public void windowOpened(WindowEvent e) {
          }
 
          public void windowClosing(WindowEvent e) {
-            Console.this.saveSize();
+            Console.this.save();
             Console.this.onClose();
          }
 
@@ -62,18 +61,28 @@ public class Console {
          int height = global.getInteger(prefix + "height", 400);
          int x = global.getInteger(prefix + "x", 0);
          int y = global.getInteger(prefix + "y", 0);
+         prefix = prefix + "search.";
+         boolean mcase = global.getBoolean(prefix + "mcase");
+         boolean whole = global.getBoolean(prefix + "whole");
+         boolean cycle = global.getBoolean(prefix + "cycle");
+         boolean regexp = global.getBoolean(prefix + "regexp");
          this.cf.setSize(width, height);
          this.cf.setLocation(x, y);
+         SearchPrefs sf = this.cf.getSearchPrefs();
+         sf.setCaseSensetive(mcase);
+         sf.setWordSearch(whole);
+         sf.setCycled(cycle);
+         sf.setRegExp(regexp);
       }
    }
 
    public Console(GlobalSettings global, String name, boolean show) {
       this(global, name);
-      this.cf.setVisible(show);
+      this.cf.setVisible(true);
    }
 
    public Console(String name, boolean show) {
-      this((GlobalSettings)null, name, show);
+      this(TLauncher.getInstance() != null ? TLauncher.getInstance().getSettings() : null, name, show);
    }
 
    public void show() {
@@ -88,20 +97,32 @@ public class Console {
       this.cf.setVisible(false);
    }
 
+   public void clear() {
+      this.check();
+      this.cf.clear();
+   }
+
    public void kill() {
       this.check();
-      this.saveSize();
+      this.save();
       this.cf.setVisible(false);
+      this.cf.clear();
       frames.remove(this.cf);
       this.killed = true;
    }
 
    public void killIn(long millis) {
+      this.check();
+      this.save();
+      this.cf.hideIn(millis);
       AsyncThread.execute(new Runnable() {
          public void run() {
-            Console.this.instance.kill();
+            if (!Console.this.cf.isVisible()) {
+               Console.this.kill();
+            }
+
          }
-      }, millis);
+      }, millis + 1000L);
    }
 
    public boolean isKilled() {
@@ -146,7 +167,7 @@ public class Console {
       return this.cf.getOutput();
    }
 
-   public void saveSize() {
+   public void save() {
       this.check();
       if (this.global != null) {
          String prefix = "gui.console.";
@@ -155,7 +176,13 @@ public class Console {
          this.global.set(prefix + "width", size[0], false);
          this.global.set(prefix + "height", size[1], false);
          this.global.set(prefix + "x", position[0], false);
-         this.global.set(prefix + "y", position[1], true);
+         this.global.set(prefix + "y", position[1], false);
+         prefix = prefix + "search.";
+         boolean[] prefs = this.cf.getSearchPrefs().get();
+         this.global.set(prefix + "mcase", prefs[0], false);
+         this.global.set(prefix + "whole", prefs[1], false);
+         this.global.set(prefix + "cycle", prefs[2], false);
+         this.global.set(prefix + "regexp", prefs[3], true);
       }
    }
 

@@ -16,6 +16,7 @@ import net.minecraft.launcher_.OperatingSystem;
 public class CompleteVersion implements Version {
    private String original_id;
    private String id;
+   private String url;
    private Date time;
    private Date releaseTime;
    private ReleaseType type;
@@ -206,7 +207,7 @@ public class CompleteVersion implements Version {
          }
 
          if (file != null) {
-            url = library.getDownloadUrl() + file;
+            url = library.hasExactUrl() ? library.getExactDownloadUrl() : library.getDownloadUrl() + file;
             File local = new File(targetDirectory, "libraries/" + file);
             neededFiles.add(new Downloadable(url, local, force));
          }
@@ -221,6 +222,18 @@ public class CompleteVersion implements Version {
 
    public void setOriginalID(String newid) {
       this.original_id = newid;
+   }
+
+   public boolean hasCustomUrl() {
+      return this.url != null;
+   }
+
+   public String getUrl() {
+      return this.url;
+   }
+
+   public void setUrl(String newurl) {
+      this.url = newurl;
    }
 
    public String toString() {

@@ -141,7 +141,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.1699 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.177 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -205,7 +205,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
       if (this.global.getDouble("updater.disallow") == found_version) {
          U.log("User cancelled updating to this version.");
       } else {
-         boolean yes = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", found_version), (Object)null, true);
+         boolean yes = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", found_version), u.getDescription(), true);
          if (yes) {
             if (u.type == Updater.Package.EXE) {
                if (!OperatingSystem.openLink(u.getFoundLinkAsURI())) {
@@ -230,7 +230,6 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    public void onUpdaterDownloadSuccess(Updater u) {
       Alert.showWarning(this.lang.get("updater.downloaded.title"), this.lang.get("updater.downloaded"));
-      this.global.set("gui.sun", true);
       u.saveUpdate();
    }
 
