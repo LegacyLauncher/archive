@@ -524,16 +524,8 @@ public class VersionManager {
    public List checkResources(File baseDirectory, boolean local, boolean fast) {
       U.log("Checking resources...");
       List r = new ArrayList();
-      List mainList;
-      List compareList;
-      if (fast) {
-         mainList = this.getLocalResourceFilesList(baseDirectory);
-         compareList = null;
-      } else {
-         mainList = this.getResourceFilesList(baseDirectory, local);
-         compareList = this.resourcesCalled ? this.getLocalResourceFilesList(baseDirectory) : null;
-      }
-
+      List mainList = this.getResourceFilesList(baseDirectory, local);
+      List compareList = fast ? null : (this.resourcesCalled ? this.getLocalResourceFilesList(baseDirectory) : null);
       boolean extended = compareList != null;
       U.log("Extended comparing: " + extended);
       Iterator var9 = mainList.iterator();
@@ -598,7 +590,7 @@ public class VersionManager {
 
    private List getResourceFilesList(File baseDirectory, boolean local) {
       List remote = null;
-      if (!local && !this.resourcesCalled) {
+      if (!local || !this.resourcesCalled) {
          try {
             remote = this.getRemoteResourceFilesList();
             this.resourcesCalled = true;
@@ -676,30 +668,42 @@ public class VersionManager {
 
    private List getRemoteResourceFilesList() throws Exception {
       List list = new ArrayList();
-      URL resourceUrl = new URL("https://s3.amazonaws.com/Minecraft.Resources/");
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      DocumentBuilder db = dbf.newDocumentBuilder();
-      URLConnection connection = resourceUrl.openConnection();
-      Downloadable.setUp(connection);
-      Document doc = db.parse(connection.getInputStream());
-      NodeList nodeLst = doc.getElementsByTagName("Contents");
+      String nextMarker = null;
 
-      for(int i = 0; i < nodeLst.getLength(); ++i) {
-         Node node = nodeLst.item(i);
-         if (node.getNodeType() == 1) {
-            Element element = (Element)node;
-            String key = element.getElementsByTagName("Key").item(0).getChildNodes().item(0).getNodeValue();
-            String etag = element.getElementsByTagName("ETag") != null ? element.getElementsByTagName("ETag").item(0).getChildNodes().item(0).getNodeValue() : null;
-            long size = Long.parseLong(element.getElementsByTagName("Size").item(0).getChildNodes().item(0).getNodeValue());
-            if (etag != null) {
-               etag = etag.substring(1, etag.length() - 1);
+      do {
+         String query = nextMarker != null ? "?marker=" + nextMarker : "";
+         URL resourceUrl = new URL("https://s3.amazonaws.com/Minecraft.Resources/" + query);
+         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+         DocumentBuilder db = dbf.newDocumentBuilder();
+         URLConnection connection = resourceUrl.openConnection();
+         Downloadable.setUp(connection);
+         Document doc = db.parse(connection.getInputStream());
+         NodeList nodeLst = doc.getElementsByTagName("Contents");
+
+         for(int i = 0; i < nodeLst.getLength(); ++i) {
+            Node node = nodeLst.item(i);
+            if (node.getNodeType() == 1) {
+               Element element = (Element)node;
+               String key = element.getElementsByTagName("Key").item(0).getChildNodes().item(0).getNodeValue();
+               String etag = element.getElementsByTagName("ETag") != null ? element.getElementsByTagName("ETag").item(0).getChildNodes().item(0).getNodeValue() : null;
+               long size = Long.parseLong(element.getElementsByTagName("Size").item(0).getChildNodes().item(0).getNodeValue());
+               if (etag != null) {
+                  etag = Downloadable.getEtag(etag);
+               }
+
+               if (size > 0L) {
+                  list.add(new ResourceFile(key, etag));
+               } else {
+                  nextMarker = key;
+               }
             }
 
-            if (size > 0L) {
-               list.add(new ResourceFile(key, etag));
+            String context = doc.getElementsByTagName("IsTruncated").item(0).getTextContent();
+            if (context != null && context.equals("false")) {
+               nextMarker = null;
             }
          }
-      }
+      } while(nextMarker != null);
 
       return list;
    }

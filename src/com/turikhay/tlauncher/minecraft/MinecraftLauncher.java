@@ -37,7 +37,7 @@ import net.minecraft.launcher_.versions.Library;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
-   public static final int VERSION = 8;
+   public static final int VERSION = 9;
    private final String prefix;
    private final Pattern crash_pattern;
    private final OperatingSystem os;
@@ -51,6 +51,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private boolean working;
    private boolean launching;
    private boolean installed;
+   private boolean forcecompare;
    private final boolean forceupdate;
    private final boolean check;
    private final boolean console;
@@ -92,7 +93,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.exit = exit;
       this.width = sizes[0];
       this.height = sizes[1];
-      this.log("Minecraft Launcher v8 is started!");
+      this.log("Minecraft Launcher v9 is started!");
    }
 
    public MinecraftLauncher(MinecraftLauncherListener listener, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
@@ -134,8 +135,16 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          throw new IllegalStateException("MinecraftLauncher is already working!");
       } else if (this.version_name != null && this.version_name.length() != 0) {
          if (!FileUtil.folderExists(this.gamedir)) {
+            this.forcecompare = true;
+         }
+
+         try {
+            FileUtil.createFolder(this.gamedir);
+         } catch (Exception var4) {
             throw new MinecraftLauncherException("Cannot find folder: " + this.gamedir, "folder-not-found", this.gamedir);
-         } else if (!FileUtil.fileExists(this.javadir)) {
+         }
+
+         if (!FileUtil.fileExists(this.javadir)) {
             throw new MinecraftLauncherException("Java executable file doesn't exist!", "java-exec", this.javadir);
          } else {
             this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
@@ -160,7 +169,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                      this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
                   }
 
-                  if (this.version.getMinimumLauncherVersion() > 8) {
+                  if (this.version.getMinimumLauncherVersion() > 9) {
                      this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
                   }
 
@@ -350,7 +359,11 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private List compareResources() {
       this.log("Comparing resources...");
       long start = System.nanoTime();
-      List result = this.vm.checkResources(true);
+      if (this.forcecompare) {
+         this.log("Resources will be compared from the server.");
+      }
+
+      List result = this.vm.checkResources(!this.forcecompare, true);
       long end = System.nanoTime();
       long delta = end - start;
       this.log("Delta time to compare resources: " + delta / 1000000L + " ms.");

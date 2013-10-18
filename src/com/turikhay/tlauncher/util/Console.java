@@ -78,7 +78,7 @@ public class Console {
 
    public Console(GlobalSettings global, String name, boolean show) {
       this(global, name);
-      this.cf.setVisible(true);
+      this.cf.setVisible(show);
    }
 
    public Console(String name, boolean show) {

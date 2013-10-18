@@ -121,8 +121,8 @@ public class Updater {
             if (this.found_version <= 0.0D) {
                throw new IllegalStateException("Settings file is invalid!");
             } else {
-               if (0.177D >= this.found_version) {
-                  if (0.177D > this.found_version) {
+               if (0.178D >= this.found_version) {
+                  if (0.178D > this.found_version) {
                      this.log("Running version is newer than found (" + this.found_version + ")");
                   } else {
                      this.log("No update found.");

@@ -141,7 +141,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.177 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.178 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {

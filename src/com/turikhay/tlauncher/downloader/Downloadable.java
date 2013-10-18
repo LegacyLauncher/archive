@@ -13,7 +13,7 @@ import net.minecraft.launcher_.Http;
 
 public class Downloadable {
    public static final int CONNECTION_TIMEOUT = 30000;
-   public static final int READ_TIMEOUT = 10000;
+   public static final int READ_TIMEOUT = 30000;
    private URL url;
    private File destination;
    private File[] copies;
@@ -135,7 +135,7 @@ public class Downloadable {
 
    public HttpURLConnection makeConnection() throws IOException {
       HttpURLConnection connection = (HttpURLConnection)this.url.openConnection();
-      setUp(connection);
+      setUp(connection, false);
       if (!this.forced) {
          String md5 = this.getMD5();
          if (md5 != null) {
@@ -160,15 +160,24 @@ public class Downloadable {
       return r;
    }
 
-   public static URLConnection setUp(URLConnection connection) {
+   public static URLConnection setUp(URLConnection connection, boolean mask) {
       connection.setConnectTimeout(30000);
-      connection.setReadTimeout(10000);
+      connection.setReadTimeout(30000);
       connection.setUseCaches(false);
       connection.setDefaultUseCaches(false);
       connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
       connection.setRequestProperty("Expires", "0");
       connection.setRequestProperty("Pragma", "no-cache");
+      connection.setRequestProperty("Accept", "text/html, application/xml;q=0.9, application/xhtml xml, image/png, image/jpeg, image/gif, image/x-xbitmap, */*;q=0.1");
+      connection.setRequestProperty("Accept-Language", "en");
+      connection.setRequestProperty("Accept-Charset", "iso-8859-1, utf-8, utf-16, *;q=0.1");
+      connection.setRequestProperty("Accept-Encoding", "deflate, gzip, x-gzip, identity, *;q=0");
+      connection.setRequestProperty("User-Agent", "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.16");
       return connection;
+   }
+
+   public static URLConnection setUp(URLConnection connection) {
+      return setUp(connection, false);
    }
 
    public static String getEtag(String etag) {
