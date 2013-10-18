@@ -88,6 +88,11 @@ public class DownloaderThread extends Thread {
                break;
             }
          }
+
+         if (attempt == 10) {
+            this.log(dc, "Gave up trying to download this file.");
+            this.onError(d, new DownloaderError("Gave up trying to download this file", true));
+         }
       }
 
       while(!this.list_) {

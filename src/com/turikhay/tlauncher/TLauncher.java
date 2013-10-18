@@ -21,7 +21,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher {
-   public static final double VERSION = 0.177D;
+   public static final double VERSION = 0.178D;
    private static TLauncher instance;
    private TLauncher.TLauncherState state;
    private Settings lang;
@@ -164,7 +164,7 @@ public class TLauncher {
       U.log("Hello!");
       U.log("TLauncher mustn't be used for profit, guys. I hope you understand.");
       U.log("---");
-      U.log("Starting version 0.177...");
+      U.log("Starting version 0.178...");
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, (OptionSet)null);

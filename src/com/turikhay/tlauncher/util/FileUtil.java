@@ -196,6 +196,10 @@ public class FileUtil {
       }
    }
 
+   public static boolean createFolder(String dir) throws IOException {
+      return dir == null ? false : createFolder(new File(dir));
+   }
+
    public static boolean folderExists(String path) {
       if (path == null) {
          return false;
@@ -228,5 +232,9 @@ public class FileUtil {
 
          return true;
       }
+   }
+
+   public static boolean createFile(String file) throws IOException {
+      return file == null ? false : createFile(new File(file));
    }
 }
