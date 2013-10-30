@@ -1,5 +1,6 @@
 package net.minecraft.launcher_;
 
+import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.U;
 import java.awt.Desktop;
 import java.io.File;
@@ -37,6 +38,10 @@ public enum OperatingSystem {
       String separator = System.getProperty("file.separator");
       String path = System.getProperty("java.home") + separator + "bin" + separator;
       return getCurrentPlatform() == WINDOWS && (new File(path + "javaw.exe")).isFile() ? path + "javaw.exe" : path + "java";
+   }
+
+   public boolean doesJavaExist() {
+      return this == WINDOWS ? FileUtil.fileExists(this.getJavaDir()) : FileUtil.folderExists(this.getJavaDir());
    }
 
    public static OperatingSystem getCurrentPlatform() {

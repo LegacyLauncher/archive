@@ -12,8 +12,6 @@ import java.net.URLConnection;
 import net.minecraft.launcher_.Http;
 
 public class Downloadable {
-   public static final int CONNECTION_TIMEOUT = 30000;
-   public static final int READ_TIMEOUT = 30000;
    private URL url;
    private File destination;
    private File[] copies;
@@ -22,10 +20,15 @@ public class Downloadable {
    private DownloadableHandler handler;
    private boolean forced;
 
-   public Downloadable(String url, File destination, File[] copies, boolean force) throws MalformedURLException {
-      this.url = new URL(Http.encode(url));
+   public Downloadable(URL url, File destination, File[] copies, boolean force) {
+      this.url = url;
       this.destination = destination;
+      this.copies = copies;
       this.forced = force;
+   }
+
+   public Downloadable(String url, File destination, File[] copies, boolean force) throws MalformedURLException {
+      this(new URL(Http.encode(url)), destination, copies, force);
    }
 
    public Downloadable(String url, File destination, boolean force) throws MalformedURLException {
@@ -42,6 +45,10 @@ public class Downloadable {
 
    public Downloadable(URL url) {
       this(url, false);
+   }
+
+   public Downloadable(URL url, File destination) {
+      this((URL)url, destination, (File[])null, false);
    }
 
    public URL getURL() {
@@ -161,8 +168,8 @@ public class Downloadable {
    }
 
    public static URLConnection setUp(URLConnection connection, boolean mask) {
-      connection.setConnectTimeout(30000);
-      connection.setReadTimeout(30000);
+      connection.setConnectTimeout(U.getConnectionTimeout());
+      connection.setReadTimeout(U.getReadTimeout());
       connection.setUseCaches(false);
       connection.setDefaultUseCaches(false);
       connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");

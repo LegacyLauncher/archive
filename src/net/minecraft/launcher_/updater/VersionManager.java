@@ -135,6 +135,7 @@ public class VersionManager {
             this.remoteVersionList.refreshVersions();
 
             try {
+               VersionSource.EXTRA.selectRelevantPath();
                this.extraVersionList.refreshVersions();
             } catch (IOException var13) {
                this.log("Cannot refresh extra versions!", var13);
@@ -450,7 +451,7 @@ public class VersionManager {
    public void downloadVersion(VersionSyncInfo syncInfo, DownloadableContainer job, boolean force) throws IOException {
       CompleteVersion version = this.getLatestCompleteVersion(syncInfo);
       File baseDirectory = this.localVersionList.getBaseDirectory();
-      job.addAll((Collection)version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), baseDirectory, force));
+      job.addAll((Collection)version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), syncInfo.getRemoteSource(), baseDirectory, force));
       if (syncInfo.isOnRemote()) {
          String url = version.getUrl();
          String id = version.getId();
@@ -590,12 +591,12 @@ public class VersionManager {
 
    private List getResourceFilesList(File baseDirectory, boolean local) {
       List remote = null;
-      if (!local || !this.resourcesCalled) {
+      if (!local && !this.resourcesCalled) {
          try {
             remote = this.getRemoteResourceFilesList();
             this.resourcesCalled = true;
          } catch (Exception var6) {
-            U.log("Cannot get remote resource files list. Trying to use local one.", var6);
+            U.log("Cannot get remote resource files list. Trying to use the local one.", var6);
          }
       }
 

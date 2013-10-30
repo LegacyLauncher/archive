@@ -120,7 +120,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
             public void componentHidden(ComponentEvent e) {
             }
          });
-         if (TLauncher.getInstance().getFrame() != null) {
+         if (TLauncher.getInstance() != null && TLauncher.getInstance().getFrame() != null) {
             this.favicon = TLauncher.getInstance().getFrame().favicon;
          }
 

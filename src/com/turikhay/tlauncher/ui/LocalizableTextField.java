@@ -7,6 +7,9 @@ public abstract class LocalizableTextField extends ExtendedTextField implements 
    static Settings l;
    private String placeholderPath;
 
+   public LocalizableTextField() {
+   }
+
    public LocalizableTextField(CenterPanel parentPanel, String placeholder, String text, int columns) {
       super(parentPanel, (String)null, text, columns);
       this.setPlaceholder(placeholder);
@@ -38,7 +41,7 @@ public abstract class LocalizableTextField extends ExtendedTextField implements 
 
    public void setPlaceholder(String placeholderPath) {
       this.placeholderPath = placeholderPath;
-      super.setPlaceholder(l.get(placeholderPath));
+      super.setPlaceholder(l == null ? placeholderPath : l.get(placeholderPath));
    }
 
    public String getPlaceholderPath() {

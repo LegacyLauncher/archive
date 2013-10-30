@@ -26,7 +26,6 @@ public class MinecraftUtil {
 
    public static File getSystemRelatedFile(String path) {
       String userHome = System.getProperty("user.home", ".");
-      String separator = File.separator;
       File file;
       switch($SWITCH_TABLE$net$minecraft$launcher_$OperatingSystem()[OperatingSystem.getCurrentPlatform().ordinal()]) {
       case 1:
@@ -39,7 +38,7 @@ public class MinecraftUtil {
          file = new File(folder, path);
          break;
       case 3:
-         file = new File(userHome, "Library" + separator + "Application Support" + separator + path);
+         file = new File(userHome, "Library/Application Support/" + path);
          break;
       default:
          file = new File(userHome, path);
@@ -49,7 +48,14 @@ public class MinecraftUtil {
    }
 
    public static File getDefaultWorkingDirectory() {
-      return getSystemRelatedFile(".minecraft/");
+      OperatingSystem os = OperatingSystem.getCurrentPlatform();
+      String separator = File.separator;
+      String path = ".minecraft";
+      if (os == OperatingSystem.OSX || os == OperatingSystem.UNKNOWN) {
+         path = "minecraft";
+      }
+
+      return getSystemRelatedFile(path + separator);
    }
 
    public static File getOptionsFile() {

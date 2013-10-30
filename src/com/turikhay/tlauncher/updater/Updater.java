@@ -4,68 +4,30 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.exceptions.TLauncherException;
-import com.turikhay.tlauncher.handlers.DownloadableHandler;
+import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.util.AsyncThread;
 import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import wrapper.Wrapper;
+import jsmooth.Wrapper;
 
 public class Updater {
-   public final String link = "http://u.to/tlauncher-update/ixhQBA";
-   public boolean enabled;
-   public Updater.Package type;
-   private Downloader d;
-   private URL url;
+   public static final String[] links = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   public static final URI[] URIs = makeURIs();
+   private boolean enabled;
+   private final GlobalSettings s;
+   private final Downloader d;
    private List listeners = new ArrayList();
-   private Downloadable update_download;
-   private Settings update_settings;
-   private double found_version;
-   private String found_description;
-   private String found_link;
-   private Downloadable launcher_download;
-   private File launcher_destination;
-   private File replace;
-
-   public Updater(TLauncher t) {
-      this.d = t.getDownloader();
-      this.type = Wrapper.isAvailable() ? Updater.Package.EXE : Updater.Package.JAR;
-      this.replace = Wrapper.isAvailable() ? Wrapper.getExecutable() : FileUtil.getRunningJar();
-
-      try {
-         this.url = new URL("http://u.to/tlauncher-update/ixhQBA");
-      } catch (MalformedURLException var3) {
-         throw new TLauncherException("Cannot create update link!", var3);
-      }
-
-      this.enabled = t.getSettings().getBoolean("updater.enabled");
-      this.log("Package type: " + this.type);
-   }
-
-   public Updater(TLauncher t, Updater.Package type) {
-      this.d = t.getDownloader();
-      this.type = type;
-
-      try {
-         this.url = new URL("http://u.to/tlauncher-update/ixhQBA");
-      } catch (MalformedURLException var4) {
-         throw new TLauncherException("Cannot create update link!", var4);
-      }
-   }
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType;
 
    public void addListener(UpdaterListener l) {
       this.listeners.add(l);
@@ -75,156 +37,106 @@ public class Updater {
       this.listeners.remove(l);
    }
 
-   public void asyncFindUpdate() {
-      if (this.enabled) {
-         AsyncThread.execute(new Runnable() {
-            public void run() {
-               Updater.this.findUpdate();
-            }
-         });
+   public Updater(TLauncher t) {
+      this.enabled = t.getSettings().getBoolean("updater.enabled");
+      this.s = t.getSettings();
+      this.d = t.getDownloader();
+      if (PackageType.isCurrent(PackageType.EXE)) {
+         File oldfile = new File(Wrapper.getExecutable().getAbsolutePath() + ".replace");
+         if (oldfile.delete()) {
+            log("Old version has been deleted (.replace)");
+         }
       }
 
+      log("Initialized.");
+      log("Package type:", PackageType.getCurrent());
+      log("Enabled:", this.enabled);
    }
 
    public void findUpdate() {
-      try {
-         this.findUpdate_();
-      } catch (Exception var2) {
-         this.log("Error on searching for update", var2);
-      }
-
-   }
-
-   private void findUpdate_() throws IOException {
-      if (!this.enabled) {
-         this.log("Updater is not enabled");
-      } else {
-         this.log("Searching for an update...");
-         if (this.type == Updater.Package.EXE) {
-            File oldfile = new File(Wrapper.getExecutable().getAbsolutePath() + ".replace");
-            if (oldfile.delete()) {
-               this.log("Old version has been deleted (.replace)");
-            }
-         }
-
+      if (this.enabled) {
+         log("Requesting an update...");
          this.onUpdaterRequests();
-         this.update_download = new Downloadable(this.url);
-         HttpURLConnection connection = this.update_download.makeConnection();
-         int code = connection.getResponseCode();
-         switch(code) {
-         case 200:
-            InputStream is = connection.getInputStream();
-            this.update_settings = new Settings(is);
-            connection.disconnect();
-            this.found_version = this.update_settings.getDouble("last-version");
-            this.found_description = this.update_settings.get("description");
-            if (this.found_version <= 0.0D) {
-               throw new IllegalStateException("Settings file is invalid!");
-            } else {
-               if (0.178D >= this.found_version) {
-                  if (0.178D > this.found_version) {
-                     this.log("Running version is newer than found (" + this.found_version + ")");
-                  } else {
-                     this.log("No update found.");
+         int attempt = 0;
+         URI[] var5;
+         int var4 = (var5 = URIs).length;
+         int var3 = 0;
+
+         while(var3 < var4) {
+            URI uri = var5[var3];
+            ++attempt;
+            log("Attempt #" + attempt + ". URL:", uri);
+
+            try {
+               Downloadable downloadable = new Downloadable(uri.toURL());
+               HttpURLConnection connection = downloadable.makeConnection();
+               int code = connection.getResponseCode();
+               switch(code) {
+               case 200:
+                  InputStream is = connection.getInputStream();
+                  Settings parsed = new Settings(is);
+                  connection.disconnect();
+                  Update update = new Update(this.d, parsed);
+                  double version = update.getVersion();
+                  log("Success!");
+                  if (0.189D > version) {
+                     log("Found version is older than running:", version);
+                  }
+
+                  if (this.s.getDouble("updater.disallow") == version) {
+                     log("User cancelled updating to this version last time.");
+                     return;
+                  }
+
+                  if (!(0.189D >= version)) {
+                     log("Found actual version:", version);
+                     this.onUpdateFound(update);
+                     return;
+                  }
+
+                  Ad ad = new Ad(parsed);
+                  if (this.s.getInteger("updater.ad") != ad.getID() && ad.canBeShown()) {
+                     this.onAdFound(ad);
                   }
 
                   this.noUpdateFound();
                   return;
+               default:
+                  throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
                }
-
-               String current_link = this.update_settings.get(this.type.toLowerCase());
-               this.found_link = current_link;
-               this.onUpdateFound();
-               return;
+            } catch (Exception var15) {
+               log("Cannot get update information", var15);
+               ++var3;
             }
-         default:
-            throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
          }
+
+         log("Updating is impossible - cannot fetch any information.");
+         this.onUpdaterRequestError();
       }
    }
 
-   public void downloadUpdate() {
-      try {
-         this.downloadUpdate_();
-      } catch (Exception var2) {
-         this.onUpdateError(var2);
-      }
-
-   }
-
-   private void downloadUpdate_() throws MalformedURLException {
-      this.log("Downloading update...");
-      this.onUpdaterDownloads();
-      this.launcher_destination = new File(MinecraftUtil.getWorkingDirectory(), "tlauncher.updated");
-      this.launcher_destination.deleteOnExit();
-      this.launcher_download = new Downloadable(this.found_link, this.launcher_destination);
-      this.launcher_download.setHandler(new DownloadableHandler() {
-         public void onStart() {
-         }
-
-         public void onCompleteError() {
-            Updater.this.onUpdateError(Updater.this.launcher_download.getError());
-         }
-
-         public void onComplete() {
-            Updater.this.onUpdateDownloaded();
+   public void asyncFindUpdate() {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Updater.this.findUpdate();
          }
       });
-      this.d.add(this.launcher_download);
-      this.d.launch();
    }
 
-   public String getLink() {
-      return this.found_link;
+   public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
    }
 
-   public void saveUpdate() {
-      try {
-         this.saveUpdate_();
-      } catch (Exception var2) {
-         this.onProcessError(var2);
-      }
-
+   public boolean isEnabled() {
+      return this.enabled;
    }
 
-   private void saveUpdate_() throws Exception {
-      this.log("Saving update... Launcher will be closed.");
-      if (this.type == Updater.Package.EXE) {
-         File oldfile = new File(this.replace.toString());
-         File newfile = new File(this.replace.toString() + ".replace");
-         if (!oldfile.renameTo(newfile)) {
-            throw new IllegalStateException("Cannot rename " + oldfile + " to " + newfile);
-         }
-      }
-
-      FileInputStream in = new FileInputStream(this.launcher_destination);
-      FileOutputStream out = new FileOutputStream(this.replace);
-      byte[] buffer = new byte[65536];
-
-      for(int curread = in.read(buffer); curread > 0; curread = in.read(buffer)) {
-         out.write(buffer, 0, curread);
-      }
-
-      in.close();
-      out.close();
-      System.exit(0);
+   public boolean isAllowed(double version) {
+      return this.s.getDouble("updater.disallowed") == version;
    }
 
-   public double getFoundVersion() {
-      return this.found_version;
-   }
-
-   public URI getFoundLinkAsURI() {
-      try {
-         return new URI(this.found_link);
-      } catch (URISyntaxException var2) {
-         var2.printStackTrace();
-         return null;
-      }
-   }
-
-   public String getDescription() {
-      return this.found_description;
+   public void setDisallowed(double version) {
+      this.s.set("updater.disallowed", version);
    }
 
    private void onUpdaterRequests() {
@@ -233,6 +145,26 @@ public class Updater {
       while(var2.hasNext()) {
          UpdaterListener l = (UpdaterListener)var2.next();
          l.onUpdaterRequesting(this);
+      }
+
+   }
+
+   private void onUpdaterRequestError() {
+      Iterator var2 = this.listeners.iterator();
+
+      while(var2.hasNext()) {
+         UpdaterListener l = (UpdaterListener)var2.next();
+         l.onUpdaterRequestError(this);
+      }
+
+   }
+
+   private void onUpdateFound(Update u) {
+      Iterator var3 = this.listeners.iterator();
+
+      while(var3.hasNext()) {
+         UpdaterListener l = (UpdaterListener)var3.next();
+         l.onUpdateFound(this, u);
       }
 
    }
@@ -247,81 +179,101 @@ public class Updater {
 
    }
 
-   private void onUpdateFound() {
-      Iterator var2 = this.listeners.iterator();
-
-      while(var2.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var2.next();
-         l.onUpdaterFoundUpdate(this);
-      }
-
-   }
-
-   private void onUpdaterDownloads() {
-      Iterator var2 = this.listeners.iterator();
-
-      while(var2.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var2.next();
-         l.onUpdaterDownloading(this);
-      }
-
-   }
-
-   private void onUpdateDownloaded() {
-      Iterator var2 = this.listeners.iterator();
-
-      while(var2.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var2.next();
-         l.onUpdaterDownloadSuccess(this);
-      }
-
-   }
-
-   private void onUpdateError(Throwable e) {
+   private void onAdFound(Ad ad) {
       Iterator var3 = this.listeners.iterator();
 
       while(var3.hasNext()) {
          UpdaterListener l = (UpdaterListener)var3.next();
-         l.onUpdaterDownloadError(this, e);
+         l.onAdFound(this, ad);
       }
 
    }
 
-   private void onProcessError(Throwable e) {
-      Iterator var3 = this.listeners.iterator();
+   public static boolean isAutomodeFor(PackageType pt) {
+      if (pt == null) {
+         throw new NullPointerException("PackageType is NULL!");
+      } else {
+         switch($SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
+         case 1:
+            return false;
+         case 2:
+            return true;
+         default:
+            throw new IllegalArgumentException("Unknown PackageType!");
+         }
+      }
+   }
 
-      while(var3.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var3.next();
-         l.onUpdaterProcessError(this, e);
+   public static boolean isAutomode() {
+      return isAutomodeFor(PackageType.getCurrent());
+   }
+
+   public static File getFileFor(PackageType pt) {
+      if (pt == null) {
+         throw new NullPointerException("PackageType is NULL!");
+      } else {
+         switch($SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
+         case 1:
+            return Wrapper.getExecutable();
+         case 2:
+            return FileUtil.getRunningJar();
+         default:
+            throw new IllegalArgumentException("Unknown PackageType!");
+         }
+      }
+   }
+
+   public static File getFile() {
+      return getFileFor(PackageType.getCurrent());
+   }
+
+   public static File getTempFileFor(PackageType pt) {
+      return new File(getFileFor(pt).getAbsolutePath() + ".update");
+   }
+
+   public static File getTempFile() {
+      return getTempFileFor(PackageType.getCurrent());
+   }
+
+   private static URI[] makeURIs() {
+      int len = links.length;
+      URI[] r = new URI[len];
+
+      for(int i = 0; i < len; ++i) {
+         try {
+            r[i] = (new URL(links[i])).toURI();
+         } catch (Exception var4) {
+            throw new TLauncherException("Cannot create link from at i:" + i, var4);
+         }
       }
 
+      return r;
    }
 
-   public boolean isEnabled() {
-      return this.enabled;
+   private static void log(Object... obj) {
+      U.log("[Updater]", obj);
    }
 
-   public void setEnabled(boolean e) {
-      this.enabled = e;
-   }
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType() {
+      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[PackageType.values().length];
 
-   private void log(Object... obj) {
-      Object[] var5 = obj;
-      int var4 = obj.length;
+         try {
+            var0[PackageType.EXE.ordinal()] = 1;
+         } catch (NoSuchFieldError var2) {
+         }
 
-      for(int var3 = 0; var3 < var4; ++var3) {
-         Object cobj = var5[var3];
-         U.log("[Updater]", cobj);
-      }
+         try {
+            var0[PackageType.JAR.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
 
-   }
-
-   public static enum Package {
-      EXE,
-      JAR;
-
-      public String toLowerCase() {
-         return this.name().toLowerCase();
+         $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType = var0;
+         return var0;
       }
    }
 }

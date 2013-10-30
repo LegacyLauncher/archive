@@ -189,12 +189,12 @@ public class CompleteVersion implements Version {
       return neededFiles;
    }
 
-   public Set getRequiredDownloadables(OperatingSystem os, File targetDirectory, boolean force) throws MalformedURLException {
+   public Set getRequiredDownloadables(OperatingSystem os, VersionSource source, File targetDirectory, boolean force) throws MalformedURLException {
       Set neededFiles = new HashSet();
-      Iterator var6 = this.getRelevantLibraries().iterator();
+      Iterator var7 = this.getRelevantLibraries().iterator();
 
-      while(var6.hasNext()) {
-         Library library = (Library)var6.next();
+      while(var7.hasNext()) {
+         Library library = (Library)var7.next();
          String file = null;
          String url;
          if (library.getNatives() != null) {
@@ -208,6 +208,10 @@ public class CompleteVersion implements Version {
 
          if (file != null) {
             url = library.hasExactUrl() ? library.getExactDownloadUrl() : library.getDownloadUrl() + file;
+            if (url.startsWith("/")) {
+               url = source.getDownloadPath() + url.substring(1);
+            }
+
             File local = new File(targetDirectory, "libraries/" + file);
             neededFiles.add(new Downloadable(url, local, force));
          }

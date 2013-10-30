@@ -33,7 +33,7 @@ public class UsernameField extends LocalizableTextField {
       if (text == null) {
          return false;
       } else {
-         String regexp = "^[A-Za-z0-9_-]" + (canBeEmpty ? "*" : "+") + "$";
+         String regexp = "^[A-Za-z0-9_|\\-|\\.]" + (canBeEmpty ? "*" : "+") + "$";
          if (text.matches(regexp)) {
             this.username = text;
             return true;

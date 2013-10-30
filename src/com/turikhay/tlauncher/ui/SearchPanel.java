@@ -36,7 +36,7 @@ public class SearchPanel extends BlockablePanel {
 
    public void search() {
       this.focus();
-      String c_regexp = this.prefs.isRegExp() ? this.field.getValue() : StringUtil.addSlashes(this.field.getValue());
+      String c_regexp = this.prefs.isRegExp() ? this.field.getValue() : StringUtil.addSlashes(this.field.getValue(), StringUtil.EscapeGroup.REGEXP);
       if (c_regexp != null && c_regexp.trim().length() != 0) {
          if (c_regexp.equalsIgnoreCase("fuck you")) {
             this.log("No, fuck you! :C");

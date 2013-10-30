@@ -67,7 +67,7 @@ public class IntegerArray {
       } else if (val.length() <= 1) {
          throw new ParseException("String mustn't equal or be less than delimiter!");
       } else {
-         String[] ints = val.split("\\" + del);
+         String[] ints = val.split("(?<!\\\\)\\" + del);
          int l = ints.length;
          int[] arr = new int[l];
 
@@ -76,6 +76,7 @@ public class IntegerArray {
             try {
                cur = Integer.parseInt(ints[i]);
             } catch (NumberFormatException var8) {
+               U.log("Cannot parse integer (iteration: " + i + ")", var8);
                throw new ParseException("Cannot parse integer (iteration: " + i + ")", var8);
             }
 

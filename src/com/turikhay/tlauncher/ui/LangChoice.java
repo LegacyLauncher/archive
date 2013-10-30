@@ -7,6 +7,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,17 +19,16 @@ public class LangChoice extends Choice implements SettingsField {
    boolean changed;
 
    LangChoice(SettingsForm sf) {
-      String[] available = GlobalSettings.SUPPORTED_LOCALE;
+      List available = GlobalSettings.SUPPORTED_LOCALE;
       Locale[] var6;
       int var5 = (var6 = Locale.getAvailableLocales()).length;
 
       for(int var4 = 0; var4 < var5; ++var4) {
          Locale loc = var6[var4];
-         String[] var10 = available;
-         int var9 = available.length;
+         Iterator var8 = available.iterator();
 
-         for(int var8 = 0; var8 < var9; ++var8) {
-            String id = var10[var8];
+         while(var8.hasNext()) {
+            String id = (String)var8.next();
             if (loc.toString().equals(id)) {
                String curdisp = loc.getDisplayCountry(Locale.ENGLISH) + " (" + id + ")";
                this.replacer.put(curdisp, id);

@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 public class Settings {
@@ -240,6 +241,10 @@ public class Settings {
       }
 
       return r;
+   }
+
+   public Set getKeys() {
+      return this.s.keySet();
    }
 
    public void set(String key, Object value, boolean save) {

@@ -105,6 +105,13 @@ public class SettingsPanel extends Panel {
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;
+      this.add(this.sf.connTimeoutLabel, constraints);
+      constraints.fill = 2;
+      constraints.weightx = 1.0D;
+      this.add(this.sf.connectionField, constraints);
+      ++constraints.gridy;
+      constraints.weightx = 0.0D;
+      constraints.fill = 0;
       this.add(this.sf.langCustom, constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;

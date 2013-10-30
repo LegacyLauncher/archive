@@ -6,10 +6,12 @@ import com.turikhay.tlauncher.util.StringUtil;
 public class SettingsCheckbox extends LocalizableCheckbox implements SettingsField {
    private static final long serialVersionUID = -9013976214526482171L;
    private String settingspath;
+   private boolean defaultState;
 
-   public SettingsCheckbox(String path, String settingspath) {
+   public SettingsCheckbox(String path, String settingspath, boolean defaultState) {
       super(path);
       this.settingspath = settingspath;
+      this.defaultState = defaultState;
    }
 
    public String getValue() {
@@ -33,6 +35,6 @@ public class SettingsCheckbox extends LocalizableCheckbox implements SettingsFie
    }
 
    public void setToDefault() {
-      this.setValue((String)null);
+      this.setState(this.defaultState);
    }
 }

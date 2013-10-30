@@ -39,7 +39,7 @@ public class LocalizableLabel extends Label implements LocalizableComponent {
    public void setText(String path) {
       this.path = path;
       this.u();
-      super.setText(l.get(path));
+      super.setText(l == null ? path : l.get(path));
    }
 
    public void setText(String path, String replace, Object with) {
@@ -47,7 +47,7 @@ public class LocalizableLabel extends Label implements LocalizableComponent {
       this.u();
       this.r0 = replace;
       this.w0 = with;
-      super.setText(l.get(path, replace, with));
+      super.setText(l == null ? path : l.get(path, replace, with));
    }
 
    public void setText(String path, String replace0, Object with0, String replace1, Object with1) {
@@ -57,7 +57,7 @@ public class LocalizableLabel extends Label implements LocalizableComponent {
       this.w0 = with0;
       this.r1 = replace1;
       this.w1 = with1;
-      super.setText(l.get(path, replace0, with0, replace1, with1));
+      super.setText(l == null ? path : l.get(path, replace0, with0, replace1, with1));
    }
 
    public String getLangPath() {

@@ -1,51 +1,44 @@
 package net.minecraft.launcher_.versions;
 
+import com.turikhay.tlauncher.util.U;
+import java.net.Proxy;
+import java.net.URL;
+import net.minecraft.launcher_.Http;
+
 public enum VersionSource {
-   LOCAL,
-   REMOTE,
-   EXTRA;
+   LOCAL(new String[1]),
+   REMOTE(new String[]{"https://s3.amazonaws.com/Minecraft.Download/"}),
+   EXTRA(new String[]{"http://ru-minecraft.org/update/tlauncher/extra/", "http://dl.dropboxusercontent.com/u/6204017/minecraft/tlauncher/extra/"});
 
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$net$minecraft$launcher_$versions$VersionSource;
+   private String[] urls;
+   private int selected;
 
-   public String getDownloadPath() {
-      switch($SWITCH_TABLE$net$minecraft$launcher_$versions$VersionSource()[this.ordinal()]) {
-      case 1:
-         return null;
-      case 2:
-         return "https://s3.amazonaws.com/Minecraft.Download/";
-      case 3:
-         return "https://dl.dropboxusercontent.com/u/6204017/minecraft/tlauncher/extra/";
-      default:
-         throw new IllegalStateException("Unknown repo type!");
-      }
+   private VersionSource(String[] url) {
+      this.urls = url;
    }
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$net$minecraft$launcher_$versions$VersionSource() {
-      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher_$versions$VersionSource;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[values().length];
+   public String getDownloadPath() {
+      return this.urls[this.selected];
+   }
 
-         try {
-            var0[EXTRA.ordinal()] = 3;
-         } catch (NoSuchFieldError var3) {
+   public void selectRelevantPath() {
+      if (this.urls.length >= 2) {
+         U.log("Selecting relevant path for", this.toString() + "...");
+         int i = 0;
+
+         while(i < this.urls.length) {
+            try {
+               Http.performGet(new URL(this.urls[i] + "check.txt"), Proxy.NO_PROXY);
+               this.selected = i;
+               U.log("Success: relevant path for", this.toString(), "is", this.urls[i]);
+               return;
+            } catch (Exception var3) {
+               U.log("Failed: repo is not reachable:", this.urls[i]);
+               ++i;
+            }
          }
 
-         try {
-            var0[LOCAL.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[REMOTE.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$net$minecraft$launcher_$versions$VersionSource = var0;
-         return var0;
+         U.log("Cannot select relevant path for", this.toString(), "because all repos are unreachable.");
       }
    }
 }

@@ -1,11 +1,14 @@
 package com.turikhay.tlauncher.util;
 
+import com.turikhay.tlauncher.TLauncher;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Random;
 
 public class U {
+   public static final int DEFAULT_READ_TIMEOUT = 15000;
+   public static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
    private static final String PREFIX = "[TLauncher]";
    private static boolean conBusy = false;
 
@@ -404,54 +407,40 @@ public class U {
    }
 
    public static String stackTrace(Throwable e) {
-      String t = e.toString();
-      if (t == null) {
-         t = "";
-      }
-
-      StackTraceElement[] elems = e.getStackTrace();
-      boolean found_out = false;
-
-      for(int x = 0; x < elems.length; ++x) {
-         String elem = elems[x].toString();
-         t = t + "\nat " + elem;
-         if (!found_out) {
-            found_out = elem.startsWith("com.turikhay");
+      if (e == null) {
+         return null;
+      } else {
+         String t = e.toString();
+         if (t == null) {
+            t = "";
          }
 
-         if (x >= 5 && found_out) {
-            int remain = elems.length - x - 1;
-            if (remain != 0) {
-               t = t + "\n... and " + remain + " more";
-            }
-            break;
-         }
-      }
+         StackTraceElement[] elems = e.getStackTrace();
+         boolean found_out = false;
 
-      Throwable cause = e.getCause();
-      if (cause != null) {
-         t = t + "\nCaused by: " + cause.toString();
-         StackTraceElement[] causeelems = cause.getStackTrace();
-         boolean found_out_cause = false;
-
-         for(int x = 0; x < causeelems.length; ++x) {
-            String causeelem = causeelems[x].toString();
-            t = t + "\nat " + causeelem;
+         for(int x = 0; x < elems.length; ++x) {
+            String elem = elems[x].toString();
+            t = t + "\nat " + elem;
             if (!found_out) {
-               found_out = causeelem.startsWith("com.turikhay");
+               found_out = elem.startsWith("com.turikhay");
             }
 
-            if (x >= 5 && found_out_cause) {
-               int remain = causeelems.length - x - 1;
+            if (x >= 5 && found_out) {
+               int remain = elems.length - x - 1;
                if (remain != 0) {
                   t = t + "\n... and " + remain + " more";
                }
                break;
             }
          }
-      }
 
-      return t;
+         Throwable cause = e.getCause();
+         if (cause != null) {
+            t = t + "\nCaused by: " + stackTrace(cause);
+         }
+
+         return t;
+      }
    }
 
    public static long getUsingSpace() {
@@ -485,7 +474,6 @@ public class U {
       try {
          return new URL(p);
       } catch (Exception var2) {
-         log("Cannot make URL from string: " + p + ".", var2);
          return null;
       }
    }
@@ -494,9 +482,12 @@ public class U {
       try {
          return url.toURI();
       } catch (Exception var2) {
-         log("Cannot make URI from URL: " + url + ".", var2);
          return null;
       }
+   }
+
+   public static URI makeURI(String url) {
+      return makeURI(makeURL(url));
    }
 
    public static boolean interval(int min, int max, int num, boolean including) {
@@ -513,5 +504,19 @@ public class U {
 
    public static long n() {
       return System.nanoTime();
+   }
+
+   public static int getReadTimeout() {
+      return getConnectionTimeout();
+   }
+
+   public static int getConnectionTimeout() {
+      TLauncher t = TLauncher.getInstance();
+      if (t == null) {
+         return 15000;
+      } else {
+         int timeout = t.getSettings().getInteger("timeout.connection");
+         return timeout < 1 ? 15000 : timeout;
+      }
    }
 }

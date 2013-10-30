@@ -6,55 +6,54 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
-import java.util.Iterator;
-import java.util.List;
 
 public class StringUtil {
-   public static String addQuotes(List a, String quotes, String del) {
+   public static String addQuotes(String a, char quote) {
       if (a == null) {
          return null;
-      } else if (a.size() == 0) {
-         return "";
       } else {
-         String t = "";
-
-         String cs;
-         for(Iterator var5 = a.iterator(); var5.hasNext(); t = t + del + quotes + cs + quotes) {
-            cs = (String)var5.next();
-         }
-
-         return t.substring(del.length());
+         return a.length() == 0 ? "" : quote + a.replaceAll("\\" + quote, "\\\\" + quote) + quote;
       }
    }
 
-   public static String addSlashes(String str) {
+   public static String addQuotes(String a) {
+      return addQuotes(a, '"');
+   }
+
+   public static String addSlashes(String str, StringUtil.EscapeGroup group) {
       if (str == null) {
          return "";
       } else {
          StringBuffer s = new StringBuffer(str);
-         int i = 0;
 
-         while(i < s.length()) {
-            switch(s.charAt(i)) {
-            case '"':
-            case '\'':
-            case '(':
-            case ')':
-            case '*':
-            case '+':
-            case ':':
-            case '?':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-               s.insert(i++, '\\');
-            default:
-               ++i;
+         for(int i = 0; i < s.length(); ++i) {
+            char[] var7;
+            int var6 = (var7 = group.getChars()).length;
+
+            for(int var5 = 0; var5 < var6; ++var5) {
+               char c = var7[var5];
+               if (s.charAt(i) == c) {
+                  s.insert(i++, '\\');
+               }
             }
          }
 
          return s.toString();
+      }
+   }
+
+   public static String[] addSlashes(String[] str, StringUtil.EscapeGroup group) {
+      if (str == null) {
+         return null;
+      } else {
+         int len = str.length;
+         String[] ret = new String[len];
+
+         for(int i = 0; i < len; ++i) {
+            ret[i] = addSlashes(str[i], group);
+         }
+
+         return ret;
       }
    }
 
@@ -100,5 +99,35 @@ public class StringUtil {
 
    public static boolean parseBoolean(String b) throws ParseException {
       return parseBoolean(b, true);
+   }
+
+   public static enum EscapeGroup {
+      COMMAND(new char[]{'\'', '"', ' '}),
+      REGEXP(COMMAND, new char[]{'/', '\\', '?', '*', '+', '[', ']', ':', '{', '}', '(', ')'});
+
+      private final char[] chars;
+
+      private EscapeGroup(char... symbols) {
+         this.chars = symbols;
+      }
+
+      private EscapeGroup(StringUtil.EscapeGroup extend, char... symbols) {
+         int len = extend.chars.length + symbols.length;
+         this.chars = new char[len];
+
+         int x;
+         for(x = 0; x < extend.chars.length; ++x) {
+            this.chars[x] = extend.chars[x];
+         }
+
+         for(int i = 0; i < symbols.length; ++i) {
+            this.chars[i + x] = symbols[i];
+         }
+
+      }
+
+      public char[] getChars() {
+         return this.chars;
+      }
    }
 }
