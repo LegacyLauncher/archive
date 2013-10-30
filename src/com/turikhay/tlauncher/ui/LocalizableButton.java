@@ -25,7 +25,7 @@ public class LocalizableButton extends Button implements LocalizableComponent {
 
    public void setLabel(String path) {
       this.path = path;
-      super.setLabel(l.get(path));
+      super.setLabel(l == null ? path : l.get(path));
    }
 
    public void setLabel(String path, String replace, Object with) {
@@ -33,7 +33,7 @@ public class LocalizableButton extends Button implements LocalizableComponent {
       this.u();
       this.r0 = replace;
       this.w0 = with;
-      super.setLabel(l.get(path, replace, with));
+      super.setLabel(l == null ? path : l.get(path, replace, with));
    }
 
    public void setLabel(String path, String replace0, Object with0, String replace1, Object with1) {
@@ -43,7 +43,7 @@ public class LocalizableButton extends Button implements LocalizableComponent {
       this.w0 = with0;
       this.r1 = replace1;
       this.w1 = with1;
-      super.setLabel(l.get(path, replace0, with0, replace1, with1));
+      super.setLabel(l == null ? path : l.get(path, replace0, with0, replace1, with1));
    }
 
    public String getLangPath() {

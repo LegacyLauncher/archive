@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.settings;
 
+import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.IntegerArray;
 import com.turikhay.tlauncher.util.MinecraftUtil;
 import com.turikhay.tlauncher.util.U;
@@ -7,16 +8,25 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import joptsimple.OptionSet;
 
 public class GlobalSettings extends Settings {
+   private static final Pattern lang_pattern = Pattern.compile("lang/([\\w]+)\\.ini");
    public static final Locale DEFAULT_LOCALE;
-   public static final String[] SUPPORTED_LOCALE;
+   public static final List DEFAULT_LOCALES;
+   public static final List SUPPORTED_LOCALE;
    private File file;
    private static boolean firstRun;
    private Map d = new HashMap();
@@ -25,7 +35,8 @@ public class GlobalSettings extends Settings {
 
    static {
       DEFAULT_LOCALE = Locale.US;
-      SUPPORTED_LOCALE = new String[]{"ru_RU", "en_US", "uk_UA"};
+      DEFAULT_LOCALES = getDefaultLocales();
+      SUPPORTED_LOCALE = getSupportedLocales();
    }
 
    public static GlobalSettings createInstance(OptionSet set) throws IOException {
@@ -45,7 +56,7 @@ public class GlobalSettings extends Settings {
       this.d.put("settings.version", this.version);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 3);
-      this.d.put("minecraft.size", new IntegerArray(new int[]{925, 525}));
+      this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
       this.d.put("minecraft.versions.snapshots", true);
       this.d.put("minecraft.versions.beta", true);
       this.d.put("minecraft.versions.alpha", true);
@@ -56,6 +67,7 @@ public class GlobalSettings extends Settings {
       this.d.put("gui.console.x", 1);
       this.d.put("gui.console.y", 1);
       this.d.put("updater.enabled", true);
+      this.d.put("timeout.connection", 15000);
       this.d.put("locale", getSupported());
       boolean forcedrepair = this.getDouble("settings.version") != this.version;
       Iterator var5 = this.d.entrySet().iterator();
@@ -190,11 +202,10 @@ public class GlobalSettings extends Settings {
       for(int var3 = 0; var3 < var4; ++var3) {
          Locale lookup = var5[var3];
          String lookup_name = lookup.toString();
-         String[] var10;
-         int var9 = (var10 = SUPPORTED_LOCALE).length;
+         Iterator var8 = SUPPORTED_LOCALE.iterator();
 
-         for(int var8 = 0; var8 < var9; ++var8) {
-            String curloc = var10[var8];
+         while(var8.hasNext()) {
+            String curloc = (String)var8.next();
             if (lookup_name.equals(curloc) && curloc.equals(locale)) {
                return lookup;
             }
@@ -207,11 +218,10 @@ public class GlobalSettings extends Settings {
    private static Locale getSupported() {
       Locale using = Locale.getDefault();
       String using_name = using.toString();
-      String[] var5;
-      int var4 = (var5 = SUPPORTED_LOCALE).length;
+      Iterator var3 = SUPPORTED_LOCALE.iterator();
 
-      for(int var3 = 0; var3 < var4; ++var3) {
-         String supported = var5[var3];
+      while(var3.hasNext()) {
+         String supported = (String)var3.next();
          if (supported.equals(using_name)) {
             return using;
          }
@@ -300,14 +310,61 @@ public class GlobalSettings extends Settings {
    }
 
    public int[] getWindowSize() {
+      int[] d_sizes = new int[]{925, 530};
+
       int[] w_sizes;
       try {
          w_sizes = IntegerArray.parseIntegerArray(this.get("minecraft.size")).toArray();
-      } catch (Exception var3) {
-         w_sizes = new int[]{925, 525};
+      } catch (Exception var4) {
+         w_sizes = d_sizes;
+      }
+
+      if (w_sizes[0] < d_sizes[0] || w_sizes[1] < d_sizes[1]) {
+         w_sizes = d_sizes;
       }
 
       return w_sizes;
+   }
+
+   private static List getSupportedLocales() {
+      File file = FileUtil.getRunningJar();
+      if (file != null && !file.toString().endsWith(".exe")) {
+         ArrayList locales = new ArrayList();
+
+         try {
+            URL jar = file.toURI().toURL();
+            ZipInputStream zip = new ZipInputStream(jar.openStream());
+
+            while(true) {
+               ZipEntry e = zip.getNextEntry();
+               if (e == null) {
+                  return locales;
+               }
+
+               String name = e.getName();
+               if (name.startsWith("lang/")) {
+                  Matcher mt = lang_pattern.matcher(name);
+                  if (mt.matches()) {
+                     U.log("Found locale:", mt.group());
+                     locales.add(mt.group(1));
+                  }
+               }
+            }
+         } catch (Exception var7) {
+            U.log("Cannot get locales!", var7);
+            return DEFAULT_LOCALES;
+         }
+      } else {
+         return DEFAULT_LOCALES;
+      }
+   }
+
+   private static List getDefaultLocales() {
+      List l = new ArrayList();
+      l.add("en_US");
+      l.add("ru_RU");
+      l.add("uk_UA");
+      return l;
    }
 
    public static enum ActionOnLaunch {

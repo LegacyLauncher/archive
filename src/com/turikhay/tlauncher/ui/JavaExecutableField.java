@@ -19,8 +19,7 @@ public class JavaExecutableField extends ExtendedTextField implements SettingsFi
    }
 
    protected boolean check(String text) {
-      File f = new File(text);
-      return !f.exists() || f.canRead() && f.canWrite();
+      return true;
    }
 
    public String getSettingsPath() {

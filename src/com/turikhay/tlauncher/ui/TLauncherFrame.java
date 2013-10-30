@@ -7,6 +7,10 @@ import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.exceptions.TLauncherException;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.updater.Ad;
+import com.turikhay.tlauncher.updater.PackageType;
+import com.turikhay.tlauncher.updater.Update;
+import com.turikhay.tlauncher.updater.UpdateListener;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
 import com.turikhay.tlauncher.util.Console;
@@ -20,12 +24,13 @@ import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.net.URI;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import net.minecraft.launcher_.OperatingSystem;
 
-public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterListener {
+public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterListener, UpdateListener {
    private final TLauncherFrame instance = this;
    final TLauncher t;
    private static final long serialVersionUID = 5949683935156305416L;
@@ -141,7 +146,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.178 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.189 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -196,48 +201,59 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    public void onUpdaterRequesting(Updater u) {
    }
 
-   public void onUpdaterRequestError(Updater u, Throwable e) {
-      U.log("Error occurred while getting update:", e);
-   }
-
-   public void onUpdaterFoundUpdate(Updater u) {
-      double found_version = u.getFoundVersion();
-      if (this.global.getDouble("updater.disallow") == found_version) {
-         U.log("User cancelled updating to this version.");
-      } else {
-         boolean yes = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", found_version), u.getDescription(), true);
-         if (yes) {
-            if (u.type == Updater.Package.EXE) {
-               if (!OperatingSystem.openLink(u.getFoundLinkAsURI())) {
-                  Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)u.getLink());
-               }
-            } else {
-               u.downloadUpdate();
-            }
-
-         } else {
-            U.log("You don't want to update? Oh, okay... I will not disturb you with this version anymore.");
-            this.global.set("updater.disallow", found_version);
-         }
-      }
+   public void onUpdaterRequestError(Updater u) {
    }
 
    public void onUpdaterNotFoundUpdate(Updater u) {
    }
 
-   public void onUpdaterDownloading(Updater u) {
+   public void onUpdateFound(Updater u, Update upd) {
+      double version = upd.getVersion();
+      boolean question = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", version), upd.getDescription(), true);
+      if (!question) {
+         u.setDisallowed(version);
+      } else if (Updater.isAutomode()) {
+         upd.addListener(this);
+         upd.download();
+      } else {
+         URI uri = upd.getDownloadLink(PackageType.EXE);
+
+         try {
+            OperatingSystem.openLink(uri);
+         } catch (Exception var8) {
+            Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
+         }
+
+      }
    }
 
-   public void onUpdaterDownloadSuccess(Updater u) {
-      Alert.showWarning(this.lang.get("updater.downloaded.title"), this.lang.get("updater.downloaded"));
-      u.saveUpdate();
-   }
-
-   public void onUpdaterDownloadError(Updater u, Throwable e) {
+   public void onUpdateError(Update u, Throwable e) {
       Alert.showError(this.lang.get("updater.error.title"), this.lang.get("updater.error.title"), e);
    }
 
-   public void onUpdaterProcessError(Updater u, Throwable e) {
+   public void onUpdateDownloading(Update u) {
+   }
+
+   public void onUpdateDownloadError(Update u, Throwable e) {
+      this.onUpdateError(u, e);
+   }
+
+   public void onUpdateReady(Update u) {
+      Alert.showWarning(this.lang.get("updater.downloaded.title"), this.lang.get("updater.downloaded"));
+      u.apply();
+   }
+
+   public void onUpdateApplying(Update u) {
+   }
+
+   public void onUpdateApplyError(Update u, Throwable e) {
       Alert.showError(this.lang.get("updater.save-error.title"), this.lang.get("updater.save-error"), e);
+   }
+
+   public void onAdFound(Updater u, Ad ad) {
+      if (ad.canBeShown()) {
+         this.global.set("updater.ad", ad.getID());
+         ad.show(false);
+      }
    }
 }

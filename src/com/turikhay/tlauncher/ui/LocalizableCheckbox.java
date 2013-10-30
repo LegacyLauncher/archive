@@ -29,7 +29,7 @@ public class LocalizableCheckbox extends Checkbox implements LocalizableComponen
 
    public void setLabel(String path) {
       this.path = path;
-      super.setLabel(l.get(path));
+      super.setLabel(l == null ? path : l.get(path));
    }
 
    public String getLangPath() {

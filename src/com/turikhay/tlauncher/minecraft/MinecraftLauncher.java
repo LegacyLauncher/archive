@@ -8,6 +8,7 @@ import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.util.Console;
 import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.MinecraftUtil;
+import com.turikhay.tlauncher.util.StringUtil;
 import com.turikhay.tlauncher.util.U;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -144,66 +145,62 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             throw new MinecraftLauncherException("Cannot find folder: " + this.gamedir, "folder-not-found", this.gamedir);
          }
 
-         if (!FileUtil.fileExists(this.javadir)) {
-            throw new MinecraftLauncherException("Java executable file doesn't exist!", "java-exec", this.javadir);
+         this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
+         if (this.syncInfo == null) {
+            throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", this.version_name + "\n" + this.gamedir);
          } else {
-            this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
-            if (this.syncInfo == null) {
-               throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", this.version_name + "\n" + this.gamedir);
+            try {
+               this.version = this.vm.getLatestCompleteVersion(this.syncInfo);
+            } catch (Exception var3) {
+               throw new MinecraftLauncherException("Cannot get version info!", "version-info", var3);
+            }
+
+            if (!this.check) {
+               this.log("Checking files for version " + this.version_name + " skipped.");
+               this.prepare_();
             } else {
-               try {
-                  this.version = this.vm.getLatestCompleteVersion(this.syncInfo);
-               } catch (Exception var3) {
-                  throw new MinecraftLauncherException("Cannot get version info!", "version-info", var3);
+               this.log("Checking files for version " + this.version_name + "...");
+               this.working = true;
+               this.onCheck();
+               this.installed = this.syncInfo.isInstalled() && this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
+               if (!this.version.appliesToCurrentEnvironment()) {
+                  this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
                }
 
-               if (!this.check) {
-                  this.log("Checking files for version " + this.version_name + " skipped.");
+               if (this.version.getMinimumLauncherVersion() > 9) {
+                  this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
+               }
+
+               if (!this.forceupdate && this.installed) {
                   this.prepare_();
+               } else if (this.d == null) {
+                  throw new MinecraftLauncherException("Downloader is NULL. Cannot download version!");
                } else {
-                  this.log("Checking files for version " + this.version_name + "...");
-                  this.working = true;
-                  this.onCheck();
-                  this.installed = this.syncInfo.isInstalled() && this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
-                  if (!this.version.appliesToCurrentEnvironment()) {
-                     this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
+                  this.log("Downloading version " + this.version_name + "...");
+
+                  try {
+                     this.vm.downloadVersion(this.syncInfo, this.jar, this.forceupdate);
+                  } catch (IOException var2) {
+                     throw new MinecraftLauncherException("Cannot get downloadable jar!", "download-jar", var2);
                   }
 
-                  if (this.version.getMinimumLauncherVersion() > 9) {
-                     this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
-                  }
-
-                  if (!this.forceupdate && this.installed) {
-                     this.prepare_();
-                  } else if (this.d == null) {
-                     throw new MinecraftLauncherException("Downloader is NULL. Cannot download version!");
-                  } else {
-                     this.log("Downloading version " + this.version_name + "...");
-
-                     try {
-                        this.vm.downloadVersion(this.syncInfo, this.jar, this.forceupdate);
-                     } catch (IOException var2) {
-                        throw new MinecraftLauncherException("Cannot get downloadable jar!", "download-jar", var2);
+                  this.jar.addHandler(new DownloadableHandler() {
+                     public void onStart() {
                      }
 
-                     this.jar.addHandler(new DownloadableHandler() {
-                        public void onStart() {
-                        }
+                     public void onCompleteError() {
+                        MinecraftLauncher.this.onError(new MinecraftLauncherException("Errors occurred, cancelling.", "download"));
+                     }
 
-                        public void onCompleteError() {
-                           MinecraftLauncher.this.onError(new MinecraftLauncherException("Errors occurred, cancelling.", "download"));
-                        }
-
-                        public void onComplete() {
-                           MinecraftLauncher.this.log("Version " + MinecraftLauncher.this.version_name + " downloaded!");
-                           MinecraftLauncher.this.vm.getLocalVersionList().saveVersion(MinecraftLauncher.this.version);
-                           MinecraftLauncher.this.prepare();
-                        }
-                     });
-                     this.jar.setConsole(this.con);
-                     this.d.add(this.jar);
-                     this.d.launch();
-                  }
+                     public void onComplete() {
+                        MinecraftLauncher.this.log("Version " + MinecraftLauncher.this.version_name + " downloaded!");
+                        MinecraftLauncher.this.vm.getLocalVersionList().saveVersion(MinecraftLauncher.this.version);
+                        MinecraftLauncher.this.prepare();
+                     }
+                  });
+                  this.jar.setConsole(this.con);
+                  this.d.add(this.jar);
+                  this.d.launch();
                }
             }
          }
@@ -235,17 +232,18 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
          try {
             this.unpackNatives(this.forceupdate);
-         } catch (IOException var5) {
-            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var5);
+         } catch (IOException var6) {
+            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var6);
          }
 
+         StringUtil.EscapeGroup esc = StringUtil.EscapeGroup.COMMAND;
          this.processLauncher = new JavaProcessLauncher(this.javadir, new String[0]);
          this.processLauncher.directory(this.gameDir);
          this.assetsDir = new File(this.gameDir, "assets");
          List resourcesList = this.check ? this.compareResources() : null;
          boolean resourcesAreReady = resourcesList == null || resourcesList.size() == 0;
          if (this.os.equals(OperatingSystem.OSX)) {
-            this.processLauncher.addCommand("-Xdock:icon=" + (new File(this.assetsDir, "icons/minecraft.icns")).getAbsolutePath(), "-Xdock:name=Minecraft");
+            this.processLauncher.addCommand("-Xdock:icon=\"" + (new File(this.assetsDir, "icons/minecraft.icns")).getAbsolutePath() + "\"", "-Xdock:name=Minecraft");
          }
 
          if (this.os.equals(OperatingSystem.WINDOWS)) {
@@ -265,7 +263,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommand("--width", this.width);
          this.processLauncher.addCommand("--height", this.height);
          if (this.margs.length() > 0) {
-            this.processLauncher.addCommands(this.margs.split(" "));
+            this.processLauncher.addSplitCommands(StringUtil.addSlashes(this.margs, esc));
          }
 
          if (resourcesAreReady) {
@@ -275,8 +273,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          } else {
             try {
                this.resources = this.vm.downloadResources(resourcesList, this.forceupdate);
-            } catch (IOException var4) {
-               throw new MinecraftLauncherException("Cannot download resources!", "download-resources", var4);
+            } catch (IOException var5) {
+               throw new MinecraftLauncherException("Cannot download resources!", "download-resources", var5);
             }
 
             if (this.resources.get().isEmpty()) {
@@ -314,6 +312,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.onError((Throwable)var2);
       }
 
+      U.gc();
    }
 
    private void launch_() throws MinecraftLauncherException {

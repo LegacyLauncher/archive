@@ -24,6 +24,7 @@ public class SettingsForm extends CenterPanel {
    final AutologinTimeoutField autologinField;
    final LangChoice langChoice;
    final LaunchActionChoice launchActionChoice;
+   final TimeoutField connectionField;
    final LocalizableLabel gameDirCustom;
    final LocalizableLabel resolutionCustom;
    final LocalizableLabel pathCustom;
@@ -31,6 +32,7 @@ public class SettingsForm extends CenterPanel {
    final LocalizableLabel tlauncherSettings;
    final LocalizableLabel autologinCustom;
    final LocalizableLabel launchActionCustom;
+   final LocalizableLabel connTimeoutLabel;
    final Label langCustom;
    final ArgsField javaArgsField;
    final ArgsField minecraftArgsField;
@@ -83,43 +85,29 @@ public class SettingsForm extends CenterPanel {
       this.autologinField = new AutologinTimeoutField(this);
       this.langChoice = new LangChoice(this);
       this.launchActionChoice = new LaunchActionChoice(this);
+      this.connectionField = new TimeoutField(this, TimeoutField.FieldType.CONNECTION);
       this.gameDirCustom = new LocalizableLabel("settings.client.gamedir.label");
       this.resolutionCustom = new LocalizableLabel("settings.client.resolution.label");
       this.versionChoice = new LocalizableLabel("settings.versions.label");
-      this.snapshotsSelect = new SettingsCheckbox("settings.versions.snapshots", "minecraft.versions.snapshots");
+      this.snapshotsSelect = new SettingsCheckbox("settings.versions.snapshots", "minecraft.versions.snapshots", true);
       this.snapshotsSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean selected = e.getStateChange() == 1;
-            if (SettingsForm.this.snapshot_old == selected) {
-               SettingsForm.this.snapshot_changed = false;
-            } else {
-               SettingsForm.this.snapshot_changed = true;
-            }
-
+            SettingsForm.this.snapshot_changed = SettingsForm.this.snapshot_old ^ selected;
          }
       });
-      this.betaSelect = new SettingsCheckbox("settings.versions.beta", "minecraft.versions.beta");
+      this.betaSelect = new SettingsCheckbox("settings.versions.beta", "minecraft.versions.beta", true);
       this.betaSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean selected = e.getStateChange() == 1;
-            if (SettingsForm.this.beta_old == selected) {
-               SettingsForm.this.beta_changed = false;
-            } else {
-               SettingsForm.this.beta_changed = true;
-            }
-
+            SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ selected;
          }
       });
-      this.alphaSelect = new SettingsCheckbox("settings.versions.alpha", "minecraft.versions.alpha");
+      this.alphaSelect = new SettingsCheckbox("settings.versions.alpha", "minecraft.versions.alpha", true);
       this.alphaSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean selected = e.getStateChange() == 1;
-            if (SettingsForm.this.alpha_old == selected) {
-               SettingsForm.this.alpha_changed = false;
-            } else {
-               SettingsForm.this.alpha_changed = false;
-            }
-
+            SettingsForm.this.alpha_changed = SettingsForm.this.alpha_old ^ selected;
          }
       });
       this.versionsPan = new VersionsPanel(this);
@@ -131,8 +119,8 @@ public class SettingsForm extends CenterPanel {
       this.minecraftArgsField.addFocusListener(this.warner);
       this.argsPan = new ArgsPanel(this);
       this.tlauncherSettings = new LocalizableLabel("settings.tlauncher.label");
-      this.consoleSelect = new SettingsCheckbox("settings.tlauncher.console", "gui.console");
-      this.updaterSelect = new SettingsCheckbox("settings.tlauncher.updater", "updater.enabled");
+      this.consoleSelect = new SettingsCheckbox("settings.tlauncher.console", "gui.console", false);
+      this.updaterSelect = new SettingsCheckbox("settings.tlauncher.updater", "updater.enabled", true);
       this.updaterSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             switch(e.getStateChange()) {
@@ -145,7 +133,7 @@ public class SettingsForm extends CenterPanel {
 
          }
       });
-      this.sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun");
+      this.sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun", true);
       this.sunSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             switch(e.getStateChange()) {
@@ -160,6 +148,7 @@ public class SettingsForm extends CenterPanel {
       });
       this.tlauncherPan = new TLauncherSettingsPanel(this);
       this.autologinCustom = new LocalizableLabel("settings.tlauncher.autologin.label");
+      this.connTimeoutLabel = new LocalizableLabel("settings.timeouts.connection.label");
       this.langCustom = new Label("Language:");
       this.launchActionCustom = new LocalizableLabel("settings.launch-action.label");
       this.backButton = new LocalizableButton("settings.back");
@@ -280,6 +269,9 @@ public class SettingsForm extends CenterPanel {
          }
 
          this.snapshot_changed = this.beta_changed = this.alpha_changed = false;
+         this.snapshot_old = this.snapshotsSelect.getState();
+         this.alpha_old = this.alphaSelect.getState();
+         this.beta_old = this.betaSelect.getState();
          return true;
       }
    }
