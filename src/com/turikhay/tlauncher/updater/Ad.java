@@ -14,7 +14,7 @@ public class Ad {
    private URI uri;
    private boolean shown;
 
-   Ad(int id, String title, String text, String textarea, URI uri) {
+   private Ad(int id, String title, String text, String textarea, URI uri) {
       this.id = id;
       this.title = title;
       this.text = text;
@@ -72,8 +72,10 @@ public class Ad {
    public void show(boolean force) {
       if (!this.shown) {
          this.shown = true;
-         if (this.uri != null && Alert.showQuestion(this.title, this.text, this.textarea, force)) {
-            OperatingSystem.openLink(this.uri);
+         if (this.uri != null) {
+            if (Alert.showQuestion(this.title, this.text, this.textarea, force)) {
+               OperatingSystem.openLink(this.uri);
+            }
          } else {
             Alert.showMessage(this.title, this.text, this.textarea);
          }

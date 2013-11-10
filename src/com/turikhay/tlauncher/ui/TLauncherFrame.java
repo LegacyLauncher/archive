@@ -8,7 +8,6 @@ import com.turikhay.tlauncher.exceptions.TLauncherException;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.updater.Ad;
-import com.turikhay.tlauncher.updater.PackageType;
 import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.UpdateListener;
 import com.turikhay.tlauncher.updater.Updater;
@@ -20,30 +19,36 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Image;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Enumeration;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
 import net.minecraft.launcher_.OperatingSystem;
 
 public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterListener, UpdateListener {
+   public static final Color backgroundColor = new Color(141, 189, 233);
    private final TLauncherFrame instance = this;
    final TLauncher t;
    private static final long serialVersionUID = 5949683935156305416L;
    int width;
    int height;
-   Color bgcolor = new Color(141, 189, 233);
    Image bgimage;
    Image favicon;
    Image sun;
    GlobalSettings global;
    Settings lang;
    Downloader d;
-   MainContainer mc;
+   MainPane mp;
    ProgressBar pb;
    LoginForm lf;
    SettingsForm sf;
@@ -57,14 +62,19 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
       try {
          this.loadResources();
-      } catch (Exception var3) {
-         throw new TLauncherException("Cannot load required resource!", var3);
+      } catch (Exception var9) {
+         throw new TLauncherException("Cannot load required resource!", var9);
       }
 
       int[] w_sizes = this.global.getWindowSize();
       this.width = w_sizes[0];
       this.height = w_sizes[1];
+      long start = System.currentTimeMillis();
+      U.log("Preparing main frame...");
       this.prepareFrame();
+      long end = System.currentTimeMillis();
+      long diff = end - start;
+      U.log("Prepared:", diff);
       this.setVisible(true);
       this.requestFocusInWindow();
       if (this.global.isFirstRun()) {
@@ -80,6 +90,26 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
       this.setMinimumSize(sizes);
       this.setLocationRelativeTo((Component)null);
       this.setLayout(new BorderLayout());
+   }
+
+   private void initFontSize() {
+      UIDefaults defaults = UIManager.getDefaults();
+      Enumeration e = defaults.keys();
+
+      while(e.hasMoreElements()) {
+         Object key = e.nextElement();
+         Object value = defaults.get(key);
+         if (value instanceof Font) {
+            Font font = (Font)value;
+            int newSize = Math.round((float)(font.getSize() + 1));
+            if (value instanceof FontUIResource) {
+               defaults.put(key, new FontUIResource(font.getName(), font.getStyle(), newSize));
+            } else {
+               defaults.put(key, new Font(font.getName(), font.getStyle(), newSize));
+            }
+         }
+      }
+
    }
 
    public void updateLocales() {
@@ -115,11 +145,13 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    private void prepareFrame() {
       try {
          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-      } catch (Exception var2) {
+      } catch (Exception var7) {
          U.log("Can't set system look and feel.");
-         var2.printStackTrace();
+         var7.printStackTrace();
       }
 
+      this.setBackground(backgroundColor);
+      this.initFontSize();
       this.setWindowTitle();
       this.resizeWindow(this.width, this.height);
       this.setIconImage(this.favicon);
@@ -129,13 +161,48 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
             TLauncher.kill();
          }
       });
+      this.addComponentListener(new ComponentListener() {
+         public void componentResized(ComponentEvent e) {
+            TLauncherFrame.this.mp.onResize();
+         }
+
+         public void componentMoved(ComponentEvent e) {
+         }
+
+         public void componentShown(ComponentEvent e) {
+         }
+
+         public void componentHidden(ComponentEvent e) {
+         }
+      });
+      long start = System.currentTimeMillis();
+      U.log("Preparing components...");
       this.sf = new SettingsForm(this);
       this.lf = new LoginForm(this);
       this.pb = new ProgressBar(this);
-      this.mc = new MainContainer(this);
-      this.add(this.mc);
+      start = System.currentTimeMillis();
+      U.log("Preparing main pane...");
+      this.mp = new MainPane(this);
+      long end = System.currentTimeMillis();
+      long diff = end - start;
+      U.log("Prepared pane:", diff);
+      this.add(this.mp);
       this.add("South", this.pb);
+      end = System.currentTimeMillis();
+      diff = end - start;
+      U.log("Components prepared:", diff);
+      start = System.currentTimeMillis();
+      U.log("Packing main frame...");
       this.pack();
+      end = System.currentTimeMillis();
+      diff = end - start;
+      U.log("Packed:", diff);
+      start = System.currentTimeMillis();
+      U.log("Resizing main pane...");
+      this.mp.onResize();
+      end = System.currentTimeMillis();
+      diff = end - start;
+      U.log("Main pane resized:", diff);
    }
 
    private void loadResources() throws IOException {
@@ -146,7 +213,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.189 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.197 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -216,7 +283,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
          upd.addListener(this);
          upd.download();
       } else {
-         URI uri = upd.getDownloadLink(PackageType.EXE);
+         URI uri = upd.getDownloadLink();
 
          try {
             OperatingSystem.openLink(uri);

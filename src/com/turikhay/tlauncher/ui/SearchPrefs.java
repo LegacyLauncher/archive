@@ -1,11 +1,12 @@
 package com.turikhay.tlauncher.ui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.LayoutManager;
-import java.awt.Panel;
 import javax.swing.BoxLayout;
+import javax.swing.JPanel;
 
-public class SearchPrefs extends Panel {
+public class SearchPrefs extends JPanel {
    private static final long serialVersionUID = -5187427203445160236L;
    LocalizableCheckbox pcase;
    LocalizableCheckbox pwhole;
@@ -21,6 +22,14 @@ public class SearchPrefs extends Panel {
       this.add(this.pwhole = new LocalizableCheckbox("console.search.prefs.whole"));
       this.add(this.pcycle = new LocalizableCheckbox("console.search.prefs.cycle"));
       this.add(this.pregexp = new LocalizableCheckbox("console.search.prefs.regexp"));
+      Component[] var6;
+      int var5 = (var6 = this.getComponents()).length;
+
+      for(int var4 = 0; var4 < var5; ++var4) {
+         Component c = var6[var4];
+         c.setForeground(Color.white);
+      }
+
    }
 
    public boolean isCaseSensetive() {

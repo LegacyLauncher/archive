@@ -22,7 +22,7 @@ import net.minecraft.launcher_.updater.VersionSyncInfo;
 import net.minecraft.launcher_.versions.ReleaseType;
 import net.minecraft.launcher_.versions.Version;
 
-public class VersionChoicePanel extends BlockablePanel implements RefreshedListener, LocalizableComponent {
+public class VersionChoicePanel extends BlockablePanel implements RefreshedListener, LocalizableComponent, LoginListener {
    private static final long serialVersionUID = -1838948772565245249L;
    private final LoginForm lf;
    private final Settings l;
@@ -43,6 +43,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
       this.version = ver;
       LayoutManager lm = new GridLayout(1, 1);
       this.setLayout(lm);
+      this.setOpaque(false);
       this.choice = new Choice();
       this.choice.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
@@ -150,11 +151,13 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
                break;
             case 2:
                dId = this.l.get("version.release", "v", id);
-               break;
             case 3:
-               dId = this.l.get("version.beta", "v", id.substring(1));
+            default:
                break;
             case 4:
+               dId = this.l.get("version.beta", "v", id.substring(1));
+               break;
+            case 5:
                dId = this.l.get("version.alpha", "v", id.startsWith("a") ? id.substring(1) : id);
             }
          } else {
@@ -179,20 +182,50 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          }
       }
 
-      if (this.choice.getItemCount() > 0) {
-         if (!exists || this.version == null) {
-            this.version = (String)this.list.get(this.choice.getItem(0));
-            this.onVersionChanged();
-         }
-      } else {
+      if (this.choice.getItemCount() <= 0) {
          this.foundlocal = false;
          this.choice.add(this.l.get("versions.notfound.tip"));
+      } else if (!exists || this.version == null) {
+         int select = 0;
+
+         for(int i = 0; i < this.choice.getItemCount(); ++i) {
+            String ch = (String)this.list.get(this.choice.getItem(i));
+            VersionSyncInfo vs = this.vm.getVersionSyncInfo(ch);
+            if (vs.getLatestVersion().getType() != ReleaseType.CHEAT) {
+               select = i;
+               break;
+            }
+         }
+
+         this.version = (String)this.list.get(this.choice.getItem(select));
+         this.choice.select(select);
+         this.onVersionChanged();
       }
    }
 
    public void onVersionManagerUpdated(VersionManager vm) {
       vm.asyncRefresh();
       vm.asyncRefreshResources();
+   }
+
+   public boolean onLogin() {
+      if (this.foundlocal) {
+         return true;
+      } else {
+         this.refresh();
+         if (this.foundlocal) {
+            return true;
+         } else {
+            Alert.showError("versions.notfound");
+            return false;
+         }
+      }
+   }
+
+   public void onLoginFailed() {
+   }
+
+   public void onLoginSuccess() {
    }
 
    // $FF: synthetic method
@@ -204,12 +237,17 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          int[] var0 = new int[ReleaseType.values().length];
 
          try {
-            var0[ReleaseType.OLD_ALPHA.ordinal()] = 4;
+            var0[ReleaseType.CHEAT.ordinal()] = 3;
+         } catch (NoSuchFieldError var5) {
+         }
+
+         try {
+            var0[ReleaseType.OLD_ALPHA.ordinal()] = 5;
          } catch (NoSuchFieldError var4) {
          }
 
          try {
-            var0[ReleaseType.OLD_BETA.ordinal()] = 3;
+            var0[ReleaseType.OLD_BETA.ordinal()] = 4;
          } catch (NoSuchFieldError var3) {
          }
 

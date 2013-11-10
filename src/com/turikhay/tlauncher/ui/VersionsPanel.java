@@ -6,6 +6,7 @@ public class VersionsPanel extends BlockablePanel {
    private static final long serialVersionUID = -9108973380914818944L;
 
    VersionsPanel(SettingsForm sf) {
+      this.setOpaque(false);
       this.setLayout(new BoxLayout(this, 3));
       this.add(sf.snapshotsSelect);
       this.add(sf.betaSelect);

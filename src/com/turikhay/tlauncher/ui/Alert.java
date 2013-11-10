@@ -57,10 +57,6 @@ public class Alert {
       showError(DEFAULT_TITLE, DEFAULT_MESSAGE, (Object)null, e, exit);
    }
 
-   public static void showError(String title, Exception e, boolean exit) {
-      showError(DEFAULT_TITLE, DEFAULT_MESSAGE, (Object)null, e, exit);
-   }
-
    public static void showError(String title, String message, Object textarea) {
       showError(title, message, textarea, (Throwable)null, false);
    }
@@ -89,6 +85,14 @@ public class Alert {
       AsyncThread.execute(new Runnable() {
          public void run() {
             Alert.showWarning(title, message);
+         }
+      });
+   }
+
+   public static void showAsyncWarning(final String path) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Alert.showWarning(path);
          }
       });
    }
@@ -146,6 +150,18 @@ public class Alert {
 
    public static void showMessage(String path, Object textarea) {
       showMessage(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), textarea);
+   }
+
+   public static void showAsyncMessage(final String path, final Object textarea) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Alert.showMessage(path, textarea);
+         }
+      });
+   }
+
+   public static void showAsyncMessage(String path) {
+      showAsyncMessage(path, (Object)null);
    }
 
    private static String getLocal(String path, String message) {

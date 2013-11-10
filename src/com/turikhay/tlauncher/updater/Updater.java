@@ -41,10 +41,10 @@ public class Updater {
       this.enabled = t.getSettings().getBoolean("updater.enabled");
       this.s = t.getSettings();
       this.d = t.getDownloader();
-      if (PackageType.isCurrent(PackageType.EXE)) {
-         File oldfile = new File(Wrapper.getExecutable().getAbsolutePath() + ".replace");
+      if (!PackageType.isCurrent(PackageType.JAR)) {
+         File oldfile = getTempFile();
          if (oldfile.delete()) {
-            log("Old version has been deleted (.replace)");
+            log("Old version has been deleted (.update)");
          }
       }
 
@@ -79,8 +79,13 @@ public class Updater {
                   Update update = new Update(this.d, parsed);
                   double version = update.getVersion();
                   log("Success!");
-                  if (0.189D > version) {
+                  if (0.197D > version) {
                      log("Found version is older than running:", version);
+                  }
+
+                  if (update.getDownloadLink() == null) {
+                     log("The update for current package type is not available.");
+                     return;
                   }
 
                   if (this.s.getDouble("updater.disallow") == version) {
@@ -88,7 +93,7 @@ public class Updater {
                      return;
                   }
 
-                  if (!(0.189D >= version)) {
+                  if (!(0.197D >= version)) {
                      log("Found actual version:", version);
                      this.onUpdateFound(update);
                      return;
@@ -197,6 +202,7 @@ public class Updater {
          case 1:
             return false;
          case 2:
+         case 3:
             return true;
          default:
             throw new IllegalArgumentException("Unknown PackageType!");
@@ -214,9 +220,18 @@ public class Updater {
       } else {
          switch($SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
          case 1:
-            return Wrapper.getExecutable();
+            return Wrapper.getWrapperExecutable();
          case 2:
             return FileUtil.getRunningJar();
+         case 3:
+            File def = FileUtil.getRunningJar();
+            String path = def.getParent();
+            String name = def.getName();
+            if (name.endsWith(".jar")) {
+               name = name.substring(0, name.length() - 4) + ".exe";
+            }
+
+            return new File(path, name);
          default:
             throw new IllegalArgumentException("Unknown PackageType!");
          }
@@ -227,8 +242,16 @@ public class Updater {
       return getFileFor(PackageType.getCurrent());
    }
 
-   public static File getTempFileFor(PackageType pt) {
+   public static File getUpdateFileFor(PackageType pt) {
       return new File(getFileFor(pt).getAbsolutePath() + ".update");
+   }
+
+   public static File getUpdateFile() {
+      return getUpdateFileFor(PackageType.getCurrent());
+   }
+
+   public static File getTempFileFor(PackageType pt) {
+      return new File(getFileFor(pt).getAbsolutePath() + ".replace");
    }
 
    public static File getTempFile() {
@@ -261,6 +284,11 @@ public class Updater {
          return var10000;
       } else {
          int[] var0 = new int[PackageType.values().length];
+
+         try {
+            var0[PackageType.AOT.ordinal()] = 3;
+         } catch (NoSuchFieldError var3) {
+         }
 
          try {
             var0[PackageType.EXE.ordinal()] = 1;

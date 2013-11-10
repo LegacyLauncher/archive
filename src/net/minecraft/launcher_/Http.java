@@ -4,12 +4,10 @@ import com.turikhay.tlauncher.util.U;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.Proxy;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -49,12 +47,12 @@ public class Http {
       return builder.toString();
    }
 
-   public static String performPost(URL url, Map query, Proxy proxy) throws IOException {
-      return performPost(url, buildQuery(query), proxy, "application/x-www-form-urlencoded", false);
+   public static String performPost(URL url, Map query) throws IOException {
+      return performPost(url, buildQuery(query), "application/x-www-form-urlencoded");
    }
 
-   public static String performGet(URL url, Proxy proxy) throws IOException {
-      HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
+   public static String performGet(URL url) throws IOException {
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       connection.setConnectTimeout(U.getConnectionTimeout());
       connection.setReadTimeout(U.getReadTimeout());
       connection.setRequestMethod("GET");
@@ -75,8 +73,8 @@ public class Http {
       return url.getQuery() != null && url.getQuery().length() > 0 ? new URL(url.getProtocol(), url.getHost(), url.getFile() + "?" + args) : new URL(url.getProtocol(), url.getHost(), url.getFile() + "&" + args);
    }
 
-   public static String performPost(URL url, String parameters, Proxy proxy, String contentType, boolean returnErrorPage) throws IOException {
-      HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
+   public static String performPost(URL url, String parameters, String contentType) throws IOException {
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       byte[] paramAsBytes = parameters.getBytes(Charset.forName("UTF-8"));
       connection.setConnectTimeout(U.getConnectionTimeout());
       connection.setReadTimeout(U.getReadTimeout());
@@ -91,23 +89,7 @@ public class Http {
       writer.write(paramAsBytes);
       writer.flush();
       writer.close();
-
-      BufferedReader reader;
-      try {
-         reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-      } catch (IOException var11) {
-         if (!returnErrorPage) {
-            throw var11;
-         }
-
-         InputStream stream = connection.getErrorStream();
-         if (stream == null) {
-            throw var11;
-         }
-
-         reader = new BufferedReader(new InputStreamReader(stream));
-      }
-
+      BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       StringBuilder response = new StringBuilder();
 
       String line;
@@ -132,7 +114,7 @@ public class Http {
       try {
          return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20").replaceAll("\\%3A", ":").replaceAll("\\%2F", "/").replaceAll("\\%21", "!").replaceAll("\\%27", "'").replaceAll("\\%28", "(").replaceAll("\\%29", ")").replaceAll("\\%7E", "~");
       } catch (UnsupportedEncodingException var2) {
-         return s;
+         throw new RuntimeException("Encoding UTF-8 is not suuported.", var2);
       }
    }
 

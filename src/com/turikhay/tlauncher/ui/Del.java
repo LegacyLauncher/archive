@@ -2,9 +2,9 @@ package com.turikhay.tlauncher.ui;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Panel;
+import javax.swing.JPanel;
 
-public class Del extends Panel {
+public class Del extends JPanel {
    public static final int TOP = -1;
    public static final int CENTER = 0;
    public static final int BOTTOM = 1;

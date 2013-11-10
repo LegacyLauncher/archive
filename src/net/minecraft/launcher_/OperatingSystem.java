@@ -34,10 +34,22 @@ public enum OperatingSystem {
       return this != UNKNOWN;
    }
 
-   public String getJavaDir() {
+   public String getJavaDir(boolean console) {
       String separator = System.getProperty("file.separator");
       String path = System.getProperty("java.home") + separator + "bin" + separator;
-      return getCurrentPlatform() == WINDOWS && (new File(path + "javaw.exe")).isFile() ? path + "javaw.exe" : path + "java";
+      if (getCurrentPlatform() == WINDOWS) {
+         String exec = console ? "java.exe" : "javaw.exe";
+         File file = new File(path, exec);
+         if (file.isFile()) {
+            return path + exec;
+         }
+      }
+
+      return path + "java";
+   }
+
+   public String getJavaDir() {
+      return this.getJavaDir(false);
    }
 
    public boolean doesJavaExist() {

@@ -2,19 +2,19 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.util.IntegerArray;
 import java.awt.LayoutManager;
-import java.awt.TextField;
 import javax.swing.BoxLayout;
+import javax.swing.JTextField;
 
 public class ResolutionField extends BlockablePanel implements SettingsField {
    private static final long serialVersionUID = 2840605102354193923L;
-   TextField w;
-   TextField h;
+   JTextField w;
+   JTextField h;
 
    ResolutionField(SettingsForm sf) {
       LayoutManager layout = new BoxLayout(this, 0);
       this.setLayout(layout);
-      this.w = new TextField();
-      this.h = new TextField();
+      this.w = new JTextField();
+      this.h = new JTextField();
       this.w.addFocusListener(sf.restart);
       this.h.addFocusListener(sf.restart);
       this.add(this.w);

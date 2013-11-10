@@ -12,6 +12,9 @@ public class SearchField extends LocalizableTextField {
       this.ok_background = Color.black;
       this.ok_foreground = Color.white;
       this.setText((String)null);
+      this.setCaretColor(Color.white);
+      this.setForeground(this.ok_foreground);
+      this.setBackground(this.ok_background);
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             sp.search();

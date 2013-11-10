@@ -50,8 +50,12 @@ public class LocalVersionList extends FileBasedVersionList {
             if (directory.isDirectory() && jsonFile.exists()) {
                try {
                   CompleteVersion version = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
-                  version.setId(id);
-                  this.addVersion(version);
+                  if (version == null) {
+                     U.log("JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local.");
+                  } else {
+                     version.setId(id);
+                     this.addVersion(version);
+                  }
                } catch (JsonSyntaxException var9) {
                   throw new JsonSyntaxException("Loading file: " + jsonFile.toString(), var9);
                }

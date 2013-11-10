@@ -6,6 +6,7 @@ import java.util.Map;
 public enum ReleaseType {
    SNAPSHOT("snapshot", "Enable experimental development versions (\"snapshots\")"),
    RELEASE("release", (String)null),
+   CHEAT("cheat", (String)null),
    OLD_BETA("old-beta", "Allow use of old \"Beta\" minecraft versions (From 2010-2011)"),
    OLD_ALPHA("old-alpha", "Allow use of old \"Alpha\" minecraft versions (From 2010)");
 

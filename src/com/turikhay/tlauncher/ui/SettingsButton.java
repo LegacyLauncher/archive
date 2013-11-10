@@ -15,13 +15,13 @@ public class SettingsButton extends ImageButton {
       this.setPreferredSize(new Dimension(30, this.getHeight()));
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            SettingsButton.this.openSettings();
+            if (SettingsButton.this.lf.settings.save()) {
+               SettingsButton.this.lf.f.mp.toggleSettings();
+            }
+
             SettingsButton.this.lf.defocus();
          }
       });
-   }
-
-   public void openSettings() {
-      this.lf.f.mc.showSettings();
+      this.initImage();
    }
 }

@@ -1,28 +1,31 @@
 package com.turikhay.tlauncher.ui;
 
-import java.awt.Checkbox;
-import java.awt.LayoutManager;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
+import net.minecraft.launcher_.updater.VersionSyncInfo;
 
 public class CheckBoxPanel extends BlockablePanel implements LoginListener {
    private static final long serialVersionUID = 1808335203922301270L;
    private final LoginForm lf;
-   Checkbox autologinbox;
-   Checkbox forceupdatebox;
+   LocalizableCheckbox autologinbox;
+   LocalizableCheckbox forceupdatebox;
    private boolean forceupdate;
 
    CheckBoxPanel(LoginForm loginform, boolean autologin_enabled, boolean console_enabled) {
       this.lf = loginform;
-      LayoutManager lm = new BoxLayout(this, 1);
+      BoxLayout lm = new BoxLayout(this, 3);
       this.setLayout(lm);
-      this.autologinbox = new LocalizableCheckbox("loginform.checkbox.autologin");
-      this.autologinbox.setState(autologin_enabled);
+      this.setOpaque(false);
+      this.setAlignmentX(0.5F);
+      this.setAlignmentY(0.5F);
+      this.autologinbox = new LocalizableCheckbox("loginform.checkbox.autologin", autologin_enabled);
       this.autologinbox.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean newstate = e.getStateChange() == 1;
             CheckBoxPanel.this.lf.setAutoLogin(newstate);
+            CheckBoxPanel.this.lf.defocus();
          }
       });
       this.forceupdatebox = new LocalizableCheckbox("loginform.checkbox.forceupdate");
@@ -31,9 +34,11 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
             boolean newstate = e.getStateChange() == 1;
             CheckBoxPanel.this.forceupdate = newstate;
             CheckBoxPanel.this.onForceUpdateChanged();
+            CheckBoxPanel.this.lf.defocus();
          }
       });
       this.add(this.autologinbox);
+      this.add(Box.createHorizontalGlue());
       this.add(this.forceupdatebox);
    }
 
@@ -63,9 +68,20 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
       this.setEnabled(true);
    }
 
-   public void onLogin() {
-      this.forceupdate = false;
-      this.onForceUpdateChanged();
+   public boolean onLogin() {
+      VersionSyncInfo syncInfo = this.lf.versionchoice.getSyncVersionInfo();
+      boolean supporting = syncInfo.isOnRemote();
+      boolean installed = syncInfo.isInstalled();
+      if (this.getForceUpdate()) {
+         if (!supporting) {
+            Alert.showWarning("forceupdate.onlylibraries");
+         } else if (installed && !Alert.showQuestion("forceupdate.question", true)) {
+            return false;
+         }
+      }
+
+      this.setForceUpdate(false);
+      return true;
    }
 
    public void onLoginFailed() {

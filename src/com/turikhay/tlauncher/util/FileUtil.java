@@ -93,9 +93,12 @@ public class FileUtil {
             return null;
          } else {
             String result = "";
+            byte[] var6 = b;
+            int var5 = b.length;
 
-            for(int i = 0; i < b.length; ++i) {
-               result = result + Integer.toString((b[i] & 255) + 256, 16).substring(1);
+            for(int var4 = 0; var4 < var5; ++var4) {
+               byte cb = var6[var4];
+               result = result + Integer.toString((cb & 255) + 256, 16).substring(1);
             }
 
             return result;
@@ -143,8 +146,14 @@ public class FileUtil {
             os.write(buffer, 0, length);
          }
       } finally {
-         is.close();
-         os.close();
+         if (is != null) {
+            is.close();
+         }
+
+         if (os != null) {
+            os.close();
+         }
+
       }
 
    }

@@ -6,17 +6,13 @@ import com.turikhay.tlauncher.util.U;
 import java.awt.Graphics2D;
 
 public class DayBackground extends LightBackground implements AnimatedBackground {
-   public final double MIN = -0.3D;
-   public final double MAX = 1.3D;
+   public final double MIN = -0.5D;
+   public final double MAX = 1.5D;
    private boolean started;
    private boolean redraw;
 
-   public DayBackground(DecoratedPanel comp, double loc, boolean start) {
+   public DayBackground(DecoratedPanel comp, double loc) {
       super(comp, loc);
-      if (start) {
-         this.start();
-      }
-
    }
 
    public void start() {
@@ -47,13 +43,13 @@ public class DayBackground extends LightBackground implements AnimatedBackground
       U.log("Sun stopped");
    }
 
-   public boolean getState() {
+   public boolean isAllowed() {
       return TLauncher.getInstance().getSettings().getBoolean("gui.sun");
    }
 
    private void tick() {
-      if (this.sunLocation <= -0.3D) {
-         this.sunLocation = 1.3D;
+      if (this.sunLocation <= -0.5D) {
+         this.sunLocation = 1.5D;
       } else {
          this.sunLocation -= 0.001D;
       }
@@ -62,11 +58,11 @@ public class DayBackground extends LightBackground implements AnimatedBackground
       this.comp.repaint();
       long end = System.nanoTime();
       long diff = end - start;
-      if (diff > 500000L) {
-         U.log("Sun is lagging (" + diff + " ns > 500000 ns).");
+      if (diff > 1000000L) {
+         U.log("Sun is possibly lagging (" + diff + " ns > 1000000 ns).");
       }
 
-      U.sleepFor(1000L);
+      U.sleepFor(100L);
    }
 
    public void draw(Graphics2D g, boolean force) {

@@ -1,12 +1,12 @@
 package com.turikhay.tlauncher.ui;
 
-import java.awt.Panel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.JPanel;
 
-public abstract class BlockablePanel extends Panel implements Blockable {
+public abstract class BlockablePanel extends JPanel implements Blockable {
    private static final long serialVersionUID = 1L;
    public static final Object UNIVERSAL_UNBLOCK = "lol, nigga";
    private boolean blocked;

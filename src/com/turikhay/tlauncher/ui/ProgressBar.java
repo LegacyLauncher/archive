@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.font.LineMetrics;
 import javax.swing.JProgressBar;
 
@@ -162,16 +164,18 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
 
          Color oldcolor = g.getColor();
          g.setColor(Color.black);
+         Graphics2D g2D = (Graphics2D)g;
+         g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
          if (center) {
-            g.drawString(this.center_string, this.center_x, this.center_y);
+            g2D.drawString(this.center_string, this.center_x, this.center_y);
          }
 
          if (west) {
-            g.drawString(this.west_string, this.west_x, this.west_y);
+            g2D.drawString(this.west_string, this.west_x, this.west_y);
          }
 
          if (east) {
-            g.drawString(this.east_string, this.east_x, this.east_y);
+            g2D.drawString(this.east_string, this.east_x, this.east_y);
          }
 
          this.oldw = w;

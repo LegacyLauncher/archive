@@ -8,6 +8,7 @@ public class TimeoutField extends LocalizableTextField implements SettingsField 
 
    TimeoutField(SettingsForm sf, TimeoutField.FieldType ft) {
       this.ft = ft;
+      this.addFocusListener(sf.warner);
    }
 
    protected boolean check(String text) {
