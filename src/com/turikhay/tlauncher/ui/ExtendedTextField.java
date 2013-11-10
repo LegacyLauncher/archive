@@ -3,13 +3,14 @@ package com.turikhay.tlauncher.ui;
 import com.turikhay.tlauncher.settings.Settings;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.TextField;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.TextEvent;
 import java.awt.event.TextListener;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
-public abstract class ExtendedTextField extends TextField implements LocalizableComponent {
+public abstract class ExtendedTextField extends JTextField implements LocalizableComponent {
    private static final long serialVersionUID = 1L;
    protected CenterPanel parent;
    protected Settings l;
@@ -102,7 +103,7 @@ public abstract class ExtendedTextField extends TextField implements Localizable
    public void setText(Object text) {
       if (text != null && !text.equals(" ")) {
          this.onChangePrepare();
-         String r = text != null ? text.toString() : "";
+         String r = text.toString();
          this.value = this.check(r) ? r : null;
          super.setText(r);
       } else if (this.placeholder != null) {
@@ -170,7 +171,7 @@ public abstract class ExtendedTextField extends TextField implements Localizable
       }
    }
 
-   protected void onChange(TextEvent e) {
+   protected void onChange() {
       if (this.edit) {
          this.value = super.getText();
          if (!this.check()) {
@@ -207,9 +208,17 @@ public abstract class ExtendedTextField extends TextField implements Localizable
             ExtendedTextField.this.onFocusLost(e);
          }
       });
-      this.addTextListener(this.textListener = new TextListener() {
-         public void textValueChanged(TextEvent e) {
-            ExtendedTextField.this.onChange(e);
+      this.getDocument().addDocumentListener(new DocumentListener() {
+         public void insertUpdate(DocumentEvent e) {
+            ExtendedTextField.this.onChange();
+         }
+
+         public void removeUpdate(DocumentEvent e) {
+            ExtendedTextField.this.onChange();
+         }
+
+         public void changedUpdate(DocumentEvent e) {
+            ExtendedTextField.this.onChange();
          }
       });
    }

@@ -14,8 +14,4 @@ public class ParseException extends RuntimeException {
    public ParseException(Throwable cause) {
       super(cause);
    }
-
-   protected ParseException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-      super(message, cause, enableSuppression, writableStackTrace);
-   }
 }

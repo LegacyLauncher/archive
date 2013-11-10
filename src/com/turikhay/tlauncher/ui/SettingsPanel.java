@@ -2,9 +2,9 @@ package com.turikhay.tlauncher.ui;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Panel;
+import javax.swing.JPanel;
 
-public class SettingsPanel extends Panel {
+public class SettingsPanel extends JPanel {
    private static final long serialVersionUID = 4212962090384406608L;
    final SettingsForm sf;
    final int keyWidth = 150;
@@ -15,6 +15,7 @@ public class SettingsPanel extends Panel {
    }
 
    void createInterface() {
+      this.setOpaque(false);
       this.setLayout(new GridBagLayout());
       GridBagConstraints constraints = new GridBagConstraints();
       constraints.anchor = 17;

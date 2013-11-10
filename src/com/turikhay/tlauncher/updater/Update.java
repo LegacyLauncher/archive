@@ -65,8 +65,12 @@ public class Update {
       }
    }
 
-   public URI getDownloadLink(PackageType pt) {
+   public URI getDownloadLinkFor(PackageType pt) {
       return (URI)this.links.get(pt);
+   }
+
+   public URI getDownloadLink() {
+      return this.getDownloadLinkFor(PackageType.getCurrent());
    }
 
    public double getVersion() {
@@ -99,12 +103,12 @@ public class Update {
          throw new Update.IllegalStepException(this.step);
       } else {
          log(0);
-         URI download_link = this.getDownloadLink(pt);
+         URI download_link = this.getDownloadLinkFor(pt);
          if (download_link == null) {
             throw new NullPointerException("Update for package \"" + pt + "\" is not found");
          } else {
             log(1);
-            File destination = Updater.getTempFileFor(pt);
+            File destination = Updater.getUpdateFileFor(pt);
             final Downloadable downloadable = new Downloadable(download_link.toURL(), destination);
             downloadable.setHandler(new DownloadableHandler() {
                public void onStart() {
@@ -148,13 +152,13 @@ public class Update {
       } else {
          log("Saving update... Launcher will be closed.");
          File replace = Updater.getFileFor(pt);
-         File replacer = Updater.getTempFileFor(pt);
+         File replacer = Updater.getUpdateFileFor(pt);
          replacer.deleteOnExit();
-         if (pt == PackageType.EXE) {
+         if (pt != PackageType.JAR) {
             File oldfile = new File(replace.toString());
-            File newfile = new File(replace.toString() + ".replace");
+            File newfile = Updater.getTempFileFor(pt);
             if (!oldfile.renameTo(newfile)) {
-               throw new IllegalStateException("Cannot rename " + oldfile + " to " + newfile);
+               throw new Exception("Cannot rename " + oldfile + " to " + newfile);
             }
          }
 

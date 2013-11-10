@@ -34,6 +34,7 @@ public class SupportButton extends ImageButton implements LocalizableComponent {
          }
       });
       this.updateURL();
+      this.initImage();
    }
 
    public void openURL() {
@@ -49,19 +50,7 @@ public class SupportButton extends ImageButton implements LocalizableComponent {
 
    private Image selectImage() {
       String locale = TLauncher.getInstance().getSettings().getLocale().toString();
-      switch(locale.hashCode()) {
-      case 108860863:
-         if (locale.equals("ru_RU")) {
-            return this.vk;
-         }
-         break;
-      case 111333589:
-         if (locale.equals("uk_UA")) {
-            return this.vk;
-         }
-      }
-
-      return this.mail;
+      return !locale.equals("ru_RU") && !locale.equals("uk_UA") ? this.mail : this.vk;
    }
 
    private void updateURL() {

@@ -132,7 +132,11 @@ public class VersionManager {
       try {
          this.localVersionList.refreshVersions();
          if (!local) {
-            this.remoteVersionList.refreshVersions();
+            try {
+               this.remoteVersionList.refreshVersions();
+            } catch (IOException var14) {
+               this.log("Cannot refresh remote version!", var14);
+            }
 
             try {
                VersionSource.EXTRA.selectRelevantPath();
@@ -141,12 +145,12 @@ public class VersionManager {
                this.log("Cannot refresh extra versions!", var13);
             }
          }
-      } catch (IOException var15) {
+      } catch (IOException var16) {
          synchronized(this.refreshLock) {
             this.isRefreshing = false;
          }
 
-         throw var15;
+         throw var16;
       }
 
       Iterator iterator = this.remoteVersionList.getVersions().iterator();
@@ -736,11 +740,7 @@ public class VersionManager {
       this.refreshedListeners.remove(listener);
    }
 
-   private void log(Object w) {
-      U.log("[VersionManager] " + w);
-   }
-
-   private void log(Object w, Throwable e) {
-      U.log("[VersionManager] " + w, e);
+   private void log(Object... w) {
+      U.log("[VersionManager]", w);
    }
 }

@@ -54,36 +54,38 @@ public class U {
 
          for(int var5 = 0; var5 < var6; ++var5) {
             Object e = var7[var5];
-            if (e != null && e.getClass().isArray()) {
-               if (!first) {
-                  b.append(" ");
-               }
+            if (e != null) {
+               if (e.getClass().isArray()) {
+                  if (!first) {
+                     b.append(" ");
+                  }
 
-               if (e instanceof Object[]) {
-                  b.append(toLog((Object[])e));
-               } else {
-                  b.append(arrayToLog(e));
-               }
-            } else if (e instanceof Throwable) {
-               if (!first) {
+                  if (e instanceof Object[]) {
+                     b.append(toLog((Object[])e));
+                  } else {
+                     b.append(arrayToLog(e));
+                  }
+               } else if (e instanceof Throwable) {
+                  if (!first) {
+                     b.append("\n");
+                  }
+
+                  b.append(stackTrace((Throwable)e));
                   b.append("\n");
-               }
+               } else {
+                  if (!first) {
+                     b.append(" ");
+                  }
 
-               b.append(stackTrace((Throwable)e));
-               b.append("\n");
+                  b.append(e);
+                  if (first) {
+                     first = false;
+                  }
+               }
             } else {
-               if (!first) {
-                  b.append(" ");
-               }
-
-               b.append(e);
-               if (first) {
-                  first = false;
-               }
+               b.append("null");
             }
          }
-      } else {
-         b.append("null");
       }
 
       return b.toString();
@@ -370,14 +372,15 @@ public class U {
 
    public static String w(String string, int normal, char newline, boolean rude) {
       char[] c = string.toCharArray();
-      int len = c.length;
       int remaining = normal;
       String ret = "";
+      char[] var10 = c;
+      int var9 = c.length;
 
-      for(int x = 0; x < len; ++x) {
+      for(int var8 = 0; var8 < var9; ++var8) {
+         char cur = var10[var8];
          --remaining;
-         char cur = c[x];
-         if (c[x] == newline) {
+         if (cur == newline) {
             remaining = normal;
          }
 

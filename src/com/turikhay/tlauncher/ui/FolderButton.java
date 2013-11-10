@@ -25,6 +25,7 @@ public class FolderButton extends ImageButton {
             FolderButton.this.lf.defocus();
          }
       });
+      this.initImage();
    }
 
    public void openFolder() {

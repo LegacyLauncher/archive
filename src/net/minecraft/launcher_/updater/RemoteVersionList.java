@@ -1,7 +1,6 @@
 package net.minecraft.launcher_.updater;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.net.URL;
 import net.minecraft.launcher_.Http;
 import net.minecraft.launcher_.OperatingSystem;
@@ -14,7 +13,7 @@ public class RemoteVersionList extends VersionList {
    }
 
    protected String getUrl(String uri) throws IOException {
-      return Http.performGet(new URL(this.getRepositoryType().getDownloadPath() + uri), Proxy.NO_PROXY);
+      return Http.performGet(new URL(this.getRepositoryType().getDownloadPath() + uri));
    }
 
    public VersionSource getRepositoryType() {

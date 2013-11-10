@@ -112,7 +112,7 @@ public class GlobalSettings extends Settings {
 
    public String get(String key) {
       Object r = this.cs.containsKey(key) ? this.cs.get(key) : this.s.get(key);
-      return r != null && r != "" ? r.toString() : null;
+      return r != null && !r.equals("") ? r.toString() : null;
    }
 
    public void set(String key, Object value, boolean save) {
@@ -237,19 +237,13 @@ public class GlobalSettings extends Settings {
    }
 
    private boolean parseBoolean(String b) throws Exception {
-      switch(b.hashCode()) {
-      case 3569038:
-         if (b.equals("true")) {
-            return true;
-         }
-         break;
-      case 97196323:
-         if (b.equals("false")) {
-            return false;
-         }
+      if (b.equalsIgnoreCase("true")) {
+         return true;
+      } else if (b.equalsIgnoreCase("false")) {
+         return false;
+      } else {
+         throw new Exception();
       }
-
-      throw new Exception();
    }
 
    private void parseLaunchAction(String b) throws Exception {

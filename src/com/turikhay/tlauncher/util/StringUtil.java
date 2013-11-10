@@ -76,23 +76,11 @@ public class StringUtil {
    public static boolean parseBoolean(String b, boolean ignoreCase) throws ParseException {
       if (b == null) {
          throw new ParseException("String cannot be NULL!");
+      } else if (b.equalsIgnoreCase("true")) {
+         return true;
+      } else if (b.equalsIgnoreCase("false")) {
+         return false;
       } else {
-         if (ignoreCase) {
-            b = b.toLowerCase();
-         }
-
-         switch(b.hashCode()) {
-         case 3569038:
-            if (b.equals("true")) {
-               return true;
-            }
-            break;
-         case 97196323:
-            if (b.equals("false")) {
-               return false;
-            }
-         }
-
          throw new ParseException("Cannot parse value (" + b + ")!");
       }
    }

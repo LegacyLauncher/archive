@@ -43,12 +43,7 @@ public class LangChoice extends Choice implements SettingsField {
 
       this.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
-            if (e.getItem().equals(LangChoice.this.current)) {
-               LangChoice.this.changed = false;
-            } else {
-               LangChoice.this.changed = true;
-            }
-
+            LangChoice.this.changed = !e.getItem().equals(LangChoice.this.current);
          }
       });
    }

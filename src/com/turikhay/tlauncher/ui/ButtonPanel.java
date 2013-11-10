@@ -12,8 +12,8 @@ public class ButtonPanel extends BlockablePanel {
    public static final int ENTERBUTTON_REINSTALL = 1;
    final LoginForm lf;
    final Settings l;
-   public final LocalizableButton enter;
    public final LocalizableButton cancel;
+   public final LocalizableButton enter;
    public final AdditionalButtonsPanel addbuttons;
 
    ButtonPanel(LoginForm loginform) {
@@ -21,8 +21,9 @@ public class ButtonPanel extends BlockablePanel {
       this.l = this.lf.l;
       BorderLayout lm = new BorderLayout();
       lm.setVgap(2);
-      lm.setHgap(3);
+      lm.setHgap(1);
       this.setLayout(lm);
+      this.setOpaque(false);
       this.enter = new LocalizableButton("loginform.enter");
       this.enter.setFont(this.lf.font_bold);
       this.enter.addActionListener(new ActionListener() {

@@ -12,13 +12,13 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.LayoutManager;
-import java.awt.Panel;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import javax.swing.BoundedRangeModel;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -40,7 +40,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    private Dimension sizes;
    boolean update;
    private boolean conBusy;
-   private final Panel panel;
+   private final JPanel panel;
    private final SearchPanel sp;
    private final ExitCancelPanel ecp;
    private final TextPopup textpopup;
@@ -65,9 +65,11 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       } else {
          this.c = c;
          LayoutManager layout = new BorderLayout();
-         this.panel = new Panel(layout);
+         this.panel = new JPanel(layout);
+         this.panel.setAlignmentX(0.5F);
+         this.panel.setAlignmentY(0.5F);
          this.font = new Font("DialogInput", 0, 14);
-         this.textpopup = new TextPopup(s);
+         this.textpopup = new TextPopup();
          this.textArea = new JTextArea();
          this.textArea.setLineWrap(true);
          this.textArea.setEditable(false);
@@ -79,7 +81,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          this.textArea.setSelectionColor(Color.gray);
          this.textArea.setAutoscrolls(true);
          ((DefaultCaret)this.textArea.getCaret()).setUpdatePolicy(2);
-         this.textArea.addMouseListener(new TextPopup(s));
+         this.textArea.addMouseListener(this.textpopup);
          this.scrollPane = new JScrollPane(this.textArea);
          this.scrollPane.setBorder((Border)null);
          this.scrollPane.setVerticalScrollBarPolicy(20);
@@ -218,7 +220,8 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       this.panel.remove(this.sp);
       this.panel.remove(this.ecp);
       this.panel.add("South", this.ecp);
-      this.panel.validate();
+      this.validate();
+      this.panel.repaint();
       this.scrollBottom();
       this.toFront();
    }
@@ -227,7 +230,8 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       this.panel.remove(this.sp);
       this.panel.remove(this.ecp);
       this.panel.add("South", this.sp);
-      this.panel.validate();
+      this.validate();
+      this.panel.repaint();
       this.scrollBottom();
    }
 

@@ -1,7 +1,6 @@
 package net.minecraft.launcher_.versions;
 
 import com.turikhay.tlauncher.util.U;
-import java.net.Proxy;
 import java.net.URL;
 import net.minecraft.launcher_.Http;
 
@@ -28,7 +27,7 @@ public enum VersionSource {
 
          while(i < this.urls.length) {
             try {
-               Http.performGet(new URL(this.urls[i] + "check.txt"), Proxy.NO_PROXY);
+               Http.performGet(new URL(this.urls[i] + "check.txt"));
                this.selected = i;
                U.log("Success: relevant path for", this.toString(), "is", this.urls[i]);
                return;

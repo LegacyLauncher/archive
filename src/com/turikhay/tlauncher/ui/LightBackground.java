@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.util.U;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
@@ -16,9 +17,12 @@ public class LightBackground extends Background {
    protected final int glowW;
    protected final int glowH;
    protected double sunLocation;
+   protected Color backgroundColor;
 
    public LightBackground(DecoratedPanel comp, double loc) {
       super(comp);
+      this.backgroundColor = TLauncherFrame.backgroundColor;
+      comp.setBackground(this.backgroundColor);
       this.grassW = this.grass.getWidth((ImageObserver)null);
       this.grassH = this.grass.getHeight((ImageObserver)null);
       this.sunW = this.sun.getWidth((ImageObserver)null);
@@ -53,7 +57,7 @@ public class LightBackground extends Background {
       int x = (int)((double)this.width * this.sunLocation - (double)(this.sunW / 2));
       int y = this.height - this.grassH - this.sunH;
       g.drawImage(this.sun, x, y, this.sunW, this.sunH, (ImageObserver)null);
-      g.setColor(this.comp.getBackground());
+      g.setColor(this.backgroundColor);
       g.fillRect(0, 0, x, this.height - this.grassH - this.glowH);
       g.fillRect(0, 0, this.width, y);
       g.fillRect(x + this.sunW, y, this.sunW, this.sunH - this.glowH);

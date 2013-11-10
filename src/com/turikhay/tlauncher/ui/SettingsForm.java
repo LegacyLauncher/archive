@@ -1,10 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.util.U;
-import java.awt.Button;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -15,8 +13,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.JLabel;
 
-public class SettingsForm extends CenterPanel {
+public class SettingsForm extends CenterPanel implements LoginListener {
    private static final long serialVersionUID = -4851979612103757573L;
    final GameDirectoryField gameDirField = new GameDirectoryField(this);
    final ResolutionField resolutionField;
@@ -33,7 +32,7 @@ public class SettingsForm extends CenterPanel {
    final LocalizableLabel autologinCustom;
    final LocalizableLabel launchActionCustom;
    final LocalizableLabel connTimeoutLabel;
-   final Label langCustom;
+   final JLabel langCustom;
    final ArgsField javaArgsField;
    final ArgsField minecraftArgsField;
    final SettingsCheckbox snapshotsSelect;
@@ -43,28 +42,29 @@ public class SettingsForm extends CenterPanel {
    final SettingsCheckbox sunSelect;
    final SettingsCheckbox updaterSelect;
    final LocalizableLabel versionChoice;
-   final Button backButton;
-   final Button defButton;
+   final LocalizableButton defButton;
+   final LocalizableButton saveButton;
    final SettingsPanel settingsPan = new SettingsPanel(this);
    final VersionsPanel versionsPan;
    final TLauncherSettingsPanel tlauncherPan;
    final ArgsPanel argsPan;
+   final SaveSettingsPanel savePan;
    final FocusListener warner = new FocusListener() {
       public void focusGained(FocusEvent e) {
-         SettingsForm.this.error.setText("settings.warning");
+         SettingsForm.this.error_l.setText("settings.warning");
       }
 
       public void focusLost(FocusEvent e) {
-         SettingsForm.this.error.setText("");
+         SettingsForm.this.error_l.setText(" ");
       }
    };
    final FocusListener restart = new FocusListener() {
       public void focusGained(FocusEvent e) {
-         SettingsForm.this.error.setText("settings.restart");
+         SettingsForm.this.error_l.setText("settings.restart");
       }
 
       public void focusLost(FocusEvent e) {
-         SettingsForm.this.error.setText("");
+         SettingsForm.this.error_l.setText(" ");
       }
    };
    private String oldDir;
@@ -136,27 +136,29 @@ public class SettingsForm extends CenterPanel {
       this.sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun", true);
       this.sunSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
-            switch(e.getStateChange()) {
-            case 1:
-               SettingsForm.this.f.mc.startBackground();
-               break;
-            case 2:
-               SettingsForm.this.f.mc.stopBackground();
-            }
+            if (SettingsForm.this.f.mp != null) {
+               switch(e.getStateChange()) {
+               case 1:
+                  SettingsForm.this.f.mp.startBackground();
+                  break;
+               case 2:
+                  SettingsForm.this.f.mp.stopBackground();
+               }
 
+            }
          }
       });
       this.tlauncherPan = new TLauncherSettingsPanel(this);
       this.autologinCustom = new LocalizableLabel("settings.tlauncher.autologin.label");
       this.connTimeoutLabel = new LocalizableLabel("settings.timeouts.connection.label");
-      this.langCustom = new Label("Language:");
+      this.langCustom = new JLabel("Language:");
       this.launchActionCustom = new LocalizableLabel("settings.launch-action.label");
-      this.backButton = new LocalizableButton("settings.back");
-      this.backButton.setFont(this.font_bold);
-      this.backButton.addActionListener(new ActionListener() {
+      this.saveButton = new LocalizableButton("settings.save");
+      this.saveButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
+            SettingsForm.this.defocus();
             if (SettingsForm.this.save()) {
-               SettingsForm.this.goBack();
+               SettingsForm.this.f.mp.toggleSettings();
             }
 
          }
@@ -164,16 +166,17 @@ public class SettingsForm extends CenterPanel {
       this.defButton = new LocalizableButton("settings.default");
       this.defButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
+            SettingsForm.this.defocus();
             if (Alert.showQuestion("settings.setdefault", true)) {
                SettingsForm.this.setToDefaults();
             }
          }
       });
+      this.savePan = new SaveSettingsPanel(this);
       this.settingsPan.createInterface();
       this.add(this.error);
       this.add(this.settingsPan);
-      this.add(this.backButton);
-      this.add(this.defButton);
+      this.add(this.savePan);
       this.updateValues();
    }
 
@@ -197,6 +200,7 @@ public class SettingsForm extends CenterPanel {
 
       this.updater_enabled = this.updaterSelect.getState();
       this.oldDir = this.gameDirField.getValue();
+      this.snapshot_changed = this.beta_changed = this.alpha_changed = false;
       this.snapshot_old = this.snapshotsSelect.getState();
       this.alpha_old = this.alphaSelect.getState();
       this.beta_old = this.betaSelect.getState();
@@ -297,13 +301,18 @@ public class SettingsForm extends CenterPanel {
       return this.findFields(this);
    }
 
-   private void goBack() {
-      this.f.mc.showLogin();
+   public boolean onLogin() {
+      if (this.save()) {
+         return true;
+      } else {
+         this.f.mp.setSettings(true);
+         return false;
+      }
    }
 
-   protected void blockElement(Object reason) {
+   public void onLoginFailed() {
    }
 
-   protected void unblockElement(Object reason) {
+   public void onLoginSuccess() {
    }
 }

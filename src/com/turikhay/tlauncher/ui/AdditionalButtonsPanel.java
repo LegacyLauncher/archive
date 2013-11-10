@@ -14,6 +14,7 @@ public class AdditionalButtonsPanel extends BlockablePanel {
       LoginForm lf = bp.lf;
       LayoutManager layout = new GridLayout(0, 4);
       this.setLayout(layout);
+      this.setOpaque(false);
       this.support = new SupportButton(lf);
       this.folder = new FolderButton(lf);
       this.refresh = new RefreshButton(lf);

@@ -48,6 +48,7 @@ public class CompleteVersion implements Version {
                throw new IllegalArgumentException("Process arguments cannot be null or empty");
             } else {
                this.id = id;
+               this.original_id = original_id;
                this.releaseTime = releaseTime;
                this.time = updateTime;
                this.type = type;

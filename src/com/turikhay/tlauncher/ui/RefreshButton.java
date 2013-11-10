@@ -21,6 +21,7 @@ public class RefreshButton extends ImageButton {
             RefreshButton.this.onPressButton();
          }
       });
+      this.initImage();
    }
 
    RefreshButton(LoginForm loginform) {

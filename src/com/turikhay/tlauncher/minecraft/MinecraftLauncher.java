@@ -8,7 +8,6 @@ import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.util.Console;
 import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.MinecraftUtil;
-import com.turikhay.tlauncher.util.StringUtil;
 import com.turikhay.tlauncher.util.U;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -22,8 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import net.minecraft.launcher_.OperatingSystem;
@@ -39,43 +36,41 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
    public static final int VERSION = 9;
-   private final String prefix;
-   private final Pattern crash_pattern;
-   private final OperatingSystem os;
-   private GlobalSettings s;
-   private Downloader d;
-   private Console con;
-   private final MinecraftLauncherListener listener;
-   private final VersionManager vm;
-   public final boolean exit;
-   private boolean init;
-   private boolean working;
-   private boolean launching;
-   private boolean installed;
-   private boolean forcecompare;
-   private final boolean forceupdate;
-   private final boolean check;
-   private final boolean console;
-   private VersionSyncInfo syncInfo;
-   private CompleteVersion version;
-   private final String username;
-   private final String version_name;
-   private final String jargs;
-   private final String margs;
-   private final String gamedir;
-   private final String javadir;
-   private final int width;
-   private final int height;
-   private DownloadableContainer jar;
-   private DownloadableContainer resources;
-   private JavaProcessLauncher processLauncher;
-   private File nativeDir;
-   private File gameDir;
-   private File assetsDir;
+   final String prefix;
+   final OperatingSystem os;
+   GlobalSettings s;
+   Downloader d;
+   Console con;
+   final MinecraftLauncherListener listener;
+   final VersionManager vm;
+   final boolean exit;
+   boolean init;
+   boolean working;
+   boolean launching;
+   boolean installed;
+   boolean forcecompare;
+   final boolean forceupdate;
+   final boolean check;
+   final boolean console;
+   VersionSyncInfo syncInfo;
+   CompleteVersion version;
+   final String username;
+   final String version_name;
+   final String jargs;
+   final String margs;
+   final String gamedir;
+   final String javadir;
+   final int width;
+   final int height;
+   DownloadableContainer jar;
+   DownloadableContainer resources;
+   JavaProcessLauncher processLauncher;
+   File nativeDir;
+   File gameDir;
+   File assetsDir;
 
-   private MinecraftLauncher(MinecraftLauncherListener listener, VersionManager vm, String version_name, String username, String gamedir, String javadir, String jargs, String margs, int[] sizes, boolean force, boolean check, boolean exit, boolean console) {
+   private MinecraftLauncher(MinecraftLauncherListener listener, VersionManager vm, String version_name, String username, String token, String gamedir, String javadir, String jargs, String margs, int[] sizes, boolean force, boolean check, boolean exit, boolean console) {
       this.prefix = "[MinecraftLauncher]";
-      this.crash_pattern = Pattern.compile("^.*[\\#\\@\\!\\@\\#][ ]Game[ ]crashed!.+[\\#\\@\\!\\@\\#][ ](.+)$");
       this.os = OperatingSystem.getCurrentPlatform();
       this.jar = new DownloadableContainer();
       this.resources = new DownloadableContainer();
@@ -97,16 +92,15 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.log("Minecraft Launcher v9 is started!");
    }
 
-   public MinecraftLauncher(MinecraftLauncherListener listener, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
-      this(listener, vm, s.get("login.version"), s.get("login.username"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getBoolean("gui.console"));
+   public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
+      this(listener, vm, s.get("login.version"), s.get("login.username"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getBoolean("gui.console"));
       this.s = s;
+      this.d = d;
       this.init();
    }
 
    public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, boolean force, boolean check) {
-      this(listener, t.getSettings(), t.getVersionManager(), force, check);
-      this.s = t.getSettings();
-      this.d = t.getDownloader();
+      this(listener, t.getDownloader(), t.getSettings(), t.getVersionManager(), force, check);
       this.init();
    }
 
@@ -232,11 +226,10 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
          try {
             this.unpackNatives(this.forceupdate);
-         } catch (IOException var6) {
-            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var6);
+         } catch (IOException var5) {
+            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var5);
          }
 
-         StringUtil.EscapeGroup esc = StringUtil.EscapeGroup.COMMAND;
          this.processLauncher = new JavaProcessLauncher(this.javadir, new String[0]);
          this.processLauncher.directory(this.gameDir);
          this.assetsDir = new File(this.gameDir, "assets");
@@ -263,7 +256,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommand("--width", this.width);
          this.processLauncher.addCommand("--height", this.height);
          if (this.margs.length() > 0) {
-            this.processLauncher.addSplitCommands(StringUtil.addSlashes(this.margs, esc));
+            this.processLauncher.addSplitCommands(this.margs);
          }
 
          if (resourcesAreReady) {
@@ -273,8 +266,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          } else {
             try {
                this.resources = this.vm.downloadResources(resourcesList, this.forceupdate);
-            } catch (IOException var5) {
-               throw new MinecraftLauncherException("Cannot download resources!", "download-resources", var5);
+            } catch (IOException var4) {
+               throw new MinecraftLauncherException("Cannot download resources!", "download-resources", var4);
             }
 
             if (this.resources.get().isEmpty()) {
@@ -320,21 +313,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.log("Starting Minecraft " + this.version_name + "...");
 
       try {
-         List parts = this.processLauncher.getFullCommands();
-         StringBuilder full = new StringBuilder();
-         boolean first = true;
-
-         String part;
-         for(Iterator var5 = parts.iterator(); var5.hasNext(); full.append(part)) {
-            part = (String)var5.next();
-            if (first) {
-               first = false;
-            } else {
-               full.append(" ");
-            }
-         }
-
-         this.log("Running: " + full.toString());
+         this.log("Running: " + this.processLauncher.getCommandsAsString());
          if (!this.exit) {
             this.onLaunch();
          }
@@ -346,8 +325,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             process.safeSetExitRunnable(this);
          }
 
-      } catch (Exception var6) {
-         throw new MinecraftLauncherException("Cannot start the game!", "start", var6);
+      } catch (Exception var2) {
+         throw new MinecraftLauncherException("Cannot start the game!", "start", var2);
       }
    }
 
@@ -560,8 +539,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       }
 
       this.log("Minecraft closed with exit code: " + exit);
-      if (!U.interval(0, 1, exit)) {
-         this.handleCrash();
+      if (!CrashDescriptor.parseExit(exit)) {
+         this.handleCrash(exit);
       } else if (this.con != null) {
          this.con.killIn(5000L);
       }
@@ -569,34 +548,22 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       U.gc();
    }
 
-   private void handleCrash() {
+   private void handleCrash(int exit) {
       if (this.con != null) {
-         String crash_report = null;
-         String output = this.con.getOutput();
-         String[] var7;
-         int var6 = (var7 = output.split("\n")).length;
-
-         for(int var5 = 0; var5 < var6; ++var5) {
-            String line = var7[var5];
-            Matcher mt = this.crash_pattern.matcher(line);
-            if (mt.matches()) {
-               crash_report = mt.group(1);
-               if (crash_report == null) {
-                  crash_report = "/* MISSING_PATH */";
-               }
-               break;
-            }
+         CrashDescriptor descriptor = new CrashDescriptor(this);
+         Crash crash = descriptor.scan(exit);
+         if (crash.getFile() != null) {
+            this.log("Crash report found.");
          }
 
-         if (crash_report != null) {
-            this.log("Crash report found.");
+         if (!crash.getSignatures().isEmpty()) {
+            this.log("Crash is recognized.");
          }
 
          this.log("Console won't vanish automatically.");
          this.con.show();
          if (this.listener != null) {
-            MinecraftLauncherException ex = new MinecraftLauncherException("Minecraft exited with illegal code.", "exit-code", crash_report);
-            this.listener.onMinecraftError(ex);
+            this.listener.onMinecraftCrash(crash);
          }
       }
    }

@@ -1,9 +1,9 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
-import java.awt.Label;
+import javax.swing.JLabel;
 
-public class LocalizableLabel extends Label implements LocalizableComponent {
+public class LocalizableLabel extends JLabel implements LocalizableComponent {
    private static final long serialVersionUID = 1L;
    static Settings l;
    private String path;

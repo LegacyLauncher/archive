@@ -6,6 +6,7 @@ public class TLauncherSettingsPanel extends BlockablePanel {
    private static final long serialVersionUID = -9108973380914818944L;
 
    TLauncherSettingsPanel(SettingsForm sf) {
+      this.setOpaque(false);
       this.setLayout(new BoxLayout(this, 3));
       this.add(sf.consoleSelect);
       this.add(sf.updaterSelect);

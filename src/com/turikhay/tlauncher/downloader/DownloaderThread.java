@@ -57,40 +57,38 @@ public class DownloaderThread extends Thread {
          Downloadable d = (Downloadable)var3.next();
          this.error = null;
          this.onStart(d);
-         DownloadableContainer dc = d.getContainer();
          int attempt = 0;
 
          while(attempt < 10) {
             ++attempt;
-            this.log(dc, "Attempting to download " + d.getURL() + " [" + attempt + "/" + 10 + "]...");
+            this.dlog("Attempting to download " + d.getURL() + " [" + attempt + "/" + 10 + "]...");
 
             try {
                this.download(d);
-               this.log(dc, "Downloaded! [" + attempt + "/" + 10 + "]");
+               this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + 10 + "]");
                break;
-            } catch (DownloaderError var7) {
-               if (var7.isSerious()) {
-                  this.log(dc, var7);
-                  this.onError(d, var7);
+            } catch (DownloaderError var6) {
+               if (var6.isSerious()) {
+                  this.log(d, var6);
+                  this.onError(d, var6);
                   break;
                }
 
-               if (var7.hasTimeout()) {
-                  this.sleepFor((long)var7.getTimeout());
+               if (var6.hasTimeout()) {
+                  this.sleepFor((long)var6.getTimeout());
                }
-            } catch (SocketTimeoutException var8) {
-               this.log(dc, "Timeout exception. Retrying.");
+            } catch (SocketTimeoutException var7) {
+               this.log(d, "Timeout exception. Retrying.");
                this.sleepFor(5000L);
-            } catch (Exception var9) {
-               this.log(dc, "Unknown error occurred.");
-               this.log(dc, var9);
-               this.onError(d, var9);
+            } catch (Exception var8) {
+               this.log(d, "Unknown error occurred.", var8);
+               this.onError(d, var8);
                break;
             }
          }
 
          if (attempt == 10) {
-            this.log(dc, "Gave up trying to download this file.");
+            this.log(d, "Gave up trying to download this file.");
             this.onError(d, new DownloaderError("Gave up trying to download this file", true));
          }
       }
@@ -110,12 +108,11 @@ public class DownloaderThread extends Thread {
    }
 
    public void download(Downloadable d) throws IOException {
-      DownloadableContainer dc = d.getContainer();
       String fn = d.getFilename();
       long reply_s = System.currentTimeMillis();
       HttpURLConnection connection = d.makeConnection();
       long reply = System.currentTimeMillis() - reply_s;
-      this.log(dc, "Got reply in " + reply + " ms.");
+      this.dlog("Got reply in " + reply + " ms.");
       int code = connection.getResponseCode();
       switch(code) {
       case 301:
@@ -128,13 +125,13 @@ public class DownloaderThread extends Thread {
             throw new DownloaderError("Redirection is required but field \"Location\" is empty", true);
          }
 
-         this.log(dc, "Responce code is " + code + ". Redirecting to: " + newurl);
+         this.dlog("Responce code is " + code + ". Redirecting to: " + newurl);
          d.setURL(newurl);
          this.download(d);
          return;
       case 304:
          if (!d.isForced()) {
-            this.log(dc, "File is not modified (304)");
+            this.log(d, "File is not modified (304)");
             this.onComplete(d);
             return;
          }
@@ -165,7 +162,7 @@ public class DownloaderThread extends Thread {
          InputStream in = connection.getInputStream();
          OutputStream out = new FileOutputStream(file);
          long read = 0L;
-         long length = connection.getContentLengthLong();
+         long length = (long)connection.getContentLength();
          long downloaded_s = System.currentTimeMillis();
          byte[] buffer = new byte[65536];
          int curread = in.read(buffer);
@@ -182,26 +179,27 @@ public class DownloaderThread extends Thread {
          }
 
          downloaded = System.currentTimeMillis() - downloaded_s;
+         d.setTime(downloaded);
          in.close();
          out.close();
          connection.disconnect();
          File[] copies = d.getAdditionalDestinations();
          if (copies != null && copies.length > 0) {
-            this.log(dc, "Found additional destinations. Copying...");
-            File[] var27 = copies;
-            int var26 = copies.length;
+            this.dlog("Found additional destinations. Copying...");
+            File[] var26 = copies;
+            int var25 = copies.length;
 
-            for(int var29 = 0; var29 < var26; ++var29) {
-               File copy = var27[var29];
-               this.log(dc, "Copying " + copy + "...");
+            for(int var29 = 0; var29 < var25; ++var29) {
+               File copy = var26[var29];
+               this.dlog("Copying " + copy + "...");
                FileUtil.copyFile(file, copy, d.isForced());
-               this.log(dc, "Success!");
+               this.dlog(d, "Success!");
             }
 
-            this.log(dc, "Copying completed.");
+            this.dlog("Copying completed.");
          }
 
-         this.log(dc, "Successfully downloaded " + fn + " in " + downloaded / 1000L + " s!");
+         this.dlog("Successfully downloaded " + fn + " in " + downloaded / 1000L + " s!");
          this.onComplete(d);
       } else {
          throw new DownloaderError("Illegal response code (" + code + ")", true);
@@ -296,8 +294,14 @@ public class DownloaderThread extends Thread {
       }
    }
 
-   private void log(DownloadableContainer c, Object message) {
+   private void dlog(Object... message) {
       String prefix = "[" + this.name + "DT #" + this.id + "]";
+      U.log(prefix, message);
+   }
+
+   private void log(Downloadable d, Object... message) {
+      DownloadableContainer c = d.getContainer();
+      String prefix = "[" + this.name + "DT #" + this.id + "]\n> " + d.getURL() + "\n> ";
       if (c != null && c.hasConsole()) {
          c.log(prefix, message);
       }

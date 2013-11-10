@@ -2,11 +2,8 @@ package com.turikhay.tlauncher.util;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
-import com.turikhay.tlauncher.exceptions.TLauncherException;
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.net.URLClassLoader;
 import net.minecraft.launcher_.OperatingSystem;
 import net.minecraft.launcher_.updater.VersionFilter;
 import net.minecraft.launcher_.versions.ReleaseType;
@@ -80,18 +77,6 @@ public class MinecraftUtil {
 
    public static Downloadable getDownloadable(String url) {
       return getDownloadable(url, false);
-   }
-
-   public static void startLauncher(File launcherJar, Class[] construct, Object[] obj) {
-      U.log("Starting launcher...");
-
-      try {
-         Class aClass = (new URLClassLoader(new URL[]{launcherJar.toURI().toURL()})).loadClass("net.minecraft.launcher.Launcher");
-         Constructor constructor = aClass.getConstructor(construct);
-         constructor.newInstance(obj);
-      } catch (Exception var5) {
-         throw new TLauncherException("Cannot start launcher", var5);
-      }
    }
 
    public static VersionFilter getVersionFilter() {

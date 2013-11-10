@@ -13,6 +13,7 @@ public class JavaProcessLauncher {
    private final String jvmPath;
    private final List commands;
    private File directory;
+   private ProcessBuilder process;
 
    public JavaProcessLauncher(String jvmPath, String[] commands) {
       if (jvmPath == null) {
@@ -26,13 +27,39 @@ public class JavaProcessLauncher {
 
    public JavaProcess start() throws IOException {
       List full = this.getFullCommands();
-      return new JavaProcess(full, (new ProcessBuilder(full)).directory(this.directory).redirectErrorStream(true).start());
+      return new JavaProcess(full, this.createProcess().start());
+   }
+
+   public ProcessBuilder createProcess() throws IOException {
+      if (this.process == null) {
+         this.process = (new ProcessBuilder(this.getFullCommands())).directory(this.directory).redirectErrorStream(true);
+      }
+
+      return this.process;
    }
 
    public List getFullCommands() {
       List result = new ArrayList(this.commands);
       result.add(0, this.getJavaPath());
       return result;
+   }
+
+   public String getCommandsAsString() {
+      List parts = this.getFullCommands();
+      StringBuilder full = new StringBuilder();
+      boolean first = true;
+
+      String part;
+      for(Iterator var5 = parts.iterator(); var5.hasNext(); full.append(part)) {
+         part = (String)var5.next();
+         if (first) {
+            first = false;
+         } else {
+            full.append(" ");
+         }
+      }
+
+      return full.toString();
    }
 
    public List getCommands() {

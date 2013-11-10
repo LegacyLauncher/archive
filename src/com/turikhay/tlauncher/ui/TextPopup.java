@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.settings.Settings;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.event.MouseAdapter;
@@ -16,10 +17,9 @@ public class TextPopup extends MouseAdapter implements LocalizableComponent {
    private static String COPY;
    private static String SELECTALL;
    private static String PASTE;
-   private GlobalSettings s;
+   static Settings l;
 
-   public TextPopup(GlobalSettings s) {
-      this.s = s;
+   public TextPopup() {
       this.updateLocale();
    }
 
@@ -102,16 +102,20 @@ public class TextPopup extends MouseAdapter implements LocalizableComponent {
    }
 
    public void updateLocale() {
-      if (this.s == null) {
+      if (l == null && TLauncher.getInstance() != null) {
+         l = TLauncher.getInstance().getSettings();
+      }
+
+      if (l == null) {
          CUT = "Cut";
          COPY = "Copy";
          SELECTALL = "Select all";
          PASTE = "Paste";
       } else {
-         CUT = this.s.get("popup.cut");
-         COPY = this.s.get("popup.copy");
-         SELECTALL = this.s.get("popup.selectall");
-         PASTE = this.s.get("popup.paste");
+         CUT = l.get("popup.cut");
+         COPY = l.get("popup.copy");
+         SELECTALL = l.get("popup.selectall");
+         PASTE = l.get("popup.paste");
       }
 
    }

@@ -2,8 +2,8 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.exceptions.TLauncherException;
 import java.awt.AlphaComposite;
-import java.awt.Button;
 import java.awt.Composite;
+import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -14,8 +14,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 
-public class ImageButton extends Button {
+public class ImageButton extends JButton {
    private static final long serialVersionUID = 1L;
    protected Image image;
    protected ImageButton.ImageRotation rotation;
@@ -68,7 +69,7 @@ public class ImageButton extends Button {
       return this.rotation;
    }
 
-   public int getMargin() {
+   public int getImageMargin() {
       return this.margin;
    }
 
@@ -78,9 +79,10 @@ public class ImageButton extends Button {
    }
 
    public void paint(Graphics g0) {
+      super.paint(g0);
       if (this.image != null) {
          Graphics2D g = (Graphics2D)g0;
-         String text = this.getLabel();
+         String text = this.getText();
          boolean drawtext = text != null && text.length() > 0;
          FontMetrics fm = g.getFontMetrics();
          float opacity = this.isEnabled() ? 1.0F : 0.5F;
@@ -131,6 +133,13 @@ public class ImageButton extends Button {
       }
    }
 
+   protected void initImage() {
+      this.setOpaque(false);
+      if (this.image != null) {
+         this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null) + 10));
+      }
+   }
+
    private void initListeners() {
       this.addMouseListener(new MouseListener() {
          public void mouseClicked(MouseEvent e) {
@@ -151,7 +160,7 @@ public class ImageButton extends Button {
       });
       this.addKeyListener(new KeyListener() {
          public void keyPressed(KeyEvent e) {
-            if (e.getExtendedKeyCode() == 32) {
+            if (e.getKeyCode() == 32) {
                ImageButton.this.pressed = true;
             }
          }

@@ -19,6 +19,7 @@ public class Downloadable {
    private DownloadableContainer container;
    private DownloadableHandler handler;
    private boolean forced;
+   private long time;
 
    public Downloadable(URL url, File destination, File[] copies, boolean force) {
       this.url = url;
@@ -37,6 +38,7 @@ public class Downloadable {
 
    public Downloadable(URL url, boolean force) {
       this.url = url;
+      this.forced = force;
    }
 
    public Downloadable(String url, File destination) throws MalformedURLException {
@@ -85,6 +87,10 @@ public class Downloadable {
 
    public DownloadableContainer getContainer() {
       return this.container;
+   }
+
+   public long getTime() {
+      return this.time;
    }
 
    public void onStart() {
@@ -140,6 +146,10 @@ public class Downloadable {
       this.forced = newforced;
    }
 
+   public void setTime(long ms) {
+      this.time = ms;
+   }
+
    public HttpURLConnection makeConnection() throws IOException {
       HttpURLConnection connection = (HttpURLConnection)this.url.openConnection();
       setUp(connection, false);
@@ -175,12 +185,16 @@ public class Downloadable {
       connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
       connection.setRequestProperty("Expires", "0");
       connection.setRequestProperty("Pragma", "no-cache");
-      connection.setRequestProperty("Accept", "text/html, application/xml;q=0.9, application/xhtml xml, image/png, image/jpeg, image/gif, image/x-xbitmap, */*;q=0.1");
-      connection.setRequestProperty("Accept-Language", "en");
-      connection.setRequestProperty("Accept-Charset", "iso-8859-1, utf-8, utf-16, *;q=0.1");
-      connection.setRequestProperty("Accept-Encoding", "deflate, gzip, x-gzip, identity, *;q=0");
-      connection.setRequestProperty("User-Agent", "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.16");
-      return connection;
+      if (!mask) {
+         return connection;
+      } else {
+         connection.setRequestProperty("Accept", "text/html, application/xml;q=0.9, application/xhtml xml, image/png, image/jpeg, image/gif, image/x-xbitmap, */*;q=0.1");
+         connection.setRequestProperty("Accept-Language", "en");
+         connection.setRequestProperty("Accept-Charset", "iso-8859-1, utf-8, utf-16, *;q=0.1");
+         connection.setRequestProperty("Accept-Encoding", "deflate, gzip, x-gzip, identity, *;q=0");
+         connection.setRequestProperty("User-Agent", "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.16");
+         return connection;
+      }
    }
 
    public static URLConnection setUp(URLConnection connection) {

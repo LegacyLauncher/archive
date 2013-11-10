@@ -2,7 +2,7 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.util.AsyncThread;
 
-public class Autologin {
+public class Autologin implements LoginListener {
    public static final int DEFAULT_TIMEOUT = 3;
    public static final int MAX_TIMEOUT = 10;
    private final LoginForm lf;
@@ -46,6 +46,17 @@ public class Autologin {
       return this.enabled;
    }
 
+   public void cancel() {
+      this.enabled = false;
+      this.stopLogin();
+      this.lf.checkbox.uncheckAutologin();
+      this.lf.buttons.toggleSouthButton();
+      if (this.active) {
+         this.lf.versionchoice.asyncRefresh();
+      }
+
+   }
+
    private boolean updateLogin() {
       --this.sec;
       this.lf.buttons.cancel.setLabel("loginform.cancel", "t", this.sec);
@@ -67,5 +78,22 @@ public class Autologin {
       } catch (Exception var4) {
       }
 
+   }
+
+   public boolean onLogin() {
+      if (!this.enabled) {
+         return true;
+      } else {
+         this.stopLogin();
+         this.active = false;
+         this.lf.buttons.toggleSouthButton();
+         return true;
+      }
+   }
+
+   public void onLoginFailed() {
+   }
+
+   public void onLoginSuccess() {
    }
 }
