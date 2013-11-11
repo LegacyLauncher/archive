@@ -21,7 +21,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher {
-   public static final double VERSION = 0.197D;
+   public static final double VERSION = 0.198D;
    private static TLauncher instance;
    private TLauncher.TLauncherState state;
    private Settings lang;
@@ -31,11 +31,12 @@ public class TLauncher {
    private TLauncherFrame frame;
    private TLauncherNoGraphics loader;
    private VersionManager vm;
-   private OptionSet args;
+   public final OptionSet args;
+   public final String[] sargs;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
-   public TLauncher(TLauncher.TLauncherState state, OptionSet set) throws IOException {
+   public TLauncher(TLauncher.TLauncherState state, String[] sargs, OptionSet set) throws IOException {
       Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
@@ -44,6 +45,7 @@ public class TLauncher {
          instance = this;
          this.state = state;
          this.args = set;
+         this.sargs = sargs;
          long start = System.currentTimeMillis();
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
@@ -64,6 +66,7 @@ public class TLauncher {
          LoginForm lf = this.frame.getLoginForm();
          this.vm.addRefreshedListener(lf.versionchoice);
          this.updater.addListener(this.frame);
+         this.updater.addListener(lf);
          if (lf.autologin.isEnabled()) {
             this.vm.refreshVersions(true);
             lf.autologin.startLogin();
@@ -163,10 +166,10 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version 0.197...");
+      U.log("Starting version 0.198...");
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
-         new TLauncher(TLauncher.TLauncherState.FULL, (OptionSet)null);
+         new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);
       } else {
          if (set.has("help")) {
             ArgumentParser.getParser().printHelpOn((OutputStream)System.out);
@@ -177,12 +180,16 @@ public class TLauncher {
             state = TLauncher.TLauncherState.MINIMAL;
          }
 
-         new TLauncher(state, set);
+         new TLauncher(state, args, set);
       }
    }
 
    public static TLauncher getInstance() {
       return instance;
+   }
+
+   public void newInstance() {
+      Bootstrapper.main(this.sargs);
    }
 
    // $FF: synthetic method

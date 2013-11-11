@@ -38,6 +38,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final SettingsCheckbox snapshotsSelect;
    final SettingsCheckbox betaSelect;
    final SettingsCheckbox alphaSelect;
+   final SettingsCheckbox cheatsSelect;
    final SettingsCheckbox consoleSelect;
    final SettingsCheckbox sunSelect;
    final SettingsCheckbox updaterSelect;
@@ -75,6 +76,8 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    private boolean beta_changed;
    private boolean alpha_old;
    private boolean alpha_changed;
+   private boolean cheats_old;
+   private boolean cheats_changed;
 
    public SettingsForm(TLauncherFrame tlauncher) {
       super(tlauncher);
@@ -89,25 +92,32 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.gameDirCustom = new LocalizableLabel("settings.client.gamedir.label");
       this.resolutionCustom = new LocalizableLabel("settings.client.resolution.label");
       this.versionChoice = new LocalizableLabel("settings.versions.label");
-      this.snapshotsSelect = new SettingsCheckbox("settings.versions.snapshots", "minecraft.versions.snapshots", true);
+      this.snapshotsSelect = new SettingsCheckbox(this, "settings.versions.snapshots", "minecraft.versions.snapshots");
       this.snapshotsSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean selected = e.getStateChange() == 1;
             SettingsForm.this.snapshot_changed = SettingsForm.this.snapshot_old ^ selected;
          }
       });
-      this.betaSelect = new SettingsCheckbox("settings.versions.beta", "minecraft.versions.beta", true);
+      this.betaSelect = new SettingsCheckbox(this, "settings.versions.beta", "minecraft.versions.beta");
       this.betaSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean selected = e.getStateChange() == 1;
             SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ selected;
          }
       });
-      this.alphaSelect = new SettingsCheckbox("settings.versions.alpha", "minecraft.versions.alpha", true);
+      this.alphaSelect = new SettingsCheckbox(this, "settings.versions.alpha", "minecraft.versions.alpha");
       this.alphaSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             boolean selected = e.getStateChange() == 1;
             SettingsForm.this.alpha_changed = SettingsForm.this.alpha_old ^ selected;
+         }
+      });
+      this.cheatsSelect = new SettingsCheckbox(this, "settings.versions.cheats", "minecraft.versions.cheats");
+      this.cheatsSelect.addItemListener(new ItemListener() {
+         public void itemStateChanged(ItemEvent e) {
+            boolean selected = e.getStateChange() == 1;
+            SettingsForm.this.cheats_changed = SettingsForm.this.cheats_old ^ selected;
          }
       });
       this.versionsPan = new VersionsPanel(this);
@@ -200,10 +210,11 @@ public class SettingsForm extends CenterPanel implements LoginListener {
 
       this.updater_enabled = this.updaterSelect.getState();
       this.oldDir = this.gameDirField.getValue();
-      this.snapshot_changed = this.beta_changed = this.alpha_changed = false;
+      this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = false;
       this.snapshot_old = this.snapshotsSelect.getState();
       this.alpha_old = this.alphaSelect.getState();
       this.beta_old = this.betaSelect.getState();
+      this.cheats_old = this.cheatsSelect.getState();
    }
 
    public void setToDefaults() {
@@ -268,14 +279,15 @@ public class SettingsForm extends CenterPanel implements LoginListener {
 
          return true;
       } else {
-         if (this.snapshot_changed || this.beta_changed || this.alpha_changed) {
+         if (this.snapshot_changed || this.beta_changed || this.alpha_changed || this.cheats_changed) {
             this.f.lf.versionchoice.asyncRefresh();
          }
 
-         this.snapshot_changed = this.beta_changed = this.alpha_changed = false;
+         this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = false;
          this.snapshot_old = this.snapshotsSelect.getState();
          this.alpha_old = this.alphaSelect.getState();
          this.beta_old = this.betaSelect.getState();
+         this.cheats_old = this.cheatsSelect.getState();
          return true;
       }
    }

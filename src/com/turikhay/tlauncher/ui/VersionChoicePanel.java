@@ -191,7 +191,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          for(int i = 0; i < this.choice.getItemCount(); ++i) {
             String ch = (String)this.list.get(this.choice.getItem(i));
             VersionSyncInfo vs = this.vm.getVersionSyncInfo(ch);
-            if (vs.getLatestVersion().getType() != ReleaseType.CHEAT) {
+            if (vs.getLatestVersion().getType() != ReleaseType.CHEAT && !vs.getLatestVersion().isCheat()) {
                select = i;
                break;
             }

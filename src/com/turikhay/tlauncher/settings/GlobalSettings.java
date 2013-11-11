@@ -60,6 +60,7 @@ public class GlobalSettings extends Settings {
       this.d.put("minecraft.versions.snapshots", true);
       this.d.put("minecraft.versions.beta", true);
       this.d.put("minecraft.versions.alpha", true);
+      this.d.put("minecraft.versions.cheats", true);
       this.d.put("minecraft.onlaunch", GlobalSettings.ActionOnLaunch.getDefault());
       this.d.put("gui.sun", true);
       this.d.put("gui.console.width", 620);
@@ -322,33 +323,29 @@ public class GlobalSettings extends Settings {
 
    private static List getSupportedLocales() {
       File file = FileUtil.getRunningJar();
-      if (file != null && !file.toString().endsWith(".exe")) {
-         ArrayList locales = new ArrayList();
+      ArrayList locales = new ArrayList();
 
-         try {
-            URL jar = file.toURI().toURL();
-            ZipInputStream zip = new ZipInputStream(jar.openStream());
+      try {
+         URL jar = file.toURI().toURL();
+         ZipInputStream zip = new ZipInputStream(jar.openStream());
 
-            while(true) {
-               ZipEntry e = zip.getNextEntry();
-               if (e == null) {
-                  return locales;
-               }
+         while(true) {
+            ZipEntry e = zip.getNextEntry();
+            if (e == null) {
+               return (List)(locales.isEmpty() ? DEFAULT_LOCALES : locales);
+            }
 
-               String name = e.getName();
-               if (name.startsWith("lang/")) {
-                  Matcher mt = lang_pattern.matcher(name);
-                  if (mt.matches()) {
-                     U.log("Found locale:", mt.group());
-                     locales.add(mt.group(1));
-                  }
+            String name = e.getName();
+            if (name.startsWith("lang/")) {
+               Matcher mt = lang_pattern.matcher(name);
+               if (mt.matches()) {
+                  U.log("Found locale:", mt.group());
+                  locales.add(mt.group(1));
                }
             }
-         } catch (Exception var7) {
-            U.log("Cannot get locales!", var7);
-            return DEFAULT_LOCALES;
          }
-      } else {
+      } catch (Exception var7) {
+         U.log("Cannot get locales!", var7);
          return DEFAULT_LOCALES;
       }
    }

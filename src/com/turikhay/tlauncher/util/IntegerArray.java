@@ -23,7 +23,7 @@ public class IntegerArray {
       if (pos >= 0 && pos < this.length) {
          return this.integers[pos];
       } else {
-         throw new ArrayIndexOutOfBoundsException("Invalid position (" + pos + ")!");
+         throw new ArrayIndexOutOfBoundsException("Invalid position (" + pos + " / " + this.length + ")!");
       }
    }
 
@@ -31,7 +31,7 @@ public class IntegerArray {
       if (pos >= 0 && pos < this.length) {
          this.integers[pos] = val;
       } else {
-         throw new ArrayIndexOutOfBoundsException("Invalid position (" + pos + ")!");
+         throw new ArrayIndexOutOfBoundsException("Invalid position (" + pos + " / " + this.length + ")!");
       }
    }
 

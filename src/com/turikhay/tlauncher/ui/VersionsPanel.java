@@ -11,6 +11,7 @@ public class VersionsPanel extends BlockablePanel {
       this.add(sf.snapshotsSelect);
       this.add(sf.betaSelect);
       this.add(sf.alphaSelect);
+      this.add(sf.cheatsSelect);
    }
 
    protected void blockElement(Object reason) {

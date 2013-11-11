@@ -539,31 +539,38 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       }
 
       this.log("Minecraft closed with exit code: " + exit);
-      if (!CrashDescriptor.parseExit(exit)) {
-         this.handleCrash(exit);
-      } else if (this.con != null) {
+      if (!CrashDescriptor.parseExit(exit) && !this.handleCrash(exit) && this.con != null) {
          this.con.killIn(5000L);
       }
 
       U.gc();
    }
 
-   private void handleCrash(int exit) {
-      if (this.con != null) {
+   private boolean handleCrash(int exit) {
+      if (this.con == null) {
+         return false;
+      } else {
          CrashDescriptor descriptor = new CrashDescriptor(this);
          Crash crash = descriptor.scan(exit);
-         if (crash.getFile() != null) {
-            this.log("Crash report found.");
-         }
+         if (crash == null) {
+            return false;
+         } else {
+            if (crash.getFile() != null) {
+               this.log("Crash report found.");
+            }
 
-         if (!crash.getSignatures().isEmpty()) {
-            this.log("Crash is recognized.");
-         }
+            if (!crash.getSignatures().isEmpty()) {
+               this.log("Crash is recognized.");
+            }
 
-         this.log("Console won't vanish automatically.");
-         this.con.show();
-         if (this.listener != null) {
-            this.listener.onMinecraftCrash(crash);
+            this.log("Console won't vanish automatically.");
+            this.con.show();
+            if (this.listener == null) {
+               return true;
+            } else {
+               this.listener.onMinecraftCrash(crash);
+               return true;
+            }
          }
       }
    }

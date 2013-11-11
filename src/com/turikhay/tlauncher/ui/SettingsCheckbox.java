@@ -14,6 +14,12 @@ public class SettingsCheckbox extends LocalizableCheckbox implements SettingsFie
       this.defaultState = defaultState;
    }
 
+   public SettingsCheckbox(SettingsForm sf, String path, String settingspath) {
+      super(path);
+      this.settingspath = settingspath;
+      this.defaultState = sf.s.getDefaultBoolean(settingspath);
+   }
+
    public String getValue() {
       return String.valueOf(this.getState());
    }

@@ -17,7 +17,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import jsmooth.Wrapper;
 
 public class Updater {
    public static final String[] links = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -79,7 +78,7 @@ public class Updater {
                   Update update = new Update(this.d, parsed);
                   double version = update.getVersion();
                   log("Success!");
-                  if (0.197D > version) {
+                  if (0.198D > version) {
                      log("Found version is older than running:", version);
                   }
 
@@ -93,7 +92,7 @@ public class Updater {
                      return;
                   }
 
-                  if (!(0.197D >= version)) {
+                  if (!(0.198D >= version)) {
                      log("Found actual version:", version);
                      this.onUpdateFound(update);
                      return;
@@ -115,7 +114,7 @@ public class Updater {
             }
          }
 
-         log("Updating is impossible - cannot fetch any information.");
+         log("Updating is impossible - cannot get any information.");
          this.onUpdaterRequestError();
       }
    }
@@ -141,7 +140,7 @@ public class Updater {
    }
 
    public void setDisallowed(double version) {
-      this.s.set("updater.disallowed", version);
+      this.s.set("updater.disallow", version);
    }
 
    private void onUpdaterRequests() {
@@ -200,9 +199,7 @@ public class Updater {
       } else {
          switch($SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
          case 1:
-            return false;
          case 2:
-         case 3:
             return true;
          default:
             throw new IllegalArgumentException("Unknown PackageType!");
@@ -220,18 +217,8 @@ public class Updater {
       } else {
          switch($SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
          case 1:
-            return Wrapper.getWrapperExecutable();
          case 2:
             return FileUtil.getRunningJar();
-         case 3:
-            File def = FileUtil.getRunningJar();
-            String path = def.getParent();
-            String name = def.getName();
-            if (name.endsWith(".jar")) {
-               name = name.substring(0, name.length() - 4) + ".exe";
-            }
-
-            return new File(path, name);
          default:
             throw new IllegalArgumentException("Unknown PackageType!");
          }
@@ -284,11 +271,6 @@ public class Updater {
          return var10000;
       } else {
          int[] var0 = new int[PackageType.values().length];
-
-         try {
-            var0[PackageType.AOT.ordinal()] = 3;
-         } catch (NoSuchFieldError var3) {
-         }
 
          try {
             var0[PackageType.EXE.ordinal()] = 1;

@@ -213,7 +213,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.197 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.198 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -276,10 +276,8 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    public void onUpdateFound(Updater u, Update upd) {
       double version = upd.getVersion();
-      boolean question = Alert.showQuestion(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", version), upd.getDescription(), true);
-      if (!question) {
-         u.setDisallowed(version);
-      } else if (Updater.isAutomode()) {
+      Alert.showWarning(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", version), upd.getDescription());
+      if (Updater.isAutomode()) {
          upd.addListener(this);
          upd.download();
       } else {
@@ -287,7 +285,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
          try {
             OperatingSystem.openLink(uri);
-         } catch (Exception var8) {
+         } catch (Exception var7) {
             Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
          }
 

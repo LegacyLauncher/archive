@@ -36,6 +36,10 @@ public class Crash {
       return r;
    }
 
+   public boolean hasSignature(CrashSignature s) {
+      return this.signatures.contains(s);
+   }
+
    public boolean isRecognized() {
       return !this.signatures.isEmpty();
    }
