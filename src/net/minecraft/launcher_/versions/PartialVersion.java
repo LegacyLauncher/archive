@@ -7,6 +7,7 @@ public class PartialVersion implements Version {
    private Date time;
    private Date releaseTime;
    private ReleaseType type;
+   private boolean cheat;
 
    public PartialVersion() {
    }
@@ -72,6 +73,10 @@ public class PartialVersion implements Version {
       } else {
          this.type = type;
       }
+   }
+
+   public boolean isCheat() {
+      return this.cheat;
    }
 
    public String toString() {

@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.updater;
 
+import com.turikhay.tlauncher.Bootstrapper;
+import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
@@ -109,6 +111,7 @@ public class Update {
          } else {
             log(1);
             File destination = Updater.getUpdateFileFor(pt);
+            destination.deleteOnExit();
             final Downloadable downloadable = new Downloadable(download_link.toURL(), destination);
             downloadable.setHandler(new DownloadableHandler() {
                public void onStart() {
@@ -154,14 +157,8 @@ public class Update {
          File replace = Updater.getFileFor(pt);
          File replacer = Updater.getUpdateFileFor(pt);
          replacer.deleteOnExit();
-         if (pt != PackageType.JAR) {
-            File oldfile = new File(replace.toString());
-            File newfile = Updater.getTempFileFor(pt);
-            if (!oldfile.renameTo(newfile)) {
-               throw new Exception("Cannot rename " + oldfile + " to " + newfile);
-            }
-         }
-
+         String[] args = TLauncher.getInstance() != null ? TLauncher.getInstance().sargs : new String[0];
+         ProcessBuilder builder = Bootstrapper.buildProcess(args);
          FileInputStream in = new FileInputStream(replacer);
          FileOutputStream out = new FileOutputStream(replace);
          this.onUpdateApplying();
@@ -173,6 +170,7 @@ public class Update {
 
          in.close();
          out.close();
+         builder.start();
          System.exit(0);
       }
    }

@@ -7,6 +7,8 @@ public interface Version {
 
    ReleaseType getType();
 
+   boolean isCheat();
+
    void setType(ReleaseType var1);
 
    Date getUpdatedTime();

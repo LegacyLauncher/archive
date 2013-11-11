@@ -21,7 +21,7 @@ public class SettingsPanel extends JPanel {
       constraints.anchor = 17;
       constraints.gridy = 0;
       constraints.weightx = 0.0D;
-      constraints.fill = 0;
+      constraints.fill = 2;
       this.add(this.sf.cdel(0, 150, 5), constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
@@ -42,7 +42,7 @@ public class SettingsPanel extends JPanel {
       this.add(this.sf.resolutionField, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
-      constraints.fill = 0;
+      constraints.fill = 2;
       this.add(this.sf.cdel(1, 150, 5), constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
@@ -56,7 +56,7 @@ public class SettingsPanel extends JPanel {
       this.add(this.sf.versionsPan, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
-      constraints.fill = 0;
+      constraints.fill = 2;
       this.add(this.sf.cdel(0, 150, 5), constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
@@ -77,7 +77,7 @@ public class SettingsPanel extends JPanel {
       this.add(this.sf.argsPan, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
-      constraints.fill = 0;
+      constraints.fill = 2;
       this.add(this.sf.cdel(1, 150, 5), constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
@@ -119,7 +119,7 @@ public class SettingsPanel extends JPanel {
       this.add(this.sf.langChoice, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
-      constraints.fill = 0;
+      constraints.fill = 2;
       this.add(this.sf.cdel(1, 150, 5), constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;

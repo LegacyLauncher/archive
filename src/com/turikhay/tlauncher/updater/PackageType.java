@@ -4,19 +4,14 @@ import jsmooth.Wrapper;
 
 public enum PackageType {
    EXE,
-   JAR,
-   AOT;
+   JAR;
 
    public String toLowerCase() {
       return this.name().toLowerCase();
    }
 
    public static PackageType getCurrent() {
-      if (Wrapper.isWrapped()) {
-         return EXE;
-      } else {
-         return Wrapper.isAOT() ? AOT : JAR;
-      }
+      return Wrapper.isWrapped() ? EXE : JAR;
    }
 
    public static boolean isCurrent(PackageType pt) {

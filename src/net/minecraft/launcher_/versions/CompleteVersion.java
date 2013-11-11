@@ -27,6 +27,7 @@ public class CompleteVersion implements Version {
    private int minimumLauncherVersion;
    private String incompatibilityReason;
    private List rules;
+   private boolean cheat;
 
    public CompleteVersion() {
    }
@@ -74,6 +75,10 @@ public class CompleteVersion implements Version {
    }
 
    public ReleaseType getType() {
+      if (this.type == null) {
+         this.type = ReleaseType.RELEASE;
+      }
+
       return this.type;
    }
 
@@ -302,6 +307,10 @@ public class CompleteVersion implements Version {
             return false;
          }
       }
+   }
+
+   public boolean isCheat() {
+      return this.cheat;
    }
 
    public String getIncompatibilityReason() {

@@ -6,14 +6,12 @@ public class CrashSignature {
    public final Pattern pattern;
    public final int exitcode;
    public final String name;
-   public final String description;
    public final String path;
 
-   CrashSignature(int exitcode, String pattern, String name, String description, String path) {
+   CrashSignature(int exitcode, String pattern, String name, String path) {
       this.pattern = pattern != null ? Pattern.compile(pattern) : null;
       this.exitcode = exitcode;
       this.name = name;
-      this.description = description;
       this.path = path;
    }
 
