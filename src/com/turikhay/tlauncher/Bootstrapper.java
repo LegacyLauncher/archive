@@ -19,7 +19,6 @@ public class Bootstrapper {
          return;
       }
 
-      System.out.println("Application output console is not redirecting. Stopping Bootstrapper.");
       System.exit(0);
    }
 

@@ -11,6 +11,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.RenderingHints;
@@ -53,7 +54,7 @@ public abstract class CenterPanel extends BlockablePanel implements LocalizableC
       this.textForeground = Color.black;
       this.wrongColor = Color.pink;
       this.error = new JPanel();
-      LayoutManager layout = new BoxLayout(this, 1);
+      LayoutManager layout = new BoxLayout(this, 3);
       this.setLayout(layout);
       this.setBackground(new Color(255, 255, 255, 128));
       this.setOpaque(false);
@@ -155,25 +156,55 @@ public abstract class CenterPanel extends BlockablePanel implements LocalizableC
    }
 
    protected void blockElement(Object reason) {
-      this.handleComponents(this, false);
+      handleComponents(this, false);
    }
 
    protected void unblockElement(Object reason) {
-      this.handleComponents(this, true);
+      handleComponents(this, true);
    }
 
-   private void handleComponents(Container container, boolean setEnabled) {
+   private static void handleComponents(Container container, boolean setEnabled) {
       Component[] components = container.getComponents();
-      Component[] var7 = components;
-      int var6 = components.length;
+      Component[] var6 = components;
+      int var5 = components.length;
 
-      for(int var5 = 0; var5 < var6; ++var5) {
-         Component component = var7[var5];
+      for(int var4 = 0; var4 < var5; ++var4) {
+         Component component = var6[var4];
          component.setEnabled(setEnabled);
          if (component instanceof Container) {
-            this.handleComponents((Container)component, setEnabled);
+            handleComponents((Container)component, setEnabled);
          }
       }
 
+   }
+
+   protected static JPanel createSeparateJPanel(Component... components) {
+      BlockablePanel panel = new BlockablePanel() {
+         private static final long serialVersionUID = 1L;
+
+         protected void blockElement(Object reason) {
+            CenterPanel.handleComponents(this, false);
+         }
+
+         protected void unblockElement(Object reason) {
+            CenterPanel.handleComponents(this, true);
+         }
+      };
+      LayoutManager lm = new GridLayout(0, 1);
+      panel.setLayout(lm);
+      panel.setOpaque(false);
+      Component[] var6 = components;
+      int var5 = components.length;
+
+      for(int var4 = 0; var4 < var5; ++var4) {
+         Component comp = var6[var4];
+         panel.add(comp);
+      }
+
+      return panel;
+   }
+
+   protected static JPanel sepPan(Component... components) {
+      return createSeparateJPanel(components);
    }
 }

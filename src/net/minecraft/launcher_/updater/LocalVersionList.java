@@ -91,7 +91,7 @@ public class LocalVersionList extends FileBasedVersionList {
    public void saveVersion_(CompleteVersion version) throws IOException {
       String text = this.serializeVersion(version);
       File target = new File(this.baseVersionsDir, version.getId() + "/" + version.getId() + ".json");
-      FileUtil.saveFile(target, text);
+      FileUtil.writeFile(target, text);
    }
 
    public void saveVersion(CompleteVersion version) {

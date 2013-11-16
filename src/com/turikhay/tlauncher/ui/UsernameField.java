@@ -1,19 +1,11 @@
 package com.turikhay.tlauncher.ui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 public class UsernameField extends LocalizableTextField {
    private static final long serialVersionUID = -5813187607562947592L;
    String username;
 
-   UsernameField(final LoginForm lf, String username, String placeholder, int columns) {
-      super(lf, placeholder, username, columns);
-      this.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            lf.callLogin();
-         }
-      });
+   UsernameField(CenterPanel pan) {
+      super(pan, "profile.username", (String)null, 20);
    }
 
    public boolean check() {

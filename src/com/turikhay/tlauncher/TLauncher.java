@@ -4,6 +4,8 @@ import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
+import com.turikhay.tlauncher.minecraft.profiles.ProfileLoader;
+import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
 import com.turikhay.tlauncher.settings.ArgumentParser;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
@@ -17,11 +19,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Locale;
+import java.util.UUID;
 import joptsimple.OptionSet;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher {
-   public static final double VERSION = 0.198D;
+   public static final double VERSION = 0.199D;
    private static TLauncher instance;
    private TLauncher.TLauncherState state;
    private Settings lang;
@@ -31,6 +34,8 @@ public class TLauncher {
    private TLauncherFrame frame;
    private TLauncherNoGraphics loader;
    private VersionManager vm;
+   private ProfileLoader pl;
+   private UUID clientToken = UUID.randomUUID();
    public final OptionSet args;
    public final String[] sargs;
    // $FF: synthetic field
@@ -50,6 +55,8 @@ public class TLauncher {
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
          this.vm = new VersionManager();
+         this.pl = new ProfileLoader(this);
+         this.pl.loadProfiles();
          this.init();
          long end = System.currentTimeMillis();
          long diff = end - start;
@@ -116,6 +123,18 @@ public class TLauncher {
       return this.loader;
    }
 
+   public UUID getClientToken() {
+      return this.clientToken;
+   }
+
+   public ProfileLoader getProfileLoader() {
+      return this.pl;
+   }
+
+   public ProfileManager getCurrentProfileManager() {
+      return this.pl.getSelected();
+   }
+
    public void reloadLocale() throws IOException {
       Locale locale = this.settings.getLocale();
       U.log("Selected locale: " + locale);
@@ -166,7 +185,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version 0.198...");
+      U.log("Starting version 0.199...");
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);

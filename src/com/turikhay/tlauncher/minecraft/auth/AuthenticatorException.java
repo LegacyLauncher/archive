@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
-class AuthenticatorException extends Exception {
+public class AuthenticatorException extends Exception {
    private static final long serialVersionUID = -6773418626800336871L;
    private String langpath;
 

@@ -27,7 +27,7 @@ public class AuthenticationResponse extends Response {
       return this.user;
    }
 
-   public String getUID() {
+   public String getUserID() {
       return this.user != null ? this.user.getID() : null;
    }
 

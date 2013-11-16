@@ -14,7 +14,8 @@ public class MainInputPanel extends BlockablePanel implements LocalizableCompone
       LayoutManager lm = new GridLayout(0, 1);
       this.setLayout(lm);
       this.setOpaque(false);
-      this.field = new UsernameField(this.lf, username, "loginform.username", 20);
+      this.field = new UsernameField(this.lf);
+      this.field.setValue(username);
       this.saveable = this.lf.s.isSaveable("login.username");
       this.field.setEnabled(this.saveable);
       this.add(this.field);

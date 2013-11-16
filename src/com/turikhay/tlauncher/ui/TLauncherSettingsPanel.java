@@ -9,7 +9,6 @@ public class TLauncherSettingsPanel extends BlockablePanel {
       this.setOpaque(false);
       this.setLayout(new BoxLayout(this, 3));
       this.add(sf.consoleSelect);
-      this.add(sf.updaterSelect);
       this.add(sf.sunSelect);
    }
 

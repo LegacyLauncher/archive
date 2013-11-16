@@ -21,7 +21,6 @@ import java.util.List;
 public class Updater {
    public static final String[] links = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    public static final URI[] URIs = makeURIs();
-   private boolean enabled;
    private final GlobalSettings s;
    private final Downloader d;
    private List listeners = new ArrayList();
@@ -37,7 +36,6 @@ public class Updater {
    }
 
    public Updater(TLauncher t) {
-      this.enabled = t.getSettings().getBoolean("updater.enabled");
       this.s = t.getSettings();
       this.d = t.getDownloader();
       if (!PackageType.isCurrent(PackageType.JAR)) {
@@ -49,74 +47,66 @@ public class Updater {
 
       log("Initialized.");
       log("Package type:", PackageType.getCurrent());
-      log("Enabled:", this.enabled);
    }
 
    public void findUpdate() {
-      if (this.enabled) {
-         log("Requesting an update...");
-         this.onUpdaterRequests();
-         int attempt = 0;
-         URI[] var5;
-         int var4 = (var5 = URIs).length;
-         int var3 = 0;
+      log("Requesting an update...");
+      this.onUpdaterRequests();
+      int attempt = 0;
+      URI[] var5;
+      int var4 = (var5 = URIs).length;
+      int var3 = 0;
 
-         while(var3 < var4) {
-            URI uri = var5[var3];
-            ++attempt;
-            log("Attempt #" + attempt + ". URL:", uri);
+      while(var3 < var4) {
+         URI uri = var5[var3];
+         ++attempt;
+         log("Attempt #" + attempt + ". URL:", uri);
 
-            try {
-               Downloadable downloadable = new Downloadable(uri.toURL());
-               HttpURLConnection connection = downloadable.makeConnection();
-               int code = connection.getResponseCode();
-               switch(code) {
-               case 200:
-                  InputStream is = connection.getInputStream();
-                  Settings parsed = new Settings(is);
-                  connection.disconnect();
-                  Update update = new Update(this.d, parsed);
-                  double version = update.getVersion();
-                  log("Success!");
-                  if (0.198D > version) {
-                     log("Found version is older than running:", version);
-                  }
-
-                  if (update.getDownloadLink() == null) {
-                     log("The update for current package type is not available.");
-                     return;
-                  }
-
-                  if (this.s.getDouble("updater.disallow") == version) {
-                     log("User cancelled updating to this version last time.");
-                     return;
-                  }
-
-                  if (!(0.198D >= version)) {
-                     log("Found actual version:", version);
-                     this.onUpdateFound(update);
-                     return;
-                  }
-
-                  Ad ad = new Ad(parsed);
-                  if (this.s.getInteger("updater.ad") != ad.getID() && ad.canBeShown()) {
-                     this.onAdFound(ad);
-                  }
-
-                  this.noUpdateFound();
-                  return;
-               default:
-                  throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
+         try {
+            Downloadable downloadable = new Downloadable(uri.toURL());
+            HttpURLConnection connection = downloadable.makeConnection();
+            int code = connection.getResponseCode();
+            switch(code) {
+            case 200:
+               InputStream is = connection.getInputStream();
+               Settings parsed = new Settings(is);
+               connection.disconnect();
+               Update update = new Update(this.d, parsed);
+               double version = update.getVersion();
+               log("Success!");
+               if (0.199D > version) {
+                  log("Found version is older than running:", version);
                }
-            } catch (Exception var15) {
-               log("Cannot get update information", var15);
-               ++var3;
-            }
-         }
 
-         log("Updating is impossible - cannot get any information.");
-         this.onUpdaterRequestError();
+               if (update.getDownloadLink() == null) {
+                  log("The update for current package type is not available.");
+                  return;
+               }
+
+               if (!(0.199D >= version)) {
+                  log("Found actual version:", version);
+                  this.onUpdateFound(update);
+                  return;
+               }
+
+               Ad ad = new Ad(parsed);
+               if (this.s.getInteger("updater.ad") != ad.getID() && ad.canBeShown()) {
+                  this.onAdFound(ad);
+               }
+
+               this.noUpdateFound();
+               return;
+            default:
+               throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
+            }
+         } catch (Exception var15) {
+            log("Cannot get update information", var15);
+            ++var3;
+         }
       }
+
+      log("Updating is impossible - cannot get any information.");
+      this.onUpdaterRequestError();
    }
 
    public void asyncFindUpdate() {
@@ -125,22 +115,6 @@ public class Updater {
             Updater.this.findUpdate();
          }
       });
-   }
-
-   public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
-   }
-
-   public boolean isEnabled() {
-      return this.enabled;
-   }
-
-   public boolean isAllowed(double version) {
-      return this.s.getDouble("updater.disallowed") == version;
-   }
-
-   public void setDisallowed(double version) {
-      this.s.set("updater.disallow", version);
    }
 
    private void onUpdaterRequests() {
