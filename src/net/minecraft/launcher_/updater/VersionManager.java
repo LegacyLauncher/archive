@@ -720,7 +720,7 @@ public class VersionManager {
       while(var5.hasNext()) {
          ResourceFile key = (ResourceFile)var5.next();
          File file = new File(baseDirectory, "assets/" + key.path);
-         String url = "https://s3.amazonaws.com/Minecraft.Resources/" + key.path;
+         String url = "http://s3.amazonaws.com/Minecraft.Resources/" + key.path;
 
          try {
             result.add(new Downloadable(url, file, true));

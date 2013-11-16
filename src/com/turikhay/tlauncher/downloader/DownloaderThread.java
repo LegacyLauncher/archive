@@ -17,7 +17,7 @@ import java.util.List;
 public class DownloaderThread extends Thread {
    public final String name;
    public final int id;
-   public final int maxAttempts = 10;
+   public final int maxAttempts = 2;
    private final Downloader fd;
    private boolean launched;
    private boolean available = true;
@@ -59,13 +59,13 @@ public class DownloaderThread extends Thread {
          this.onStart(d);
          int attempt = 0;
 
-         while(attempt < 10) {
+         while(attempt < 2) {
             ++attempt;
-            this.dlog("Attempting to download " + d.getURL() + " [" + attempt + "/" + 10 + "]...");
+            this.dlog("Attempting to download " + d.getURL() + " [" + attempt + "/" + 2 + "]...");
 
             try {
                this.download(d);
-               this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + 10 + "]");
+               this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + 2 + "]");
                break;
             } catch (DownloaderError var6) {
                if (var6.isSerious()) {
@@ -79,7 +79,6 @@ public class DownloaderThread extends Thread {
                }
             } catch (SocketTimeoutException var7) {
                this.log(d, "Timeout exception. Retrying.");
-               this.sleepFor(5000L);
             } catch (Exception var8) {
                this.log(d, "Unknown error occurred.", var8);
                this.onError(d, var8);
@@ -87,7 +86,7 @@ public class DownloaderThread extends Thread {
             }
          }
 
-         if (attempt == 10) {
+         if (attempt == 2) {
             this.log(d, "Gave up trying to download this file.");
             this.onError(d, new DownloaderError("Gave up trying to download this file", true));
          }
@@ -113,97 +112,50 @@ public class DownloaderThread extends Thread {
       HttpURLConnection connection = d.makeConnection();
       long reply = System.currentTimeMillis() - reply_s;
       this.dlog("Got reply in " + reply + " ms.");
-      int code = connection.getResponseCode();
-      switch(code) {
-      case 301:
-      case 302:
-      case 303:
-      case 307:
-         String newurl = connection.getHeaderField("Location");
-         connection.disconnect();
-         if (newurl == null) {
-            throw new DownloaderError("Redirection is required but field \"Location\" is empty", true);
-         }
+      InputStream in = connection.getInputStream();
+      File file = d.getDestination();
+      FileUtil.createFile(file);
+      OutputStream out = new FileOutputStream(file);
+      long read = 0L;
+      long length = (long)connection.getContentLength();
+      long downloaded_s = System.currentTimeMillis();
+      byte[] buffer = new byte[65536];
+      int curread = in.read(buffer);
 
-         this.dlog("Responce code is " + code + ". Redirecting to: " + newurl);
-         d.setURL(newurl);
-         this.download(d);
-         return;
-      case 304:
-         if (!d.isForced()) {
-            this.log(d, "File is not modified (304)");
-            this.onComplete(d);
-            return;
-         }
-         break;
-      case 403:
-         throw new DownloaderError("Forbidden (403)", true);
-      case 404:
-         throw new DownloaderError("Not Found (404)", true);
-      case 408:
-         throw new DownloaderError("Request Timeout (408)", false);
-      case 500:
-         throw new DownloaderError("Internal Server Error (500)", 5000);
-      case 502:
-         throw new DownloaderError("Bad Gateway (502)", 5000);
-      case 503:
-         throw new DownloaderError("Service Unavailable (503)", 5000);
-      case 504:
-         throw new DownloaderError("Gateway Timeout (504)", true);
+      long downloaded;
+      while(curread > 0) {
+         read += (long)curread;
+         out.write(buffer, 0, curread);
+         downloaded = System.nanoTime();
+         curread = in.read(buffer);
+         long curelapsed = System.nanoTime() - downloaded;
+         double curdone = (double)((float)read / (float)length);
+         this.onProgress(curread, curelapsed, curdone);
       }
 
-      if (code >= 200 && code <= 299) {
-         File file = d.getDestination();
-         if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
+      downloaded = System.currentTimeMillis() - downloaded_s;
+      d.setTime(downloaded);
+      in.close();
+      out.close();
+      connection.disconnect();
+      File[] copies = d.getAdditionalDestinations();
+      if (copies != null && copies.length > 0) {
+         this.dlog("Found additional destinations. Copying...");
+         File[] var25 = copies;
+         int var24 = copies.length;
+
+         for(int var27 = 0; var27 < var24; ++var27) {
+            File copy = var25[var27];
+            this.dlog("Copying " + copy + "...");
+            FileUtil.copyFile(file, copy, d.isForced());
+            this.dlog(d, "Success!");
          }
 
-         InputStream in = connection.getInputStream();
-         OutputStream out = new FileOutputStream(file);
-         long read = 0L;
-         long length = (long)connection.getContentLength();
-         long downloaded_s = System.currentTimeMillis();
-         byte[] buffer = new byte[65536];
-         int curread = in.read(buffer);
-
-         long downloaded;
-         while(curread > 0) {
-            read += (long)curread;
-            out.write(buffer, 0, curread);
-            downloaded = System.nanoTime();
-            curread = in.read(buffer);
-            long curelapsed = System.nanoTime() - downloaded;
-            double curdone = (double)((float)read / (float)length);
-            this.onProgress(curread, curelapsed, curdone);
-         }
-
-         downloaded = System.currentTimeMillis() - downloaded_s;
-         d.setTime(downloaded);
-         in.close();
-         out.close();
-         connection.disconnect();
-         File[] copies = d.getAdditionalDestinations();
-         if (copies != null && copies.length > 0) {
-            this.dlog("Found additional destinations. Copying...");
-            File[] var26 = copies;
-            int var25 = copies.length;
-
-            for(int var29 = 0; var29 < var25; ++var29) {
-               File copy = var26[var29];
-               this.dlog("Copying " + copy + "...");
-               FileUtil.copyFile(file, copy, d.isForced());
-               this.dlog(d, "Success!");
-            }
-
-            this.dlog("Copying completed.");
-         }
-
-         this.dlog("Successfully downloaded " + fn + " in " + downloaded / 1000L + " s!");
-         this.onComplete(d);
-      } else {
-         throw new DownloaderError("Illegal response code (" + code + ")", true);
+         this.dlog("Copying completed.");
       }
+
+      this.dlog("Successfully downloaded " + fn + " in " + downloaded / 1000L + " s!");
+      this.onComplete(d);
    }
 
    public void add(Downloadable d) {
