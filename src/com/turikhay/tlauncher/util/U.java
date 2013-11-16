@@ -217,7 +217,11 @@ public class U {
 
                   b.append(i);
                }
-            } else if (e instanceof char[]) {
+            } else {
+               if (!(e instanceof char[])) {
+                  throw new UnknownError("Unknown array type given.");
+               }
+
                char[] var23;
                var5 = (var23 = (char[])e).length;
 
@@ -234,11 +238,7 @@ public class U {
             }
          }
 
-         if (b.length() == 0) {
-            throw new UnknownError("Unknown array type given.");
-         } else {
-            return b.toString();
-         }
+         return b.toString();
       }
    }
 

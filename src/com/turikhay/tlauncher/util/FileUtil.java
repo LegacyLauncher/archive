@@ -1,16 +1,14 @@
 package com.turikhay.tlauncher.util;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -19,34 +17,39 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class FileUtil {
-   public static void saveFile(File file, String text) throws IOException {
-      FileWriter fstream = new FileWriter(file);
-      BufferedWriter out = new BufferedWriter(fstream);
-      out.write(text);
-      out.close();
+   public static final String DEFAULT_CHARSET = "UTF-8";
+
+   public static void writeFile(File file, String text) throws IOException {
+      createFile(file);
+      FileOutputStream os = new FileOutputStream(file);
+      OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
+      ow.write(text);
+      ow.close();
+      os.close();
+   }
+
+   public static String readFile(File file, String charset) throws IOException {
+      if (file == null) {
+         throw new NullPointerException("File is NULL!");
+      } else if (!file.exists()) {
+         return null;
+      } else {
+         FileInputStream fis = new FileInputStream(file);
+         InputStreamReader reader = new InputStreamReader(fis, charset);
+         StringBuilder b = new StringBuilder();
+
+         while(reader.ready()) {
+            b.append((char)reader.read());
+         }
+
+         reader.close();
+         fis.close();
+         return b.toString();
+      }
    }
 
    public static String readFile(File file) throws IOException {
-      StringBuilder toret = new StringBuilder();
-      boolean first = true;
-      FileReader file_r = new FileReader(file);
-      BufferedReader buff = new BufferedReader(file_r);
-      boolean eof = false;
-
-      while(!eof) {
-         String line = buff.readLine();
-         if (line == null) {
-            eof = true;
-         } else if (!first) {
-            toret.append("\n" + line);
-         } else {
-            toret.append(line);
-            first = false;
-         }
-      }
-
-      buff.close();
-      return toret.toString();
+      return readFile(file, "UTF-8");
    }
 
    public static String getFilename(URL url) {
@@ -228,22 +231,18 @@ public class FileUtil {
    }
 
    public static boolean createFile(File file) throws IOException {
-      if (file == null) {
+      if (file.isFile()) {
          return false;
       } else {
-         if (!file.isFile()) {
-            if (file.getParentFile() != null) {
-               file.getParentFile().mkdirs();
-            }
-
-            file.createNewFile();
+         if (file.getParentFile() != null) {
+            file.getParentFile().mkdirs();
          }
 
-         return true;
+         return file.createNewFile();
       }
    }
 
    public static boolean createFile(String file) throws IOException {
-      return file == null ? false : createFile(new File(file));
+      return createFile(new File(file));
    }
 }

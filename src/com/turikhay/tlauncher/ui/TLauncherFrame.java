@@ -5,6 +5,8 @@ import com.turikhay.tlauncher.downloader.DownloadListener;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.exceptions.TLauncherException;
+import com.turikhay.tlauncher.minecraft.events.ProfileListener;
+import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.updater.Ad;
@@ -35,7 +37,7 @@ import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 import net.minecraft.launcher_.OperatingSystem;
 
-public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterListener, UpdateListener {
+public class TLauncherFrame extends JFrame implements ProfileListener, DownloadListener, UpdaterListener, UpdateListener {
    public static final Color backgroundColor = new Color(141, 189, 233);
    private final TLauncherFrame instance = this;
    final TLauncher t;
@@ -52,13 +54,16 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    ProgressBar pb;
    LoginForm lf;
    SettingsForm sf;
+   ProfileCreatorForm spcf;
    private boolean pb_started;
+   private ProfileManager pm;
 
    public TLauncherFrame(TLauncher tlauncher) {
       this.t = tlauncher;
       this.global = this.t.getSettings();
       this.lang = this.t.getLang();
       this.d = this.t.getDownloader();
+      this.pm = this.t.getCurrentProfileManager();
 
       try {
          this.loadResources();
@@ -179,6 +184,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
       U.log("Preparing components...");
       this.sf = new SettingsForm(this);
       this.lf = new LoginForm(this);
+      this.spcf = new ProfileCreatorForm(this);
       this.pb = new ProgressBar(this);
       start = System.currentTimeMillis();
       U.log("Preparing main pane...");
@@ -213,7 +219,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.198 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.199 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -222,6 +228,10 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
 
    public ProgressBar getProgressBar() {
       return this.pb;
+   }
+
+   public ProfileManager getProfileManager() {
+      return this.pm;
    }
 
    public void onDownloaderStart(Downloader d, int files) {
@@ -237,6 +247,7 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
    public void onDownloaderComplete(Downloader d) {
       this.pb_started = false;
       this.pb.progressStop();
+      this.pb.setVisible(false);
    }
 
    public void onDownloaderFileComplete(Downloader d, Downloadable f) {
@@ -320,5 +331,12 @@ public class TLauncherFrame extends JFrame implements DownloadListener, UpdaterL
          this.global.set("updater.ad", ad.getID());
          ad.show(false);
       }
+   }
+
+   public void onProfilesRefreshed(ProfileManager pm) {
+   }
+
+   public void onProfileManagerChanged(ProfileManager pm) {
+      this.pm = pm;
    }
 }

@@ -638,7 +638,7 @@ public class VersionManager {
          }
       }
 
-      FileUtil.saveFile(file, b.toString());
+      FileUtil.writeFile(file, b.toString());
    }
 
    private List getLocalResourceFilesList(File baseDirectory) {

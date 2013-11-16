@@ -41,7 +41,6 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final SettingsCheckbox cheatsSelect;
    final SettingsCheckbox consoleSelect;
    final SettingsCheckbox sunSelect;
-   final SettingsCheckbox updaterSelect;
    final LocalizableLabel versionChoice;
    final LocalizableButton defButton;
    final LocalizableButton saveButton;
@@ -69,7 +68,6 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       }
    };
    private String oldDir;
-   private boolean updater_enabled;
    private boolean snapshot_old;
    private boolean snapshot_changed;
    private boolean beta_old;
@@ -100,10 +98,9 @@ public class SettingsForm extends CenterPanel implements LoginListener {
          }
       });
       this.betaSelect = new SettingsCheckbox(this, "settings.versions.beta", "minecraft.versions.beta");
-      this.betaSelect.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            boolean selected = e.getStateChange() == 1;
-            SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ selected;
+      this.betaSelect.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean newstate) {
+            SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ newstate;
          }
       });
       this.alphaSelect = new SettingsCheckbox(this, "settings.versions.alpha", "minecraft.versions.alpha");
@@ -130,19 +127,6 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.argsPan = new ArgsPanel(this);
       this.tlauncherSettings = new LocalizableLabel("settings.tlauncher.label");
       this.consoleSelect = new SettingsCheckbox("settings.tlauncher.console", "gui.console", false);
-      this.updaterSelect = new SettingsCheckbox("settings.tlauncher.updater", "updater.enabled", true);
-      this.updaterSelect.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            switch(e.getStateChange()) {
-            case 1:
-               SettingsForm.this.t.getUpdater().setEnabled(true);
-               break;
-            case 2:
-               SettingsForm.this.t.getUpdater().setEnabled(false);
-            }
-
-         }
-      });
       this.sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun", true);
       this.sunSelect.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
@@ -208,7 +192,6 @@ public class SettingsForm extends CenterPanel implements LoginListener {
          }
       }
 
-      this.updater_enabled = this.updaterSelect.getState();
       this.oldDir = this.gameDirField.getValue();
       this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = false;
       this.snapshot_old = this.snapshotsSelect.getState();
@@ -254,10 +237,6 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       } catch (IOException var5) {
          U.log("Cannot save settings!");
          Alert.showError(var5, false);
-      }
-
-      if (!this.updater_enabled && this.updaterSelect.getState()) {
-         this.t.getUpdater().asyncFindUpdate();
       }
 
       if (this.langChoice.changed) {

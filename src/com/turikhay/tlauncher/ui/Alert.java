@@ -82,7 +82,7 @@ public class Alert {
          }
 
          frame.requestFocus();
-         JOptionPane.showMessageDialog(frame, t_message, t_title, 2);
+         JOptionPane.showMessageDialog(frame, panel, t_title, 2);
          show = false;
       }
    }

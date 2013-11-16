@@ -279,10 +279,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                   }
 
                   public void onCompleteError() {
-                     if (MinecraftLauncher.this.resources.getErrors() > 0) {
-                        MinecraftLauncher.this.onError(new MinecraftLauncherException("Errors occurred, cancelling.", "download"));
-                     }
-
+                     MinecraftLauncher.this.log("Error occurred while downloading the resources. Minecraft will be be launched, though");
+                     MinecraftLauncher.this.launch();
                   }
 
                   public void onComplete() {

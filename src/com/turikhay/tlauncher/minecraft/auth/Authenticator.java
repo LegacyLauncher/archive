@@ -5,6 +5,8 @@ import com.turikhay.tlauncher.util.AsyncThread;
 import com.turikhay.tlauncher.util.U;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.launcher_.Http;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,71 +16,90 @@ public class Authenticator {
    public static final URL ROUTE_VALIDATE = Http.constantURL("https://authserver.mojang.com/validate");
    public static final URL ROUTE_INVALIDATE = Http.constantURL("https://authserver.mojang.com/invalidate");
    public static final URL ROUTE_SIGNOUT = Http.constantURL("https://authserver.mojang.com/signout");
-   public final String username;
+   private String username;
    private String password;
    private String clientToken;
    private String accessToken;
-   private String uid;
+   private String uuid;
+   private String userid;
+   private String displayName;
    private boolean online;
    private GameProfile[] profiles;
    private GameProfile profile;
    private final Authenticator instance = this;
    private final Gson gson = new Gson();
 
-   public Authenticator(String username) {
-      if (username == null) {
-         throw new IllegalArgumentException("Username cannot be NULL!");
-      } else {
-         this.username = username;
-      }
+   public String toString() {
+      return "Authenticator" + this.createMap();
    }
 
    public String getUsername() {
       return this.username;
    }
 
-   public boolean setPassword(String pass) {
-      if (this.password != null) {
-         return false;
-      } else if (StringUtils.isBlank(pass)) {
+   public void setUsername(String name) {
+      if (StringUtils.isBlank(name)) {
+         throw new IllegalArgumentException("Username is blank!");
+      } else {
+         this.username = name;
+      }
+   }
+
+   public void setPassword(String pass) {
+      if (StringUtils.isBlank(pass)) {
          throw new IllegalArgumentException("Password is blank!");
       } else {
          this.password = pass;
-         return true;
       }
    }
 
-   public boolean setClientToken(String tok) {
-      if (this.clientToken != null) {
-         return false;
-      } else if (StringUtils.isBlank(tok)) {
+   public void setClientToken(String tok) {
+      if (StringUtils.isBlank(tok)) {
          throw new IllegalArgumentException("Client token is blank!");
       } else {
          this.clientToken = tok;
-         return true;
       }
    }
 
-   public boolean setAccessToken(String tok) {
-      if (this.accessToken != null) {
-         return false;
-      } else if (StringUtils.isBlank(tok)) {
+   public void setAccessToken(String tok) {
+      if (StringUtils.isBlank(tok)) {
          throw new IllegalArgumentException("Access token is blank!");
       } else {
          this.accessToken = tok;
-         return true;
       }
    }
 
-   public boolean setUID(String id) {
-      if (this.uid != null) {
-         return false;
-      } else if (StringUtils.isBlank(id)) {
-         throw new IllegalArgumentException("UID is blank!");
+   public void setUUID(String id) {
+      this.uuid = id;
+   }
+
+   public void setUserID(String id) {
+      this.userid = id;
+   }
+
+   public void setDisplayName(String name) {
+      this.displayName = name;
+   }
+
+   public void selectGameProfile(GameProfile gprofile) {
+      if (gprofile == null) {
+         throw new NullPointerException("GameProfile is NULL!");
       } else {
-         this.uid = id;
-         return true;
+         this.profile = gprofile;
       }
+   }
+
+   public boolean selectGameProfile() {
+      if (this.displayName != null && this.uuid != null) {
+         this.selectGameProfile(new GameProfile(this.uuid, this.displayName));
+         return true;
+      } else {
+         return false;
+      }
+   }
+
+   public String getDisplayName() {
+      return this.displayName;
    }
 
    public String getPassword() {
@@ -93,8 +114,12 @@ public class Authenticator {
       return this.accessToken;
    }
 
-   public String getUID() {
-      return this.uid;
+   public String getUUID() {
+      return this.uuid;
+   }
+
+   public String getUserID() {
+      return this.userid;
    }
 
    public boolean isOnline() {
@@ -110,9 +135,9 @@ public class Authenticator {
    }
 
    public void pass() throws AuthenticatorException {
-      if (this.password == null && this.clientToken == null) {
+      if (this.password == null && this.accessToken == null) {
          throw new AuthenticatorException("Password and token are NULL!");
-      } else if (this.password != null && this.clientToken != null) {
+      } else if (this.password != null && this.accessToken != null) {
          throw new AuthenticatorException("Cannot choose authentication type between \"password\" and \"token\": both are not NULL.");
       } else {
          this.log("Staring to authenticate:");
@@ -131,7 +156,7 @@ public class Authenticator {
          }
 
          this.log("Log in successful!");
-         this.log("UID:", this.uid);
+         this.log("UUID:", this.uuid);
          this.log("Client token:", this.clientToken);
          this.log("Access token:", this.accessToken);
          this.log("Profiles:", this.profiles);
@@ -143,12 +168,17 @@ public class Authenticator {
       this.log("Loggining in with password");
       AuthenticationRequest request = new AuthenticationRequest(this);
       AuthenticationResponse response = (AuthenticationResponse)this.makeRequest(ROUTE_AUTHENTICATE, request, AuthenticationResponse.class);
-      this.uid = response.getUID() != null ? response.getUID() : this.getUsername();
+      this.userid = response.getUserID() != null ? response.getUserID() : this.getUsername();
       this.clientToken = response.getClientToken();
       this.accessToken = response.getAccessToken();
       this.profiles = response.getAvailableProfiles();
       this.profile = response.getSelectedProfile();
       this.online = true;
+      if (this.profile != null) {
+         this.uuid = response.getSelectedProfile().getId();
+         this.displayName = response.getSelectedProfile().getName();
+      }
+
    }
 
    protected void tokenLogin() throws AuthenticatorException, IOException {
@@ -205,6 +235,27 @@ public class Authenticator {
 
          }
       });
+   }
+
+   public Map createMap() {
+      Map r = new HashMap();
+      r.put("username", this.username);
+      r.put("accessToken", this.accessToken);
+      r.put("userid", this.userid);
+      r.put("uuid", this.uuid);
+      r.put("displayName", this.displayName);
+      return r;
+   }
+
+   public static Authenticator createFromMap(Map map) {
+      Authenticator auth = new Authenticator();
+      auth.setUsername((String)map.get("username"));
+      auth.setUserID(map.containsKey("userid") ? (String)map.get("userid") : auth.getUsername());
+      auth.setDisplayName(map.containsKey("displayName") ? (String)map.get("displayName") : auth.getUsername());
+      auth.setUUID((String)map.get("uuid"));
+      auth.setAccessToken((String)map.get("accessToken"));
+      auth.selectGameProfile();
+      return auth;
    }
 
    protected void log(Object... o) {

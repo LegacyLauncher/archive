@@ -12,17 +12,20 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
    final Integer BACKGROUND_PANEL;
    final Integer LOGINFORM;
    final Integer SETTINGSFORM;
+   final Integer PROFILECREATOR;
    final MainPane instance = this;
    final DecoratedPanel bgpan;
    final Background bg;
    final LoginForm lf;
    final SettingsForm sf;
+   final ProfileCreatorForm spcf;
    private boolean settings;
 
    MainPane(TLauncherFrame f) {
       this.f = f;
       this.lf = f.lf;
       this.sf = f.sf;
+      this.spcf = f.spcf;
       int i = 0;
       int i = i + 1;
       this.BACKGROUND_PANEL = i;
@@ -30,6 +33,8 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       this.LOGINFORM = i;
       ++i;
       this.SETTINGSFORM = i;
+      ++i;
+      this.PROFILECREATOR = i;
       this.bgpan = new DecoratedPanel();
       this.bg = this.chooseBackground();
       this.bgpan.setPanelBackground(this.bg);

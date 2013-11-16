@@ -18,6 +18,12 @@ public abstract class ExtendedTextField extends JTextField implements Localizabl
    protected String placeholder;
    protected boolean edit;
    private String error;
+   public static final Font PLACEHOLDER_FONT = new Font("", 2, 12);
+   public static final Font DEFAULT_FONT = new Font("", 0, 12);
+   public static final Color OK_BACKGROUND;
+   public static final Color OK_FOREGROUND;
+   public static final Color WRONG_BACKGROUND;
+   public static final Color WRONG_FOREGROUND;
    protected Font placeholder_font;
    protected Font default_font;
    protected Color ok_background;
@@ -26,6 +32,13 @@ public abstract class ExtendedTextField extends JTextField implements Localizabl
    protected Color wrong_foreground;
    protected FocusListener focusListener;
    protected TextListener textListener;
+
+   static {
+      OK_BACKGROUND = Color.white;
+      OK_FOREGROUND = Color.black;
+      WRONG_BACKGROUND = Color.pink;
+      WRONG_FOREGROUND = Color.black;
+   }
 
    protected ExtendedTextField() {
       this.placeholder_font = new Font("", 2, 12);
