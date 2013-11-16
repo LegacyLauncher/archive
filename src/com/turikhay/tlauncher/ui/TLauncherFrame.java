@@ -219,7 +219,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.199 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.1991 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -257,11 +257,11 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    public void onDownloaderError(Downloader d, Downloadable file, Throwable error) {
+      int i = d.getRemaining();
       String path = "download.error" + (error == null ? ".unknown" : "");
       this.pb.setIndeterminate(false);
+      this.pb.setEastString(this.lang.get("progressBar.remaining" + (i == 1 ? "-one" : ""), "i", i));
       this.pb.setCenterString(this.lang.get(path, "f", file.getFilename(), "e", error.toString()));
-      this.pb.setWestString((String)null);
-      this.pb.setEastString((String)null);
    }
 
    public void onDownloaderProgress(Downloader d, int progress) {
