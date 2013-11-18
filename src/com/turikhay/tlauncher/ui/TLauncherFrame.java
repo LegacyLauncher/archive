@@ -54,7 +54,6 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    ProgressBar pb;
    LoginForm lf;
    SettingsForm sf;
-   ProfileCreatorForm spcf;
    private boolean pb_started;
    private ProfileManager pm;
 
@@ -188,7 +187,6 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       U.log("Preparing components...");
       this.sf = new SettingsForm(this);
       this.lf = new LoginForm(this);
-      this.spcf = new ProfileCreatorForm(this);
       this.pb = new ProgressBar(this);
       start = System.currentTimeMillis();
       U.log("Preparing main pane...");
@@ -223,7 +221,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.1995 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.1997 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -274,6 +272,10 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    public void onDownloaderProgress(Downloader d, int progress) {
       if (progress > 0) {
+         if (this.pb.getValue() > progress) {
+            return;
+         }
+
          this.pb.setIndeterminate(false);
          this.pb.setValue(progress);
          this.pb.setCenterString(progress + "%");

@@ -21,9 +21,9 @@ import net.minecraft.launcher_.OperatingSystem;
 
 public class LoginForm extends CenterPanel implements MinecraftLauncherListener, AuthenticatorListener, UpdaterListener, UpdateListener {
    private static final long serialVersionUID = 6768252827144456302L;
-   private final String LAUNCH_BLOCK = "launch";
-   private final String AUTH_BLOCK = "auth";
-   private final String UPDATER_BLOCK = "update";
+   final String LAUNCH_BLOCK = "launch";
+   final String AUTH_BLOCK = "auth";
+   final String UPDATER_BLOCK = "update";
    final LoginForm instance = this;
    final SettingsForm settings;
    final List listeners = new ArrayList();
@@ -249,8 +249,9 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
                   }
 
                   U.log("Yay, crash report file doesn't exist by now.");
-                  Alert.showAsyncMessage(p + "store.success");
                }
+
+               Alert.showAsyncMessage(p + "store.success");
             }
 
          }

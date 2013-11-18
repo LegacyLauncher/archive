@@ -5,10 +5,10 @@ import java.awt.LayoutManager;
 
 public class AdditionalButtonsPanel extends BlockablePanel {
    private static final long serialVersionUID = 7217356608637239309L;
-   SupportButton support;
-   FolderButton folder;
-   RefreshButton refresh;
-   SettingsButton settings;
+   public final SupportButton support;
+   public final FolderButton folder;
+   public final RefreshButton refresh;
+   public final SettingsButton settings;
 
    AdditionalButtonsPanel(ButtonPanel bp) {
       LoginForm lf = bp.lf;
@@ -26,12 +26,18 @@ public class AdditionalButtonsPanel extends BlockablePanel {
    }
 
    protected void blockElement(Object reason) {
-      this.refresh.setEnabled(false);
+      if (!reason.toString().endsWith("_refresh")) {
+         this.refresh.setEnabled(false);
+      }
+
       this.settings.setEnabled(false);
    }
 
    protected void unblockElement(Object reason) {
-      this.refresh.setEnabled(true);
+      if (!reason.toString().endsWith("_refresh")) {
+         this.refresh.setEnabled(true);
+      }
+
       this.settings.setEnabled(true);
    }
 }

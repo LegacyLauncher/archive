@@ -7,7 +7,7 @@ import net.minecraft.launcher_.Http;
 public enum VersionSource {
    LOCAL(new String[1]),
    REMOTE(new String[]{"http://s3.amazonaws.com/Minecraft.Download/"}),
-   EXTRA(new String[]{"http://ru-minecraft.org/update/tlauncher/extra/", "http://dl.dropboxusercontent.com/u/6204017/update/tlauncher/extra/"});
+   EXTRA(new String[]{"http://5.9.120.11/upd/versions/", "http://ru-minecraft.org/update/tlauncher/extra/", "http://dl.dropboxusercontent.com/u/6204017/update/tlauncher/extra/"});
 
    private String[] urls;
    private int selected;
