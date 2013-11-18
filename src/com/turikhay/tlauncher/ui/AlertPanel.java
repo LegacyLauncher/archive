@@ -23,6 +23,8 @@ public class AlertPanel extends Panel {
       area.setFont(this.getFont());
       area.setCaretPosition(0);
       area.setAlignmentX(0.0F);
+      area.setEditable(false);
+      area.addMouseListener(new TextPopup());
       this.add(area);
    }
 }

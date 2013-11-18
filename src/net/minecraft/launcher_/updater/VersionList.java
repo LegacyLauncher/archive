@@ -2,6 +2,7 @@ package net.minecraft.launcher_.updater;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.turikhay.tlauncher.util.U;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,9 +93,12 @@ public abstract class VersionList {
       this.latestVersions.clear();
    }
 
-   public void refreshVersions() throws IOException {
+   public VersionList.RawVersionList getRawList() throws IOException {
+      return (VersionList.RawVersionList)this.gson.fromJson(this.getUrl("versions/versions.json"), VersionList.RawVersionList.class);
+   }
+
+   public void refreshVersions(VersionList.RawVersionList versionList) {
       this.clearCache();
-      VersionList.RawVersionList versionList = (VersionList.RawVersionList)this.gson.fromJson(this.getUrl("versions/versions.json"), VersionList.RawVersionList.class);
       Iterator var3 = versionList.getVersions().iterator();
 
       while(var3.hasNext()) {
@@ -113,11 +117,16 @@ public abstract class VersionList {
 
    }
 
+   public void refreshVersions() throws IOException {
+      this.refreshVersions(this.getRawList());
+   }
+
    public CompleteVersion addVersion(CompleteVersion version) {
       if (version.getId() == null) {
          throw new IllegalArgumentException("Cannot add blank version");
       } else if (this.getVersion(version.getId()) != null) {
-         throw new IllegalArgumentException("Version '" + version.getId() + "' is already tracked");
+         U.log("Version '" + version.getId() + "' is already tracked");
+         return version;
       } else {
          this.versions.add(version);
          this.versionsByName.put(version.getId(), version);
@@ -179,7 +188,7 @@ public abstract class VersionList {
    }
 
    public String serializeVersionList() {
-      VersionList.RawVersionList list = new VersionList.RawVersionList((VersionList.RawVersionList)null);
+      VersionList.RawVersionList list = new VersionList.RawVersionList();
       ReleaseType[] var5;
       int var4 = (var5 = ReleaseType.values()).length;
 
@@ -217,14 +226,9 @@ public abstract class VersionList {
 
    protected abstract String getUrl(String var1) throws IOException;
 
-   private static class RawVersionList {
-      private List versions;
-      private Map latest;
-
-      private RawVersionList() {
-         this.versions = new ArrayList();
-         this.latest = new EnumMap(ReleaseType.class);
-      }
+   public static class RawVersionList {
+      private List versions = new ArrayList();
+      private Map latest = new EnumMap(ReleaseType.class);
 
       public List getVersions() {
          return this.versions;
@@ -232,11 +236,6 @@ public abstract class VersionList {
 
       public Map getLatestVersions() {
          return this.latest;
-      }
-
-      // $FF: synthetic method
-      RawVersionList(VersionList.RawVersionList var1) {
-         this();
       }
    }
 }

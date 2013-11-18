@@ -246,6 +246,10 @@ public class U {
       return (new Random(System.currentTimeMillis())).nextDouble();
    }
 
+   public static short shortRandom() {
+      return (short)(new Random(System.currentTimeMillis())).nextInt(32767);
+   }
+
    public static int random(int s, int e) {
       return (new Random(System.currentTimeMillis())).nextInt(e - s) + s;
    }

@@ -24,7 +24,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher_.updater.VersionManager;
 
 public class TLauncher {
-   public static final double VERSION = 0.1995D;
+   public static final double VERSION = 0.1997D;
    private static TLauncher instance;
    private TLauncher.TLauncherState state;
    private Settings lang;
@@ -34,7 +34,6 @@ public class TLauncher {
    private TLauncherFrame frame;
    private TLauncherNoGraphics loader;
    private VersionManager vm;
-   private ProfileLoader pl;
    private UUID clientToken = UUID.randomUUID();
    public final OptionSet args;
    public final String[] sargs;
@@ -55,8 +54,6 @@ public class TLauncher {
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
          this.vm = new VersionManager();
-         this.pl = new ProfileLoader(this);
-         this.pl.loadProfiles();
          this.init();
          long end = System.currentTimeMillis();
          long diff = end - start;
@@ -72,6 +69,7 @@ public class TLauncher {
          this.frame = new TLauncherFrame(this);
          LoginForm lf = this.frame.getLoginForm();
          this.vm.addRefreshedListener(lf.versionchoice);
+         this.vm.addRefreshedListener(lf.buttons.addbuttons.refresh);
          this.updater.addListener(this.frame);
          this.updater.addListener(lf);
          if (lf.autologin.isEnabled()) {
@@ -128,11 +126,11 @@ public class TLauncher {
    }
 
    public ProfileLoader getProfileLoader() {
-      return this.pl;
+      return null;
    }
 
    public ProfileManager getCurrentProfileManager() {
-      return this.pl.getSelected();
+      return null;
    }
 
    public void reloadLocale() throws IOException {
@@ -185,7 +183,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version 0.1995...");
+      U.log("Starting version 0.1997...");
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);
