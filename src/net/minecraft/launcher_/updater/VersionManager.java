@@ -538,17 +538,16 @@ public class VersionManager {
       while(true) {
          while(var9.hasNext()) {
             ResourceFile resource = (ResourceFile)var9.next();
-            File file = new File(baseDirectory, "assets/" + resource.path);
             if (!extended) {
-               if (!file.exists()) {
+               if (!this.checkResource(baseDirectory, resource)) {
                   r.add(resource);
                }
             } else {
                boolean found = false;
-               Iterator var13 = compareList.iterator();
+               Iterator var12 = compareList.iterator();
 
-               while(var13.hasNext()) {
-                  ResourceFile compare = (ResourceFile)var13.next();
+               while(var12.hasNext()) {
+                  ResourceFile compare = (ResourceFile)var12.next();
                   if (resource.path.equalsIgnoreCase(compare.path)) {
                      U.log(resource.path + " found in local list");
                      found = true;
@@ -585,12 +584,20 @@ public class VersionManager {
    private boolean checkResource(File baseDirectory, ResourceFile local, ResourceFile remote) {
       String path = local.path;
       File file = new File(baseDirectory, "assets/" + path);
-      if (!file.exists()) {
-         return false;
+      if (file.isFile() && file.length() != 0L) {
+         if (remote == null) {
+            return true;
+         } else {
+            String md5 = FileUtil.getMD5Checksum(file);
+            return local.md5 != md5 || remote.md5 == md5;
+         }
       } else {
-         String md5 = FileUtil.getMD5Checksum(file);
-         return local.md5 != md5 || remote.md5 == md5;
+         return false;
       }
+   }
+
+   private boolean checkResource(File baseDirectory, ResourceFile local) {
+      return this.checkResource(baseDirectory, local, (ResourceFile)null);
    }
 
    private List getResourceFilesList(File baseDirectory, boolean local) {
@@ -715,16 +722,19 @@ public class VersionManager {
 
    private Set getResourceFiles(File baseDirectory, List list) {
       Set result = new HashSet();
-      Iterator var5 = list.iterator();
+      String prefix = "http://s3.amazonaws.com/Minecraft.Resources/";
+      Iterator var6 = list.iterator();
 
-      while(var5.hasNext()) {
-         ResourceFile key = (ResourceFile)var5.next();
+      while(var6.hasNext()) {
+         ResourceFile key = (ResourceFile)var6.next();
          File file = new File(baseDirectory, "assets/" + key.path);
-         String url = "http://s3.amazonaws.com/Minecraft.Resources/" + key.path;
+         String url = prefix + key.path;
 
          try {
-            result.add(new Downloadable(url, file, true));
-         } catch (Exception var9) {
+            Downloadable d = new Downloadable(url, file, true);
+            d.setFast(true);
+            result.add(d);
+         } catch (Exception var10) {
             U.log("Cannot create Downloadable from " + url);
          }
       }

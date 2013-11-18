@@ -9,19 +9,24 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.launcher_.Http;
 
 public class Downloadable {
+   private List handlers;
    private URL url;
    private File destination;
    private File[] copies;
    private Throwable error;
    private DownloadableContainer container;
-   private DownloadableHandler handler;
    private boolean forced;
+   private boolean fast;
    private long time;
 
    public Downloadable(URL url, File destination, File[] copies, boolean force) {
+      this.handlers = new ArrayList();
       this.url = url;
       this.destination = destination;
       this.copies = copies;
@@ -37,6 +42,7 @@ public class Downloadable {
    }
 
    public Downloadable(URL url, boolean force) {
+      this.handlers = new ArrayList();
       this.url = url;
       this.forced = force;
    }
@@ -93,29 +99,42 @@ public class Downloadable {
       return this.time;
    }
 
+   public boolean getFast() {
+      return this.fast;
+   }
+
    public void onStart() {
-      if (this.handler != null) {
-         this.handler.onStart();
+      Iterator var2 = this.handlers.iterator();
+
+      while(var2.hasNext()) {
+         DownloadableHandler h = (DownloadableHandler)var2.next();
+         h.onStart();
       }
 
    }
 
    public void onComplete() {
-      if (this.handler != null) {
-         this.handler.onComplete();
+      Iterator var2 = this.handlers.iterator();
+
+      while(var2.hasNext()) {
+         DownloadableHandler h = (DownloadableHandler)var2.next();
+         h.onComplete();
       }
 
    }
 
    public void onError() {
-      if (this.handler != null) {
-         this.handler.onCompleteError();
+      Iterator var2 = this.handlers.iterator();
+
+      while(var2.hasNext()) {
+         DownloadableHandler h = (DownloadableHandler)var2.next();
+         h.onCompleteError();
       }
 
    }
 
-   public void setHandler(DownloadableHandler newhandler) {
-      this.handler = newhandler;
+   public void addHandler(DownloadableHandler newhandler) {
+      this.handlers.add(newhandler);
    }
 
    void setError(Throwable e) {
@@ -150,6 +169,10 @@ public class Downloadable {
       this.time = ms;
    }
 
+   public void setFast(boolean newfast) {
+      this.fast = newfast;
+   }
+
    public HttpURLConnection makeConnection() throws IOException {
       HttpURLConnection connection = (HttpURLConnection)this.url.openConnection();
       setUp(connection, false);
@@ -160,7 +183,6 @@ public class Downloadable {
          }
       }
 
-      connection.connect();
       return connection;
    }
 
@@ -171,7 +193,7 @@ public class Downloadable {
       r = r + ",additionaldestinations=" + U.toLog(this.copies);
       r = r + ",error=" + this.error;
       r = r + ",container=" + this.container;
-      r = r + ",handler=" + this.handler;
+      r = r + ",handlers=" + U.toLog(this.handlers);
       r = r + ",forced=" + this.forced;
       r = r + "}";
       return r;

@@ -74,7 +74,7 @@ public class Updater {
                Update update = new Update(this.d, parsed);
                double version = update.getVersion();
                log("Success!");
-               if (0.1991D > version) {
+               if (0.1995D > version) {
                   log("Found version is older than running:", version);
                }
 
@@ -83,7 +83,7 @@ public class Updater {
                   return;
                }
 
-               if (!(0.1991D >= version)) {
+               if (!(0.1995D >= version)) {
                   log("Found actual version:", version);
                   this.onUpdateFound(update);
                   return;

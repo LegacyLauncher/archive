@@ -113,7 +113,7 @@ public class Update {
             File destination = Updater.getUpdateFileFor(pt);
             destination.deleteOnExit();
             final Downloadable downloadable = new Downloadable(download_link.toURL(), destination);
-            downloadable.setHandler(new DownloadableHandler() {
+            downloadable.addHandler(new DownloadableHandler() {
                public void onStart() {
                }
 

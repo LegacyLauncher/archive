@@ -537,7 +537,9 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       }
 
       this.log("Minecraft closed with exit code: " + exit);
-      if (!CrashDescriptor.parseExit(exit) && !this.handleCrash(exit) && this.con != null) {
+      if (!CrashDescriptor.parseExit(exit)) {
+         this.handleCrash(exit);
+      } else if (this.con != null) {
          this.con.killIn(5000L);
       }
 
