@@ -111,14 +111,17 @@ public class LocalVersionList extends FileBasedVersionList {
       Set files = version.getRequiredFiles(os);
       Iterator var5 = files.iterator();
 
-      while(var5.hasNext()) {
-         String file = (String)var5.next();
-         if (!(new File(this.baseDirectory, file)).isFile()) {
-            return false;
+      File required;
+      do {
+         if (!var5.hasNext()) {
+            return true;
          }
-      }
 
-      return true;
+         String file = (String)var5.next();
+         required = new File(this.baseDirectory, file);
+      } while(required.isFile() && required.length() != 0L);
+
+      return false;
    }
 
    public VersionSource getRepositoryType() {

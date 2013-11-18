@@ -17,7 +17,7 @@ import java.util.List;
 public class DownloaderThread extends Thread {
    public final String name;
    public final int id;
-   public final int maxAttempts = 2;
+   public final int maxAttempts = 3;
    private final Downloader fd;
    private boolean launched;
    private boolean available = true;
@@ -58,36 +58,38 @@ public class DownloaderThread extends Thread {
          this.error = null;
          this.onStart(d);
          int attempt = 0;
+         int max = d.getFast() ? 2 : 3;
 
-         while(attempt < 2) {
+         while(attempt < max) {
             ++attempt;
-            this.dlog("Attempting to download " + d.getURL() + " [" + attempt + "/" + 2 + "]...");
+            this.dlog("Attempting to download " + d.getURL() + " [" + attempt + "/" + max + "]...");
 
             try {
                this.download(d);
-               this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + 2 + "]");
+               this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + max + ";" + d.getFast() + "]");
                break;
-            } catch (DownloaderError var6) {
-               if (var6.isSerious()) {
-                  this.log(d, var6);
-                  this.onError(d, var6);
+            } catch (DownloaderError var7) {
+               if (var7.isSerious()) {
+                  this.log(d, var7);
+                  this.onError(d, var7);
                   break;
                }
 
-               if (var6.hasTimeout()) {
-                  this.sleepFor((long)var6.getTimeout());
+               if (var7.hasTimeout()) {
+                  this.sleepFor((long)var7.getTimeout());
                }
-            } catch (SocketTimeoutException var7) {
+            } catch (SocketTimeoutException var8) {
                this.log(d, "Timeout exception. Retrying.");
-            } catch (Exception var8) {
-               this.log(d, "Unknown error occurred.", var8);
-               this.onError(d, var8);
+               this.sleepFor(5000L);
+            } catch (Exception var9) {
+               this.log(d, "Unknown error occurred.", var9);
+               this.onError(d, var9);
                break;
             }
          }
 
-         if (attempt == 2) {
-            this.log(d, "Gave up trying to download this file.");
+         if (attempt >= max) {
+            this.log(d, "Gave up trying to download this file [" + attempt + "/" + max + "]");
             this.onError(d, new DownloaderError("Gave up trying to download this file", true));
          }
       }
@@ -108,10 +110,58 @@ public class DownloaderThread extends Thread {
 
    public void download(Downloadable d) throws IOException {
       String fn = d.getFilename();
-      long reply_s = System.currentTimeMillis();
       HttpURLConnection connection = d.makeConnection();
+      int code = -1;
+      long reply_s = System.currentTimeMillis();
+      if (d.getFast()) {
+         connection.connect();
+      } else {
+         code = connection.getResponseCode();
+      }
+
       long reply = System.currentTimeMillis() - reply_s;
       this.dlog("Got reply in " + reply + " ms.");
+      switch(code) {
+      case -1:
+         break;
+      case 301:
+      case 302:
+      case 303:
+      case 304:
+         this.log(d, "File is not modified (304)");
+         this.onComplete(d);
+         return;
+      case 307:
+         String newurl = connection.getHeaderField("Location");
+         connection.disconnect();
+         if (newurl == null) {
+            throw new DownloaderError("Redirection is required but field \"Location\" is empty", true);
+         }
+
+         this.dlog("Responce code is " + code + ". Redirecting to: " + newurl);
+         d.setURL(newurl);
+         this.download(d);
+         return;
+      case 403:
+         throw new DownloaderError("Forbidden (403)", true);
+      case 404:
+         throw new DownloaderError("Not Found (404)", true);
+      case 408:
+         throw new DownloaderError("Request Timeout (408)", false);
+      case 500:
+         throw new DownloaderError("Internal Server Error (500)", 5000);
+      case 502:
+         throw new DownloaderError("Bad Gateway (502)", 5000);
+      case 503:
+         throw new DownloaderError("Service Unavailable (503)", 5000);
+      case 504:
+         throw new DownloaderError("Gateway Timeout (504)", true);
+      default:
+         if (code < 200 || code > 299) {
+            throw new DownloaderError("Illegal response code (" + code + ")", true);
+         }
+      }
+
       InputStream in = connection.getInputStream();
       File file = d.getDestination();
       FileUtil.createFile(file);
@@ -141,11 +191,11 @@ public class DownloaderThread extends Thread {
       File[] copies = d.getAdditionalDestinations();
       if (copies != null && copies.length > 0) {
          this.dlog("Found additional destinations. Copying...");
-         File[] var25 = copies;
-         int var24 = copies.length;
+         File[] var26 = copies;
+         int var25 = copies.length;
 
-         for(int var27 = 0; var27 < var24; ++var27) {
-            File copy = var25[var27];
+         for(int var29 = 0; var29 < var25; ++var29) {
+            File copy = var26[var29];
             this.dlog("Copying " + copy + "...");
             FileUtil.copyFile(file, copy, d.isForced());
             this.dlog(d, "Success!");

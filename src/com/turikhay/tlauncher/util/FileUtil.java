@@ -245,4 +245,34 @@ public class FileUtil {
    public static boolean createFile(String file) throws IOException {
       return createFile(new File(file));
    }
+
+   public static void unZip(File zip, File folder, boolean replace) throws IOException {
+      createFolder(folder);
+      ZipInputStream zis = new ZipInputStream(new FileInputStream(zip));
+      byte[] buffer = new byte[1024];
+
+      ZipEntry ze;
+      while((ze = zis.getNextEntry()) != null) {
+         String fileName = ze.getName();
+         File newFile = new File(folder, fileName);
+         if (!replace && newFile.isFile()) {
+            U.log("[UnZip] File exists:", newFile.getAbsoluteFile());
+            break;
+         }
+
+         U.log("[UnZip]", newFile.getAbsoluteFile());
+         createFile(newFile);
+         FileOutputStream fos = new FileOutputStream(newFile);
+
+         int len;
+         while((len = zis.read(buffer)) > 0) {
+            fos.write(buffer, 0, len);
+         }
+
+         fos.close();
+      }
+
+      zis.closeEntry();
+      zis.close();
+   }
 }

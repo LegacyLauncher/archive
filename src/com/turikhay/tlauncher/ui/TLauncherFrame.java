@@ -98,21 +98,25 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    private void initFontSize() {
-      UIDefaults defaults = UIManager.getDefaults();
-      Enumeration e = defaults.keys();
+      try {
+         UIDefaults defaults = UIManager.getDefaults();
+         Enumeration e = defaults.keys();
 
-      while(e.hasMoreElements()) {
-         Object key = e.nextElement();
-         Object value = defaults.get(key);
-         if (value instanceof Font) {
-            Font font = (Font)value;
-            int newSize = Math.round((float)(font.getSize() + 1));
-            if (value instanceof FontUIResource) {
-               defaults.put(key, new FontUIResource(font.getName(), font.getStyle(), newSize));
-            } else {
-               defaults.put(key, new Font(font.getName(), font.getStyle(), newSize));
+         while(e.hasMoreElements()) {
+            Object key = e.nextElement();
+            Object value = defaults.get(key);
+            if (value instanceof Font) {
+               Font font = (Font)value;
+               int newSize = Math.round((float)(font.getSize() + 1));
+               if (value instanceof FontUIResource) {
+                  defaults.put(key, new FontUIResource(font.getName(), font.getStyle(), newSize));
+               } else {
+                  defaults.put(key, new Font(font.getName(), font.getStyle(), newSize));
+               }
             }
          }
+      } catch (Exception var7) {
+         U.log("Cannot change font sizes!", var7);
       }
 
    }
@@ -219,7 +223,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.1991 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher 0.1995 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -247,21 +251,25 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    public void onDownloaderComplete(Downloader d) {
       this.pb_started = false;
       this.pb.progressStop();
-      this.pb.setVisible(false);
    }
 
    public void onDownloaderFileComplete(Downloader d, Downloadable f) {
       int i = d.getRemaining();
+      this.pb.setIndeterminate(false);
       this.pb.setEastString(this.lang.get("progressBar.remaining" + (i == 1 ? "-one" : ""), "i", i));
       this.pb.setWestString(this.lang.get("progressBar.completed", "f", f.getFilename()));
    }
 
    public void onDownloaderError(Downloader d, Downloadable file, Throwable error) {
       int i = d.getRemaining();
-      String path = "download.error" + (error == null ? ".unknown" : "");
-      this.pb.setIndeterminate(false);
-      this.pb.setEastString(this.lang.get("progressBar.remaining" + (i == 1 ? "-one" : ""), "i", i));
-      this.pb.setCenterString(this.lang.get(path, "f", file.getFilename(), "e", error.toString()));
+      if (i == 0) {
+         this.onDownloaderComplete(d);
+      } else {
+         String path = "download.error" + (error == null ? ".unknown" : "");
+         this.pb.setIndeterminate(false);
+         this.pb.setEastString(this.lang.get("progressBar.remaining" + (i == 1 ? "-one" : ""), "i", i));
+         this.pb.setCenterString(this.lang.get(path, "f", file.getFilename(), "e", error.toString()));
+      }
    }
 
    public void onDownloaderProgress(Downloader d, int progress) {
@@ -269,9 +277,6 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          this.pb.setIndeterminate(false);
          this.pb.setValue(progress);
          this.pb.setCenterString(progress + "%");
-      } else {
-         this.pb.setIndeterminate(true);
-         this.pb.setCenterString((String)null);
       }
 
    }
@@ -304,7 +309,16 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    public void onUpdateError(Update u, Throwable e) {
-      Alert.showError(this.lang.get("updater.error.title"), this.lang.get("updater.error.title"), e);
+      if (Alert.showQuestion(this.lang.get("updater.error.title"), this.lang.get("updater.error.title"), e, true)) {
+         URI uri = u.getDownloadLink();
+
+         try {
+            OperatingSystem.openLink(uri);
+         } catch (Exception var5) {
+            Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
+         }
+      }
+
    }
 
    public void onUpdateDownloading(Update u) {

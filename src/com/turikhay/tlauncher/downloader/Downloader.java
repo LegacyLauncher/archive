@@ -47,7 +47,14 @@ public class Downloader extends Thread {
          this.sleepFor(500L);
       }
 
+      while(!this.list_) {
+         this.sleepFor(100L);
+      }
+
       this.available = false;
+      this.list_ = false;
+      this.list.addAll(this.queue);
+      this.queue.clear();
       this.av_progress = 0;
       this.remain = new int[this.maxThreads];
       this.progress = new int[this.maxThreads];
@@ -89,11 +96,6 @@ public class Downloader extends Thread {
          }
       }
 
-      while(!this.list_) {
-         this.sleepFor(100L);
-      }
-
-      this.list_ = false;
       this.list.clear();
       this.list_ = true;
       this.launched = false;
