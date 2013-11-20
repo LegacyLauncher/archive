@@ -54,38 +54,36 @@ public class U {
 
          for(int var5 = 0; var5 < var6; ++var5) {
             Object e = var7[var5];
-            if (e != null) {
-               if (e.getClass().isArray()) {
-                  if (!first) {
-                     b.append(" ");
-                  }
-
-                  if (e instanceof Object[]) {
-                     b.append(toLog((Object[])e));
-                  } else {
-                     b.append(arrayToLog(e));
-                  }
-               } else if (e instanceof Throwable) {
-                  if (!first) {
-                     b.append("\n");
-                  }
-
-                  b.append(stackTrace((Throwable)e));
-                  b.append("\n");
-               } else {
-                  if (!first) {
-                     b.append(" ");
-                  }
-
-                  b.append(e);
-                  if (first) {
-                     first = false;
-                  }
+            if (e != null && e.getClass().isArray()) {
+               if (!first) {
+                  b.append(" ");
                }
+
+               if (e instanceof Object[]) {
+                  b.append(toLog((Object[])e));
+               } else {
+                  b.append(arrayToLog(e));
+               }
+            } else if (e instanceof Throwable) {
+               if (!first) {
+                  b.append("\n");
+               }
+
+               b.append(stackTrace((Throwable)e));
+               b.append("\n");
             } else {
-               b.append("null");
+               if (!first) {
+                  b.append(" ");
+               }
+
+               b.append(e);
+               if (first) {
+                  first = false;
+               }
             }
          }
+      } else {
+         b.append("null");
       }
 
       return b.toString();
@@ -217,11 +215,7 @@ public class U {
 
                   b.append(i);
                }
-            } else {
-               if (!(e instanceof char[])) {
-                  throw new UnknownError("Unknown array type given.");
-               }
-
+            } else if (e instanceof char[]) {
                char[] var23;
                var5 = (var23 = (char[])e).length;
 
@@ -238,16 +232,20 @@ public class U {
             }
          }
 
-         return b.toString();
+         if (b.length() == 0) {
+            throw new UnknownError("Unknown array type given.");
+         } else {
+            return b.toString();
+         }
       }
-   }
-
-   public static double doubleRandom() {
-      return (new Random(System.currentTimeMillis())).nextDouble();
    }
 
    public static short shortRandom() {
       return (short)(new Random(System.currentTimeMillis())).nextInt(32767);
+   }
+
+   public static double doubleRandom() {
+      return (new Random(System.currentTimeMillis())).nextDouble();
    }
 
    public static int random(int s, int e) {
@@ -376,15 +374,14 @@ public class U {
 
    public static String w(String string, int normal, char newline, boolean rude) {
       char[] c = string.toCharArray();
+      int len = c.length;
       int remaining = normal;
       String ret = "";
-      char[] var10 = c;
-      int var9 = c.length;
 
-      for(int var8 = 0; var8 < var9; ++var8) {
-         char cur = var10[var8];
+      for(int x = 0; x < len; ++x) {
          --remaining;
-         if (cur == newline) {
+         char cur = c[x];
+         if (c[x] == newline) {
             remaining = normal;
          }
 
@@ -493,8 +490,8 @@ public class U {
       }
    }
 
-   public static URI makeURI(String url) {
-      return makeURI(makeURL(url));
+   public static URI makeURI(String p) {
+      return makeURI(makeURL(p));
    }
 
    public static boolean interval(int min, int max, int num, boolean including) {

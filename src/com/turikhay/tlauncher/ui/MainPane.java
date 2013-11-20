@@ -82,6 +82,12 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
 
    public void setSettings(boolean shown, boolean animate) {
       if (this.settings != shown || !animate) {
+         if (shown) {
+            this.sf.unblockElement("");
+         } else {
+            this.sf.blockElement("");
+         }
+
          int w = this.getWidth();
          int h = this.getHeight();
          int hw = w / 2;

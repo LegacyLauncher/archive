@@ -51,10 +51,10 @@ public class Http {
       return performPost(url, buildQuery(query), "application/x-www-form-urlencoded");
    }
 
-   public static String performGet(URL url) throws IOException {
+   public static String performGet(URL url, int connTimeout, int readTimeout) throws IOException {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-      connection.setConnectTimeout(U.getConnectionTimeout());
-      connection.setReadTimeout(U.getReadTimeout());
+      connection.setConnectTimeout(connTimeout);
+      connection.setReadTimeout(readTimeout);
       connection.setRequestMethod("GET");
       BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       StringBuilder response = new StringBuilder();
@@ -67,6 +67,10 @@ public class Http {
 
       reader.close();
       return response.toString();
+   }
+
+   public static String performGet(URL url) throws IOException {
+      return performGet(url, U.getConnectionTimeout(), U.getReadTimeout());
    }
 
    public static URL concatenateURL(URL url, String args) throws MalformedURLException {

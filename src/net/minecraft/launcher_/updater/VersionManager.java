@@ -175,6 +175,7 @@ public class VersionManager {
          if (!this.versionRefreshes.contains(rand)) {
             throw new VersionManager.RefreshedException((VersionManager.RefreshedException)null);
          } else {
+            this.extraVersionList.getRepositoryType().selectRelevantPath();
             VersionList.RawVersionList extraRaw = null;
 
             try {

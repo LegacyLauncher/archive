@@ -37,10 +37,18 @@ public class CrashDescriptor {
 
             for(int var9 = 0; var9 < var10; ++var9) {
                CrashSignature sign = var11[var9];
-               if (sign.match(line) && (sign.exitcode == 0 || sign.exitcode == exit)) {
-                  this.log("Signature \"" + sign.name + "\" matches!");
-                  if (!crash.hasSignature(sign)) {
-                     crash.addSignature(sign);
+               if (sign.match(line)) {
+                  if (sign instanceof FakeCrashSignature) {
+                     this.log("Minecraft closed with an illegal exit code not due to error. Cancelling.");
+                     this.log("Catched by signature:", sign.name);
+                     return null;
+                  }
+
+                  if (sign.exitcode == 0 || sign.exitcode == exit) {
+                     this.log("Signature \"" + sign.name + "\" matches!");
+                     if (!crash.hasSignature(sign)) {
+                        crash.addSignature(sign);
+                     }
                   }
                }
             }
@@ -55,7 +63,7 @@ public class CrashDescriptor {
    }
 
    private static CrashSignature[] initSigns() {
-      CrashSignature[] r = new CrashSignature[]{new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated", "Old graphics driver", "opengl"), new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}java\\.lang\\.(?:Error|NoClass|Exception|Error|Throwable|Illegal){1}.+", "Probably modified JAR", "invalid-modify"), new CrashSignature(1, "Exception in thread \"main\" java.lang.SecurityException: SHA1 digest error for .+", "Undeleted META-INF", "meta-inf")};
+      CrashSignature[] r = new CrashSignature[]{new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated", "Old graphics driver", "opengl"), new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}java\\.lang\\.(?:Error|NoClass|Exception|Error|Throwable|Illegal){1}.+", "Probably modified JAR", "invalid-modify"), new CrashSignature(1, "Exception in thread \"main\" java.lang.SecurityException: SHA1 digest error for .+", "Undeleted META-INF", "meta-inf"), new FakeCrashSignature(1, "Someone is closing me!", "ALC cleanup bug")};
       return r;
    }
 
