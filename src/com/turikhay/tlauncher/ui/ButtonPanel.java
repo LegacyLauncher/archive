@@ -25,7 +25,7 @@ public class ButtonPanel extends BlockablePanel {
       this.setLayout(lm);
       this.setOpaque(false);
       this.enter = new LocalizableButton("loginform.enter");
-      this.enter.setFont(this.lf.font_bold);
+      this.enter.setFont(this.lf.font_bold.deriveFont(this.lf.font_bold.getSize2D() + 5.0F));
       this.enter.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             ButtonPanel.this.lf.callLogin();

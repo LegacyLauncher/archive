@@ -35,7 +35,7 @@ import net.minecraft.launcher_.versions.Library;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
-   public static final int VERSION = 9;
+   public static final int VERSION = 10;
    final String prefix;
    final OperatingSystem os;
    GlobalSettings s;
@@ -89,7 +89,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.exit = exit;
       this.width = sizes[0];
       this.height = sizes[1];
-      this.log("Minecraft Launcher v9 is started!");
+      this.log("Minecraft Launcher v10 is started!");
    }
 
    public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
@@ -161,7 +161,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                   this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
                }
 
-               if (this.version.getMinimumLauncherVersion() > 9) {
+               if (this.version.getMinimumLauncherVersion() > 10) {
                   this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
                }
 
@@ -538,7 +538,9 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
       this.log("Minecraft closed with exit code: " + exit);
       if (!CrashDescriptor.parseExit(exit)) {
-         this.handleCrash(exit);
+         if (!this.handleCrash(exit) && this.con != null) {
+            this.con.killIn(5000L);
+         }
       } else if (this.con != null) {
          this.con.killIn(5000L);
       }
