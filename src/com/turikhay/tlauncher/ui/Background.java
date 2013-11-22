@@ -14,13 +14,13 @@ import javax.imageio.ImageIO;
 
 public abstract class Background {
    private static Map loaded = new HashMap();
-   final DecoratedPanel comp;
-   int width;
-   int height;
-   double relativeSize = 1.0D;
-   VolatileImage vImage;
+   protected final DecoratedPanel comp;
+   protected int width;
+   protected int height;
+   protected double relativeSize = 1.0D;
+   protected VolatileImage vImage;
 
-   Background(DecoratedPanel comp) {
+   protected Background(DecoratedPanel comp) {
       this.comp = comp;
    }
 

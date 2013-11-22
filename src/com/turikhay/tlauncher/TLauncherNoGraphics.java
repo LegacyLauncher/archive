@@ -10,7 +10,7 @@ import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.util.Console;
 import com.turikhay.tlauncher.util.U;
 import joptsimple.OptionSet;
-import net.minecraft.launcher_.updater.VersionManager;
+import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncherNoGraphics implements MinecraftLauncherListener {
    private final TLauncher t;

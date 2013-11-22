@@ -21,10 +21,12 @@ import java.net.URL;
 import java.util.Locale;
 import java.util.UUID;
 import joptsimple.OptionSet;
-import net.minecraft.launcher_.updater.VersionManager;
+import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   public static final double VERSION = 0.1998D;
+   private static final double VERSION = 0.2D;
+   private static final String SETTINGS = "tlauncher.ini";
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static TLauncher instance;
    private TLauncher.TLauncherState state;
    private Settings lang;
@@ -34,6 +36,7 @@ public class TLauncher {
    private TLauncherFrame frame;
    private TLauncherNoGraphics loader;
    private VersionManager vm;
+   private ProfileLoader pl;
    private UUID clientToken = UUID.randomUUID();
    public final OptionSet args;
    public final String[] sargs;
@@ -54,6 +57,7 @@ public class TLauncher {
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
          this.vm = new VersionManager();
+         this.pl = new ProfileLoader(this);
          this.init();
          long end = System.currentTimeMillis();
          long diff = end - start;
@@ -126,11 +130,11 @@ public class TLauncher {
    }
 
    public ProfileLoader getProfileLoader() {
-      return null;
+      return this.pl;
    }
 
    public ProfileManager getCurrentProfileManager() {
-      return null;
+      return this.pl.getSelected();
    }
 
    public void reloadLocale() throws IOException {
@@ -167,6 +171,18 @@ public class TLauncher {
       this.frame.setVisible(true);
    }
 
+   public double getVersion() {
+      return 0.2D;
+   }
+
+   public String[] getUpdateRepos() {
+      return DEFAULT_UPDATE_REPO;
+   }
+
+   public String getSettingsFile() {
+      return "tlauncher.ini";
+   }
+
    public static void main(String[] args) {
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
@@ -183,7 +199,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version 0.1998...");
+      U.log("Starting version", 0.2D);
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);

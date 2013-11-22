@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.minecraft.profiles;
 
 import java.io.File;
-import net.minecraft.launcher_.updater.VersionFilter;
-import net.minecraft.launcher_.versions.ReleaseType;
+import net.minecraft.launcher.updater.VersionFilter;
+import net.minecraft.launcher.versions.ReleaseType;
 
 public class Profile {
    public static final ReleaseType[] DEFAULT_RELEASE_TYPES;

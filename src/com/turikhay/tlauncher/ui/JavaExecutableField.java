@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import java.io.File;
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class JavaExecutableField extends ExtendedTextField implements SettingsField {
    private static final long serialVersionUID = 2221135591155035960L;

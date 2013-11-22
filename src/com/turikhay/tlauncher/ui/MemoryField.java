@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class MemoryField extends ExtendedTextField {
    private static final long serialVersionUID = 104141941185197117L;
@@ -29,6 +29,6 @@ public class MemoryField extends ExtendedTextField {
 
    public int getSpecialValue() {
       String val = this.getValue();
-      return val != null && !val.equals("") ? Integer.parseInt(val) : OperatingSystem.getRecommendedMemory();
+      return val != null && !val.equals("") ? Integer.parseInt(val) : OperatingSystem.getCurrentPlatform().getRecommendedMemory();
    }
 }

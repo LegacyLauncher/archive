@@ -27,8 +27,8 @@ public class DownloaderThread extends Thread {
    private int done;
    private int remain;
    private int progress;
+   private double speed;
    private double each;
-   private double av_speed;
    private Throwable error;
 
    public DownloaderThread(Downloader td, int tid) {
@@ -180,7 +180,8 @@ public class DownloaderThread extends Thread {
          curread = in.read(buffer);
          long curelapsed = System.nanoTime() - downloaded;
          double curdone = (double)((float)read / (float)length);
-         this.onProgress(curread, curelapsed, curdone);
+         double curspeed = 0.0D;
+         this.onProgress(curread, curelapsed, curdone, curspeed);
       }
 
       downloaded = System.currentTimeMillis() - downloaded_s;
@@ -191,11 +192,11 @@ public class DownloaderThread extends Thread {
       File[] copies = d.getAdditionalDestinations();
       if (copies != null && copies.length > 0) {
          this.dlog("Found additional destinations. Copying...");
-         File[] var26 = copies;
+         File[] var31 = copies;
          int var25 = copies.length;
 
-         for(int var29 = 0; var29 < var25; ++var29) {
-            File copy = var26[var29];
+         for(int var30 = 0; var30 < var25; ++var30) {
+            File copy = var31[var30];
             this.dlog("Copying " + copy + "...");
             FileUtil.copyFile(file, copy, d.isForced());
             this.dlog(d, "Success!");
@@ -236,7 +237,7 @@ public class DownloaderThread extends Thread {
    }
 
    public double getSpeed() {
-      return this.av_speed;
+      return this.speed;
    }
 
    public int getProgress() {
@@ -288,7 +289,7 @@ public class DownloaderThread extends Thread {
       this.fd.onError(this.id, d);
    }
 
-   private void onProgress(int curread, long curelapsed, double curdone) {
+   private void onProgress(int curread, long curelapsed, double curdone, double curspeed) {
       int old_progress = this.progress;
       this.progress = (int)((double)this.done * this.each + curdone * this.each);
       if (this.progress != old_progress) {

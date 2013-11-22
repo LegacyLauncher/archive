@@ -35,7 +35,7 @@ import javax.swing.JFrame;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncherFrame extends JFrame implements ProfileListener, DownloadListener, UpdaterListener, UpdateListener {
    public static final Color backgroundColor = new Color(141, 189, 233);
@@ -45,7 +45,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    int width;
    int height;
    Image bgimage;
-   Image favicon;
+   public Image favicon;
    Image sun;
    GlobalSettings global;
    Settings lang;
@@ -221,7 +221,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher 0.1998 (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      this.setTitle("TLauncher " + TLauncher.getInstance().getVersion() + " (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {

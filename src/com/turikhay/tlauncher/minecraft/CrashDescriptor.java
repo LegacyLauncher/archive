@@ -63,7 +63,7 @@ public class CrashDescriptor {
    }
 
    private static CrashSignature[] initSigns() {
-      CrashSignature[] r = new CrashSignature[]{new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated", "Old graphics driver", "opengl"), new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}java\\.lang\\.(?:Error|NoClass|Exception|Error|Throwable|Illegal){1}.+", "Probably modified JAR", "invalid-modify"), new CrashSignature(1, "Exception in thread \"main\" java.lang.SecurityException: SHA1 digest error for .+", "Undeleted META-INF", "meta-inf"), new FakeCrashSignature(1, "Someone is closing me!", "ALC cleanup bug")};
+      CrashSignature[] r = new CrashSignature[]{new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated", "Old graphics driver", "opengl"), new CrashSignature(0, "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}java\\.lang\\.(?:Error|NoClass|Exception|Error|Throwable|Illegal){1}.+", "Probably modified JAR", "invalid-modify"), new CrashSignature(1, "Exception in thread \"main\" java.lang.SecurityException: SHA1 digest error for .+", "Undeleted META-INF", "meta-inf"), new FakeCrashSignature(1, "Someone is closing me!", "ALC cleanup bug"), new CrashSignature(1, "^Error: Could not find or load main class .+", "Missing main class", "missing-main")};
       return r;
    }
 

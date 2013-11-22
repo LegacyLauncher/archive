@@ -4,7 +4,7 @@ import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.util.FileUtil;
 import java.io.File;
 import java.io.IOException;
-import net.minecraft.launcher_.process.JavaProcessLauncher;
+import net.minecraft.launcher.process.JavaProcessLauncher;
 
 public class Bootstrapper {
    public static void main(String[] args) {
