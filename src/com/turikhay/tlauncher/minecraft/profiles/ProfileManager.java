@@ -16,9 +16,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.launcher_.updater.versions.json.DateTypeAdapter;
-import net.minecraft.launcher_.updater.versions.json.FileTypeAdapter;
-import net.minecraft.launcher_.updater.versions.json.LowerCaseEnumTypeAdapterFactory;
+import net.minecraft.launcher.updater.versions.json.DateTypeAdapter;
+import net.minecraft.launcher.updater.versions.json.FileTypeAdapter;
+import net.minecraft.launcher.updater.versions.json.LowerCaseEnumTypeAdapterFactory;
 
 public class ProfileManager {
    public static final String DEFAULT_PROFILE_NAME = "TLauncher";

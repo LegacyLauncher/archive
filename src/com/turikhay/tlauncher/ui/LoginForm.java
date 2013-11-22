@@ -17,7 +17,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class LoginForm extends CenterPanel implements MinecraftLauncherListener, AuthenticatorListener, UpdaterListener, UpdateListener {
    private static final long serialVersionUID = 6768252827144456302L;

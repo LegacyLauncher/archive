@@ -6,7 +6,7 @@ import com.turikhay.tlauncher.util.MinecraftUtil;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class FolderButton extends ImageButton {
    private static final long serialVersionUID = 1621745146166800209L;

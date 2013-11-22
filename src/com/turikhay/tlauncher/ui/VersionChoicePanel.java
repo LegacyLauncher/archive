@@ -15,12 +15,12 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.launcher_.events.RefreshedListener;
-import net.minecraft.launcher_.updater.VersionFilter;
-import net.minecraft.launcher_.updater.VersionManager;
-import net.minecraft.launcher_.updater.VersionSyncInfo;
-import net.minecraft.launcher_.versions.ReleaseType;
-import net.minecraft.launcher_.versions.Version;
+import net.minecraft.launcher.events.RefreshedListener;
+import net.minecraft.launcher.updater.VersionFilter;
+import net.minecraft.launcher.updater.VersionManager;
+import net.minecraft.launcher.updater.VersionSyncInfo;
+import net.minecraft.launcher.versions.ReleaseType;
+import net.minecraft.launcher.versions.Version;
 
 public class VersionChoicePanel extends BlockablePanel implements RefreshedListener, LocalizableComponent, LoginListener {
    private static final long serialVersionUID = -1838948772565245249L;
@@ -34,7 +34,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
    Choice choice;
    boolean foundlocal;
    // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType;
+   private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
 
    VersionChoicePanel(LoginForm lf, String ver) {
       this.lf = lf;
@@ -145,7 +145,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          String id = ver.getId();
          String dId = id;
          if (id.length() < 19) {
-            switch($SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType()[ver.getType().ordinal()]) {
+            switch($SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType()[ver.getType().ordinal()]) {
             case 1:
                dId = this.l.get("version.snapshot", "v", id);
                break;
@@ -191,7 +191,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          for(int i = 0; i < this.choice.getItemCount(); ++i) {
             String ch = (String)this.list.get(this.choice.getItem(i));
             VersionSyncInfo vs = this.vm.getVersionSyncInfo(ch);
-            if (vs.getLatestVersion().getType() != ReleaseType.CHEAT && !vs.getLatestVersion().isCheat()) {
+            if (vs.getLatestVersion().getType().isDesired()) {
                select = i;
                break;
             }
@@ -229,8 +229,8 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
    }
 
    // $FF: synthetic method
-   static int[] $SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType() {
-      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType;
+   static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType() {
+      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
       if (var10000 != null) {
          return var10000;
       } else {
@@ -261,7 +261,7 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          } catch (NoSuchFieldError var1) {
          }
 
-         $SWITCH_TABLE$net$minecraft$launcher_$versions$ReleaseType = var0;
+         $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType = var0;
          return var0;
       }
    }

@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Updater {
-   public static final String[] links = new String[]{"http://u.to/tlauncher-original-update/krAMBQ", "http://5.9.120.11/upd/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   public static final String[] links = TLauncher.getInstance().getUpdateRepos();
    public static final URI[] URIs = makeURIs();
    private final GlobalSettings s;
    private final Downloader d;
@@ -74,8 +74,8 @@ public class Updater {
                Update update = new Update(this.d, parsed);
                double version = update.getVersion();
                log("Success!");
-               if (0.1998D > version) {
-                  log("Found version is older than running:", version);
+               if (TLauncher.getInstance().getVersion() > version) {
+                  log("Found version is older than running:", version, "(" + TLauncher.getInstance().getVersion() + ")");
                }
 
                if (update.getDownloadLink() == null) {
@@ -83,7 +83,7 @@ public class Updater {
                   return;
                }
 
-               if (!(0.1998D >= version)) {
+               if (!(TLauncher.getInstance().getVersion() >= version)) {
                   log("Found actual version:", version);
                   this.onUpdateFound(update);
                   return;

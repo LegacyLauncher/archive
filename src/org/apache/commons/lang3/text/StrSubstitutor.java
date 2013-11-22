@@ -84,8 +84,9 @@ public class StrSubstitutor {
       if (source == null) {
          return null;
       } else {
-         StrBuilder buf = new StrBuilder(source);
-         return !this.substitute(buf, 0, source.length()) ? source : buf.toString();
+         StrBuilder buf = (new StrBuilder()).append(source);
+         this.substitute(buf, 0, buf.length());
+         return buf.toString();
       }
    }
 

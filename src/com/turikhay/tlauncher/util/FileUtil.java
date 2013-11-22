@@ -275,4 +275,35 @@ public class FileUtil {
       zis.closeEntry();
       zis.close();
    }
+
+   public static String getResource(URL resource, String charset) throws IOException {
+      InputStream is = resource.openStream();
+      InputStreamReader reader = new InputStreamReader(is, charset);
+
+      String b;
+      for(b = ""; reader.ready(); b = b + (char)reader.read()) {
+      }
+
+      reader.close();
+      return b;
+   }
+
+   public static String getResource(URL resource) throws IOException {
+      return getResource(resource, "UTF-8");
+   }
+
+   public static String getFolder(URL url, char separator) {
+      String[] folders = url.toString().split(String.valueOf(separator));
+      String s = "";
+
+      for(int i = 0; i < folders.length - 1; ++i) {
+         s = s + folders[i] + separator;
+      }
+
+      return s;
+   }
+
+   public static String getFolder(URL url) {
+      return getFolder(url, File.separatorChar);
+   }
 }

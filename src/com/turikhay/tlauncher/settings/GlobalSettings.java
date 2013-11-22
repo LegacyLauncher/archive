@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.settings;
 
+import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.IntegerArray;
 import com.turikhay.tlauncher.util.MinecraftUtil;
@@ -259,7 +260,7 @@ public class GlobalSettings extends Settings {
    }
 
    public static File getDefaultFile() {
-      return MinecraftUtil.getSystemRelatedFile("tlauncher.ini");
+      return MinecraftUtil.getSystemRelatedFile(TLauncher.getInstance().getSettingsFile());
    }
 
    public File getFile() {

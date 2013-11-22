@@ -4,7 +4,7 @@ import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.util.U;
 import java.net.URI;
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class Ad {
    private int id;

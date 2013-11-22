@@ -4,7 +4,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import net.minecraft.launcher_.updater.VersionSyncInfo;
+import net.minecraft.launcher.updater.VersionSyncInfo;
 
 public class CheckBoxPanel extends BlockablePanel implements LoginListener {
    private static final long serialVersionUID = 1808335203922301270L;

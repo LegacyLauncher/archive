@@ -12,7 +12,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.launcher_.Http;
+import net.minecraft.launcher.Http;
 
 public class Downloadable {
    private List handlers;
@@ -34,7 +34,7 @@ public class Downloadable {
    }
 
    public Downloadable(String url, File destination, File[] copies, boolean force) throws MalformedURLException {
-      this(new URL(Http.encode(url)), destination, copies, force);
+      this(new URL(url), destination, copies, force);
    }
 
    public Downloadable(String url, File destination, boolean force) throws MalformedURLException {

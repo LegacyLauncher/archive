@@ -23,15 +23,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import net.minecraft.launcher_.OperatingSystem;
-import net.minecraft.launcher_.process.JavaProcess;
-import net.minecraft.launcher_.process.JavaProcessLauncher;
-import net.minecraft.launcher_.process.JavaProcessListener;
-import net.minecraft.launcher_.updater.VersionManager;
-import net.minecraft.launcher_.updater.VersionSyncInfo;
-import net.minecraft.launcher_.versions.CompleteVersion;
-import net.minecraft.launcher_.versions.ExtractRules;
-import net.minecraft.launcher_.versions.Library;
+import net.minecraft.launcher.OperatingSystem;
+import net.minecraft.launcher.process.JavaProcess;
+import net.minecraft.launcher.process.JavaProcessLauncher;
+import net.minecraft.launcher.process.JavaProcessListener;
+import net.minecraft.launcher.updater.VersionManager;
+import net.minecraft.launcher.updater.VersionSyncInfo;
+import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.ExtractRules;
+import net.minecraft.launcher.versions.Library;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
@@ -243,7 +243,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             this.processLauncher.addCommand("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
          }
 
-         this.processLauncher.addCommand(OperatingSystem.is32Bit() ? "-Xmx512M" : "-Xmx1G");
+         this.processLauncher.addCommand(this.os.is32Bit() ? "-Xmx512M" : "-Xmx1G");
          this.processLauncher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
          this.processLauncher.addCommand("-cp", this.constructClassPath(this.version));
          this.processLauncher.addCommands(this.getJVMArguments());
@@ -445,6 +445,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          map.put("auth_username", this.username);
          map.put("auth_session", "null");
          map.put("auth_access_token", "null");
+         map.put("user_properties", "{}");
          map.put("auth_player_name", this.username);
          map.put("auth_uuid", (new UUID(0L, 0L)).toString());
          map.put("profile_name", "(Default)");

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.launcher_.Http;
+import net.minecraft.launcher.Http;
 import org.apache.commons.lang3.StringUtils;
 
 public class Authenticator {

@@ -3,8 +3,8 @@ package com.turikhay.tlauncher.ui;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import net.minecraft.launcher_.events.RefreshedListener;
-import net.minecraft.launcher_.updater.VersionManager;
+import net.minecraft.launcher.events.RefreshedListener;
+import net.minecraft.launcher.updater.VersionManager;
 
 public class RefreshButton extends ImageButton implements RefreshedListener {
    private static final long serialVersionUID = -1334187593288746348L;

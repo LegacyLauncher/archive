@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
 import java.net.URL;
-import net.minecraft.launcher_.OperatingSystem;
+import net.minecraft.launcher.OperatingSystem;
 
 public class SupportButton extends ImageButton implements LocalizableComponent {
    private static final long serialVersionUID = 7903730373496194592L;

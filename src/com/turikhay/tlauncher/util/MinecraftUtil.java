@@ -4,13 +4,13 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import java.io.File;
 import java.net.URL;
-import net.minecraft.launcher_.OperatingSystem;
-import net.minecraft.launcher_.updater.VersionFilter;
-import net.minecraft.launcher_.versions.ReleaseType;
+import net.minecraft.launcher.OperatingSystem;
+import net.minecraft.launcher.updater.VersionFilter;
+import net.minecraft.launcher.versions.ReleaseType;
 
 public class MinecraftUtil {
    // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$net$minecraft$launcher_$OperatingSystem;
+   private static int[] $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem;
 
    public static File getWorkingDirectory() {
       if (TLauncher.getInstance() == null) {
@@ -24,7 +24,7 @@ public class MinecraftUtil {
    public static File getSystemRelatedFile(String path) {
       String userHome = System.getProperty("user.home", ".");
       File file;
-      switch($SWITCH_TABLE$net$minecraft$launcher_$OperatingSystem()[OperatingSystem.getCurrentPlatform().ordinal()]) {
+      switch($SWITCH_TABLE$net$minecraft$launcher$OperatingSystem()[OperatingSystem.getCurrentPlatform().ordinal()]) {
       case 1:
       case 4:
          file = new File(userHome, path);
@@ -110,8 +110,8 @@ public class MinecraftUtil {
    }
 
    // $FF: synthetic method
-   static int[] $SWITCH_TABLE$net$minecraft$launcher_$OperatingSystem() {
-      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher_$OperatingSystem;
+   static int[] $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem() {
+      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem;
       if (var10000 != null) {
          return var10000;
       } else {
@@ -142,7 +142,7 @@ public class MinecraftUtil {
          } catch (NoSuchFieldError var1) {
          }
 
-         $SWITCH_TABLE$net$minecraft$launcher_$OperatingSystem = var0;
+         $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem = var0;
          return var0;
       }
    }
