@@ -36,6 +36,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
    public static final int VERSION = 10;
+   public static final int TLAUNCHER_VERSION = 5;
    final String prefix;
    final OperatingSystem os;
    GlobalSettings s;
@@ -89,7 +90,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.exit = exit;
       this.width = sizes[0];
       this.height = sizes[1];
-      this.log("Minecraft Launcher v10 is started!");
    }
 
    public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
@@ -104,13 +104,15 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.init();
    }
 
-   private void init() {
+   public void init() {
       if (!this.init) {
          this.init = true;
-         if (!this.exit) {
+         if (!this.exit && this.s != null) {
             this.con = new Console(this.s, "Minecraft Logger", this.console);
          }
 
+         this.log("Minecraft Launcher [10;5] is started!");
+         this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
       }
    }
 
@@ -157,12 +159,18 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                this.working = true;
                this.onCheck();
                this.installed = this.syncInfo.isInstalled() && this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
-               if (!this.version.appliesToCurrentEnvironment()) {
-                  this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
-               }
+               if (this.version.getTLauncherVersion() != 0) {
+                  if (this.version.getTLauncherVersion() > 5) {
+                     throw new MinecraftLauncherException("TLauncher is incompatible with this extra version (needed " + this.version.getTLauncherVersion() + ").", "incompatible");
+                  }
+               } else {
+                  if (!this.version.appliesToCurrentEnvironment()) {
+                     this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
+                  }
 
-               if (this.version.getMinimumLauncherVersion() > 10) {
-                  this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
+                  if (this.version.getMinimumLauncherVersion() > 10) {
+                     this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
+                  }
                }
 
                if (!this.forceupdate && this.installed) {
@@ -226,8 +234,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
          try {
             this.unpackNatives(this.forceupdate);
+         } catch (IOException var6) {
+            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var6);
+         }
+
+         try {
+            this.deleteEntries();
          } catch (IOException var5) {
-            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var5);
+            throw new MinecraftLauncherException("Cannot delete entries!", "delete-entries", var5);
          }
 
          this.processLauncher = new JavaProcessLauncher(this.javadir, new String[0]);
@@ -346,6 +360,15 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       return result;
    }
 
+   private void deleteEntries() throws IOException {
+      List entries = this.version.getUnnecessaryEntries();
+      if (entries != null && entries.size() != 0) {
+         this.log("Removing entries...");
+         File file = this.version.getJARFile(this.gameDir);
+         FileUtil.removeFromZip(file, entries);
+      }
+   }
+
    private void unpackNatives(boolean force) throws IOException {
       this.log("Unpacking natives...");
       Collection libraries = this.version.getRelevantLibraries();
@@ -416,7 +439,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private String constructClassPath(CompleteVersion version) throws MinecraftLauncherException {
       this.log("Constructing Classpath...");
       StringBuilder result = new StringBuilder();
-      Collection classPath = version.getClassPath(this.os, MinecraftUtil.getWorkingDirectory());
+      Collection classPath = version.getClassPath(this.os, this.gameDir);
       String separator = System.getProperty("path.separator");
 
       File file;

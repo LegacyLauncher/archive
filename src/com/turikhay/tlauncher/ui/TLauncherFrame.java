@@ -221,7 +221,8 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      this.setTitle("TLauncher " + TLauncher.getInstance().getVersion() + " (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
+      TLauncher.getInstance();
+      this.setTitle("TLauncher " + TLauncher.getVersion() + " (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
    public LoginForm getLoginForm() {
@@ -343,9 +344,11 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    public void onAdFound(Updater u, Ad ad) {
-      if (ad.canBeShown()) {
-         this.global.set("updater.ad", ad.getID());
-         ad.show(false);
+      if (this.global.getInteger("updater.ad") != ad.getID()) {
+         if (ad.canBeShown()) {
+            this.global.set("updater.ad", ad.getID());
+            ad.show(false);
+         }
       }
    }
 

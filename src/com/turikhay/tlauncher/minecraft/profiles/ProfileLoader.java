@@ -75,7 +75,7 @@ public class ProfileLoader {
          }
 
          for(i = 0; i < files.size(); ++i) {
-            this.managers.add(new ProfileManager(this, this.t.getClientToken(), (File)files.get(i)));
+            this.managers.add(new ProfileManager(this, this.t.getClientToken(), (File)files.get(i), true));
          }
 
          this.selected = this.managers.size() > 0 ? (ProfileManager)this.managers.get(select == -1 ? 0 : select) : null;

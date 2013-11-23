@@ -13,8 +13,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.security.MessageDigest;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
    public static final String DEFAULT_CHARSET = "UTF-8";
@@ -274,6 +276,36 @@ public class FileUtil {
 
       zis.closeEntry();
       zis.close();
+   }
+
+   public static void removeFromZip(File zipFile, List files) throws IOException {
+      File tempFile = File.createTempFile(zipFile.getName(), (String)null);
+      tempFile.delete();
+      tempFile.deleteOnExit();
+      boolean renameOk = zipFile.renameTo(tempFile);
+      if (!renameOk) {
+         throw new IOException("Could not rename the file " + zipFile.getAbsolutePath() + " to " + tempFile.getAbsolutePath());
+      } else {
+         byte[] buf = new byte[1024];
+         ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
+         ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(zipFile));
+
+         for(ZipEntry entry = zin.getNextEntry(); entry != null; entry = zin.getNextEntry()) {
+            String name = entry.getName();
+            if (!files.contains(name)) {
+               zout.putNextEntry(new ZipEntry(name));
+
+               int len;
+               while((len = zin.read(buf)) > 0) {
+                  zout.write(buf, 0, len);
+               }
+            }
+         }
+
+         zin.close();
+         zout.close();
+         tempFile.delete();
+      }
    }
 
    public static String getResource(URL resource, String charset) throws IOException {
