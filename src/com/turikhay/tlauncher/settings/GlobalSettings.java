@@ -217,7 +217,7 @@ public class GlobalSettings extends Settings {
       return DEFAULT_LOCALE;
    }
 
-   private static Locale getSupported() {
+   public static Locale getSupported() {
       Locale using = Locale.getDefault();
       String using_name = using.toString();
       Iterator var3 = SUPPORTED_LOCALE.iterator();
@@ -260,7 +260,8 @@ public class GlobalSettings extends Settings {
    }
 
    public static File getDefaultFile() {
-      return MinecraftUtil.getSystemRelatedFile(TLauncher.getInstance().getSettingsFile());
+      TLauncher.getInstance();
+      return MinecraftUtil.getSystemRelatedFile(TLauncher.getSettingsFile());
    }
 
    public File getFile() {

@@ -23,6 +23,7 @@ public class Update {
    private String description;
    private Map links = new HashMap();
    private final Downloader d;
+   private boolean isDownloading;
    private List listeners = new ArrayList();
 
    public void addListener(UpdateListener l) {
@@ -118,19 +119,27 @@ public class Update {
                }
 
                public void onCompleteError() {
+                  Update.this.isDownloading = false;
                   Update.this.step = Update.Step.NONE.ordinal();
                   Update.this.onUpdateDownloadError(downloadable.getError());
                }
 
                public void onComplete() {
+                  Update.this.isDownloading = false;
                   Update.this.step = Update.Step.DOWNLOADED.ordinal();
                   Update.this.onUpdateReady();
                }
             });
             log(2);
             this.onUpdateDownloading();
+            this.isDownloading = true;
             this.d.add(downloadable);
             this.d.launch();
+
+            while(this.isDownloading) {
+               U.sleepFor(1000L);
+            }
+
             log(3);
          }
       }
@@ -153,7 +162,7 @@ public class Update {
       if (this.step < Update.Step.DOWNLOADED.ordinal()) {
          throw new Update.IllegalStepException(this.step);
       } else {
-         log("Saving update... Launcher will be closed.");
+         log("Saving update... Launcher will be reopened.");
          File replace = Updater.getFileFor(pt);
          File replacer = Updater.getUpdateFileFor(pt);
          replacer.deleteOnExit();

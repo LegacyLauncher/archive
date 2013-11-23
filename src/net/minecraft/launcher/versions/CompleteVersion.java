@@ -25,49 +25,10 @@ public class CompleteVersion implements Version {
    private List libraries;
    private String mainClass;
    private int minimumLauncherVersion;
+   private int tlauncherVersion;
    private String incompatibilityReason;
    private List rules;
-
-   public CompleteVersion() {
-   }
-
-   public CompleteVersion(String id, String original_id, Date releaseTime, Date updateTime, ReleaseType type, String mainClass, String jvmArguments, String minecraftArguments) {
-      if (id != null && id.length() != 0) {
-         if (releaseTime == null) {
-            throw new IllegalArgumentException("Release time cannot be null");
-         } else if (updateTime == null) {
-            throw new IllegalArgumentException("Update time cannot be null");
-         } else if (type == null) {
-            throw new IllegalArgumentException("Release type cannot be null");
-         } else if (mainClass != null && mainClass.length() != 0) {
-            if (jvmArguments == null) {
-               jvmArguments = "";
-            }
-
-            if (minecraftArguments == null) {
-               throw new IllegalArgumentException("Process arguments cannot be null or empty");
-            } else {
-               this.id = id;
-               this.original_id = original_id;
-               this.releaseTime = releaseTime;
-               this.time = updateTime;
-               this.type = type;
-               this.mainClass = mainClass;
-               this.libraries = new ArrayList();
-               this.jvmArguments = jvmArguments;
-               this.minecraftArguments = minecraftArguments;
-            }
-         } else {
-            throw new IllegalArgumentException("Main class cannot be null or empty");
-         }
-      } else {
-         throw new IllegalArgumentException("ID cannot be null or empty");
-      }
-   }
-
-   public CompleteVersion(CompleteVersion version) {
-      this(version.getId(), version.getOriginalID(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), version.getMainClass(), version.getJVMArguments(), version.getMinecraftArguments());
-   }
+   private List unnecessaryEntries;
 
    public String getId() {
       return this.id;
@@ -151,8 +112,12 @@ public class CompleteVersion implements Version {
          }
       }
 
-      result.add(new File(base, "versions/" + this.getId() + "/" + this.getId() + ".jar"));
+      result.add(this.getJARFile(base));
       return result;
+   }
+
+   public File getJARFile(File base) {
+      return new File(base, "versions/" + this.getId() + "/" + this.getId() + ".jar");
    }
 
    public Collection getExtractFiles(OperatingSystem os) {
@@ -251,6 +216,14 @@ public class CompleteVersion implements Version {
 
    public String getMinecraftArguments() {
       return this.minecraftArguments;
+   }
+
+   public List getUnnecessaryEntries() {
+      return this.unnecessaryEntries;
+   }
+
+   public int getTLauncherVersion() {
+      return this.tlauncherVersion;
    }
 
    public void setId(String id) {

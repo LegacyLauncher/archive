@@ -65,8 +65,7 @@ public class DownloaderThread extends Thread {
             this.dlog("Attempting to download " + d.getURL() + " [" + attempt + "/" + max + "]...");
 
             try {
-               this.download(d);
-               this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + max + ";" + d.getFast() + "]");
+               this.download(d, attempt, max);
                break;
             } catch (DownloaderError var7) {
                if (var7.isSerious()) {
@@ -108,8 +107,7 @@ public class DownloaderThread extends Thread {
       this.run();
    }
 
-   public void download(Downloadable d) throws IOException {
-      String fn = d.getFilename();
+   public void download(Downloadable d, int attempt, int max) throws IOException {
       HttpURLConnection connection = d.makeConnection();
       int code = -1;
       long reply_s = System.currentTimeMillis();
@@ -140,7 +138,7 @@ public class DownloaderThread extends Thread {
 
          this.dlog("Responce code is " + code + ". Redirecting to: " + newurl);
          d.setURL(newurl);
-         this.download(d);
+         this.download(d, 1, max);
          return;
       case 403:
          throw new DownloaderError("Forbidden (403)", true);
@@ -192,11 +190,11 @@ public class DownloaderThread extends Thread {
       File[] copies = d.getAdditionalDestinations();
       if (copies != null && copies.length > 0) {
          this.dlog("Found additional destinations. Copying...");
-         File[] var31 = copies;
-         int var25 = copies.length;
+         File[] var32 = copies;
+         int var26 = copies.length;
 
-         for(int var30 = 0; var30 < var25; ++var30) {
-            File copy = var31[var30];
+         for(int var31 = 0; var31 < var26; ++var31) {
+            File copy = var32[var31];
             this.dlog("Copying " + copy + "...");
             FileUtil.copyFile(file, copy, d.isForced());
             this.dlog(d, "Success!");
@@ -205,7 +203,7 @@ public class DownloaderThread extends Thread {
          this.dlog("Copying completed.");
       }
 
-      this.dlog("Successfully downloaded " + fn + " in " + downloaded / 1000L + " s!");
+      this.log(d, "Downloaded in " + d.getTime() + " ms. [" + attempt + "/" + max + ";" + d.getFast() + "]");
       this.onComplete(d);
    }
 

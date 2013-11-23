@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticationDatabase;
 import com.turikhay.tlauncher.util.FileUtil;
+import com.turikhay.tlauncher.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -22,9 +23,9 @@ import net.minecraft.launcher.updater.versions.json.LowerCaseEnumTypeAdapterFact
 
 public class ProfileManager {
    public static final String DEFAULT_PROFILE_NAME = "TLauncher";
-   private final JsonParser parser = new JsonParser();
+   private final JsonParser parser;
    private final Gson gson;
-   private final Map profiles = new HashMap();
+   private final Map profiles;
    private final File profileFile;
    private final ProfileLoader loader;
    private String selectedProfile;
@@ -32,6 +33,12 @@ public class ProfileManager {
    private AuthenticationDatabase authDatabase;
 
    public ProfileManager(ProfileLoader loader, UUID clientToken, File file) {
+      this(loader, clientToken, file, false);
+   }
+
+   public ProfileManager(ProfileLoader loader, UUID clientToken, File file, boolean load) {
+      this.parser = new JsonParser();
+      this.profiles = new HashMap();
       this.loader = loader;
       this.profileFile = file;
       this.clientToken = clientToken;
@@ -43,6 +50,15 @@ public class ProfileManager {
       builder.setPrettyPrinting();
       this.gson = builder.create();
       this.authDatabase = new AuthenticationDatabase();
+      if (load) {
+         try {
+            this.loadProfiles();
+            this.saveProfiles();
+         } catch (IOException var7) {
+            U.log("Cannot load profiles!");
+         }
+      }
+
    }
 
    public void saveProfiles() throws IOException {

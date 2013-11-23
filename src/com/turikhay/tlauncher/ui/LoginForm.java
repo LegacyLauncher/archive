@@ -77,6 +77,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
          } else {
             this.save();
             this.t.launch(this, force);
+            this.block("launch");
          }
       }
    }

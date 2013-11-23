@@ -24,9 +24,10 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.2D;
+   private static final double VERSION = 0.21D;
    private static final String SETTINGS = "tlauncher.ini";
-   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   private static final String BRAND = "Original";
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static TLauncher instance;
    private TLauncher.TLauncherState state;
    private Settings lang;
@@ -171,15 +172,19 @@ public class TLauncher {
       this.frame.setVisible(true);
    }
 
-   public double getVersion() {
-      return 0.2D;
+   public static double getVersion() {
+      return 0.21D;
    }
 
-   public String[] getUpdateRepos() {
+   public static String getBrand() {
+      return "Original";
+   }
+
+   public static String[] getUpdateRepos() {
       return DEFAULT_UPDATE_REPO;
    }
 
-   public String getSettingsFile() {
+   public static String getSettingsFile() {
       return "tlauncher.ini";
    }
 
@@ -199,7 +204,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version", 0.2D);
+      U.log("Starting version", 0.21D);
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);

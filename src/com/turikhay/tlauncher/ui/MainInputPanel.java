@@ -2,6 +2,8 @@ package com.turikhay.tlauncher.ui;
 
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class MainInputPanel extends BlockablePanel implements LocalizableComponent, LoginListener {
    private static final long serialVersionUID = 296073104610204659L;
@@ -15,6 +17,11 @@ public class MainInputPanel extends BlockablePanel implements LocalizableCompone
       this.setLayout(lm);
       this.setOpaque(false);
       this.field = new UsernameField(this.lf);
+      this.field.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            MainInputPanel.this.lf.callLogin();
+         }
+      });
       this.field.setValue(username);
       this.saveable = this.lf.s.isSaveable("login.username");
       this.field.setEnabled(this.saveable);

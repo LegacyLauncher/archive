@@ -4,7 +4,6 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.exceptions.TLauncherException;
-import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.util.AsyncThread;
 import com.turikhay.tlauncher.util.FileUtil;
@@ -19,11 +18,11 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Updater {
-   public static final String[] links = TLauncher.getInstance().getUpdateRepos();
+   public static final String[] links = TLauncher.getUpdateRepos();
    public static final URI[] URIs = makeURIs();
-   private final GlobalSettings s;
    private final Downloader d;
-   private List listeners = new ArrayList();
+   private List listeners;
+   private Update found;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType;
 
@@ -35,9 +34,9 @@ public class Updater {
       this.listeners.remove(l);
    }
 
-   public Updater(TLauncher t) {
-      this.s = t.getSettings();
-      this.d = t.getDownloader();
+   public Updater(Downloader d) {
+      this.listeners = new ArrayList();
+      this.d = d;
       if (!PackageType.isCurrent(PackageType.JAR)) {
          File oldfile = getTempFile();
          if (oldfile.delete()) {
@@ -47,6 +46,10 @@ public class Updater {
 
       log("Initialized.");
       log("Package type:", PackageType.getCurrent());
+   }
+
+   public Updater(TLauncher t) {
+      this(t.getDownloader());
    }
 
    public void findUpdate() {
@@ -74,8 +77,10 @@ public class Updater {
                Update update = new Update(this.d, parsed);
                double version = update.getVersion();
                log("Success!");
-               if (TLauncher.getInstance().getVersion() > version) {
-                  log("Found version is older than running:", version, "(" + TLauncher.getInstance().getVersion() + ")");
+               TLauncher.getInstance();
+               if (TLauncher.getVersion() > version) {
+                  TLauncher.getInstance();
+                  log("Found version is older than running:", version, "(" + TLauncher.getVersion() + ")");
                }
 
                if (update.getDownloadLink() == null) {
@@ -83,14 +88,16 @@ public class Updater {
                   return;
                }
 
-               if (!(TLauncher.getInstance().getVersion() >= version)) {
+               TLauncher.getInstance();
+               if (!(TLauncher.getVersion() >= version)) {
                   log("Found actual version:", version);
+                  this.found = update;
                   this.onUpdateFound(update);
                   return;
                }
 
                Ad ad = new Ad(parsed);
-               if (this.s.getInteger("updater.ad") != ad.getID() && ad.canBeShown()) {
+               if (ad.canBeShown()) {
                   this.onAdFound(ad);
                }
 
@@ -107,6 +114,10 @@ public class Updater {
 
       log("Updating is impossible - cannot get any information.");
       this.onUpdaterRequestError();
+   }
+
+   public Update getUpdate() {
+      return this.found;
    }
 
    public void asyncFindUpdate() {
