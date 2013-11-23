@@ -34,7 +34,7 @@ public class Downloadable {
    }
 
    public Downloadable(String url, File destination, File[] copies, boolean force) throws MalformedURLException {
-      this(new URL(url), destination, copies, force);
+      this(new URL(Http.encode(url)), destination, copies, force);
    }
 
    public Downloadable(String url, File destination, boolean force) throws MalformedURLException {

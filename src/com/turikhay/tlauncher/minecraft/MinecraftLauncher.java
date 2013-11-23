@@ -36,7 +36,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
    public static final int VERSION = 10;
-   public static final int TLAUNCHER_VERSION = 5;
+   public static final int TLAUNCHER_VERSION = 6;
    final String prefix;
    final OperatingSystem os;
    GlobalSettings s;
@@ -111,7 +111,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             this.con = new Console(this.s, "Minecraft Logger", this.console);
          }
 
-         this.log("Minecraft Launcher [10;5] is started!");
+         this.log("Minecraft Launcher [10;6] is started!");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
       }
    }
@@ -160,7 +160,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                this.onCheck();
                this.installed = this.syncInfo.isInstalled() && this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
                if (this.version.getTLauncherVersion() != 0) {
-                  if (this.version.getTLauncherVersion() > 5) {
+                  if (this.version.getTLauncherVersion() > 6) {
                      throw new MinecraftLauncherException("TLauncher is incompatible with this extra version (needed " + this.version.getTLauncherVersion() + ").", "incompatible");
                   }
                } else {
