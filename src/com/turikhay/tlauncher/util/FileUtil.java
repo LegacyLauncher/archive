@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -36,8 +38,8 @@ public class FileUtil {
       } else if (!file.exists()) {
          return null;
       } else {
-         FileInputStream fis = new FileInputStream(file);
-         InputStreamReader reader = new InputStreamReader(fis, charset);
+         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+         InputStreamReader reader = new InputStreamReader(bis, charset);
          StringBuilder b = new StringBuilder();
 
          while(reader.ready()) {
@@ -45,7 +47,7 @@ public class FileUtil {
          }
 
          reader.close();
-         fis.close();
+         bis.close();
          return b.toString();
       }
    }
@@ -62,10 +64,10 @@ public class FileUtil {
    }
 
    public static byte[] createChecksum(File file) {
-      FileInputStream fis = null;
+      BufferedInputStream fis = null;
 
       try {
-         fis = new FileInputStream(file);
+         fis = new BufferedInputStream(new FileInputStream(file));
          byte[] buffer = new byte[1024];
          MessageDigest complete = MessageDigest.getInstance("MD5");
 
@@ -139,11 +141,11 @@ public class FileUtil {
       }
 
       InputStream is = null;
-      FileOutputStream os = null;
+      BufferedOutputStream os = null;
 
       try {
-         is = new FileInputStream(source);
-         os = new FileOutputStream(dest);
+         is = new BufferedInputStream(new FileInputStream(source));
+         os = new BufferedOutputStream(new FileOutputStream(dest));
          byte[] buffer = new byte[1024];
 
          int length;
@@ -309,15 +311,16 @@ public class FileUtil {
    }
 
    public static String getResource(URL resource, String charset) throws IOException {
-      InputStream is = resource.openStream();
+      InputStream is = new BufferedInputStream(resource.openStream());
       InputStreamReader reader = new InputStreamReader(is, charset);
+      StringBuilder b = new StringBuilder();
 
-      String b;
-      for(b = ""; reader.ready(); b = b + (char)reader.read()) {
+      while(reader.ready()) {
+         b.append((char)reader.read());
       }
 
       reader.close();
-      return b;
+      return b.toString();
    }
 
    public static String getResource(URL resource) throws IOException {

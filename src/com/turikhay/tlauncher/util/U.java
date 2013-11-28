@@ -256,6 +256,24 @@ public class U {
       return (new Random(System.currentTimeMillis())).nextInt(d) == 0;
    }
 
+   public static double getAverage(double[] d) {
+      double a = 0.0D;
+      int k = 0;
+      double[] var8 = d;
+      int var7 = d.length;
+
+      for(int var6 = 0; var6 < var7; ++var6) {
+         double curd = var8[var6];
+         a += curd;
+         ++k;
+         if (a == 0.0D) {
+            break;
+         }
+      }
+
+      return k == 0 ? 0.0D : a / (double)k;
+   }
+
    public static double getAverage(double[] d, int max) {
       double a = 0.0D;
       int k = 0;

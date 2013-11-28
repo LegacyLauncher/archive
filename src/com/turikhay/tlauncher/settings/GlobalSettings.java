@@ -30,9 +30,9 @@ public class GlobalSettings extends Settings {
    public static final List SUPPORTED_LOCALE;
    private File file;
    private static boolean firstRun;
-   private Map d = new HashMap();
+   private GlobalDefaults d = new GlobalDefaults(this);
    private Map cs = new HashMap();
-   private double version = 0.14D;
+   double version = 0.14D;
 
    static {
       DEFAULT_LOCALE = Locale.US;
@@ -53,26 +53,8 @@ public class GlobalSettings extends Settings {
    private GlobalSettings(File file, OptionSet set) throws IOException {
       super(file);
       this.cs = ArgumentParser.parse(set);
-      U.log("Settings file:", file);
-      this.d.put("settings.version", this.version);
-      this.d.put("login.auto", false);
-      this.d.put("login.auto.timeout", 3);
-      this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
-      this.d.put("minecraft.versions.snapshots", true);
-      this.d.put("minecraft.versions.beta", true);
-      this.d.put("minecraft.versions.alpha", true);
-      this.d.put("minecraft.versions.cheats", true);
-      this.d.put("minecraft.onlaunch", GlobalSettings.ActionOnLaunch.getDefault());
-      this.d.put("gui.sun", true);
-      this.d.put("gui.console.width", 620);
-      this.d.put("gui.console.height", 400);
-      this.d.put("gui.console.x", 1);
-      this.d.put("gui.console.y", 1);
-      this.d.put("updater.enabled", true);
-      this.d.put("timeout.connection", 15000);
-      this.d.put("locale", getSupported());
       boolean forcedrepair = this.getDouble("settings.version") != this.version;
-      Iterator var5 = this.d.entrySet().iterator();
+      Iterator var5 = this.d.getMap().entrySet().iterator();
 
       while(true) {
          while(var5.hasNext()) {

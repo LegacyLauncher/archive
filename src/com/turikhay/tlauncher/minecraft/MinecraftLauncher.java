@@ -35,7 +35,7 @@ import net.minecraft.launcher.versions.Library;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
-   public static final int VERSION = 10;
+   public static final int VERSION = 11;
    public static final int TLAUNCHER_VERSION = 6;
    final String prefix;
    final OperatingSystem os;
@@ -111,7 +111,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             this.con = new Console(this.s, "Minecraft Logger", this.console);
          }
 
-         this.log("Minecraft Launcher [10;6] is started!");
+         this.log("Minecraft Launcher [11;6] is started!");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
       }
    }
@@ -168,7 +168,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                      this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
                   }
 
-                  if (this.version.getMinimumLauncherVersion() > 10) {
+                  if (this.version.getMinimumLauncherVersion() > 11) {
                      this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
                   }
                }
@@ -325,7 +325,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.log("Starting Minecraft " + this.version_name + "...");
 
       try {
-         this.log("Running: " + this.processLauncher.getCommandsAsString());
+         this.log("Running (characters are not escaped):");
+         this.log(this.processLauncher.getCommandsAsString());
          if (!this.exit) {
             this.onLaunch();
          }
@@ -538,7 +539,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
    }
 
-   private void log(Object w) {
+   private void log(Object... w) {
       if (this.con != null) {
          this.con.log("[MinecraftLauncher]", w);
       }

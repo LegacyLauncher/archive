@@ -2,6 +2,7 @@ package com.turikhay.tlauncher.settings;
 
 import com.turikhay.tlauncher.util.FileUtil;
 import com.turikhay.tlauncher.util.U;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -73,7 +74,7 @@ public class Settings {
       if (stream == null) {
          throw new SettingsException("Given stream is NULL!");
       } else {
-         this.input = stream;
+         this.input = new BufferedInputStream(stream);
          this.filename = null;
          this.inputType = Settings.InputType.STREAM;
          this.CHARSET = charset;
@@ -101,7 +102,7 @@ public class Settings {
          this.NEWLINE_CHAR = String.valueOf(newline);
          this.COMMENT_CHAR = String.valueOf(comment_char);
          FileUtil.createFile(file);
-         InputStream is = new FileInputStream(file);
+         InputStream is = new BufferedInputStream(new FileInputStream(file));
          this.readFromStream(is);
       }
    }
@@ -115,13 +116,14 @@ public class Settings {
          throw new SettingsException(this, "Given stream is NULL!");
       } else if (stream.available() != 0) {
          InputStreamReader reader = new InputStreamReader(stream, this.CHARSET);
+         StringBuilder b = new StringBuilder();
 
-         String b;
-         for(b = ""; reader.ready(); b = b + (char)reader.read()) {
+         while(reader.ready()) {
+            b.append((char)reader.read());
          }
 
          reader.close();
-         this.readFromString(b);
+         this.readFromString(b.toString());
       }
    }
 

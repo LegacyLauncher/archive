@@ -59,7 +59,7 @@ public class DayBackground extends LightBackground implements AnimatedBackground
       long end = System.nanoTime();
       long diff = end - start;
       if (diff > 1000000L) {
-         U.log("Sun is possibly lagging (" + diff + " ns > 1000000 ns).");
+         U.log("Sun is probably lagging (" + diff + " ns > 1000000 ns).");
       }
 
       U.sleepFor(100L);

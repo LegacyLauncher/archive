@@ -211,10 +211,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public void onMinecraftCrash(Crash crash) {
       String p = "crash.";
       String title = this.l.get(p + "title");
-      String report = crash.getFile();
       if (!crash.isRecognized()) {
          Alert.showError(title, this.l.get(p + "unknown"), (Throwable)null);
       } else {
+         String report = crash.getFile();
          Iterator var6 = crash.getSignatures().iterator();
 
          while(var6.hasNext()) {
