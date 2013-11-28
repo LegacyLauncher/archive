@@ -24,6 +24,7 @@ public class Downloadable {
    private boolean forced;
    private boolean fast;
    private long time;
+   private long size;
 
    public Downloadable(URL url, File destination, File[] copies, boolean force) {
       this.handlers = new ArrayList();
@@ -99,6 +100,10 @@ public class Downloadable {
       return this.time;
    }
 
+   public long getSize() {
+      return this.size;
+   }
+
    public boolean getFast() {
       return this.fast;
    }
@@ -167,6 +172,10 @@ public class Downloadable {
 
    public void setTime(long ms) {
       this.time = ms;
+   }
+
+   public void setSize(long b) {
+      this.size = b;
    }
 
    public void setFast(boolean newfast) {

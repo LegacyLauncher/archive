@@ -174,10 +174,13 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
             TLauncherFrame.this.mp.onResize();
          }
 
-         public void componentMoved(ComponentEvent e) {
+         public void componentShown(ComponentEvent e) {
+            TLauncherFrame.this.instance.validate();
+            TLauncherFrame.this.instance.repaint();
+            TLauncherFrame.this.instance.toFront();
          }
 
-         public void componentShown(ComponentEvent e) {
+         public void componentMoved(ComponentEvent e) {
          }
 
          public void componentHidden(ComponentEvent e) {
@@ -221,7 +224,6 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    private void setWindowTitle() {
       String translator = this.lang.nget("translator");
-      TLauncher.getInstance();
       this.setTitle("TLauncher " + TLauncher.getVersion() + " (by turikhay" + (translator != null ? ", translated by " + translator : "") + ")");
    }
 
@@ -253,10 +255,9 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    public void onDownloaderFileComplete(Downloader d, Downloadable f) {
-      int i = d.getRemaining();
       this.pb.setIndeterminate(false);
-      this.pb.setEastString(this.lang.get("progressBar.remaining" + (i == 1 ? "-one" : ""), "i", i));
       this.pb.setWestString(this.lang.get("progressBar.completed", "f", f.getFilename()));
+      this.pb.setEastString(this.lang.get("progressBar.remaining", "i", d.getRemaining()));
    }
 
    public void onDownloaderError(Downloader d, Downloadable file, Throwable error) {
@@ -266,12 +267,11 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       } else {
          String path = "download.error" + (error == null ? ".unknown" : "");
          this.pb.setIndeterminate(false);
-         this.pb.setEastString(this.lang.get("progressBar.remaining" + (i == 1 ? "-one" : ""), "i", i));
          this.pb.setCenterString(this.lang.get(path, "f", file.getFilename(), "e", error.toString()));
       }
    }
 
-   public void onDownloaderProgress(Downloader d, int progress) {
+   public void onDownloaderProgress(Downloader d, int progress, double speed) {
       if (progress > 0) {
          if (this.pb.getValue() > progress) {
             return;
@@ -300,12 +300,8 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          upd.addListener(this);
          upd.download();
       } else {
-         URI uri = upd.getDownloadLink();
-
-         try {
-            OperatingSystem.openLink(uri);
-         } catch (Exception var7) {
-            Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
+         if (this.openUpdateLink(upd.getDownloadLink())) {
+            TLauncher.kill();
          }
 
       }
@@ -340,7 +336,20 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    public void onUpdateApplyError(Update u, Throwable e) {
-      Alert.showError(this.lang.get("updater.save-error.title"), this.lang.get("updater.save-error"), e);
+      if (Alert.showQuestion(this.lang.get("updater.save-error.title"), this.lang.get("updater.save-error"), e, true)) {
+         this.openUpdateLink(u.getDownloadLink());
+      }
+
+   }
+
+   private boolean openUpdateLink(URI uri) {
+      try {
+         OperatingSystem.openLink(uri);
+         return true;
+      } catch (Exception var3) {
+         Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
+         return false;
+      }
    }
 
    public void onAdFound(Updater u, Ad ad) {

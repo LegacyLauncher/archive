@@ -111,6 +111,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
             public void componentResized(ComponentEvent e) {
                ConsoleFrame.this.w = ConsoleFrame.this.getWidth();
                ConsoleFrame.this.h = ConsoleFrame.this.getHeight();
+               ConsoleFrame.this.sp.repaint();
             }
 
             public void componentMoved(ComponentEvent e) {

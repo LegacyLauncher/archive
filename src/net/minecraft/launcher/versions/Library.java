@@ -12,7 +12,7 @@ import net.minecraft.launcher.OperatingSystem;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class Library {
-   private static final String LIBRARY_DOWNLOAD_BASE = "https://s3.amazonaws.com/Minecraft.Download/libraries/";
+   private static final String LIBRARY_DOWNLOAD_BASE = "https://libraries.minecraft.net/";
    private static final StrSubstitutor SUBSTITUTOR = createSubstitutor();
    private String name;
    private List rules;
@@ -177,7 +177,7 @@ public class Library {
    }
 
    public String getDownloadUrl() {
-      return this.url != null ? this.url : "https://s3.amazonaws.com/Minecraft.Download/libraries/";
+      return this.url != null ? this.url : "https://libraries.minecraft.net/";
    }
 
    private static StrSubstitutor createSubstitutor() {

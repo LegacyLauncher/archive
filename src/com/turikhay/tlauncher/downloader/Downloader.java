@@ -19,8 +19,10 @@ public class Downloader extends Thread {
    private boolean[] running;
    private int[] remain;
    private int[] progress;
+   private double[] speed;
    private int av_progress;
    private int threadsStarted;
+   private double av_speed;
 
    public Downloader(String name, int mthreads) {
       this.available = true;
@@ -58,10 +60,12 @@ public class Downloader extends Thread {
       this.av_progress = 0;
       this.remain = new int[this.maxThreads];
       this.progress = new int[this.maxThreads];
+      this.speed = new double[this.maxThreads];
       int len = this.list.size();
       int each = U.getMaxMultiply(len, this.maxThreads);
       int x = 0;
       int y = -1;
+      U.log("EACH:", each);
       if (len > 0) {
          this.onDownloaderStart(len);
       }
@@ -217,16 +221,18 @@ public class Downloader extends Thread {
 
    }
 
-   void onProgress(int id, int curprogress) {
+   void onProgress(int id, int curprogress, double curspeed) {
       this.progress[id] = curprogress;
+      this.speed[id] = curspeed;
       int old_progress = this.av_progress;
       this.av_progress = U.getAverage(this.progress, this.threadsStarted);
       if (this.av_progress != old_progress) {
-         Iterator var5 = this.listeners.iterator();
+         this.av_speed = U.getSum(this.speed);
+         Iterator var7 = this.listeners.iterator();
 
-         while(var5.hasNext()) {
-            DownloadListener l = (DownloadListener)var5.next();
-            l.onDownloaderProgress(this, this.av_progress);
+         while(var7.hasNext()) {
+            DownloadListener l = (DownloadListener)var7.next();
+            l.onDownloaderProgress(this, this.av_progress, this.av_speed);
          }
 
       }
