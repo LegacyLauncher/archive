@@ -1,8 +1,8 @@
 package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

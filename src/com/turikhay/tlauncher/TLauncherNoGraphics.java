@@ -7,8 +7,8 @@ import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.ui.Alert;
-import com.turikhay.tlauncher.util.Console;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.tlauncher.ui.Console;
+import com.turikhay.util.U;
 import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionManager;
 
@@ -42,6 +42,10 @@ public class TLauncherNoGraphics implements MinecraftLauncherListener {
    }
 
    public void onMinecraftLaunch() {
+   }
+
+   public void onMinecraftLaunchStop() {
+      TLauncher.kill();
    }
 
    public void onMinecraftClose() {

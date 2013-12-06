@@ -70,7 +70,7 @@ public class DateTypeAdapter implements JsonDeserializer, JsonSerializer {
       }
    }
 
-   private String serializeToString(Date date) {
+   public String serializeToString(Date date) {
       synchronized(this.enUsFormat) {
          String result = this.iso8601Format.format(date);
          return result.substring(0, 22) + ":" + result.substring(22);

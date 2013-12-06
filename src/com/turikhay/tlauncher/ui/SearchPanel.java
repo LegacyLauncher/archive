@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.StringUtil;
+import com.turikhay.util.StringUtil;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Insets;

@@ -29,6 +29,7 @@ public class CompleteVersion implements Version {
    private String incompatibilityReason;
    private List rules;
    private List unnecessaryEntries;
+   private String assets;
 
    public String getId() {
       return this.id;
@@ -224,6 +225,10 @@ public class CompleteVersion implements Version {
 
    public int getTLauncherVersion() {
       return this.tlauncherVersion;
+   }
+
+   public String getAssets() {
+      return this.assets == null ? "legacy" : this.assets;
    }
 
    public void setId(String id) {

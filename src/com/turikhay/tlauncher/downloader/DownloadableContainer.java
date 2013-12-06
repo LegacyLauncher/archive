@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.downloader;
 
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
-import com.turikhay.tlauncher.util.Console;
+import com.turikhay.tlauncher.ui.Console;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -108,6 +108,16 @@ public class DownloadableContainer {
       while(var2.hasNext()) {
          DownloadableHandler h = (DownloadableHandler)var2.next();
          h.onStart();
+      }
+
+   }
+
+   void onAbort() {
+      Iterator var2 = this.handlers.iterator();
+
+      while(var2.hasNext()) {
+         DownloadableHandler h = (DownloadableHandler)var2.next();
+         h.onAbort();
       }
 
    }

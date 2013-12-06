@@ -1,13 +1,17 @@
 package net.minecraft.launcher.updater;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.DownloadableContainer;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.MinecraftUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,34 +24,30 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.events.RefreshedListener;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.VersionSource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.apache.commons.io.IOUtils;
 
 public class VersionManager {
    private static final String ASSETS_REPO = "http://resources.download.minecraft.net/";
+   private final Gson gson;
    private LocalVersionList localVersionList;
    private RemoteVersionList remoteVersionList;
    private ExtraVersionList extraVersionList;
    private final List refreshedListeners;
    private final List versionRefreshes;
    private final List resourceRefreshes;
-   private boolean resourcesCalled;
 
    public VersionManager() throws IOException {
       this(new LocalVersionList(MinecraftUtil.getWorkingDirectory()), new RemoteVersionList(), new ExtraVersionList());
    }
 
    public VersionManager(LocalVersionList localVersionList, RemoteVersionList remoteVersionList, ExtraVersionList extraVersionList) {
+      this.gson = new Gson();
       this.refreshedListeners = Collections.synchronizedList(new ArrayList());
       this.versionRefreshes = Collections.synchronizedList(new ArrayList());
       this.resourceRefreshes = Collections.synchronizedList(new ArrayList());
@@ -60,7 +60,6 @@ public class VersionManager {
       this.localVersionList = localVersionList;
       this.remoteVersionList = remoteVersionList;
       this.extraVersionList = extraVersionList;
-      this.resourcesCalled = false;
       List listeners = new ArrayList(this.refreshedListeners);
       Iterator iterator = listeners.iterator();
 
@@ -168,7 +167,7 @@ public class VersionManager {
 
          try {
             remoteRaw = this.remoteVersionList.getRawList();
-         } catch (IOException var11) {
+         } catch (IOException var8) {
             this.log("Cannot get remote versions list!");
          }
 
@@ -180,7 +179,7 @@ public class VersionManager {
 
             try {
                extraRaw = this.extraVersionList.getRawList();
-            } catch (IOException var10) {
+            } catch (IOException var7) {
                this.log("Cannot get extra versions list!");
             }
 
@@ -190,32 +189,6 @@ public class VersionManager {
                synchronized(this.versionRefreshes) {
                   this.remoteVersionList.refreshVersions(remoteRaw);
                   this.extraVersionList.refreshVersions(extraRaw);
-                  Iterator var7 = this.remoteVersionList.getVersions().iterator();
-
-                  Version version;
-                  String id;
-                  while(var7.hasNext()) {
-                     version = (Version)var7.next();
-                     id = version.getId();
-                     if (this.localVersionList.getVersion(id) != null) {
-                        this.localVersionList.removeVersion(id);
-                        this.localVersionList.addVersion(this.remoteVersionList.getCompleteVersion(id));
-                        this.localVersionList.saveVersion(this.localVersionList.getCompleteVersion(id));
-                     }
-                  }
-
-                  var7 = this.extraVersionList.getVersions().iterator();
-
-                  while(var7.hasNext()) {
-                     version = (Version)var7.next();
-                     id = version.getId();
-                     if (this.localVersionList.getVersion(id) != null) {
-                        this.localVersionList.removeVersion(id);
-                        this.localVersionList.addVersion(this.extraVersionList.getCompleteVersion(id));
-                        this.localVersionList.saveVersion(this.localVersionList.getCompleteVersion(id));
-                     }
-                  }
-
                }
             }
          }
@@ -452,7 +425,7 @@ public class VersionManager {
       }
    }
 
-   public void downloadVersion(VersionSyncInfo syncInfo, DownloadableContainer job, boolean force) throws IOException {
+   public void downloadVersion(DownloadableContainer job, VersionSyncInfo syncInfo, boolean force) throws IOException {
       CompleteVersion version = this.getLatestCompleteVersion(syncInfo);
       File baseDirectory = this.localVersionList.getBaseDirectory();
       job.addAll((Collection)version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), syncInfo.getRemoteSource(), baseDirectory, force));
@@ -483,42 +456,62 @@ public class VersionManager {
       }
    }
 
-   public DownloadableContainer downloadResources(List list, boolean force) throws IOException {
-      DownloadableContainer job = new DownloadableContainer();
+   public DownloadableContainer downloadResources(DownloadableContainer job, CompleteVersion version, List list, boolean force) throws IOException {
       File baseDirectory = this.localVersionList.getBaseDirectory();
-      job.addAll((Collection)this.getResourceFiles(baseDirectory, list));
+      job.addAll((Collection)this.getResourceFiles(version, baseDirectory, list));
       return job;
    }
 
-   public boolean refreshResources(boolean local) {
+   private Set getResourceFiles(CompleteVersion version, File baseDirectory, List list) {
+      Set result = new HashSet();
+      File objectsFolder = new File(baseDirectory, "assets/objects");
+      Iterator var7 = list.iterator();
+
+      while(var7.hasNext()) {
+         AssetIndex.AssetObject object = (AssetIndex.AssetObject)var7.next();
+         String filename = object.getFilename();
+         String url = "http://resources.download.minecraft.net/" + filename;
+         File file = new File(objectsFolder, filename);
+
+         try {
+            result.add(new Downloadable(url, file, false));
+         } catch (MalformedURLException var12) {
+            this.log("Cannot create downloadable resource from URL:", url, var12);
+         }
+      }
+
+      return result;
+   }
+
+   public boolean refreshResources(CompleteVersion version, boolean local) {
       long start = System.nanoTime();
       this.log("Refreshing resources...");
-      Iterator var9 = this.refreshedListeners.iterator();
+      Iterator var10 = this.refreshedListeners.iterator();
 
       RefreshedListener l;
-      while(var9.hasNext()) {
-         l = (RefreshedListener)var9.next();
+      while(var10.hasNext()) {
+         l = (RefreshedListener)var10.next();
          l.onResourcesRefreshing(this);
       }
 
       long end;
       long diff;
       try {
-         this.getResourceFilesList(this.localVersionList.getBaseDirectory(), local);
-      } catch (VersionManager.RefreshedException var10) {
+         this.getResourceFilesList(version, this.localVersionList.getBaseDirectory(), local);
+      } catch (VersionManager.RefreshedException var11) {
          end = System.nanoTime();
          diff = end - start;
          this.log("Resource refresh has been cancelled (" + diff / 1000000L + " ms)");
          return false;
-      } catch (Throwable var11) {
-         this.log("Cannot refresh resources!", var11);
+      } catch (Throwable var12) {
+         this.log("Cannot refresh resources!", var12);
          return false;
       }
 
-      var9 = this.refreshedListeners.iterator();
+      var10 = this.refreshedListeners.iterator();
 
-      while(var9.hasNext()) {
-         l = (RefreshedListener)var9.next();
+      while(var10.hasNext()) {
+         l = (RefreshedListener)var10.next();
          l.onResourcesRefreshed(this);
       }
 
@@ -528,106 +521,7 @@ public class VersionManager {
       return true;
    }
 
-   public void cancelResourceRefresh() {
-      this.log("Cancelling resource refresh...");
-      this.resourceRefreshes.clear();
-      this.asyncRefreshResources(true);
-   }
-
-   public void asyncRefreshResources(final boolean local) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            VersionManager.this.refreshResources(local);
-         }
-      });
-   }
-
-   public void asyncRefreshResources() {
-      this.asyncRefreshResources(false);
-   }
-
-   public List checkResources(File baseDirectory, boolean local, boolean fast) {
-      this.log("Checking resources...");
-      ArrayList r = new ArrayList();
-
-      Object mainList;
-      try {
-         mainList = this.getResourceFilesList(baseDirectory, local);
-      } catch (VersionManager.RefreshedException var13) {
-         mainList = new ArrayList();
-      }
-
-      List compareList = fast ? null : (this.resourcesCalled ? this.getLocalResourceFilesList(baseDirectory) : null);
-      boolean extended = compareList != null;
-      this.log("Extended comparing: " + extended);
-      Iterator var9 = ((List)mainList).iterator();
-
-      while(true) {
-         while(var9.hasNext()) {
-            ResourceFile resource = (ResourceFile)var9.next();
-            if (!extended) {
-               if (!this.checkResource(baseDirectory, resource)) {
-                  r.add(resource);
-               }
-            } else {
-               boolean found = false;
-               Iterator var12 = compareList.iterator();
-
-               while(var12.hasNext()) {
-                  ResourceFile compare = (ResourceFile)var12.next();
-                  if (resource.path.equalsIgnoreCase(compare.path)) {
-                     this.log(resource.path + " found in local list");
-                     found = true;
-                     if (!this.checkResource(baseDirectory, resource, compare)) {
-                        this.log(resource.path + " was modified on the server - adding.");
-                        r.add(resource);
-                     }
-                  }
-               }
-
-               if (!found) {
-                  this.log(resource.path + " isn't found on the local machine - adding.");
-                  r.add(resource);
-               }
-            }
-         }
-
-         return r;
-      }
-   }
-
-   public List checkResources(boolean local, boolean fast) {
-      return this.checkResources(this.localVersionList.getBaseDirectory(), local, fast);
-   }
-
-   public List checkResources(File baseDirectory, boolean fast) {
-      return this.checkResources(baseDirectory, false, fast);
-   }
-
-   public List checkResources(boolean fast) {
-      return this.checkResources(false, fast);
-   }
-
-   private boolean checkResource(File baseDirectory, ResourceFile local, ResourceFile remote) {
-      String path = local.path;
-      File file = new File(baseDirectory, "assets/" + path);
-      if (file.isFile() && file.length() != 0L) {
-         if (remote == null) {
-            return true;
-         } else {
-            String md5 = FileUtil.getMD5Checksum(file);
-            return local.md5 != md5 || remote.md5 == md5;
-         }
-      } else {
-         return false;
-      }
-   }
-
-   private boolean checkResource(File baseDirectory, ResourceFile local) {
-      return this.checkResource(baseDirectory, local, (ResourceFile)null);
-   }
-
-   private List getResourceFilesList(File baseDirectory, boolean local) throws VersionManager.RefreshedException {
+   private List getResourceFilesList(CompleteVersion version, File baseDirectory, boolean local) throws VersionManager.RefreshedException {
       Short rand = U.shortRandom();
       synchronized(this.resourceRefreshes) {
          while(this.resourceRefreshes.contains(rand)) {
@@ -637,91 +531,40 @@ public class VersionManager {
          this.resourceRefreshes.add(rand);
       }
 
-      Object var4 = null;
+      Object var5 = null;
 
       try {
-         return this.desyncResourceFilesList(baseDirectory, local, rand);
-      } catch (VersionManager.RefreshedException var6) {
+         return this.desyncResourceFilesList(version, baseDirectory, local, rand);
+      } catch (VersionManager.RefreshedException var7) {
          this.resourceRefreshes.remove(rand);
-         throw var6;
+         throw var7;
       }
    }
 
    /** @deprecated */
    @Deprecated
-   private List desyncResourceFilesList(File baseDirectory, boolean local, Short rand) throws VersionManager.RefreshedException {
-      List remote = null;
-      if (!local && !this.resourcesCalled) {
+   private List desyncResourceFilesList(CompleteVersion version, File baseDirectory, boolean local, Short rand) throws VersionManager.RefreshedException {
+      List list = null;
+      if (!local) {
          try {
-            remote = this.getRemoteResourceFilesList();
-            this.resourcesCalled = true;
-         } catch (Exception var7) {
-            this.log("Cannot get remote resource files list. Trying to use the local one.", var7);
+            list = this.getRemoteResourceFilesList(version, baseDirectory, true);
+         } catch (Exception var8) {
+            this.log("Cannot get remote assets list. Trying to use the local one.", var8);
          }
       }
 
       if (!this.resourceRefreshes.contains(rand)) {
          throw new VersionManager.RefreshedException((VersionManager.RefreshedException)null);
-      } else if (remote == null) {
-         return this.getLocalResourceFilesList(baseDirectory);
       } else {
-         try {
-            this.saveLocalResourceFilesList(baseDirectory, remote);
-         } catch (Exception var6) {
-            this.log("Cannot save resource files list locally.", var6);
+         if (list == null) {
+            list = this.getLocalResourceFilesList(version, baseDirectory);
          }
 
-         return remote;
-      }
-   }
-
-   private void saveLocalResourceFilesList(File baseDirectory, List list) throws IOException {
-      File file = new File(baseDirectory, "resources.list");
-      if (!file.exists()) {
-         file.getParentFile().mkdirs();
-         file.createNewFile();
-      }
-
-      StringBuilder b = new StringBuilder();
-      boolean first = true;
-      Iterator var7 = list.iterator();
-
-      while(var7.hasNext()) {
-         ResourceFile cur = (ResourceFile)var7.next();
-         if (first) {
-            b.append(cur);
-            first = false;
-         } else {
-            b.append("\n" + cur);
-         }
-      }
-
-      FileUtil.writeFile(file, b.toString());
-   }
-
-   private List getLocalResourceFilesList(File baseDirectory) {
-      List list = new ArrayList();
-      File file = new File(baseDirectory, "resources.list");
-      if (!file.exists()) {
-         return list;
-      } else {
-         String content;
-         try {
-            content = FileUtil.readFile(file);
-         } catch (IOException var11) {
-            this.log("Cannot get content from resources.list");
-            return list;
-         }
-
-         String[] lines = content.split("\n");
-         String[] var9 = lines;
-         int var8 = lines.length;
-
-         for(int var7 = 0; var7 < var8; ++var7) {
-            String cur = var9[var7];
-            String[] args = cur.split("\t");
-            if (args.length >= 2) {
-               list.add(new ResourceFile(args[0], args[1]));
+         if (list == null) {
+            try {
+               list = this.getRemoteResourceFilesList(version, baseDirectory, true);
+            } catch (Exception var7) {
+               this.log("Gave up trying to get assets list.", var7);
             }
          }
 
@@ -729,49 +572,122 @@ public class VersionManager {
       }
    }
 
-   private List getRemoteResourceFilesList() throws Exception {
-      List list = new ArrayList();
-      URL resourceUrl = new URL("http://resources.download.minecraft.net/");
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      DocumentBuilder db = dbf.newDocumentBuilder();
-      Document doc = db.parse(resourceUrl.openConnection().getInputStream());
-      NodeList nodeLst = doc.getElementsByTagName("Contents");
+   private List getLocalResourceFilesList(CompleteVersion version, File baseDirectory) {
+      List result = new ArrayList();
+      String indexName = version.getAssets();
+      File indexesFolder = new File(baseDirectory, "assets/indexes/");
+      File indexFile = new File(indexesFolder, indexName + ".json");
+      this.log("Reading indexes from file", indexFile);
 
-      for(int i = 0; i < nodeLst.getLength(); ++i) {
-         Node node = nodeLst.item(i);
-         if (node.getNodeType() == 1) {
-            Element element = (Element)node;
-            String key = element.getElementsByTagName("Key").item(0).getChildNodes().item(0).getNodeValue();
-            String etag = element.getElementsByTagName("ETag") != null ? element.getElementsByTagName("ETag").item(0).getChildNodes().item(0).getNodeValue() : "-";
-            long size = Long.parseLong(element.getElementsByTagName("Size").item(0).getChildNodes().item(0).getNodeValue());
-            if (size > 0L) {
-               list.add(new ResourceFile(key, etag));
-            }
-         }
+      String json;
+      try {
+         json = FileUtil.readFile(indexFile);
+      } catch (IOException var12) {
+         this.log("Cannot read local resource files list for index:", indexName, var12);
+         return null;
       }
 
-      return list;
+      AssetIndex index = null;
+
+      try {
+         index = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
+      } catch (JsonSyntaxException var11) {
+         this.log("JSON file is invalid", var11);
+      }
+
+      if (index == null) {
+         this.log("Cannot read data from JSON file.");
+         return null;
+      } else {
+         Iterator var10 = index.getUniqueObjects().iterator();
+
+         while(var10.hasNext()) {
+            AssetIndex.AssetObject object = (AssetIndex.AssetObject)var10.next();
+            result.add(object);
+         }
+
+         return result;
+      }
    }
 
-   private Set getResourceFiles(File baseDirectory, List list) {
-      Set result = new HashSet();
-      Iterator var5 = list.iterator();
+   private List getRemoteResourceFilesList(CompleteVersion version, File baseDirectory, boolean save) throws IOException {
+      List result = new ArrayList();
+      String indexName = version.getAssets();
+      if (indexName == null) {
+         indexName = "legacy";
+      }
 
-      while(var5.hasNext()) {
-         ResourceFile key = (ResourceFile)var5.next();
-         File file = new File(baseDirectory, "assets/" + key.path);
-         String url = "http://resources.download.minecraft.net/" + key.path;
+      File assets = new File(baseDirectory, "assets");
+      File indexesFolder = new File(assets, "indexes");
+      File indexFile = new File(indexesFolder, indexName + ".json");
+      URL indexUrl = new URL("https://s3.amazonaws.com/Minecraft.Download/indexes/" + indexName + ".json");
+      InputStream inputStream = indexUrl.openConnection().getInputStream();
+      this.log("Reading indexes from URL", indexUrl);
+      String json = IOUtils.toString(inputStream);
+      if (save) {
+         FileUtil.writeFile(indexFile, json);
+      }
 
-         try {
-            Downloadable d = new Downloadable(url, file, true);
-            d.setFast(true);
-            result.add(d);
-         } catch (Exception var9) {
-            this.log("Cannot create Downloadable from " + url);
-         }
+      AssetIndex index = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
+      Iterator var14 = index.getUniqueObjects().iterator();
+
+      while(var14.hasNext()) {
+         AssetIndex.AssetObject object = (AssetIndex.AssetObject)var14.next();
+         result.add(object);
       }
 
       return result;
+   }
+
+   public List checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
+      this.log("Checking resources...");
+      List r = new ArrayList();
+      List list;
+      if (local) {
+         list = this.getLocalResourceFilesList(version, baseDirectory);
+      } else {
+         try {
+            list = this.getResourceFilesList(version, baseDirectory, true);
+         } catch (VersionManager.RefreshedException var9) {
+            list = this.getLocalResourceFilesList(version, baseDirectory);
+         }
+      }
+
+      if (list == null) {
+         this.log("Cannot get assets list. Aborting.");
+         return r;
+      } else {
+         this.log("Fast comparing:", fast);
+         Iterator var8 = list.iterator();
+
+         while(var8.hasNext()) {
+            AssetIndex.AssetObject resource = (AssetIndex.AssetObject)var8.next();
+            if (!this.checkResource(baseDirectory, resource, fast)) {
+               r.add(resource);
+            }
+         }
+
+         return r;
+      }
+   }
+
+   public List checkResources(CompleteVersion version) {
+      return this.checkResources(version, this.localVersionList.getBaseDirectory(), false, true);
+   }
+
+   private boolean checkResource(File baseDirectory, AssetIndex.AssetObject local, boolean fast) {
+      String path = local.getFilename();
+      File file = new File(baseDirectory, "assets/objects/" + path);
+      if (file.isFile() && file.length() != 0L) {
+         if (fast) {
+            return true;
+         } else {
+            String hash = FileUtil.getChecksum(file, "SHA-1");
+            return local.getHash() == hash;
+         }
+      } else {
+         return false;
+      }
    }
 
    public void addRefreshedListener(RefreshedListener listener) {

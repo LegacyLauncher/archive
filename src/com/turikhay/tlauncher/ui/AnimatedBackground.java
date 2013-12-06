@@ -6,4 +6,8 @@ public interface AnimatedBackground {
    void stop();
 
    void suspend();
+
+   boolean isAllowed();
+
+   void setAllowed(boolean var1);
 }

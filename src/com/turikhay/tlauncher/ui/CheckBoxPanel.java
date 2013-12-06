@@ -80,7 +80,6 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
          }
       }
 
-      this.setForceUpdate(false);
       return true;
    }
 
@@ -88,5 +87,6 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
    }
 
    public void onLoginSuccess() {
+      this.setForceUpdate(false);
    }
 }

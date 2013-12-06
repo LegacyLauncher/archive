@@ -2,9 +2,8 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.Console;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.U;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;

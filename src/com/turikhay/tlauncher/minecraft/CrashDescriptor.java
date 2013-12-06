@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.minecraft;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

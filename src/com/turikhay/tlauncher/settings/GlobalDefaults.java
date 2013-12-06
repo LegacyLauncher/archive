@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.settings;
 
-import com.turikhay.tlauncher.util.IntegerArray;
+import com.turikhay.util.IntegerArray;
 import java.util.HashMap;
 import java.util.Map;
 

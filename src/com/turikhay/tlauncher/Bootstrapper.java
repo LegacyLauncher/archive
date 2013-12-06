@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher;
 
 import com.turikhay.tlauncher.ui.Alert;
-import com.turikhay.tlauncher.util.FileUtil;
+import com.turikhay.util.FileUtil;
 import java.io.File;
 import java.io.IOException;
 import net.minecraft.launcher.process.JavaProcessLauncher;

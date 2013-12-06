@@ -2,7 +2,7 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;

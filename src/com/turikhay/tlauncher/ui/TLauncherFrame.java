@@ -14,8 +14,7 @@ import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.UpdateListener;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
-import com.turikhay.tlauncher.util.Console;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -120,6 +119,12 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    }
 
+   private void initUILocale() {
+      UIManager.put("OptionPane.yesButtonText", this.lang.nget("ui.yes"));
+      UIManager.put("OptionPane.noButtonText", this.lang.nget("ui.no"));
+      UIManager.put("OptionPane.cancelButtonText", this.lang.nget("ui.cancel"));
+   }
+
    public void updateLocales() {
       try {
          this.t.reloadLocale();
@@ -130,6 +135,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
       Console.updateLocale();
       this.setWindowTitle();
+      this.initUILocale();
       updateContainer(this, true);
    }
 
@@ -158,6 +164,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          var7.printStackTrace();
       }
 
+      this.initUILocale();
       this.setBackground(backgroundColor);
       this.initFontSize();
       this.setWindowTitle();
@@ -175,6 +182,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          }
 
          public void componentShown(ComponentEvent e) {
+            TLauncherFrame.this.mp.startBackground();
             TLauncherFrame.this.instance.validate();
             TLauncherFrame.this.instance.repaint();
             TLauncherFrame.this.instance.toFront();
@@ -184,6 +192,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          }
 
          public void componentHidden(ComponentEvent e) {
+            TLauncherFrame.this.mp.suspendBackground();
          }
       });
       long start = System.currentTimeMillis();
@@ -249,6 +258,11 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       }
    }
 
+   public void onDownloaderAbort(Downloader d) {
+      this.pb_started = false;
+      this.pb.progressStop();
+   }
+
    public void onDownloaderComplete(Downloader d) {
       this.pb_started = false;
       this.pb.progressStop();
@@ -308,14 +322,8 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    }
 
    public void onUpdateError(Update u, Throwable e) {
-      if (Alert.showQuestion(this.lang.get("updater.error.title"), this.lang.get("updater.error.title"), e, true)) {
-         URI uri = u.getDownloadLink();
-
-         try {
-            OperatingSystem.openLink(uri);
-         } catch (Exception var5) {
-            Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
-         }
+      if (Alert.showQuestion(this.lang.get("updater.error.title"), this.lang.get("updater.download-error"), e, true)) {
+         this.openUpdateLink(u.getDownloadLink());
       }
 
    }

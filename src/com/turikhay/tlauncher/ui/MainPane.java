@@ -57,8 +57,13 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       if (!(this.bg instanceof AnimatedBackground)) {
          return false;
       } else {
-         ((AnimatedBackground)this.bg).start();
-         return true;
+         AnimatedBackground abg = (AnimatedBackground)this.bg;
+         if (!abg.isAllowed()) {
+            return false;
+         } else {
+            abg.start();
+            return true;
+         }
       }
    }
 
@@ -140,6 +145,10 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
 
    public void onMinecraftLaunch() {
       this.stopBackground();
+   }
+
+   public void onMinecraftLaunchStop() {
+      this.startBackground();
    }
 
    public void onMinecraftClose() {

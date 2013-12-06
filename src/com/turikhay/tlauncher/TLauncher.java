@@ -14,7 +14,7 @@ import com.turikhay.tlauncher.ui.Localizable;
 import com.turikhay.tlauncher.ui.LoginForm;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.updater.Updater;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
@@ -24,7 +24,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.24D;
+   private static final double VERSION = 0.27D;
    private static final String SETTINGS = "tlauncher.ini";
    private static final String BRAND = "Original";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -82,7 +82,6 @@ public class TLauncher {
             lf.autologin.startLogin();
          } else {
             this.vm.asyncRefresh();
-            this.vm.asyncRefreshResources();
             this.updater.asyncFindUpdate();
          }
          break;
@@ -91,7 +90,7 @@ public class TLauncher {
          this.loader = new TLauncherNoGraphics(this);
       }
 
-      this.downloader.launch();
+      this.downloader.startLaunch();
    }
 
    public Downloader getDownloader() {
@@ -173,7 +172,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.24D;
+      return 0.27D;
    }
 
    public static String getBrand() {
@@ -191,6 +190,7 @@ public class TLauncher {
    public static void main(String[] args) {
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
+      U.setPrefix("[TLauncher]");
 
       try {
          launch(args);
@@ -204,7 +204,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version", 0.24D);
+      U.log("Starting version", 0.27D);
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);

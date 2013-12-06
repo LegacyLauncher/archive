@@ -5,15 +5,16 @@ import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.exceptions.TLauncherException;
 import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class Updater {
    }
 
    public Updater(Downloader d) {
-      this.listeners = new ArrayList();
+      this.listeners = Collections.synchronizedList(new ArrayList());
       this.d = d;
       if (!PackageType.isCurrent(PackageType.JAR)) {
          File oldfile = getTempFile();
@@ -129,53 +130,63 @@ public class Updater {
    }
 
    private void onUpdaterRequests() {
-      Iterator var2 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var2.next();
-         l.onUpdaterRequesting(this);
+         while(var3.hasNext()) {
+            UpdaterListener l = (UpdaterListener)var3.next();
+            l.onUpdaterRequesting(this);
+         }
+
       }
-
    }
 
    private void onUpdaterRequestError() {
-      Iterator var2 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var2.next();
-         l.onUpdaterRequestError(this);
+         while(var3.hasNext()) {
+            UpdaterListener l = (UpdaterListener)var3.next();
+            l.onUpdaterRequestError(this);
+         }
+
       }
-
    }
 
    private void onUpdateFound(Update u) {
-      Iterator var3 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var3.next();
-         l.onUpdateFound(this, u);
+         while(var4.hasNext()) {
+            UpdaterListener l = (UpdaterListener)var4.next();
+            l.onUpdateFound(this, u);
+         }
+
       }
-
    }
 
    private void noUpdateFound() {
-      Iterator var2 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var2.next();
-         l.onUpdaterNotFoundUpdate(this);
+         while(var3.hasNext()) {
+            UpdaterListener l = (UpdaterListener)var3.next();
+            l.onUpdaterNotFoundUpdate(this);
+         }
+
       }
-
    }
 
    private void onAdFound(Ad ad) {
-      Iterator var3 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         UpdaterListener l = (UpdaterListener)var3.next();
-         l.onAdFound(this, ad);
+         while(var4.hasNext()) {
+            UpdaterListener l = (UpdaterListener)var4.next();
+            l.onAdFound(this, ad);
+         }
+
       }
-
    }
 
    public static boolean isAutomodeFor(PackageType pt) {

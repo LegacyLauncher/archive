@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -12,6 +12,7 @@ import javax.swing.JProgressBar;
 
 public class ProgressBar extends JProgressBar implements LocalizableComponent {
    private static final long serialVersionUID = 5163801043869691008L;
+   private Object sync = new Object();
    private String center_string;
    private String west_string;
    private String east_string;
@@ -117,11 +118,20 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
    }
 
    public void update(Graphics g) {
-      super.update(g);
+      synchronized(this.sync) {
+         super.update(g);
+      }
+
       this.paint(g);
    }
 
    public void paint(Graphics g) {
+      synchronized(this.sync) {
+         this.paint_(g);
+      }
+   }
+
+   private void paint_(Graphics g) {
       super.paint(g);
       boolean center = this.center_string != null;
       boolean west = this.west_string != null;

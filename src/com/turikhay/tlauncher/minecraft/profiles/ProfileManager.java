@@ -6,8 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticationDatabase;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -54,8 +54,8 @@ public class ProfileManager {
          try {
             this.loadProfiles();
             this.saveProfiles();
-         } catch (IOException var7) {
-            U.log("Cannot load profiles!");
+         } catch (Throwable var7) {
+            U.log("Cannot load profiles! Ignoring, though.", var7);
          }
       }
 

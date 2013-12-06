@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.downloader;
 
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -73,22 +73,43 @@ public class DownloaderThread extends Thread {
             try {
                this.download(d, attempt, max);
                break;
-            } catch (DownloaderError var7) {
-               if (var7.isSerious()) {
-                  this.log(d, var7);
-                  this.onError(d, var7);
+            } catch (DownloaderThread.DownloaderStoppedException var7) {
+               this.log(d, "Aborting...");
+               if (d.getSize() > 0L) {
+                  this.log(d, "Nevermind, file has been downloaded in time C:");
+                  return;
+               }
+
+               if (!d.getDestination().delete()) {
+                  this.log(d, "Cannot delete destination file, will be deleted on exit.");
+                  d.getDestination().deleteOnExit();
+               } else {
+                  this.log(d, "Successfully deleted destination file!");
+               }
+
+               this.list.clear();
+               this.queue.clear();
+               this.available = true;
+               this.launched = false;
+               this.onAbort(d);
+               this.run();
+               break;
+            } catch (DownloaderError var8) {
+               if (var8.isSerious()) {
+                  this.log(d, var8);
+                  this.onError(d, var8);
                   break;
                }
 
-               if (var7.hasTimeout()) {
-                  this.sleepFor((long)var7.getTimeout());
+               if (var8.hasTimeout()) {
+                  this.sleepFor((long)var8.getTimeout());
                }
-            } catch (SocketTimeoutException var8) {
+            } catch (SocketTimeoutException var9) {
                this.log(d, "Timeout exception. Retrying.");
                this.sleepFor(5000L);
-            } catch (Exception var9) {
-               this.log(d, "Unknown error occurred.", var9);
-               this.onError(d, var9);
+            } catch (Exception var10) {
+               this.log(d, "Unknown error occurred.", var10);
+               this.onError(d, var10);
                break;
             }
          }
@@ -115,107 +136,124 @@ public class DownloaderThread extends Thread {
 
    public void download(Downloadable d, int attempt, int max) throws IOException {
       HttpURLConnection connection = d.makeConnection();
-      int code = -1;
-      long reply_s = System.currentTimeMillis();
-      if (d.getFast()) {
-         connection.connect();
+      if (!this.launched) {
+         throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
       } else {
-         code = connection.getResponseCode();
-      }
-
-      long reply = System.currentTimeMillis() - reply_s;
-      this.dlog("Got reply in " + reply + " ms.");
-      switch(code) {
-      case 301:
-      case 302:
-      case 303:
-      case 304:
-         this.log(d, "File is not modified (304)");
-         this.onComplete(d);
-         return;
-      case 307:
-         String newurl = connection.getHeaderField("Location");
-         connection.disconnect();
-         if (newurl == null) {
-            throw new DownloaderError("Redirection is required but field \"Location\" is empty", true);
+         int code = -1;
+         long reply_s = System.currentTimeMillis();
+         if (d.getFast()) {
+            connection.connect();
+         } else {
+            code = connection.getResponseCode();
          }
 
-         this.dlog("Responce code is " + code + ". Redirecting to: " + newurl);
-         d.setURL(newurl);
-         this.download(d, 1, max);
-         return;
-      case 403:
-         throw new DownloaderError("Forbidden (403)", true);
-      case 404:
-         throw new DownloaderError("Not Found (404)", true);
-      case 408:
-         throw new DownloaderError("Request Timeout (408)", false);
-      case 500:
-         throw new DownloaderError("Internal Server Error (500)", 5000);
-      case 502:
-         throw new DownloaderError("Bad Gateway (502)", 5000);
-      case 503:
-         throw new DownloaderError("Service Unavailable (503)", 5000);
-      case 504:
-         throw new DownloaderError("Gateway Timeout (504)", true);
-      default:
-         if (code < 200 || code > 299) {
-            throw new DownloaderError("Illegal response code (" + code + ")", true);
-         }
-      case -1:
-         InputStream in = connection.getInputStream();
-         File file = d.getDestination();
-         FileUtil.createFile(file);
-         OutputStream out = new FileOutputStream(file);
-         long read = 0L;
-         long length = (long)connection.getContentLength();
-         long downloaded_s = System.currentTimeMillis();
-         byte[] buffer = new byte[65536];
-         int curread = in.read(buffer);
+         long reply = System.currentTimeMillis() - reply_s;
+         if (!this.launched) {
+            throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
+         } else {
+            this.dlog("Got reply in " + reply + " ms.");
+            switch(code) {
+            case 304:
+               this.log(d, "File is not modified (304)");
+               this.onComplete(d);
+               return;
+            case 307:
+               String newurl = connection.getHeaderField("Location");
+               connection.disconnect();
+               if (newurl == null) {
+                  throw new DownloaderError("Redirection is required but field \"Location\" is empty", true);
+               }
 
-         long downloaded_e;
-         double curdone;
-         while(curread > 0) {
-            read += (long)curread;
-            out.write(buffer, 0, curread);
-            curread = in.read(buffer);
-            if (curread == -1) {
-               break;
+               this.dlog("Responce code is " + code + ". Redirecting to: " + newurl);
+               d.setURL(newurl);
+               this.download(d, 1, max);
+               return;
+            case 403:
+               throw new DownloaderError("Forbidden (403)", true);
+            case 404:
+               throw new DownloaderError("Not Found (404)", true);
+            case 408:
+               throw new DownloaderError("Request Timeout (408)", false);
+            case 500:
+               throw new DownloaderError("Internal Server Error (500)", 5000);
+            case 502:
+               throw new DownloaderError("Bad Gateway (502)", 5000);
+            case 503:
+               throw new DownloaderError("Service Unavailable (503)", 5000);
+            case 504:
+               throw new DownloaderError("Gateway Timeout (504)", true);
+            default:
+               if (code < 200 || code > 299) {
+                  throw new DownloaderError("Illegal response code (" + code + ")", true);
+               }
+            case -1:
+               InputStream in = connection.getInputStream();
+               File file = d.getDestination();
+               FileUtil.createFile(file);
+               OutputStream out = new FileOutputStream(file);
+               long read = 0L;
+               long length = (long)connection.getContentLength();
+               long downloaded_s = System.currentTimeMillis();
+               long speed_s = downloaded_s;
+               byte[] buffer = new byte[65536];
+               int curread = in.read(buffer);
+
+               long downloaded_e;
+               double curdone;
+               while(curread > 0) {
+                  if (!this.launched) {
+                     out.close();
+                     throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
+                  }
+
+                  read += (long)curread;
+                  out.write(buffer, 0, curread);
+                  curread = in.read(buffer);
+                  if (curread == -1) {
+                     break;
+                  }
+
+                  long speed_e = System.currentTimeMillis() - speed_s;
+                  if (speed_e >= 50L) {
+                     speed_s = System.currentTimeMillis();
+                     downloaded_e = speed_s - downloaded_s;
+                     curdone = (double)((float)read / (float)length);
+                     double curspeed = (double)read / (double)downloaded_e;
+                     this.onProgress(curread, curdone, curspeed);
+                  }
+               }
+
+               downloaded_e = System.currentTimeMillis() - downloaded_s;
+               curdone = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
+               in.close();
+               out.close();
+               connection.disconnect();
+               File[] copies = d.getAdditionalDestinations();
+               if (copies != null && copies.length > 0) {
+                  this.dlog("Found additional destinations. Copying...");
+                  File[] var33 = copies;
+                  int var32 = copies.length;
+
+                  for(int var31 = 0; var31 < var32; ++var31) {
+                     File copy = var33[var31];
+                     this.dlog("Copying " + copy + "...");
+                     FileUtil.copyFile(file, copy, d.isForced());
+                     this.dlog(d, "Success!");
+                  }
+
+                  this.dlog("Copying completed.");
+               }
+
+               d.setTime(downloaded_e);
+               d.setSize(read);
+               this.log(d, "Downloaded in " + d.getTime() + " ms. at " + curdone + " kb/s [" + attempt + "/" + max + ";" + d.getFast() + "]");
+               if (!this.launched) {
+                  throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
+               } else {
+                  this.onComplete(d);
+               }
             }
-
-            downloaded_e = System.currentTimeMillis() - downloaded_s;
-            if (downloaded_e >= 500L) {
-               curdone = (double)((float)read / (float)length);
-               double curspeed = (double)read / (double)downloaded_e;
-               this.onProgress(curread, curdone, curspeed);
-            }
          }
-
-         downloaded_e = System.currentTimeMillis() - downloaded_s;
-         curdone = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
-         d.setTime(downloaded_e);
-         d.setSize(read);
-         in.close();
-         out.close();
-         connection.disconnect();
-         File[] copies = d.getAdditionalDestinations();
-         if (copies != null && copies.length > 0) {
-            this.dlog("Found additional destinations. Copying...");
-            File[] var29 = copies;
-            int var28 = copies.length;
-
-            for(int var27 = 0; var27 < var28; ++var27) {
-               File copy = var29[var27];
-               this.dlog("Copying " + copy + "...");
-               FileUtil.copyFile(file, copy, d.isForced());
-               this.dlog(d, "Success!");
-            }
-
-            this.dlog("Copying completed.");
-         }
-
-         this.log(d, "Downloaded in " + d.getTime() + " ms. at " + curdone + " kb/s [" + attempt + "/" + max + ";" + d.getFast() + "]");
-         this.onComplete(d);
       }
    }
 
@@ -262,8 +300,12 @@ public class DownloaderThread extends Thread {
       return this.done;
    }
 
-   public void launch() {
+   public void startLaunch() {
       this.launched = true;
+   }
+
+   public void stopLaunch() {
+      this.launched = false;
    }
 
    private void onStart(Downloadable d) {
@@ -273,6 +315,14 @@ public class DownloaderThread extends Thread {
       }
 
       this.fd.onStart(this.id, d);
+   }
+
+   private void onAbort(Downloadable d) {
+      d.onAbort();
+      if (d.hasContainter()) {
+         d.getContainer().onAbort();
+      }
+
    }
 
    private void onComplete(Downloadable d) {
@@ -300,6 +350,7 @@ public class DownloaderThread extends Thread {
    }
 
    private void onProgress(int curread, double curdone, double curspeed) {
+      ++this.avi;
       if (this.avi == this.av) {
          this.avi = 0;
       }
@@ -340,5 +391,17 @@ public class DownloaderThread extends Thread {
       } catch (Exception var4) {
       }
 
+   }
+
+   private class DownloaderStoppedException extends RuntimeException {
+      private static final long serialVersionUID = 1383043531539603476L;
+
+      private DownloaderStoppedException() {
+      }
+
+      // $FF: synthetic method
+      DownloaderStoppedException(DownloaderThread.DownloaderStoppedException var2) {
+         this();
+      }
    }
 }

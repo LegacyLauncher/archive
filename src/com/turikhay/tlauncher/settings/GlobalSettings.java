@@ -1,10 +1,10 @@
 package com.turikhay.tlauncher.settings;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.IntegerArray;
-import com.turikhay.tlauncher.util.MinecraftUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.IntegerArray;
+import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

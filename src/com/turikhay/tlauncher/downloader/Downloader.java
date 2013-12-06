@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.downloader;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -21,7 +21,6 @@ public class Downloader extends Thread {
    private int[] progress;
    private double[] speed;
    private int av_progress;
-   private int threadsStarted;
    private double av_speed;
 
    public Downloader(String name, int mthreads) {
@@ -80,7 +79,6 @@ public class Downloader extends Thread {
             DownloaderThread curthread = this.threads[i];
             if (curthread == null) {
                this.running[i] = (curthread = this.threads[i] = new DownloaderThread(this, i)) != null;
-               ++this.threadsStarted;
             }
 
             for(y = x; y < x + each; ++y) {
@@ -96,7 +94,7 @@ public class Downloader extends Thread {
 
       for(i = 0; i < this.maxThreads; ++i) {
          if (this.running[i]) {
-            this.threads[i].launch();
+            this.threads[i].startLaunch();
          }
       }
 
@@ -182,8 +180,47 @@ public class Downloader extends Thread {
       return U.getSum(this.remain);
    }
 
-   public void launch() {
+   public void startLaunch() {
       this.launched = true;
+   }
+
+   public void stopLaunch() {
+      DownloaderThread[] var4;
+      int var3 = (var4 = this.threads).length;
+
+      for(int var2 = 0; var2 < var3; ++var2) {
+         DownloaderThread thread = var4[var2];
+         if (thread != null) {
+            thread.stopLaunch();
+         }
+      }
+
+      boolean has = true;
+
+      while(true) {
+         while(has) {
+            has = false;
+            DownloaderThread[] var5;
+            int var10 = (var5 = this.threads).length;
+
+            for(var3 = 0; var3 < var10; ++var3) {
+               DownloaderThread thread = var5[var3];
+               if (thread != null && !thread.isAvailable()) {
+                  has = true;
+                  break;
+               }
+            }
+         }
+
+         Iterator var9 = this.listeners.iterator();
+
+         while(var9.hasNext()) {
+            DownloadListener l = (DownloadListener)var9.next();
+            l.onDownloaderAbort(this);
+         }
+
+         return;
+      }
    }
 
    void onDownloaderStart(int files) {
@@ -225,7 +262,7 @@ public class Downloader extends Thread {
       this.progress[id] = curprogress;
       this.speed[id] = curspeed;
       int old_progress = this.av_progress;
-      this.av_progress = U.getAverage(this.progress, this.threadsStarted);
+      this.av_progress = U.getAverage(this.progress);
       if (this.av_progress != old_progress) {
          this.av_speed = U.getSum(this.speed);
          Iterator var7 = this.listeners.iterator();

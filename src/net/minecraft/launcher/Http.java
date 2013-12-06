@@ -1,6 +1,6 @@
 package net.minecraft.launcher;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
