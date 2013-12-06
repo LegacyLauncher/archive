@@ -6,4 +6,6 @@ public interface DownloadableHandler {
    void onCompleteError();
 
    void onComplete();
+
+   void onAbort();
 }

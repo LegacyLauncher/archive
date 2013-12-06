@@ -1,7 +1,7 @@
 package net.minecraft.launcher;
 
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.U;
 import java.awt.Desktop;
 import java.io.File;
 import java.net.URI;

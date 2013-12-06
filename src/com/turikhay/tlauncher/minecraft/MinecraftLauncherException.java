@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.minecraft;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 
 public class MinecraftLauncherException extends Exception {
    private static final long serialVersionUID = 7704448719401222348L;

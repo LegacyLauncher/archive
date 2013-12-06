@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
 import com.google.gson.Gson;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.U;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;

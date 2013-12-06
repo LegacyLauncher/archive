@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;

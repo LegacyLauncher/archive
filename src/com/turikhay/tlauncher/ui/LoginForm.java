@@ -11,7 +11,7 @@ import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.UpdateListener;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    final LoginForm instance = this;
    final SettingsForm settings;
    final List listeners = new ArrayList();
+   final MainPane pane;
    public final MainInputPanel maininput;
    public final VersionChoicePanel versionchoice;
    public final CheckBoxPanel checkbox;
@@ -36,6 +37,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    LoginForm(TLauncherFrame fd) {
       super(fd);
       this.settings = this.f.sf;
+      this.pane = this.f.mp;
       String username = this.s.nget("login.username");
       String version = this.s.nget("login.version");
       boolean auto = this.s.getBoolean("login.auto");
@@ -47,10 +49,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       this.checkbox = new CheckBoxPanel(this, auto, console);
       this.buttons = new ButtonPanel(this);
       this.addListener(this.autologin);
+      this.addListener(this.checkbox);
       this.addListener(this.maininput);
       this.addListener(this.settings);
       this.addListener(this.versionchoice);
-      this.addListener(this.checkbox);
       this.add(this.error);
       this.add(this.maininput);
       this.add(this.versionchoice);
@@ -70,13 +72,12 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public void callLogin() {
       this.defocus();
       if (!this.isBlocked()) {
-         boolean force = this.checkbox.getForceUpdate();
-         U.log("Loggining in (force update: " + force + ")...");
+         U.log("Loggining in...");
          if (!this.listenerOnLogin()) {
             U.log("Login cancelled");
          } else {
             this.save();
-            this.t.launch(this, force);
+            this.t.launch(this, this.checkbox.getForceUpdate());
             this.block("launch");
          }
       }
@@ -167,6 +168,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       this.listenerOnSuccess();
       this.t.hide();
       this.versionchoice.asyncRefresh();
+   }
+
+   public void onMinecraftLaunchStop() {
+      this.handleError();
    }
 
    public void onMinecraftClose() {

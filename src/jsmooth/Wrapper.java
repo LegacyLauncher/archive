@@ -1,6 +1,6 @@
 package jsmooth;
 
-import com.turikhay.tlauncher.util.FileUtil;
+import com.turikhay.util.FileUtil;
 
 public class Wrapper {
    public static boolean isWrapped() {

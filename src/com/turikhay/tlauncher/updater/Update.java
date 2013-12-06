@@ -6,12 +6,13 @@ import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -24,7 +25,7 @@ public class Update {
    private Map links = new HashMap();
    private final Downloader d;
    private boolean isDownloading;
-   private List listeners = new ArrayList();
+   private List listeners = Collections.synchronizedList(new ArrayList());
 
    public void addListener(UpdateListener l) {
       this.listeners.add(l);
@@ -129,12 +130,17 @@ public class Update {
                   Update.this.step = Update.Step.DOWNLOADED.ordinal();
                   Update.this.onUpdateReady();
                }
+
+               public void onAbort() {
+                  Update.this.isDownloading = false;
+                  Update.this.step = Update.Step.NONE.ordinal();
+               }
             });
             log(2);
             this.onUpdateDownloading();
             this.isDownloading = true;
             this.d.add(downloadable);
-            this.d.launch();
+            this.d.startLaunch();
 
             while(this.isDownloading) {
                U.sleepFor(1000L);
@@ -211,63 +217,75 @@ public class Update {
    }
 
    private void onUpdateError(Throwable e) {
-      Iterator var3 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         UpdateListener l = (UpdateListener)var3.next();
-         l.onUpdateError(this, e);
+         while(var4.hasNext()) {
+            UpdateListener l = (UpdateListener)var4.next();
+            l.onUpdateError(this, e);
+         }
+
       }
-
    }
 
    private void onUpdateDownloading() {
-      Iterator var2 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         UpdateListener l = (UpdateListener)var2.next();
-         l.onUpdateDownloading(this);
+         while(var3.hasNext()) {
+            UpdateListener l = (UpdateListener)var3.next();
+            l.onUpdateDownloading(this);
+         }
+
       }
-
    }
 
    private void onUpdateDownloadError(Throwable e) {
-      Iterator var3 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         UpdateListener l = (UpdateListener)var3.next();
-         l.onUpdateDownloadError(this, e);
+         while(var4.hasNext()) {
+            UpdateListener l = (UpdateListener)var4.next();
+            l.onUpdateDownloadError(this, e);
+         }
+
       }
-
    }
 
    private void onUpdateReady() {
-      Iterator var2 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         UpdateListener l = (UpdateListener)var2.next();
-         l.onUpdateReady(this);
+         while(var3.hasNext()) {
+            UpdateListener l = (UpdateListener)var3.next();
+            l.onUpdateReady(this);
+         }
+
       }
-
    }
 
    private void onUpdateApplying() {
-      Iterator var2 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         UpdateListener l = (UpdateListener)var2.next();
-         l.onUpdateApplying(this);
+         while(var3.hasNext()) {
+            UpdateListener l = (UpdateListener)var3.next();
+            l.onUpdateApplying(this);
+         }
+
       }
-
    }
 
    private void onUpdateApplyError(Throwable e) {
-      Iterator var3 = this.listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         UpdateListener l = (UpdateListener)var3.next();
-         l.onUpdateApplyError(this, e);
+         while(var4.hasNext()) {
+            UpdateListener l = (UpdateListener)var4.next();
+            l.onUpdateApplyError(this, e);
+         }
+
       }
-
    }
 
    private static void log(Object... obj) {

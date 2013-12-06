@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.MinecraftUtil;
+import com.turikhay.util.MinecraftUtil;
 import java.io.File;
 
 public class GameDirectoryField extends ExtendedTextField implements SettingsField {

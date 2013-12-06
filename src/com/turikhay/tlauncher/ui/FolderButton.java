@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.MinecraftUtil;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.MinecraftUtil;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;

@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.AsyncThread;
+import com.turikhay.util.AsyncThread;
 
 public class Autologin implements LoginListener {
    public static final int DEFAULT_TIMEOUT = 3;

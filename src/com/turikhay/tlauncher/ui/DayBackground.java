@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.U;
 import java.awt.Graphics2D;
 
 public class DayBackground extends LightBackground implements AnimatedBackground {
@@ -45,6 +45,10 @@ public class DayBackground extends LightBackground implements AnimatedBackground
 
    public boolean isAllowed() {
       return TLauncher.getInstance().getSettings().getBoolean("gui.sun");
+   }
+
+   public void setAllowed(boolean b) {
+      TLauncher.getInstance().getSettings().set("gui.sun", b);
    }
 
    private void tick() {

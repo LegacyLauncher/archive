@@ -1,6 +1,6 @@
 package net.minecraft.launcher.versions;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.net.URL;
 import net.minecraft.launcher.Http;
 

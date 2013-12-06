@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.downloader;
 
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -15,16 +15,17 @@ import java.util.List;
 import net.minecraft.launcher.Http;
 
 public class Downloadable {
+   public static final String DEFAULT_CHECKSUM_ALGORITHM = "SHA-1";
    private List handlers;
    private URL url;
    private File destination;
    private File[] copies;
-   private Throwable error;
    private DownloadableContainer container;
    private boolean forced;
    private boolean fast;
    private long time;
    private long size;
+   protected Throwable error;
 
    public Downloadable(URL url, File destination, File[] copies, boolean force) {
       this.handlers = new ArrayList();
@@ -72,8 +73,8 @@ public class Downloadable {
       return this.copies;
    }
 
-   public String getMD5() {
-      return FileUtil.getMD5Checksum(this.destination);
+   public String getHash(String algorithm) {
+      return FileUtil.getChecksum(this.destination, algorithm);
    }
 
    public String getFilename() {
@@ -138,6 +139,16 @@ public class Downloadable {
 
    }
 
+   public void onAbort() {
+      Iterator var2 = this.handlers.iterator();
+
+      while(var2.hasNext()) {
+         DownloadableHandler h = (DownloadableHandler)var2.next();
+         h.onAbort();
+      }
+
+   }
+
    public void addHandler(DownloadableHandler newhandler) {
       this.handlers.add(newhandler);
    }
@@ -186,7 +197,7 @@ public class Downloadable {
       HttpURLConnection connection = (HttpURLConnection)this.url.openConnection();
       setUp(connection, false);
       if (!this.forced) {
-         String md5 = this.getMD5();
+         String md5 = this.getHash("MD5");
          if (md5 != null) {
             connection.setRequestProperty("If-None-Match", md5);
          }
@@ -208,7 +219,7 @@ public class Downloadable {
       return r;
    }
 
-   public static URLConnection setUp(URLConnection connection, boolean mask) {
+   public static URLConnection setUp(URLConnection connection, boolean fake) {
       connection.setConnectTimeout(U.getConnectionTimeout());
       connection.setReadTimeout(U.getReadTimeout());
       connection.setUseCaches(false);
@@ -216,7 +227,7 @@ public class Downloadable {
       connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
       connection.setRequestProperty("Expires", "0");
       connection.setRequestProperty("Pragma", "no-cache");
-      if (!mask) {
+      if (!fake) {
          return connection;
       } else {
          connection.setRequestProperty("Accept", "text/html, application/xml;q=0.9, application/xhtml xml, image/png, image/jpeg, image/gif, image/x-xbitmap, */*;q=0.1");
@@ -234,11 +245,9 @@ public class Downloadable {
 
    public static String getEtag(String etag) {
       if (etag == null) {
-         etag = "-";
-      } else if (etag.startsWith("\"") && etag.endsWith("\"")) {
-         etag = etag.substring(1, etag.length() - 1);
+         return "-";
+      } else {
+         return etag.startsWith("\"") && etag.endsWith("\"") ? etag.substring(1, etag.length() - 1) : etag;
       }
-
-      return etag;
    }
 }

@@ -7,6 +7,8 @@ public interface MinecraftLauncherListener {
 
    void onMinecraftLaunch();
 
+   void onMinecraftLaunchStop();
+
    void onMinecraftClose();
 
    void onMinecraftError(MinecraftLauncherException var1);

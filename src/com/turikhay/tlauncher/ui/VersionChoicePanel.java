@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.util.MinecraftUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import java.awt.Choice;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
@@ -19,6 +19,7 @@ import net.minecraft.launcher.events.RefreshedListener;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
+import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 
@@ -205,13 +206,10 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
 
    public void onVersionManagerUpdated(VersionManager vm) {
       vm.asyncRefresh();
-      vm.asyncRefreshResources();
    }
 
    public boolean onLogin() {
-      if (this.foundlocal) {
-         return true;
-      } else {
+      if (!this.foundlocal) {
          this.refresh();
          if (this.foundlocal) {
             return true;
@@ -219,6 +217,23 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
             Alert.showError("versions.notfound");
             return false;
          }
+      } else if (this.selected.isInstalled() && !this.selected.isUpToDate()) {
+         if (!Alert.showQuestion("versions.found-update", false)) {
+            try {
+               CompleteVersion complete = this.vm.getLocalVersionList().getCompleteVersion(this.version);
+               complete.setUpdatedTime(this.selected.getLatestVersion().getUpdatedTime());
+               this.vm.getLocalVersionList().saveVersion(complete);
+            } catch (IOException var2) {
+               Alert.showError("versions.found-update.error");
+            }
+
+            return true;
+         } else {
+            this.lf.checkbox.setForceUpdate(true);
+            return true;
+         }
+      } else {
+         return true;
       }
    }
 

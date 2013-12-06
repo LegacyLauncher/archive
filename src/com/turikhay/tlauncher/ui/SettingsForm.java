@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;

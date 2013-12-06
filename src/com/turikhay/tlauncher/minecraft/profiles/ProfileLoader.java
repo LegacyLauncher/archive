@@ -2,9 +2,9 @@ package com.turikhay.tlauncher.minecraft.profiles;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.minecraft.events.ProfileListener;
-import com.turikhay.tlauncher.util.FileUtil;
-import com.turikhay.tlauncher.util.MinecraftUtil;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

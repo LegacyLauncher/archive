@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.exceptions.ParseException;
-import com.turikhay.tlauncher.util.StringUtil;
+import com.turikhay.util.StringUtil;
 
 public class SettingsCheckbox extends LocalizableCheckbox implements SettingsField {
    private static final long serialVersionUID = -9013976214526482171L;

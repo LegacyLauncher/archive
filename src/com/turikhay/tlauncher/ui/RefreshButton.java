@@ -41,11 +41,9 @@ public class RefreshButton extends ImageButton implements RefreshedListener {
       switch(this.type) {
       case 0:
          this.vm.asyncRefresh();
-         this.vm.asyncRefreshResources();
          break;
       case 1:
          this.vm.cancelVersionRefresh();
-         this.vm.cancelResourceRefresh();
          break;
       default:
          throw new IllegalArgumentException("Unknown type: " + this.type + ". Use RefreshButton.TYPE_* constants.");

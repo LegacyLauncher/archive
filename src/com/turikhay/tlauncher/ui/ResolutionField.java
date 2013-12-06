@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.util.IntegerArray;
+import com.turikhay.util.IntegerArray;
 import java.awt.LayoutManager;
 import javax.swing.BoxLayout;
 import javax.swing.JTextField;

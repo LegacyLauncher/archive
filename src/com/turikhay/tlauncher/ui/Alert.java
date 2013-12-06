@@ -2,8 +2,8 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.util.AsyncThread;
-import com.turikhay.tlauncher.util.U;
+import com.turikhay.util.AsyncThread;
+import com.turikhay.util.U;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
