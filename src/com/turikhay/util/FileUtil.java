@@ -249,7 +249,7 @@ public class FileUtil {
       } else if (dir.isDirectory()) {
          return false;
       } else if (!dir.mkdirs()) {
-         throw new IOException("Cannot create folder!");
+         throw new IOException("Cannot create folders: " + dir);
       } else {
          return true;
       }

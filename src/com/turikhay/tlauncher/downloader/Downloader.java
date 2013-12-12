@@ -64,7 +64,6 @@ public class Downloader extends Thread {
       int each = U.getMaxMultiply(len, this.maxThreads);
       int x = 0;
       int y = -1;
-      U.log("EACH:", each);
       if (len > 0) {
          this.onDownloaderStart(len);
       }
@@ -212,6 +211,7 @@ public class Downloader extends Thread {
             }
          }
 
+         U.gc();
          Iterator var9 = this.listeners.iterator();
 
          while(var9.hasNext()) {

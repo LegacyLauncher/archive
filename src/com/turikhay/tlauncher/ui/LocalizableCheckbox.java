@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
+import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
 
 public class LocalizableCheckbox extends JCheckBox implements LocalizableComponent {
@@ -40,6 +41,14 @@ public class LocalizableCheckbox extends JCheckBox implements LocalizableCompone
 
    public void setState(boolean state) {
       super.getModel().setSelected(state);
+   }
+
+   public void addListener(ItemListener l) {
+      super.getModel().addItemListener(l);
+   }
+
+   public void removeListener(ItemListener l) {
+      super.getModel().removeItemListener(l);
    }
 
    public void updateLocale() {

@@ -24,7 +24,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.27D;
+   private static final double VERSION = 0.29D;
    private static final String SETTINGS = "tlauncher.ini";
    private static final String BRAND = "Original";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -38,14 +38,13 @@ public class TLauncher {
    private TLauncherNoGraphics loader;
    private VersionManager vm;
    private ProfileLoader pl;
-   private UUID clientToken = UUID.randomUUID();
+   private static final UUID clientToken = UUID.randomUUID();
    public final OptionSet args;
    public final String[] sargs;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
    public TLauncher(TLauncher.TLauncherState state, String[] sargs, OptionSet set) throws IOException {
-      Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
@@ -58,7 +57,7 @@ public class TLauncher {
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
          this.vm = new VersionManager();
-         this.pl = new ProfileLoader(this);
+         this.pl = new ProfileLoader();
          this.init();
          long end = System.currentTimeMillis();
          long diff = end - start;
@@ -75,8 +74,8 @@ public class TLauncher {
          LoginForm lf = this.frame.getLoginForm();
          this.vm.addRefreshedListener(lf.versionchoice);
          this.vm.addRefreshedListener(lf.buttons.addbuttons.refresh);
-         this.updater.addListener(this.frame);
          this.updater.addListener(lf);
+         this.updater.addListener(this.frame);
          if (lf.autologin.isEnabled()) {
             this.vm.refreshVersions(true);
             lf.autologin.startLogin();
@@ -125,8 +124,8 @@ public class TLauncher {
       return this.loader;
    }
 
-   public UUID getClientToken() {
-      return this.clientToken;
+   public static UUID getClientToken() {
+      return clientToken;
    }
 
    public ProfileLoader getProfileLoader() {
@@ -172,7 +171,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.27D;
+      return 0.29D;
    }
 
    public static String getBrand() {
@@ -204,7 +203,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version", 0.27D);
+      U.log("Starting version", 0.29D);
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);
