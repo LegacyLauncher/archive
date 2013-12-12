@@ -53,6 +53,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    ProgressBar pb;
    LoginForm lf;
    SettingsForm sf;
+   ProfileCreatorForm spcf;
    private boolean pb_started;
    private ProfileManager pm;
 
@@ -199,6 +200,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       U.log("Preparing components...");
       this.sf = new SettingsForm(this);
       this.lf = new LoginForm(this);
+      this.spcf = new ProfileCreatorForm(this);
       this.pb = new ProgressBar(this);
       start = System.currentTimeMillis();
       U.log("Preparing main pane...");

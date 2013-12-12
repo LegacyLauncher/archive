@@ -58,6 +58,7 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
          this.sleepFor(10L);
       }
 
+      this.setValue(0);
       this.setWestString((String)null);
       this.setCenterString((String)null);
       this.setEastString((String)null);

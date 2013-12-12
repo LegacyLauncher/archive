@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import net.minecraft.launcher.Http;
 import org.apache.commons.lang3.StringUtils;
 
@@ -53,12 +54,20 @@ public class Authenticator {
       }
    }
 
+   public void setPassword(char[] pass) {
+      this.setPassword(new String(pass));
+   }
+
    public void setClientToken(String tok) {
       if (StringUtils.isBlank(tok)) {
          throw new IllegalArgumentException("Client token is blank!");
       } else {
          this.clientToken = tok;
       }
+   }
+
+   public void setClientToken(UUID uid) {
+      this.setClientToken(uid.toString());
    }
 
    public void setAccessToken(String tok) {

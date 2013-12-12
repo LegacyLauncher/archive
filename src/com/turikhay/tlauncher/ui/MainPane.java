@@ -18,12 +18,14 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
    final Background bg;
    final LoginForm lf;
    final SettingsForm sf;
+   final ProfileCreatorForm spcf;
    private boolean settings;
 
    MainPane(TLauncherFrame f) {
       this.f = f;
       this.lf = f.lf;
       this.sf = f.sf;
+      this.spcf = f.spcf;
       int i = 0;
       int i = i + 1;
       this.BACKGROUND_PANEL = i;

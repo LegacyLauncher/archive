@@ -3,7 +3,7 @@ package com.turikhay.util;
 import com.turikhay.tlauncher.exceptions.ParseException;
 
 public class IntegerArray {
-   public static char defaultDelimiter = ';';
+   public static final char defaultDelimiter = ';';
    private final int[] integers;
    public final char delimiter;
    public final int length;
@@ -16,7 +16,7 @@ public class IntegerArray {
    }
 
    public IntegerArray(int... values) {
-      this(defaultDelimiter, values);
+      this(';', values);
    }
 
    public int get(int pos) {
@@ -88,6 +88,6 @@ public class IntegerArray {
    }
 
    public static IntegerArray parseIntegerArray(String val) throws ParseException {
-      return parseIntegerArray(val, defaultDelimiter);
+      return parseIntegerArray(val, ';');
    }
 }

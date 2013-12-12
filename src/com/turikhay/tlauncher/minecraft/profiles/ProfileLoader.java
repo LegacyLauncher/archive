@@ -15,21 +15,19 @@ import java.util.List;
 public class ProfileLoader {
    public static final File DEFAULT_PROFILE_STORAGE = MinecraftUtil.getSystemRelatedFile("tlauncher.profiles.list");
    public static final String DEFAULT_PROFILE_FILENAME = "launcher_profiles.json";
-   private final TLauncher t;
-   private File storageFile;
-   private List managers;
+   private final List managers;
    private final List listeners;
    private ProfileManager selected;
+   private File storageFile;
 
-   public ProfileLoader(TLauncher t, File storage) throws IOException {
-      this.managers = new ArrayList();
+   public ProfileLoader(File storage) throws IOException {
+      this.managers = Collections.synchronizedList(new ArrayList());
       this.listeners = Collections.synchronizedList(new ArrayList());
-      this.t = t;
       this.create(storage);
    }
 
-   public ProfileLoader(TLauncher t) throws IOException {
-      this(t, DEFAULT_PROFILE_STORAGE);
+   public ProfileLoader() throws IOException {
+      this(DEFAULT_PROFILE_STORAGE);
    }
 
    private void create(File storage) throws IOException {
@@ -75,7 +73,7 @@ public class ProfileLoader {
          }
 
          for(i = 0; i < files.size(); ++i) {
-            this.managers.add(new ProfileManager(this, this.t.getClientToken(), (File)files.get(i), true));
+            this.managers.add(new ProfileManager(this, TLauncher.getClientToken(), (File)files.get(i), true));
          }
 
          this.selected = this.managers.size() > 0 ? (ProfileManager)this.managers.get(select == -1 ? 0 : select) : null;
@@ -149,18 +147,26 @@ public class ProfileLoader {
    public void save() throws IOException {
       StringBuilder s = new StringBuilder();
       boolean first = true;
+      synchronized(this.managers) {
+         Iterator var5 = this.managers.iterator();
 
-      ProfileManager pm;
-      for(Iterator var4 = this.managers.iterator(); var4.hasNext(); s.append(pm.getFile().getAbsolutePath())) {
-         pm = (ProfileManager)var4.next();
-         if (!first) {
-            s.append("\n");
-         } else {
-            first = false;
-         }
+         while(true) {
+            if (!var5.hasNext()) {
+               break;
+            }
 
-         if (pm.equals(this.selected)) {
-            s.append(">");
+            ProfileManager pm = (ProfileManager)var5.next();
+            if (!first) {
+               s.append("\n");
+            } else {
+               first = false;
+            }
+
+            if (pm.equals(this.selected)) {
+               s.append(">");
+            }
+
+            s.append(pm.getFile().getAbsolutePath());
          }
       }
 
@@ -168,23 +174,27 @@ public class ProfileLoader {
    }
 
    public void loadProfiles() throws IOException {
-      Iterator var2 = this.managers.iterator();
+      synchronized(this.managers) {
+         Iterator var3 = this.managers.iterator();
 
-      while(var2.hasNext()) {
-         ProfileManager pm = (ProfileManager)var2.next();
-         pm.loadProfiles();
+         while(var3.hasNext()) {
+            ProfileManager pm = (ProfileManager)var3.next();
+            pm.loadProfiles();
+         }
+
       }
-
    }
 
    public void saveProfiles() throws IOException {
-      Iterator var2 = this.managers.iterator();
+      synchronized(this.managers) {
+         Iterator var3 = this.managers.iterator();
 
-      while(var2.hasNext()) {
-         ProfileManager pm = (ProfileManager)var2.next();
-         pm.saveProfiles();
+         while(var3.hasNext()) {
+            ProfileManager pm = (ProfileManager)var3.next();
+            pm.saveProfiles();
+         }
+
       }
-
    }
 
    private String writeDefault() throws IOException {
@@ -194,15 +204,15 @@ public class ProfileLoader {
    }
 
    void onRefresh(ProfileManager pm) {
-      List listeners = new ArrayList(this.listeners);
-      Iterator iterator = listeners.iterator();
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
 
-      while(iterator.hasNext()) {
-         ProfileListener listener = (ProfileListener)iterator.next();
-         listener.onProfilesRefreshed(pm);
-         iterator.remove();
+         while(var4.hasNext()) {
+            ProfileListener pl = (ProfileListener)var4.next();
+            pl.onProfilesRefreshed(pm);
+         }
+
       }
-
    }
 
    private void log(Object... o) {

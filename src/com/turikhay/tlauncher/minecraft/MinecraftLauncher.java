@@ -45,7 +45,7 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
-   public static final int VERSION = 12;
+   public static final int VERSION = 13;
    public static final int TLAUNCHER_VERSION = 6;
    final String prefix;
    final OperatingSystem os;
@@ -60,7 +60,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    boolean init;
    boolean working;
    boolean launching;
-   boolean forcecompare;
    final boolean forceupdate;
    final boolean check;
    final boolean console;
@@ -128,7 +127,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             this.con = new Console(this.s, "Minecraft Logger", this.console);
          }
 
-         this.log("Minecraft Launcher [12;6] is started!");
+         this.log("Minecraft Launcher [13;6] is started!");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
       }
    }
@@ -148,10 +147,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       if (this.working) {
          throw new IllegalStateException("MinecraftLauncher is already working!");
       } else if (this.version_name != null && this.version_name.length() != 0) {
-         if (!FileUtil.folderExists(this.gamedir)) {
-            this.forcecompare = true;
-         }
-
          try {
             FileUtil.createFolder(this.gamedir);
          } catch (Exception var3) {
@@ -181,7 +176,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                      this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
                   }
 
-                  if (this.version.getMinimumLauncherVersion() > 12) {
+                  if (this.version.getMinimumLauncherVersion() > 13) {
                      this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
                   }
                }
@@ -364,7 +359,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommand("-cp", this.constructClassPath(this.version));
          this.processLauncher.addCommands(this.getJVMArguments());
          if (this.jargs.length() > 0) {
-            this.processLauncher.addCommand(this.jargs);
+            this.processLauncher.addSplitCommands(this.jargs);
          }
 
          this.processLauncher.addCommand(this.version.getMainClass());
@@ -392,14 +387,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private void launch_() throws MinecraftLauncherException {
       U.gc();
       this.log("Starting Minecraft " + this.version_name + "...");
+      this.log("Launching in:", this.gameDir.getAbsolutePath());
+      this.log("Running (characters are not escaped):");
+      this.log(this.processLauncher.getCommandsAsString());
+      if (!this.exit) {
+         this.onLaunch();
+      }
 
       try {
-         this.log("Running (characters are not escaped):");
-         this.log(this.processLauncher.getCommandsAsString());
-         if (!this.exit) {
-            this.onLaunch();
-         }
-
          JavaProcess process = this.processLauncher.start();
          if (this.exit) {
             TLauncher.kill();
@@ -420,10 +415,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.migrateOldAssets();
       this.log("Comparing assets...");
       long start = System.nanoTime();
-      if (this.forcecompare) {
-         this.log("Assets will be compared from the server.");
-      }
-
       List result = this.vm.checkResources(this.version);
       long end = System.nanoTime();
       long delta = end - start;
@@ -554,7 +545,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       File sourceDir = new File(this.gamedir, "assets");
       File objectsDir = new File(sourceDir, "objects");
       if (sourceDir.isDirectory()) {
-         this.log("Migrating old assets...");
          IOFileFilter migratableFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("indexes"), FileFilterUtils.nameFileFilter("objects"), FileFilterUtils.nameFileFilter("virtual")));
 
          File file;
@@ -563,7 +553,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             String hash = FileUtil.getDigest(file, "SHA-1", 40);
             File destinationFile = new File(objectsDir, hash.substring(0, 2) + "/" + hash);
             if (!destinationFile.exists()) {
-               this.log("Migrated old asset {} into {}", new Object[]{file, destinationFile});
+               this.log("Migrated old asset", file, "into", destinationFile);
 
                try {
                   FileUtils.copyFile(file, destinationFile);
@@ -581,7 +571,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             for(int var12 = 0; var12 < var13; ++var12) {
                File file = var8[var12];
                if (!file.getName().equals("indexes") && !file.getName().equals("objects") && !file.getName().equals("virtual")) {
-                  this.log("Cleaning up old assets directory {} after migration", new Object[]{file});
+                  this.log("Cleaning up old assets directory", file, "after migration");
                   FileUtils.deleteQuietly(file);
                }
             }
@@ -625,6 +615,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          map.put("user_properties", "{}");
          map.put("auth_player_name", this.username);
          map.put("auth_uuid", (new UUID(0L, 0L)).toString());
+         map.put("user_type", "legacy");
          map.put("profile_name", "(Default)");
          map.put("version_name", this.version.getId());
          map.put("game_directory", this.gameDir.getAbsolutePath());
@@ -667,7 +658,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    void onStop() {
-      this.log("Stopped :3");
+      this.log("Launcher stopped.");
       if (this.listener != null) {
          this.listener.onMinecraftLaunchStop();
       }
@@ -750,7 +741,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             }
 
             if (!crash.getSignatures().isEmpty()) {
-               this.log("Crash is recognized.");
+               this.log("Crash has been recognized.");
             }
 
             this.log("Console won't vanish automatically.");

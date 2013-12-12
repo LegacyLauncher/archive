@@ -24,7 +24,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
 
@@ -38,7 +37,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    private int v = 0;
    private Dimension sizes;
    boolean update;
-   private boolean conBusy;
+   private Object busy;
    private final JPanel panel;
    private final SearchPanel sp;
    private final ExitCancelPanel ecp;
@@ -56,7 +55,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       super(name);
       this.sizes = new Dimension(this.w, this.h);
       this.update = true;
-      this.conBusy = false;
+      this.busy = new Object();
       this.hiding = false;
       this.output = new StringBuilder();
       if (c == null) {
@@ -146,23 +145,20 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    }
 
    public void print(String string) {
-      while(this.conBusy) {
-         U.sleepFor(10L);
-      }
+      synchronized(this.busy) {
+         this.output.append(string);
+         Document document = this.textArea.getDocument();
+         if (this.update) {
+            this.scrollBottom();
+         }
 
-      this.conBusy = true;
-      this.output.append(string);
-      Document document = this.textArea.getDocument();
-      if (this.update) {
-         this.scrollBottom();
-      }
+         try {
+            document.insertString(document.getLength(), string, (AttributeSet)null);
+         } catch (Throwable var5) {
+            U.log("Logger error:", var5);
+         }
 
-      try {
-         document.insertString(document.getLength(), string, (AttributeSet)null);
-      } catch (BadLocationException var4) {
       }
-
-      this.conBusy = false;
    }
 
    public void scrollBottom() {
@@ -174,14 +170,10 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    }
 
    public String getOutput() {
-      while(this.conBusy) {
-         U.sleepFor(10L);
+      synchronized(this.busy) {
+         String s = this.output.toString();
+         return s;
       }
-
-      this.conBusy = true;
-      String s = this.output.toString();
-      this.conBusy = false;
-      return s;
    }
 
    public SearchPrefs getSearchPrefs() {

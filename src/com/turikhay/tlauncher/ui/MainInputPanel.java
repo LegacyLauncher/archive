@@ -16,7 +16,7 @@ public class MainInputPanel extends BlockablePanel implements LocalizableCompone
       LayoutManager lm = new GridLayout(0, 1);
       this.setLayout(lm);
       this.setOpaque(false);
-      this.field = new UsernameField(this.lf);
+      this.field = new UsernameField(this.lf, UsernameField.UsernameState.USERNAME);
       this.field.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             MainInputPanel.this.lf.callLogin();

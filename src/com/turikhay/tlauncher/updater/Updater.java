@@ -85,7 +85,7 @@ public class Updater {
                }
 
                if (update.getDownloadLink() == null) {
-                  log("The update for current package type is not available.");
+                  log("An update for current package type is not available.");
                   return;
                }
 

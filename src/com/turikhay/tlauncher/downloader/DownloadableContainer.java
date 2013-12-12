@@ -4,11 +4,12 @@ import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.ui.Console;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 public class DownloadableContainer {
-   private List handlers = new ArrayList();
+   private List handlers = Collections.synchronizedList(new ArrayList());
    private Console console;
    private boolean available = true;
    private int remain;
