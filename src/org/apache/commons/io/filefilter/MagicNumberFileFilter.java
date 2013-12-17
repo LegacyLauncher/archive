@@ -52,22 +52,24 @@ public class MagicNumberFileFilter extends AbstractFileFilter implements Seriali
       if (file != null && file.isFile() && file.canRead()) {
          RandomAccessFile randomAccessFile = null;
 
+         boolean var6;
          try {
             byte[] fileBytes = new byte[this.magicNumbers.length];
             randomAccessFile = new RandomAccessFile(file, "r");
             randomAccessFile.seek(this.byteOffset);
             int read = randomAccessFile.read(fileBytes);
-            if (read == this.magicNumbers.length) {
-               boolean var6 = Arrays.equals(this.magicNumbers, fileBytes);
-               return var6;
+            if (read != this.magicNumbers.length) {
+               return false;
             }
+
+            var6 = Arrays.equals(this.magicNumbers, fileBytes);
          } catch (IOException var9) {
             return false;
          } finally {
             IOUtils.closeQuietly((Closeable)randomAccessFile);
          }
 
-         return false;
+         return var6;
       } else {
          return false;
       }

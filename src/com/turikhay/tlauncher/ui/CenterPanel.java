@@ -163,7 +163,7 @@ public abstract class CenterPanel extends BlockablePanel implements LocalizableC
       handleComponents(this, true);
    }
 
-   private static void handleComponents(Container container, boolean setEnabled) {
+   protected static void handleComponents(Container container, boolean setEnabled) {
       Component[] components = container.getComponents();
       Component[] var6 = components;
       int var5 = components.length;

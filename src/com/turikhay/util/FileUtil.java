@@ -29,7 +29,7 @@ public class FileUtil {
 
    public static void writeFile(File file, String text) throws IOException {
       createFile(file);
-      FileOutputStream os = new FileOutputStream(file);
+      BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
       OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
       ow.write(text);
       ow.close();
@@ -93,7 +93,7 @@ public class FileUtil {
       try {
          digest = MessageDigest.getInstance(algorithm);
       } catch (NoSuchAlgorithmException var10) {
-         throw new RuntimeException("Missing Digest." + algorithm, var10);
+         throw new RuntimeException("Missing Digest. " + algorithm, var10);
       }
 
       byte[] buffer = new byte[65536];
@@ -210,6 +210,19 @@ public class FileUtil {
 
       }
 
+   }
+
+   public static void deleteFile(File file) {
+      if (!file.delete()) {
+         file.deleteOnExit();
+      }
+
+   }
+
+   public static File makeTemp(File file) throws IOException {
+      createFile(file);
+      file.deleteOnExit();
+      return file;
    }
 
    public byte[] getFile(File archive, String requestedFile) throws IOException {

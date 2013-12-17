@@ -2,8 +2,10 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.turikhay.util.Time;
 import com.turikhay.util.U;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.launcher.Http;
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.updater.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.updater.versions.json.LowerCaseEnumTypeAdapterFactory;
@@ -20,8 +23,10 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
+import net.minecraft.launcher.versions.VersionSource;
 
 public abstract class VersionList {
+   public static final int DEFAULT_TIMEOUT = 7500;
    protected final Gson gson;
    private final Map versionsByName = new HashMap();
    private final List versions = new ArrayList();
@@ -94,7 +99,11 @@ public abstract class VersionList {
    }
 
    public VersionList.RawVersionList getRawList() throws IOException {
-      return (VersionList.RawVersionList)this.gson.fromJson(this.getUrl("versions/versions.json"), VersionList.RawVersionList.class);
+      Object lock = new Object();
+      Time.start(lock);
+      VersionList.RawVersionList list = (VersionList.RawVersionList)this.gson.fromJson(this.getUrl("versions/versions.json"), VersionList.RawVersionList.class);
+      this.log("Got in", Time.stop(lock), "ms");
+      return list;
    }
 
    public void refreshVersions(VersionList.RawVersionList versionList) {
@@ -125,7 +134,7 @@ public abstract class VersionList {
       if (version.getId() == null) {
          throw new IllegalArgumentException("Cannot add blank version");
       } else if (this.getVersion(version.getId()) != null) {
-         U.log("Version '" + version.getId() + "' is already tracked");
+         this.log("Version '" + version.getId() + "' is already tracked");
          return version;
       } else {
          this.versions.add(version);
@@ -222,9 +231,80 @@ public abstract class VersionList {
       }
    }
 
+   protected String getUrl(String uri, boolean selectPath) throws IOException {
+      VersionSource source = this.getRepositoryType();
+      boolean canSelect = source.isSelectable();
+      if (!canSelect) {
+         return this.getRawUrl(uri);
+      } else {
+         boolean gotError = false;
+         if (!selectPath && source.isSelected()) {
+            try {
+               return this.getRawUrl(uri);
+            } catch (IOException var15) {
+               gotError = true;
+               this.log("Cannot get required URL, reselecting path.");
+            }
+         }
+
+         this.log("Selecting relevant path...");
+         Object lock = new Object();
+         IOException e = null;
+         int i = 0;
+         int attempt = 0;
+         int exclude = gotError ? source.getSelected() : -1;
+
+         while(i < 3) {
+            ++i;
+            int timeout = 7500 * i;
+
+            for(int x = 0; x < source.getRepoCount(); ++x) {
+               if (i != 1 || x != exclude) {
+                  ++attempt;
+                  this.log("Attempt #" + attempt + "; timeout: " + timeout + " ms; url: " + source.getRepo(x));
+                  Time.start(lock);
+
+                  try {
+                     String result = Http.performGet(new URL(source.getRepo(x) + uri), timeout, timeout);
+                     source.setSelected(x);
+                     this.log("Success: Reached the repo in", Time.stop(lock), "ms.");
+                     return result;
+                  } catch (IOException var14) {
+                     this.log("Failed: Repo is not reachable!");
+                     e = var14;
+                     Time.stop(lock);
+                  }
+               }
+            }
+         }
+
+         this.log("Failed: All repos are unreachable.");
+         throw e;
+      }
+   }
+
+   protected String getUrl(String uri) throws IOException {
+      return this.getUrl(uri, false);
+   }
+
+   protected String getRawUrl(String uri) throws IOException {
+      String url = this.getRepositoryType().getSelectedRepo() + Http.encode(uri);
+
+      try {
+         return Http.performGet(new URL(url));
+      } catch (IOException var4) {
+         this.log("Cannot get raw:", url);
+         throw var4;
+      }
+   }
+
    public abstract boolean hasAllFiles(CompleteVersion var1, OperatingSystem var2);
 
-   protected abstract String getUrl(String var1) throws IOException;
+   public abstract VersionSource getRepositoryType();
+
+   protected void log(Object... obj) {
+      U.log("[" + this.getClass().getSimpleName() + "]", obj);
+   }
 
    public static class RawVersionList {
       private List versions = new ArrayList();

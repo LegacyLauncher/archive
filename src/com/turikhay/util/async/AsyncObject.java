@@ -1,0 +1,38 @@
+package com.turikhay.util.async;
+
+import com.turikhay.tlauncher.handlers.ExceptionHandler;
+
+public abstract class AsyncObject extends Thread {
+   private boolean gotValue;
+   private Object value;
+   private AsyncObjectGotErrorException error;
+
+   public void run() {
+      Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
+
+      try {
+         this.value = this.execute();
+      } catch (Throwable var2) {
+         this.error = new AsyncObjectGotErrorException(this, this.error);
+         return;
+      }
+
+      this.gotValue = true;
+   }
+
+   public Object getValue() throws AsyncObjectNotReadyException, AsyncObjectGotErrorException {
+      if (this.error != null) {
+         throw this.error;
+      } else if (!this.gotValue) {
+         throw new AsyncObjectNotReadyException();
+      } else {
+         return this.value;
+      }
+   }
+
+   public AsyncObjectGotErrorException getError() {
+      return this.error;
+   }
+
+   protected abstract Object execute();
+}

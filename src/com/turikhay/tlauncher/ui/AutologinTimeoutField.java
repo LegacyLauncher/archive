@@ -4,6 +4,7 @@ public class AutologinTimeoutField extends ExtendedTextField implements Localiza
    private static final long serialVersionUID = 104141941185197117L;
    private static final int DEFAULT_TIMEOUT = 3;
    private static final int MAX_TIMEOUT = 10;
+   private boolean saveable = true;
 
    AutologinTimeoutField(SettingsForm settingsform) {
       super((CenterPanel)settingsform);
@@ -37,5 +38,13 @@ public class AutologinTimeoutField extends ExtendedTextField implements Localiza
 
    public void setToDefault() {
       this.setValue(3);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

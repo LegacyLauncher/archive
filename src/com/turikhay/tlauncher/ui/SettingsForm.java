@@ -184,11 +184,6 @@ public class SettingsForm extends CenterPanel implements LoginListener {
             String key = sf.getSettingsPath();
             String val = this.s.get(key);
             sf.setValue(val);
-            if (!this.s.isSaveable(key)) {
-               c.setEnabled(false);
-            } else {
-               c.setEnabled(true);
-            }
          }
       }
 
@@ -198,6 +193,21 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.alpha_old = this.alphaSelect.getState();
       this.beta_old = this.betaSelect.getState();
       this.cheats_old = this.cheatsSelect.getState();
+   }
+
+   public void updateIfSaveable() {
+      Iterator var3 = this.findFields().iterator();
+
+      while(var3.hasNext()) {
+         Component c = (Component)var3.next();
+         if (c instanceof SettingsField) {
+            String key = ((SettingsField)c).getSettingsPath();
+            if (!this.s.isSaveable(key)) {
+               c.setEnabled(false);
+            }
+         }
+      }
+
    }
 
    public void setToDefaults() {

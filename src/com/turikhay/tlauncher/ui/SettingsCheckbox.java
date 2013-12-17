@@ -7,6 +7,7 @@ public class SettingsCheckbox extends LocalizableCheckbox implements SettingsFie
    private static final long serialVersionUID = -9013976214526482171L;
    private String settingspath;
    private boolean defaultState;
+   private boolean saveable;
 
    public SettingsCheckbox(String path, String settingspath, boolean defaultState) {
       super(path);
@@ -42,5 +43,13 @@ public class SettingsCheckbox extends LocalizableCheckbox implements SettingsFie
 
    public void setToDefault() {
       this.setState(this.defaultState);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

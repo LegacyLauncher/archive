@@ -21,6 +21,7 @@ public class Downloader extends Thread {
    private int[] progress;
    private double[] speed;
    private int av_progress;
+   private int runningThreads;
    private double av_speed;
 
    public Downloader(String name, int mthreads) {
@@ -56,7 +57,7 @@ public class Downloader extends Thread {
       this.list_ = false;
       this.list.addAll(this.queue);
       this.queue.clear();
-      this.av_progress = 0;
+      this.av_progress = this.runningThreads = 0;
       this.remain = new int[this.maxThreads];
       this.progress = new int[this.maxThreads];
       this.speed = new double[this.maxThreads];
@@ -72,6 +73,7 @@ public class Downloader extends Thread {
       for(; len > 0; each = U.getMaxMultiply(len, this.maxThreads)) {
          for(i = 0; i < this.maxThreads; ++i) {
             ++y;
+            ++this.runningThreads;
             len -= each;
             int[] var10000 = this.remain;
             var10000[i] += each;
@@ -262,7 +264,7 @@ public class Downloader extends Thread {
       this.progress[id] = curprogress;
       this.speed[id] = curspeed;
       int old_progress = this.av_progress;
-      this.av_progress = U.getAverage(this.progress);
+      this.av_progress = U.getAverage(this.progress, this.runningThreads);
       if (this.av_progress != old_progress) {
          this.av_speed = U.getSum(this.speed);
          Iterator var7 = this.listeners.iterator();

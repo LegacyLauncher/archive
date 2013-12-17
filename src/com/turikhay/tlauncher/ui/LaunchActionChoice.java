@@ -14,6 +14,7 @@ public class LaunchActionChoice extends Choice implements LocalizableComponent, 
    private Map values = new LinkedHashMap();
    private final SettingsForm sf;
    private Settings l;
+   private boolean saveable;
 
    LaunchActionChoice(SettingsForm settingsform) {
       this.sf = settingsform;
@@ -79,5 +80,13 @@ public class LaunchActionChoice extends Choice implements LocalizableComponent, 
 
    public void setToDefault() {
       this.setValue((String)null);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

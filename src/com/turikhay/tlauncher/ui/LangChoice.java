@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 public class LangChoice extends Choice implements SettingsField {
    private static final long serialVersionUID = 570709181645184106L;
+   private boolean saveable = true;
    private Map replacer = new LinkedHashMap();
    private String current;
    boolean changed;
@@ -79,5 +80,13 @@ public class LangChoice extends Choice implements SettingsField {
    }
 
    public void setToDefault() {
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }
