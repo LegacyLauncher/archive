@@ -3,6 +3,7 @@ package com.turikhay.tlauncher.ui;
 public class ArgsField extends LocalizableTextField implements SettingsField {
    private static final long serialVersionUID = -5279771273100196802L;
    private String settingspath;
+   private boolean saveable = true;
 
    ArgsField(SettingsForm sf, String placeholder, String settingspath) {
       super(sf, placeholder, (String)null, 0);
@@ -23,5 +24,13 @@ public class ArgsField extends LocalizableTextField implements SettingsField {
 
    public void setToDefault() {
       this.setValue((String)null);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

@@ -6,12 +6,12 @@ public class AsyncThread extends Thread {
    private long wait;
    private Runnable runnable;
 
-   public AsyncThread(Runnable r) {
+   private AsyncThread(Runnable r) {
       Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
       this.runnable = r;
    }
 
-   public AsyncThread(Runnable r, long wait) {
+   private AsyncThread(Runnable r, long wait) {
       this(r);
       this.wait = wait;
    }
@@ -25,19 +25,19 @@ public class AsyncThread extends Thread {
       this.interrupt();
    }
 
-   public static void execute(Runnable r) {
-      (new AsyncThread(r)).start();
-   }
-
-   public static void execute(Runnable r, long sleep) {
-      (new AsyncThread(r, sleep)).start();
-   }
-
    private void sleepFor(long millis) {
       try {
          Thread.sleep(millis);
       } catch (Exception var4) {
       }
 
+   }
+
+   public static void execute(Runnable r) {
+      (new AsyncThread(r)).start();
+   }
+
+   public static void execute(Runnable r, long sleep) {
+      (new AsyncThread(r, sleep)).start();
    }
 }

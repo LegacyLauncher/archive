@@ -211,12 +211,11 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
    public boolean onLogin() {
       if (!this.foundlocal) {
          this.refresh();
-         if (this.foundlocal) {
-            return true;
-         } else {
+         if (!this.foundlocal) {
             Alert.showError("versions.notfound");
-            return false;
          }
+
+         return false;
       } else if (this.selected.isInstalled() && !this.selected.isUpToDate()) {
          if (!Alert.showQuestion("versions.found-update", false)) {
             try {

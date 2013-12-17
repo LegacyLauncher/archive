@@ -13,9 +13,9 @@ public class GlobalDefaults {
       this.d.put("login.auto.timeout", 3);
       this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
       this.d.put("minecraft.versions.snapshots", true);
-      this.d.put("minecraft.versions.beta", true);
-      this.d.put("minecraft.versions.alpha", true);
-      this.d.put("minecraft.versions.cheats", true);
+      this.d.put("minecraft.versions.beta", false);
+      this.d.put("minecraft.versions.alpha", false);
+      this.d.put("minecraft.versions.cheats", false);
       this.d.put("minecraft.onlaunch", GlobalSettings.ActionOnLaunch.getDefault());
       this.d.put("gui.sun", true);
       this.d.put("gui.console.width", 620);

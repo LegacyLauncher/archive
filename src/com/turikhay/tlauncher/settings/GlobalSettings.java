@@ -29,8 +29,9 @@ public class GlobalSettings extends Settings {
    public static final List DEFAULT_LOCALES;
    public static final List SUPPORTED_LOCALE;
    private File file;
+   private boolean saveable;
    private static boolean firstRun;
-   private GlobalDefaults d = new GlobalDefaults(this);
+   private GlobalDefaults d;
    private Map cs = new HashMap();
    double version = 0.14D;
 
@@ -42,6 +43,13 @@ public class GlobalSettings extends Settings {
 
    public static GlobalSettings createInstance(OptionSet set) throws IOException {
       Object path = set != null ? set.valueOf("settings") : null;
+      if (path == null) {
+         URL resource = GlobalSettings.class.getResource("/settings.ini");
+         if (resource != null) {
+            return new GlobalSettings(resource, set);
+         }
+      }
+
       File file = path == null ? getDefaultFile() : new File(path.toString());
       if (!file.exists()) {
          firstRun = true;
@@ -50,44 +58,64 @@ public class GlobalSettings extends Settings {
       return new GlobalSettings(file, set);
    }
 
+   private GlobalSettings(URL url, OptionSet set) throws IOException {
+      super(url);
+      U.log("Settings URL:", url);
+      this.init(set);
+   }
+
    private GlobalSettings(File file, OptionSet set) throws IOException {
       super(file);
+      U.log("Settings file:", file);
+      this.init(set);
+   }
+
+   private void init(OptionSet set) throws IOException {
+      this.d = new GlobalDefaults(this);
       this.cs = ArgumentParser.parse(set);
       boolean forcedrepair = this.getDouble("settings.version") != this.version;
-      Iterator var5 = this.d.getMap().entrySet().iterator();
+      this.saveable = this.input instanceof File;
+      Iterator var4 = this.d.getMap().entrySet().iterator();
 
-      while(true) {
-         while(var5.hasNext()) {
-            Entry curen = (Entry)var5.next();
-            String key = (String)curen.getKey();
-            String value = (String)this.s.get(key);
-            Object defvalue = this.d.get(key);
-            if (!forcedrepair && value != null) {
-               try {
-                  if (defvalue instanceof Integer) {
-                     Integer.parseInt(value);
-                  } else if (defvalue instanceof Boolean) {
-                     this.parseBoolean(value);
-                  } else if (defvalue instanceof Double) {
-                     Double.parseDouble(value);
-                  } else if (defvalue instanceof Long) {
-                     Long.parseLong(value);
-                  } else if (defvalue instanceof GlobalSettings.ActionOnLaunch) {
-                     this.parseLaunchAction(value);
-                  } else if (defvalue instanceof IntegerArray) {
-                     IntegerArray.parseIntegerArray(value);
-                  }
-               } catch (Exception var10) {
-                  this.repair(key, defvalue);
+      while(var4.hasNext()) {
+         Entry curen = (Entry)var4.next();
+         String key = (String)curen.getKey();
+         String value = (String)this.s.get(key);
+         Object defvalue = this.d.get(key);
+         if (defvalue != null) {
+            try {
+               if (forcedrepair) {
+                  throw new Exception();
                }
-            } else {
-               this.repair(key, defvalue);
+
+               if (defvalue instanceof Integer) {
+                  Integer.parseInt(value);
+               } else if (defvalue instanceof Boolean) {
+                  this.parseBoolean(value);
+               } else if (defvalue instanceof Double) {
+                  Double.parseDouble(value);
+               } else if (defvalue instanceof Long) {
+                  Long.parseLong(value);
+               } else if (defvalue instanceof GlobalSettings.ActionOnLaunch) {
+                  this.parseLaunchAction(value);
+               } else if (defvalue instanceof IntegerArray) {
+                  IntegerArray.parseIntegerArray(value);
+               }
+            } catch (Exception var9) {
+               this.repair(key, defvalue, !this.saveable);
+               value = defvalue.toString();
+            }
+
+            if (!this.saveable) {
+               this.cs.put(key, value);
             }
          }
-
-         this.save();
-         return;
       }
+
+      if (this.saveable) {
+         this.save();
+      }
+
    }
 
    public boolean isFirstRun() {
@@ -122,6 +150,10 @@ public class GlobalSettings extends Settings {
 
    public boolean isSaveable(String key) {
       return !this.cs.containsKey(key);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
    }
 
    public String getDefault(String key) {
@@ -236,13 +268,16 @@ public class GlobalSettings extends Settings {
       }
    }
 
-   private void repair(String key, Object value) throws IOException {
+   private void repair(String key, Object value, boolean unsaveable) throws IOException {
       U.log("Field \"" + key + "\" in GlobalSettings is invalid.");
       this.set(key, value.toString(), false);
+      if (unsaveable) {
+         this.cs.put(key, value);
+      }
+
    }
 
    public static File getDefaultFile() {
-      TLauncher.getInstance();
       return MinecraftUtil.getSystemRelatedFile(TLauncher.getSettingsFile());
    }
 
@@ -260,32 +295,34 @@ public class GlobalSettings extends Settings {
    }
 
    public void save() throws IOException {
-      File file = (File)this.input;
-      StringBuilder r = new StringBuilder();
-      boolean first = true;
+      if (this.input instanceof File) {
+         File file = (File)this.input;
+         StringBuilder r = new StringBuilder();
+         boolean first = true;
 
-      String key;
-      Object value;
-      for(Iterator var5 = this.s.entrySet().iterator(); var5.hasNext(); r.append(key + this.DELIMITER_CHAR + value.toString().replace(this.NEWLINE_CHAR, "\\" + this.NEWLINE_CHAR))) {
-         Entry curen = (Entry)var5.next();
-         key = (String)curen.getKey();
-         value = curen.getValue();
-         if (value == null) {
-            value = "";
+         String key;
+         Object value;
+         for(Iterator var5 = this.s.entrySet().iterator(); var5.hasNext(); r.append(key + this.DELIMITER_CHAR + value.toString().replace(this.NEWLINE_CHAR, "\\" + this.NEWLINE_CHAR))) {
+            Entry curen = (Entry)var5.next();
+            key = (String)curen.getKey();
+            value = curen.getValue();
+            if (value == null) {
+               value = "";
+            }
+
+            if (!first) {
+               r.append(this.NEWLINE_CHAR);
+            } else {
+               first = false;
+            }
          }
 
-         if (!first) {
-            r.append(this.NEWLINE_CHAR);
-         } else {
-            first = false;
-         }
+         String towrite = r.toString();
+         FileOutputStream os = new FileOutputStream(file);
+         OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
+         ow.write(towrite);
+         ow.close();
       }
-
-      String towrite = r.toString();
-      FileOutputStream os = new FileOutputStream(file);
-      OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
-      ow.write(towrite);
-      ow.close();
    }
 
    public int[] getWindowSize() {

@@ -5,6 +5,7 @@ import java.io.File;
 
 public class GameDirectoryField extends ExtendedTextField implements SettingsField {
    private static final long serialVersionUID = 9048714882203326864L;
+   private boolean saveable = true;
 
    GameDirectoryField(SettingsForm settingsform) {
       super((CenterPanel)settingsform);
@@ -33,5 +34,13 @@ public class GameDirectoryField extends ExtendedTextField implements SettingsFie
 
    public void setToDefault() {
       this.setValue((String)null);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

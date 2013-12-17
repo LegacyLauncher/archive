@@ -3,6 +3,7 @@ package com.turikhay.tlauncher.ui;
 public class TimeoutField extends LocalizableTextField implements SettingsField {
    private static final long serialVersionUID = -1540285891285378219L;
    private TimeoutField.FieldType ft;
+   private boolean saveable;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$TimeoutField$FieldType;
 
@@ -41,6 +42,14 @@ public class TimeoutField extends LocalizableTextField implements SettingsField 
 
    public void setToDefault() {
       this.setValue(15000);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 
    // $FF: synthetic method

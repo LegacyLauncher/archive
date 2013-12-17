@@ -5,6 +5,7 @@ import net.minecraft.launcher.OperatingSystem;
 
 public class JavaExecutableField extends ExtendedTextField implements SettingsField {
    private static final long serialVersionUID = 2221135591155035960L;
+   private boolean saveable = true;
 
    JavaExecutableField(SettingsForm settingsform) {
       super((CenterPanel)settingsform);
@@ -32,5 +33,13 @@ public class JavaExecutableField extends ExtendedTextField implements SettingsFi
 
    public void setToDefault() {
       this.setValue((String)null);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

@@ -155,7 +155,6 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          try {
             document.insertString(document.getLength(), string, (AttributeSet)null);
          } catch (Throwable var5) {
-            U.log("Logger error:", var5);
          }
 
       }

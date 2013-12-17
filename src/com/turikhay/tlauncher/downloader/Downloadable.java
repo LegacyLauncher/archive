@@ -196,11 +196,9 @@ public class Downloadable {
    public HttpURLConnection makeConnection() throws IOException {
       HttpURLConnection connection = (HttpURLConnection)this.url.openConnection();
       setUp(connection, false);
-      if (!this.forced) {
-         String md5 = this.getHash("MD5");
-         if (md5 != null) {
-            connection.setRequestProperty("If-None-Match", md5);
-         }
+      String md5 = this.getHash("MD5");
+      if (md5 != null) {
+         connection.setRequestProperty("If-None-Match", md5);
       }
 
       return connection;

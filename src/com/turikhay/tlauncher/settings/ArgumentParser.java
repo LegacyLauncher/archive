@@ -65,6 +65,7 @@ public class ArgumentParser {
    private static Map createLinkMap() {
       Map r = new HashMap();
       r.put("directory", "minecraft.gamedir");
+      r.put("java-directory", "minecraft.javadir");
       r.put("version", "login.version");
       r.put("username", "login.username");
       r.put("javaargs", "minecraft.javaargs");
@@ -80,6 +81,7 @@ public class ArgumentParser {
       parser.accepts("help", "Shows this help");
       parser.accepts("nogui", "Starts minimal version");
       parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
+      parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();
       parser.accepts("version", "Specifies version to run").withRequiredArg();
       parser.accepts("username", "Specifies username").withRequiredArg();
       parser.accepts("javaargs", "Specifies JVM arguments").withRequiredArg();

@@ -95,6 +95,7 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
             this.sf.blockElement("");
          }
 
+         this.sf.updateIfSaveable();
          int w = this.getWidth();
          int h = this.getHeight();
          int hw = w / 2;

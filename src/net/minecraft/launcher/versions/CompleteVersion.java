@@ -176,7 +176,7 @@ public class CompleteVersion implements Version {
          if (file != null) {
             url = library.hasExactUrl() ? library.getExactDownloadUrl() : library.getDownloadUrl() + file;
             if (url.startsWith("/")) {
-               url = source.getDownloadPath() + url.substring(1);
+               url = source.getSelectedRepo() + url.substring(1);
             }
 
             File local = new File(targetDirectory, "libraries/" + file);

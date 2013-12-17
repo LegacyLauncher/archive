@@ -8,6 +8,8 @@ import com.turikhay.util.AsyncThread;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.MinecraftUtil;
 import com.turikhay.util.U;
+import com.turikhay.util.async.AsyncObject;
+import com.turikhay.util.async.AsyncObjectContainer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +43,8 @@ public class VersionManager {
    private final List refreshedListeners;
    private final List versionRefreshes;
    private final List resourceRefreshes;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$VersionSource;
 
    public VersionManager() throws IOException {
       this(new LocalVersionList(MinecraftUtil.getWorkingDirectory()), new RemoteVersionList(), new ExtraVersionList());
@@ -163,33 +167,42 @@ public class VersionManager {
    private void desyncRefreshVersions(boolean local, Short rand) throws IOException, VersionManager.RefreshedException {
       this.localVersionList.refreshVersions();
       if (!local) {
-         VersionList.RawVersionList remoteRaw = null;
-
-         try {
-            remoteRaw = this.remoteVersionList.getRawList();
-         } catch (IOException var8) {
-            this.log("Cannot get remote versions list!");
-         }
-
+         AsyncObjectContainer asyncContainer = new AsyncObjectContainer();
+         AsyncObject remoteRawAsync = new AsyncObject() {
+            protected VersionList.RawVersionList execute() {
+               try {
+                  return VersionManager.this.remoteVersionList.getRawList();
+               } catch (IOException var2) {
+                  throw new RuntimeException(var2);
+               }
+            }
+         };
+         AsyncObject extraRawAsync = new AsyncObject() {
+            protected VersionList.RawVersionList execute() {
+               try {
+                  return VersionManager.this.extraVersionList.getRawList();
+               } catch (IOException var2) {
+                  throw new RuntimeException(var2);
+               }
+            }
+         };
+         asyncContainer.add(remoteRawAsync);
+         asyncContainer.add(extraRawAsync);
+         Map results = asyncContainer.execute();
+         VersionList.RawVersionList remoteRaw = (VersionList.RawVersionList)results.get(remoteRawAsync);
+         VersionList.RawVersionList extraRaw = (VersionList.RawVersionList)results.get(extraRawAsync);
          if (!this.versionRefreshes.contains(rand)) {
             throw new VersionManager.RefreshedException((VersionManager.RefreshedException)null);
          } else {
-            this.extraVersionList.getRepositoryType().selectRelevantPath();
-            VersionList.RawVersionList extraRaw = null;
-
-            try {
-               extraRaw = this.extraVersionList.getRawList();
-            } catch (IOException var7) {
-               this.log("Cannot get extra versions list!");
-            }
-
-            if (!this.versionRefreshes.contains(rand)) {
-               throw new VersionManager.RefreshedException((VersionManager.RefreshedException)null);
-            } else {
-               synchronized(this.versionRefreshes) {
+            synchronized(this.versionRefreshes) {
+               if (remoteRaw != null) {
                   this.remoteVersionList.refreshVersions(remoteRaw);
+               }
+
+               if (extraRaw != null) {
                   this.extraVersionList.refreshVersions(extraRaw);
                }
+
             }
          }
       }
@@ -394,35 +407,29 @@ public class VersionManager {
 
    public CompleteVersion getLatestCompleteVersion(VersionSyncInfo syncInfo) throws IOException {
       if (syncInfo.getLatestSource() != VersionSource.LOCAL) {
-         CompleteVersion result = null;
-         IOException exception = null;
          Version complete = syncInfo.getLatestVersion();
-
-         try {
+         VersionSource source = syncInfo.getLatestSource();
+         CompleteVersion result;
+         switch($SWITCH_TABLE$net$minecraft$launcher$versions$VersionSource()[source.ordinal()]) {
+         case 1:
+            result = this.localVersionList.getCompleteVersion(complete);
+            break;
+         case 2:
             result = this.remoteVersionList.getCompleteVersion(complete);
-         } catch (IOException var10) {
-            exception = var10;
-
-            try {
-               result = this.extraVersionList.getCompleteVersion(complete);
-            } catch (IOException var9) {
-               exception = var9;
-
-               try {
-                  result = this.localVersionList.getCompleteVersion(complete);
-               } catch (IOException var8) {
-               }
-            }
+            break;
+         case 3:
+            result = this.extraVersionList.getCompleteVersion(complete);
+            break;
+         default:
+            throw new IllegalStateException("Unknown source:" + source);
          }
 
          if (result != null) {
             return result;
-         } else {
-            throw exception;
          }
-      } else {
-         return this.localVersionList.getCompleteVersion(syncInfo.getLatestVersion());
       }
+
+      return this.localVersionList.getCompleteVersion(syncInfo.getLatestVersion());
    }
 
    public void downloadVersion(DownloadableContainer job, VersionSyncInfo syncInfo, boolean force) throws IOException {
@@ -441,15 +448,16 @@ public class VersionManager {
             jarFile = "";
             saveFile = saveFile + id + "/" + id + ".jar";
          } else if (o_id != null) {
-            downloadPath = VersionSource.REMOTE.getDownloadPath();
+            downloadPath = VersionSource.REMOTE.getSelectedRepo();
             jarFile = jarFile + o_id + "/" + o_id + ".jar";
             saveFile = saveFile + id + "/" + id + ".jar";
          } else {
-            downloadPath = syncInfo.getRemoteSource().getDownloadPath();
+            downloadPath = syncInfo.getRemoteSource().getSelectedRepo();
             jarFile = jarFile + id + "/" + id + ".jar";
             saveFile = jarFile;
          }
 
+         U.log("Latest source:", syncInfo.getLatestSource());
          Downloadable d = new Downloadable(downloadPath + jarFile, new File(baseDirectory, saveFile), force);
          d.setAdditionalDestinations(new File[]{new File(d.getDestination() + ".bak")});
          job.add(d);
@@ -700,6 +708,34 @@ public class VersionManager {
 
    private void log(Object... w) {
       U.log("[VersionManager]", w);
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$VersionSource() {
+      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher$versions$VersionSource;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[VersionSource.values().length];
+
+         try {
+            var0[VersionSource.EXTRA.ordinal()] = 3;
+         } catch (NoSuchFieldError var3) {
+         }
+
+         try {
+            var0[VersionSource.LOCAL.ordinal()] = 1;
+         } catch (NoSuchFieldError var2) {
+         }
+
+         try {
+            var0[VersionSource.REMOTE.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$net$minecraft$launcher$versions$VersionSource = var0;
+         return var0;
+      }
    }
 
    private class RefreshedException extends Exception {

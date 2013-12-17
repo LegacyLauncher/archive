@@ -135,6 +135,14 @@ public class DownloaderThread extends Thread {
    }
 
    public void download(Downloadable d, int attempt, int max) throws IOException {
+      File file = d.getDestination();
+
+      try {
+         file.canWrite();
+      } catch (SecurityException var35) {
+         throw new IOException("Cannot write into destination file!", var35);
+      }
+
       HttpURLConnection connection = d.makeConnection();
       if (!this.launched) {
          throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
@@ -151,8 +159,10 @@ public class DownloaderThread extends Thread {
          if (!this.launched) {
             throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
          } else {
-            this.dlog("Got reply in " + reply + " ms.");
+            this.dlog("Got reply in " + reply + " ms. Response code:", code);
             switch(code) {
+            case -1:
+               break;
             case 304:
                this.log(d, "File is not modified (304)");
                this.onComplete(d);
@@ -186,72 +196,76 @@ public class DownloaderThread extends Thread {
                if (code < 200 || code > 299) {
                   throw new DownloaderError("Illegal response code (" + code + ")", true);
                }
-            case -1:
-               InputStream in = connection.getInputStream();
-               File file = d.getDestination();
-               FileUtil.createFile(file);
-               OutputStream out = new FileOutputStream(file);
-               long read = 0L;
-               long length = (long)connection.getContentLength();
-               long downloaded_s = System.currentTimeMillis();
-               long speed_s = downloaded_s;
-               byte[] buffer = new byte[65536];
-               int curread = in.read(buffer);
+            }
 
-               long downloaded_e;
-               double curdone;
-               while(curread > 0) {
-                  if (!this.launched) {
-                     out.close();
-                     throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
-                  }
+            InputStream in = connection.getInputStream();
+            File temp = FileUtil.makeTemp(new File(d.getDestination().getAbsolutePath() + ".tlauncherdownload"));
+            OutputStream out = new FileOutputStream(temp);
+            long read = 0L;
+            long length = (long)connection.getContentLength();
+            long downloaded_s = System.currentTimeMillis();
+            long speed_s = downloaded_s;
+            byte[] buffer = new byte[65536];
+            int curread = in.read(buffer);
 
-                  read += (long)curread;
-                  out.write(buffer, 0, curread);
-                  curread = in.read(buffer);
-                  if (curread == -1) {
-                     break;
-                  }
-
-                  long speed_e = System.currentTimeMillis() - speed_s;
-                  if (speed_e >= 50L) {
-                     speed_s = System.currentTimeMillis();
-                     downloaded_e = speed_s - downloaded_s;
-                     curdone = (double)((float)read / (float)length);
-                     double curspeed = (double)read / (double)downloaded_e;
-                     this.onProgress(curread, curdone, curspeed);
-                  }
-               }
-
-               downloaded_e = System.currentTimeMillis() - downloaded_s;
-               curdone = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
-               in.close();
-               out.close();
-               connection.disconnect();
-               File[] copies = d.getAdditionalDestinations();
-               if (copies != null && copies.length > 0) {
-                  this.dlog("Found additional destinations. Copying...");
-                  File[] var33 = copies;
-                  int var32 = copies.length;
-
-                  for(int var31 = 0; var31 < var32; ++var31) {
-                     File copy = var33[var31];
-                     this.dlog("Copying " + copy + "...");
-                     FileUtil.copyFile(file, copy, d.isForced());
-                     this.dlog(d, "Success!");
-                  }
-
-                  this.dlog("Copying completed.");
-               }
-
-               d.setTime(downloaded_e);
-               d.setSize(read);
-               this.log(d, "Downloaded in " + d.getTime() + " ms. at " + curdone + " kb/s [" + attempt + "/" + max + ";" + d.getFast() + "]");
+            long downloaded_e;
+            double curdone;
+            while(curread > 0) {
                if (!this.launched) {
+                  out.close();
                   throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
-               } else {
-                  this.onComplete(d);
                }
+
+               read += (long)curread;
+               out.write(buffer, 0, curread);
+               curread = in.read(buffer);
+               if (curread == -1) {
+                  break;
+               }
+
+               long speed_e = System.currentTimeMillis() - speed_s;
+               if (speed_e >= 50L) {
+                  speed_s = System.currentTimeMillis();
+                  downloaded_e = speed_s - downloaded_s;
+                  curdone = (double)((float)read / (float)length);
+                  double curspeed = (double)read / (double)downloaded_e;
+                  this.onProgress(curread, curdone, curspeed);
+               }
+            }
+
+            downloaded_e = System.currentTimeMillis() - downloaded_s;
+            curdone = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
+            in.close();
+            out.close();
+            connection.disconnect();
+            if (!temp.renameTo(file)) {
+               FileUtil.copyFile(temp, file, true);
+               FileUtil.deleteFile(temp);
+            }
+
+            File[] copies = d.getAdditionalDestinations();
+            if (copies != null && copies.length > 0) {
+               this.dlog("Found additional destinations. Copying...");
+               File[] var34 = copies;
+               int var33 = copies.length;
+
+               for(int var32 = 0; var32 < var33; ++var32) {
+                  File copy = var34[var32];
+                  this.dlog("Copying " + copy + "...");
+                  FileUtil.copyFile(file, copy, d.isForced());
+                  this.dlog(d, "Success!");
+               }
+
+               this.dlog("Copying completed.");
+            }
+
+            d.setTime(downloaded_e);
+            d.setSize(read);
+            this.log(d, "Downloaded in " + d.getTime() + " ms. at " + curdone + " kb/s [" + attempt + "/" + max + ";" + d.getFast() + "]");
+            if (!this.launched) {
+               throw new DownloaderThread.DownloaderStoppedException((DownloaderThread.DownloaderStoppedException)null);
+            } else {
+               this.onComplete(d);
             }
          }
       }

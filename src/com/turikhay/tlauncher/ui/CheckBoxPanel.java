@@ -70,17 +70,21 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
 
    public boolean onLogin() {
       VersionSyncInfo syncInfo = this.lf.versionchoice.getSyncVersionInfo();
-      boolean supporting = syncInfo.isOnRemote();
-      boolean installed = syncInfo.isInstalled();
-      if (this.getForceUpdate()) {
-         if (!supporting) {
-            Alert.showWarning("forceupdate.onlylibraries");
-         } else if (installed && !Alert.showQuestion("forceupdate.question", true)) {
-            return false;
+      if (syncInfo == null) {
+         return true;
+      } else {
+         boolean supporting = syncInfo.isOnRemote();
+         boolean installed = syncInfo.isInstalled();
+         if (this.getForceUpdate()) {
+            if (!supporting) {
+               Alert.showWarning("forceupdate.onlylibraries");
+            } else if (installed && !Alert.showQuestion("forceupdate.question", true)) {
+               return false;
+            }
          }
-      }
 
-      return true;
+         return true;
+      }
    }
 
    public void onLoginFailed() {

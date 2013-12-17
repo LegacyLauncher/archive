@@ -9,6 +9,7 @@ public class ResolutionField extends BlockablePanel implements SettingsField {
    private static final long serialVersionUID = 2840605102354193923L;
    JTextField w;
    JTextField h;
+   private boolean saveable;
 
    ResolutionField(SettingsForm sf) {
       LayoutManager layout = new BoxLayout(this, 0);
@@ -100,5 +101,13 @@ public class ResolutionField extends BlockablePanel implements SettingsField {
 
    public void setToDefault() {
       this.setValue((String)null);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
    }
 }

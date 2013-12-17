@@ -2,7 +2,6 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
 import com.turikhay.util.FileUtil;
-import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,7 +25,7 @@ public class LocalVersionList extends FileBasedVersionList {
          throw new IllegalArgumentException("Base directory is not a folder!");
       } else {
          FileUtil.createFolder(baseDirectory);
-         U.log("Base directory:", baseDirectory);
+         this.log(new Object[]{"Base directory:", baseDirectory.getAbsolutePath()});
          this.baseDirectory = baseDirectory;
          this.baseVersionsDir = new File(this.baseDirectory, "versions");
       }
@@ -51,7 +50,7 @@ public class LocalVersionList extends FileBasedVersionList {
                try {
                   CompleteVersion version = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
                   if (version == null) {
-                     U.log("JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local.");
+                     this.log(new Object[]{"JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local."});
                   } else {
                      version.setId(id);
                      this.addVersion(version);

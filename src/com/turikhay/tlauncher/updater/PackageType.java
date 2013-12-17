@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.updater;
 
-import jsmooth.Wrapper;
+import com.turikhay.util.FileUtil;
 
 public enum PackageType {
    EXE,
@@ -11,10 +11,14 @@ public enum PackageType {
    }
 
    public static PackageType getCurrent() {
-      return Wrapper.isWrapped() ? EXE : JAR;
+      return isWrapped() ? EXE : JAR;
    }
 
    public static boolean isCurrent(PackageType pt) {
       return getCurrent() == pt;
+   }
+
+   public static boolean isWrapped() {
+      return FileUtil.getRunningJar().toString().endsWith(".exe");
    }
 }
