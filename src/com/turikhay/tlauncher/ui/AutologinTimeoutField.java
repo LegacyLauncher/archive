@@ -1,50 +1,45 @@
 package com.turikhay.tlauncher.ui;
 
+
 public class AutologinTimeoutField extends ExtendedTextField implements LocalizableComponent, SettingsField {
-   private static final long serialVersionUID = 104141941185197117L;
-   private static final int DEFAULT_TIMEOUT = 3;
-   private static final int MAX_TIMEOUT = 10;
-   private boolean saveable = true;
+	private static final long serialVersionUID = 104141941185197117L;
+	private static final int DEFAULT_TIMEOUT = Autologin.DEFAULT_TIMEOUT, MAX_TIMEOUT = Autologin.MAX_TIMEOUT;
+	private boolean saveable = true;
 
-   AutologinTimeoutField(SettingsForm settingsform) {
-      super((CenterPanel)settingsform);
-   }
+	AutologinTimeoutField(SettingsForm settingsform){		
+		super(settingsform);
+	}
 
-   protected boolean check(String text) {
-      boolean var2 = true;
+	protected boolean check(String text) {		
+		int cur = -1;
+		try{ cur = Integer.parseInt(text); }catch(Exception e){ return setError(l.get("settings.tlauncher.autologin.parse")); }
+		
+		if(cur < 2 || cur > MAX_TIMEOUT) return setError(l.get("settings.tlauncher.autologin.incorrect", "s", MAX_TIMEOUT));
+		
+		return true;
+	}
 
-      int cur;
-      try {
-         cur = Integer.parseInt(text);
-      } catch (Exception var4) {
-         return this.setError(this.l.get("settings.tlauncher.autologin.parse"));
-      }
+	public void updateLocale() { check(); }
 
-      return cur >= 2 && cur <= 10 ? true : this.setError(this.l.get("settings.tlauncher.autologin.incorrect", "s", 10));
-   }
+	public String getSettingsPath() {
+		return "login.auto.timeout";
+	}
 
-   public void updateLocale() {
-      this.check();
-   }
+	public boolean isValueValid() {
+		String val = getValue();
+        return !(val == null || val.equals(""));
 
-   public String getSettingsPath() {
-      return "login.auto.timeout";
-   }
+    }
+	
+	public void setToDefault() {
+		setValue(DEFAULT_TIMEOUT);
+	}
+	
+	public boolean isSaveable() {
+		return saveable;
+	}
 
-   public boolean isValueValid() {
-      String val = this.getValue();
-      return val != null && !val.equals("");
-   }
-
-   public void setToDefault() {
-      this.setValue(3);
-   }
-
-   public boolean isSaveable() {
-      return this.saveable;
-   }
-
-   public void setSaveable(boolean val) {
-      this.saveable = val;
-   }
+	public void setSaveable(boolean val) {
+		this.saveable = val;
+	}
 }

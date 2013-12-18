@@ -1,166 +1,165 @@
 package com.turikhay.tlauncher.minecraft.profiles;
 
 import java.io.File;
+
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class Profile {
-   public static final ReleaseType[] DEFAULT_RELEASE_TYPES;
-   private String name;
-   private File gameDir;
-   private String lastVersionId;
-   private String javaDir;
-   private String javaArgs;
-   private Profile.Resolution resolution;
-   private ReleaseType[] allowedReleaseTypes;
-   private String playerUUID;
-   private Boolean useHopperCrashService;
-   private Profile.ActionOnClose launcherVisibilityOnGameClose;
+	public static final ReleaseType[]
+			DEFAULT_RELEASE_TYPES = new ReleaseType[]
+				{ ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.CHEAT };
+	
+	private String name;
+	private File gameDir;
+	private String lastVersionId;
+	private String javaDir;
+	private String javaArgs;
+	private Resolution resolution;
+	private ReleaseType[] allowedReleaseTypes;
+	private String playerUUID;
+	private Boolean useHopperCrashService;
+	private ActionOnClose launcherVisibilityOnGameClose;
+	
+	public String toString(){
+		return "Profile{name='"+name+"', gameDir='"+gameDir+"', lastVersion='"+lastVersionId+"', javaDir='"+javaDir+"', javaArgs='"+javaArgs+"', resolution='"+resolution+"', playerUUID="+playerUUID+", useHopper='"+useHopperCrashService+"', onClose='"+launcherVisibilityOnGameClose+"'}";
+	}
+	
+	public Profile(String name){
+		this.name = name;
+	}
+	
+	public String getName() {
+		return this.name;
+	}
 
-   static {
-      DEFAULT_RELEASE_TYPES = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.CHEAT};
-   }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-   public String toString() {
-      return "Profile{name='" + this.name + "', gameDir='" + this.gameDir + "', lastVersion='" + this.lastVersionId + "', javaDir='" + this.javaDir + "', javaArgs='" + this.javaArgs + "', resolution='" + this.resolution + "', playerUUID=" + this.playerUUID + ", useHopper='" + this.useHopperCrashService + "', onClose='" + this.launcherVisibilityOnGameClose + "'}";
-   }
+	public File getGameDir() {
+		return this.gameDir;
+	}
 
-   public Profile(String name) {
-      this.name = name;
-   }
+	public void setGameDir(File gameDir) {
+		this.gameDir = gameDir;
+	}
 
-   public String getName() {
-      return this.name;
-   }
+	public void setLastVersionId(String lastVersionId) {
+		this.lastVersionId = lastVersionId;
+	}
 
-   public void setName(String name) {
-      this.name = name;
-   }
+	public void setJavaDir(String javaDir) {
+		this.javaDir = javaDir;
+	}
 
-   public File getGameDir() {
-      return this.gameDir;
-   }
+	public void setJavaArgs(String javaArgs) {
+		this.javaArgs = javaArgs;
+	}
 
-   public void setGameDir(File gameDir) {
-      this.gameDir = gameDir;
-   }
+	public String getLastVersionId() {
+		return this.lastVersionId;
+	}
 
-   public void setLastVersionId(String lastVersionId) {
-      this.lastVersionId = lastVersionId;
-   }
+	public String getJavaArgs() {
+		return this.javaArgs;
+	}
 
-   public void setJavaDir(String javaDir) {
-      this.javaDir = javaDir;
-   }
+	public String getJavaPath() {
+		return this.javaDir;
+	}
 
-   public void setJavaArgs(String javaArgs) {
-      this.javaArgs = javaArgs;
-   }
+	public Resolution getResolution() {
+		return this.resolution;
+	}
 
-   public String getLastVersionId() {
-      return this.lastVersionId;
-   }
+	public void setResolution(Resolution resolution) {
+		this.resolution = resolution;
+	}
 
-   public String getJavaArgs() {
-      return this.javaArgs;
-   }
+	public String getPlayerUUID() {
+		return this.playerUUID;
+	}
 
-   public String getJavaPath() {
-      return this.javaDir;
-   }
+	public void setPlayerUUID(String playerUUID) {
+		this.playerUUID = playerUUID;
+	}
 
-   public Profile.Resolution getResolution() {
-      return this.resolution;
-   }
+	public ReleaseType[] getAllowedReleaseTypes() {
+		return this.allowedReleaseTypes;
+	}
 
-   public void setResolution(Profile.Resolution resolution) {
-      this.resolution = resolution;
-   }
+	public void setAllowedReleaseTypes(ReleaseType[] allowedReleaseTypes) {
+		this.allowedReleaseTypes = allowedReleaseTypes;
+	}
 
-   public String getPlayerUUID() {
-      return this.playerUUID;
-   }
+	public boolean getUseHopperCrashService() {
+		return this.useHopperCrashService == null;
+	}
 
-   public void setPlayerUUID(String playerUUID) {
-      this.playerUUID = playerUUID;
-   }
+	public void setUseHopperCrashService(boolean useHopperCrashService) {
+		this.useHopperCrashService = (useHopperCrashService ? null : Boolean.valueOf(false));
+	}
 
-   public ReleaseType[] getAllowedReleaseTypes() {
-      return this.allowedReleaseTypes;
-   }
+	public VersionFilter getVersionFilter() {
+		VersionFilter filter = new VersionFilter();
+		filter.onlyForTypes(this.allowedReleaseTypes == null? DEFAULT_RELEASE_TYPES : this.allowedReleaseTypes);
+		return filter;
+	}
 
-   public void setAllowedReleaseTypes(ReleaseType[] allowedReleaseTypes) {
-      this.allowedReleaseTypes = allowedReleaseTypes;
-   }
+	public ActionOnClose getLauncherVisibilityOnGameClose() {
+		return this.launcherVisibilityOnGameClose;
+	}
 
-   public boolean getUseHopperCrashService() {
-      return this.useHopperCrashService == null;
-   }
+	public void setLauncherVisibilityOnGameClose(ActionOnClose launcherVisibilityOnGameClose) {
+		this.launcherVisibilityOnGameClose = launcherVisibilityOnGameClose;
+	}
+	
+	public static class Resolution {
+		private int width;
+		private int height;
 
-   public void setUseHopperCrashService(boolean useHopperCrashService) {
-      this.useHopperCrashService = useHopperCrashService ? null : false;
-   }
+		public Resolution() {}
 
-   public VersionFilter getVersionFilter() {
-      VersionFilter filter = new VersionFilter();
-      filter.onlyForTypes(this.allowedReleaseTypes == null ? DEFAULT_RELEASE_TYPES : this.allowedReleaseTypes);
-      return filter;
-   }
+		public Resolution(Resolution resolution) {
+			this(resolution.getWidth(), resolution.getHeight());
+		}
 
-   public Profile.ActionOnClose getLauncherVisibilityOnGameClose() {
-      return this.launcherVisibilityOnGameClose;
-   }
+		public Resolution(int width, int height) {
+			this.width = width;
+			this.height = height;
+		}
 
-   public void setLauncherVisibilityOnGameClose(Profile.ActionOnClose launcherVisibilityOnGameClose) {
-      this.launcherVisibilityOnGameClose = launcherVisibilityOnGameClose;
-   }
+		public int getWidth() {
+			return this.width;
+		}
 
-   public static enum ActionOnClose {
-      HIDE_LAUNCHER("Hide launcher and re-open when game closes"),
-      CLOSE_LAUNCHER("Close launcher when game starts"),
-      DO_NOTHING("Keep the launcher open");
+		public int getHeight() {
+			return this.height;
+		}
+		
+		public String toString(){
+			return width+"x"+height;
+		}
+	}
+	
+	public enum ActionOnClose {
+		HIDE_LAUNCHER("Hide launcher and re-open when game closes"), 
+		CLOSE_LAUNCHER("Close launcher when game starts"), 
+		DO_NOTHING("Keep the launcher open");
 
-      private final String name;
+		private final String name;
 
-      private ActionOnClose(String name) {
-         this.name = name;
-      }
+		private ActionOnClose(String name) {
+			this.name = name;
+		}
 
-      public String getName() {
-         return this.name;
-      }
+		public String getName() {
+			return this.name;
+		}
 
-      public String toString() {
-         return this.name;
-      }
-   }
-
-   public static class Resolution {
-      private int width;
-      private int height;
-
-      public Resolution() {
-      }
-
-      public Resolution(Profile.Resolution resolution) {
-         this(resolution.getWidth(), resolution.getHeight());
-      }
-
-      public Resolution(int width, int height) {
-         this.width = width;
-         this.height = height;
-      }
-
-      public int getWidth() {
-         return this.width;
-      }
-
-      public int getHeight() {
-         return this.height;
-      }
-
-      public String toString() {
-         return this.width + "x" + this.height;
-      }
-   }
+		public String toString() {
+			return this.name;
+		}
+	}
 }
