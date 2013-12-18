@@ -2,18 +2,20 @@ package net.minecraft.launcher.versions;
 
 import java.util.Date;
 
-public interface Version {
-   String getId();
 
-   ReleaseType getType();
+public abstract interface Version
+{
+  public abstract String getId();
 
-   void setType(ReleaseType var1);
+  public abstract ReleaseType getType();
 
-   Date getUpdatedTime();
+  public abstract void setType(ReleaseType paramReleaseType);
 
-   void setUpdatedTime(Date var1);
+  public abstract Date getUpdatedTime();
 
-   Date getReleaseTime();
+  public abstract void setUpdatedTime(Date paramDate);
 
-   void setReleaseTime(Date var1);
+  public abstract Date getReleaseTime();
+
+  public abstract void setReleaseTime(Date paramDate);
 }

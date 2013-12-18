@@ -2,128 +2,115 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
 import com.turikhay.util.FileUtil;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.Set;
+
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.VersionSource;
 
-public class LocalVersionList extends FileBasedVersionList {
-   private final File baseDirectory;
-   private final File baseVersionsDir;
+public class LocalVersionList extends FileBasedVersionList
+{
+  private final File baseDirectory;
+  private final File baseVersionsDir;
 
-   public LocalVersionList(File baseDirectory) throws IOException {
-      if (baseDirectory == null) {
-         throw new IllegalArgumentException("Base directory is not a folder!");
-      } else {
-         FileUtil.createFolder(baseDirectory);
-         this.log(new Object[]{"Base directory:", baseDirectory.getAbsolutePath()});
-         this.baseDirectory = baseDirectory;
-         this.baseVersionsDir = new File(this.baseDirectory, "versions");
+  public LocalVersionList(File baseDirectory) throws IOException
+  {
+    if ((baseDirectory == null)) throw new IllegalArgumentException("Base directory is not a folder!");
+    
+    FileUtil.createFolder(baseDirectory);
+    log("Base directory:", baseDirectory.getAbsolutePath());
+
+    this.baseDirectory = baseDirectory;
+    this.baseVersionsDir = new File(this.baseDirectory, "versions");
+  }
+
+  protected InputStream getFileInputStream(String uri)
+    throws FileNotFoundException
+  {
+    return new FileInputStream(new File(this.baseDirectory, uri));
+  }
+
+  public void refreshVersions() throws IOException
+  {
+    clearCache();
+
+    File[] files = this.baseVersionsDir.listFiles();
+    if (files == null) return;
+
+    for (File directory : files) {
+      String id = directory.getName();
+      File jsonFile = new File(directory, id + ".json");
+
+      if ((directory.isDirectory()) && (jsonFile.exists())) {
+        try {
+          CompleteVersion version = (CompleteVersion) this.gson.fromJson(getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
+          if(version == null){
+        	  log("JSON descriptor of version \""+id+"\" in NULL, it won't be added in list as local.");
+        	  continue;
+          }
+          version.setId(id);
+          addVersion(version);
+        } catch (JsonSyntaxException ex) {
+            throw new JsonSyntaxException("Loading file: " + jsonFile.toString(), ex);
+        }
       }
-   }
+    }
 
-   protected InputStream getFileInputStream(String uri) throws FileNotFoundException {
-      return new FileInputStream(new File(this.baseDirectory, uri));
-   }
+    for (Version version : getVersions()) {
+      ReleaseType type = version.getType();
 
-   public void refreshVersions() throws IOException {
-      this.clearCache();
-      File[] files = this.baseVersionsDir.listFiles();
-      if (files != null) {
-         File[] var5 = files;
-         int var4 = files.length;
+      if ((getLatestVersion(type) == null) || (getLatestVersion(type).getUpdatedTime().before(version.getUpdatedTime())))
+        setLatestVersion(version);
+    }
+  }
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            File directory = var5[var3];
-            String id = directory.getName();
-            File jsonFile = new File(directory, id + ".json");
-            if (directory.isDirectory() && jsonFile.exists()) {
-               try {
-                  CompleteVersion version = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
-                  if (version == null) {
-                     this.log(new Object[]{"JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local."});
-                  } else {
-                     version.setId(id);
-                     this.addVersion(version);
-                  }
-               } catch (JsonSyntaxException var9) {
-                  throw new JsonSyntaxException("Loading file: " + jsonFile.toString(), var9);
-               }
-            }
-         }
+  public void saveVersionList() throws IOException
+  {
+    String text = serializeVersionList();
+    PrintWriter writer = new PrintWriter(new File(this.baseVersionsDir, "versions.json"));
+    writer.print(text);
+    writer.close();
+  }
 
-         Iterator var11 = this.getVersions().iterator();
+  public void saveVersion_(CompleteVersion version) throws IOException {
+    String text = serializeVersion(version);
+    File target = new File(this.baseVersionsDir, version.getId() + "/" + version.getId() + ".json");
+    
+    FileUtil.writeFile(target, text);
+  }
+  
+  public void saveVersion(CompleteVersion version) {
+	  try{ saveVersion_(version); }catch(IOException e){ e.printStackTrace(); }
+  }
 
-         while(true) {
-            Version version;
-            ReleaseType type;
-            do {
-               if (!var11.hasNext()) {
-                  return;
-               }
+  public File getBaseDirectory() {
+    return this.baseDirectory;
+  }
 
-               version = (Version)var11.next();
-               type = version.getType();
-            } while(this.getLatestVersion(type) != null && !this.getLatestVersion(type).getUpdatedTime().before(version.getUpdatedTime()));
+  public boolean hasAllFiles(CompleteVersion version, OperatingSystem os)
+  {
+    Set<String> files = version.getRequiredFiles(os);
 
-            this.setLatestVersion(version);
-         }
+    for (String file : files) {
+      File required = new File(this.baseDirectory, file);
+      if (!required.isFile() || required.length() == 0L) {
+        return false;
       }
-   }
+    }
 
-   public void saveVersionList() throws IOException {
-      String text = this.serializeVersionList();
-      PrintWriter writer = new PrintWriter(new File(this.baseVersionsDir, "versions.json"));
-      writer.print(text);
-      writer.close();
-   }
+    return true;
+  }
 
-   public void saveVersion_(CompleteVersion version) throws IOException {
-      String text = this.serializeVersion(version);
-      File target = new File(this.baseVersionsDir, version.getId() + "/" + version.getId() + ".json");
-      FileUtil.writeFile(target, text);
-   }
-
-   public void saveVersion(CompleteVersion version) {
-      try {
-         this.saveVersion_(version);
-      } catch (IOException var3) {
-         var3.printStackTrace();
-      }
-
-   }
-
-   public File getBaseDirectory() {
-      return this.baseDirectory;
-   }
-
-   public boolean hasAllFiles(CompleteVersion version, OperatingSystem os) {
-      Set files = version.getRequiredFiles(os);
-      Iterator var5 = files.iterator();
-
-      File required;
-      do {
-         if (!var5.hasNext()) {
-            return true;
-         }
-
-         String file = (String)var5.next();
-         required = new File(this.baseDirectory, file);
-      } while(required.isFile() && required.length() != 0L);
-
-      return false;
-   }
-
-   public VersionSource getRepositoryType() {
-      return VersionSource.LOCAL;
-   }
+  public VersionSource getRepositoryType() {
+	return VersionSource.LOCAL;
+  }
 }

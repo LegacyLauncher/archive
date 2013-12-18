@@ -1,92 +1,68 @@
 package com.turikhay.tlauncher.ui;
 
 public class UsernameField extends LocalizableTextField {
-   private static final long serialVersionUID = -5813187607562947592L;
-   UsernameField.UsernameState state;
-   String username;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState;
+	private static final long serialVersionUID = -5813187607562947592L;
+	UsernameState state;
+	String username;
+	
+	UsernameField(CenterPanel pan, UsernameState state){
+		super(pan, "profile.username", null, 20);
+		this.setState(state);
+	}
+	
+	public UsernameState getState(){
+		return state;
+	}
+	
+	public void setState(UsernameState state){
+		if(state == null)
+			throw new NullPointerException();
+		
+		this.state = state;
+	}
+	
+	public boolean check(){
+		return check(true);
+	}
+	
+	protected boolean check(String text) {
+		return check(text, true);
+	}
+	
+	public boolean check(boolean canBeEmpty){
+		String text = this.getValue();
+		
+		if(check(text, canBeEmpty))
+			return ok();
+		return wrong(l.get("username.incorrect"));
+	}
+	
+	protected boolean check(String text, boolean canBeEmpty){
+		if(text == null) return false;
+		
+		String regexp;
+		
+		switch(state){
+		case EMAIL:
+			regexp = "^.*$"; // LOL, any email
+			break;
+		case USERNAME:
+			regexp= "^[A-Za-z0-9_|\\-|\\.]"+ ((canBeEmpty)? "*" : "+")  +"$";
+			break;
+		default:
+			throw new IllegalArgumentException("Unknown field state!");
+		}
+		
+		if(text.matches(regexp)){
+			username = text;
+			return true;
+		}
+		
+		return false;
+	}
+	
+	enum UsernameState {
+		USERNAME, EMAIL;
+	}
 
-   UsernameField(CenterPanel pan, UsernameField.UsernameState state) {
-      super(pan, "profile.username", (String)null, 20);
-      this.setState(state);
-   }
-
-   public UsernameField.UsernameState getState() {
-      return this.state;
-   }
-
-   public void setState(UsernameField.UsernameState state) {
-      if (state == null) {
-         throw new NullPointerException();
-      } else {
-         this.state = state;
-      }
-   }
-
-   public boolean check() {
-      return this.check(true);
-   }
-
-   protected boolean check(String text) {
-      return this.check(text, true);
-   }
-
-   public boolean check(boolean canBeEmpty) {
-      String text = this.getValue();
-      return this.check(text, canBeEmpty) ? this.ok() : this.wrong(l.get("username.incorrect"));
-   }
-
-   protected boolean check(String text, boolean canBeEmpty) {
-      if (text == null) {
-         return false;
-      } else {
-         String regexp;
-         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState()[this.state.ordinal()]) {
-         case 1:
-            regexp = "^[A-Za-z0-9_|\\-|\\.]" + (canBeEmpty ? "*" : "+") + "$";
-            break;
-         case 2:
-            regexp = "^.*$";
-            break;
-         default:
-            throw new IllegalArgumentException("Unknown field state!");
-         }
-
-         if (text.matches(regexp)) {
-            this.username = text;
-            return true;
-         } else {
-            return false;
-         }
-      }
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState() {
-      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[UsernameField.UsernameState.values().length];
-
-         try {
-            var0[UsernameField.UsernameState.EMAIL.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[UsernameField.UsernameState.USERNAME.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState = var0;
-         return var0;
-      }
-   }
-
-   static enum UsernameState {
-      USERNAME,
-      EMAIL;
-   }
 }
