@@ -1,5 +1,15 @@
 package com.turikhay.tlauncher.minecraft;
 
+import com.google.gson.Gson;
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.downloader.DownloadableContainer;
+import com.turikhay.tlauncher.downloader.Downloader;
+import com.turikhay.tlauncher.handlers.DownloadableHandler;
+import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.ui.Console;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -9,605 +19,776 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.commons.lang3.text.StrSubstitutor;
-
-import com.google.gson.Gson;
-import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.downloader.DownloadableContainer;
-import com.turikhay.tlauncher.downloader.Downloader;
-import com.turikhay.tlauncher.handlers.DownloadableHandler;
-import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.settings.GlobalSettings.ActionOnLaunch;
-import com.turikhay.tlauncher.ui.Console;
-import com.turikhay.util.FileUtil;
-import com.turikhay.util.MinecraftUtil;
-import com.turikhay.util.U;
-
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessListener;
 import net.minecraft.launcher.updater.AssetIndex;
-import net.minecraft.launcher.updater.AssetIndex.AssetObject;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.updater.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ExtractRules;
 import net.minecraft.launcher.versions.Library;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
-	public final static int VERSION = 13, TLAUNCHER_VERSION = 6;
-	final String prefix = "[MinecraftLauncher]";
-	
-	final OperatingSystem os = OperatingSystem.getCurrentPlatform();
-	final Gson gson = new Gson();
-	final DateTypeAdapter dateAdapter = new DateTypeAdapter();
-	
-	//private TLauncher t;
-	GlobalSettings s; 
-	Downloader d;
-	Console con;
-	
-	final MinecraftLauncherListener listener;
-	final VersionManager vm;
-	
-	final boolean exit;
-	
-	boolean init, working, launching;
-	final boolean forceupdate, check, console;
-	VersionSyncInfo syncInfo;
-	CompleteVersion version;
-	final String username, version_name, jargs, margs, gamedir, javadir;
-	final int width, height;
-	
-	DownloadableContainer ver = new DownloadableContainer(), res = new DownloadableContainer();
-	List<AssetObject> assetsList;
-	private boolean downloadVersion, downloadAssets, downloadFlag;
-	
-	JavaProcessLauncher processLauncher;
-	File nativeDir, gameDir, assetsDir;
-	
-	private MinecraftLauncher (
-			MinecraftLauncherListener listener, VersionManager vm,
-			String version_name, String username, String token, String gamedir, String javadir, String jargs, String margs,
-			int[] sizes,
-			boolean force, boolean check, boolean exit, boolean console
-		){
-		Thread.setDefaultUncaughtExceptionHandler(new MinecraftLauncherExceptionHandler(this));
-		
-		this.listener = listener; this.vm = vm;
-		
-		this.version_name = version_name;
-		this.forceupdate = force;
-		
-		this.username = username;
-		
-		this.gamedir = gamedir;
-		this.javadir = (javadir == null)? os.getJavaDir() : javadir;
-		this.jargs = (jargs == null)? "" : jargs;
-		this.margs = (margs == null)? "" : margs;
-		
-		this.console = console;
-		this.check = check;
-		this.exit = exit;
-		
-		this.width = sizes[0];
-		this.height = sizes[1];
-	}
-	
-	public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check){
-		this(
-				listener, vm,
-				s.get("login.version"), s.get("login.username"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"),
-				s.getWindowSize(),
-				force, check, s.getActionOnLaunch() == ActionOnLaunch.EXIT, s.getBoolean("gui.console")
-		);
-		
-		this.s = s;
-		this.d = d;
-		
-		init();
-	}
-	
-	public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, boolean force, boolean check){
-		this(listener, t.getDownloader(), t.getSettings(), t.getVersionManager(), force, check);
-		
-		init();
-	}
-	
-	public void init(){
-		if(init) return; init = true;
-		
-		if(!exit && s != null)
-			con = new Console(s, "Minecraft Logger", console);
-		
-		log("Minecraft Launcher ["+VERSION+";"+TLAUNCHER_VERSION+"] is started!");
-		log("Running under TLauncher "+TLauncher.getVersion()+" "+TLauncher.getBrand());
-	}
-	
-	public void run(){
-		try{ check(); }catch(MinecraftLauncherException me){ onError(me); }catch(Exception e){ onError(e); }
-	}
-	
-	private void check() throws MinecraftLauncherException {
-		if(working) throw new IllegalStateException("MinecraftLauncher is already working!");
-		
-		if(version_name == null || version_name.length() == 0)
-			throw new MinecraftLauncherException("Version name is invalid: \""+version_name+"\"", "version-invalid", version_name);
-		
-		try{
-			FileUtil.createFolder(gamedir);
-		}catch(Exception e){
-			throw new MinecraftLauncherException("Cannot find folder: "+gamedir, "folder-not-found", gamedir);
-		}
-		
-		this.syncInfo = vm.getVersionSyncInfo(version_name);
-		if(syncInfo == null)
-			throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", version_name + "\n" + gamedir);
-		
-		try {
-			this.version = vm.getLatestCompleteVersion(syncInfo);
-		} catch (Exception e) {
-			throw new MinecraftLauncherException("Cannot get version info!", "version-info", e);
-		}
-		
-		if(check) log("Checking files for version "+version_name+"...");
-		else {
-			log("Checking files for version "+version_name+" skipped.");
-			prepare_();
-			return;
-		}
-		
-		this.working = true;
-		this.onCheck();
-		
-		if(version.getTLauncherVersion() != 0){
-			if(version.getTLauncherVersion() > TLAUNCHER_VERSION)
-				throw new MinecraftLauncherException("TLauncher is incompatible with this extra version (needed "+version.getTLauncherVersion()+").", "incompatible");
-		} else {
-			if(!version.appliesToCurrentEnvironment())
-				showWarning("Version "+version_name+" is incompatible with your environment.", "incompatible");
-			if(version.getMinimumLauncherVersion() > VERSION)
-				showWarning("Current launcher version is incompatible with selected version "+version_name+" (version "+version.getMinimumLauncherVersion()+" required).", "incompatible.launcher");
-		}
-		
-		
-		assetsList = (check)? this.compareAssets() : null;
-		
-		downloadAssets = assetsList != null && !assetsList.isEmpty();
-		if(forceupdate) downloadVersion = true;
-		else downloadVersion = !syncInfo.isInstalled() || !vm.getLocalVersionList().hasAllFiles(version, os);
-		
-		if(!forceupdate && !downloadVersion && !downloadAssets){
-			prepare_();
-			return;
-		}
-		
-		this.downloadResources();
-	}
-	
-	private void prepare(){
-		try{ prepare_(); }catch(Exception e){ onError(e); }
-	}
-	
-	private void downloadResources() throws MinecraftLauncherException {
-		if(d == null)
-			throw new MinecraftLauncherException("Downloader is NULL. Cannot download version!");
-		
-		if(downloadVersion)
-			try {
-				vm.downloadVersion(ver, syncInfo, forceupdate);
-			} catch (IOException e) { throw new MinecraftLauncherException("Cannot get downloadable jar!", "download-jar", e); }
-		
-	    if(downloadAssets)
-	    	try {
-	    		vm.downloadResources(res, version, assetsList, forceupdate);
-	    	} catch(IOException e){ throw new MinecraftLauncherException("Cannot download resources!", "download-resources", e); }
-		
-		ver.addHandler(new DownloadableHandler(){
-			public void onStart(){}
-			public void onCompleteError(){
-				onError(new MinecraftLauncherException("Errors occurred, cancelling.", "download"));
-			}
-			public void onAbort(){
-				onStop();
-			}
-			public void onComplete(){
-				log("Version "+version_name+" downloaded!");
-				
-				vm.getLocalVersionList().saveVersion(version);
-				
-				if(downloadFlag) prepare();
-				else downloadFlag = true;
-			}
-		});
-		ver.setConsole(con);
-		
-		res.addHandler(new DownloadableHandler(){
-			public void onStart() {}
-			public void onCompleteError() {
-				log("Error occurred while downloading the assets. Minecraft will be be launched, though");
-				onContinue();
-			}
-			public void onComplete() {			
-				log("Assets have been downloaded!");
-				onContinue();
-			}
-			public void onAbort(){
-				onStop();
-			}
-			private void onContinue(){				
-				if(downloadFlag) prepare();
-				else downloadFlag = true;
-			}
-		});
-		res.setConsole(con);
-		
-		if(!downloadVersion || !downloadAssets)
-			downloadFlag = true;
-		
-		if(downloadVersion) log("Downloading version "+version_name+"...");
-		if(downloadAssets) log("Downloading assets...");
-		
-		d.add(ver); d.add(res);
-		d.startLaunch();
-	}
-	
-	private void prepare_() throws MinecraftLauncherException {
-		if(launching) throw new IllegalStateException("The game is already launching!");
-		
-		this.launching = true;
-		this.onPrepare();
-		
-		this.gameDir = new File(gamedir);
-		this.nativeDir = new File(gameDir, "versions/" + this.version.getId() + "/" + "natives");
-		if (!this.nativeDir.isDirectory()) this.nativeDir.mkdirs();
-		
-		try {
-			this.unpackNatives(forceupdate);
-		} catch (IOException e){ throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", e); }
-		
-		try {
-			this.deleteEntries();
-		} catch (IOException e){ throw new MinecraftLauncherException("Cannot delete entries!", "delete-entries", e); }
-		
-	    processLauncher = new JavaProcessLauncher(javadir, new String[0]);
-	    processLauncher.directory(gameDir);
-	    
-	    try {
-			this.assetsDir = this.reconstructAssets();
-		} catch (IOException e) { throw new MinecraftLauncherException("Cannot reconstruct assets!", "reconstruct-assets", e); }
-	    
-	    if(os.equals(OperatingSystem.OSX)){
-	    	File icon = null;
-	    	try{ icon = getAssetObject("icons/minecraft.icns"); }
-	    	catch(IOException e){ log("Cannot get icon file from assets.", e); }
-	        
-	    	if(icon != null)
-	    		processLauncher.addCommand("-Xdock:icon=\"" + icon.getAbsolutePath() + "\"", "-Xdock:name=Minecraft");
-	    }
-	    if(os.equals(OperatingSystem.WINDOWS))
-	    	processLauncher.addCommand("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
-	    
-	    	processLauncher.addCommand((os.is32Bit()) ? "-Xmx512M" : "-Xmx1G");
-	    	
-	        processLauncher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
-	        processLauncher.addCommand("-cp", constructClassPath(this.version));
-	        
-	        processLauncher.addCommands(getJVMArguments());
-	        if(jargs.length() > 0) processLauncher.addSplitCommands(jargs);
-	        
-	        processLauncher.addCommand(this.version.getMainClass());
-	        
-	        processLauncher.addCommands(getMinecraftArguments());
-	        
-	        processLauncher.addCommand("--width", width);
-	        processLauncher.addCommand("--height", height);
-	        
-	        if(margs.length() > 0) processLauncher.addSplitCommands(margs);
-	        
-	        launch();
-	}
-	
-	public void launch(){
-		try{ launch_(); }catch(Exception e){ onError(e); }
-		U.gc();
-	}
-	
-	private void launch_() throws MinecraftLauncherException {
-		U.gc();
-		log("Starting Minecraft "+version_name+"...");
-		
-		log("Launching in:", this.gameDir.getAbsolutePath());
-		
-   	 	log("Running (characters are not escaped):");
-   	 	log(processLauncher.getCommandsAsString());
-   	 
-   	 	if(!exit){ onLaunch(); }
-		
-   	 	try {
-   	 		JavaProcess process = processLauncher.start();
-   	 		if(exit) TLauncher.kill(); else process.safeSetExitRunnable(this);
-   	 	}catch(Exception e){ throw new MinecraftLauncherException("Cannot start the game!", "start", e); }
-	}
-	
-	private void removeNatives(){
-		this.nativeDir.delete();
-	}
-	
-	private List<AssetObject> compareAssets(){
-		this.migrateOldAssets();
-		
-		log("Comparing assets...");
-		long start = System.nanoTime();
-		
-		List<AssetObject> result = vm.checkResources(version);
-		
-		long end = System.nanoTime(), delta = end - start;
-		log("Delta time to compare assets: " + delta / 1000000L + " ms.");
-		
-		return result;
-	}
-	
-	private void deleteEntries() throws IOException {
-		List<String> entries = this.version.getUnnecessaryEntries();
-		if(entries == null || entries.size() == 0) return;
-		log("Removing entries...");
-	    
-	    File file = version.getJARFile(gameDir);
-	    FileUtil.removeFromZip(file, entries);
-	}
-	
-	private void unpackNatives(boolean force) throws IOException {
-		log("Unpacking natives...");
-	    Collection<Library> libraries = version.getRelevantLibraries();
-	    
-	    ZipFile zip; BufferedOutputStream bufferedOutputStream;
-	    
-	    if(force) removeNatives();
+   public static final int VERSION = 13;
+   public static final int TLAUNCHER_VERSION = 6;
+   final String prefix;
+   final OperatingSystem os;
+   final Gson gson;
+   final DateTypeAdapter dateAdapter;
+   GlobalSettings s;
+   Downloader d;
+   Console con;
+   final MinecraftLauncherListener listener;
+   final VersionManager vm;
+   static boolean instanceWorking;
+   final boolean exit;
+   int step;
+   boolean init;
+   boolean working;
+   final boolean forceupdate;
+   final boolean check;
+   final boolean console;
+   VersionSyncInfo syncInfo;
+   CompleteVersion version;
+   final String username;
+   final String version_name;
+   final String jargs;
+   final String margs;
+   final String gamedir;
+   final String javadir;
+   final int width;
+   final int height;
+   DownloadableContainer ver;
+   DownloadableContainer res;
+   List assetsList;
+   private boolean downloadVersion;
+   private boolean downloadAssets;
+   private boolean downloadFlag;
+   JavaProcessLauncher processLauncher;
+   File nativeDir;
+   File gameDir;
+   File assetsDir;
 
-	    for (Library library : libraries) {
-	    	Map<OperatingSystem, String> nativesPerOs = library.getNatives();
+   private MinecraftLauncher(MinecraftLauncherListener listener, VersionManager vm, String version_name, String username, String token, String gamedir, String javadir, String jargs, String margs, int[] sizes, boolean force, boolean check, boolean exit, boolean console) {
+      this.prefix = "[MinecraftLauncher]";
+      this.os = OperatingSystem.getCurrentPlatform();
+      this.gson = new Gson();
+      this.dateAdapter = new DateTypeAdapter();
+      this.step = -1;
+      this.ver = new DownloadableContainer();
+      this.res = new DownloadableContainer();
+      Thread.setDefaultUncaughtExceptionHandler(new MinecraftLauncherExceptionHandler(this));
+      this.listener = listener;
+      this.vm = vm;
+      this.version_name = version_name;
+      this.forceupdate = force;
+      this.username = username;
+      this.gamedir = gamedir;
+      this.javadir = javadir == null ? this.os.getJavaDir() : javadir;
+      this.jargs = jargs == null ? "" : jargs;
+      this.margs = margs == null ? "" : margs;
+      this.console = console;
+      this.check = check;
+      this.exit = exit;
+      this.width = sizes[0];
+      this.height = sizes[1];
+   }
 
-	    	if(nativesPerOs != null && nativesPerOs.get(os) != null) {
-	    		File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath(nativesPerOs.get(os)));
-	    		
-	    		zip = new ZipFile(file);
-	    		ExtractRules extractRules = library.getExtractRules();
-	    		Enumeration<? extends ZipEntry> entries = zip.entries();
-	    		
-	    		while (entries.hasMoreElements()) {
-	    			ZipEntry entry = entries.nextElement();
-	    			if(extractRules == null || extractRules.shouldExtract(entry.getName() ) )
-	    			{
-	    				File targetFile = new File(this.nativeDir, entry.getName());
-	    				if(!force && targetFile.exists()) continue;
-	    				if (targetFile.getParentFile() != null) targetFile.getParentFile().mkdirs();
+   public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
+      this(listener, vm, s.get("login.version"), s.get("login.username"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getBoolean("gui.console"));
+      this.s = s;
+      this.d = d;
+      this.init();
+   }
 
-	    				if (!entry.isDirectory()) {
-	    					BufferedInputStream inputStream = new BufferedInputStream(zip.getInputStream(entry));
+   public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, boolean force, boolean check) {
+      this(listener, t.getDownloader(), t.getSettings(), t.getVersionManager(), force, check);
+      this.init();
+   }
 
-	    					byte[] buffer = new byte[2048];
-	    					FileOutputStream outputStream = new FileOutputStream(targetFile);
-	    					bufferedOutputStream = new BufferedOutputStream(outputStream);
-	    					
-	    					int length;
-	    					while ((length = inputStream.read(buffer, 0, buffer.length)) != -1)
-	    						bufferedOutputStream.write(buffer, 0, length);
-	    					
-	    					inputStream.close();
-	    					bufferedOutputStream.close();
-	    				}
-	    			}
-	    		}
-	    		zip.close();
-	    	}
-	    }
-	}
-	
-	private File getAssetObject(String name) throws IOException {
-		File assetsDir = new File(gamedir, "assets");
-		File indexDir = new File(assetsDir, "indexes");
-		File objectsDir = new File(assetsDir, "objects");
-		String assetVersion = this.version.getAssets() == null ? "legacy" : this.version.getAssets();
-		File indexFile = new File(indexDir, assetVersion + ".json");
-		AssetIndex index = (AssetIndex) this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
-			    
-		String hash = ((AssetIndex.AssetObject)index.getFileMap().get(name)).getHash();
-		return new File(objectsDir, hash.substring(0, 2) + "/" + hash);
-	}
-			  
-	private File reconstructAssets() throws IOException {
-		File assetsDir = new File(gameDir, "assets");
-		File indexDir = new File(assetsDir, "indexes");
-		File objectDir = new File(assetsDir, "objects");
-		String assetVersion = this.version.getAssets() == null ? "legacy" : this.version.getAssets();
-		File indexFile = new File(indexDir, assetVersion + ".json");
-		File virtualRoot = new File(new File(assetsDir, "virtual"), assetVersion);
-		if (!indexFile.isFile()) {
-			log("No assets index file " + virtualRoot + "; can't reconstruct assets");
-			return virtualRoot;
-		}
-		
-		AssetIndex index = this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
-		if (index.isVirtual())
-		{
-			log("Reconstructing virtual assets folder at " + virtualRoot);
-			for (Map.Entry<String, AssetIndex.AssetObject> entry : index.getFileMap().entrySet()) {
-				File target = new File(virtualRoot, entry.getKey());
-				File original = new File(new File(objectDir, entry.getValue().getHash().substring(0, 2)), entry.getValue().getHash());
-				if (!target.isFile()) {
-					FileUtils.copyFile(original, target, false);
-				}
-			}
-			FileUtil.writeFile(new File(virtualRoot, ".lastused"), this.dateAdapter.serializeToString(new Date()));
-		}
-		return virtualRoot;
-	}
-	
-	private void migrateOldAssets() {
-		File sourceDir = new File(gamedir, "assets");
-		File objectsDir = new File(sourceDir, "objects");
-		
-		if (!sourceDir.isDirectory())
-			return;
-		
-		IOFileFilter migratableFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(new IOFileFilter[] { FileFilterUtils.nameFileFilter("indexes"), FileFilterUtils.nameFileFilter("objects"), FileFilterUtils.nameFileFilter("virtual") }));
-		for (File file : new TreeSet<File>(FileUtils.listFiles(sourceDir, TrueFileFilter.TRUE, migratableFilter))) {
-			String hash = FileUtil.getDigest(file, "SHA-1", 40);
-			File destinationFile = new File(objectsDir, hash.substring(0, 2) + "/" + hash);
-			
-			if (!destinationFile.exists()) {
-				log("Migrated old asset", file, "into", destinationFile);
-				try {
-					FileUtils.copyFile(file, destinationFile);
-				}
-				catch (IOException e) {
-					log("Couldn't migrate old asset", e);
-				}
-			}
-			FileUtils.deleteQuietly(file);
-		}
-		File[] assets = sourceDir.listFiles();
-		if (assets != null) {
-			for (File file : assets) {
-				if ((!file.getName().equals("indexes")) && (!file.getName().equals("objects")) && (!file.getName().equals("virtual"))) {
-					log("Cleaning up old assets directory",file,"after migration");
-					FileUtils.deleteQuietly(file);
-				}
-			}
-		}
-	}
-	
-	private String constructClassPath(CompleteVersion version) throws MinecraftLauncherException {
-		log("Constructing Classpath...");
-		StringBuilder result = new StringBuilder();
-	    Collection<File> classPath = version.getClassPath(os, gameDir);
-	    String separator = System.getProperty("path.separator");
+   public void init() {
+      if (!this.init) {
+         this.init = true;
+         if (!this.exit && this.s != null) {
+            this.con = new Console(this.s, "Minecraft Logger", this.console);
+         }
 
-	    for (File file : classPath) {
-	      if (!file.isFile()) throw new MinecraftLauncherException("Classpath is not found: " + file, "classpath", file);
-	      if (result.length() > 0) result.append(separator);
-	      result.append(file.getAbsolutePath());
-	    }
+         this.log("Minecraft Launcher [13;6] is started!");
+         this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
+      }
+   }
 
-	    return result.toString();
-	}
-	
-	private String[] getMinecraftArguments() throws MinecraftLauncherException {
-		log("Getting Minecraft arguments...");
-		if (version.getMinecraftArguments() == null)
-			throw new MinecraftLauncherException("Can't run version, missing minecraftArguments", "noArgs");
-		Map<String, String> map = new HashMap<String, String>();
-		StrSubstitutor substitutor = new StrSubstitutor(map);
-		    String[] split = version.getMinecraftArguments().split(" ");
+   public void run() {
+      try {
+         this.check();
+      } catch (MinecraftLauncherException var2) {
+         this.onError(var2);
+      } catch (Exception var3) {
+         this.onError(var3);
+      }
 
-		    map.put("auth_username", username);
-		    map.put("auth_session", "null");
-		    map.put("auth_access_token", "null");
-		    map.put("user_properties", "{}");
+   }
 
-		    map.put("auth_player_name", username);
-		    map.put("auth_uuid", new UUID(0L, 0L).toString());
-		    map.put("user_type", "legacy");
+   private void check() throws MinecraftLauncherException {
+      if (this.step > -1) {
+         throw new IllegalStateException("MinecraftLauncher is already working!");
+      } else if (this.version_name != null && this.version_name.length() != 0) {
+         try {
+            FileUtil.createFolder(this.gamedir);
+         } catch (Exception var3) {
+            throw new MinecraftLauncherException("Cannot find folder: " + this.gamedir, "folder-not-found", this.gamedir);
+         }
 
-		    map.put("profile_name", "(Default)");
-		    map.put("version_name", version.getId());
+         this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
+         if (this.syncInfo == null) {
+            throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", this.version_name + "\n" + this.gamedir);
+         } else {
+            try {
+               this.version = this.vm.getLatestCompleteVersion(this.syncInfo);
+            } catch (Exception var2) {
+               throw new MinecraftLauncherException("Cannot get version info!", "version-info", var2);
+            }
 
-		    map.put("game_directory", gameDir.getAbsolutePath());
-		    map.put("game_assets", assetsDir.getAbsolutePath());
-		    
-		    map.put("assets_root", new File(gameDir, "assets").getAbsolutePath());
-		    map.put("assets_index_name", version.getAssets() == null ? "legacy" : version.getAssets());
+            if (this.check) {
+               this.log("Checking files for version " + this.version_name + "...");
+               this.working = true;
+               ++this.step;
+               this.onCheck();
+               if (this.version.getTLauncherVersion() != 0) {
+                  if (this.version.getTLauncherVersion() > 6) {
+                     throw new MinecraftLauncherException("TLauncher is incompatible with this extra version (needed " + this.version.getTLauncherVersion() + ").", "incompatible");
+                  }
+               } else {
+                  if (!this.version.appliesToCurrentEnvironment()) {
+                     this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
+                  }
 
-		    for (int i = 0; i < split.length; i++) {
-		      split[i] = substitutor.replace(split[i]);
-		    }
+                  if (this.version.getMinimumLauncherVersion() > 13) {
+                     this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
+                  }
+               }
 
-		    return split;
-	}
-	
-	private String[] getJVMArguments() {
-		String jvmargs = version.getJVMArguments();
-		return (jvmargs != null)? jvmargs.split(" ") : new String[0];
-	}
-	
-	void onCheck(){ if(listener != null) listener.onMinecraftCheck(); }
-	void onPrepare(){ if(listener != null) listener.onMinecraftPrepare(); }
-	void onLaunch(){ if(listener != null) listener.onMinecraftLaunch(); }
-	void onStop(){ log("Launcher stopped."); if(listener != null) listener.onMinecraftLaunchStop(); }
-	
-	void showWarning(String message, String langpath, Object replace){ log("[WARNING] " + message); if(listener != null) listener.onMinecraftWarning(langpath, replace); }
-	void showWarning(String message, String langpath){ this.showWarning(message, langpath, null); }
-	
-	void onError(MinecraftLauncherException e){ logerror(e); if(listener != null) listener.onMinecraftError(e); }
-	void onError(Throwable e){ logerror(e); if(listener != null) listener.onMinecraftError(e); }
-	private void log(Object... w){ if(con != null) con.log(prefix, w); U.log(prefix, w); }
-	private void logerror(Throwable e){ e.printStackTrace(); if(con == null) return; con.log(prefix, "Error occurred. Logger won't vanish automatically."); con.log(e); }
+               this.assetsList = this.check ? this.compareAssets() : null;
+               this.downloadAssets = this.assetsList != null && !this.assetsList.isEmpty();
+               if (this.forceupdate) {
+                  this.downloadVersion = true;
+               } else {
+                  this.downloadVersion = !this.syncInfo.isInstalled() || !this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
+               }
 
-	public void onJavaProcessEnded(JavaProcess jp) {
-		int exit = jp.getExitCode();
-		
-		if(listener != null)
-			listener.onMinecraftClose();
-		
-		log("Minecraft closed with exit code: "+exit);		
-		if(!CrashDescriptor.parseExit(exit)) {
-			if(!handleCrash(exit)) if(con != null) con.killIn(5000);
-		} else if(con != null) con.killIn(5000);
-		
-		U.gc();
-	}
-	
-	private boolean handleCrash(int exit){
-		if(con == null) return false;
-		
-		CrashDescriptor descriptor = new CrashDescriptor(this);
-		Crash crash = descriptor.scan(exit);
-		
-		if(crash == null) return false;
-		
-		if(crash.getFile() != null)
-			log("Crash report found.");
-		
-		if(!crash.getSignatures().isEmpty())
-			log("Crash has been recognized.");
-		
-		log("Console won't vanish automatically.");	
-		con.show();
-		
-		if(listener == null) return true;
-		listener.onMinecraftCrash(crash);
-		return true;
-	}
+               if (!this.forceupdate && !this.downloadVersion && !this.downloadAssets) {
+                  this.prepare_();
+               } else {
+                  this.downloadResources();
+               }
+            } else {
+               this.log("Checking files for version " + this.version_name + " skipped.");
+               this.prepare_();
+            }
+         }
+      } else {
+         throw new MinecraftLauncherException("Version name is invalid: \"" + this.version_name + "\"", "version-invalid", this.version_name);
+      }
+   }
 
-	public void onJavaProcessError(JavaProcess jp, Throwable e) {
-		e.printStackTrace();		
-		if(con != null) con.log("Error has occurred:", e);
-		
-		if(listener != null)
-			listener.onMinecraftError(e);
-	}
+   private void prepare() {
+      try {
+         this.prepare_();
+      } catch (Exception var2) {
+         this.onError(var2);
+      }
 
-	public void onJavaProcessLog(JavaProcess jp, String line) {
-		U.plog(">", line);
-		
-		if(con != null) con.log(line);
-	}
-	
-	public Console getConsole(){
-		return con;
-	}
+   }
+
+   private void downloadResources() throws MinecraftLauncherException {
+      if (this.d == null) {
+         throw new MinecraftLauncherException("Downloader is NULL. Cannot download version!");
+      } else {
+         if (this.downloadVersion) {
+            try {
+               this.vm.downloadVersion(this.ver, this.syncInfo, this.forceupdate);
+            } catch (IOException var3) {
+               throw new MinecraftLauncherException("Cannot get downloadable jar!", "download-jar", var3);
+            }
+         }
+
+         if (this.downloadAssets) {
+            try {
+               this.vm.downloadResources(this.res, this.version, this.assetsList, this.forceupdate);
+            } catch (IOException var2) {
+               throw new MinecraftLauncherException("Cannot download resources!", "download-resources", var2);
+            }
+         }
+
+         this.ver.addHandler(new DownloadableHandler() {
+            public void onStart() {
+            }
+
+            public void onCompleteError() {
+               MinecraftLauncher.this.onError(new MinecraftLauncherException("Errors occurred, cancelling.", "download"));
+            }
+
+            public void onAbort() {
+               MinecraftLauncher.this.onStop();
+            }
+
+            public void onComplete() {
+               MinecraftLauncher.this.log("Version " + MinecraftLauncher.this.version_name + " downloaded!");
+               MinecraftLauncher.this.vm.getLocalVersionList().saveVersion(MinecraftLauncher.this.version);
+               if (MinecraftLauncher.this.downloadFlag) {
+                  MinecraftLauncher.this.prepare();
+               } else {
+                  MinecraftLauncher.this.downloadFlag = true;
+               }
+
+            }
+         });
+         this.ver.setConsole(this.con);
+         this.res.addHandler(new DownloadableHandler() {
+            public void onStart() {
+            }
+
+            public void onCompleteError() {
+               MinecraftLauncher.this.log("Error occurred while downloading the assets. Minecraft will be be launched, though");
+               this.onContinue();
+            }
+
+            public void onComplete() {
+               MinecraftLauncher.this.log("Assets have been downloaded!");
+               this.onContinue();
+            }
+
+            public void onAbort() {
+               MinecraftLauncher.this.onStop();
+            }
+
+            private void onContinue() {
+               if (MinecraftLauncher.this.downloadFlag) {
+                  MinecraftLauncher.this.prepare();
+               } else {
+                  MinecraftLauncher.this.downloadFlag = true;
+               }
+
+            }
+         });
+         this.res.setConsole(this.con);
+         if (!this.downloadVersion || !this.downloadAssets) {
+            this.downloadFlag = true;
+         }
+
+         if (this.downloadVersion) {
+            this.log("Downloading version " + this.version_name + "...");
+         }
+
+         if (this.downloadAssets) {
+            this.log("Downloading assets...");
+         }
+
+         this.d.add(this.ver);
+         this.d.add(this.res);
+         this.d.startLaunch();
+      }
+   }
+
+   private void prepare_() throws MinecraftLauncherException {
+      if (this.step != 0) {
+         throw new IllegalStateException("The game is not checked or is already launching!");
+      } else {
+         ++this.step;
+         this.onPrepare();
+         this.gameDir = new File(this.gamedir);
+         this.nativeDir = new File(this.gameDir, "versions/" + this.version.getId() + "/" + "natives");
+         if (!this.nativeDir.isDirectory()) {
+            this.nativeDir.mkdirs();
+         }
+
+         try {
+            this.unpackNatives(this.forceupdate);
+         } catch (IOException var6) {
+            throw new MinecraftLauncherException("Cannot unpack natives!", "unpack-natives", var6);
+         }
+
+         try {
+            this.deleteEntries();
+         } catch (IOException var5) {
+            throw new MinecraftLauncherException("Cannot delete entries!", "delete-entries", var5);
+         }
+
+         this.processLauncher = new JavaProcessLauncher(this.javadir, new String[0]);
+         this.processLauncher.directory(this.gameDir);
+
+         try {
+            this.assetsDir = this.reconstructAssets();
+         } catch (IOException var4) {
+            throw new MinecraftLauncherException("Cannot reconstruct assets!", "reconstruct-assets", var4);
+         }
+
+         if (this.os.equals(OperatingSystem.OSX)) {
+            File icon = null;
+
+            try {
+               icon = this.getAssetObject("icons/minecraft.icns");
+            } catch (IOException var3) {
+               this.log("Cannot get icon file from assets.", var3);
+            }
+
+            if (icon != null) {
+               this.processLauncher.addCommand("-Xdock:icon=\"" + icon.getAbsolutePath() + "\"", "-Xdock:name=Minecraft");
+            }
+         }
+
+         if (this.os.equals(OperatingSystem.WINDOWS)) {
+            this.processLauncher.addCommand("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
+         }
+
+         this.processLauncher.addCommand(this.os.is32Bit() ? "-Xmx512M" : "-Xmx1G");
+         this.processLauncher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
+         this.processLauncher.addCommand("-cp", this.constructClassPath(this.version));
+         this.processLauncher.addCommands(this.getJVMArguments());
+         if (this.jargs.length() > 0) {
+            this.processLauncher.addSplitCommands(this.jargs);
+         }
+
+         this.processLauncher.addCommand(this.version.getMainClass());
+         this.processLauncher.addCommands(this.getMinecraftArguments());
+         this.processLauncher.addCommand("--width", this.width);
+         this.processLauncher.addCommand("--height", this.height);
+         if (this.margs.length() > 0) {
+            this.processLauncher.addSplitCommands(this.margs);
+         }
+
+         this.launch();
+      }
+   }
+
+   public void launch() {
+      try {
+         this.launch_();
+      } catch (Exception var2) {
+         this.onError(var2);
+      }
+
+      U.gc();
+   }
+
+   private void launch_() throws MinecraftLauncherException {
+      if (this.step != 1) {
+         throw new IllegalStateException("The game is not prepared or is already launched!");
+      } else {
+         ++this.step;
+         U.gc();
+         this.log("Starting Minecraft " + this.version_name + "...");
+         this.log("Launching in:", this.gameDir.getAbsolutePath());
+         this.log("Running (characters are not escaped):");
+         this.log(this.processLauncher.getCommandsAsString());
+         if (!this.exit) {
+            this.onLaunch();
+         }
+
+         try {
+            JavaProcess process = this.processLauncher.start();
+            if (this.exit) {
+               TLauncher.kill();
+            } else {
+               process.safeSetExitRunnable(this);
+            }
+
+         } catch (Exception var2) {
+            throw new MinecraftLauncherException("Cannot start the game!", "start", var2);
+         }
+      }
+   }
+
+   private void removeNatives() {
+      this.nativeDir.delete();
+   }
+
+   private List compareAssets() {
+      this.migrateOldAssets();
+      this.log("Comparing assets...");
+      long start = System.nanoTime();
+      List result = this.vm.checkResources(this.version);
+      long end = System.nanoTime();
+      long delta = end - start;
+      this.log("Delta time to compare assets: " + delta / 1000000L + " ms.");
+      return result;
+   }
+
+   private void deleteEntries() throws IOException {
+      List entries = this.version.getUnnecessaryEntries();
+      if (entries != null && entries.size() != 0) {
+         this.log("Removing entries...");
+         File file = this.version.getJARFile(this.gameDir);
+         FileUtil.removeFromZip(file, entries);
+      }
+   }
+
+   private void unpackNatives(boolean force) throws IOException {
+      this.log("Unpacking natives...");
+      Collection libraries = this.version.getRelevantLibraries();
+      if (force) {
+         this.removeNatives();
+      }
+
+      Iterator var6 = libraries.iterator();
+
+      label68:
+      while(true) {
+         Library library;
+         Map nativesPerOs;
+         do {
+            do {
+               if (!var6.hasNext()) {
+                  return;
+               }
+
+               library = (Library)var6.next();
+               nativesPerOs = library.getNatives();
+            } while(nativesPerOs == null);
+         } while(nativesPerOs.get(this.os) == null);
+
+         File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String)nativesPerOs.get(this.os)));
+         ZipFile zip = new ZipFile(file);
+         ExtractRules extractRules = library.getExtractRules();
+         Enumeration entries = zip.entries();
+
+         while(true) {
+            ZipEntry entry;
+            File targetFile;
+            do {
+               do {
+                  do {
+                     if (!entries.hasMoreElements()) {
+                        zip.close();
+                        continue label68;
+                     }
+
+                     entry = (ZipEntry)entries.nextElement();
+                  } while(extractRules != null && !extractRules.shouldExtract(entry.getName()));
+
+                  targetFile = new File(this.nativeDir, entry.getName());
+               } while(!force && targetFile.exists());
+
+               if (targetFile.getParentFile() != null) {
+                  targetFile.getParentFile().mkdirs();
+               }
+            } while(entry.isDirectory());
+
+            BufferedInputStream inputStream = new BufferedInputStream(zip.getInputStream(entry));
+            byte[] buffer = new byte[2048];
+            FileOutputStream outputStream = new FileOutputStream(targetFile);
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+
+            int length;
+            while((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
+               bufferedOutputStream.write(buffer, 0, length);
+            }
+
+            inputStream.close();
+            bufferedOutputStream.close();
+         }
+      }
+   }
+
+   private File getAssetObject(String name) throws IOException {
+      File assetsDir = new File(this.gamedir, "assets");
+      File indexDir = new File(assetsDir, "indexes");
+      File objectsDir = new File(assetsDir, "objects");
+      String assetVersion = this.version.getAssets() == null ? "legacy" : this.version.getAssets();
+      File indexFile = new File(indexDir, assetVersion + ".json");
+      AssetIndex index = (AssetIndex)this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
+      String hash = ((AssetIndex.AssetObject)index.getFileMap().get(name)).getHash();
+      return new File(objectsDir, hash.substring(0, 2) + "/" + hash);
+   }
+
+   private File reconstructAssets() throws IOException {
+      File assetsDir = new File(this.gameDir, "assets");
+      File indexDir = new File(assetsDir, "indexes");
+      File objectDir = new File(assetsDir, "objects");
+      String assetVersion = this.version.getAssets() == null ? "legacy" : this.version.getAssets();
+      File indexFile = new File(indexDir, assetVersion + ".json");
+      File virtualRoot = new File(new File(assetsDir, "virtual"), assetVersion);
+      if (!indexFile.isFile()) {
+         this.log("No assets index file " + virtualRoot + "; can't reconstruct assets");
+         return virtualRoot;
+      } else {
+         AssetIndex index = (AssetIndex)this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
+         if (index.isVirtual()) {
+            this.log("Reconstructing virtual assets folder at " + virtualRoot);
+            Iterator var9 = index.getFileMap().entrySet().iterator();
+
+            while(var9.hasNext()) {
+               Entry entry = (Entry)var9.next();
+               File target = new File(virtualRoot, (String)entry.getKey());
+               File original = new File(new File(objectDir, ((AssetIndex.AssetObject)entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject)entry.getValue()).getHash());
+               if (!target.isFile()) {
+                  FileUtils.copyFile(original, target, false);
+               }
+            }
+
+            FileUtil.writeFile(new File(virtualRoot, ".lastused"), this.dateAdapter.serializeToString(new Date()));
+         }
+
+         return virtualRoot;
+      }
+   }
+
+   private void migrateOldAssets() {
+      File sourceDir = new File(this.gamedir, "assets");
+      File objectsDir = new File(sourceDir, "objects");
+      if (sourceDir.isDirectory()) {
+         IOFileFilter migratableFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("indexes"), FileFilterUtils.nameFileFilter("objects"), FileFilterUtils.nameFileFilter("virtual")));
+
+         File file;
+         for(Iterator var5 = (new TreeSet(FileUtils.listFiles(sourceDir, TrueFileFilter.TRUE, migratableFilter))).iterator(); var5.hasNext(); FileUtils.deleteQuietly(file)) {
+            file = (File)var5.next();
+            String hash = FileUtil.getDigest(file, "SHA-1", 40);
+            File destinationFile = new File(objectsDir, hash.substring(0, 2) + "/" + hash);
+            if (!destinationFile.exists()) {
+               this.log("Migrated old asset", file, "into", destinationFile);
+
+               try {
+                  FileUtils.copyFile(file, destinationFile);
+               } catch (IOException var9) {
+                  this.log("Couldn't migrate old asset", var9);
+               }
+            }
+         }
+
+         File[] assets = sourceDir.listFiles();
+         if (assets != null) {
+            File[] var8 = assets;
+            int var13 = assets.length;
+
+            for(int var12 = 0; var12 < var13; ++var12) {
+               File file = var8[var12];
+               if (!file.getName().equals("indexes") && !file.getName().equals("objects") && !file.getName().equals("virtual")) {
+                  this.log("Cleaning up old assets directory", file, "after migration");
+                  FileUtils.deleteQuietly(file);
+               }
+            }
+         }
+
+      }
+   }
+
+   private String constructClassPath(CompleteVersion version) throws MinecraftLauncherException {
+      this.log("Constructing Classpath...");
+      StringBuilder result = new StringBuilder();
+      Collection classPath = version.getClassPath(this.os, this.gameDir);
+      String separator = System.getProperty("path.separator");
+
+      File file;
+      for(Iterator var6 = classPath.iterator(); var6.hasNext(); result.append(file.getAbsolutePath())) {
+         file = (File)var6.next();
+         if (!file.isFile()) {
+            throw new MinecraftLauncherException("Classpath is not found: " + file, "classpath", file);
+         }
+
+         if (result.length() > 0) {
+            result.append(separator);
+         }
+      }
+
+      return result.toString();
+   }
+
+   private String[] getMinecraftArguments() throws MinecraftLauncherException {
+      this.log("Getting Minecraft arguments...");
+      if (this.version.getMinecraftArguments() == null) {
+         throw new MinecraftLauncherException("Can't run version, missing minecraftArguments", "noArgs");
+      } else {
+         Map map = new HashMap();
+         StrSubstitutor substitutor = new StrSubstitutor(map);
+         String[] split = this.version.getMinecraftArguments().split(" ");
+         map.put("auth_username", this.username);
+         map.put("auth_session", "null");
+         map.put("auth_access_token", "null");
+         map.put("user_properties", "{}");
+         map.put("auth_player_name", this.username);
+         map.put("auth_uuid", (new UUID(0L, 0L)).toString());
+         map.put("user_type", "legacy");
+         map.put("profile_name", "(Default)");
+         map.put("version_name", this.version.getId());
+         map.put("game_directory", this.gameDir.getAbsolutePath());
+         map.put("game_assets", this.assetsDir.getAbsolutePath());
+         map.put("assets_root", (new File(this.gameDir, "assets")).getAbsolutePath());
+         map.put("assets_index_name", this.version.getAssets() == null ? "legacy" : this.version.getAssets());
+
+         for(int i = 0; i < split.length; ++i) {
+            split[i] = substitutor.replace(split[i]);
+         }
+
+         return split;
+      }
+   }
+
+   private String[] getJVMArguments() {
+      String jvmargs = this.version.getJVMArguments();
+      return jvmargs != null ? jvmargs.split(" ") : new String[0];
+   }
+
+   void onCheck() {
+      this.working = true;
+      if (this.listener != null) {
+         this.listener.onMinecraftCheck();
+      }
+
+   }
+
+   void onPrepare() {
+      if (this.listener != null) {
+         this.listener.onMinecraftPrepare();
+      }
+
+   }
+
+   void onLaunch() {
+      if (this.listener != null) {
+         this.listener.onMinecraftLaunch();
+      }
+
+   }
+
+   void onStop() {
+      this.working = false;
+      this.log("Launcher stopped.");
+      if (this.listener != null) {
+         this.listener.onMinecraftLaunchStop();
+      }
+
+   }
+
+   void showWarning(String message, String langpath, Object replace) {
+      this.log("[WARNING] " + message);
+      if (this.listener != null) {
+         this.listener.onMinecraftWarning(langpath, replace);
+      }
+
+   }
+
+   void showWarning(String message, String langpath) {
+      this.showWarning(message, langpath, (Object)null);
+   }
+
+   void onError(Throwable e) {
+      this.working = false;
+      this.logerror(e);
+      if (this.listener != null) {
+         if (this.listener instanceof MinecraftLauncherException) {
+            this.listener.onMinecraftError((MinecraftLauncherException)e);
+         } else {
+            this.listener.onMinecraftError(e);
+         }
+
+      }
+   }
+
+   private void log(Object... w) {
+      if (this.con != null) {
+         this.con.log("[MinecraftLauncher]", w);
+      }
+
+      U.log("[MinecraftLauncher]", w);
+   }
+
+   private void logerror(Throwable e) {
+      e.printStackTrace();
+      if (this.con != null) {
+         this.con.log("[MinecraftLauncher]", "Error occurred. Logger won't vanish automatically.");
+         this.con.log(e);
+      }
+   }
+
+   public void onJavaProcessEnded(JavaProcess jp) {
+      int exit = jp.getExitCode();
+      this.working = false;
+      if (this.listener != null) {
+         this.listener.onMinecraftClose();
+      }
+
+      this.log("Minecraft closed with exit code: " + exit);
+      if (!CrashDescriptor.parseExit(exit)) {
+         if (!this.handleCrash(exit) && this.con != null) {
+            this.con.killIn(5000L);
+         }
+      } else if (this.con != null) {
+         this.con.killIn(5000L);
+      }
+
+      U.gc();
+   }
+
+   private boolean handleCrash(int exit) {
+      if (this.con == null) {
+         return false;
+      } else {
+         CrashDescriptor descriptor = new CrashDescriptor(this);
+         Crash crash = descriptor.scan(exit);
+         if (crash == null) {
+            return false;
+         } else {
+            if (crash.getFile() != null) {
+               this.log("Crash report found.");
+            }
+
+            if (!crash.getSignatures().isEmpty()) {
+               this.log("Crash has been recognized.");
+            }
+
+            this.log("Console won't vanish automatically.");
+            this.con.show();
+            if (this.listener == null) {
+               return true;
+            } else {
+               this.listener.onMinecraftCrash(crash);
+               return true;
+            }
+         }
+      }
+   }
+
+   public void onJavaProcessError(JavaProcess jp, Throwable e) {
+      e.printStackTrace();
+      if (this.con != null) {
+         this.con.log("Error has occurred:", e);
+      }
+
+      if (this.listener != null) {
+         this.listener.onMinecraftError(e);
+      }
+
+   }
+
+   public void onJavaProcessLog(JavaProcess jp, String line) {
+      U.plog(">", line);
+      if (this.con != null) {
+         this.con.log(line);
+      }
+
+   }
+
+   public Console getConsole() {
+      return this.con;
+   }
+
+   public boolean isWorking() {
+      return this.working;
+   }
 }

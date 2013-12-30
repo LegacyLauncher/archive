@@ -1,12 +1,15 @@
 package com.turikhay.tlauncher.ui;
 
-import javax.swing.JComponent;
+import java.awt.Component;
 
 public class AnimateThread {
-	public final static long DEFAULT_TIME = 1000;
-	
-	public static void animate(JComponent comp, int destX, int destY, long ms){
-		comp.setLocation(destX, destY);
-	}
-	public static void animate(JComponent comp, int destX, int destY){ animate(comp, destX, destY, DEFAULT_TIME); }
+   public static final long DEFAULT_TIME = 1000L;
+
+   public static void animate(Component comp, int destX, int destY, long ms) {
+      comp.setLocation(destX, destY);
+   }
+
+   public static void animate(Component comp, int destX, int destY) {
+      animate(comp, destX, destY, 1000L);
+   }
 }

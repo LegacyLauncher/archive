@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
@@ -10,296 +11,309 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-
 import javax.swing.JLabel;
 
-import com.turikhay.tlauncher.ui.TimeoutField.FieldType;
-import com.turikhay.util.U;
-
 public class SettingsForm extends CenterPanel implements LoginListener {
-	private static final long serialVersionUID = -4851979612103757573L;
-	
-	final GameDirectoryField gameDirField;
-	final ResolutionField resolutionField;
-	final JavaExecutableField pathCustomField;
-	final AutologinTimeoutField autologinField;
-	final LangChoice langChoice;
-	final LaunchActionChoice launchActionChoice;
-	final TimeoutField connectionField;
-	//final MemoryField memoryCustomField;
-	
-	final LocalizableLabel gameDirCustom, resolutionCustom, pathCustom, argsCustom, tlauncherSettings, autologinCustom, launchActionCustom, connTimeoutLabel; //memoryCustom;
-	final JLabel langCustom;
-	final ArgsField javaArgsField, minecraftArgsField;
-	final SettingsCheckbox snapshotsSelect, betaSelect, alphaSelect, cheatsSelect, consoleSelect, sunSelect;
-	final LocalizableLabel versionChoice;
+   private static final long serialVersionUID = -4851979612103757573L;
+   final GameDirectoryField gameDirField = new GameDirectoryField(this);
+   final ResolutionField resolutionField;
+   final JavaExecutableField pathCustomField;
+   final AutologinTimeoutField autologinField;
+   final LangChoice langChoice;
+   final LaunchActionChoice launchActionChoice;
+   final TimeoutField connectionField;
+   final LocalizableLabel gameDirCustom;
+   final LocalizableLabel resolutionCustom;
+   final LocalizableLabel pathCustom;
+   final LocalizableLabel argsCustom;
+   final LocalizableLabel tlauncherSettings;
+   final LocalizableLabel autologinCustom;
+   final LocalizableLabel launchActionCustom;
+   final LocalizableLabel connTimeoutLabel;
+   final JLabel langCustom;
+   final ArgsField javaArgsField;
+   final ArgsField minecraftArgsField;
+   final SettingsCheckbox snapshotsSelect;
+   final SettingsCheckbox betaSelect;
+   final SettingsCheckbox alphaSelect;
+   final SettingsCheckbox cheatsSelect;
+   final SettingsCheckbox consoleSelect;
+   final SettingsCheckbox sunSelect;
+   final LocalizableLabel versionChoice;
+   final LocalizableButton defButton;
+   final LocalizableButton saveButton;
+   final SettingsPanel settingsPan = new SettingsPanel(this);
+   final VersionsPanel versionsPan;
+   final TLauncherSettingsPanel tlauncherPan;
+   final ArgsPanel argsPan;
+   final SaveSettingsPanel savePan;
+   final FocusListener warner = new FocusListener() {
+      public void focusGained(FocusEvent e) {
+         SettingsForm.this.error_l.setText("settings.warning");
+      }
 
-	final LocalizableButton defButton, saveButton;
-	
-	final SettingsPanel settingsPan;
-	final VersionsPanel versionsPan;
-	final TLauncherSettingsPanel tlauncherPan;
-	final ArgsPanel argsPan;
-	final SaveSettingsPanel savePan;
-	
-	final FocusListener warner, restart;
-	
-	
-	private String oldDir;
-	private boolean
-		snapshot_old, snapshot_changed,
-		beta_old, beta_changed,
-		alpha_old, alpha_changed,
-		cheats_old, cheats_changed;
+      public void focusLost(FocusEvent e) {
+         SettingsForm.this.error_l.setText(" ");
+      }
+   };
+   final FocusListener restart = new FocusListener() {
+      public void focusGained(FocusEvent e) {
+         SettingsForm.this.error_l.setText("settings.restart");
+      }
 
-	public SettingsForm(TLauncherFrame tlauncher) {
-		super(tlauncher);
-		
-		warner = new FocusListener(){
-			public void focusGained(FocusEvent e) {
-				error_l.setText("settings.warning");
-			}
-			public void focusLost(FocusEvent e) {
-				error_l.setText(" ");
-			}
-		};
-		
-		restart = new FocusListener(){
-			public void focusGained(FocusEvent e) {
-				error_l.setText("settings.restart");
-			}
-			public void focusLost(FocusEvent e) {
-				error_l.setText(" ");
-			}
-		};
-		
-		settingsPan = new SettingsPanel(this);
-		
-		gameDirField = new GameDirectoryField(this); gameDirField.addFocusListener(warner);
-		resolutionField = new ResolutionField(this);
-		pathCustomField = new JavaExecutableField(this); pathCustomField.addFocusListener(warner);
-		autologinField = new AutologinTimeoutField(this);
-		langChoice = new LangChoice(this);
-		launchActionChoice = new LaunchActionChoice(this);
-		connectionField = new TimeoutField(this, FieldType.CONNECTION);
-		//memoryCustomField = new MemoryField(this); memoryCustomField.addFocusListener(warner);
-		
-		gameDirCustom = new LocalizableLabel("settings.client.gamedir.label");
-		resolutionCustom = new LocalizableLabel("settings.client.resolution.label");
-		
-		versionChoice = new LocalizableLabel("settings.versions.label");
-		
-		snapshotsSelect = new SettingsCheckbox(this, "settings.versions.snapshots", "minecraft.versions.snapshots");
-		snapshotsSelect.addItemListener(new ItemListener(){
-			public void itemStateChanged(ItemEvent e) {
-				boolean selected = e.getStateChange() == ItemEvent.SELECTED;
-				snapshot_changed = (snapshot_old != selected);
-			}
-		});
-		betaSelect = new SettingsCheckbox(this, "settings.versions.beta", "minecraft.versions.beta");
-		betaSelect.addItemListener(new CheckBoxListener(){
-			public void itemStateChanged(boolean newstate) {
-				beta_changed = (beta_old != newstate);
-			}
-		});
-		alphaSelect = new SettingsCheckbox(this, "settings.versions.alpha", "minecraft.versions.alpha");
-		alphaSelect.addItemListener(new ItemListener(){
-			public void itemStateChanged(ItemEvent e) {
-				boolean selected = e.getStateChange() == ItemEvent.SELECTED;
-				alpha_changed = (alpha_old != selected);
-			}
-		});
-		cheatsSelect = new SettingsCheckbox(this, "settings.versions.cheats", "minecraft.versions.cheats");
-		cheatsSelect.addItemListener(new ItemListener(){
-			public void itemStateChanged(ItemEvent e) {
-				boolean selected = e.getStateChange() == ItemEvent.SELECTED;
-				cheats_changed = (cheats_old != selected);
-			}
-		});
-		versionsPan = new VersionsPanel(this);
-		
-		pathCustom = new LocalizableLabel("settings.java.path.label");
-		argsCustom = new LocalizableLabel("settings.java.args.label");
-		javaArgsField = new ArgsField(this, "settings.java.args.jvm", "minecraft.javaargs"); javaArgsField.addFocusListener(warner);
-		minecraftArgsField = new ArgsField(this, "settings.java.args.minecraft", "minecraft.args"); minecraftArgsField.addFocusListener(warner);
-		argsPan = new ArgsPanel(this);
-		tlauncherSettings = new LocalizableLabel("settings.tlauncher.label");
-		consoleSelect = new SettingsCheckbox("settings.tlauncher.console", "gui.console", false);
-		sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun", true);
-		sunSelect.addItemListener(new ItemListener(){
-			public void itemStateChanged(ItemEvent e) {
-				if(f.mp == null) return; // TODO fix npe
-				switch(e.getStateChange()){
-				case ItemEvent.SELECTED:
-					f.mp.startBackground();
-					break;
-				case ItemEvent.DESELECTED:
-					f.mp.stopBackground();
-					break;
-				}
-			}
-		});
-		tlauncherPan = new TLauncherSettingsPanel(this);
-		autologinCustom = new LocalizableLabel("settings.tlauncher.autologin.label");
-		//memoryCustom = new Label(l.get("settings.java.memory.label"));
-		
-		connTimeoutLabel = new LocalizableLabel("settings.timeouts.connection.label");
-		
-		langCustom = new JLabel("Language:");
-		launchActionCustom = new LocalizableLabel("settings.launch-action.label");
-		
-		saveButton = new LocalizableButton("settings.save");
-		saveButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) { defocus();
-				if(save())
-					f.mp.toggleSettings();
-			}
-		});
-		
-		defButton = new LocalizableButton("settings.default");
-		defButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) { defocus();
-				if(!Alert.showQuestion("settings.setdefault", true)) return;
-				
-				setToDefaults();
-			}
-		});
-		
-		savePan = new SaveSettingsPanel(this);
-		 
-		settingsPan.createInterface();
-		
-		add(error);
-		add(settingsPan);
-		add(savePan);
-		
-		updateValues();
-	}
-	
-	public void updateValues(){
-		//U.log("Updating values...");
-		
-		SettingsField sf; String key, val;
-		for(Component c : findFields())
-			if(c instanceof SettingsField){
-				//U.log("> Filling " + c.getClass().getSimpleName()+"...");
-				
-				sf = (SettingsField) c;
-				key = sf.getSettingsPath();
-				val = s.get(key);
-				//U.log("Key:", key, "Value:", val);
-				
-				sf.setValue(val);
-			}
-		
-		oldDir = gameDirField.getValue();
-		
-		snapshot_changed = beta_changed = alpha_changed = cheats_changed = false;
-		
-		snapshot_old = snapshotsSelect.getState();
-		alpha_old = alphaSelect.getState();
-		beta_old = betaSelect.getState();
-		cheats_old = cheatsSelect.getState();
-	}
-	
-	public void updateIfSaveable(){
-		String key;
-		
-		for(Component c : findFields())
-			if(c instanceof SettingsField){				
-				key = ((SettingsField) c).getSettingsPath();
-				
-				if(s.isSaveable(key))
-					continue;
-				
-				c.setEnabled(false);
-			}
-	}
-	
-	public void setToDefaults(){
-		for(Component c : findFields())
-			if(c instanceof SettingsField)
-				((SettingsField) c).setToDefault();
-	}
-	
-	public boolean save(){
-		U.log("Saving...");
-		
-		SettingsField sf;
-		for(Component c : findFields())
-			if(c instanceof SettingsField){
-				//U.log("> Checking " + c.getClass().getSimpleName()+"...");
-				sf = (SettingsField) c;
-				if(!sf.isValueValid()){
-					//U.log("Invalid!");
-					c.setBackground(wrongColor);
-					return false;
-				}
-				
-				if(!c.isEnabled()){
-					//U.log("Is insaveable!");
-					continue;
-				}
-				
-				s.set(sf.getSettingsPath(), sf.getValue(), false);
-				//U.log("Saved (", sf.getSettingsPath(), ":", sf.getValue(), ")");
-			}
-		
-		try{
-			s.save();
-			U.log("Settings saved!");
-		}catch(IOException e){
-			U.log("Cannot save settings!");
-			Alert.showError(e, false);
-		}
-		
-		if(langChoice.changed){
-			langChoice.setCurrent();
-			U.log("Language has been changed.");
-			f.updateLocales();
-		}
-		
-		String gamedir = gameDirField.getValue();
-		if(!gamedir.equals(oldDir)){ oldDir = gamedir;
-			U.log("Game directory has been changed. Recreating Version Manager.");
-			try {
-				t.getVersionManager().recreate();
-			} catch (IOException e) {
-				Alert.showError(e, false);
-			}
-			return true;
-		}
-		
-		if(snapshot_changed || beta_changed || alpha_changed || cheats_changed) f.lf.versionchoice.asyncRefresh();
-		snapshot_changed = beta_changed = alpha_changed = cheats_changed = false;
-		
-		snapshot_old = snapshotsSelect.getState();
-		alpha_old = alphaSelect.getState();
-		beta_old = betaSelect.getState();
-		cheats_old = cheatsSelect.getState();
-		
-		return true;
-	}
-	
-	private List<Component> findFields(Container container){
-		List<Component> f = new ArrayList<Component>();
-		
-		for(Component c : container.getComponents())
-			if(c instanceof SettingsField) f.add(c);
-			else if(c instanceof Container) f.addAll(findFields((Container) c));
-		
-		return f;
-	}
-	
-	private List<Component> findFields(){ return findFields(this); }
-	
-	public boolean onLogin() {
-		if(save()) return true;
-		
-		f.mp.setSettings(true);
-		return false;
-	}
-	public void onLoginFailed() {}
-	public void onLoginSuccess() {}
+      public void focusLost(FocusEvent e) {
+         SettingsForm.this.error_l.setText(" ");
+      }
+   };
+   private String oldDir;
+   private boolean snapshot_old;
+   private boolean snapshot_changed;
+   private boolean beta_old;
+   private boolean beta_changed;
+   private boolean alpha_old;
+   private boolean alpha_changed;
+   private boolean cheats_old;
+   private boolean cheats_changed;
+
+   public SettingsForm(TLauncherFrame tlauncher) {
+      super(tlauncher);
+      this.gameDirField.addFocusListener(this.warner);
+      this.resolutionField = new ResolutionField(this);
+      this.pathCustomField = new JavaExecutableField(this);
+      this.pathCustomField.addFocusListener(this.warner);
+      this.autologinField = new AutologinTimeoutField(this);
+      this.langChoice = new LangChoice(this);
+      this.launchActionChoice = new LaunchActionChoice(this);
+      this.connectionField = new TimeoutField(this, TimeoutField.FieldType.CONNECTION);
+      this.gameDirCustom = new LocalizableLabel("settings.client.gamedir.label");
+      this.resolutionCustom = new LocalizableLabel("settings.client.resolution.label");
+      this.versionChoice = new LocalizableLabel("settings.versions.label");
+      this.snapshotsSelect = new SettingsCheckbox(this, "settings.versions.snapshots", "minecraft.versions.snapshots");
+      this.snapshotsSelect.addItemListener(new ItemListener() {
+         public void itemStateChanged(ItemEvent e) {
+            boolean selected = e.getStateChange() == 1;
+            SettingsForm.this.snapshot_changed = SettingsForm.this.snapshot_old ^ selected;
+         }
+      });
+      this.betaSelect = new SettingsCheckbox(this, "settings.versions.beta", "minecraft.versions.beta");
+      this.betaSelect.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean newstate) {
+            SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ newstate;
+         }
+      });
+      this.alphaSelect = new SettingsCheckbox(this, "settings.versions.alpha", "minecraft.versions.alpha");
+      this.alphaSelect.addItemListener(new ItemListener() {
+         public void itemStateChanged(ItemEvent e) {
+            boolean selected = e.getStateChange() == 1;
+            SettingsForm.this.alpha_changed = SettingsForm.this.alpha_old ^ selected;
+         }
+      });
+      this.cheatsSelect = new SettingsCheckbox(this, "settings.versions.cheats", "minecraft.versions.cheats");
+      this.cheatsSelect.addItemListener(new ItemListener() {
+         public void itemStateChanged(ItemEvent e) {
+            boolean selected = e.getStateChange() == 1;
+            SettingsForm.this.cheats_changed = SettingsForm.this.cheats_old ^ selected;
+         }
+      });
+      this.versionsPan = new VersionsPanel(this);
+      this.pathCustom = new LocalizableLabel("settings.java.path.label");
+      this.argsCustom = new LocalizableLabel("settings.java.args.label");
+      this.javaArgsField = new ArgsField(this, "settings.java.args.jvm", "minecraft.javaargs");
+      this.javaArgsField.addFocusListener(this.warner);
+      this.minecraftArgsField = new ArgsField(this, "settings.java.args.minecraft", "minecraft.args");
+      this.minecraftArgsField.addFocusListener(this.warner);
+      this.argsPan = new ArgsPanel(this);
+      this.tlauncherSettings = new LocalizableLabel("settings.tlauncher.label");
+      this.consoleSelect = new SettingsCheckbox("settings.tlauncher.console", "gui.console", false);
+      this.sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun", true);
+      this.sunSelect.addItemListener(new ItemListener() {
+         public void itemStateChanged(ItemEvent e) {
+            if (SettingsForm.this.f.mp != null) {
+               switch(e.getStateChange()) {
+               case 1:
+                  SettingsForm.this.f.mp.startBackground();
+                  break;
+               case 2:
+                  SettingsForm.this.f.mp.stopBackground();
+               }
+
+            }
+         }
+      });
+      this.tlauncherPan = new TLauncherSettingsPanel(this);
+      this.autologinCustom = new LocalizableLabel("settings.tlauncher.autologin.label");
+      this.connTimeoutLabel = new LocalizableLabel("settings.timeouts.connection.label");
+      this.langCustom = new JLabel("Language:");
+      this.launchActionCustom = new LocalizableLabel("settings.launch-action.label");
+      this.saveButton = new LocalizableButton("settings.save");
+      this.saveButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsForm.this.defocus();
+            if (SettingsForm.this.save()) {
+               SettingsForm.this.f.mp.toggleSettings();
+            }
+
+         }
+      });
+      this.defButton = new LocalizableButton("settings.default");
+      this.defButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsForm.this.defocus();
+            if (Alert.showQuestion("settings.setdefault", true)) {
+               SettingsForm.this.setToDefaults();
+            }
+         }
+      });
+      this.savePan = new SaveSettingsPanel(this);
+      this.settingsPan.createInterface();
+      this.add(this.error);
+      this.add(this.settingsPan);
+      this.add(this.savePan);
+      this.updateValues();
+   }
+
+   public void updateValues() {
+      Iterator var5 = this.findFields().iterator();
+
+      while(var5.hasNext()) {
+         Component c = (Component)var5.next();
+         if (c instanceof SettingsField) {
+            SettingsField sf = (SettingsField)c;
+            String key = sf.getSettingsPath();
+            String val = this.s.get(key);
+            sf.setValue(val);
+         }
+      }
+
+      this.oldDir = this.gameDirField.getValue();
+      this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = false;
+      this.snapshot_old = this.snapshotsSelect.getState();
+      this.alpha_old = this.alphaSelect.getState();
+      this.beta_old = this.betaSelect.getState();
+      this.cheats_old = this.cheatsSelect.getState();
+   }
+
+   public void updateIfSaveable() {
+      Iterator var3 = this.findFields().iterator();
+
+      while(var3.hasNext()) {
+         Component c = (Component)var3.next();
+         if (c instanceof SettingsField) {
+            String key = ((SettingsField)c).getSettingsPath();
+            if (!this.s.isSaveable(key)) {
+               c.setEnabled(false);
+            }
+         }
+      }
+
+   }
+
+   public void setToDefaults() {
+      Iterator var2 = this.findFields().iterator();
+
+      while(var2.hasNext()) {
+         Component c = (Component)var2.next();
+         if (c instanceof SettingsField) {
+            ((SettingsField)c).setToDefault();
+         }
+      }
+
+   }
+
+   public boolean save() {
+      U.log("Saving...");
+      Iterator var3 = this.findFields().iterator();
+
+      while(var3.hasNext()) {
+         Component c = (Component)var3.next();
+         if (c instanceof SettingsField) {
+            SettingsField sf = (SettingsField)c;
+            if (!sf.isValueValid()) {
+               c.setBackground(this.wrongColor);
+               return false;
+            }
+
+            if (c.isEnabled()) {
+               this.s.set(sf.getSettingsPath(), sf.getValue(), false);
+            }
+         }
+      }
+
+      try {
+         this.s.save();
+         U.log("Settings saved!");
+      } catch (IOException var5) {
+         U.log("Cannot save settings!");
+         Alert.showError(var5, false);
+      }
+
+      if (this.langChoice.changed) {
+         this.langChoice.setCurrent();
+         U.log("Language has been changed.");
+         this.f.updateLocales();
+      }
+
+      String gamedir = this.gameDirField.getValue();
+      if (!gamedir.equals(this.oldDir)) {
+         this.oldDir = gamedir;
+         U.log("Game directory has been changed. Recreating Version Manager.");
+
+         try {
+            this.t.getVersionManager().recreate();
+         } catch (IOException var4) {
+            Alert.showError(var4, false);
+         }
+
+         return true;
+      } else {
+         if (this.snapshot_changed || this.beta_changed || this.alpha_changed || this.cheats_changed) {
+            this.f.lf.versionchoice.asyncRefresh();
+         }
+
+         this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = false;
+         this.snapshot_old = this.snapshotsSelect.getState();
+         this.alpha_old = this.alphaSelect.getState();
+         this.beta_old = this.betaSelect.getState();
+         this.cheats_old = this.cheatsSelect.getState();
+         return true;
+      }
+   }
+
+   private List findFields(Container container) {
+      List f = new ArrayList();
+      Component[] var6;
+      int var5 = (var6 = container.getComponents()).length;
+
+      for(int var4 = 0; var4 < var5; ++var4) {
+         Component c = var6[var4];
+         if (c instanceof SettingsField) {
+            f.add(c);
+         } else if (c instanceof Container) {
+            f.addAll(this.findFields((Container)c));
+         }
+      }
+
+      return f;
+   }
+
+   private List findFields() {
+      return this.findFields(this);
+   }
+
+   public boolean onLogin() {
+      if (this.save()) {
+         return true;
+      } else {
+         this.f.mp.setSettings(true);
+         return false;
+      }
+   }
+
+   public void onLoginFailed() {
+   }
+
+   public void onLoginSuccess() {
+   }
 }
