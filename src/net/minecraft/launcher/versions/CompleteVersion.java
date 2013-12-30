@@ -1,257 +1,288 @@
 package net.minecraft.launcher.versions;
 
+import com.turikhay.tlauncher.downloader.Downloadable;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.turikhay.tlauncher.downloader.Downloadable;
-
 import net.minecraft.launcher.OperatingSystem;
 
-public class CompleteVersion
-  implements Version
-{
-  private String original_id, id, url;
-  private Date time;
-  private Date releaseTime;
-  private ReleaseType type;
-  private String jvmArguments;
-  private String minecraftArguments;
-  private List<Library> libraries;
-  private String mainClass;
-  private int minimumLauncherVersion;
-  private int tlauncherVersion;
-  private String incompatibilityReason;
-  private List<Rule> rules;
-  private List<String> unnecessaryEntries;
-  private String assets;
+public class CompleteVersion implements Version {
+   private String original_id;
+   private String id;
+   private String url;
+   private Date time;
+   private Date releaseTime;
+   private ReleaseType type;
+   private String jvmArguments;
+   private String minecraftArguments;
+   private List libraries;
+   private String mainClass;
+   private int minimumLauncherVersion;
+   private int tlauncherVersion;
+   private String incompatibilityReason;
+   private List rules;
+   private List unnecessaryEntries;
+   private String assets;
 
-  public String getId()
-  {
-    return this.id;
-  }
+   public String getId() {
+      return this.id;
+   }
 
-  public ReleaseType getType()
-  {
-    return this.type;
-  }
+   public ReleaseType getType() {
+      return this.type;
+   }
 
-  public Date getUpdatedTime()
-  {
-    return this.time;
-  }
+   public Date getUpdatedTime() {
+      return this.time;
+   }
 
-  public Date getReleaseTime()
-  {
-    return this.releaseTime;
-  }
+   public Date getReleaseTime() {
+      return this.releaseTime;
+   }
 
-  public Collection<Library> getLibraries() {
-    return this.libraries;
-  }
+   public Collection getLibraries() {
+      return this.libraries;
+   }
 
-  public String getMainClass() {
-    return this.mainClass;
-  }
+   public String getMainClass() {
+      return this.mainClass;
+   }
 
-  public void setUpdatedTime(Date time)
-  {
-    if (time == null) throw new IllegalArgumentException("Time cannot be null");
-    this.time = time;
-  }
-
-  public void setReleaseTime(Date time)
-  {
-    if (time == null) throw new IllegalArgumentException("Time cannot be null");
-    this.releaseTime = time;
-  }
-
-  public void setType(ReleaseType type)
-  {
-    if (type == null) throw new IllegalArgumentException("Release type cannot be null");
-    this.type = type;
-  }
-
-  public void setMainClass(String mainClass) {
-    if ((mainClass == null) || (mainClass.length() == 0)) throw new IllegalArgumentException("Main class cannot be null or empty");
-    this.mainClass = mainClass;
-  }
-
-  public Collection<Library> getRelevantLibraries() {
-    List<Library> result = new ArrayList<Library>();
-
-    for (Library library : this.libraries) {
-      if (library.appliesToCurrentEnvironment()) {
-        result.add(library);
+   public void setUpdatedTime(Date time) {
+      if (time == null) {
+         throw new IllegalArgumentException("Time cannot be null");
+      } else {
+         this.time = time;
       }
-    }
+   }
 
-    return result;
-  }
-
-  public Collection<File> getClassPath(OperatingSystem os, File base) {
-    Collection<Library> libraries = getRelevantLibraries();
-    Collection<File> result = new ArrayList<File>();
-
-    for (Library library : libraries) {
-      if (library.getNatives() == null) {
-        result.add(new File(base, "libraries/" + library.getArtifactPath()));
+   public void setReleaseTime(Date time) {
+      if (time == null) {
+         throw new IllegalArgumentException("Time cannot be null");
+      } else {
+         this.releaseTime = time;
       }
-    }
+   }
 
-    result.add(getJARFile(base));
-
-    return result;
-  }
-  
-  public File getJARFile(File base){
-	  return new File(base, "versions/" + getId() + "/" + getId() + ".jar");
-  }
-
-  public Collection<String> getExtractFiles(OperatingSystem os) {
-    Collection<Library> libraries = getRelevantLibraries();
-    Collection<String> result = new ArrayList<String>();
-
-    for (Library library : libraries) {
-      Map<OperatingSystem, String> natives = library.getNatives();
-
-      if ((natives != null) && (natives.containsKey(os))) {
-        result.add("libraries/" + library.getArtifactPath(natives.get(os)));
+   public void setType(ReleaseType type) {
+      if (type == null) {
+         throw new IllegalArgumentException("Release type cannot be null");
+      } else {
+         this.type = type;
       }
-    }
+   }
 
-    return result;
-  }
-
-  public Set<String> getRequiredFiles(OperatingSystem os) {
-    Set<String> neededFiles = new HashSet<String>();
-
-    for (Library library : getRelevantLibraries()) {
-      if (library.getNatives() != null) {
-        String natives = (String)library.getNatives().get(os);
-        if (natives != null) neededFiles.add("libraries/" + library.getArtifactPath(natives)); 
+   public void setMainClass(String mainClass) {
+      if (mainClass != null && mainClass.length() != 0) {
+         this.mainClass = mainClass;
+      } else {
+         throw new IllegalArgumentException("Main class cannot be null or empty");
       }
-      else { neededFiles.add("libraries/" + library.getArtifactPath()); }
-    }
+   }
 
-    return neededFiles;
-  }
+   public Collection getRelevantLibraries() {
+      List result = new ArrayList();
+      Iterator var3 = this.libraries.iterator();
 
-  public Set<Downloadable> getRequiredDownloadables(OperatingSystem os, VersionSource source, File targetDirectory, boolean force) throws MalformedURLException {
-    Set<Downloadable> neededFiles = new HashSet<Downloadable>();
-
-    for (Library library : getRelevantLibraries()) {
-      String file = null;
-
-      if (library.getNatives() != null) {
-        String natives = (String)library.getNatives().get(os);
-        if (natives != null)
-          file = library.getArtifactPath(natives);
-      }
-      else {
-        file = library.getArtifactPath();
+      while(var3.hasNext()) {
+         Library library = (Library)var3.next();
+         if (library.appliesToCurrentEnvironment()) {
+            result.add(library);
+         }
       }
 
-      if (file != null) {
-    	  String url = library.hasExactUrl()? library.getExactDownloadUrl() : (library.getDownloadUrl() + file);
-    	  if(url.startsWith("/")) url = source.getSelectedRepo() + url.substring(1);
-    	  
-    	  File local = new File(targetDirectory, "libraries/" + file);
-    	  neededFiles.add(new Downloadable(url, local, force));
+      return result;
+   }
+
+   public Collection getClassPath(OperatingSystem os, File base) {
+      Collection libraries = this.getRelevantLibraries();
+      Collection result = new ArrayList();
+      Iterator var6 = libraries.iterator();
+
+      while(var6.hasNext()) {
+         Library library = (Library)var6.next();
+         if (library.getNatives() == null) {
+            result.add(new File(base, "libraries/" + library.getArtifactPath()));
+         }
       }
-    }
 
-    return neededFiles;
-  }
-  
-  public String getOriginalID(){
-	  return this.original_id;
-  }
-  
-  public void setOriginalID(String newid){
-	  this.original_id = newid;
-  }
-  
-  public boolean hasCustomUrl(){
-	  return this.url != null;
-  }
-  
-  public String getUrl(){
-	  return this.url;
-  }
-  
-  public void setUrl(String newurl){
-	  this.url = newurl;
-  }
+      result.add(this.getJARFile(base));
+      return result;
+   }
 
-  public String toString()
-  {
-    return "CompleteVersion{id='" + this.id + '\'' + ", time=" + this.time + ", type=" + this.type + ", libraries=" + this.libraries + ", mainClass='" + this.mainClass + '\'' + ", minimumLauncherVersion=" + this.minimumLauncherVersion + '}';
-  }
-  
-  public String getJVMArguments()
-  {
-    return this.jvmArguments;
-  }
+   public File getJARFile(File base) {
+      return new File(base, "versions/" + this.getId() + "/" + this.getId() + ".jar");
+   }
 
-  public String getMinecraftArguments()
-  {
-    return this.minecraftArguments;
-  }
-  
-  public List<String> getUnnecessaryEntries(){
-	  return this.unnecessaryEntries;
-  }
-  
-  public int getTLauncherVersion(){
-	  return this.tlauncherVersion;
-  }
-  
-  public String getAssets(){
-	  return (assets == null)? "legacy" : assets;
-  }
-  
-  public void setId(String id){
-	  if ((id == null) || (id.length() == 0)) throw new IllegalArgumentException("ID cannot be null or empty");
-	  this.id = id;
-  }
+   public Collection getExtractFiles(OperatingSystem os) {
+      Collection libraries = this.getRelevantLibraries();
+      Collection result = new ArrayList();
+      Iterator var5 = libraries.iterator();
 
-  public void setMinecraftArguments(String minecraftArguments) {
-    if (minecraftArguments == null) throw new IllegalArgumentException("Process arguments cannot be null or empty");
-    this.minecraftArguments = minecraftArguments;
-  }
-  
-  public void setJVMArguments(String jvmArguments) {
-	this.jvmArguments = jvmArguments;
-  }
+      while(var5.hasNext()) {
+         Library library = (Library)var5.next();
+         Map natives = library.getNatives();
+         if (natives != null && natives.containsKey(os)) {
+            result.add("libraries/" + library.getArtifactPath((String)natives.get(os)));
+         }
+      }
 
-  public int getMinimumLauncherVersion() {
-    return this.minimumLauncherVersion;
-  }
+      return result;
+   }
 
-  public void setMinimumLauncherVersion(int minimumLauncherVersion) {
-    this.minimumLauncherVersion = minimumLauncherVersion;
-  }
+   public Set getRequiredFiles(OperatingSystem os) {
+      Set neededFiles = new HashSet();
+      Iterator var4 = this.getRelevantLibraries().iterator();
 
-  public boolean appliesToCurrentEnvironment() {
-    if (this.rules == null) return true;
-    Rule.Action lastAction = Rule.Action.DISALLOW;
+      while(var4.hasNext()) {
+         Library library = (Library)var4.next();
+         if (library.getNatives() != null) {
+            String natives = (String)library.getNatives().get(os);
+            if (natives != null) {
+               neededFiles.add("libraries/" + library.getArtifactPath(natives));
+            }
+         } else {
+            neededFiles.add("libraries/" + library.getArtifactPath());
+         }
+      }
 
-    for (Rule rule : this.rules) {
-      Rule.Action action = rule.getAppliedAction();
-      if (action != null) lastAction = action;
-    }
+      return neededFiles;
+   }
 
-    return lastAction == Rule.Action.ALLOW;
-  }
+   public Set getRequiredDownloadables(OperatingSystem os, VersionSource source, File targetDirectory, boolean force) throws MalformedURLException {
+      Set neededFiles = new HashSet();
+      Iterator var7 = this.getRelevantLibraries().iterator();
 
-  public String getIncompatibilityReason() {
-    return this.incompatibilityReason;
-  }
+      while(var7.hasNext()) {
+         Library library = (Library)var7.next();
+         String file = null;
+         String url;
+         if (library.getNatives() != null) {
+            url = (String)library.getNatives().get(os);
+            if (url != null) {
+               file = library.getArtifactPath(url);
+            }
+         } else {
+            file = library.getArtifactPath();
+         }
+
+         if (file != null) {
+            url = library.hasExactUrl() ? library.getExactDownloadUrl() : library.getDownloadUrl() + file;
+            if (url.startsWith("/")) {
+               url = source.getSelectedRepo() + url.substring(1);
+            }
+
+            File local = new File(targetDirectory, "libraries/" + file);
+            neededFiles.add(new Downloadable(url, local, force));
+         }
+      }
+
+      return neededFiles;
+   }
+
+   public String getOriginalID() {
+      return this.original_id;
+   }
+
+   public void setOriginalID(String newid) {
+      this.original_id = newid;
+   }
+
+   public boolean hasCustomUrl() {
+      return this.url != null;
+   }
+
+   public String getUrl() {
+      return this.url;
+   }
+
+   public void setUrl(String newurl) {
+      this.url = newurl;
+   }
+
+   public String toString() {
+      return "CompleteVersion{id='" + this.id + '\'' + ", time=" + this.time + ", type=" + this.type + ", libraries=" + this.libraries + ", mainClass='" + this.mainClass + '\'' + ", minimumLauncherVersion=" + this.minimumLauncherVersion + '}';
+   }
+
+   public String getJVMArguments() {
+      return this.jvmArguments;
+   }
+
+   public String getMinecraftArguments() {
+      return this.minecraftArguments;
+   }
+
+   public List getUnnecessaryEntries() {
+      return this.unnecessaryEntries;
+   }
+
+   public int getTLauncherVersion() {
+      return this.tlauncherVersion;
+   }
+
+   public String getAssets() {
+      return this.assets == null ? "legacy" : this.assets;
+   }
+
+   public void setId(String id) {
+      if (id != null && id.length() != 0) {
+         this.id = id;
+      } else {
+         throw new IllegalArgumentException("ID cannot be null or empty");
+      }
+   }
+
+   public void setMinecraftArguments(String minecraftArguments) {
+      if (minecraftArguments == null) {
+         throw new IllegalArgumentException("Process arguments cannot be null or empty");
+      } else {
+         this.minecraftArguments = minecraftArguments;
+      }
+   }
+
+   public void setJVMArguments(String jvmArguments) {
+      this.jvmArguments = jvmArguments;
+   }
+
+   public int getMinimumLauncherVersion() {
+      return this.minimumLauncherVersion;
+   }
+
+   public void setMinimumLauncherVersion(int minimumLauncherVersion) {
+      this.minimumLauncherVersion = minimumLauncherVersion;
+   }
+
+   public boolean appliesToCurrentEnvironment() {
+      if (this.rules == null) {
+         return true;
+      } else {
+         Rule.Action lastAction = Rule.Action.DISALLOW;
+         Iterator var3 = this.rules.iterator();
+
+         while(var3.hasNext()) {
+            Rule rule = (Rule)var3.next();
+            Rule.Action action = rule.getAppliedAction();
+            if (action != null) {
+               lastAction = action;
+            }
+         }
+
+         if (lastAction == Rule.Action.ALLOW) {
+            return true;
+         } else {
+            return false;
+         }
+      }
+   }
+
+   public String getIncompatibilityReason() {
+      return this.incompatibilityReason;
+   }
 }

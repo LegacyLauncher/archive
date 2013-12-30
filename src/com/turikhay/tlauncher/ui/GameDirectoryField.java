@@ -1,51 +1,46 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.util.MinecraftUtil;
 import java.io.File;
 
-import com.turikhay.util.MinecraftUtil;
-
 public class GameDirectoryField extends ExtendedTextField implements SettingsField {
-	private static final long serialVersionUID = 9048714882203326864L;
-	private boolean saveable = true;
-	
-	GameDirectoryField(SettingsForm settingsform){		
-		super(settingsform);
-	}
-	
-	public void setValue(String dir){
-		if(dir == null || !new File(dir).isDirectory())
-			dir = MinecraftUtil.getDefaultWorkingDirectory().toString();
-		
-		super.setText(dir);
-	}
+   private static final long serialVersionUID = 9048714882203326864L;
+   private boolean saveable = true;
 
-	protected boolean check(String text) {
-		File f = new File(text);
-		
-		if(f.exists())
-			if(!f.canRead() || !f.canWrite())
-				return false;
-		
-		return true;
-	}
+   GameDirectoryField(SettingsForm settingsform) {
+      super((CenterPanel)settingsform);
+   }
 
-	public String getSettingsPath() {
-		return "minecraft.gamedir";
-	}
+   public void setValue(String dir) {
+      if (dir == null || !(new File(dir)).isDirectory()) {
+         dir = MinecraftUtil.getDefaultWorkingDirectory().toString();
+      }
 
-	public boolean isValueValid() {
-		return (getValue() != null);
-	}
-	
-	public void setToDefault() {
-		setValue(null);
-	}
-	
-	public boolean isSaveable() {
-		return saveable;
-	}
+      super.setText(dir);
+   }
 
-	public void setSaveable(boolean val) {
-		this.saveable = val;
-	}
+   protected boolean check(String text) {
+      File f = new File(text);
+      return !f.exists() || f.canRead() && f.canWrite();
+   }
+
+   public String getSettingsPath() {
+      return "minecraft.gamedir";
+   }
+
+   public boolean isValueValid() {
+      return this.getValue() != null;
+   }
+
+   public void setToDefault() {
+      this.setValue((String)null);
+   }
+
+   public boolean isSaveable() {
+      return this.saveable;
+   }
+
+   public void setSaveable(boolean val) {
+      this.saveable = val;
+   }
 }
