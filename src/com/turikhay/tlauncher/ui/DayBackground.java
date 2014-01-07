@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 public class DayBackground extends LightBackground implements AnimatedBackground {
    public final double MIN = -0.5D;
    public final double MAX = 1.5D;
+   private final int TICK = 100;
    private boolean started;
    private boolean redraw;
 
@@ -28,19 +29,19 @@ public class DayBackground extends LightBackground implements AnimatedBackground
 
             }
          });
-         U.log("Sun started");
+         log("Sun has been started");
       }
    }
 
    public void suspend() {
       this.started = false;
-      U.log("Sun suspended");
+      log("Sun has been suspended");
    }
 
    public void stop() {
       TLauncher.getInstance().getSettings().set("gui.sun", false);
       this.started = false;
-      U.log("Sun stopped");
+      log("Sun has been stopped");
    }
 
    public boolean isAllowed() {
@@ -63,7 +64,7 @@ public class DayBackground extends LightBackground implements AnimatedBackground
       long end = System.nanoTime();
       long diff = end - start;
       if (diff > 1000000L) {
-         U.log("Sun is probably lagging (" + diff + " ns > 1000000 ns).");
+         log("Sun is probably lagging (" + diff + " ns > 1000000 ns).");
       }
 
       U.sleepFor(100L);
@@ -76,5 +77,9 @@ public class DayBackground extends LightBackground implements AnimatedBackground
       }
 
       super.draw(g, force);
+   }
+
+   private static void log(Object... o) {
+      U.log("[DayBackground]", o);
    }
 }

@@ -11,7 +11,7 @@ public interface MinecraftLauncherListener {
 
    void onMinecraftClose();
 
-   void onMinecraftError(MinecraftLauncherException var1);
+   void onMinecraftKnownError(MinecraftLauncherException var1);
 
    void onMinecraftError(Throwable var1);
 

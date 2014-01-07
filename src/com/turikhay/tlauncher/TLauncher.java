@@ -10,13 +10,17 @@ import com.turikhay.tlauncher.settings.ArgumentParser;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.Console;
 import com.turikhay.tlauncher.ui.Localizable;
 import com.turikhay.tlauncher.ui.LoginForm;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.updater.Updater;
+import com.turikhay.util.Time;
 import com.turikhay.util.U;
+import com.turikhay.util.logger.MirroredLinkedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URL;
 import java.util.Locale;
 import java.util.UUID;
@@ -24,13 +28,16 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.32D;
+   private static final double VERSION = 0.33D;
    private static final String SETTINGS = "tlauncher.ini";
    private static final String BRAND = "Original";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static final String[] REMOTE_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
    private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://ru-minecraft.org/update/tlauncher/extra/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
    private static TLauncher instance;
+   private static MirroredLinkedOutputStream stream;
+   private static PrintStream print;
+   private static Console console;
    private TLauncher.TLauncherState state;
    private Settings lang;
    private GlobalSettings settings;
@@ -51,14 +58,17 @@ public class TLauncher {
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
-         U.log("State:", state);
+         U.log("TLauncher is loading in state", state);
+         Time.start(this);
          instance = this;
          this.state = state;
          this.args = set;
          this.sargs = sargs;
-         long start = System.currentTimeMillis();
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
+         console = new Console(this.settings, stream, "TLauncher Development Console", this.settings.getConsoleType() == GlobalSettings.ConsoleType.GLOBAL);
+         System.setOut(console);
+         Console.updateLocale();
          this.vm = new VersionManager();
          this.pl = new ProfileLoader();
          if (!this.settings.isStaticProfile()) {
@@ -68,9 +78,7 @@ public class TLauncher {
          }
 
          this.init();
-         long end = System.currentTimeMillis();
-         long diff = end - start;
-         U.log("Started! (" + diff + " ms.)");
+         U.log("Started! (" + Time.stop(this) + " ms.)");
       }
    }
 
@@ -139,6 +147,10 @@ public class TLauncher {
       return clientToken;
    }
 
+   public static Console getConsole() {
+      return console;
+   }
+
    public ProfileLoader getProfileLoader() {
       return this.pl;
    }
@@ -186,7 +198,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.32D;
+      return 0.33D;
    }
 
    public static String getBrand() {
@@ -212,12 +224,16 @@ public class TLauncher {
    public static void main(String[] args) {
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
+      TLauncherFrame.initLookAndFeel();
+      stream = new MirroredLinkedOutputStream();
+      stream.setMirror(System.out);
+      print = new PrintStream(stream);
+      System.setOut(print);
       U.setPrefix("[TLauncher]");
 
       try {
          launch(args);
       } catch (Throwable var3) {
-         var3.printStackTrace();
          Alert.showError(var3, true);
       }
 
@@ -226,7 +242,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version", 0.32D);
+      U.log("Starting version", 0.33D);
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);

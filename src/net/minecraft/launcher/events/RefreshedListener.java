@@ -10,8 +10,4 @@ public interface RefreshedListener {
    void onVersionsRefreshingFailed(VersionManager var1);
 
    void onVersionsRefreshed(VersionManager var1);
-
-   void onResourcesRefreshing(VersionManager var1);
-
-   void onResourcesRefreshed(VersionManager var1);
 }

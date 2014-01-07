@@ -20,9 +20,9 @@ public class Alert {
    public static void showError(String title, String message, Object textarea, Throwable e, boolean exit) {
       JFrame frame = new JFrame();
       String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + U.w(message, 100).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_throwable = e != null ? U.stackTrace(e) : null;
-      String t_textarea = textarea != null ? textarea.toString() : null;
+      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
+      String t_throwable = e != null ? w(U.stackTrace(e)) : null;
+      String t_textarea = textarea != null ? w(textarea.toString()) : null;
       AlertPanel panel = new AlertPanel(t_message);
       if (t_textarea != null) {
          panel.addTextArea(t_textarea);
@@ -67,8 +67,8 @@ public class Alert {
    public static void showWarning(String title, String message, Object textarea) {
       JFrame frame = new JFrame();
       String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + U.w(message, 100).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_textarea = textarea != null ? textarea.toString() : null;
+      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
+      String t_textarea = textarea != null ? w(textarea.toString()) : null;
       AlertPanel panel = new AlertPanel(t_message);
       if (t_textarea != null) {
          panel.addTextArea(t_textarea);
@@ -109,8 +109,8 @@ public class Alert {
    public static boolean showQuestion(String title, String message, Object textarea, boolean force) {
       JFrame frame = new JFrame();
       String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + U.w(message, 100).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_textarea = textarea != null ? textarea.toString() : null;
+      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
+      String t_textarea = textarea != null ? w(textarea.toString()) : null;
       AlertPanel panel = new AlertPanel(t_message);
       if (t_textarea != null) {
          panel.addTextArea(t_textarea);
@@ -132,8 +132,8 @@ public class Alert {
    public static void showMessage(String title, String message, Object textarea) {
       JFrame frame = new JFrame();
       String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + U.w(message, 100).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_textarea = textarea != null ? textarea.toString() : null;
+      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
+      String t_textarea = textarea != null ? w(textarea.toString()) : null;
       AlertPanel panel = new AlertPanel(t_message);
       if (t_textarea != null) {
          panel.addTextArea(t_textarea);
@@ -175,5 +175,9 @@ public class Alert {
    public static void prepareLocal() {
       DEFAULT_TITLE = getLocal("alert.error.title", DEFAULT_TITLE);
       DEFAULT_MESSAGE = getLocal("alert.error.message", DEFAULT_MESSAGE);
+   }
+
+   private static String w(String s) {
+      return U.w(s, 100);
    }
 }

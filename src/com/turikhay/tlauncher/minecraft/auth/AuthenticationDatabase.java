@@ -34,18 +34,14 @@ public class AuthenticationDatabase {
       } else {
          Iterator var3 = this.authById.entrySet().iterator();
 
-         Entry entry;
-         GameProfile profile;
-         do {
-            if (!var3.hasNext()) {
-               return null;
+         while(var3.hasNext()) {
+            Entry entry = (Entry)var3.next();
+            if (name.equals(((Authenticator)entry.getValue()).getUsername())) {
+               return (Authenticator)entry.getValue();
             }
+         }
 
-            entry = (Entry)var3.next();
-            profile = ((Authenticator)entry.getValue()).getSelectedProfile();
-         } while(profile == null || !profile.getName().equals(name));
-
-         return (Authenticator)entry.getValue();
+         return null;
       }
    }
 

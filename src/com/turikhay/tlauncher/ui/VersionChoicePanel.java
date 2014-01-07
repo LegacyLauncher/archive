@@ -57,7 +57,6 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
    }
 
    void onVersionChanged() {
-      U.log("Selected", this.version);
       this.foundlocal = true;
       this.selected = this.vm.getVersionSyncInfo(this.version);
       this.lf.buttons.updateEnterButton();

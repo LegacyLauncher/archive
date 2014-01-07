@@ -54,7 +54,7 @@ public class SearchPanel extends BlockablePanel {
             try {
                this.pt = Pattern.compile(c_regexp, flags);
             } catch (PatternSyntaxException var4) {
-               this.log("Invalid pattern.\n", var4);
+               this.log("Invalid pattern.\n", var4.toString());
                this.field.wrong((String)null);
                return;
             }

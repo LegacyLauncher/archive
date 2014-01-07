@@ -111,7 +111,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
-      this(listener, vm, s.get("login.version"), s.get("login.username"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getBoolean("gui.console"));
+      this(listener, vm, s.get("login.version"), s.get("login.username"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getConsoleType() == GlobalSettings.ConsoleType.MINECRAFT);
       this.s = s;
       this.d = d;
       this.init();
@@ -125,12 +125,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    public void init() {
       if (!this.init) {
          this.init = true;
+         U.log(this.s.getConsoleType());
          if (!this.exit && this.s != null) {
             this.con = new Console(this.s, "Minecraft Logger", this.console);
          }
 
          this.log("Minecraft Launcher [13;6] is started!");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
+         this.log("Current machine:", OperatingSystem.getCurrentInfo());
       }
    }
 
@@ -616,6 +618,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       } else {
          Map map = new HashMap();
          StrSubstitutor substitutor = new StrSubstitutor(map);
+         String assets = this.version.getAssets();
          String[] split = this.version.getMinecraftArguments().split(" ");
          map.put("auth_username", this.username);
          map.put("auth_session", "null");
@@ -629,7 +632,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          map.put("game_directory", this.gameDir.getAbsolutePath());
          map.put("game_assets", this.assetsDir.getAbsolutePath());
          map.put("assets_root", (new File(this.gameDir, "assets")).getAbsolutePath());
-         map.put("assets_index_name", this.version.getAssets() == null ? "legacy" : this.version.getAssets());
+         map.put("assets_index_name", assets == null ? "legacy" : assets);
 
          for(int i = 0; i < split.length; ++i) {
             split[i] = substitutor.replace(split[i]);
@@ -691,8 +694,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.working = false;
       this.logerror(e);
       if (this.listener != null) {
-         if (this.listener instanceof MinecraftLauncherException) {
-            this.listener.onMinecraftError((MinecraftLauncherException)e);
+         if (e instanceof MinecraftLauncherException) {
+            this.listener.onMinecraftKnownError((MinecraftLauncherException)e);
          } else {
             this.listener.onMinecraftError(e);
          }

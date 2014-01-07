@@ -12,6 +12,7 @@ public class Localizable {
       LocalizableTextField.l = l;
       LocalizableButton.l = l;
       LocalizableTransparentButton.l = l;
+      LocalizableRadioButton.l = l;
       TextPopup.l = l;
    }
 

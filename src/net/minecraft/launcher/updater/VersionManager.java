@@ -482,7 +482,9 @@ public class VersionManager {
          File file = new File(objectsFolder, filename);
 
          try {
-            result.add(new Downloadable(url, file, false));
+            Downloadable d = new Downloadable(url, file, false);
+            d.setFast(true);
+            result.add(d);
          } catch (MalformedURLException var12) {
             this.log("Cannot create downloadable resource from URL:", url, var12);
          }
@@ -494,33 +496,19 @@ public class VersionManager {
    public boolean refreshResources(CompleteVersion version, boolean local) {
       long start = System.nanoTime();
       this.log("Refreshing resources...");
-      Iterator var10 = this.refreshedListeners.iterator();
-
-      RefreshedListener l;
-      while(var10.hasNext()) {
-         l = (RefreshedListener)var10.next();
-         l.onResourcesRefreshing(this);
-      }
 
       long end;
       long diff;
       try {
          this.getResourceFilesList(version, this.localVersionList.getBaseDirectory(), local);
-      } catch (VersionManager.RefreshedException var11) {
+      } catch (VersionManager.RefreshedException var10) {
          end = System.nanoTime();
          diff = end - start;
          this.log("Resource refresh has been cancelled (" + diff / 1000000L + " ms)");
          return false;
-      } catch (Throwable var12) {
-         this.log("Cannot refresh resources!", var12);
+      } catch (Throwable var11) {
+         this.log("Cannot refresh resources!", var11);
          return false;
-      }
-
-      var10 = this.refreshedListeners.iterator();
-
-      while(var10.hasNext()) {
-         l = (RefreshedListener)var10.next();
-         l.onResourcesRefreshed(this);
       }
 
       end = System.nanoTime();

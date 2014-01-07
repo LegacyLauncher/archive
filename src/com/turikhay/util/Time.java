@@ -104,8 +104,11 @@ public class Time {
    }
 
    public static void start(Object holder) {
-      timers.remove(holder);
-      timers.put(holder, System.currentTimeMillis());
+      if (timers.containsKey(holder)) {
+         throw new IllegalArgumentException("This holder (" + holder.toString() + ") is already in use!");
+      } else {
+         timers.put(holder, System.currentTimeMillis());
+      }
    }
 
    public static long stop(Object holder) {

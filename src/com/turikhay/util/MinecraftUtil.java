@@ -46,13 +46,12 @@ public class MinecraftUtil {
 
    public static File getDefaultWorkingDirectory() {
       OperatingSystem os = OperatingSystem.getCurrentPlatform();
-      String separator = File.separator;
       String path = ".minecraft";
       if (os == OperatingSystem.OSX || os == OperatingSystem.UNKNOWN) {
          path = "minecraft";
       }
 
-      return getSystemRelatedFile(path + separator);
+      return getSystemRelatedFile(path + File.separator);
    }
 
    public static File getOptionsFile() {

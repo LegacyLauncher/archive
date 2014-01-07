@@ -124,4 +124,8 @@ public enum OperatingSystem {
    public int getRecommendedMemory() {
       return this.is32Bit() ? 512 : 1024;
    }
+
+   public static String getCurrentInfo() {
+      return System.getProperty("os.name") + " " + System.getProperty("os.version") + ", " + "Java " + System.getProperty("java.version");
+   }
 }

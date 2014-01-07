@@ -3,7 +3,6 @@ package com.turikhay.tlauncher.ui;
 import com.turikhay.tlauncher.minecraft.Crash;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
-import java.awt.Graphics;
 import javax.swing.JLayeredPane;
 
 public class MainPane extends JLayeredPane implements MinecraftLauncherListener {
@@ -29,7 +28,7 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       this.sf = f.sf;
       this.spcf = f.spcf;
       this.warning = f.warning;
-      int i = 0;
+      int i = -1;
       int i = i + 1;
       this.BACKGROUND_PANEL = i;
       ++i;
@@ -140,10 +139,6 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       this.setSettings(!this.settings);
    }
 
-   public void update(Graphics g) {
-      this.paint(g);
-   }
-
    public void onMinecraftCheck() {
    }
 
@@ -165,7 +160,7 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       this.startBackground();
    }
 
-   public void onMinecraftError(MinecraftLauncherException knownError) {
+   public void onMinecraftKnownError(MinecraftLauncherException knownError) {
       this.startBackground();
    }
 
