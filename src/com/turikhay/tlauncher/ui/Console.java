@@ -4,17 +4,25 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.util.AsyncThread;
 import com.turikhay.util.U;
+import com.turikhay.util.logger.LinkedOutputStream;
+import com.turikhay.util.logger.Logger;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class Console {
-   private static List frames = new ArrayList();
+public class Console extends PrintStream implements Logger {
+   private static List frames = Collections.synchronizedList(new ArrayList());
    private final GlobalSettings global;
+   private final LinkedOutputStream stream;
    private final ConsoleFrame cf;
    private String del;
    private boolean killed;
@@ -22,14 +30,31 @@ public class Console {
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$Console$CloseAction;
 
-   public Console(String name) {
-      this(TLauncher.getInstance() != null ? TLauncher.getInstance().getSettings() : null, name);
+   public Console(GlobalSettings global, LinkedOutputStream stream, String name, boolean show) {
+      super(new BufferedOutputStream(stream), true);
+      this.del = null;
+      this.global = global;
+      this.stream = stream;
+      this.stream.setLogger(this);
+      this.cf = new ConsoleFrame(this, global, name);
+      this.init();
+      if (show) {
+         this.cf.setVisible(true);
+      }
+
+      frames.add(this.cf);
+      this.log(stream.getOutput());
    }
 
-   public Console(GlobalSettings global, String name) {
-      this.del = null;
-      this.cf = new ConsoleFrame(this, global, name);
-      this.global = global;
+   public Console(GlobalSettings global, String name, boolean show) {
+      this(global, new LinkedOutputStream(), name, show);
+   }
+
+   public Console(LinkedOutputStream stream, String name, boolean show) {
+      this((GlobalSettings)null, stream, name, show);
+   }
+
+   private void init() {
       this.cf.addWindowListener(new WindowListener() {
          public void windowOpened(WindowEvent e) {
          }
@@ -54,18 +79,35 @@ public class Console {
          public void windowDeactivated(WindowEvent e) {
          }
       });
+      this.cf.addComponentListener(new ComponentListener() {
+         public void componentResized(ComponentEvent e) {
+            Console.this.save(false);
+         }
+
+         public void componentMoved(ComponentEvent e) {
+            Console.this.save(false);
+         }
+
+         public void componentShown(ComponentEvent e) {
+            Console.this.save(true);
+         }
+
+         public void componentHidden(ComponentEvent e) {
+            Console.this.save(true);
+         }
+      });
       frames.add(this.cf);
-      if (global != null) {
+      if (this.global != null) {
          String prefix = "gui.console.";
-         int width = global.getInteger(prefix + "width", 620);
-         int height = global.getInteger(prefix + "height", 400);
-         int x = global.getInteger(prefix + "x", 0);
-         int y = global.getInteger(prefix + "y", 0);
+         int width = this.global.getInteger(prefix + "width", 620);
+         int height = this.global.getInteger(prefix + "height", 400);
+         int x = this.global.getInteger(prefix + "x", 0);
+         int y = this.global.getInteger(prefix + "y", 0);
          prefix = prefix + "search.";
-         boolean mcase = global.getBoolean(prefix + "mcase");
-         boolean whole = global.getBoolean(prefix + "whole");
-         boolean cycle = global.getBoolean(prefix + "cycle");
-         boolean regexp = global.getBoolean(prefix + "regexp");
+         boolean mcase = this.global.getBoolean(prefix + "mcase");
+         boolean whole = this.global.getBoolean(prefix + "whole");
+         boolean cycle = this.global.getBoolean(prefix + "cycle");
+         boolean regexp = this.global.getBoolean(prefix + "regexp");
          this.cf.setSize(width, height);
          this.cf.setLocation(x, y);
          SearchPrefs sf = this.cf.getSearchPrefs();
@@ -76,13 +118,13 @@ public class Console {
       }
    }
 
-   public Console(GlobalSettings global, String name, boolean show) {
-      this(global, name);
-      this.cf.setVisible(show);
-   }
+   public void setShown(boolean shown) {
+      if (shown) {
+         this.show();
+      } else {
+         this.hide();
+      }
 
-   public Console(String name, boolean show) {
-      this(TLauncher.getInstance() != null ? TLauncher.getInstance().getSettings() : null, name, show);
    }
 
    public void show() {
@@ -99,6 +141,7 @@ public class Console {
 
    public void clear() {
       this.check();
+      this.stream.clear();
       this.cf.clear();
    }
 
@@ -135,12 +178,6 @@ public class Console {
       return !this.cf.isShowing();
    }
 
-   public void log(Object... obj) {
-      this.check();
-      this.cf.print(this.del);
-      this.cf.print(U.toLog(obj));
-   }
-
    public Point getPositionPoint() {
       this.check();
       return this.cf.getLocation();
@@ -164,10 +201,18 @@ public class Console {
    }
 
    public String getOutput() {
-      return this.cf.getOutput();
+      return this.stream.getOutput();
+   }
+
+   public ConsoleFrame getFrame() {
+      return this.cf;
    }
 
    public void save() {
+      this.save(true);
+   }
+
+   public void save(boolean flush) {
       this.check();
       if (this.global != null) {
          String prefix = "gui.console.";
@@ -182,8 +227,19 @@ public class Console {
          this.global.set(prefix + "mcase", prefs[0], false);
          this.global.set(prefix + "whole", prefs[1], false);
          this.global.set(prefix + "cycle", prefs[2], false);
-         this.global.set(prefix + "regexp", prefs[3], true);
+         this.global.set(prefix + "regexp", prefs[3], flush);
       }
+   }
+
+   public void rawlog(int c) {
+      this.check();
+      this.cf.print((char)c);
+   }
+
+   public void log(Object... obj) {
+      this.check();
+      this.cf.print(this.del);
+      this.cf.print(U.toLog(obj));
    }
 
    public Console.CloseAction getCloseAction() {

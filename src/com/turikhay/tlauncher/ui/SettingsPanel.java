@@ -85,10 +85,10 @@ public class SettingsPanel extends JPanel {
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;
-      this.add(this.sf.tlauncherSettings, constraints);
+      this.add(this.sf.consoleSettings, constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
-      this.add(this.sf.tlauncherPan, constraints);
+      this.add(this.sf.consolePan, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;

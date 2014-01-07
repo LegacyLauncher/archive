@@ -1,6 +1,5 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.util.AsyncThread;
 import com.turikhay.util.U;
@@ -49,7 +48,6 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    private Image favicon;
    final Console c;
    boolean hiding;
-   private StringBuilder output;
 
    public ConsoleFrame(Console c, GlobalSettings s, String name) {
       super(name);
@@ -57,7 +55,6 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       this.update = true;
       this.busy = new Object();
       this.hiding = false;
-      this.output = new StringBuilder();
       if (c == null) {
          throw new NullPointerException("Console can't be NULL!");
       } else {
@@ -121,10 +118,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
             public void componentHidden(ComponentEvent e) {
             }
          });
-         if (TLauncher.getInstance() != null && TLauncher.getInstance().getFrame() != null) {
-            this.favicon = TLauncher.getInstance().getFrame().favicon;
-         }
-
+         this.favicon = TLauncherFrame.getFavicon();
          this.setFont(this.font);
          this.setBackground(Color.black);
          this.setSize(this.sizes);
@@ -144,9 +138,12 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       this.print(string + "\n");
    }
 
+   public void print(char c) {
+      this.print(String.valueOf(c));
+   }
+
    public void print(String string) {
       synchronized(this.busy) {
-         this.output.append(string);
          Document document = this.textArea.getDocument();
          if (this.update) {
             this.scrollBottom();
@@ -169,10 +166,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    }
 
    public String getOutput() {
-      synchronized(this.busy) {
-         String s = this.output.toString();
-         return s;
-      }
+      return this.c.getOutput();
    }
 
    public SearchPrefs getSearchPrefs() {
@@ -233,7 +227,6 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
 
    public void clear() {
       this.textArea.setText("");
-      this.output = new StringBuilder();
    }
 
    public void selectAll() {

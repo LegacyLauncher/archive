@@ -113,6 +113,8 @@ public class GlobalSettings extends Settings {
                   this.parseLaunchAction(value);
                } else if (defvalue instanceof IntegerArray) {
                   IntegerArray.parseIntegerArray(value);
+               } else if (defvalue instanceof GlobalSettings.ConsoleType) {
+                  this.parseConsoleType(value);
                }
             } catch (Exception var9) {
                this.repair(key, defvalue, !this.saveable);
@@ -174,8 +176,13 @@ public class GlobalSettings extends Settings {
    }
 
    public String getDefault(String key) {
-      String r = "" + this.d.get(key);
-      return r == "" ? null : r;
+      Object r = this.d.get(key);
+      if (r == null) {
+         return null;
+      } else {
+         String s = r.toString();
+         return s.isEmpty() ? null : s;
+      }
    }
 
    public int getDefaultInteger(String key) {
@@ -228,45 +235,25 @@ public class GlobalSettings extends Settings {
    }
 
    public Locale getLocale() {
-      String locale = this.get("locale");
-      Locale[] var5;
-      int var4 = (var5 = Locale.getAvailableLocales()).length;
-
-      for(int var3 = 0; var3 < var4; ++var3) {
-         Locale lookup = var5[var3];
-         String lookup_name = lookup.toString();
-         Iterator var8 = SUPPORTED_LOCALE.iterator();
-
-         while(var8.hasNext()) {
-            String curloc = (String)var8.next();
-            if (lookup_name.equals(curloc) && curloc.equals(locale)) {
-               return lookup;
-            }
-         }
-      }
-
-      return DEFAULT_LOCALE;
+      Locale locale = getLocale(this.get("locale"));
+      return locale != null && SUPPORTED_LOCALE.contains(locale) ? locale : DEFAULT_LOCALE;
    }
 
    public static Locale getSupported() {
       Locale using = Locale.getDefault();
-      String using_name = using.toString();
-      Iterator var3 = SUPPORTED_LOCALE.iterator();
-
-      while(var3.hasNext()) {
-         String supported = (String)var3.next();
-         if (supported.equals(using_name)) {
-            return using;
-         }
-      }
-
-      return Locale.US;
+      return SUPPORTED_LOCALE.contains(using) ? using : Locale.US;
    }
 
    public GlobalSettings.ActionOnLaunch getActionOnLaunch() {
       String action = this.get("minecraft.onlaunch");
       GlobalSettings.ActionOnLaunch get = GlobalSettings.ActionOnLaunch.get(action);
       return get != null ? get : GlobalSettings.ActionOnLaunch.getDefault();
+   }
+
+   public GlobalSettings.ConsoleType getConsoleType() {
+      String type = this.get("gui.console");
+      GlobalSettings.ConsoleType get = GlobalSettings.ConsoleType.get(type);
+      return get != null ? get : GlobalSettings.ConsoleType.getDefault();
    }
 
    private boolean parseBoolean(String b) throws Exception {
@@ -281,6 +268,12 @@ public class GlobalSettings extends Settings {
 
    private void parseLaunchAction(String b) throws Exception {
       if (!GlobalSettings.ActionOnLaunch.parse(b)) {
+         throw new Exception();
+      }
+   }
+
+   private void parseConsoleType(String b) throws Exception {
+      if (!GlobalSettings.ConsoleType.parse(b)) {
          throw new Exception();
       }
    }
@@ -359,7 +352,8 @@ public class GlobalSettings extends Settings {
       return w_sizes;
    }
 
-   private static List getSupportedLocales() {
+   public static List getSupportedLocales() {
+      U.log("Searching for supported locales...");
       File file = FileUtil.getRunningJar();
       ArrayList locales = new ArrayList();
 
@@ -377,8 +371,8 @@ public class GlobalSettings extends Settings {
             if (name.startsWith("lang/")) {
                Matcher mt = lang_pattern.matcher(name);
                if (mt.matches()) {
-                  U.log("Found locale:", mt.group());
-                  locales.add(mt.group(1));
+                  U.log("Found locale:", mt.group(1));
+                  locales.add(getLocale(mt.group(1)));
                }
             }
          }
@@ -388,11 +382,29 @@ public class GlobalSettings extends Settings {
       }
    }
 
+   public static Locale getLocale(String locale) {
+      if (locale == null) {
+         return null;
+      } else {
+         Locale[] var4;
+         int var3 = (var4 = Locale.getAvailableLocales()).length;
+
+         for(int var2 = 0; var2 < var3; ++var2) {
+            Locale cur = var4[var2];
+            if (cur.toString().equals(locale)) {
+               return cur;
+            }
+         }
+
+         return null;
+      }
+   }
+
    private static List getDefaultLocales() {
       List l = new ArrayList();
-      l.add("en_US");
-      l.add("ru_RU");
-      l.add("uk_UA");
+      l.add(getLocale("en_US"));
+      l.add(getLocale("ru_RU"));
+      l.add(getLocale("uk_UA"));
       return l;
    }
 
@@ -409,7 +421,7 @@ public class GlobalSettings extends Settings {
 
             for(int var2 = 0; var2 < var3; ++var2) {
                GlobalSettings.ActionOnLaunch cur = var4[var2];
-               if (cur.toString().toLowerCase().equalsIgnoreCase(val)) {
+               if (cur.toString().equalsIgnoreCase(val)) {
                   return true;
                }
             }
@@ -424,7 +436,7 @@ public class GlobalSettings extends Settings {
 
          for(int var2 = 0; var2 < var3; ++var2) {
             GlobalSettings.ActionOnLaunch cur = var4[var2];
-            if (cur.toString().toLowerCase().equalsIgnoreCase(val)) {
+            if (cur.toString().equalsIgnoreCase(val)) {
                return cur;
             }
          }
@@ -438,6 +450,52 @@ public class GlobalSettings extends Settings {
 
       public static GlobalSettings.ActionOnLaunch getDefault() {
          return HIDE;
+      }
+   }
+
+   public static enum ConsoleType {
+      GLOBAL,
+      MINECRAFT,
+      NONE;
+
+      public static boolean parse(String val) {
+         if (val == null) {
+            return false;
+         } else {
+            GlobalSettings.ConsoleType[] var4;
+            int var3 = (var4 = values()).length;
+
+            for(int var2 = 0; var2 < var3; ++var2) {
+               GlobalSettings.ConsoleType cur = var4[var2];
+               if (cur.toString().equalsIgnoreCase(val)) {
+                  return true;
+               }
+            }
+
+            return false;
+         }
+      }
+
+      public static GlobalSettings.ConsoleType get(String val) {
+         GlobalSettings.ConsoleType[] var4;
+         int var3 = (var4 = values()).length;
+
+         for(int var2 = 0; var2 < var3; ++var2) {
+            GlobalSettings.ConsoleType cur = var4[var2];
+            if (cur.toString().equalsIgnoreCase(val)) {
+               return cur;
+            }
+         }
+
+         return null;
+      }
+
+      public String toString() {
+         return super.toString().toLowerCase();
+      }
+
+      public static GlobalSettings.ConsoleType getDefault() {
+         return NONE;
       }
    }
 }

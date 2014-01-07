@@ -193,12 +193,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       this.handleError();
    }
 
-   public void onMinecraftError(String message) {
-      Alert.showError(this.l.get("launcher.error.title"), this.l.get(message));
-      this.handleError();
-   }
-
-   public void onMinecraftError(MinecraftLauncherException knownError) {
+   public void onMinecraftKnownError(MinecraftLauncherException knownError) {
       Alert.showError(this.l.get("launcher.error.title"), this.l.get(knownError.getLangpath()), knownError.getReplace());
       this.handleError();
    }

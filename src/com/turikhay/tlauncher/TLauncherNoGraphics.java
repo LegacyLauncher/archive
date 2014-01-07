@@ -52,7 +52,7 @@ public class TLauncherNoGraphics implements MinecraftLauncherListener {
       TLauncher.kill();
    }
 
-   public void onMinecraftError(MinecraftLauncherException knownError) {
+   public void onMinecraftKnownError(MinecraftLauncherException knownError) {
       Alert.showError(knownError, this.exit);
    }
 

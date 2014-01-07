@@ -456,6 +456,10 @@ public class U {
       return w(string, max, '\n', false);
    }
 
+   public static String w(String string, int max, boolean rude) {
+      return w(string, max, '\n', rude);
+   }
+
    public static String setFractional(double d, int fractional) {
       NumberFormat nf = NumberFormat.getInstance();
       nf.setMaximumFractionDigits(fractional);

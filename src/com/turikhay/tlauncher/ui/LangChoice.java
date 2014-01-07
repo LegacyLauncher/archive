@@ -21,24 +21,16 @@ public class LangChoice extends Choice implements SettingsField {
 
    LangChoice(SettingsForm sf) {
       List available = GlobalSettings.SUPPORTED_LOCALE;
-      Locale[] var6;
-      int var5 = (var6 = Locale.getAvailableLocales()).length;
+      Iterator var4 = available.iterator();
 
-      for(int var4 = 0; var4 < var5; ++var4) {
-         Locale loc = var6[var4];
-         Iterator var8 = available.iterator();
-
-         while(var8.hasNext()) {
-            String id = (String)var8.next();
-            if (loc.toString().equals(id)) {
-               String curdisp = loc.getDisplayCountry(Locale.ENGLISH) + " (" + id + ")";
-               this.replacer.put(curdisp, id);
-               this.add(curdisp);
-               if (TLauncher.getInstance().getSettings().getLocale() == loc) {
-                  this.select(curdisp);
-               }
-               break;
-            }
+      while(var4.hasNext()) {
+         Locale loc = (Locale)var4.next();
+         String id = loc.toString();
+         String curdisp = loc.getDisplayCountry(Locale.ENGLISH) + " (" + id + ")";
+         this.replacer.put(curdisp, id);
+         this.add(curdisp);
+         if (TLauncher.getInstance().getSettings().getLocale() == loc) {
+            this.select(curdisp);
          }
       }
 

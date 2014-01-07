@@ -41,10 +41,10 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    private final TLauncherFrame instance = this;
    final TLauncher t;
    private static final long serialVersionUID = 5949683935156305416L;
+   private static Image favicon;
    int width;
    int height;
    Image bgimage;
-   public Image favicon;
    Image sun;
    GlobalSettings global;
    Settings lang;
@@ -67,19 +67,15 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
       try {
          this.loadResources();
-      } catch (Exception var9) {
-         throw new TLauncherException("Cannot load required resource!", var9);
+      } catch (Exception var3) {
+         throw new TLauncherException("Cannot load required resource!", var3);
       }
 
       int[] w_sizes = this.global.getWindowSize();
       this.width = w_sizes[0];
       this.height = w_sizes[1];
-      long start = System.currentTimeMillis();
-      U.log("Preparing main frame...");
+      log("Preparing main frame...");
       this.prepareFrame();
-      long end = System.currentTimeMillis();
-      long diff = end - start;
-      U.log("Prepared:", diff);
       this.setVisible(true);
       this.requestFocusInWindow();
       if (this.global.isFirstRun()) {
@@ -116,7 +112,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
             }
          }
       } catch (Exception var7) {
-         U.log("Cannot change font sizes!", var7);
+         log("Cannot change font sizes!", var7);
       }
 
    }
@@ -131,7 +127,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       try {
          this.t.reloadLocale();
       } catch (Exception var2) {
-         U.log("Cannot reload settings!", var2);
+         log("Cannot reload settings!", var2);
          return;
       }
 
@@ -158,20 +154,37 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    }
 
-   private void prepareFrame() {
+   public static void initLookAndFeel() {
       try {
          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-      } catch (Exception var2) {
-         U.log("Can't set system look and feel.");
-         var2.printStackTrace();
+      } catch (Exception var1) {
+         log("Can't set system look and feel.");
+         var1.printStackTrace();
       }
 
+   }
+
+   public static Image getFavicon() {
+      if (favicon == null) {
+         try {
+            favicon = ImageIO.read(TLauncherFrame.class.getResource("favicon.png"));
+         } catch (IOException var1) {
+            log("Cannot load favicon. Where is it?", var1);
+            return null;
+         }
+      }
+
+      return favicon;
+   }
+
+   private void prepareFrame() {
+      initLookAndFeel();
       this.initUILocale();
       this.setBackground(backgroundColor);
       this.initFontSize();
       this.setWindowTitle();
       this.resizeWindow(this.width, this.height);
-      this.setIconImage(this.favicon);
+      this.setIconImage(favicon);
       this.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
             TLauncherFrame.this.instance.setVisible(false);
@@ -184,6 +197,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          }
 
          public void componentShown(ComponentEvent e) {
+            TLauncherFrame.log("Hi, guys!");
             TLauncherFrame.this.mp.startBackground();
             TLauncherFrame.this.instance.validate();
             TLauncherFrame.this.instance.repaint();
@@ -197,25 +211,24 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
             TLauncherFrame.this.mp.suspendBackground();
          }
       });
-      U.log("Preparing components...");
+      log("Preparing components...");
       this.sf = new SettingsForm(this);
       this.lf = new LoginForm(this);
       this.spcf = new ProfileCreatorForm(this);
       this.pb = new ProgressBar(this);
       this.warning = new ConnectionWarning();
-      U.log("Preparing main pane...");
+      log("Preparing main pane...");
       this.mp = new MainPane(this);
       this.add(this.mp);
       this.add("South", this.pb);
-      U.log("Packing main frame...");
+      log("Packing main frame...");
       this.pack();
-      U.log("Resizing main pane...");
+      log("Resizing main pane...");
       this.mp.onResize();
    }
 
    private void loadResources() throws IOException {
       this.bgimage = ImageIO.read(TLauncherFrame.class.getResource("grass.png"));
-      this.favicon = ImageIO.read(TLauncherFrame.class.getResource("favicon.png"));
       this.sun = ImageIO.read(TLauncherFrame.class.getResource("sun.png"));
    }
 
@@ -368,5 +381,9 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    public void onProfileManagerChanged(ProfileManager pm) {
       this.pm = pm;
+   }
+
+   private static void log(Object... o) {
+      U.log("[Frame]", o);
    }
 }

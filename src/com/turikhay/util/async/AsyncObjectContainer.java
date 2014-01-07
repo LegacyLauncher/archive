@@ -62,6 +62,7 @@ public class AsyncObjectContainer {
          }
       }
 
+      this.executionLock = false;
       return this.values;
    }
 

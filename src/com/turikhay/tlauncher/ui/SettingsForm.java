@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.Container;
@@ -28,7 +29,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final LocalizableLabel resolutionCustom;
    final LocalizableLabel pathCustom;
    final LocalizableLabel argsCustom;
-   final LocalizableLabel tlauncherSettings;
+   final LocalizableLabel consoleSettings;
    final LocalizableLabel autologinCustom;
    final LocalizableLabel launchActionCustom;
    final LocalizableLabel connTimeoutLabel;
@@ -39,14 +40,15 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final SettingsCheckbox betaSelect;
    final SettingsCheckbox alphaSelect;
    final SettingsCheckbox cheatsSelect;
-   final SettingsCheckbox consoleSelect;
-   final SettingsCheckbox sunSelect;
    final LocalizableLabel versionChoice;
+   final SettingsRadioButton globalConsole;
+   final SettingsRadioButton minecraftConsole;
+   final SettingsRadioButton noneConsole;
+   final ConsoleSettingsPanel consolePan;
    final LocalizableButton defButton;
    final LocalizableButton saveButton;
    final SettingsPanel settingsPan = new SettingsPanel(this);
    final VersionsPanel versionsPan;
-   final TLauncherSettingsPanel tlauncherPan;
    final ArgsPanel argsPan;
    final SaveSettingsPanel savePan;
    final FocusListener warner = new FocusListener() {
@@ -125,24 +127,16 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.minecraftArgsField = new ArgsField(this, "settings.java.args.minecraft", "minecraft.args");
       this.minecraftArgsField.addFocusListener(this.warner);
       this.argsPan = new ArgsPanel(this);
-      this.tlauncherSettings = new LocalizableLabel("settings.tlauncher.label");
-      this.consoleSelect = new SettingsCheckbox("settings.tlauncher.console", "gui.console", false);
-      this.sunSelect = new SettingsCheckbox("settings.tlauncher.sun", "gui.sun", true);
-      this.sunSelect.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            if (SettingsForm.this.f.mp != null) {
-               switch(e.getStateChange()) {
-               case 1:
-                  SettingsForm.this.f.mp.startBackground();
-                  break;
-               case 2:
-                  SettingsForm.this.f.mp.stopBackground();
-               }
-
-            }
+      this.consoleSettings = new LocalizableLabel("settings.console.label");
+      this.globalConsole = new SettingsRadioButton("settings.console.global", "global");
+      this.globalConsole.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean newstate) {
+            TLauncher.getConsole().setShown(newstate);
          }
       });
-      this.tlauncherPan = new TLauncherSettingsPanel(this);
+      this.minecraftConsole = new SettingsRadioButton("settings.console.minecraft", "minecraft");
+      this.noneConsole = new SettingsRadioButton("settings.console.none", "none");
+      this.consolePan = new ConsoleSettingsPanel(this);
       this.autologinCustom = new LocalizableLabel("settings.tlauncher.autologin.label");
       this.connTimeoutLabel = new LocalizableLabel("settings.timeouts.connection.label");
       this.langCustom = new JLabel("Language:");
