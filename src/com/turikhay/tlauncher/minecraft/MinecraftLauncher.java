@@ -10,6 +10,8 @@ import com.turikhay.tlauncher.ui.Console;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.MinecraftUtil;
 import com.turikhay.util.U;
+import com.turikhay.util.logger.LinkedStringStream;
+import com.turikhay.util.logger.PrintLogger;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -53,7 +55,9 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    final DateTypeAdapter dateAdapter;
    GlobalSettings s;
    Downloader d;
-   Console con;
+   final LinkedStringStream output;
+   final PrintLogger logger;
+   Console c;
    final MinecraftLauncherListener listener;
    final VersionManager vm;
    static boolean instanceWorking;
@@ -108,6 +112,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.exit = exit;
       this.width = sizes[0];
       this.height = sizes[1];
+      this.output = new LinkedStringStream();
+      this.logger = new PrintLogger(this.output);
    }
 
    public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
@@ -125,14 +131,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    public void init() {
       if (!this.init) {
          this.init = true;
-         U.log(this.s.getConsoleType());
-         if (!this.exit && this.s != null) {
-            this.con = new Console(this.s, "Minecraft Logger", this.console);
+         if (!this.exit && this.s != null && this.s.getConsoleType() != GlobalSettings.ConsoleType.GLOBAL) {
+            this.c = new Console(this.s, this.logger, "Minecraft Logger", this.console);
          }
 
          this.log("Minecraft Launcher [13;6] is started!");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
          this.log("Current machine:", OperatingSystem.getCurrentInfo());
+         this.log("Launching version:", this.version_name);
       }
    }
 
@@ -162,7 +168,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", this.version_name + "\n" + this.gamedir);
          } else {
             try {
-               this.version = this.vm.getLatestCompleteVersion(this.syncInfo);
+               this.version = this.forceupdate ? this.vm.getRemoteCompleteVersion(this.syncInfo) : this.vm.getLatestCompleteVersion(this.syncInfo);
             } catch (Exception var2) {
                throw new MinecraftLauncherException("Cannot get version info!", "version-info", var2);
             }
@@ -261,7 +267,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
             }
          });
-         this.ver.setConsole(this.con);
+         this.ver.setConsole(this.c);
          this.res.addHandler(new DownloadableHandler() {
             public void onStart() {
             }
@@ -289,7 +295,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
             }
          });
-         this.res.setConsole(this.con);
+         this.res.setConsole(this.c);
          if (!this.downloadVersion || !this.downloadAssets) {
             this.downloadFlag = true;
          }
@@ -704,18 +710,15 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    }
 
    private void log(Object... w) {
-      if (this.con != null) {
-         this.con.log("[MinecraftLauncher]", w);
-      }
-
+      this.logger.log("[MinecraftLauncher]", w);
       U.log("[MinecraftLauncher]", w);
    }
 
    private void logerror(Throwable e) {
       e.printStackTrace();
-      if (this.con != null) {
-         this.con.log("[MinecraftLauncher]", "Error occurred. Logger won't vanish automatically.");
-         this.con.log(e);
+      if (this.c != null) {
+         this.c.log("[MinecraftLauncher]", "Error occurred. Logger won't vanish automatically.");
+         this.c.log(e);
       }
    }
 
@@ -728,49 +731,48 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
       this.log("Minecraft closed with exit code: " + exit);
       if (!CrashDescriptor.parseExit(exit)) {
-         if (!this.handleCrash(exit) && this.con != null) {
-            this.con.killIn(5000L);
+         if (!this.handleCrash(exit) && this.c != null) {
+            this.c.killIn(5000L);
          }
-      } else if (this.con != null) {
-         this.con.killIn(5000L);
+      } else if (this.c != null) {
+         this.c.killIn(5000L);
       }
 
       U.gc();
    }
 
    private boolean handleCrash(int exit) {
-      if (this.con == null) {
+      CrashDescriptor descriptor = new CrashDescriptor(this);
+      Crash crash = descriptor.scan(exit);
+      if (crash == null) {
          return false;
       } else {
-         CrashDescriptor descriptor = new CrashDescriptor(this);
-         Crash crash = descriptor.scan(exit);
-         if (crash == null) {
-            return false;
-         } else {
-            if (crash.getFile() != null) {
-               this.log("Crash report found.");
-            }
+         if (crash.getFile() != null) {
+            this.log("Crash report found.");
+         }
 
-            if (!crash.getSignatures().isEmpty()) {
-               this.log("Crash has been recognized.");
-            }
+         if (!crash.getSignatures().isEmpty()) {
+            this.log("Crash has been recognized.");
+         }
 
+         if (this.c != null) {
             this.log("Console won't vanish automatically.");
-            this.con.show();
-            if (this.listener == null) {
-               return true;
-            } else {
-               this.listener.onMinecraftCrash(crash);
-               return true;
-            }
+            this.c.show();
+         }
+
+         if (this.listener == null) {
+            return true;
+         } else {
+            this.listener.onMinecraftCrash(crash);
+            return true;
          }
       }
    }
 
    public void onJavaProcessError(JavaProcess jp, Throwable e) {
       e.printStackTrace();
-      if (this.con != null) {
-         this.con.log("Error has occurred:", e);
+      if (this.c != null) {
+         this.c.log("Error has occurred:", e);
       }
 
       if (this.listener != null) {
@@ -781,14 +783,19 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 
    public void onJavaProcessLog(JavaProcess jp, String line) {
       U.plog(">", line);
-      if (this.con != null) {
-         this.con.log(line);
-      }
-
+      this.logger.log(line);
    }
 
    public Console getConsole() {
-      return this.con;
+      return this.c;
+   }
+
+   public PrintLogger getLogger() {
+      return this.logger;
+   }
+
+   public LinkedStringStream getStream() {
+      return this.output;
    }
 
    public boolean isWorking() {

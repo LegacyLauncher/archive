@@ -432,8 +432,28 @@ public class VersionManager {
       return this.localVersionList.getCompleteVersion(syncInfo.getLatestVersion());
    }
 
+   public CompleteVersion getRemoteCompleteVersion(VersionSyncInfo syncInfo) throws IOException {
+      CompleteVersion result = null;
+      Version complete = syncInfo.getRemoteVersion();
+      VersionSource source = syncInfo.getRemoteSource();
+      if (complete != null && source != null) {
+         switch($SWITCH_TABLE$net$minecraft$launcher$versions$VersionSource()[source.ordinal()]) {
+         case 2:
+            result = this.remoteVersionList.getCompleteVersion(complete);
+            break;
+         case 3:
+            result = this.extraVersionList.getCompleteVersion(complete);
+            break;
+         default:
+            throw new IllegalStateException("Unknown source:" + source);
+         }
+      }
+
+      return result != null ? result : this.localVersionList.getCompleteVersion(syncInfo.getLatestVersion());
+   }
+
    public void downloadVersion(DownloadableContainer job, VersionSyncInfo syncInfo, boolean force) throws IOException {
-      CompleteVersion version = this.getLatestCompleteVersion(syncInfo);
+      CompleteVersion version = force ? this.getRemoteCompleteVersion(syncInfo) : this.getLatestCompleteVersion(syncInfo);
       File baseDirectory = this.localVersionList.getBaseDirectory();
       job.addAll((Collection)version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), syncInfo.getRemoteSource(), baseDirectory, force));
       if (syncInfo.isOnRemote()) {
@@ -457,7 +477,6 @@ public class VersionManager {
             saveFile = jarFile;
          }
 
-         U.log("Latest source:", syncInfo.getLatestSource());
          Downloadable d = new Downloadable(downloadPath + jarFile, new File(baseDirectory, saveFile), force);
          d.setAdditionalDestinations(new File[]{new File(d.getDestination() + ".bak")});
          job.add(d);

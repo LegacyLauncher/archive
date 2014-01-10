@@ -65,7 +65,7 @@ public class Update {
             }
          }
 
-         U.log(this.links);
+         log("An update available for packages:", this.links.keySet());
       }
    }
 

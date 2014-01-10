@@ -1,7 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.util.U;
 import java.awt.event.ItemListener;
 import javax.swing.JRadioButton;
 
@@ -43,7 +42,6 @@ public class LocalizableRadioButton extends JRadioButton implements LocalizableC
    }
 
    public void updateLocale() {
-      U.log(this.path, l.get(this.path));
       this.setLabel(this.path);
    }
 

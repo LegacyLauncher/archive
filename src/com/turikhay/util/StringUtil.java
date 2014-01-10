@@ -89,6 +89,42 @@ public class StringUtil {
       return parseBoolean(b, true);
    }
 
+   public static int countLines(String str) {
+      if (str != null && str.length() != 0) {
+         int lines = 1;
+         int len = str.length();
+
+         for(int pos = 0; pos < len; ++pos) {
+            char c = str.charAt(pos);
+            if (c == '\r') {
+               ++lines;
+               if (pos + 1 < len && str.charAt(pos + 1) == '\n') {
+                  ++pos;
+               }
+            } else if (c == '\n') {
+               ++lines;
+            }
+         }
+
+         return lines;
+      } else {
+         return 0;
+      }
+   }
+
+   public static char lastChar(String str) {
+      if (str == null) {
+         throw new NullPointerException();
+      } else {
+         int len = str.length();
+         if (len == 0) {
+            return '\u0000';
+         } else {
+            return len == 1 ? str.charAt(0) : str.charAt(len - 1);
+         }
+      }
+   }
+
    public static enum EscapeGroup {
       COMMAND(new char[]{'\'', '"', ' '}),
       REGEXP(COMMAND, new char[]{'/', '\\', '?', '*', '+', '[', ']', ':', '{', '}', '(', ')'});

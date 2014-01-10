@@ -28,7 +28,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.UIDefaults;
@@ -41,7 +43,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
    private final TLauncherFrame instance = this;
    final TLauncher t;
    private static final long serialVersionUID = 5949683935156305416L;
-   private static Image favicon;
+   private static List favicons = new ArrayList();
    int width;
    int height;
    Image bgimage;
@@ -164,17 +166,27 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    }
 
-   public static Image getFavicon() {
-      if (favicon == null) {
+   public static List getFavicons() {
+      if (!favicons.isEmpty()) {
+         return favicons;
+      } else {
+         int[] sizes = new int[]{256, 128, 96, 64, 48, 32, 24, 16};
+
          try {
-            favicon = ImageIO.read(TLauncherFrame.class.getResource("favicon.png"));
-         } catch (IOException var1) {
-            log("Cannot load favicon. Where is it?", var1);
+            int[] var4 = sizes;
+            int var3 = sizes.length;
+
+            for(int var2 = 0; var2 < var3; ++var2) {
+               int i = var4[var2];
+               favicons.add(ImageIO.read(TLauncherFrame.class.getResource("fav" + i + ".png")));
+            }
+         } catch (IOException var5) {
+            log("Cannot load favicon. Where is it?", var5);
             return null;
          }
-      }
 
-      return favicon;
+         return favicons;
+      }
    }
 
    private void prepareFrame() {
@@ -184,7 +196,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       this.initFontSize();
       this.setWindowTitle();
       this.resizeWindow(this.width, this.height);
-      this.setIconImage(favicon);
+      this.setIconImages(getFavicons());
       this.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
             TLauncherFrame.this.instance.setVisible(false);
