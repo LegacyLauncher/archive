@@ -167,7 +167,6 @@ public class Alert {
 
          return lang.get(path);
       } catch (Throwable var3) {
-         var3.printStackTrace();
          return message;
       }
    }

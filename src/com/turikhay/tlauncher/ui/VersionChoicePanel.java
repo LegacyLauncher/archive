@@ -135,6 +135,9 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
    public void updateLocale() {
       this.choice.removeAll();
       this.list.clear();
+      this.choice.add("...");
+      this.choice.select(0);
+      this.choice.remove(0);
       boolean exists = false;
       String add = "";
       Iterator var4 = this.lastupdate.iterator();

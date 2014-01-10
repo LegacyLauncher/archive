@@ -1,6 +1,8 @@
 package com.turikhay.tlauncher.minecraft;
 
 import com.turikhay.util.U;
+import com.turikhay.util.logger.PrintLogger;
+import com.turikhay.util.logger.StringStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,15 +12,22 @@ public class CrashDescriptor {
    static final Pattern crash_pattern = Pattern.compile("^.*[\\#\\@\\!\\@\\#][ ]Game[ ]crashed!.+[\\#\\@\\!\\@\\#][ ](.+)$");
    static final Pattern start_crash_report_pattern = Pattern.compile("^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}---- Minecraft Crash Report ----");
    static final CrashSignature[] signatures = initSigns();
-   private final MinecraftLauncher context;
+   private final PrintLogger context;
+   private final StringStream stream;
 
-   CrashDescriptor(MinecraftLauncher l) {
-      this.context = l;
+   CrashDescriptor(MinecraftLauncher launcher) {
+      this.context = launcher.getLogger();
+      this.stream = launcher.getStream();
+   }
+
+   CrashDescriptor(StringStream stream) {
+      this.context = null;
+      this.stream = stream;
    }
 
    public Crash scan(int exit) {
       Crash crash = new Crash();
-      String[] lines = this.context.con.getOutput().split("\n");
+      String[] lines = this.stream.getOutput().split("\n");
 
       for(int i = lines.length - 1; i > -1; --i) {
          String line = lines[i];
@@ -68,8 +77,8 @@ public class CrashDescriptor {
    }
 
    void log(Object... w) {
-      if (this.context.con != null) {
-         this.context.con.log("[CrashDescriptor]", w);
+      if (this.context != null) {
+         this.context.log("[CrashDescriptor]", w);
       }
 
       U.log("[CrashDescriptor]", w);

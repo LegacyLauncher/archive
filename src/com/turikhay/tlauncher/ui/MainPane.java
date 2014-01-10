@@ -13,6 +13,11 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
    final Integer SETTINGSFORM;
    final Integer PROFILECREATOR;
    final Integer CONNECTIONWARNING;
+   final int LOGINFORM_WIDTH;
+   final int LOGINFORM_HEIGHT;
+   final int SETTINGSFORM_WIDTH;
+   final int SETTINGSFORM_HEIGHT;
+   final int MARGIN;
    final MainPane instance = this;
    final DecoratedPanel bgpan;
    final Background bg;
@@ -28,6 +33,10 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       this.sf = f.sf;
       this.spcf = f.spcf;
       this.warning = f.warning;
+      this.LOGINFORM_WIDTH = this.LOGINFORM_HEIGHT = 250;
+      this.SETTINGSFORM_WIDTH = 500;
+      this.SETTINGSFORM_HEIGHT = 450;
+      this.MARGIN = 25;
       int i = -1;
       int i = i + 1;
       this.BACKGROUND_PANEL = i;
@@ -51,8 +60,8 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
 
    public void onResize() {
       this.bgpan.setBounds(0, 0, this.getWidth(), this.getHeight());
-      this.lf.setSize(250, 250);
-      this.sf.setSize(500, 500);
+      this.lf.setSize(this.LOGINFORM_WIDTH, this.LOGINFORM_HEIGHT);
+      this.sf.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);
       this.warning.setLocation(5, 5);
       this.setSettings(this.settings, false);
    }
@@ -111,18 +120,17 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
          int sf_x;
          int sf_y;
          if (shown) {
-            int margin = 15;
-            int bw = 750 + margin;
+            int bw = this.LOGINFORM_WIDTH + this.SETTINGSFORM_WIDTH + this.MARGIN;
             int hbw = bw / 2;
             lf_x = hw - hbw;
-            lf_y = hh - 125;
-            sf_x = hw - hbw + 250 + margin;
-            sf_y = hh - 250;
+            lf_y = hh - this.LOGINFORM_HEIGHT / 2;
+            sf_x = hw - hbw + this.SETTINGSFORM_WIDTH / 2 + this.MARGIN;
+            sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
          } else {
             lf_x = hw - 125;
             lf_y = hh - 125;
             sf_x = w;
-            sf_y = hh - 250;
+            sf_y = hh - 225;
          }
 
          AnimateThread.animate(this.lf, lf_x, lf_y);

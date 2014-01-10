@@ -29,7 +29,11 @@ public class VersionSyncInfo {
    }
 
    public Version getRemoteVersion() {
-      return this.remoteVersion;
+      if (this.extraVersion != null) {
+         return this.extraVersion;
+      } else {
+         return this.remoteVersion != null ? this.remoteVersion : null;
+      }
    }
 
    public String getId() {

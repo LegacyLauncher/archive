@@ -16,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,6 +27,15 @@ import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
    public static final String DEFAULT_CHARSET = "UTF-8";
+
+   public static Charset getCharset() {
+      try {
+         return Charset.forName("UTF-8");
+      } catch (Exception var1) {
+         var1.printStackTrace();
+         return null;
+      }
+   }
 
    public static void writeFile(File file, String text) throws IOException {
       createFile(file);

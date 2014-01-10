@@ -7,7 +7,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.AdjustmentEvent;
@@ -45,7 +44,6 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    private final JScrollPane scrollPane;
    private final JScrollBar scrollBar;
    private final BoundedRangeModel scrollBarModel;
-   private Image favicon;
    final Console c;
    boolean hiding;
 
@@ -118,16 +116,12 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
             public void componentHidden(ComponentEvent e) {
             }
          });
-         this.favicon = TLauncherFrame.getFavicon();
          this.setFont(this.font);
          this.setBackground(Color.black);
          this.setSize(this.sizes);
          this.setMinimumSize(this.sizes);
          this.setLocation(0, 0);
-         if (this.favicon != null) {
-            this.setIconImage(this.favicon);
-         }
-
+         this.setIconImages(TLauncherFrame.getFavicons());
          this.panel.add("Center", this.scrollPane);
          this.panel.add("South", this.sp);
          this.add(this.panel);
@@ -135,23 +129,20 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    }
 
    public void println(String string) {
-      this.print(string + "\n");
-   }
-
-   public void print(char c) {
-      this.print(String.valueOf(c));
+      this.print(string + '\n');
    }
 
    public void print(String string) {
       synchronized(this.busy) {
          Document document = this.textArea.getDocument();
-         if (this.update) {
-            this.scrollBottom();
-         }
 
          try {
             document.insertString(document.getLength(), string, (AttributeSet)null);
          } catch (Throwable var5) {
+         }
+
+         if (this.update) {
+            this.scrollBottom();
          }
 
       }

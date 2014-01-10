@@ -37,42 +37,41 @@ public class TextPopup extends MouseAdapter implements LocalizableComponent {
          boolean marked = textComponent.getSelectedText() != null;
          boolean pasteAvailable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents((Object)null).isDataFlavorSupported(DataFlavor.stringFlavor);
          JPopupMenu popup = new JPopupMenu();
-         Action selectAllAction;
          if (enabled && editable && marked) {
-            selectAllAction = textComponent.getActionMap().get("cut-to-clipboard");
-            if (selectAllAction == null) {
-               selectAllAction = textComponent.getActionMap().get("cut");
+            Action cutAction = textComponent.getActionMap().get("cut-to-clipboard");
+            if (cutAction == null) {
+               cutAction = textComponent.getActionMap().get("cut");
             }
 
-            if (selectAllAction != null) {
-               popup.add(selectAllAction).setText(CUT);
+            if (cutAction != null) {
+               popup.add(cutAction).setText(CUT);
             }
          }
 
          if (enabled && marked) {
-            selectAllAction = textComponent.getActionMap().get("copy-to-clipboard");
-            if (selectAllAction == null) {
-               selectAllAction = textComponent.getActionMap().get("copy");
+            Action copyAction = textComponent.getActionMap().get("copy-to-clipboard");
+            if (copyAction == null) {
+               copyAction = textComponent.getActionMap().get("copy");
             }
 
-            if (selectAllAction != null) {
-               popup.add(selectAllAction).setText(COPY);
+            if (copyAction != null) {
+               popup.add(copyAction).setText(COPY);
             }
          }
 
          if (enabled && editable && pasteAvailable) {
-            selectAllAction = textComponent.getActionMap().get("paste-from-clipboard");
-            if (selectAllAction == null) {
-               selectAllAction = textComponent.getActionMap().get("paste");
+            Action pasteAction = textComponent.getActionMap().get("paste-from-clipboard");
+            if (pasteAction == null) {
+               pasteAction = textComponent.getActionMap().get("paste");
             }
 
-            if (selectAllAction != null) {
-               popup.add(selectAllAction).setText(PASTE);
+            if (pasteAction != null) {
+               popup.add(pasteAction).setText(PASTE);
             }
          }
 
          if (enabled && nonempty) {
-            selectAllAction = textComponent.getActionMap().get("select-all");
+            Action selectAllAction = textComponent.getActionMap().get("select-all");
             if (selectAllAction == null) {
                selectAllAction = textComponent.getActionMap().get("selectAll");
             }
