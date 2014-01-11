@@ -2,9 +2,9 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.util.AsyncThread;
 import com.turikhay.util.StringUtil;
 import com.turikhay.util.U;
+import com.turikhay.util.async.AsyncThread;
 import com.turikhay.util.logger.LinkedStringStream;
 import com.turikhay.util.logger.Logger;
 import com.turikhay.util.logger.PrintLogger;
