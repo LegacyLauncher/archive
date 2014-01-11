@@ -28,7 +28,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.35D;
+   private static final double VERSION = 0.36D;
    private static final String SETTINGS = "tlauncher.ini";
    private static final String BRAND = "Original";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -197,7 +197,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.35D;
+      return 0.36D;
    }
 
    public static String getBrand() {
@@ -242,7 +242,7 @@ public class TLauncher {
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
       U.log("---");
-      U.log("Starting version", 0.35D);
+      U.log("Starting version", 0.36D);
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
          new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);

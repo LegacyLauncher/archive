@@ -1,4 +1,4 @@
-package com.turikhay.util;
+package com.turikhay.util.async;
 
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 

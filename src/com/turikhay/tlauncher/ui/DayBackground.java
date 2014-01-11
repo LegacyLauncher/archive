@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.util.AsyncThread;
 import com.turikhay.util.U;
+import com.turikhay.util.async.AsyncThread;
 import java.awt.Graphics2D;
 
 public class DayBackground extends LightBackground implements AnimatedBackground {

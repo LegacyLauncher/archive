@@ -34,7 +34,8 @@ public class PrintLogger extends PrintStream implements Logger {
    }
 
    public void log(String s) {
-      this.println(s);
+      this.print(s);
+      this.print('\n');
       if (this.mirror != null) {
          this.mirror.log(s);
       }

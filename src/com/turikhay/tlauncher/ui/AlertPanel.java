@@ -13,13 +13,14 @@ import javax.swing.border.Border;
 
 public class AlertPanel extends Panel {
    private static final long serialVersionUID = -8032765825488193573L;
+   private final JLabel label;
 
    public AlertPanel(String message) {
       LayoutManager lm = new BoxLayout(this, 1);
       this.setLayout(lm);
-      JLabel text = new JLabel(message);
-      text.setAlignmentX(0.5F);
-      this.add(text);
+      this.label = new JLabel(message);
+      this.label.setAlignmentX(0.5F);
+      this.add(this.label);
    }
 
    public void addTextArea(String text) {
@@ -36,11 +37,14 @@ public class AlertPanel extends Panel {
       scroll.setVerticalScrollBarPolicy(20);
       int lineHeight = area.getFont() != null ? this.getFontMetrics(area.getFont()).getHeight() : 15;
       int height = StringUtil.countLines(text) * lineHeight;
-      if (height > 200) {
-         height = 200;
+      int width = 400;
+      if (height > 150) {
+         width = 500;
+         height = 400;
       }
 
-      scroll.setMinimumSize(new Dimension(200, height));
+      this.label.setMinimumSize(new Dimension(width, 0));
+      scroll.setPreferredSize(new Dimension(width, height));
       this.add(scroll);
    }
 }
