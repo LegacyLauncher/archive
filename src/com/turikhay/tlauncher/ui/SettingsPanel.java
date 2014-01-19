@@ -92,6 +92,13 @@ public class SettingsPanel extends JPanel {
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;
+      this.add(this.sf.extraSettings, constraints);
+      constraints.fill = 2;
+      constraints.weightx = 1.0D;
+      this.add(this.sf.checkUsernameSelect, constraints);
+      ++constraints.gridy;
+      constraints.weightx = 0.0D;
+      constraints.fill = 0;
       this.add(this.sf.autologinCustom, constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
@@ -106,10 +113,10 @@ public class SettingsPanel extends JPanel {
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;
-      this.add(this.sf.connTimeoutLabel, constraints);
+      this.add(this.sf.connQualityLabel, constraints);
       constraints.fill = 2;
       constraints.weightx = 1.0D;
-      this.add(this.sf.connectionField, constraints);
+      this.add(this.sf.connPan, constraints);
       ++constraints.gridy;
       constraints.weightx = 0.0D;
       constraints.fill = 0;

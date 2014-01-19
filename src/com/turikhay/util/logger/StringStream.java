@@ -1,6 +1,6 @@
 package com.turikhay.util.logger;
 
-import com.turikhay.util.SafeOutputStream;
+import com.turikhay.util.streams.SafeOutputStream;
 
 public class StringStream extends SafeOutputStream {
    protected final StringBuffer buffer = new StringBuffer();

@@ -133,7 +133,13 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
    }
 
    private void paint_(Graphics g) {
-      super.paint(g);
+      try {
+         super.paint(g);
+      } catch (Exception var10) {
+         U.log("Error paining progress bar:", var10.toString());
+         return;
+      }
+
       boolean center = this.center_string != null;
       boolean west = this.west_string != null;
       boolean east = this.east_string != null;

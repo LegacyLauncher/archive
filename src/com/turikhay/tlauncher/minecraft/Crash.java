@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.minecraft;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 
 public class Crash {
@@ -25,15 +25,7 @@ public class Crash {
    }
 
    public List getSignatures() {
-      List r = new ArrayList();
-      Iterator var3 = this.signatures.iterator();
-
-      while(var3.hasNext()) {
-         CrashSignature sign = (CrashSignature)var3.next();
-         r.add(sign);
-      }
-
-      return r;
+      return Collections.unmodifiableList(this.signatures);
    }
 
    public boolean hasSignature(CrashSignature s) {

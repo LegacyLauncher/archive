@@ -139,11 +139,15 @@ public abstract class ExtendedTextField extends JTextField implements Localizabl
    }
 
    public String getValue() {
-      return !this.edit ? null : this.value;
+      if (!this.edit) {
+         return null;
+      } else {
+         return this.value != null && this.value.equals(this.placeholder) ? null : this.value;
+      }
    }
 
    public boolean check() {
-      String text = this.getValue();
+      String text = this.edit ? super.getText() : null;
       return this.check(text) ? this.ok() : this.wrong(this.error);
    }
 
@@ -186,10 +190,7 @@ public abstract class ExtendedTextField extends JTextField implements Localizabl
    protected void onChange() {
       if (this.edit) {
          this.value = super.getText();
-         if (!this.check()) {
-            this.value = null;
-         }
-
+         this.check();
       }
    }
 

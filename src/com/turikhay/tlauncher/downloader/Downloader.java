@@ -1,13 +1,18 @@
 package com.turikhay.tlauncher.downloader;
 
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.util.U;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class Downloader extends Thread {
+   private final int limitThreads;
    public final String name;
-   public final int maxThreads;
+   private int maxThreads;
+   private int minTries;
+   private int maxTries;
    private boolean launched;
    private boolean available;
    private boolean list_;
@@ -16,7 +21,6 @@ public class Downloader extends Thread {
    private List list;
    private List queue;
    private List listeners;
-   private boolean[] running;
    private int[] remain;
    private int[] progress;
    private double[] speed;
@@ -24,7 +28,22 @@ public class Downloader extends Thread {
    private int runningThreads;
    private double av_speed;
 
-   public Downloader(String name, int mthreads) {
+   public Downloader(TLauncher tlauncher) {
+      this.limitThreads = 10;
+      this.available = true;
+      this.list_ = true;
+      this.listeners_ = true;
+      this.list = new ArrayList();
+      this.queue = new ArrayList();
+      this.listeners = new ArrayList();
+      this.name = "Tl";
+      this.loadConfiguration(tlauncher.getSettings());
+      this.threads = new DownloaderThread[10];
+      this.start();
+   }
+
+   public Downloader(String name, int minTries, int maxTries, int threads) {
+      this.limitThreads = 10;
       this.available = true;
       this.list_ = true;
       this.listeners_ = true;
@@ -32,14 +51,15 @@ public class Downloader extends Thread {
       this.queue = new ArrayList();
       this.listeners = new ArrayList();
       this.name = name;
-      this.maxThreads = mthreads;
-      this.threads = new DownloaderThread[this.maxThreads];
-      this.running = new boolean[this.maxThreads];
+      this.maxThreads = threads;
+      this.minTries = minTries;
+      this.maxThreads = maxTries;
+      this.threads = new DownloaderThread[10];
       this.start();
    }
 
-   public Downloader(int mthreads) {
-      this("", mthreads);
+   public Downloader(int minTries, int maxTries, int threads) {
+      this("", minTries, maxTries, threads);
    }
 
    public void run() {
@@ -79,7 +99,7 @@ public class Downloader extends Thread {
             var10000[i] += each;
             DownloaderThread curthread = this.threads[i];
             if (curthread == null) {
-               this.running[i] = (curthread = this.threads[i] = new DownloaderThread(this, i)) != null;
+               curthread = this.threads[i] = new DownloaderThread(this, i);
             }
 
             for(y = x; y < x + each; ++y) {
@@ -94,7 +114,7 @@ public class Downloader extends Thread {
       }
 
       for(i = 0; i < this.maxThreads; ++i) {
-         if (this.running[i]) {
+         if (this.threads[i] != null) {
             this.threads[i].startLaunch();
          }
       }
@@ -225,6 +245,34 @@ public class Downloader extends Thread {
       }
    }
 
+   public int getMinTries() {
+      return this.minTries;
+   }
+
+   public void setMinTries(int i) {
+      this.minTries = i;
+   }
+
+   public int getMaxTries() {
+      return this.maxTries;
+   }
+
+   public void setMaxTries(int i) {
+      this.maxTries = i;
+   }
+
+   public int getMaxThreads() {
+      return this.maxThreads;
+   }
+
+   public void setMaxThreads(int i) {
+      if (i > 10) {
+         throw new IllegalArgumentException("Thread limit exceed!");
+      } else {
+         this.maxThreads = i;
+      }
+   }
+
    void onDownloaderStart(int files) {
       Iterator var3 = this.listeners.iterator();
 
@@ -318,5 +366,12 @@ public class Downloader extends Thread {
       } catch (Exception var4) {
       }
 
+   }
+
+   public void loadConfiguration(GlobalSettings settings) {
+      int[] conf = settings.getConnectionQuality().getConfiguration();
+      this.setMinTries(conf[0]);
+      this.setMaxTries(conf[1]);
+      this.setMaxThreads(conf[2]);
    }
 }

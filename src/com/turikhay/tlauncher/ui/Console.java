@@ -44,7 +44,9 @@ public class Console implements Logger {
       }
 
       this.name = name;
+      TLauncherFrame.initLookAndFeel();
       this.frame = new ConsoleFrame(this, global, name);
+      frames.add(this.frame);
       this.update();
       this.frame.addWindowListener(new WindowListener() {
          public void windowOpened(WindowEvent e) {
@@ -197,10 +199,17 @@ public class Console implements Logger {
    }
 
    public void show() {
+      this.show(true);
+   }
+
+   public void show(boolean toFront) {
       this.check();
       this.frame.setVisible(true);
-      this.frame.toFront();
       this.frame.scrollBottom();
+      if (toFront) {
+         this.frame.toFront();
+      }
+
    }
 
    public void hide() {

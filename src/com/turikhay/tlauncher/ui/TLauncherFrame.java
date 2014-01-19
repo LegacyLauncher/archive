@@ -210,17 +210,17 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
          public void componentShown(ComponentEvent e) {
             TLauncherFrame.log("Hi, guys!");
-            TLauncherFrame.this.mp.startBackground();
             TLauncherFrame.this.instance.validate();
             TLauncherFrame.this.instance.repaint();
             TLauncherFrame.this.instance.toFront();
+            TLauncherFrame.this.mp.showBackground();
          }
 
          public void componentMoved(ComponentEvent e) {
          }
 
          public void componentHidden(ComponentEvent e) {
-            TLauncherFrame.this.mp.suspendBackground();
+            TLauncherFrame.this.mp.hideBackground();
          }
       });
       log("Preparing components...");
@@ -271,7 +271,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
          this.pb.progressStart();
          this.pb.setIndeterminate(true);
          this.pb.setCenterString(this.lang.get("progressBar.init"));
-         this.pb.setEastString(this.lang.get("progressBar.downloading" + (files == 1 ? "-one" : ""), "i", files));
+         this.pb.setEastString(this.lang.get("progressBar.downloading" + (files == 1 ? "-one" : ""), "0", files));
       }
    }
 
@@ -287,8 +287,8 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
 
    public void onDownloaderFileComplete(Downloader d, Downloadable f) {
       this.pb.setIndeterminate(false);
-      this.pb.setWestString(this.lang.get("progressBar.completed", "f", f.getFilename()));
-      this.pb.setEastString(this.lang.get("progressBar.remaining", "i", d.getRemaining()));
+      this.pb.setWestString(this.lang.get("progressBar.completed", "0", f.getFilename()));
+      this.pb.setEastString(this.lang.get("progressBar.remaining", "0", d.getRemaining()));
    }
 
    public void onDownloaderError(Downloader d, Downloadable file, Throwable error) {
@@ -298,7 +298,7 @@ public class TLauncherFrame extends JFrame implements ProfileListener, DownloadL
       } else {
          String path = "download.error" + (error == null ? ".unknown" : "");
          this.pb.setIndeterminate(false);
-         this.pb.setCenterString(this.lang.get(path, "f", file.getFilename(), "e", error.toString()));
+         this.pb.setCenterString(this.lang.get(path, "0", file.getFilename(), "1", error.toString()));
       }
    }
 

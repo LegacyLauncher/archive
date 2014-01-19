@@ -5,7 +5,7 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class MainInputPanel extends BlockablePanel implements LocalizableComponent, LoginListener {
+public class MainInputPanel extends BlockablePanel implements LoginListener {
    private static final long serialVersionUID = 296073104610204659L;
    private final LoginForm lf;
    private boolean saveable;
@@ -22,6 +22,7 @@ public class MainInputPanel extends BlockablePanel implements LocalizableCompone
             MainInputPanel.this.lf.callLogin();
          }
       });
+      this.field.setCheck(this.lf.s.getBoolean("login.check"));
       this.field.setValue(username);
       this.saveable = this.lf.s.isSaveable("login.username");
       this.field.setEnabled(this.saveable);
@@ -40,10 +41,6 @@ public class MainInputPanel extends BlockablePanel implements LocalizableCompone
          this.field.setEnabled(true);
       }
 
-   }
-
-   public void updateLocale() {
-      this.field.setPlaceholder("loginform.username");
    }
 
    public boolean onLogin() {

@@ -8,8 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,15 +22,15 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final AutologinTimeoutField autologinField;
    final LangChoice langChoice;
    final LaunchActionChoice launchActionChoice;
-   final TimeoutField connectionField;
    final LocalizableLabel gameDirCustom;
    final LocalizableLabel resolutionCustom;
    final LocalizableLabel pathCustom;
    final LocalizableLabel argsCustom;
    final LocalizableLabel consoleSettings;
+   final LocalizableLabel extraSettings;
    final LocalizableLabel autologinCustom;
    final LocalizableLabel launchActionCustom;
-   final LocalizableLabel connTimeoutLabel;
+   final LocalizableLabel connQualityLabel;
    final JLabel langCustom;
    final ArgsField javaArgsField;
    final ArgsField minecraftArgsField;
@@ -40,11 +38,16 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final SettingsCheckbox betaSelect;
    final SettingsCheckbox alphaSelect;
    final SettingsCheckbox cheatsSelect;
+   final SettingsCheckbox checkUsernameSelect;
    final LocalizableLabel versionChoice;
    final SettingsRadioButton globalConsole;
    final SettingsRadioButton minecraftConsole;
    final SettingsRadioButton noneConsole;
    final ConsoleSettingsPanel consolePan;
+   final SettingsRadioButton goodQuality;
+   final SettingsRadioButton normalQuality;
+   final SettingsRadioButton badQuality;
+   final ConnectionQualitySettingsPanel connPan;
    final LocalizableButton defButton;
    final LocalizableButton saveButton;
    final SettingsPanel settingsPan = new SettingsPanel(this);
@@ -88,35 +91,31 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.autologinField = new AutologinTimeoutField(this);
       this.langChoice = new LangChoice(this);
       this.launchActionChoice = new LaunchActionChoice(this);
-      this.connectionField = new TimeoutField(this, TimeoutField.FieldType.CONNECTION);
       this.gameDirCustom = new LocalizableLabel("settings.client.gamedir.label");
       this.resolutionCustom = new LocalizableLabel("settings.client.resolution.label");
       this.versionChoice = new LocalizableLabel("settings.versions.label");
       this.snapshotsSelect = new SettingsCheckbox(this, "settings.versions.snapshots", "minecraft.versions.snapshots");
-      this.snapshotsSelect.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            boolean selected = e.getStateChange() == 1;
-            SettingsForm.this.snapshot_changed = SettingsForm.this.snapshot_old ^ selected;
+      this.snapshotsSelect.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean e) {
+            SettingsForm.this.snapshot_changed = SettingsForm.this.snapshot_old ^ e;
          }
       });
       this.betaSelect = new SettingsCheckbox(this, "settings.versions.beta", "minecraft.versions.beta");
       this.betaSelect.addItemListener(new CheckBoxListener() {
-         public void itemStateChanged(boolean newstate) {
-            SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ newstate;
+         public void itemStateChanged(boolean e) {
+            SettingsForm.this.beta_changed = SettingsForm.this.beta_old ^ e;
          }
       });
       this.alphaSelect = new SettingsCheckbox(this, "settings.versions.alpha", "minecraft.versions.alpha");
-      this.alphaSelect.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            boolean selected = e.getStateChange() == 1;
-            SettingsForm.this.alpha_changed = SettingsForm.this.alpha_old ^ selected;
+      this.alphaSelect.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean e) {
+            SettingsForm.this.alpha_changed = SettingsForm.this.alpha_old ^ e;
          }
       });
       this.cheatsSelect = new SettingsCheckbox(this, "settings.versions.cheats", "minecraft.versions.cheats");
-      this.cheatsSelect.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            boolean selected = e.getStateChange() == 1;
-            SettingsForm.this.cheats_changed = SettingsForm.this.cheats_old ^ selected;
+      this.cheatsSelect.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean e) {
+            SettingsForm.this.cheats_changed = SettingsForm.this.cheats_old ^ e;
          }
       });
       this.versionsPan = new VersionsPanel(this);
@@ -137,8 +136,21 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.minecraftConsole = new SettingsRadioButton("settings.console.minecraft", "minecraft");
       this.noneConsole = new SettingsRadioButton("settings.console.none", "none");
       this.consolePan = new ConsoleSettingsPanel(this);
+      this.extraSettings = new LocalizableLabel("settings.extra.label");
+      this.checkUsernameSelect = new SettingsCheckbox(this, "settings.extra.check-username", "login.check");
+      this.checkUsernameSelect.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean e) {
+            if (SettingsForm.this.f.lf != null) {
+               SettingsForm.this.f.lf.maininput.field.setCheck(e);
+            }
+         }
+      });
       this.autologinCustom = new LocalizableLabel("settings.tlauncher.autologin.label");
-      this.connTimeoutLabel = new LocalizableLabel("settings.timeouts.connection.label");
+      this.connQualityLabel = new LocalizableLabel("settings.connection.label");
+      this.goodQuality = new SettingsRadioButton("settings.connection.good", "good");
+      this.normalQuality = new SettingsRadioButton("settings.connection.normal", "normal");
+      this.badQuality = new SettingsRadioButton("settings.connection.bad", "bad");
+      this.connPan = new ConnectionQualitySettingsPanel(this);
       this.langCustom = new JLabel("Language:");
       this.launchActionCustom = new LocalizableLabel("settings.launch-action.label");
       this.saveButton = new LocalizableButton("settings.save");
@@ -271,6 +283,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
          this.alpha_old = this.alphaSelect.getState();
          this.beta_old = this.betaSelect.getState();
          this.cheats_old = this.cheatsSelect.getState();
+         this.t.getDownloader().loadConfiguration(this.s);
          return true;
       }
    }

@@ -102,7 +102,7 @@ public class TextPopup extends MouseAdapter implements LocalizableComponent {
 
    public void updateLocale() {
       if (l == null && TLauncher.getInstance() != null) {
-         l = TLauncher.getInstance().getSettings();
+         l = Localizable.get();
       }
 
       if (l == null) {

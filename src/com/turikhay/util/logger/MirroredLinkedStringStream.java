@@ -30,7 +30,7 @@ public class MirroredLinkedStringStream extends LinkedStringStream {
       this.mirror = stream;
    }
 
-   public void write(int b) {
+   public void write(char b) {
       super.write(b);
       if (this.mirror != null) {
          try {

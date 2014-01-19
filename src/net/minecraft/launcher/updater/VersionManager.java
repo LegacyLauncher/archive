@@ -706,6 +706,12 @@ public class VersionManager {
    }
 
    public void addRefreshedListener(RefreshedListener listener) {
+      if (this.versionRefreshes.isEmpty()) {
+         listener.onVersionsRefreshed(this);
+      } else {
+         listener.onVersionsRefreshing(this);
+      }
+
       this.refreshedListeners.add(listener);
    }
 
