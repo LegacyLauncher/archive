@@ -93,6 +93,20 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
       }
    }
 
+   public void hideBackground() {
+      if (this.stopBackground()) {
+         this.bgpan.setVisible(false);
+      }
+
+   }
+
+   public void showBackground() {
+      if (this.startBackground()) {
+         this.bgpan.setVisible(true);
+      }
+
+   }
+
    public boolean suspendBackground() {
       if (!(this.bg instanceof AnimatedBackground)) {
          return false;
@@ -127,10 +141,10 @@ public class MainPane extends JLayeredPane implements MinecraftLauncherListener 
             sf_x = hw - hbw + this.SETTINGSFORM_WIDTH / 2 + this.MARGIN;
             sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
          } else {
-            lf_x = hw - 125;
-            lf_y = hh - 125;
-            sf_x = w;
-            sf_y = hh - 225;
+            lf_x = hw - this.LOGINFORM_WIDTH / 2;
+            lf_y = hh - this.LOGINFORM_HEIGHT / 2;
+            sf_x = w * 2;
+            sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
          }
 
          AnimateThread.animate(this.lf, lf_x, lf_y);

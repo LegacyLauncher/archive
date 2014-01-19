@@ -1,6 +1,5 @@
 package com.turikhay.tlauncher.downloader;
 
-import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.U;
 import java.io.File;
@@ -17,13 +16,12 @@ import java.util.List;
 public class DownloaderThread extends Thread {
    public final String name;
    public final int id;
-   public final int maxAttempts = 3;
    private final Downloader fd;
    private boolean launched;
    private boolean available = true;
    private boolean list_ = true;
-   private List list;
-   private List queue;
+   private List list = new ArrayList();
+   private List queue = new ArrayList();
    private int done;
    private int remain;
    private int progress;
@@ -35,9 +33,6 @@ public class DownloaderThread extends Thread {
    private Throwable error;
 
    public DownloaderThread(Downloader td, int tid) {
-      Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
-      this.list = new ArrayList();
-      this.queue = new ArrayList();
       this.av_speed = new double[this.av];
       this.fd = td;
       this.name = this.fd.name;
@@ -64,7 +59,7 @@ public class DownloaderThread extends Thread {
          this.error = null;
          this.onStart(d);
          int attempt = 0;
-         int max = d.getFast() ? 2 : 3;
+         int max = d.getFast() ? this.fd.getMinTries() : this.fd.getMaxTries();
 
          while(attempt < max) {
             ++attempt;

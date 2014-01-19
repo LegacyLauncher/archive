@@ -53,21 +53,23 @@ public class DayBackground extends LightBackground implements AnimatedBackground
    }
 
    private void tick() {
-      if (this.sunLocation <= -0.5D) {
-         this.sunLocation = 1.5D;
-      } else {
-         this.sunLocation -= 0.001D;
-      }
+      if (this.comp.isVisible()) {
+         if (this.sunLocation <= -0.5D) {
+            this.sunLocation = 1.5D;
+         } else {
+            this.sunLocation -= 0.001D;
+         }
 
-      long start = System.nanoTime();
-      this.comp.repaint();
-      long end = System.nanoTime();
-      long diff = end - start;
-      if (diff > 1000000L) {
-         log("Sun is probably lagging (" + diff + " ns > 1000000 ns).");
-      }
+         long start = System.nanoTime();
+         this.comp.repaint();
+         long end = System.nanoTime();
+         long diff = end - start;
+         if (diff > 1000000L) {
+            log("Sun is probably lagging (" + diff + " ns > 1000000 ns).");
+         }
 
-      U.sleepFor(100L);
+         U.sleepFor(100L);
+      }
    }
 
    public void draw(Graphics2D g, boolean force) {

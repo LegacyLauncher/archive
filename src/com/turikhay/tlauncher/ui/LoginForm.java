@@ -216,10 +216,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public void onMinecraftCrash(Crash crash) {
       String p = "crash.";
       String title = this.l.get(p + "title");
+      String report = crash.getFile();
       if (!crash.isRecognized()) {
          Alert.showError(title, this.l.get(p + "unknown"), (Throwable)null);
       } else {
-         String report = crash.getFile();
          Iterator var6 = crash.getSignatures().iterator();
 
          while(var6.hasNext()) {
@@ -236,31 +236,31 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
                Alert.showMessage(title, message, report);
             }
          }
+      }
 
-         if (report != null) {
-            if (Alert.showQuestion(p + "store", false)) {
-               U.log("Removing crash report...");
-               File file = new File(report);
-               if (!file.exists()) {
-                  U.log("File is already removed. LOL.");
-               } else {
-                  try {
-                     if (!file.delete()) {
-                        throw new Exception("file.delete() returned false");
-                     }
-                  } catch (Exception var11) {
-                     U.log("Can't delete crash report file. Okay.");
-                     Alert.showAsyncMessage(p + "store.failed", var11);
-                     return;
+      if (report != null) {
+         if (Alert.showQuestion(p + "store", false)) {
+            U.log("Removing crash report...");
+            File file = new File(report);
+            if (!file.exists()) {
+               U.log("File is already removed. LOL.");
+            } else {
+               try {
+                  if (!file.delete()) {
+                     throw new Exception("file.delete() returned false");
                   }
-
-                  U.log("Yay, crash report file doesn't exist by now.");
+               } catch (Exception var11) {
+                  U.log("Can't delete crash report file. Okay.");
+                  Alert.showAsyncMessage(p + "store.failed", var11);
+                  return;
                }
 
-               Alert.showAsyncMessage(p + "store.success");
+               U.log("Yay, crash report file doesn't exist by now.");
             }
 
+            Alert.showAsyncMessage(p + "store.success");
          }
+
       }
    }
 

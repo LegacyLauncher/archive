@@ -115,6 +115,8 @@ public class GlobalSettings extends Settings {
                   IntegerArray.parseIntegerArray(value);
                } else if (defvalue instanceof GlobalSettings.ConsoleType) {
                   this.parseConsoleType(value);
+               } else if (defvalue instanceof GlobalSettings.ConnectionQuality) {
+                  this.parseConnectionQuality(value);
                }
             } catch (Exception var9) {
                this.repair(key, defvalue, !this.saveable);
@@ -144,6 +146,11 @@ public class GlobalSettings extends Settings {
    public String get(String key) {
       Object r = this.cs.containsKey(key) ? this.cs.get(key) : this.s.get(key);
       return r != null && !r.equals("") ? r.toString() : null;
+   }
+
+   public String getD(String key) {
+      Object r = this.cs.containsKey(key) ? this.cs.get(key) : this.s.get(key);
+      return r != null && !r.equals("") ? r.toString() : this.getDefault(key);
    }
 
    public void set(String key, Object value, boolean save) {
@@ -256,6 +263,12 @@ public class GlobalSettings extends Settings {
       return get != null ? get : GlobalSettings.ConsoleType.getDefault();
    }
 
+   public GlobalSettings.ConnectionQuality getConnectionQuality() {
+      String quality = this.get("connection");
+      GlobalSettings.ConnectionQuality get = GlobalSettings.ConnectionQuality.get(quality);
+      return get != null ? get : GlobalSettings.ConnectionQuality.getDefault();
+   }
+
    private boolean parseBoolean(String b) throws Exception {
       if (b.equalsIgnoreCase("true")) {
          return true;
@@ -274,6 +287,12 @@ public class GlobalSettings extends Settings {
 
    private void parseConsoleType(String b) throws Exception {
       if (!GlobalSettings.ConsoleType.parse(b)) {
+         throw new Exception();
+      }
+   }
+
+   private void parseConnectionQuality(String b) throws Exception {
+      if (!GlobalSettings.ConnectionQuality.parse(b)) {
          throw new Exception();
       }
    }
@@ -450,6 +469,86 @@ public class GlobalSettings extends Settings {
 
       public static GlobalSettings.ActionOnLaunch getDefault() {
          return HIDE;
+      }
+   }
+
+   public static enum ConnectionQuality {
+      GOOD(2, 5, 10, 15000),
+      NORMAL(5, 10, 5, 45000),
+      BAD(10, 20, 1, 120000);
+
+      private final int minTries;
+      private final int maxTries;
+      private final int maxThreads;
+      private final int timeout;
+      private final int[] configuration;
+
+      private ConnectionQuality(int minTries, int maxTries, int maxThreads, int timeout) {
+         this.minTries = minTries;
+         this.maxTries = maxTries;
+         this.maxThreads = maxThreads;
+         this.timeout = timeout;
+         this.configuration = new int[]{minTries, maxTries, maxThreads};
+      }
+
+      public static boolean parse(String val) {
+         if (val == null) {
+            return false;
+         } else {
+            GlobalSettings.ConnectionQuality[] var4;
+            int var3 = (var4 = values()).length;
+
+            for(int var2 = 0; var2 < var3; ++var2) {
+               GlobalSettings.ConnectionQuality cur = var4[var2];
+               if (cur.toString().equalsIgnoreCase(val)) {
+                  return true;
+               }
+            }
+
+            return false;
+         }
+      }
+
+      public static GlobalSettings.ConnectionQuality get(String val) {
+         GlobalSettings.ConnectionQuality[] var4;
+         int var3 = (var4 = values()).length;
+
+         for(int var2 = 0; var2 < var3; ++var2) {
+            GlobalSettings.ConnectionQuality cur = var4[var2];
+            if (cur.toString().equalsIgnoreCase(val)) {
+               return cur;
+            }
+         }
+
+         return null;
+      }
+
+      public int[] getConfiguration() {
+         return this.configuration;
+      }
+
+      public int getMinTries() {
+         return this.minTries;
+      }
+
+      public int getMaxTries() {
+         return this.maxTries;
+      }
+
+      public int getMaxThreads() {
+         return this.maxThreads;
+      }
+
+      public int getTimeout() {
+         return this.timeout;
+      }
+
+      public String toString() {
+         return super.toString().toLowerCase();
+      }
+
+      public static GlobalSettings.ConnectionQuality getDefault() {
+         return GOOD;
       }
    }
 

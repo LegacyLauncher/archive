@@ -11,6 +11,7 @@ public class GlobalDefaults {
 
    GlobalDefaults(GlobalSettings g) {
       this.d.put("settings.version", g.version);
+      this.d.put("login.check", true);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 3);
       this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
@@ -26,7 +27,7 @@ public class GlobalDefaults {
       this.d.put("gui.console.height", 400);
       this.d.put("gui.console.x", 1);
       this.d.put("gui.console.y", 1);
-      this.d.put("timeout.connection", 15000);
+      this.d.put("connection", GlobalSettings.ConnectionQuality.getDefault());
       this.d.put("locale", GlobalSettings.getSupported());
    }
 

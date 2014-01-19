@@ -1,13 +1,12 @@
 package com.turikhay.util.async;
 
-import com.turikhay.tlauncher.handlers.ExceptionHandler;
-
 public class AsyncThread extends Thread {
+   private static long threadNum;
    private long wait;
    private Runnable runnable;
 
    private AsyncThread(Runnable r) {
-      Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler.getInstance());
+      super("AsyncThread#" + ++threadNum);
       this.runnable = r;
    }
 

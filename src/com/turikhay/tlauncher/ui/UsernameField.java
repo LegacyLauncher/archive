@@ -4,6 +4,7 @@ public class UsernameField extends LocalizableTextField {
    private static final long serialVersionUID = -5813187607562947592L;
    UsernameField.UsernameState state;
    String username;
+   private boolean check;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState;
 
@@ -24,6 +25,15 @@ public class UsernameField extends LocalizableTextField {
       }
    }
 
+   public boolean getCheck() {
+      return this.check;
+   }
+
+   public void setCheck(boolean c) {
+      this.check = c;
+      this.check();
+   }
+
    public boolean check() {
       return this.check(true);
    }
@@ -41,24 +51,26 @@ public class UsernameField extends LocalizableTextField {
       if (text == null) {
          return false;
       } else {
-         String regexp;
-         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState()[this.state.ordinal()]) {
-         case 1:
-            regexp = "^[A-Za-z0-9_|\\-|\\.]" + (canBeEmpty ? "*" : "+") + "$";
-            break;
-         case 2:
-            regexp = "^.*$";
-            break;
-         default:
-            throw new IllegalArgumentException("Unknown field state!");
+         if (this.check) {
+            String regexp;
+            switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$UsernameField$UsernameState()[this.state.ordinal()]) {
+            case 1:
+               regexp = "^[A-Za-z0-9_|\\-|\\.]" + (canBeEmpty ? "*" : "+") + "$";
+               break;
+            case 2:
+               regexp = "^.*$";
+               break;
+            default:
+               throw new IllegalArgumentException("Unknown field state!");
+            }
+
+            if (!text.matches(regexp)) {
+               return false;
+            }
          }
 
-         if (text.matches(regexp)) {
-            this.username = text;
-            return true;
-         } else {
-            return false;
-         }
+         this.username = text;
+         return true;
       }
    }
 
