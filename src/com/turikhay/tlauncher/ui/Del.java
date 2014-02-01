@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 
@@ -17,6 +18,13 @@ public class Del extends JPanel {
       this.size = size;
       this.aligment = aligment;
       this.color = color;
+   }
+
+   public Del(int size, int aligment, int width, int height, Color color) {
+      this.size = size;
+      this.aligment = aligment;
+      this.color = color;
+      this.setPreferredSize(new Dimension(width, height));
    }
 
    public void paint(Graphics g) {

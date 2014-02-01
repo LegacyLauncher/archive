@@ -114,12 +114,10 @@ public class Update {
       if (this.step > Update.Step.NONE.ordinal()) {
          throw new Update.IllegalStepException(this.step);
       } else {
-         log(0);
          URI download_link = this.getDownloadLinkFor(pt);
          if (download_link == null) {
             throw new NullPointerException("Update for package \"" + pt + "\" is not found");
          } else {
-            log(1);
             File destination = Updater.getUpdateFileFor(pt);
             destination.deleteOnExit();
             final Downloadable downloadable = new Downloadable(download_link.toURL(), destination);
@@ -144,7 +142,6 @@ public class Update {
                   Update.this.step = Update.Step.NONE.ordinal();
                }
             });
-            log(2);
             this.onUpdateDownloading();
             this.isDownloading = true;
             this.d.add(downloadable);
@@ -155,7 +152,6 @@ public class Update {
                }
             }
 
-            log(3);
          }
       }
    }
@@ -181,7 +177,7 @@ public class Update {
          File replace = Updater.getFileFor(pt);
          File replacer = Updater.getUpdateFileFor(pt);
          replacer.deleteOnExit();
-         String[] args = TLauncher.getInstance() != null ? TLauncher.getInstance().sargs : new String[0];
+         String[] args = TLauncher.getInstance() != null ? TLauncher.getArgs() : new String[0];
          ProcessBuilder builder = Bootstrapper.buildProcess(args);
          FileInputStream in = new FileInputStream(replacer);
          FileOutputStream out = new FileOutputStream(replace);
@@ -194,7 +190,12 @@ public class Update {
 
          in.close();
          out.close();
-         builder.start();
+
+         try {
+            builder.start();
+         } catch (Exception var11) {
+         }
+
          System.exit(0);
       }
    }
@@ -286,7 +287,9 @@ public class Update {
    }
 
    private void onUpdateApplyError(Throwable e) {
+      U.log("Apply error");
       synchronized(this.listeners) {
+         U.log(e);
          Iterator var4 = this.listeners.iterator();
 
          while(var4.hasNext()) {

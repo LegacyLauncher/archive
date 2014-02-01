@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.tlauncher.updater.Ad;
 import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.Updater;
@@ -10,7 +12,8 @@ public class ConnectionWarning extends ImagePanel implements UpdaterListener {
    private final String langPath = "firewall";
 
    public ConnectionWarning() {
-      super(ImageButton.loadImage("warning.png"), 1.0F, 0.75F, false, false);
+      super(ImageCache.getImage("warning.png"), 1.0F, 0.75F, false, false);
+      TLauncher.getInstance().getUpdater().addListener(this);
    }
 
    protected boolean onClick() {

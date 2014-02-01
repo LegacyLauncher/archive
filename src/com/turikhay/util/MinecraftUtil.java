@@ -16,8 +16,13 @@ public class MinecraftUtil {
       if (TLauncher.getInstance() == null) {
          return getDefaultWorkingDirectory();
       } else {
-         String dir = TLauncher.getInstance().getSettings().get("minecraft.gamedir");
-         return dir == null ? getDefaultWorkingDirectory() : new File(dir);
+         String sdir = TLauncher.getInstance().getSettings().get("minecraft.gamedir");
+         if (sdir == null) {
+            return getDefaultWorkingDirectory();
+         } else {
+            File dir = new File(sdir);
+            return !dir.canRead() ? getDefaultWorkingDirectory() : dir;
+         }
       }
    }
 
@@ -88,6 +93,7 @@ public class MinecraftUtil {
          boolean beta = t.getSettings().getBoolean("minecraft.versions.beta");
          boolean alpha = t.getSettings().getBoolean("minecraft.versions.alpha");
          boolean cheats = t.getSettings().getBoolean("minecraft.versions.cheats");
+         boolean old = t.getSettings().getBoolean("minecraft.versions.old");
          if (!snaps) {
             r.excludeType(ReleaseType.SNAPSHOT);
          }
@@ -102,6 +108,10 @@ public class MinecraftUtil {
 
          if (!cheats) {
             r.excludeType(ReleaseType.CHEAT);
+         }
+
+         if (!old) {
+            r.excludeType(ReleaseType.OLD);
          }
 
          return r;

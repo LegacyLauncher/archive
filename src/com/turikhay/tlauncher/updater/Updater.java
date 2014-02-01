@@ -25,6 +25,7 @@ public class Updater {
    private List listeners;
    private Update found;
    private Settings parsed;
+   private Updater.UpdaterState state;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType;
 
@@ -54,7 +55,20 @@ public class Updater {
       this(t.getDownloader());
    }
 
-   public void findUpdate() {
+   public Updater.UpdaterState getState() {
+      return this.state;
+   }
+
+   public Updater.UpdaterState findUpdate() {
+      try {
+         return this.state = this.findUpdate_();
+      } catch (Throwable var2) {
+         this.state = Updater.UpdaterState.ERROR;
+         return this.state;
+      }
+   }
+
+   private Updater.UpdaterState findUpdate_() {
       log("Requesting an update...");
       this.onUpdaterRequests();
       int attempt = 0;
@@ -89,7 +103,7 @@ public class Updater {
                   log("Found actual version:", version);
                   this.found = update;
                   this.onUpdateFound(update);
-                  return;
+                  return Updater.UpdaterState.FOUND;
                }
 
                Ad ad = new Ad(this.parsed);
@@ -98,7 +112,7 @@ public class Updater {
                }
 
                this.noUpdateFound();
-               return;
+               return Updater.UpdaterState.NOT_FOUND;
             default:
                throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
             }
@@ -110,6 +124,7 @@ public class Updater {
 
       log("Updating is impossible - cannot get any information.");
       this.onUpdaterRequestError();
+      return Updater.UpdaterState.ERROR;
    }
 
    public void notifyAboutUpdate() {
@@ -286,5 +301,12 @@ public class Updater {
          $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType = var0;
          return var0;
       }
+   }
+
+   public static enum UpdaterState {
+      READY,
+      FOUND,
+      NOT_FOUND,
+      ERROR;
    }
 }

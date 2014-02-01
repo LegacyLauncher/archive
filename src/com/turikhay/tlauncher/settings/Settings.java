@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class Settings {
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$settings$Settings$InputType;
 
    public Settings(String charset, char delimiter, char newline, char comment_char) {
-      this.s = new HashMap();
+      this.s = Collections.synchronizedMap(new HashMap());
       this.input = this.filename = null;
       this.inputType = null;
       this.CHARSET = charset;
@@ -49,7 +50,7 @@ public class Settings {
    }
 
    public Settings(URL resource, String charset, char delimiter, char newline, char comment_char) throws IOException {
-      this.s = new HashMap();
+      this.s = Collections.synchronizedMap(new HashMap());
       if (resource == null) {
          throw new SettingsException("Given resourse is NULL!");
       } else {
@@ -70,7 +71,7 @@ public class Settings {
    }
 
    public Settings(InputStream stream, String charset, char delimiter, char newline, char comment_char) throws IOException {
-      this.s = new HashMap();
+      this.s = Collections.synchronizedMap(new HashMap());
       if (stream == null) {
          throw new SettingsException("Given stream is NULL!");
       } else {
@@ -90,7 +91,7 @@ public class Settings {
    }
 
    public Settings(File file, String charset, char delimiter, char newline, char comment_char) throws IOException {
-      this.s = new HashMap();
+      this.s = Collections.synchronizedMap(new HashMap());
       if (file == null) {
          throw new SettingsException("Given file is NULL!");
       } else {

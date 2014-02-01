@@ -34,7 +34,7 @@ public class GlobalSettings extends Settings {
    private static boolean firstRun;
    private GlobalDefaults d;
    private Map cs = new HashMap();
-   double version = 0.14D;
+   double version = 0.15D;
 
    static {
       DEFAULT_LOCALE = Locale.US;
@@ -117,6 +117,8 @@ public class GlobalSettings extends Settings {
                   this.parseConsoleType(value);
                } else if (defvalue instanceof GlobalSettings.ConnectionQuality) {
                   this.parseConnectionQuality(value);
+               } else if (defvalue instanceof File) {
+                  this.parseFile(value);
                }
             } catch (Exception var9) {
                this.repair(key, defvalue, !this.saveable);
@@ -297,6 +299,12 @@ public class GlobalSettings extends Settings {
       }
    }
 
+   private void parseFile(String s) throws Exception {
+      if (!(new File(s)).canRead()) {
+         throw new Exception();
+      }
+   }
+
    private void repair(String key, Object value, boolean unsaveable) throws IOException {
       U.log("Field \"" + key + "\" in GlobalSettings is invalid.");
       this.set(key, value.toString(), false);
@@ -328,29 +336,30 @@ public class GlobalSettings extends Settings {
          File file = (File)this.input;
          StringBuilder r = new StringBuilder();
          boolean first = true;
+         synchronized(this.s) {
+            String key;
+            Object value;
+            for(Iterator var6 = this.s.entrySet().iterator(); var6.hasNext(); r.append(key + this.DELIMITER_CHAR + value.toString().replace(this.NEWLINE_CHAR, "\\" + this.NEWLINE_CHAR))) {
+               Entry curen = (Entry)var6.next();
+               key = (String)curen.getKey();
+               value = curen.getValue();
+               if (value == null) {
+                  value = "";
+               }
 
-         String key;
-         Object value;
-         for(Iterator var5 = this.s.entrySet().iterator(); var5.hasNext(); r.append(key + this.DELIMITER_CHAR + value.toString().replace(this.NEWLINE_CHAR, "\\" + this.NEWLINE_CHAR))) {
-            Entry curen = (Entry)var5.next();
-            key = (String)curen.getKey();
-            value = curen.getValue();
-            if (value == null) {
-               value = "";
+               if (!first) {
+                  r.append(this.NEWLINE_CHAR);
+               } else {
+                  first = false;
+               }
             }
 
-            if (!first) {
-               r.append(this.NEWLINE_CHAR);
-            } else {
-               first = false;
-            }
+            String towrite = r.toString();
+            FileOutputStream os = new FileOutputStream(file);
+            OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
+            ow.write(towrite);
+            ow.close();
          }
-
-         String towrite = r.toString();
-         FileOutputStream os = new FileOutputStream(file);
-         OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
-         ow.write(towrite);
-         ow.close();
       }
    }
 

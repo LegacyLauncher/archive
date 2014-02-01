@@ -16,7 +16,7 @@ public class AuthenticationRequest extends Request {
    }
 
    AuthenticationRequest(Authenticator auth) {
-      this(auth.getUsername(), auth.getPassword(), auth.getClientToken());
+      this(auth.account.getUsername(), auth.account.getPassword(), auth.getClientToken().toString());
    }
 
    public Agent getAgent() {

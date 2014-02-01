@@ -13,10 +13,6 @@ public class AuthenticatorException extends Exception {
       this.langpath = langpath;
    }
 
-   AuthenticatorException(String message, Throwable cause) {
-      super(message, cause);
-   }
-
    AuthenticatorException(String message, String langpath, Throwable cause) {
       super(message, cause);
       this.langpath = langpath;

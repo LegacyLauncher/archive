@@ -37,10 +37,10 @@ public class AlertPanel extends Panel {
       scroll.setVerticalScrollBarPolicy(20);
       int lineHeight = area.getFont() != null ? this.getFontMetrics(area.getFont()).getHeight() : 15;
       int height = StringUtil.countLines(text) * lineHeight;
-      int width = 400;
+      int width = 300;
       if (height > 150) {
-         width = 500;
-         height = 400;
+         width = 400;
+         height = 200;
       }
 
       this.label.setMinimumSize(new Dimension(width, 0));

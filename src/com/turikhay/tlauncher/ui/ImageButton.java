@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.exceptions.TLauncherException;
+import com.turikhay.tlauncher.ui.images.ImageCache;
 import java.awt.AlphaComposite;
 import java.awt.Composite;
 import java.awt.Dimension;
@@ -13,7 +13,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
-import javax.imageio.ImageIO;
 import javax.swing.JButton;
 
 public class ImageButton extends JButton {
@@ -25,7 +24,7 @@ public class ImageButton extends JButton {
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation;
 
-   protected ImageButton() {
+   public ImageButton() {
       this.rotation = ImageButton.ImageRotation.CENTER;
       this.margin = 4;
       this.initListeners();
@@ -47,6 +46,10 @@ public class ImageButton extends JButton {
 
    public ImageButton(String label, Image image) {
       this(label, image, ImageButton.ImageRotation.CENTER);
+   }
+
+   public ImageButton(String imagepath) {
+      this((String)null, (Image)loadImage(imagepath));
    }
 
    public ImageButton(String label, String imagepath, ImageButton.ImageRotation rotation, int margin) {
@@ -126,21 +129,18 @@ public class ImageButton extends JButton {
    }
 
    protected static Image loadImage(String path) {
-      try {
-         return ImageIO.read(ImageButton.class.getResource(path));
-      } catch (Exception var2) {
-         throw new TLauncherException("Cannot load required image (" + path + ")!", var2);
-      }
+      return ImageCache.getImage(path);
    }
 
    protected void initImage() {
-      this.setOpaque(false);
       if (this.image != null) {
          this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null) + 10));
       }
    }
 
    private void initListeners() {
+      this.initImage();
+      this.setOpaque(false);
       this.addMouseListener(new MouseListener() {
          public void mouseClicked(MouseEvent e) {
          }

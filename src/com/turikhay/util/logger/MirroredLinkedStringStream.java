@@ -36,7 +36,7 @@ public class MirroredLinkedStringStream extends LinkedStringStream {
          try {
             this.mirror.write(b);
          } catch (IOException var3) {
-            throw new RuntimeException("Cannot log into mirror!", var3);
+            throw new RuntimeException("Cannot log into the mirror!", var3);
          }
       }
 

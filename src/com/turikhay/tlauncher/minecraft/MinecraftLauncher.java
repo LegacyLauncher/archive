@@ -5,8 +5,10 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.DownloadableContainer;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
+import com.turikhay.tlauncher.minecraft.auth.Account;
+import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
 import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.ui.Console;
+import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.MinecraftUtil;
 import com.turikhay.util.U;
@@ -60,6 +62,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    Console c;
    final MinecraftLauncherListener listener;
    final VersionManager vm;
+   final ProfileManager pm;
    static boolean instanceWorking;
    final boolean exit;
    int step;
@@ -70,7 +73,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    final boolean console;
    VersionSyncInfo syncInfo;
    CompleteVersion version;
-   final String username;
    final String version_name;
    final String jargs;
    final String margs;
@@ -78,6 +80,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    final String javadir;
    final int width;
    final int height;
+   final String account_name;
+   Account account;
    DownloadableContainer ver;
    DownloadableContainer res;
    List assetsList;
@@ -89,7 +93,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    File gameDir;
    File assetsDir;
 
-   private MinecraftLauncher(MinecraftLauncherListener listener, VersionManager vm, String version_name, String username, String token, String gamedir, String javadir, String jargs, String margs, int[] sizes, boolean force, boolean check, boolean exit, boolean console) {
+   private MinecraftLauncher(MinecraftLauncherListener listener, VersionManager vm, ProfileManager pm, String version_name, String account_name, String token, String gamedir, String javadir, String jargs, String margs, int[] sizes, boolean force, boolean check, boolean exit, boolean console) {
       this.prefix = "[MinecraftLauncher]";
       this.os = OperatingSystem.getCurrentPlatform();
       this.gson = new Gson();
@@ -100,9 +104,10 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       Thread.setDefaultUncaughtExceptionHandler(new MinecraftLauncherExceptionHandler(this));
       this.listener = listener;
       this.vm = vm;
+      this.pm = pm;
       this.version_name = version_name;
       this.forceupdate = force;
-      this.username = username;
+      this.account_name = account_name;
       this.gamedir = gamedir;
       this.javadir = javadir == null ? this.os.getJavaDir() : javadir;
       this.jargs = jargs == null ? "" : jargs;
@@ -116,15 +121,15 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.logger = new PrintLogger(this.output);
    }
 
-   public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, boolean force, boolean check) {
-      this(listener, vm, s.get("login.version"), s.get("login.username"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getConsoleType() == GlobalSettings.ConsoleType.MINECRAFT);
+   public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, ProfileManager pm, boolean force, boolean check) {
+      this(listener, vm, pm, s.get("login.version"), s.get("login.account"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getConsoleType() == GlobalSettings.ConsoleType.MINECRAFT);
       this.s = s;
       this.d = d;
       this.init();
    }
 
    public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, boolean force, boolean check) {
-      this(listener, t.getDownloader(), t.getSettings(), t.getVersionManager(), force, check);
+      this(listener, t.getDownloader(), t.getSettings(), t.getVersionManager(), t.getProfileManager(), force, check);
       this.init();
    }
 
@@ -156,62 +161,69 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private void check() throws MinecraftLauncherException {
       if (this.step > -1) {
          throw new IllegalStateException("MinecraftLauncher is already working!");
-      } else if (this.version_name != null && this.version_name.length() != 0) {
-         try {
-            FileUtil.createFolder(this.gamedir);
-         } catch (Exception var3) {
-            throw new MinecraftLauncherException("Cannot find folder: " + this.gamedir, "folder-not-found", this.gamedir);
-         }
-
-         this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
-         if (this.syncInfo == null) {
-            throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", this.version_name + "\n" + this.gamedir);
-         } else {
+      } else if (this.account_name != null && !this.account_name.isEmpty()) {
+         this.account = this.pm.getAuthDatabase().getByUsername(this.account_name);
+         if (this.account == null) {
+            throw new MinecraftLauncherException("Account is not found", "account-not-found", this.account_name);
+         } else if (this.version_name != null && this.version_name.length() != 0) {
             try {
-               this.version = this.forceupdate ? this.vm.getRemoteCompleteVersion(this.syncInfo) : this.vm.getLatestCompleteVersion(this.syncInfo);
-            } catch (Exception var2) {
-               throw new MinecraftLauncherException("Cannot get version info!", "version-info", var2);
+               FileUtil.createFolder(this.gamedir);
+            } catch (Exception var3) {
+               throw new MinecraftLauncherException("Cannot find folder: " + this.gamedir, "folder-not-found", this.gamedir);
             }
 
-            if (this.check) {
-               this.log("Checking files for version " + this.version_name + "...");
-               this.working = true;
-               ++this.step;
-               this.onCheck();
-               if (this.version.getTLauncherVersion() != 0) {
-                  if (this.version.getTLauncherVersion() > 6) {
-                     throw new MinecraftLauncherException("TLauncher is incompatible with this extra version (needed " + this.version.getTLauncherVersion() + ").", "incompatible");
-                  }
-               } else {
-                  if (!this.version.appliesToCurrentEnvironment()) {
-                     this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
-                  }
-
-                  if (this.version.getMinimumLauncherVersion() > 13) {
-                     this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
-                  }
-               }
-
-               this.assetsList = this.check ? this.compareAssets() : null;
-               this.downloadAssets = this.assetsList != null && !this.assetsList.isEmpty();
-               if (this.forceupdate) {
-                  this.downloadVersion = true;
-               } else {
-                  this.downloadVersion = !this.syncInfo.isInstalled() || !this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
-               }
-
-               if (!this.forceupdate && !this.downloadVersion && !this.downloadAssets) {
-                  this.prepare_();
-               } else {
-                  this.downloadResources();
-               }
+            this.syncInfo = this.vm.getVersionSyncInfo(this.version_name);
+            if (this.syncInfo == null) {
+               throw new MinecraftLauncherException("SyncInfo is NULL!", "version-not-found", this.version_name + "\n" + this.gamedir);
             } else {
-               this.log("Checking files for version " + this.version_name + " skipped.");
-               this.prepare_();
+               try {
+                  this.version = this.forceupdate ? this.vm.getRemoteCompleteVersion(this.syncInfo) : this.vm.getLatestCompleteVersion(this.syncInfo);
+               } catch (Exception var2) {
+                  throw new MinecraftLauncherException("Cannot get version info!", "version-info", var2);
+               }
+
+               if (this.check) {
+                  this.log("Checking files for version " + this.version_name + "...");
+                  this.working = true;
+                  ++this.step;
+                  this.onCheck();
+                  if (this.version.getTLauncherVersion() != 0) {
+                     if (this.version.getTLauncherVersion() > 6) {
+                        throw new MinecraftLauncherException("TLauncher is incompatible with this extra version (needed " + this.version.getTLauncherVersion() + ").", "incompatible");
+                     }
+                  } else {
+                     if (!this.version.appliesToCurrentEnvironment()) {
+                        this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
+                     }
+
+                     if (this.version.getMinimumLauncherVersion() > 13) {
+                        this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
+                     }
+                  }
+
+                  this.assetsList = this.check ? this.compareAssets() : null;
+                  this.downloadAssets = this.assetsList != null && !this.assetsList.isEmpty();
+                  if (this.forceupdate) {
+                     this.downloadVersion = true;
+                  } else {
+                     this.downloadVersion = !this.syncInfo.isInstalled() || !this.vm.getLocalVersionList().hasAllFiles(this.version, this.os);
+                  }
+
+                  if (!this.forceupdate && !this.downloadVersion && !this.downloadAssets) {
+                     this.prepare_();
+                  } else {
+                     this.downloadResources();
+                  }
+               } else {
+                  this.log("Checking files for version " + this.version_name + " skipped.");
+                  this.prepare_();
+               }
             }
+         } else {
+            throw new MinecraftLauncherException("Version name is invalid: \"" + this.version_name + "\"", "version-invalid", this.version_name);
          }
       } else {
-         throw new MinecraftLauncherException("Version name is invalid: \"" + this.version_name + "\"", "version-invalid", this.version_name);
+         throw new MinecraftLauncherException("Account is NULL!", "account-invalid", this.account_name);
       }
    }
 
@@ -368,12 +380,14 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          this.processLauncher.addCommand(this.os.is32Bit() ? "-Xmx512M" : "-Xmx1G");
          this.processLauncher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
          this.processLauncher.addCommand("-cp", this.constructClassPath(this.version));
-         this.processLauncher.addCommands(this.getJVMArguments());
          if (this.jargs.length() > 0) {
             this.processLauncher.addSplitCommands(this.jargs);
          }
 
+         this.processLauncher.addCommands(this.getJVMArguments());
          this.processLauncher.addCommand(this.version.getMainClass());
+         this.log("Half command (characters are not escaped, without Minecraft arguments):");
+         this.log(this.processLauncher.getCommandsAsString());
          this.processLauncher.addCommands(this.getMinecraftArguments());
          this.processLauncher.addCommand("--width", this.width);
          this.processLauncher.addCommand("--height", this.height);
@@ -403,8 +417,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          U.gc();
          this.log("Starting Minecraft " + this.version_name + "...");
          this.log("Launching in:", this.gameDir.getAbsolutePath());
-         this.log("Running (characters are not escaped):");
-         this.log(this.processLauncher.getCommandsAsString());
          if (!this.exit) {
             this.onLaunch();
          }
@@ -545,7 +557,9 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                Entry entry = (Entry)var9.next();
                File target = new File(virtualRoot, (String)entry.getKey());
                File original = new File(new File(objectDir, ((AssetIndex.AssetObject)entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject)entry.getValue()).getHash());
-               if (!target.isFile()) {
+               if (!original.isFile()) {
+                  this.log("Skipped reconstructing:", original);
+               } else if (!target.isFile()) {
                   FileUtils.copyFile(original, target, false);
                }
             }
@@ -626,14 +640,25 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          StrSubstitutor substitutor = new StrSubstitutor(map);
          String assets = this.version.getAssets();
          String[] split = this.version.getMinecraftArguments().split(" ");
-         map.put("auth_username", this.username);
-         map.put("auth_session", "null");
-         map.put("auth_access_token", "null");
-         map.put("user_properties", "{}");
-         map.put("auth_player_name", this.username);
-         map.put("auth_uuid", (new UUID(0L, 0L)).toString());
-         map.put("user_type", "legacy");
-         map.put("profile_name", "(Default)");
+         map.put("auth_username", this.account_name);
+         if (this.account != null && this.account.hasLicense()) {
+            map.put("auth_session", String.format("token:%s:%s", this.account.getAccessToken(), this.account.getProfile().getId()));
+            map.put("auth_access_token", this.account.getAccessToken());
+            map.put("user_properties", this.gson.toJson((Object)this.account.getProperties()));
+            map.put("auth_player_name", this.account.getDisplayName());
+            map.put("auth_uuid", this.account.getUUID());
+            map.put("user_type", "mojang");
+            map.put("profile_name", this.account.getProfile().getName());
+         } else {
+            map.put("auth_session", "null");
+            map.put("auth_access_token", "null");
+            map.put("user_properties", "[]");
+            map.put("auth_player_name", this.account_name);
+            map.put("auth_uuid", (new UUID(0L, 0L)).toString());
+            map.put("user_type", "legacy");
+            map.put("profile_name", "(Default)");
+         }
+
          map.put("version_name", this.version.getId());
          map.put("game_directory", this.gameDir.getAbsolutePath());
          map.put("game_assets", this.assetsDir.getAbsolutePath());

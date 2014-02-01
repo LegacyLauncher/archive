@@ -5,7 +5,7 @@ public class AuthenticationResponse extends Response {
    private String clientToken;
    private GameProfile selectedProfile;
    private GameProfile[] availableProfiles;
-   private AuthenticationResponse.User user;
+   private User user;
 
    public String getAccessToken() {
       return this.accessToken;
@@ -23,19 +23,11 @@ public class AuthenticationResponse extends Response {
       return this.selectedProfile;
    }
 
-   public AuthenticationResponse.User getUser() {
+   public User getUser() {
       return this.user;
    }
 
    public String getUserID() {
       return this.user != null ? this.user.getID() : null;
-   }
-
-   public class User {
-      private String id;
-
-      public String getID() {
-         return this.id;
-      }
    }
 }
