@@ -4,8 +4,10 @@ public class RefreshRequest extends Request {
    private String clientToken;
    private String accessToken;
    private GameProfile selectedProfile;
+   private boolean requestUser;
 
    RefreshRequest(String clientToken, String accessToken, GameProfile profile) {
+      this.requestUser = true;
       this.clientToken = clientToken;
       this.accessToken = accessToken;
       this.selectedProfile = profile;
@@ -16,7 +18,7 @@ public class RefreshRequest extends Request {
    }
 
    RefreshRequest(Authenticator auth, GameProfile profile) {
-      this(auth.getClientToken(), auth.getAccessToken(), profile);
+      this(auth.getClientToken().toString(), auth.account.getAccessToken(), profile);
    }
 
    RefreshRequest(Authenticator auth) {

@@ -80,7 +80,7 @@ public class VersionManager {
 
    public void refreshVersions(boolean local) {
       long start = System.nanoTime();
-      this.log("Refreshing versions...");
+      log("Refreshing versions...");
       Iterator var9 = this.refreshedListeners.iterator();
 
       RefreshedListener listener;
@@ -96,7 +96,7 @@ public class VersionManager {
       } catch (VersionManager.RefreshedException var11) {
          end = System.nanoTime();
          diff = end - start;
-         this.log("Versions refresh has been cancelled (" + diff / 1000000L + " ms)");
+         log("Versions refresh has been cancelled (" + diff / 1000000L + " ms)");
          return;
       } catch (Throwable var12) {
          Iterator var10 = this.refreshedListeners.iterator();
@@ -106,7 +106,7 @@ public class VersionManager {
             listener.onVersionsRefreshed(this);
          }
 
-         this.log("Cannot refresh versions!", var12);
+         log("Cannot refresh versions!", var12);
          return;
       }
 
@@ -119,7 +119,7 @@ public class VersionManager {
 
       end = System.nanoTime();
       diff = end - start;
-      this.log("Versions have been refreshed (" + diff / 1000000L + " ms)");
+      log("Versions have been refreshed (" + diff / 1000000L + " ms)");
    }
 
    public void refreshVersions() {
@@ -141,11 +141,11 @@ public class VersionManager {
    private void silentlyRefreshVersions(boolean local) throws Throwable {
       Short rand = U.shortRandom();
       synchronized(this.versionRefreshes) {
-         while(this.versionRefreshes.contains(rand)) {
-            rand = U.shortRandom();
+         if (!this.versionRefreshes.isEmpty()) {
+            this.versionRefreshes.clear();
          }
 
-         this.versionRefreshes.add(rand);
+         this.versionRefreshes.add(U.shortRandom());
       }
 
       Throwable e = null;
@@ -209,7 +209,7 @@ public class VersionManager {
    }
 
    public void cancelVersionRefresh() {
-      this.log("Cancelling version refresh...");
+      log("Cancelling version refresh...");
       this.versionRefreshes.clear();
       this.asyncRefresh(true);
    }
@@ -222,6 +222,10 @@ public class VersionManager {
       if (!this.versionRefreshes.isEmpty()) {
          return new ArrayList();
       } else {
+         if (filter == null) {
+            filter = new VersionFilter();
+         }
+
          List result = new ArrayList();
          Map lookup = new HashMap();
          Map counts = new EnumMap(ReleaseType.class);
@@ -235,91 +239,62 @@ public class VersionManager {
 
          Iterator var10 = this.localVersionList.getVersions().iterator();
 
-         while(true) {
-            Version version;
-            VersionSyncInfo syncInfo;
-            do {
-               do {
-                  do {
-                     if (!var10.hasNext()) {
-                        var10 = this.remoteVersionList.getVersions().iterator();
-
-                        while(true) {
-                           do {
-                              do {
-                                 do {
-                                    do {
-                                       if (!var10.hasNext()) {
-                                          var10 = this.extraVersionList.getVersions().iterator();
-
-                                          while(true) {
-                                             do {
-                                                do {
-                                                   do {
-                                                      do {
-                                                         if (!var10.hasNext()) {
-                                                            if (result.isEmpty()) {
-                                                               var10 = this.localVersionList.getVersions().iterator();
-
-                                                               while(var10.hasNext()) {
-                                                                  version = (Version)var10.next();
-                                                                  if (version.getType() != null && version.getUpdatedTime() != null) {
-                                                                     syncInfo = this.getVersionSyncInfo(version, this.remoteVersionList.getVersion(version.getId()), this.extraVersionList.getVersion(version.getId()));
-                                                                     lookup.put(version.getId(), syncInfo);
-                                                                     result.add(syncInfo);
-                                                                  }
-                                                               }
-                                                            }
-
-                                                            Collections.sort(result, new Comparator() {
-                                                               public int compare(VersionSyncInfo a, VersionSyncInfo b) {
-                                                                  Version aVer = a.getLatestVersion();
-                                                                  Version bVer = b.getLatestVersion();
-                                                                  return aVer.getReleaseTime() != null && bVer.getReleaseTime() != null ? bVer.getReleaseTime().compareTo(aVer.getReleaseTime()) : bVer.getUpdatedTime().compareTo(aVer.getUpdatedTime());
-                                                               }
-                                                            });
-                                                            return result;
-                                                         }
-
-                                                         version = (Version)var10.next();
-                                                      } while(version.getType() == null);
-                                                   } while(version.getUpdatedTime() == null);
-                                                } while(lookup.containsKey(version.getId()));
-                                             } while(filter != null && !filter.getTypes().contains(version.getType()));
-
-                                             syncInfo = this.getVersionSyncInfo(this.localVersionList.getVersion(version.getId()), this.remoteVersionList.getVersion(version.getId()), version);
-                                             lookup.put(version.getId(), syncInfo);
-                                             result.add(syncInfo);
-                                             if (filter != null) {
-                                                counts.put(version.getType(), (Integer)counts.get(version.getType()) + 1);
-                                             }
-                                          }
-                                       }
-
-                                       version = (Version)var10.next();
-                                    } while(version.getType() == null);
-                                 } while(version.getUpdatedTime() == null);
-                              } while(lookup.containsKey(version.getId()));
-                           } while(filter != null && !filter.getTypes().contains(version.getType()));
-
-                           syncInfo = this.getVersionSyncInfo(this.localVersionList.getVersion(version.getId()), version, this.extraVersionList.getVersion(version.getId()));
-                           lookup.put(version.getId(), syncInfo);
-                           result.add(syncInfo);
-                           if (filter != null) {
-                              counts.put(version.getType(), (Integer)counts.get(version.getType()) + 1);
-                           }
-                        }
-                     }
-
-                     version = (Version)var10.next();
-                  } while(version.getType() == null);
-               } while(version.getUpdatedTime() == null);
-            } while(filter != null && !filter.getTypes().contains(version.getType()));
-
-            syncInfo = this.getVersionSyncInfo(version, this.remoteVersionList.getVersion(version.getId()), this.extraVersionList.getVersion(version.getId()));
-            lookup.put(version.getId(), syncInfo);
-            result.add(syncInfo);
+         Version version;
+         VersionSyncInfo syncInfo;
+         while(var10.hasNext()) {
+            version = (Version)var10.next();
+            if (filter.satisfies(version)) {
+               syncInfo = this.getVersionSyncInfo(version, this.remoteVersionList.getVersion(version.getId()), this.extraVersionList.getVersion(version.getId()));
+               lookup.put(version.getId(), syncInfo);
+               result.add(syncInfo);
+            }
          }
+
+         var10 = this.remoteVersionList.getVersions().iterator();
+
+         while(var10.hasNext()) {
+            version = (Version)var10.next();
+            if (!lookup.containsKey(version.getId()) && filter.satisfies(version)) {
+               syncInfo = this.getVersionSyncInfo(this.localVersionList.getVersion(version.getId()), version, this.extraVersionList.getVersion(version.getId()));
+               lookup.put(version.getId(), syncInfo);
+               result.add(syncInfo);
+               counts.put(version.getType(), (Integer)counts.get(version.getType()) + 1);
+            }
+         }
+
+         var10 = this.extraVersionList.getVersions().iterator();
+
+         while(var10.hasNext()) {
+            version = (Version)var10.next();
+            if (!lookup.containsKey(version.getId()) && filter.satisfies(version)) {
+               syncInfo = this.getVersionSyncInfo(this.localVersionList.getVersion(version.getId()), this.remoteVersionList.getVersion(version.getId()), version);
+               lookup.put(version.getId(), syncInfo);
+               result.add(syncInfo);
+               counts.put(version.getType(), (Integer)counts.get(version.getType()) + 1);
+            }
+         }
+
+         if (result.isEmpty()) {
+            var10 = this.localVersionList.getVersions().iterator();
+
+            while(var10.hasNext()) {
+               version = (Version)var10.next();
+               if (version.getType() != null && version.getUpdatedTime() != null) {
+                  syncInfo = this.getVersionSyncInfo(version, this.remoteVersionList.getVersion(version.getId()), this.extraVersionList.getVersion(version.getId()));
+                  lookup.put(version.getId(), syncInfo);
+                  result.add(syncInfo);
+               }
+            }
+         }
+
+         Collections.sort(result, new Comparator() {
+            public int compare(VersionSyncInfo a, VersionSyncInfo b) {
+               Version aVer = a.getLatestVersion();
+               Version bVer = b.getLatestVersion();
+               return aVer.getReleaseTime() != null && bVer.getReleaseTime() != null ? bVer.getReleaseTime().compareTo(aVer.getReleaseTime()) : bVer.getUpdatedTime().compareTo(aVer.getUpdatedTime());
+            }
+         });
+         return result;
       }
    }
 
@@ -505,7 +480,7 @@ public class VersionManager {
             d.setFast(true);
             result.add(d);
          } catch (MalformedURLException var12) {
-            this.log("Cannot create downloadable resource from URL:", url, var12);
+            log("Cannot create downloadable resource from URL:", url, var12);
          }
       }
 
@@ -514,7 +489,7 @@ public class VersionManager {
 
    public boolean refreshResources(CompleteVersion version, boolean local) {
       long start = System.nanoTime();
-      this.log("Refreshing resources...");
+      log("Refreshing resources...");
 
       long end;
       long diff;
@@ -523,27 +498,27 @@ public class VersionManager {
       } catch (VersionManager.RefreshedException var10) {
          end = System.nanoTime();
          diff = end - start;
-         this.log("Resource refresh has been cancelled (" + diff / 1000000L + " ms)");
+         log("Resource refresh has been cancelled (" + diff / 1000000L + " ms)");
          return false;
       } catch (Throwable var11) {
-         this.log("Cannot refresh resources!", var11);
+         log("Cannot refresh resources!", var11);
          return false;
       }
 
       end = System.nanoTime();
       diff = end - start;
-      this.log("Resources have been refreshed (" + diff / 1000000L + " ms)");
+      log("Resources have been refreshed (" + diff / 1000000L + " ms)");
       return true;
    }
 
    private List getResourceFilesList(CompleteVersion version, File baseDirectory, boolean local) throws VersionManager.RefreshedException {
       Short rand = U.shortRandom();
       synchronized(this.resourceRefreshes) {
-         while(this.resourceRefreshes.contains(rand)) {
-            rand = U.shortRandom();
+         if (!this.resourceRefreshes.isEmpty()) {
+            this.resourceRefreshes.clear();
          }
 
-         this.resourceRefreshes.add(rand);
+         this.resourceRefreshes.add(U.shortRandom());
       }
 
       Object var5 = null;
@@ -564,7 +539,7 @@ public class VersionManager {
          try {
             list = this.getRemoteResourceFilesList(version, baseDirectory, true);
          } catch (Exception var8) {
-            this.log("Cannot get remote assets list. Trying to use the local one.", var8);
+            log("Cannot get remote assets list. Trying to use the local one.", var8);
          }
       }
 
@@ -579,7 +554,7 @@ public class VersionManager {
             try {
                list = this.getRemoteResourceFilesList(version, baseDirectory, true);
             } catch (Exception var7) {
-               this.log("Gave up trying to get assets list.", var7);
+               log("Gave up trying to get assets list.", var7);
             }
          }
 
@@ -592,13 +567,13 @@ public class VersionManager {
       String indexName = version.getAssets();
       File indexesFolder = new File(baseDirectory, "assets/indexes/");
       File indexFile = new File(indexesFolder, indexName + ".json");
-      this.log("Reading indexes from file", indexFile);
+      log("Reading indexes from file", indexFile);
 
       String json;
       try {
          json = FileUtil.readFile(indexFile);
       } catch (IOException var12) {
-         this.log("Cannot read local resource files list for index:", indexName, var12);
+         log("Cannot read local resource files list for index:", indexName, var12);
          return null;
       }
 
@@ -607,11 +582,11 @@ public class VersionManager {
       try {
          index = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
       } catch (JsonSyntaxException var11) {
-         this.log("JSON file is invalid", var11);
+         log("JSON file is invalid", var11);
       }
 
       if (index == null) {
-         this.log("Cannot read data from JSON file.");
+         log("Cannot read data from JSON file.");
          return null;
       } else {
          Iterator var10 = index.getUniqueObjects().iterator();
@@ -637,7 +612,7 @@ public class VersionManager {
       File indexFile = new File(indexesFolder, indexName + ".json");
       URL indexUrl = new URL("https://s3.amazonaws.com/Minecraft.Download/indexes/" + indexName + ".json");
       InputStream inputStream = indexUrl.openConnection().getInputStream();
-      this.log("Reading indexes from URL", indexUrl);
+      log("Reading indexes from URL", indexUrl);
       String json = IOUtils.toString(inputStream);
       if (save) {
          FileUtil.writeFile(indexFile, json);
@@ -655,7 +630,7 @@ public class VersionManager {
    }
 
    public List checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
-      this.log("Checking resources...");
+      log("Checking resources...");
       List r = new ArrayList();
       List list;
       if (local) {
@@ -669,10 +644,10 @@ public class VersionManager {
       }
 
       if (list == null) {
-         this.log("Cannot get assets list. Aborting.");
+         log("Cannot get assets list. Aborting.");
          return r;
       } else {
-         this.log("Fast comparing:", fast);
+         log("Fast comparing:", fast);
          Iterator var8 = list.iterator();
 
          while(var8.hasNext()) {
@@ -719,7 +694,7 @@ public class VersionManager {
       this.refreshedListeners.remove(listener);
    }
 
-   private void log(Object... w) {
+   private static void log(Object... w) {
       U.log("[VersionManager]", w);
    }
 

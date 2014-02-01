@@ -2,6 +2,8 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.ui.loc.Localizable;
+import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.event.MouseAdapter;

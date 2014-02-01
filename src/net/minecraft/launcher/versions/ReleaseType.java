@@ -6,7 +6,9 @@ import java.util.Map;
 public enum ReleaseType {
    SNAPSHOT("snapshot", "Enable experimental development versions (\"snapshots\")", false),
    RELEASE("release", (String)null, true),
+   MODIFIED("modified", (String)null, false),
    CHEAT("cheat", (String)null, false),
+   OLD("old", (String)null, false),
    OLD_BETA("old-beta", "Allow use of old \"Beta\" minecraft versions (From 2010-2011)", false),
    OLD_ALPHA("old-alpha", "Allow use of old \"Alpha\" minecraft versions (From 2010)", false);
 
@@ -42,6 +44,10 @@ public enum ReleaseType {
 
    public boolean isDesired() {
       return this.desired;
+   }
+
+   public boolean isOld() {
+      return this.name.startsWith("old");
    }
 
    public static ReleaseType getByName(String name) {

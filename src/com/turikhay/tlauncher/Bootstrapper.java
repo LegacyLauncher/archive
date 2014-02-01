@@ -32,7 +32,7 @@ public class Bootstrapper {
       JavaProcessLauncher launcher = new JavaProcessLauncher((String)null, new String[0]);
       launcher.directory(dir);
       launcher.addCommand("-Xmx128m");
-      launcher.addCommand("-cp", file);
+      launcher.addCommand("-cp", file.getAbsolutePath());
       launcher.addCommand("com.turikhay.tlauncher.TLauncher");
       launcher.addCommands(args);
       return launcher;

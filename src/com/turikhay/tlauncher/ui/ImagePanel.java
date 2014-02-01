@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.exceptions.TLauncherException;
+import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.util.U;
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -12,14 +12,13 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
-import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 public class ImagePanel extends JPanel {
    private static final long serialVersionUID = 1L;
    public static final float DEFAULT_ACTIVE_OPACITY = 1.0F;
    public static final float DEFAULT_NON_ACTIVE_OPACITY = 0.75F;
-   protected Object animationLock = new Object();
+   protected Object animationLock;
    protected Image image;
    protected float activeOpacity;
    protected float nonActiveOpacity;
@@ -30,7 +29,12 @@ public class ImagePanel extends JPanel {
    protected boolean shown;
    protected boolean animating;
 
+   public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
+      this(ImageCache.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
+   }
+
    public ImagePanel(Image image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
+      this.animationLock = new Object();
       this.setImage(image);
       this.setActiveOpacity(activeOpacity);
       this.setNonActiveOpacity(nonActiveOpacity);
@@ -113,6 +117,7 @@ public class ImagePanel extends JPanel {
          this.shown = true;
          synchronized(this.animationLock) {
             this.animating = true;
+            this.setVisible(true);
             this.opacity = 0.0F;
             float selectedOpacity = this.hover ? this.activeOpacity : this.nonActiveOpacity;
 
@@ -147,6 +152,7 @@ public class ImagePanel extends JPanel {
                U.sleepFor((long)this.timeFrame);
             }
 
+            this.setVisible(false);
             this.animating = false;
          }
       }
@@ -169,14 +175,6 @@ public class ImagePanel extends JPanel {
       if (!this.animating && this.shown) {
          this.opacity = this.nonActiveOpacity;
          this.repaint();
-      }
-   }
-
-   public static Image loadImage(String path) {
-      try {
-         return ImageIO.read(SupportButton.class.getResource(path));
-      } catch (Exception var2) {
-         throw new TLauncherException("Cannot load required image (" + path + ")!", var2);
       }
    }
 }

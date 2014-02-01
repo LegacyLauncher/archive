@@ -1,196 +1,122 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.minecraft.Crash;
-import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
-import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
-import javax.swing.JLayeredPane;
+import com.turikhay.tlauncher.ui.backgrounds.Background;
+import com.turikhay.tlauncher.ui.backgrounds.DefaultBackground;
+import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
+import com.turikhay.tlauncher.ui.scenes.DefaultScene;
+import com.turikhay.tlauncher.ui.scenes.PseudoScene;
+import java.awt.Component;
+import java.awt.Point;
 
-public class MainPane extends JLayeredPane implements MinecraftLauncherListener {
-   private static final long serialVersionUID = 8925486339442046362L;
-   TLauncherFrame f;
-   final Integer BACKGROUND_PANEL;
-   final Integer LOGINFORM;
-   final Integer SETTINGSFORM;
-   final Integer PROFILECREATOR;
-   final Integer CONNECTIONWARNING;
-   final int LOGINFORM_WIDTH;
-   final int LOGINFORM_HEIGHT;
-   final int SETTINGSFORM_WIDTH;
-   final int SETTINGSFORM_HEIGHT;
-   final int MARGIN;
-   final MainPane instance = this;
-   final DecoratedPanel bgpan;
-   final Background bg;
-   final LoginForm lf;
-   final SettingsForm sf;
-   final ProfileCreatorForm spcf;
-   final ConnectionWarning warning;
-   private boolean settings;
+public class MainPane extends ExtendedLayeredPane {
+   private static final long serialVersionUID = -8854598755786867602L;
+   private final TLauncherFrame rootFrame;
+   private Background background;
+   private PseudoScene scene;
+   private final ConnectionWarning warning;
+   private final ProgressBar progress;
+   public final DefaultBackground defaultBackground;
+   public final DefaultScene defaultScene;
+   public final AccountEditorScene accountEditor;
 
-   MainPane(TLauncherFrame f) {
-      this.f = f;
-      this.lf = f.lf;
-      this.sf = f.sf;
-      this.spcf = f.spcf;
-      this.warning = f.warning;
-      this.LOGINFORM_WIDTH = this.LOGINFORM_HEIGHT = 250;
-      this.SETTINGSFORM_WIDTH = 500;
-      this.SETTINGSFORM_HEIGHT = 450;
-      this.MARGIN = 25;
-      int i = -1;
-      int i = i + 1;
-      this.BACKGROUND_PANEL = i;
-      ++i;
-      this.LOGINFORM = i;
-      ++i;
-      this.SETTINGSFORM = i;
-      ++i;
-      this.PROFILECREATOR = i;
-      ++i;
-      this.CONNECTIONWARNING = i;
-      this.bgpan = new DecoratedPanel();
-      this.bg = this.chooseBackground();
-      this.bgpan.setPanelBackground(this.bg);
-      this.add(this.bgpan, this.BACKGROUND_PANEL);
-      this.add(this.lf, this.LOGINFORM);
-      this.add(this.sf, this.SETTINGSFORM);
-      this.add(this.warning, this.CONNECTIONWARNING);
-      this.startBackground();
-   }
-
-   public void onResize() {
-      this.bgpan.setBounds(0, 0, this.getWidth(), this.getHeight());
-      this.lf.setSize(this.LOGINFORM_WIDTH, this.LOGINFORM_HEIGHT);
-      this.sf.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);
-      this.warning.setLocation(5, 5);
-      this.setSettings(this.settings, false);
-   }
-
-   private Background chooseBackground() {
-      return (Background)(this.f.global.getBoolean("gui.sun") ? new DayBackground(this.bgpan, -1.0D) : new LightBackground(this.bgpan, -1.0D));
-   }
-
-   public boolean startBackground() {
-      if (!(this.bg instanceof AnimatedBackground)) {
-         return false;
-      } else {
-         AnimatedBackground abg = (AnimatedBackground)this.bg;
-         if (!abg.isAllowed()) {
-            return false;
-         } else {
-            abg.start();
-            return true;
-         }
-      }
-   }
-
-   public boolean stopBackground() {
-      if (!(this.bg instanceof AnimatedBackground)) {
-         return false;
-      } else {
-         ((AnimatedBackground)this.bg).stop();
-         return true;
-      }
-   }
-
-   public void hideBackground() {
-      if (this.stopBackground()) {
-         this.bgpan.setVisible(false);
-      }
-
+   MainPane(TLauncherFrame frame) {
+      this.rootFrame = frame;
+      this.background = this.defaultBackground = new DefaultBackground(this);
+      this.add(this.defaultBackground);
+      this.defaultScene = new DefaultScene(this);
+      this.add(this.defaultScene);
+      this.accountEditor = new AccountEditorScene(this);
+      this.add(this.accountEditor);
+      this.progress = new ProgressBar(frame);
+      this.add(this.progress);
+      this.warning = new ConnectionWarning();
+      this.warning.setLocation(10, 10);
+      this.add(this.warning);
+      this.setScene(this.defaultScene, false);
    }
 
    public void showBackground() {
-      if (this.startBackground()) {
-         this.bgpan.setVisible(true);
-      }
-
+      this.background.setShown(true);
    }
 
-   public boolean suspendBackground() {
-      if (!(this.bg instanceof AnimatedBackground)) {
-         return false;
-      } else {
-         ((AnimatedBackground)this.bg).suspend();
-         return true;
-      }
+   public void hideBackground() {
+      this.background.setShown(false);
    }
 
-   public void setSettings(boolean shown, boolean animate) {
-      if (this.settings != shown || !animate) {
-         if (shown) {
-            this.sf.unblockElement("");
-         } else {
-            this.sf.blockElement("");
+   public Background getBackgroundPane() {
+      return this.background;
+   }
+
+   public void setBackgroundPane(Background background) {
+      if (background == null) {
+         throw new NullPointerException();
+      } else if (!this.background.equals(background)) {
+         Component[] var5;
+         int var4 = (var5 = this.getComponents()).length;
+
+         for(int var3 = 0; var3 < var4; ++var3) {
+            Component comp = var5[var3];
+            if (!comp.equals(background) && comp instanceof Background) {
+               ((Background)comp).setShown(false);
+            }
          }
 
-         this.sf.updateIfSaveable();
-         int w = this.getWidth();
-         int h = this.getHeight();
-         int hw = w / 2;
-         int hh = h / 2;
-         int lf_x;
-         int lf_y;
-         int sf_x;
-         int sf_y;
-         if (shown) {
-            int bw = this.LOGINFORM_WIDTH + this.SETTINGSFORM_WIDTH + this.MARGIN;
-            int hbw = bw / 2;
-            lf_x = hw - hbw;
-            lf_y = hh - this.LOGINFORM_HEIGHT / 2;
-            sf_x = hw - hbw + this.SETTINGSFORM_WIDTH / 2 + this.MARGIN;
-            sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
-         } else {
-            lf_x = hw - this.LOGINFORM_WIDTH / 2;
-            lf_y = hh - this.LOGINFORM_HEIGHT / 2;
-            sf_x = w * 2;
-            sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
-         }
-
-         AnimateThread.animate(this.lf, lf_x, lf_y);
-         AnimateThread.animate(this.sf, sf_x, sf_y);
-         this.settings = shown;
+         this.background = background;
+         this.background.setShown(true);
       }
    }
 
-   public void setSettings(boolean shown) {
-      this.setSettings(shown, true);
+   public DefaultBackground getDefaultBackgroundPane() {
+      return this.defaultBackground;
    }
 
-   public void toggleSettings() {
-      this.setSettings(!this.settings);
+   public PseudoScene getScene() {
+      return this.scene;
    }
 
-   public void onMinecraftCheck() {
+   public void setScene(PseudoScene scene) {
+      this.setScene(scene, true);
    }
 
-   public void onMinecraftPrepare() {
+   public void setScene(PseudoScene scene, boolean animate) {
+      if (scene == null) {
+         throw new NullPointerException();
+      } else if (!scene.equals(this.scene)) {
+         Component[] var6;
+         int var5 = (var6 = this.getComponents()).length;
+
+         for(int var4 = 0; var4 < var5; ++var4) {
+            Component comp = var6[var4];
+            if (!comp.equals(scene) && comp instanceof PseudoScene) {
+               ((PseudoScene)comp).setShown(false, animate);
+            }
+         }
+
+         this.scene = scene;
+         this.scene.setShown(true);
+      }
    }
 
-   public void onMinecraftWarning(String langpath, Object replace) {
+   public void openDefaultScene() {
+      this.setScene(this.defaultScene);
    }
 
-   public void onMinecraftLaunch() {
-      this.stopBackground();
+   public void openAccountEditor() {
+      this.setScene(this.accountEditor);
    }
 
-   public void onMinecraftLaunchStop() {
-      this.startBackground();
+   public TLauncherFrame getRootFrame() {
+      return this.rootFrame;
    }
 
-   public void onMinecraftClose() {
-      this.startBackground();
+   public void onResize() {
+      super.onResize();
+      this.progress.setLocation(0, this.getHeight() - this.progress.getWidth());
    }
 
-   public void onMinecraftKnownError(MinecraftLauncherException knownError) {
-      this.startBackground();
-   }
-
-   public void onMinecraftError(Throwable unknownError) {
-      this.startBackground();
-   }
-
-   public void onMinecraftCrash(Crash crash) {
-      this.startBackground();
+   public Point getLocationOf(Component comp) {
+      Point compLocation = comp.getLocationOnScreen();
+      Point paneLocation = this.getLocationOnScreen();
+      return new Point(compLocation.x - paneLocation.x, compLocation.y - paneLocation.y);
    }
 }

@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.downloader;
 
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
-import com.turikhay.tlauncher.ui.Console;
+import com.turikhay.tlauncher.ui.console.Console;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

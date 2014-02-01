@@ -477,16 +477,16 @@ public class U {
          }
 
          StackTraceElement[] elems = e.getStackTrace();
-         boolean found_out = false;
+         int found_out = 0;
 
          for(int x = 0; x < elems.length; ++x) {
             String elem = elems[x].toString();
             t = t + "\nat " + elem;
-            if (!found_out) {
-               found_out = elem.startsWith("com.turikhay");
+            if (elem.startsWith("com.turikhay")) {
+               ++found_out;
             }
 
-            if (x >= 5 && found_out) {
+            if (found_out >= 5 || x >= 15) {
                int remain = elems.length - x - 1;
                if (remain != 0) {
                   t = t + "\n... and " + remain + " more";

@@ -36,6 +36,10 @@ public class CompleteVersion implements Version {
    }
 
    public ReleaseType getType() {
+      if (this.type == null) {
+         this.type = ReleaseType.RELEASE;
+      }
+
       return this.type;
    }
 

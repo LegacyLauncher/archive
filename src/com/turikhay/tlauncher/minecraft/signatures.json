@@ -3,7 +3,7 @@
         "forge": "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}",
         "crash": "^.*[\\#\\@\\!\\@\\#][ ]Game[ ]crashed!.+[\\#\\@\\!\\@\\#][ ](.+)$",
         "start_crash": "${forge}---- Minecraft Crash Report ----",
-        "version": "[TLauncher] [MinecraftLauncher] Launching version: (.+)"
+        "version": "^[.+] [MinecraftLauncher] Launching version: (.+)"
     },
     signatures: [
         {
@@ -15,7 +15,7 @@
         {
             name: "Probably modified JAR",
             path: "invalid-modify",
-            pattern: '(?:Exception in thread ".*" ){0,1}java\\.lang\\.(?:Error|NoClass|Exception|Error|Throwable|Illegal){1}.+',
+            pattern: '(?:Exception in thread ".*" ){0,1}java\\.lang\\.(?:Error|NoClass|Illegal){1}.+',
             forge: true
         },
         {

@@ -11,7 +11,6 @@ public class GlobalDefaults {
 
    GlobalDefaults(GlobalSettings g) {
       this.d.put("settings.version", g.version);
-      this.d.put("login.check", true);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 3);
       this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
@@ -21,6 +20,7 @@ public class GlobalDefaults {
       this.d.put("minecraft.versions.beta", false);
       this.d.put("minecraft.versions.alpha", false);
       this.d.put("minecraft.versions.cheats", false);
+      this.d.put("minecraft.versions.old", true);
       this.d.put("minecraft.onlaunch", GlobalSettings.ActionOnLaunch.getDefault());
       this.d.put("gui.console", GlobalSettings.ConsoleType.NONE);
       this.d.put("gui.console.width", 620);

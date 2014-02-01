@@ -4,16 +4,16 @@ import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
-import com.turikhay.tlauncher.minecraft.profiles.ProfileLoader;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
 import com.turikhay.tlauncher.settings.ArgumentParser;
 import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.ui.Alert;
-import com.turikhay.tlauncher.ui.Console;
-import com.turikhay.tlauncher.ui.Localizable;
-import com.turikhay.tlauncher.ui.LoginForm;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
+import com.turikhay.tlauncher.ui.console.Console;
+import com.turikhay.tlauncher.ui.listeners.UpdaterUIListener;
+import com.turikhay.tlauncher.ui.loc.Localizable;
+import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.util.Time;
 import com.turikhay.util.U;
@@ -23,18 +23,19 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Locale;
-import java.util.UUID;
 import joptsimple.OptionSet;
+import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.37D;
+   private static final double VERSION = 0.591D;
    private static final String SETTINGS = "tlauncher.ini";
    private static final String BRAND = "Original";
-   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini", "http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini"};
    private static final String[] REMOTE_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
-   private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://ru-minecraft.org/update/tlauncher/extra/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
+   private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://ru-minecraft.org/update/tlauncher/extra/", "http://s1.mmods.ru/launcher/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
    private static TLauncher instance;
+   private static String[] sargs;
    private static MirroredLinkedStringStream stream;
    private static PrintLogger print;
    private static Console console;
@@ -46,15 +47,13 @@ public class TLauncher {
    private TLauncherFrame frame;
    private TLauncherNoGraphics loader;
    private VersionManager vm;
-   private ProfileLoader pl;
-   private static final UUID clientToken = UUID.randomUUID();
+   private ProfileManager pm;
    public final OptionSet args;
-   public final String[] sargs;
    private MinecraftLauncher launcher;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
-   public TLauncher(TLauncher.TLauncherState state, String[] sargs, OptionSet set) throws IOException {
+   public TLauncher(TLauncher.TLauncherState state, OptionSet set) throws IOException {
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
@@ -63,19 +62,12 @@ public class TLauncher {
          instance = this;
          this.state = state;
          this.args = set;
-         this.sargs = sargs;
          this.settings = GlobalSettings.createInstance(set);
          this.reloadLocale();
          console = new Console(this.settings, print, "TLauncher Dev Console", this.settings.getConsoleType() == GlobalSettings.ConsoleType.GLOBAL);
          Console.updateLocale();
          this.vm = new VersionManager();
-         this.pl = new ProfileLoader();
-         if (!this.settings.isStaticProfile()) {
-            this.pl.createInto();
-         } else {
-            this.pl.createFrom();
-         }
-
+         this.pm = new ProfileManager();
          this.init();
          U.log("Started! (" + Time.stop(this) + " ms.)");
       }
@@ -86,14 +78,9 @@ public class TLauncher {
       switch($SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState()[this.state.ordinal()]) {
       case 1:
          this.updater = new Updater(this);
+         this.updater.addListener(new UpdaterUIListener(this));
          this.frame = new TLauncherFrame(this);
-         LoginForm lf = this.frame.getLoginForm();
-         this.vm.addRefreshedListener(lf.versionchoice);
-         this.vm.addRefreshedListener(lf.buttons.addbuttons.refresh);
-         this.updater.addListener(lf);
-         this.updater.addListener(this.frame);
-         this.updater.addListener(this.frame.getConnectionWarning());
-         this.updater.addListener(lf.buttons.addbuttons.refresh);
+         LoginForm lf = this.frame.mp.defaultScene.loginForm;
          if (lf.autologin.isEnabled()) {
             this.vm.refreshVersions(true);
             lf.autologin.startLogin();
@@ -101,6 +88,8 @@ public class TLauncher {
             this.vm.asyncRefresh();
             this.updater.asyncFindUpdate();
          }
+
+         this.pm.loadProfiles();
          break;
       case 2:
          this.loader = new TLauncherNoGraphics(this);
@@ -141,20 +130,12 @@ public class TLauncher {
       return this.loader;
    }
 
-   public static UUID getClientToken() {
-      return clientToken;
-   }
-
    public static Console getConsole() {
       return console;
    }
 
-   public ProfileLoader getProfileLoader() {
-      return this.pl;
-   }
-
-   public ProfileManager getCurrentProfileManager() {
-      return this.pl.getSelected();
+   public ProfileManager getProfileManager() {
+      return this.pm;
    }
 
    public void reloadLocale() throws IOException {
@@ -196,7 +177,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.37D;
+      return 0.591D;
    }
 
    public static String getBrand() {
@@ -222,17 +203,18 @@ public class TLauncher {
    public static void main(String[] args) {
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
-      TLauncherFrame.initLookAndFeel();
+      U.setPrefix("[TLauncher]");
       stream = new MirroredLinkedStringStream();
       stream.setMirror(System.out);
       print = new PrintLogger(stream);
       stream.setLogger(print);
       System.setOut(print);
-      U.setPrefix("[TLauncher]");
+      TLauncherFrame.initLookAndFeel();
 
       try {
          launch(args);
       } catch (Throwable var3) {
+         U.log("Error launching TLauncher:", var3);
          Alert.showError(var3, true);
       }
 
@@ -240,11 +222,13 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
+      U.log("Starting TLauncher", "Original", 0.591D);
+      U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
-      U.log("Starting version", 0.37D);
+      sargs = args;
       OptionSet set = ArgumentParser.parseArgs(args);
       if (set == null) {
-         new TLauncher(TLauncher.TLauncherState.FULL, args, (OptionSet)null);
+         new TLauncher(TLauncher.TLauncherState.FULL, (OptionSet)null);
       } else {
          if (set.has("help")) {
             ArgumentParser.getParser().printHelpOn((OutputStream)System.out);
@@ -255,8 +239,16 @@ public class TLauncher {
             state = TLauncher.TLauncherState.MINIMAL;
          }
 
-         new TLauncher(state, args, set);
+         new TLauncher(state, set);
       }
+   }
+
+   public static String[] getArgs() {
+      if (sargs == null) {
+         sargs = new String[0];
+      }
+
+      return sargs;
    }
 
    public static TLauncher getInstance() {
@@ -264,7 +256,7 @@ public class TLauncher {
    }
 
    public void newInstance() {
-      Bootstrapper.main(this.sargs);
+      Bootstrapper.main(sargs);
    }
 
    // $FF: synthetic method

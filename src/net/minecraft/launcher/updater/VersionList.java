@@ -26,7 +26,7 @@ import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.VersionSource;
 
 public abstract class VersionList {
-   public static final int DEFAULT_TIMEOUT = 7500;
+   public static final int DEFAULT_TIMEOUT = 5000;
    protected final Gson gson;
    private final Map versionsByName = new HashMap();
    private final List versions = new ArrayList();
@@ -256,7 +256,7 @@ public abstract class VersionList {
 
          while(i < 3) {
             ++i;
-            int timeout = 7500 * i;
+            int timeout = 5000 * i;
 
             for(int x = 0; x < source.getRepoCount(); ++x) {
                if (i != 1 || x != exclude) {
