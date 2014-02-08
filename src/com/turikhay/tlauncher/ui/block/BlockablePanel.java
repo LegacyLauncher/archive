@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui.block;
 
+import java.awt.Container;
 import java.awt.LayoutManager;
 import javax.swing.JPanel;
 
@@ -26,11 +27,11 @@ public class BlockablePanel extends JPanel implements Blockable {
 
    public void block(Object reason) {
       this.setEnabled(false);
-      Blocker.blockComponents(this, reason);
+      Blocker.blockComponents((Container)this, (Object)reason);
    }
 
    public void unblock(Object reason) {
       this.setEnabled(true);
-      Blocker.unblockComponents(this, reason);
+      Blocker.unblockComponents((Container)this, (Object)reason);
    }
 }

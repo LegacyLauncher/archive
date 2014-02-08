@@ -4,17 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ReleaseType {
-   SNAPSHOT("snapshot", "Enable experimental development versions (\"snapshots\")", false),
-   RELEASE("release", (String)null, true),
-   MODIFIED("modified", (String)null, false),
-   CHEAT("cheat", (String)null, false),
-   OLD("old", (String)null, false),
-   OLD_BETA("old-beta", "Allow use of old \"Beta\" minecraft versions (From 2010-2011)", false),
-   OLD_ALPHA("old-alpha", "Allow use of old \"Alpha\" minecraft versions (From 2010)", false);
+   SNAPSHOT("snapshot"),
+   RELEASE("release", true),
+   MODIFIED("modified"),
+   OLD("old"),
+   OLD_BETA("old-beta"),
+   OLD_ALPHA("old-alpha"),
+   UNKNOWN("unknown");
 
    private static final Map lookup = new HashMap();
    private final String name;
-   private final String description;
    private final boolean desired;
 
    static {
@@ -28,18 +27,17 @@ public enum ReleaseType {
 
    }
 
-   private ReleaseType(String name, String description, boolean desired) {
+   private ReleaseType(String name, boolean desired) {
       this.name = name;
-      this.description = description;
       this.desired = desired;
+   }
+
+   private ReleaseType(String name) {
+      this(name, false);
    }
 
    public String getName() {
       return this.name;
-   }
-
-   public String getDescription() {
-      return this.description;
    }
 
    public boolean isDesired() {

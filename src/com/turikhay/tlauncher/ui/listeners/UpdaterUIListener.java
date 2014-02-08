@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.listeners;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
@@ -16,8 +16,10 @@ import net.minecraft.launcher.OperatingSystem;
 
 public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    private final TLauncher t;
-   private final Settings lang;
-   private final GlobalSettings global;
+   private final LangConfiguration lang;
+   private final Configuration global;
+   private Update hiddenUpdate;
+   private Throwable hiddenError;
 
    public UpdaterUIListener(TLauncher tlauncher) {
       this.t = tlauncher;
@@ -34,25 +36,42 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    public void onUpdaterNotFoundUpdate(Updater u) {
    }
 
-   public void onUpdateFound(Updater u, Update upd) {
-      if (!this.t.isLauncherWorking()) {
-         double version = upd.getVersion();
-         Alert.showWarning(this.lang.get("updater.found.title"), this.lang.get("updater.found", "v", version), upd.getDescription());
-         this.block();
-         if (Updater.isAutomode()) {
-            upd.addListener(this);
-            upd.download();
-         } else {
-            if (this.openUpdateLink(upd.getDownloadLink())) {
-               TLauncher.kill();
-            }
+   public void onUpdateFound(Update upd, boolean force, boolean async) {
+      boolean download = true;
+      if (!force && this.t.isLauncherWorking()) {
+         download = this.global.getConnectionQuality().equals(Configuration.ConnectionQuality.GOOD);
+         this.hiddenUpdate = upd;
+      }
 
+      boolean shown = force || this.hiddenUpdate == null;
+      double version = upd.getVersion();
+      if (shown) {
+         Alert.showWarning(this.lang.get("updater.found.title"), this.lang.get("updater.found", version), upd.getDescription());
+      }
+
+      this.block();
+      if (Updater.isAutomode()) {
+         upd.addListener(this);
+         if (download) {
+            upd.download(async);
          }
+
+      } else {
+         if (shown && this.openUpdateLink(upd.getDownloadLink())) {
+            TLauncher.kill();
+         }
+
       }
    }
 
+   public void onUpdateFound(Update upd) {
+      this.onUpdateFound(upd, false, false);
+   }
+
    public void onUpdateError(Update u, Throwable e) {
-      if (Alert.showQuestion(this.lang.get("updater.error.title"), this.lang.get("updater.download-error"), e, true)) {
+      if (this.hiddenUpdate != null) {
+         this.hiddenError = e;
+      } else if (Alert.showQuestion(this.lang.get("updater.error.title"), this.lang.get("updater.download-error"), e, true)) {
          this.openUpdateLink(u.getDownloadLink());
       }
 
@@ -67,8 +86,14 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    }
 
    public void onUpdateReady(Update u) {
-      Alert.showWarning(this.lang.get("updater.downloaded.title"), this.lang.get("updater.downloaded"));
-      u.apply();
+      this.onUpdateReady(u, false, false);
+   }
+
+   public void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
+      if (force || !u.equals(this.hiddenUpdate)) {
+         Alert.showWarning(this.lang.get("updater.downloaded.title"), this.lang.get("updater.downloaded"), showChangeLog ? u.getDescription() : null);
+         u.apply();
+      }
    }
 
    public void onUpdateApplying(Update u) {
@@ -97,6 +122,27 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
          if (ad.canBeShown()) {
             this.global.set("updater.ad", ad.getID());
             ad.show(false);
+         }
+      }
+   }
+
+   public void applyDelayedUpdate() {
+      if (this.hiddenUpdate != null) {
+         int step = this.hiddenUpdate.getStep();
+         if (this.hiddenError != null) {
+            this.onUpdateError(this.hiddenUpdate, this.hiddenError);
+         } else {
+            switch(step) {
+            case 0:
+               this.onUpdateFound(this.hiddenUpdate, true, true);
+            case 1:
+               this.hiddenUpdate = null;
+               return;
+            case 2:
+               this.onUpdateReady(this.hiddenUpdate, true, true);
+               return;
+            default:
+            }
          }
       }
    }

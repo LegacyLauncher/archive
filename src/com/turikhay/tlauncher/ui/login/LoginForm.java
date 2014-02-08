@@ -43,14 +43,13 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public final CheckBoxPanel checkbox;
    public final ButtonPanel buttons;
    public final Autologin autologin;
-   Updater updater;
 
    public LoginForm(DefaultScene scene) {
       this.scene = scene;
       this.settings = scene.settingsForm;
       this.pane = scene.getMainPane();
-      String account = this.global.nget("login.account");
-      String version = this.global.nget("login.version");
+      String account = this.global.get("login.account");
+      String version = this.global.get("login.version");
       boolean auto = this.global.getBoolean("login.auto");
       boolean console = this.global.getBoolean("login.debug");
       int timeout = this.global.getInteger("login.auto.timeout");
@@ -59,11 +58,11 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       this.versionchoice = new VersionChoicePanel(this, version);
       this.checkbox = new CheckBoxPanel(this, auto, console);
       this.buttons = new ButtonPanel(this);
+      this.addListener(this.versionchoice);
       this.addListener(this.autologin);
       this.addListener(this.checkbox);
       this.addListener(this.settings);
-      this.addListener(this.versionchoice);
-      this.add(this.error);
+      this.add(this.messagePanel);
       this.add(sepPan(new Component[]{this.accountchoice, this.versionchoice}));
       this.add(this.del(1));
       this.add(this.checkbox);
@@ -193,10 +192,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public void onMinecraftClose() {
       this.unblock("launch");
       this.tlauncher.show();
-      if (this.updater != null) {
-         this.updater.notifyAboutUpdate();
-      }
-
+      this.tlauncher.getUpdaterListener().applyDelayedUpdate();
    }
 
    public void onMinecraftError(Throwable e) {
@@ -216,7 +212,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    }
 
    public void onMinecraftWarning(String langpath, Object replace) {
-      Alert.showWarning(this.lang.get("launcher.warning.title"), this.lang.get("launcher.warning." + langpath, "r", replace));
+      Alert.showWarning(this.lang.get("launcher.warning.title"), this.lang.get("launcher.warning." + langpath, replace));
    }
 
    public void onMinecraftCrash(Crash crash) {
@@ -309,11 +305,8 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public void onUpdaterRequestError(Updater u) {
    }
 
-   public void onUpdateFound(Updater u, Update upd) {
-      if (this.tlauncher.isLauncherWorking()) {
-         U.log("The update is delayed until the Minecraft will stop.");
-         this.updater = u;
-      } else if (Updater.isAutomode()) {
+   public void onUpdateFound(Update upd) {
+      if (Updater.isAutomode()) {
          upd.addListener(this);
          this.block("update");
       }

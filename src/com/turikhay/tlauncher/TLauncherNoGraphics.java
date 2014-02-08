@@ -1,12 +1,12 @@
 package com.turikhay.tlauncher;
 
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.minecraft.Crash;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.util.U;
@@ -16,7 +16,7 @@ import net.minecraft.launcher.updater.VersionManager;
 public class TLauncherNoGraphics implements MinecraftLauncherListener {
    private final TLauncher t;
    private Downloader d;
-   private GlobalSettings g;
+   private Configuration g;
    private VersionManager vm;
    private ProfileManager pm;
    private OptionSet args;

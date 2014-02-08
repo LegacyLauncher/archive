@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
 
 public class Account {
    protected String username;
@@ -48,11 +47,7 @@ public class Account {
    }
 
    public void setUserID(String userID) {
-      if (StringUtils.isEmpty(userID)) {
-         throw new IllegalArgumentException("UserID is empty!");
-      } else {
-         this.userID = userID;
-      }
+      this.userID = userID;
    }
 
    public String getDisplayName() {
@@ -112,11 +107,7 @@ public class Account {
    }
 
    public void setDisplayName(String displayName) {
-      if (StringUtils.isEmpty(displayName)) {
-         throw new IllegalArgumentException("DisplayName is empty!");
-      } else {
-         this.displayName = displayName;
-      }
+      this.displayName = displayName;
    }
 
    public User getUser() {
@@ -244,5 +235,9 @@ public class Account {
    public static enum AccountType {
       LICENSE,
       PIRATE;
+
+      public String toString() {
+         return super.toString().toLowerCase();
+      }
    }
 }

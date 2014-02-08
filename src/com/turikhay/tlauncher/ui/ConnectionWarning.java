@@ -32,7 +32,7 @@ public class ConnectionWarning extends ImagePanel implements UpdaterListener {
    public void onUpdaterRequesting(Updater u) {
    }
 
-   public void onUpdateFound(Updater u, Update upd) {
+   public void onUpdateFound(Update upd) {
       this.hide();
    }
 

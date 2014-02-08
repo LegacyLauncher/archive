@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.downloader;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.util.U;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -368,7 +368,7 @@ public class Downloader extends Thread {
 
    }
 
-   public void loadConfiguration(GlobalSettings settings) {
+   public void loadConfiguration(Configuration settings) {
       int[] conf = settings.getConnectionQuality().getConfiguration();
       this.setMinTries(conf[0]);
       this.setMaxTries(conf[1]);

@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -32,11 +32,10 @@ public class TLauncherFrame extends JFrame {
    private static final List favicons = new ArrayList();
    private final TLauncherFrame instance = this;
    public final TLauncher tlauncher;
-   public final GlobalSettings settings;
-   public final Settings lang;
+   public final Configuration settings;
+   public final LangConfiguration lang;
    private final int[] windowSize;
    public final MainPane mp;
-   public final ProgressBar pb;
 
    public TLauncherFrame(TLauncher t) {
       this.tlauncher = t;
@@ -57,6 +56,7 @@ public class TLauncherFrame extends JFrame {
       });
       this.addComponentListener(new ComponentListener() {
          public void componentResized(ComponentEvent e) {
+            TLauncherFrame.this.mp.onResize();
          }
 
          public void componentShown(ComponentEvent e) {
@@ -75,10 +75,7 @@ public class TLauncherFrame extends JFrame {
       });
       log("Preparing main pane...");
       this.mp = new MainPane(this);
-      log("Preparing progress bar...");
-      this.pb = new ProgressBar(this);
       this.add(this.mp);
-      this.add("South", this.pb);
       log("Packing main frame...");
       this.pack();
       log("Resizing main pane...");

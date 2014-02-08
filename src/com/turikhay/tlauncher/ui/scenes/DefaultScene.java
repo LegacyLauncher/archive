@@ -30,6 +30,7 @@ public class DefaultScene extends PseudoScene {
       this.loginForm = new LoginForm(this);
       this.loginForm.setSize(this.LOGINFORM_WIDTH, this.LOGINFORM_HEIGHT);
       this.add(this.loginForm);
+      this.setSettings(this.settings, false);
    }
 
    public void onResize() {
@@ -37,16 +38,19 @@ public class DefaultScene extends PseudoScene {
       this.setSettings(this.settings, false);
    }
 
-   public void setSettings(boolean shown, boolean animate) {
-      if (this.settings != shown || !animate) {
+   public void setSettings(boolean shown, boolean update) {
+      if (this.settings != shown || !update) {
          if (shown) {
             this.settingsForm.unblock("");
          } else {
             this.settingsForm.block("");
          }
 
-         this.settingsForm.updateIfSaveable();
-         this.settingsForm.save();
+         if (update) {
+            this.settingsForm.updateIfSaveable();
+            this.settingsForm.save();
+         }
+
          int w = this.getWidth();
          int h = this.getHeight();
          int hw = w / 2;

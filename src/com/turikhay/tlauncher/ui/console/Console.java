@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui.console;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.util.StringUtil;
 import com.turikhay.util.U;
@@ -22,7 +22,7 @@ import java.util.List;
 
 public class Console implements Logger {
    private static List frames = Collections.synchronizedList(new ArrayList());
-   private final GlobalSettings global;
+   private final Configuration global;
    private final ConsoleFrame frame;
    private final String name;
    private LinkedStringStream stream;
@@ -32,7 +32,7 @@ public class Console implements Logger {
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$console$Console$CloseAction;
 
-   public Console(GlobalSettings global, PrintLogger logger, String name, boolean show) {
+   public Console(Configuration global, PrintLogger logger, String name, boolean show) {
       this.global = global;
       this.name = name;
       TLauncherFrame.initLookAndFeel();

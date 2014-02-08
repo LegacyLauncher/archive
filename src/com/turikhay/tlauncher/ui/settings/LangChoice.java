@@ -1,13 +1,12 @@
 package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.ui.loc.Localizable;
 import java.awt.Choice;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,11 +19,12 @@ public class LangChoice extends Choice implements SettingsField {
    boolean changed;
 
    LangChoice(SettingsForm sf) {
-      List available = GlobalSettings.SUPPORTED_LOCALE;
-      Iterator var4 = available.iterator();
+      Locale[] available = Localizable.get().getLocales();
+      Locale[] var6 = available;
+      int var5 = available.length;
 
-      while(var4.hasNext()) {
-         Locale loc = (Locale)var4.next();
+      for(int var4 = 0; var4 < var5; ++var4) {
+         Locale loc = var6[var4];
          String id = loc.toString();
          String curdisp = loc.getDisplayCountry(Locale.ENGLISH) + " (" + id + ")";
          this.replacer.put(curdisp, id);

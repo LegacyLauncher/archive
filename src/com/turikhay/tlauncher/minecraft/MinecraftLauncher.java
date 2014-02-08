@@ -2,12 +2,12 @@ package com.turikhay.tlauncher.minecraft;
 
 import com.google.gson.Gson;
 import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.downloader.DownloadableContainer;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
 import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.settings.GlobalSettings;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.MinecraftUtil;
@@ -55,7 +55,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    final OperatingSystem os;
    final Gson gson;
    final DateTypeAdapter dateAdapter;
-   GlobalSettings s;
+   Configuration s;
    Downloader d;
    final LinkedStringStream output;
    final PrintLogger logger;
@@ -80,7 +80,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    final String javadir;
    final int width;
    final int height;
-   final String account_name;
+   String account_name;
    Account account;
    DownloadableContainer ver;
    DownloadableContainer res;
@@ -121,8 +121,8 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.logger = new PrintLogger(this.output);
    }
 
-   public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, GlobalSettings s, VersionManager vm, ProfileManager pm, boolean force, boolean check) {
-      this(listener, vm, pm, s.get("login.version"), s.get("login.account"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == GlobalSettings.ActionOnLaunch.EXIT, s.getConsoleType() == GlobalSettings.ConsoleType.MINECRAFT);
+   public MinecraftLauncher(MinecraftLauncherListener listener, Downloader d, Configuration s, VersionManager vm, ProfileManager pm, boolean force, boolean check) {
+      this(listener, vm, pm, s.get("login.version"), s.get("login.account"), s.get("login.token"), s.get("minecraft.gamedir"), s.get("minecraft.javadir"), s.get("minecraft.javaargs"), s.get("minecraft.args"), s.getWindowSize(), force, check, s.getActionOnLaunch() == Configuration.ActionOnLaunch.EXIT, s.getConsoleType() == Configuration.ConsoleType.MINECRAFT);
       this.s = s;
       this.d = d;
       this.init();
@@ -133,10 +133,17 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
       this.init();
    }
 
+   public MinecraftLauncher(TLauncher t, MinecraftLauncherListener listener, String username, boolean force, boolean check) {
+      this(listener, t.getDownloader(), t.getSettings(), t.getVersionManager(), t.getProfileManager(), force, check);
+      this.account_name = username;
+      this.account = new Account(username);
+      this.init();
+   }
+
    public void init() {
       if (!this.init) {
          this.init = true;
-         if (!this.exit && this.s != null && this.s.getConsoleType() != GlobalSettings.ConsoleType.GLOBAL) {
+         if (!this.exit && this.s != null && this.s.getConsoleType() != Configuration.ConsoleType.GLOBAL) {
             this.c = new Console(this.s, this.logger, "Minecraft Logger", this.console);
          }
 
@@ -161,8 +168,15 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
    private void check() throws MinecraftLauncherException {
       if (this.step > -1) {
          throw new IllegalStateException("MinecraftLauncher is already working!");
-      } else if (this.account_name != null && !this.account_name.isEmpty()) {
-         this.account = this.pm.getAuthDatabase().getByUsername(this.account_name);
+      } else {
+         if (this.account == null) {
+            if (this.account_name == null || this.account_name.isEmpty()) {
+               throw new MinecraftLauncherException("Account is NULL!", "account-invalid", this.account_name);
+            }
+
+            this.account = this.pm.getAuthDatabase().getByUsername(this.account_name);
+         }
+
          if (this.account == null) {
             throw new MinecraftLauncherException("Account is not found", "account-not-found", this.account_name);
          } else if (this.version_name != null && this.version_name.length() != 0) {
@@ -222,8 +236,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
          } else {
             throw new MinecraftLauncherException("Version name is invalid: \"" + this.version_name + "\"", "version-invalid", this.version_name);
          }
-      } else {
-         throw new MinecraftLauncherException("Account is NULL!", "account-invalid", this.account_name);
       }
    }
 

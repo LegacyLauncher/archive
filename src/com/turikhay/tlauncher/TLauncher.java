@@ -1,13 +1,13 @@
 package com.turikhay.tlauncher;
 
+import com.turikhay.tlauncher.configuration.ArgumentParser;
+import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.settings.ArgumentParser;
-import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.ui.console.Console;
@@ -21,27 +21,26 @@ import com.turikhay.util.logger.MirroredLinkedStringStream;
 import com.turikhay.util.logger.PrintLogger;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.Locale;
 import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.591D;
-   private static final String SETTINGS = "tlauncher.ini";
+   private static final double VERSION = 0.596D;
+   private static final String SETTINGS = "tlauncher.cfg";
    private static final String BRAND = "Original";
-   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini", "http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini"};
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static final String[] REMOTE_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
-   private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://ru-minecraft.org/update/tlauncher/extra/", "http://s1.mmods.ru/launcher/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
+   private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://s1.mmods.ru/launcher/", "http://ru-minecraft.org/update/tlauncher/extra/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
    private static TLauncher instance;
    private static String[] sargs;
    private static MirroredLinkedStringStream stream;
    private static PrintLogger print;
    private static Console console;
    private TLauncher.TLauncherState state;
-   private Settings lang;
-   private GlobalSettings settings;
+   private LangConfiguration lang;
+   private Configuration settings;
    private Downloader downloader;
    private Updater updater;
    private TLauncherFrame frame;
@@ -50,6 +49,7 @@ public class TLauncher {
    private ProfileManager pm;
    public final OptionSet args;
    private MinecraftLauncher launcher;
+   private UpdaterUIListener updaterListener;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
@@ -62,9 +62,9 @@ public class TLauncher {
          instance = this;
          this.state = state;
          this.args = set;
-         this.settings = GlobalSettings.createInstance(set);
+         this.settings = Configuration.createConfiguration(set);
          this.reloadLocale();
-         console = new Console(this.settings, print, "TLauncher Dev Console", this.settings.getConsoleType() == GlobalSettings.ConsoleType.GLOBAL);
+         console = new Console(this.settings, print, "TLauncher Dev Console", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
          Console.updateLocale();
          this.vm = new VersionManager();
          this.pm = new ProfileManager();
@@ -77,8 +77,9 @@ public class TLauncher {
       this.downloader = new Downloader(this);
       switch($SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState()[this.state.ordinal()]) {
       case 1:
+         this.updaterListener = new UpdaterUIListener(this);
          this.updater = new Updater(this);
-         this.updater.addListener(new UpdaterUIListener(this));
+         this.updater.addListener(this.updaterListener);
          this.frame = new TLauncherFrame(this);
          LoginForm lf = this.frame.mp.defaultScene.loginForm;
          if (lf.autologin.isEnabled()) {
@@ -102,11 +103,11 @@ public class TLauncher {
       return this.downloader;
    }
 
-   public Settings getLang() {
+   public LangConfiguration getLang() {
       return this.lang;
    }
 
-   public GlobalSettings getSettings() {
+   public Configuration getSettings() {
       return this.settings;
    }
 
@@ -138,14 +139,17 @@ public class TLauncher {
       return this.pm;
    }
 
+   public UpdaterUIListener getUpdaterListener() {
+      return this.updaterListener;
+   }
+
    public void reloadLocale() throws IOException {
       Locale locale = this.settings.getLocale();
       U.log("Selected locale: " + locale);
-      URL url = TLauncher.class.getResource("/lang/" + locale + ".ini");
       if (this.lang == null) {
-         this.lang = new Settings(url);
+         this.lang = new LangConfiguration(this.settings.getLocales(), locale);
       } else {
-         this.lang.reload(url);
+         this.lang.setSelected(locale);
       }
 
       Alert.prepareLocal();
@@ -177,7 +181,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.591D;
+      return 0.596D;
    }
 
    public static String getBrand() {
@@ -189,7 +193,7 @@ public class TLauncher {
    }
 
    public static String getSettingsFile() {
-      return "tlauncher.ini";
+      return "tlauncher.cfg";
    }
 
    public static String[] getRemoteRepo() {
@@ -222,7 +226,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.591D);
+      U.log("Starting TLauncher", "Original", 0.596D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;

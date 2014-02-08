@@ -2,6 +2,7 @@ package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.ui.backgrounds.Background;
 import com.turikhay.tlauncher.ui.backgrounds.DefaultBackground;
+import com.turikhay.tlauncher.ui.progress.DownloaderProgress;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.scenes.PseudoScene;
@@ -14,12 +15,13 @@ public class MainPane extends ExtendedLayeredPane {
    private Background background;
    private PseudoScene scene;
    private final ConnectionWarning warning;
-   private final ProgressBar progress;
+   private final DownloaderProgress progress;
    public final DefaultBackground defaultBackground;
    public final DefaultScene defaultScene;
    public final AccountEditorScene accountEditor;
 
    MainPane(TLauncherFrame frame) {
+      super((Component)null);
       this.rootFrame = frame;
       this.background = this.defaultBackground = new DefaultBackground(this);
       this.add(this.defaultBackground);
@@ -27,7 +29,7 @@ public class MainPane extends ExtendedLayeredPane {
       this.add(this.defaultScene);
       this.accountEditor = new AccountEditorScene(this);
       this.add(this.accountEditor);
-      this.progress = new ProgressBar(frame);
+      this.progress = new DownloaderProgress(frame);
       this.add(this.progress);
       this.warning = new ConnectionWarning();
       this.warning.setLocation(10, 10);
@@ -111,7 +113,7 @@ public class MainPane extends ExtendedLayeredPane {
 
    public void onResize() {
       super.onResize();
-      this.progress.setLocation(0, this.getHeight() - this.progress.getWidth());
+      this.progress.setBounds(0, this.getHeight() - DownloaderProgress.DEFAULT_HEIGHT, this.getWidth(), DownloaderProgress.DEFAULT_HEIGHT);
    }
 
    public Point getLocationOf(Component comp) {

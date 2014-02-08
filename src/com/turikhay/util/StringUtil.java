@@ -73,7 +73,7 @@ public class StringUtil {
       }
    }
 
-   public static boolean parseBoolean(String b, boolean ignoreCase) throws ParseException {
+   public static boolean parseBoolean(String b) throws ParseException {
       if (b == null) {
          throw new ParseException("String cannot be NULL!");
       } else if (b.equalsIgnoreCase("true")) {
@@ -83,10 +83,6 @@ public class StringUtil {
       } else {
          throw new ParseException("Cannot parse value (" + b + ")!");
       }
-   }
-
-   public static boolean parseBoolean(String b) throws ParseException {
-      return parseBoolean(b, true);
    }
 
    public static int countLines(String str) {

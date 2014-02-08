@@ -128,7 +128,7 @@ public class RefreshButton extends ImageButton implements RefreshedListener, Upd
       this.updaterFlag = u;
    }
 
-   public void onUpdateFound(Updater u, Update upd) {
+   public void onUpdateFound(Update upd) {
       this.updaterFlag = null;
    }
 

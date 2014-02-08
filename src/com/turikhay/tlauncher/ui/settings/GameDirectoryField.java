@@ -13,10 +13,6 @@ public class GameDirectoryField extends CheckableTextField implements SettingsFi
       super((CenterPanel)settingsform);
    }
 
-   public void setValue(String dir) {
-      super.setText(dir);
-   }
-
    protected String check(String text) {
       if (text == null) {
          return "settings.client.gamedir.invalid";

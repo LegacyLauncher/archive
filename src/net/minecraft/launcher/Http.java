@@ -69,6 +69,10 @@ public class Http {
       return response.toString();
    }
 
+   public static String performGet(String url) throws IOException {
+      return performGet(constantURL(url), U.getConnectionTimeout(), U.getReadTimeout());
+   }
+
    public static String performGet(URL url) throws IOException {
       return performGet(url, U.getConnectionTimeout(), U.getReadTimeout());
    }

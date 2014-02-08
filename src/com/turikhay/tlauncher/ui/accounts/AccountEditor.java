@@ -6,6 +6,7 @@ import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableButton;
 import com.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
 import com.turikhay.tlauncher.ui.login.UsernameField;
+import com.turikhay.tlauncher.ui.progress.ProgressBar;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.tlauncher.ui.text.ExtendedPasswordField;
 import java.awt.Component;
@@ -13,7 +14,6 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JProgressBar;
 
 public class AccountEditor extends CenterPanel {
    private static final long serialVersionUID = 7061277150214976212L;
@@ -22,7 +22,7 @@ public class AccountEditor extends CenterPanel {
    public final ExtendedPasswordField password;
    public final LocalizableCheckbox premiumBox;
    public final LocalizableButton save;
-   public final JProgressBar progressBar;
+   public final ProgressBar progressBar;
 
    public AccountEditor(AccountEditorScene sc) {
       super(squareInsets);
@@ -47,14 +47,14 @@ public class AccountEditor extends CenterPanel {
             AccountEditor.this.defocus();
          }
       });
-      this.save = new LocalizableButton("account.save");
+      this.save = new LocalizableButton("account.save", new Object[0]);
       this.save.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             AccountEditor.this.defocus();
             AccountEditor.this.scene.handler.saveEditor();
          }
       });
-      this.progressBar = new JProgressBar();
+      this.progressBar = new ProgressBar();
       this.progressBar.setPreferredSize(new Dimension(200, 20));
       this.add(this.del(0));
       this.add(sepPan(new Component[]{this.username}));

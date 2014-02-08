@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import javax.swing.JFrame;
@@ -9,7 +9,7 @@ import javax.swing.JOptionPane;
 
 public class Alert {
    private static final int wrap = 100;
-   private static Settings lang;
+   private static LangConfiguration lang;
    private static String PREFIX = "TLauncher : ";
    private static String DEFAULT_TITLE = "An error occurred";
    private static String DEFAULT_MESSAGE = "An unexpected error occurred";

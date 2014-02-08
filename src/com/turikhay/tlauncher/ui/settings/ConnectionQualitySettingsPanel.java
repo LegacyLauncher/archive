@@ -1,13 +1,13 @@
 package com.turikhay.tlauncher.ui.settings;
 
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
 import javax.swing.BoxLayout;
 
 public class ConnectionQualitySettingsPanel extends BlockablePanel implements SettingsField {
    private static final long serialVersionUID = -9108973380914818944L;
    private final String path = "connection";
-   private final String defaultValue = GlobalSettings.ConnectionQuality.getDefault().toString();
+   private final String defaultValue = Configuration.ConnectionQuality.getDefault().toString();
    final SettingsRadioGroup connGroup;
 
    ConnectionQualitySettingsPanel(SettingsForm sf) {

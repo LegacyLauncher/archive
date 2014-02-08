@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui.console;
 
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.ui.TextPopup;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -50,7 +50,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    final Console c;
    boolean hiding;
 
-   public ConsoleFrame(Console c, GlobalSettings s, String name) {
+   public ConsoleFrame(Console c, Configuration s, String name) {
       super(name);
       this.sizes = new Dimension(this.w, this.h);
       this.update = true;

@@ -9,9 +9,11 @@ public class PartialVersion implements Version {
    private ReleaseType type;
 
    public PartialVersion() {
+      this.type = ReleaseType.UNKNOWN;
    }
 
    public PartialVersion(String id, Date releaseTime, Date updateTime, ReleaseType type) {
+      this.type = ReleaseType.UNKNOWN;
       if (id != null && id.length() != 0) {
          if (releaseTime == null) {
             throw new IllegalArgumentException("Release time cannot be null");
@@ -40,7 +42,7 @@ public class PartialVersion implements Version {
 
    public ReleaseType getType() {
       if (this.type == null) {
-         this.type = ReleaseType.RELEASE;
+         this.type = ReleaseType.UNKNOWN;
       }
 
       return this.type;

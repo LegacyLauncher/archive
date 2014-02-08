@@ -1,7 +1,7 @@
 package com.turikhay.util;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.configuration.Configuration;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -78,6 +78,7 @@ public class U {
                   Iterator i = (Iterator)e;
 
                   while(i.hasNext()) {
+                     b.append(" ");
                      b.append(toLog(i.next()));
                   }
                } else {
@@ -576,7 +577,7 @@ public class U {
       if (t == null) {
          return 15000;
       } else {
-         GlobalSettings.ConnectionQuality quality = t.getSettings().getConnectionQuality();
+         Configuration.ConnectionQuality quality = t.getSettings().getConnectionQuality();
          return quality == null ? 15000 : quality.getTimeout();
       }
    }

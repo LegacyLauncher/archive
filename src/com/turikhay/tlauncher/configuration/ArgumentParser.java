@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.settings;
+package com.turikhay.tlauncher.configuration;
 
 import com.turikhay.tlauncher.ui.Alert;
 import java.io.IOException;

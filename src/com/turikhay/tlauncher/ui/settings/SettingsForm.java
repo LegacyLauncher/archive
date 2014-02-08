@@ -44,7 +44,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    final SettingsCheckbox snapshotsSelect;
    final SettingsCheckbox betaSelect;
    final SettingsCheckbox alphaSelect;
-   final SettingsCheckbox cheatsSelect;
+   final SettingsCheckbox modifiedSelect;
    final SettingsCheckbox oldSelect;
    final LocalizableLabel versionChoice;
    final SettingsRadioButton globalConsole;
@@ -70,8 +70,8 @@ public class SettingsForm extends CenterPanel implements LoginListener {
    private boolean beta_changed;
    private boolean alpha_old;
    private boolean alpha_changed;
-   private boolean cheats_old;
-   private boolean cheats_changed;
+   private boolean modified_old;
+   private boolean modified_changed;
    private boolean old_old;
    private boolean old_changed;
 
@@ -79,20 +79,20 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.scene = sc;
       this.warner = new FocusListener() {
          public void focusGained(FocusEvent e) {
-            SettingsForm.this.setError("settings.warning");
+            SettingsForm.this.setMessage("settings.warning");
          }
 
          public void focusLost(FocusEvent e) {
-            SettingsForm.this.setError(" ");
+            SettingsForm.this.setMessage((String)null);
          }
       };
       this.restart = new FocusListener() {
          public void focusGained(FocusEvent e) {
-            SettingsForm.this.setError("settings.restart");
+            SettingsForm.this.setMessage("settings.restart");
          }
 
          public void focusLost(FocusEvent e) {
-            SettingsForm.this.setError(" ");
+            SettingsForm.this.setMessage((String)null);
          }
       };
       this.settingsPan = new SettingsPanel(this);
@@ -125,10 +125,10 @@ public class SettingsForm extends CenterPanel implements LoginListener {
             SettingsForm.this.alpha_changed = SettingsForm.this.alpha_old ^ e;
          }
       });
-      this.cheatsSelect = new SettingsCheckbox(this, "settings.versions.cheats", "minecraft.versions.cheats");
-      this.cheatsSelect.addItemListener(new CheckBoxListener() {
+      this.modifiedSelect = new SettingsCheckbox(this, "settings.versions.modified", "minecraft.versions.modified");
+      this.modifiedSelect.addItemListener(new CheckBoxListener() {
          public void itemStateChanged(boolean e) {
-            SettingsForm.this.cheats_changed = SettingsForm.this.cheats_old ^ e;
+            SettingsForm.this.modified_changed = SettingsForm.this.modified_old ^ e;
          }
       });
       this.oldSelect = new SettingsCheckbox(this, "settings.versions.old", "minecraft.versions.old");
@@ -163,7 +163,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       this.connPan = new ConnectionQualitySettingsPanel(this);
       this.langCustom = new JLabel("Language:");
       this.launchActionCustom = new LocalizableLabel("settings.launch-action.label");
-      this.saveButton = new LocalizableButton("settings.save");
+      this.saveButton = new LocalizableButton("settings.save", new Object[0]);
       this.saveButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             SettingsForm.this.defocus();
@@ -173,7 +173,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
 
          }
       });
-      this.defButton = new LocalizableButton("settings.default");
+      this.defButton = new LocalizableButton("settings.default", new Object[0]);
       this.defButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             SettingsForm.this.defocus();
@@ -184,7 +184,7 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       });
       this.savePan = new SaveSettingsPanel(this);
       this.settingsPan.createInterface();
-      this.add(this.error);
+      this.add(this.messagePanel);
       this.add(this.settingsPan);
       this.add(this.savePan);
       this.updateValues();
@@ -204,11 +204,11 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       }
 
       this.oldDir = this.gameDirField.getValue();
-      this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = this.old_changed = false;
+      this.snapshot_changed = this.beta_changed = this.alpha_changed = this.modified_changed = this.old_changed = false;
       this.snapshot_old = this.snapshotsSelect.getState();
       this.alpha_old = this.alphaSelect.getState();
       this.beta_old = this.betaSelect.getState();
-      this.cheats_old = this.cheatsSelect.getState();
+      this.modified_old = this.modifiedSelect.getState();
       this.old_old = this.oldSelect.getState();
    }
 
@@ -233,73 +233,82 @@ public class SettingsForm extends CenterPanel implements LoginListener {
       while(var2.hasNext()) {
          Component c = (Component)var2.next();
          if (c instanceof SettingsField) {
-            ((SettingsField)c).setToDefault();
+            SettingsField sf = (SettingsField)c;
+            String key = sf.getSettingsPath();
+            if (this.global.isSaveable(key)) {
+               sf.setToDefault();
+            }
          }
       }
 
    }
 
    public boolean save() {
-      U.log("Saving...");
-      Iterator var3 = this.findFields().iterator();
-
-      while(var3.hasNext()) {
-         Component c = (Component)var3.next();
-         if (c instanceof SettingsField) {
-            SettingsField sf = (SettingsField)c;
-            if (!sf.isValueValid()) {
-               c.setBackground(this.getTheme().getFailure());
-               return false;
-            }
-
-            if (c.isEnabled()) {
-               this.global.set(sf.getSettingsPath(), sf.getValue(), false);
-            }
-         }
-      }
-
-      try {
-         this.global.save();
-         U.log("Settings saved!");
-      } catch (IOException var5) {
-         U.log("Cannot save settings!");
-         Alert.showError(var5, false);
-      }
-
-      if (this.langChoice.changed) {
-         this.langChoice.setCurrent();
-         U.log("Language has been changed.");
-         this.tlauncher.getFrame().updateLocales();
-      }
-
-      String gamedir = this.gameDirField.getValue();
-      if (!gamedir.equals(this.oldDir)) {
-         this.oldDir = gamedir;
-         U.log("Game directory has been changed. Recreating Version Manager.");
-
-         try {
-            this.tlauncher.getVersionManager().recreate();
-         } catch (IOException var4) {
-            Alert.showError(var4, false);
-         }
-
-         U.log("And Profile Manager, too");
-         this.tlauncher.getProfileManager().recreate();
-         this.tlauncher.getProfileManager().loadProfiles();
+      if (!this.global.isSaveable()) {
+         U.log("Settings are not saveable.");
          return true;
       } else {
-         if (this.snapshot_changed || this.beta_changed || this.alpha_changed || this.cheats_changed || this.old_changed) {
-            this.scene.loginForm.versionchoice.asyncRefresh();
+         U.log("Saving...");
+         Iterator var3 = this.findFields().iterator();
+
+         while(var3.hasNext()) {
+            Component c = (Component)var3.next();
+            if (c instanceof SettingsField) {
+               SettingsField sf = (SettingsField)c;
+               if (!sf.isValueValid()) {
+                  c.setBackground(this.getTheme().getFailure());
+                  return false;
+               }
+
+               if (c.isEnabled()) {
+                  this.global.set(sf.getSettingsPath(), sf.getValue(), false);
+               }
+            }
          }
 
-         this.snapshot_changed = this.beta_changed = this.alpha_changed = this.cheats_changed = this.old_changed = false;
-         this.snapshot_old = this.snapshotsSelect.getState();
-         this.alpha_old = this.alphaSelect.getState();
-         this.beta_old = this.betaSelect.getState();
-         this.cheats_old = this.cheatsSelect.getState();
-         this.old_old = this.oldSelect.getState();
-         this.tlauncher.getDownloader().loadConfiguration(this.global);
-         return true;
+         try {
+            this.global.save();
+            U.log("Settings saved!");
+         } catch (IOException var5) {
+            U.log("Cannot save settings!");
+            Alert.showError(var5, false);
+         }
+
+         if (this.langChoice.changed) {
+            this.langChoice.setCurrent();
+            U.log("Language has been changed.");
+            this.tlauncher.getFrame().updateLocales();
+         }
+
+         String gamedir = this.gameDirField.getValue();
+         if (!gamedir.equals(this.oldDir)) {
+            this.oldDir = gamedir;
+            U.log("Game directory has been changed. Recreating Version Manager.");
+
+            try {
+               this.tlauncher.getVersionManager().recreate();
+            } catch (IOException var4) {
+               Alert.showError(var4, false);
+            }
+
+            U.log("And Profile Manager, too");
+            this.tlauncher.getProfileManager().recreate();
+            this.tlauncher.getProfileManager().loadProfiles();
+            return true;
+         } else {
+            if (this.snapshot_changed || this.beta_changed || this.alpha_changed || this.modified_changed || this.old_changed) {
+               this.tlauncher.getVersionManager().updateVersionList();
+            }
+
+            this.snapshot_changed = this.beta_changed = this.alpha_changed = this.modified_changed = this.old_changed = false;
+            this.snapshot_old = this.snapshotsSelect.getState();
+            this.alpha_old = this.alphaSelect.getState();
+            this.beta_old = this.betaSelect.getState();
+            this.modified_old = this.modifiedSelect.getState();
+            this.old_old = this.oldSelect.getState();
+            this.tlauncher.getDownloader().loadConfiguration(this.global);
+            return true;
+         }
       }
    }
 

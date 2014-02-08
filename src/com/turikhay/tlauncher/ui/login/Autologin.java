@@ -59,7 +59,7 @@ public class Autologin implements LoginListener {
 
    private boolean updateLogin() {
       --this.sec;
-      this.lf.buttons.cancel.setLabel("loginform.cancel", "t", this.sec);
+      this.lf.buttons.cancel.setText("loginform.cancel", this.sec);
       if (this.sec != 0) {
          return false;
       } else {

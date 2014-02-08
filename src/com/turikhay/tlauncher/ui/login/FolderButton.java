@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui.login;
 
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.ImageButton;
 import com.turikhay.util.MinecraftUtil;
@@ -14,7 +14,7 @@ public class FolderButton extends ImageButton {
    private static final long serialVersionUID = 1621745146166800209L;
    private final FolderButton instance = this;
    private final LoginForm lf;
-   private final Settings l;
+   private final LangConfiguration l;
 
    FolderButton(LoginForm loginform) {
       this.lf = loginform;

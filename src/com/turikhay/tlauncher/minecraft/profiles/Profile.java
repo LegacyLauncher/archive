@@ -18,7 +18,7 @@ public class Profile {
    private Profile.ActionOnClose launcherVisibilityOnGameClose;
 
    static {
-      DEFAULT_RELEASE_TYPES = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.CHEAT};
+      DEFAULT_RELEASE_TYPES = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.OLD};
    }
 
    public String toString() {
