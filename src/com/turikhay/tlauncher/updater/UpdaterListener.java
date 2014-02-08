@@ -5,7 +5,7 @@ public interface UpdaterListener {
 
    void onUpdaterRequestError(Updater var1);
 
-   void onUpdateFound(Updater var1, Update var2);
+   void onUpdateFound(Update var1);
 
    void onUpdaterNotFoundUpdate(Updater var1);
 

@@ -1,7 +1,6 @@
 package com.turikhay.tlauncher.ui.login;
 
-import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.ui.block.Blockable;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.loc.LocalizableButton;
@@ -15,7 +14,7 @@ public class ButtonPanel extends BlockablePanel {
    public static final int ENTERBUTTON_PLAY = 0;
    public static final int ENTERBUTTON_REINSTALL = 1;
    final LoginForm lf;
-   final Settings l;
+   final LangConfiguration l;
    public final LocalizableButton cancel;
    public final LocalizableButton enter;
    public final AdditionalButtonsPanel addbuttons;
@@ -28,14 +27,14 @@ public class ButtonPanel extends BlockablePanel {
       lm.setHgap(1);
       this.setLayout(lm);
       this.setOpaque(false);
-      this.enter = new LocalizableButton("loginform.enter");
+      this.enter = new LocalizableButton("loginform.enter", new Object[0]);
       this.enter.setFont(this.enter.getFont().deriveFont(1).deriveFont(16.0F));
       this.enter.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             ButtonPanel.this.lf.callLogin();
          }
       });
-      this.cancel = new LocalizableButton("loginform.cancel", "t", this.lf.autologin.timeout);
+      this.cancel = new LocalizableButton("loginform.cancel", new Object[]{this.lf.autologin.timeout});
       this.cancel.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             ButtonPanel.this.lf.setAutoLogin(false);
@@ -82,7 +81,7 @@ public class ButtonPanel extends BlockablePanel {
             throw new IllegalArgumentException("Status is invalid! Use ButtonPanel.ENTERBUTTON_* variables.");
          }
 
-         this.enter.setLabel("loginform.enter" + s);
+         this.enter.setText("loginform.enter" + s);
       }
    }
 
@@ -93,12 +92,10 @@ public class ButtonPanel extends BlockablePanel {
    }
 
    public void block(Object reason) {
-      this.enter.setEnabled(false);
-      Blocker.block((Blockable)this.addbuttons, (Object)reason);
+      Blocker.blockComponents(reason, this.enter, this.addbuttons, this.cancel);
    }
 
    public void unblock(Object reason) {
-      this.enter.setEnabled(true);
-      Blocker.unblock((Blockable)this.addbuttons, (Object)reason);
+      Blocker.unblockComponents(reason, this.enter, this.addbuttons, this.cancel);
    }
 }

@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui.login;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.ImageButton;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -18,7 +18,7 @@ public class SupportButton extends ImageButton implements LocalizableComponent {
    private static final long serialVersionUID = 7903730373496194592L;
    private final SupportButton instance = this;
    private final LoginForm lf;
-   private final Settings l;
+   private final LangConfiguration l;
    private String path;
    private URL url;
    private URI uri;

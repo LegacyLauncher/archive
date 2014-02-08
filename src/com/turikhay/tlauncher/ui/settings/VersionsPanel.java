@@ -12,7 +12,7 @@ public class VersionsPanel extends BlockablePanel {
       this.add(sf.snapshotsSelect);
       this.add(sf.betaSelect);
       this.add(sf.alphaSelect);
-      this.add(sf.cheatsSelect);
+      this.add(sf.modifiedSelect);
       this.add(sf.oldSelect);
    }
 

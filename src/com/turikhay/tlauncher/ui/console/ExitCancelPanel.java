@@ -20,7 +20,7 @@ public class ExitCancelPanel extends JPanel {
       this.setBackground(Color.black);
       this.label = new LocalizableLabel(0);
       this.label.setForeground(Color.white);
-      this.button = new LocalizableButton("console.close.cancel");
+      this.button = new LocalizableButton("console.close.cancel", new Object[0]);
       this.label.setFont(this.font);
       this.label.setForeground(Color.white);
       this.button.addActionListener(new ActionListener() {

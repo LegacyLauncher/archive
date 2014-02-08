@@ -73,14 +73,15 @@ public class VersionFilter {
       if (v.getType() == null) {
          return true;
       } else {
-         boolean old = v.getReleaseTime().before(this.oldMarker) && !v.getType().isOld() && v.getReleaseTime().getTime() > 0L;
+         Date releaseTime = v.getReleaseTime();
+         boolean old = !v.getType().isOld() && releaseTime != null && v.getReleaseTime().before(this.oldMarker) && v.getReleaseTime().getTime() > 0L;
          if (old) {
             return this.types.contains(ReleaseType.OLD);
          } else {
-            Iterator var4 = this.types.iterator();
+            Iterator var5 = this.types.iterator();
 
-            while(var4.hasNext()) {
-               ReleaseType ct = (ReleaseType)var4.next();
+            while(var5.hasNext()) {
+               ReleaseType ct = (ReleaseType)var5.next();
                if (ct == v.getType()) {
                   return true;
                }

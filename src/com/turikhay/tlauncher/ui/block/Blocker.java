@@ -144,14 +144,14 @@ public class Blocker {
       }
    }
 
-   public static void blockComponents(Container container, Object reason) {
-      if (container == null) {
-         throw new NullPointerException("Container is NULL!");
+   public static void blockComponents(Object reason, Component... components) {
+      if (components == null) {
+         throw new NullPointerException("Components is NULL!");
       } else if (reason == null) {
          throw new NullPointerException("Reason is NULL!");
       } else {
-         Component[] var5;
-         int var4 = (var5 = container.getComponents()).length;
+         Component[] var5 = components;
+         int var4 = components.length;
 
          for(int var3 = 0; var3 < var4; ++var3) {
             Component component = var5[var3];
@@ -168,14 +168,18 @@ public class Blocker {
       }
    }
 
-   public static void unblockComponents(Container container, Object reason) {
-      if (container == null) {
-         throw new NullPointerException("Container is NULL!");
+   public static void blockComponents(Container container, Object reason) {
+      blockComponents(reason, container.getComponents());
+   }
+
+   public static void unblockComponents(Object reason, Component... components) {
+      if (components == null) {
+         throw new NullPointerException("Components is NULL!");
       } else if (reason == null) {
          throw new NullPointerException("Reason is NULL!");
       } else {
-         Component[] var5;
-         int var4 = (var5 = container.getComponents()).length;
+         Component[] var5 = components;
+         int var4 = components.length;
 
          for(int var3 = 0; var3 < var4; ++var3) {
             Component component = var5[var3];
@@ -190,5 +194,9 @@ public class Blocker {
          }
 
       }
+   }
+
+   public static void unblockComponents(Container container, Object reason) {
+      unblockComponents(reason, container.getComponents());
    }
 }

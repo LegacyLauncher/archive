@@ -27,7 +27,7 @@ public class ResolutionField extends BlockablePanel implements SettingsField {
    }
 
    private void setValues(int width, int height) {
-      int[] def = this.sf.global.getWindowSize();
+      int[] def = this.sf.global.getDefaultWindowSize();
       if (width < 1) {
          width = def[0];
       }
@@ -87,13 +87,13 @@ public class ResolutionField extends BlockablePanel implements SettingsField {
 
    public boolean isValueValid() {
       int[] v = this.getValues();
-      int[] def = this.sf.global.getWindowSize();
+      int[] def = this.sf.global.getDefaultWindowSize();
       boolean valid = v != null;
       if (!valid || v[0] < def[0]) {
          valid = this.w.setInvalid("settings.client.resolution.width.invalid");
       }
 
-      if (!valid || v[1] < def[1]) {
+      if (v[1] < def[1]) {
          valid |= this.h.setInvalid("settings.client.resolution.height.invalid");
       }
 

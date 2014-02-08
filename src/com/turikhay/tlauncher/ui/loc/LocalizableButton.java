@@ -3,64 +3,32 @@ package com.turikhay.tlauncher.ui.loc;
 import javax.swing.JButton;
 
 public class LocalizableButton extends JButton implements LocalizableComponent {
-   private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1073130908385613323L;
    private String path;
-   private String r0;
-   private String r1;
-   private Object w0;
-   private Object w1;
+   private String[] variables;
 
-   public LocalizableButton() {
-      this.init();
+   public LocalizableButton(String path, Object... vars) {
+      this.setOpaque(false);
+      this.setText(path, vars);
    }
 
-   public LocalizableButton(String path) {
-      this();
-      this.setLabel(path);
-   }
-
-   public LocalizableButton(String path, String replace, Object with) {
-      this();
-      this.setLabel(path, replace, with);
-   }
-
-   public void setLabel(String path) {
+   public void setText(String path, Object... vars) {
       this.path = path;
-      super.setText(Localizable.get(path));
+      this.variables = Localizable.checkVariables(vars);
+      String value = Localizable.get(path);
+
+      for(int i = 0; i < this.variables.length; ++i) {
+         value = value.replace("%" + i, this.variables[i]);
+      }
+
+      super.setText(value);
    }
 
-   public void setLabel(String path, String replace, Object with) {
-      this.path = path;
-      this.u();
-      this.r0 = replace;
-      this.w0 = with;
-      super.setText(Localizable.get() == null ? path : Localizable.get().get(path, replace, with));
-   }
-
-   public void setLabel(String path, String replace0, Object with0, String replace1, Object with1) {
-      this.path = path;
-      this.u();
-      this.r0 = replace0;
-      this.w0 = with0;
-      this.r1 = replace1;
-      this.w1 = with1;
-      super.setText(Localizable.get() == null ? path : Localizable.get().get(path, replace0, with0, replace1, with1));
-   }
-
-   public String getLangPath() {
-      return this.path;
+   public void setText(String path) {
+      this.setText(path, Localizable.EMPTY_VARS);
    }
 
    public void updateLocale() {
-      this.setLabel(this.path, this.r0, this.w0, this.r1, this.w1);
-   }
-
-   private void u() {
-      this.r0 = this.r1 = null;
-      this.w0 = this.w1 = null;
-   }
-
-   private void init() {
-      this.setOpaque(false);
+      this.setText(this.path, this.variables);
    }
 }

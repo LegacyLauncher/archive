@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui.login;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
@@ -32,7 +32,7 @@ import net.minecraft.launcher.versions.Version;
 public class VersionChoicePanel extends BlockablePanel implements RefreshedListener, LocalizableComponent, LoginListener {
    private static final long serialVersionUID = -1838948772565245249L;
    private final LoginForm lf;
-   private final Settings l;
+   private final LangConfiguration l;
    private VersionManager vm;
    String version;
    VersionSyncInfo selected;
@@ -149,20 +149,19 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          if (id.length() < 19) {
             switch($SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType()[ver.getType().ordinal()]) {
             case 1:
-               dId = this.l.get("version.snapshot", "v", id);
+               dId = this.l.get("version.snapshot", id);
                break;
             case 2:
-               dId = this.l.get("version.release", "v", id);
+               dId = this.l.get("version.release", id);
             case 3:
             case 4:
-            case 5:
             default:
                break;
-            case 6:
-               dId = this.l.get("version.old_beta", "v", id.substring(1));
+            case 5:
+               dId = this.l.get("version.old_beta", id.substring(1));
                break;
-            case 7:
-               dId = this.l.get("version.old_alpha", "v", id.startsWith("a") ? id.substring(1) : id);
+            case 6:
+               dId = this.l.get("version.old_alpha", id.startsWith("a") ? id.substring(1) : id);
             }
          } else {
             dId = U.t(id, 20);
@@ -254,37 +253,37 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
          int[] var0 = new int[ReleaseType.values().length];
 
          try {
-            var0[ReleaseType.CHEAT.ordinal()] = 4;
+            var0[ReleaseType.MODIFIED.ordinal()] = 3;
          } catch (NoSuchFieldError var7) {
          }
 
          try {
-            var0[ReleaseType.MODIFIED.ordinal()] = 3;
+            var0[ReleaseType.OLD.ordinal()] = 4;
          } catch (NoSuchFieldError var6) {
          }
 
          try {
-            var0[ReleaseType.OLD.ordinal()] = 5;
+            var0[ReleaseType.OLD_ALPHA.ordinal()] = 6;
          } catch (NoSuchFieldError var5) {
          }
 
          try {
-            var0[ReleaseType.OLD_ALPHA.ordinal()] = 7;
+            var0[ReleaseType.OLD_BETA.ordinal()] = 5;
          } catch (NoSuchFieldError var4) {
          }
 
          try {
-            var0[ReleaseType.OLD_BETA.ordinal()] = 6;
+            var0[ReleaseType.RELEASE.ordinal()] = 2;
          } catch (NoSuchFieldError var3) {
          }
 
          try {
-            var0[ReleaseType.RELEASE.ordinal()] = 2;
+            var0[ReleaseType.SNAPSHOT.ordinal()] = 1;
          } catch (NoSuchFieldError var2) {
          }
 
          try {
-            var0[ReleaseType.SNAPSHOT.ordinal()] = 1;
+            var0[ReleaseType.UNKNOWN.ordinal()] = 7;
          } catch (NoSuchFieldError var1) {
          }
 

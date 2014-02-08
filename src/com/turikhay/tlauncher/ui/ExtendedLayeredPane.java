@@ -16,21 +16,23 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane {
 
    public ExtendedLayeredPane(Component parent) {
       this.parent = parent;
-      parent.addComponentListener(new ComponentListener() {
-         public void componentResized(ComponentEvent e) {
-            ExtendedLayeredPane.this.onResize();
-         }
+      if (parent != null) {
+         parent.addComponentListener(new ComponentListener() {
+            public void componentResized(ComponentEvent e) {
+               ExtendedLayeredPane.this.onResize();
+            }
 
-         public void componentMoved(ComponentEvent e) {
-         }
+            public void componentMoved(ComponentEvent e) {
+            }
 
-         public void componentShown(ComponentEvent e) {
-            ExtendedLayeredPane.this.onResize();
-         }
+            public void componentShown(ComponentEvent e) {
+               ExtendedLayeredPane.this.onResize();
+            }
 
-         public void componentHidden(ComponentEvent e) {
-         }
-      });
+            public void componentHidden(ComponentEvent e) {
+            }
+         });
+      }
    }
 
    public Component add(Component comp) {

@@ -1,12 +1,8 @@
-package com.turikhay.tlauncher.ui;
+package com.turikhay.tlauncher.ui.progress;
 
-import com.turikhay.tlauncher.downloader.DownloadListener;
-import com.turikhay.tlauncher.downloader.Downloadable;
-import com.turikhay.tlauncher.downloader.Downloader;
-import com.turikhay.tlauncher.settings.Settings;
-import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.util.U;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -15,21 +11,17 @@ import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.font.LineMetrics;
-import javax.swing.JFrame;
 import javax.swing.JProgressBar;
 
-public class ProgressBar extends JProgressBar implements LocalizableComponent {
-   private static int DEFAULT_HEIGHT = 20;
-   private static int BOUNDS_SIZE = 3;
-   private static int BORDER_SIZE = 10;
-   private static int EDGE_CHARS = 50;
-   private static int CENTER_CHARS = 20;
-   private static final long serialVersionUID = 4988683059704813021L;
-   private final ProgressBar instance;
-   private final Object sync;
-   private final JFrame parent;
-   private Settings lang;
-   private DownloadListener listener;
+public class ProgressBar extends JProgressBar {
+   public static int DEFAULT_HEIGHT = 20;
+   public static int BOUNDS_SIZE = 3;
+   public static int BORDER_SIZE = 10;
+   public static int EDGE_CHARS = 50;
+   public static int CENTER_CHARS = 20;
+   private static final long serialVersionUID = -8095192709934629794L;
+   protected final Object sync;
+   protected final Component parent;
    private String wS;
    private String cS;
    private String eS;
@@ -41,79 +33,40 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
    private final int[] eS_bounds;
    private int oldWidth;
 
-   public ProgressBar(JFrame frame, Downloader downloader, Settings language) {
-      this.instance = this;
+   public ProgressBar(Component parentComp) {
       this.sync = new Object();
       this.wS_bounds = new int[BOUNDS_SIZE];
       this.cS_bounds = new int[BOUNDS_SIZE];
       this.eS_bounds = new int[BOUNDS_SIZE];
-      this.parent = frame;
-      this.parent.addComponentListener(new ComponentListener() {
-         public void componentResized(ComponentEvent e) {
-            ProgressBar.this.instance.setPreferredSize(new Dimension(ProgressBar.this.parent.getWidth(), ProgressBar.DEFAULT_HEIGHT));
-         }
+      this.parent = parentComp;
+      if (this.parent != null) {
+         this.parent.addComponentListener(new ComponentListener() {
+            public void componentResized(ComponentEvent e) {
+               ProgressBar.this.updateSize();
+            }
 
-         public void componentMoved(ComponentEvent e) {
-         }
+            public void componentMoved(ComponentEvent e) {
+            }
 
-         public void componentShown(ComponentEvent e) {
-         }
+            public void componentShown(ComponentEvent e) {
+            }
 
-         public void componentHidden(ComponentEvent e) {
-         }
-      });
-      if (language != null) {
-         this.lang = language;
+            public void componentHidden(ComponentEvent e) {
+            }
+         });
       }
 
-      if (downloader != null) {
-         this.listener = new DownloadListener() {
-            public void onDownloaderStart(Downloader d, int files) {
-               ProgressBar.this.instance.startProgress();
-               ProgressBar.this.setIndeterminate(true);
-               ProgressBar.this.setCenterString(ProgressBar.this.lang.get("progressBar.init"));
-               ProgressBar.this.setEastString(ProgressBar.this.lang.get("progressBar.downloading" + (files == 1 ? "-one" : ""), "0", files));
-            }
-
-            public void onDownloaderAbort(Downloader d) {
-               ProgressBar.this.instance.stopProgress();
-            }
-
-            public void onDownloaderComplete(Downloader d) {
-               ProgressBar.this.instance.stopProgress();
-            }
-
-            public void onDownloaderError(Downloader d, Downloadable file, Throwable error) {
-            }
-
-            public void onDownloaderProgress(Downloader d, int progress, double speed) {
-               if (progress > 0) {
-                  if (ProgressBar.this.getValue() > progress) {
-                     return;
-                  }
-
-                  ProgressBar.this.setIndeterminate(false);
-                  ProgressBar.this.setValue(progress);
-                  ProgressBar.this.setCenterString(progress + "%");
-               }
-
-            }
-
-            public void onDownloaderFileComplete(Downloader d, Downloadable file) {
-               ProgressBar.this.setIndeterminate(false);
-               ProgressBar.this.setWestString(ProgressBar.this.lang.get("progressBar.completed", "0", file.getFilename()));
-               ProgressBar.this.setEastString(ProgressBar.this.lang.get("progressBar.remaining", "0", d.getRemaining()));
-            }
-         };
-         downloader.addListener(this.listener);
-      }
-
-      this.setPreferredSize(new Dimension(this.parent.getWidth(), DEFAULT_HEIGHT));
-      this.stopProgress();
+      this.setOpaque(false);
    }
 
-   public ProgressBar(TLauncherFrame f) {
-      this(f, f.tlauncher.getDownloader(), f.lang);
+   public ProgressBar() {
+      this((Component)null);
+   }
+
+   private void updateSize() {
+      if (this.parent != null) {
+         this.setPreferredSize(new Dimension(this.parent.getWidth(), DEFAULT_HEIGHT));
+      }
    }
 
    public void setStrings(String west, String center, String east, boolean acceptNull) {
@@ -187,6 +140,7 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
    public void startProgress() {
       synchronized(this.sync) {
          this.clearProgress();
+         this.updateSize();
          this.setVisible(true);
       }
    }
@@ -198,28 +152,7 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
       }
    }
 
-   public void update(Graphics g) {
-      synchronized(this.sync) {
-         super.update(g);
-      }
-
-      this.paint(g);
-   }
-
-   public void paint(Graphics g) {
-      synchronized(this.sync) {
-         this.draw(g);
-      }
-   }
-
    private void draw(Graphics g) {
-      try {
-         super.paint(g);
-      } catch (Exception var9) {
-         U.log("Error paining progress bar:", var9.toString());
-         return;
-      }
-
       boolean drawWest = this.wS != null;
       boolean drawCenter = this.cS != null;
       boolean drawEast = this.eS != null;
@@ -268,7 +201,29 @@ public class ProgressBar extends JProgressBar implements LocalizableComponent {
       }
    }
 
-   public void updateLocale() {
-      this.repaint();
+   public void update(Graphics g) {
+      synchronized(this.sync) {
+         try {
+            super.update(g);
+         } catch (Exception var4) {
+            U.log("Error updating progress bar:", var4.toString());
+            return;
+         }
+
+         this.draw(g);
+      }
+   }
+
+   public void paint(Graphics g) {
+      synchronized(this.sync) {
+         try {
+            super.paint(g);
+         } catch (Exception var4) {
+            U.log("Error paining progress bar:", var4.toString());
+            return;
+         }
+
+         this.draw(g);
+      }
    }
 }

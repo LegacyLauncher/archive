@@ -1,13 +1,13 @@
 package com.turikhay.tlauncher.ui.settings;
 
-import com.turikhay.tlauncher.settings.GlobalSettings;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
 import javax.swing.BoxLayout;
 
 public class ConsoleSettingsPanel extends BlockablePanel implements SettingsField {
    private static final long serialVersionUID = -9108973380914818944L;
    private final String path = "gui.console";
-   private final String defaultValue = GlobalSettings.ConsoleType.getDefault().toString();
+   private final String defaultValue = Configuration.ConsoleType.getDefault().toString();
    final SettingsRadioGroup consoleGroup;
 
    ConsoleSettingsPanel(SettingsForm sf) {

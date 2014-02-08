@@ -1,58 +1,34 @@
 package com.turikhay.tlauncher.ui.loc;
 
-import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.tlauncher.ui.TransparentButton;
 
-public class LocalizableTransparentButton extends TransparentButton {
-   private static final long serialVersionUID = 1L;
-   static Settings l;
+public class LocalizableTransparentButton extends TransparentButton implements LocalizableComponent {
+   private static final long serialVersionUID = -1357535949476677157L;
    private String path;
-   private String r0;
-   private String r1;
-   private Object w0;
-   private Object w1;
+   private String[] variables;
 
-   public LocalizableTransparentButton(String path) {
-      this.setText(path);
+   public LocalizableTransparentButton(String path, Object... vars) {
+      this.setOpaque(false);
+      this.setText(path, vars);
    }
 
-   public LocalizableTransparentButton(String path, String replace, Object with) {
-      this.setText(path, replace, with);
+   public void setText(String path, Object... vars) {
+      this.path = path;
+      this.variables = Localizable.checkVariables(vars);
+      String value = Localizable.get(path);
+
+      for(int i = 0; i < this.variables.length; ++i) {
+         value = value.replace("%" + i, this.variables[i]);
+      }
+
+      super.setText(value);
    }
 
    public void setText(String path) {
-      this.path = path;
-      super.setText(l == null ? path : l.get(path));
-   }
-
-   public void setText(String path, String replace, Object with) {
-      this.path = path;
-      this.u();
-      this.r0 = replace;
-      this.w0 = with;
-      super.setText(l == null ? path : l.get(path, replace, with));
-   }
-
-   public void setText(String path, String replace0, Object with0, String replace1, Object with1) {
-      this.path = path;
-      this.u();
-      this.r0 = replace0;
-      this.w0 = with0;
-      this.r1 = replace1;
-      this.w1 = with1;
-      super.setText(l == null ? path : l.get(path, replace0, with0, replace1, with1));
-   }
-
-   public String getLangPath() {
-      return this.path;
+      this.setText(path, Localizable.EMPTY_VARS);
    }
 
    public void updateLocale() {
-      this.setText(this.path, this.r0, this.w0, this.r1, this.w1);
-   }
-
-   private void u() {
-      this.r0 = this.r1 = null;
-      this.w0 = this.w1 = null;
+      this.setText(this.path, this.variables);
    }
 }

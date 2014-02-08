@@ -214,6 +214,18 @@ public class VersionManager {
       this.asyncRefresh(true);
    }
 
+   public void updateVersionList() {
+      synchronized(this.versionRefreshes) {
+         Iterator var3 = this.refreshedListeners.iterator();
+
+         while(var3.hasNext()) {
+            RefreshedListener listener = (RefreshedListener)var3.next();
+            listener.onVersionsRefreshed(this);
+         }
+
+      }
+   }
+
    public List getVersions() {
       return this.getVersions((VersionFilter)null);
    }

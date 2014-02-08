@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.updater;
 
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.SimpleConfiguration;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.util.U;
 import java.net.URI;
@@ -33,15 +33,15 @@ public class Ad {
       this(id, title, text, textarea, U.makeURI(uri));
    }
 
-   Ad(Settings settings) {
+   Ad(SimpleConfiguration settings) {
       if (settings == null) {
          throw new NullPointerException("Settings is NULL!");
       } else {
          this.id = settings.getInteger("ad.id");
-         this.title = settings.nget("ad.title");
-         this.text = settings.nget("ad.text");
-         this.textarea = settings.nget("ad.textarea");
-         this.uri = U.makeURI(settings.nget("ad.url"));
+         this.title = settings.get("ad.title");
+         this.text = settings.get("ad.text");
+         this.textarea = settings.get("ad.textarea");
+         this.uri = U.makeURI(settings.get("ad.url"));
       }
    }
 

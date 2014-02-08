@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import java.awt.Toolkit;
@@ -19,7 +19,7 @@ public class TextPopup extends MouseAdapter implements LocalizableComponent {
    private static String COPY;
    private static String SELECTALL;
    private static String PASTE;
-   static Settings l;
+   static LangConfiguration l;
 
    public TextPopup() {
       this.updateLocale();

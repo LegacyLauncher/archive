@@ -92,7 +92,7 @@ public class MinecraftUtil {
          boolean snaps = t.getSettings().getBoolean("minecraft.versions.snapshots");
          boolean beta = t.getSettings().getBoolean("minecraft.versions.beta");
          boolean alpha = t.getSettings().getBoolean("minecraft.versions.alpha");
-         boolean cheats = t.getSettings().getBoolean("minecraft.versions.cheats");
+         boolean modified = t.getSettings().getBoolean("minecraft.versions.modified");
          boolean old = t.getSettings().getBoolean("minecraft.versions.old");
          if (!snaps) {
             r.excludeType(ReleaseType.SNAPSHOT);
@@ -106,8 +106,8 @@ public class MinecraftUtil {
             r.excludeType(ReleaseType.OLD_ALPHA);
          }
 
-         if (!cheats) {
-            r.excludeType(ReleaseType.CHEAT);
+         if (!modified) {
+            r.excludeType(ReleaseType.MODIFIED);
          }
 
          if (!old) {

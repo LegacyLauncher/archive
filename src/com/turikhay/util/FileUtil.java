@@ -229,6 +229,14 @@ public class FileUtil {
 
    }
 
+   public static void deleteFile(String path) {
+      File file = new File(path);
+      if (!file.delete()) {
+         file.deleteOnExit();
+      }
+
+   }
+
    public static File makeTemp(File file) throws IOException {
       createFile(file);
       file.deleteOnExit();

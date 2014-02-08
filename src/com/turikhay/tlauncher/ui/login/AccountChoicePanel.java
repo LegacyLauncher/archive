@@ -13,6 +13,7 @@ import com.turikhay.tlauncher.ui.block.BlockablePanel;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.listeners.AuthUIListener;
 import com.turikhay.tlauncher.ui.loc.Localizable;
+import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import java.awt.Choice;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -24,7 +25,7 @@ import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class AccountChoicePanel extends BlockablePanel implements ProfileListener {
+public class AccountChoicePanel extends BlockablePanel implements ProfileListener, LocalizableComponent {
    private static final long serialVersionUID = -8152546672896025263L;
    private static final String EMPTY = "empty";
    private final LoginForm lf;
@@ -173,5 +174,9 @@ public class AccountChoicePanel extends BlockablePanel implements ProfileListene
          this.editAccounts.setEnabled(true);
       }
 
+   }
+
+   public void updateLocale() {
+      this.onAccountsRefreshed(this.pm.getAuthDatabase());
    }
 }

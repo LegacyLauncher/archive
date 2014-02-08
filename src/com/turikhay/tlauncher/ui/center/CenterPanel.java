@@ -1,17 +1,19 @@
 package com.turikhay.tlauncher.ui.center;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.Del;
 import com.turikhay.tlauncher.ui.awt.UnmodifiableInsets;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.RenderingHints;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -26,11 +28,11 @@ public class CenterPanel extends BlockablePanel {
    public static final Insets smallSquareInsets = new UnmodifiableInsets(7, 7, 7, 7);
    private final Insets insets;
    private final CenterPanelTheme theme;
-   protected final JPanel error;
-   private final LocalizableLabel errorLabel;
+   protected final JPanel messagePanel;
+   protected final LocalizableLabel messageLabel;
    public final TLauncher tlauncher;
-   public final GlobalSettings global;
-   public final Settings lang;
+   public final Configuration global;
+   public final LangConfiguration lang;
 
    public CenterPanel() {
       this((CenterPanelTheme)null, (Insets)null);
@@ -51,12 +53,11 @@ public class CenterPanel extends BlockablePanel {
       this.setLayout(new BoxLayout(this, 3));
       this.setBackground(theme.getPanelBackground());
       this.setOpaque(false);
-      this.errorLabel = new LocalizableLabel(" ");
-      this.errorLabel.setFont(this.getFont().deriveFont(1));
-      this.errorLabel.setForeground(theme.getFailure());
-      this.errorLabel.setVerticalAlignment(0);
-      this.errorLabel.setHorizontalTextPosition(0);
-      this.error = sepPan(this.errorLabel);
+      this.messageLabel = new LocalizableLabel("  ");
+      this.messageLabel.setFont(this.getFont().deriveFont(1));
+      this.messageLabel.setVerticalAlignment(0);
+      this.messageLabel.setHorizontalTextPosition(0);
+      this.messagePanel = sepPan(new FlowLayout(), this.messageLabel);
       this.add(Box.createVerticalGlue());
    }
 
@@ -97,21 +98,32 @@ public class CenterPanel extends BlockablePanel {
    }
 
    public boolean setError(String message) {
-      this.errorLabel.setText(message != null && message.length() <= 0 ? message : " ");
+      this.messageLabel.setForeground(this.theme.getFailure());
+      this.messageLabel.setText(message != null && message.length() != 0 ? message : " ");
       return false;
    }
 
-   public static JPanel sepPan(Component... components) {
-      BlockablePanel panel = new BlockablePanel(new GridLayout(0, 1));
-      panel.setOpaque(false);
-      Component[] var5 = components;
-      int var4 = components.length;
+   public boolean setMessage(String message) {
+      this.messageLabel.setForeground(this.theme.getSuccess());
+      this.messageLabel.setText(message != null && message.length() != 0 ? message : " ");
+      return true;
+   }
 
-      for(int var3 = 0; var3 < var4; ++var3) {
-         Component comp = var5[var3];
+   public static JPanel sepPan(LayoutManager manager, Component... components) {
+      BlockablePanel panel = new BlockablePanel(manager);
+      panel.setOpaque(false);
+      Component[] var6 = components;
+      int var5 = components.length;
+
+      for(int var4 = 0; var4 < var5; ++var4) {
+         Component comp = var6[var4];
          panel.add(comp);
       }
 
       return panel;
+   }
+
+   public static JPanel sepPan(Component... components) {
+      return sepPan(new GridLayout(0, 1), components);
    }
 }

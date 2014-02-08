@@ -1,10 +1,10 @@
 package com.turikhay.tlauncher.updater;
 
 import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.configuration.SimpleConfiguration;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.exceptions.TLauncherException;
-import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
@@ -24,7 +24,7 @@ public class Updater {
    private final Downloader d;
    private List listeners;
    private Update found;
-   private Settings parsed;
+   private SimpleConfiguration parsed;
    private Updater.UpdaterState state;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$updater$PackageType;
@@ -88,9 +88,9 @@ public class Updater {
             switch(code) {
             case 200:
                InputStream is = connection.getInputStream();
-               this.parsed = new Settings(is);
+               this.parsed = new SimpleConfiguration(is);
                connection.disconnect();
-               Update update = new Update(this.d, this.parsed);
+               Update update = new Update(this, this.d, this.parsed);
                double version = update.getVersion();
                log("Success!");
                if (TLauncher.getVersion() > version) {
@@ -137,7 +137,7 @@ public class Updater {
       return this.found;
    }
 
-   public Settings getParsed() {
+   public SimpleConfiguration getParsed() {
       return this.parsed;
    }
 
@@ -179,7 +179,7 @@ public class Updater {
 
          while(var4.hasNext()) {
             UpdaterListener l = (UpdaterListener)var4.next();
-            l.onUpdateFound(this, u);
+            l.onUpdateFound(u);
          }
 
       }

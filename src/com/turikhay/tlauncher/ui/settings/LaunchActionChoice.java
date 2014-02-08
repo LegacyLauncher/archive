@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.settings.GlobalSettings;
-import com.turikhay.tlauncher.settings.Settings;
+import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import java.awt.Choice;
 import java.util.Iterator;
@@ -14,7 +14,7 @@ public class LaunchActionChoice extends Choice implements LocalizableComponent, 
    private static final long serialVersionUID = 7116359806652349614L;
    private Map values = new LinkedHashMap();
    private final SettingsForm sf;
-   private Settings l;
+   private LangConfiguration l;
    private boolean saveable;
 
    LaunchActionChoice(SettingsForm settingsform) {
@@ -25,13 +25,13 @@ public class LaunchActionChoice extends Choice implements LocalizableComponent, 
 
    private void createList() {
       this.removeAll();
-      GlobalSettings.ActionOnLaunch[] available = GlobalSettings.ActionOnLaunch.values();
+      Configuration.ActionOnLaunch[] available = Configuration.ActionOnLaunch.values();
       String current = TLauncher.getInstance().getSettings().getActionOnLaunch().toString();
-      GlobalSettings.ActionOnLaunch[] var6 = available;
+      Configuration.ActionOnLaunch[] var6 = available;
       int var5 = available.length;
 
       for(int var4 = 0; var4 < var5; ++var4) {
-         GlobalSettings.ActionOnLaunch al = var6[var4];
+         Configuration.ActionOnLaunch al = var6[var4];
          String value = al.toString();
          String key = this.l.get("settings.launch-action." + value);
          this.values.put(key, value);
@@ -53,7 +53,7 @@ public class LaunchActionChoice extends Choice implements LocalizableComponent, 
 
    public void setValue(String id) {
       if (id == null) {
-         id = GlobalSettings.ActionOnLaunch.getDefault().toString();
+         id = Configuration.ActionOnLaunch.getDefault().toString();
       }
 
       Iterator var3 = this.values.entrySet().iterator();

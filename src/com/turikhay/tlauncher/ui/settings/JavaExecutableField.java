@@ -14,7 +14,7 @@ public class JavaExecutableField extends CheckableTextField implements SettingsF
    }
 
    public void setText(String dir) {
-      if (dir == null || !(new File(dir)).isFile()) {
+      if (dir == null || !(new File(dir)).exists()) {
          dir = OperatingSystem.getCurrentPlatform().getJavaDir();
       }
 
@@ -30,11 +30,11 @@ public class JavaExecutableField extends CheckableTextField implements SettingsF
    }
 
    public boolean isValueValid() {
-      return this.getValue() != null;
+      return this.check();
    }
 
    public void setToDefault() {
-      this.setValue((String)null);
+      this.setValue(OperatingSystem.getCurrentPlatform().getJavaDir());
    }
 
    public boolean isSaveable() {

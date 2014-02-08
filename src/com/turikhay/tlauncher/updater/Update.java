@@ -2,10 +2,10 @@ package com.turikhay.tlauncher.updater;
 
 import com.turikhay.tlauncher.Bootstrapper;
 import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.configuration.SimpleConfiguration;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.DownloadableHandler;
-import com.turikhay.tlauncher.settings.Settings;
 import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,10 +19,15 @@ import java.util.List;
 import java.util.Map;
 
 public class Update {
+   public static final int NONE = 0;
+   public static final int DOWNLOADING = 1;
+   public static final int DOWNLOADED = 2;
+   public static final int UPDATING = 3;
    private int step;
    private double version;
    private String description;
    private Map links = new HashMap();
+   private final Updater upd;
    private final Downloader d;
    private boolean isDownloading;
    private List listeners = Collections.synchronizedList(new ArrayList());
@@ -35,38 +40,48 @@ public class Update {
       this.listeners.remove(l);
    }
 
-   Update(Downloader d, double version, String description) {
-      if (d == null) {
+   Update(Updater upd, Downloader d, double version, String description) {
+      if (upd == null) {
+         throw new NullPointerException("Updater is NULL!");
+      } else if (d == null) {
          throw new NullPointerException("Downloader is NULL!");
       } else {
+         this.upd = upd;
          this.d = d;
          this.setVersion(version);
          this.setDescription(description);
       }
    }
 
-   Update(Downloader d, Settings settings) {
-      if (d == null) {
+   Update(Updater upd, Downloader d, SimpleConfiguration settings) {
+      if (upd == null) {
+         throw new NullPointerException("Updater is NULL!");
+      } else if (d == null) {
          throw new NullPointerException("Downloader is NULL!");
       } else if (settings == null) {
          throw new NullPointerException("Settings is NULL!");
       } else {
+         this.upd = upd;
          this.d = d;
          this.setVersion(settings.getDouble("latest"));
-         this.setDescription(settings.nget("description"));
-         Iterator var4 = settings.getKeys().iterator();
+         this.setDescription(settings.get("description"));
+         Iterator var5 = settings.getKeys().iterator();
 
-         while(var4.hasNext()) {
-            String key = (String)var4.next();
+         while(var5.hasNext()) {
+            String key = (String)var5.next();
 
             try {
-               this.links.put(PackageType.valueOf(key.toUpperCase()), U.makeURI(settings.nget(key)));
-            } catch (Exception var6) {
+               this.links.put(PackageType.valueOf(key.toUpperCase()), U.makeURI(settings.get(key)));
+            } catch (Exception var7) {
             }
          }
 
          log("An update available for packages:", this.links.keySet());
       }
+   }
+
+   public Updater getUpdater() {
+      return this.upd;
    }
 
    public URI getDownloadLinkFor(PackageType pt) {
@@ -111,7 +126,7 @@ public class Update {
    }
 
    private void downloadFor_(PackageType pt, boolean async) throws Exception {
-      if (this.step > Update.Step.NONE.ordinal()) {
+      if (this.step > 0) {
          throw new Update.IllegalStepException(this.step);
       } else {
          URI download_link = this.getDownloadLinkFor(pt);
@@ -127,19 +142,19 @@ public class Update {
 
                public void onCompleteError() {
                   Update.this.isDownloading = false;
-                  Update.this.step = Update.Step.NONE.ordinal();
+                  Update.this.step = 0;
                   Update.this.onUpdateDownloadError(downloadable.getError());
                }
 
                public void onComplete() {
                   Update.this.isDownloading = false;
-                  Update.this.step = Update.Step.DOWNLOADED.ordinal();
+                  Update.this.step = 2;
                   Update.this.onUpdateReady();
                }
 
                public void onAbort() {
                   Update.this.isDownloading = false;
-                  Update.this.step = Update.Step.NONE.ordinal();
+                  Update.this.step = 0;
                }
             });
             this.onUpdateDownloading();
@@ -170,7 +185,7 @@ public class Update {
    }
 
    private void applyFor_(PackageType pt) throws Exception {
-      if (this.step < Update.Step.DOWNLOADED.ordinal()) {
+      if (this.step < 2) {
          throw new Update.IllegalStepException(this.step);
       } else {
          log("Saving update... Launcher will be reopened.");
@@ -306,17 +321,6 @@ public class Update {
 
    private static String getMessageForStep(int step, String description) {
       String r = "Illegal action on step #" + step;
-      Update.Step[] var6;
-      int var5 = (var6 = Update.Step.values()).length;
-
-      for(int var4 = 0; var4 < var5; ++var4) {
-         Update.Step curstep = var6[var4];
-         if (curstep.ordinal() == step) {
-            r = curstep.toString();
-            break;
-         }
-      }
-
       if (description != null) {
          r = r + " : " + description;
       }
@@ -334,12 +338,5 @@ public class Update {
       IllegalStepException(int step) {
          super(Update.getMessageForStep(step, (String)null));
       }
-   }
-
-   public static enum Step {
-      NONE,
-      DOWNLOADING,
-      DOWNLOADED,
-      UPDATING;
    }
 }
