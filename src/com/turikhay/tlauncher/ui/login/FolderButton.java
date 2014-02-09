@@ -3,7 +3,9 @@ package com.turikhay.tlauncher.ui.login;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.ImageButton;
+import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,6 +33,7 @@ public class FolderButton extends ImageButton {
    }
 
    public void openFolder() {
+      U.log(Blocker.getBlockList(this.lf));
       AsyncThread.execute(new Runnable() {
          public void run() {
             File dir = MinecraftUtil.getWorkingDirectory();

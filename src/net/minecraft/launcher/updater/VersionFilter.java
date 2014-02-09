@@ -74,7 +74,7 @@ public class VersionFilter {
          return true;
       } else {
          Date releaseTime = v.getReleaseTime();
-         boolean old = !v.getType().isOld() && releaseTime != null && v.getReleaseTime().before(this.oldMarker) && v.getReleaseTime().getTime() > 0L;
+         boolean old = !v.getType().isOld() && releaseTime != null && releaseTime.before(this.oldMarker) && releaseTime.getTime() > 0L;
          if (old) {
             return this.types.contains(ReleaseType.OLD);
          } else {

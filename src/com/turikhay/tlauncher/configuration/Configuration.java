@@ -29,7 +29,7 @@ public class Configuration extends SimpleConfiguration {
    private List supportedLocales;
    private boolean firstRun;
 
-   private Configuration(URL url, OptionSet set) {
+   private Configuration(URL url, OptionSet set) throws IOException {
       super(url);
       this.init(set);
    }
@@ -53,6 +53,10 @@ public class Configuration extends SimpleConfiguration {
       Configuration config = new Configuration(file, set);
       config.firstRun = firstRun;
       return config;
+   }
+
+   public static Configuration createConfiguration() throws IOException {
+      return createConfiguration((OptionSet)null);
    }
 
    private void init(OptionSet set) {

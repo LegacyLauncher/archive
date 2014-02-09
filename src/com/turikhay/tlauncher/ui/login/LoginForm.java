@@ -5,8 +5,6 @@ import com.turikhay.tlauncher.minecraft.Crash;
 import com.turikhay.tlauncher.minecraft.CrashSignature;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
-import com.turikhay.tlauncher.minecraft.auth.Authenticator;
-import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.MainPane;
 import com.turikhay.tlauncher.ui.block.Blockable;
@@ -28,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import net.minecraft.launcher.OperatingSystem;
 
-public class LoginForm extends CenterPanel implements MinecraftLauncherListener, AuthenticatorListener, UpdaterListener, UpdateListener {
+public class LoginForm extends CenterPanel implements MinecraftLauncherListener, UpdaterListener, UpdateListener {
    private static final long serialVersionUID = 6768252827144456302L;
    final String LAUNCH_BLOCK = "launch";
    final String AUTH_BLOCK = "auth";
@@ -58,10 +56,11 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       this.versionchoice = new VersionChoicePanel(this, version);
       this.checkbox = new CheckBoxPanel(this, auto, console);
       this.buttons = new ButtonPanel(this);
-      this.addListener(this.versionchoice);
       this.addListener(this.autologin);
       this.addListener(this.checkbox);
+      this.addListener(this.versionchoice);
       this.addListener(this.settings);
+      this.addListener(this.accountchoice);
       this.add(this.messagePanel);
       this.add(sepPan(new Component[]{this.accountchoice, this.versionchoice}));
       this.add(this.del(1));
@@ -79,6 +78,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    }
 
    public void callLogin() {
+      U.log("Blocked: ", Blocker.getBlockList(this));
       if (!Blocker.isBlocked(this)) {
          if (!this.accountchoice.waitOnLogin()) {
             this.runLogin();
@@ -90,18 +90,19 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       this.defocus();
       U.log("Loggining in...");
       if (!this.listenerOnLogin()) {
-         U.log("Login cancelled");
+         this.cancelLogin();
       } else {
          this.save();
          this.tlauncher.launch(this, this.checkbox.getForceUpdate());
-         this.block("launch");
+         Blocker.block((Blockable)this, (Object)"launch");
       }
    }
 
    public void cancelLogin() {
       this.defocus();
-      U.log("cancellogin");
       this.unblock("launch");
+      this.listenerOnFail();
+      U.log("Login cancelled");
    }
 
    void setAutoLogin(boolean enabled) {
@@ -168,14 +169,14 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    }
 
    public void onMinecraftCheck() {
-      this.block("launch");
+      Blocker.block((Object)"launch", (Blockable[])());
    }
 
    public void onMinecraftPrepare() {
    }
 
    public void onMinecraftLaunch() {
-      this.unblock("launch");
+      this.unblock(Blocker.UNIVERSAL_UNBLOCK);
       this.listenerOnSuccess();
       this.tlauncher.hide();
       this.versionchoice.asyncRefresh();
@@ -266,28 +267,16 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
       }
    }
 
-   public void onAuthPassing(Authenticator auth) {
-      this.block("auth");
-   }
-
-   public void onAuthPassingError(Authenticator auth, Throwable e) {
-      this.unblock("auth");
-   }
-
-   public void onAuthPassed(Authenticator auth) {
-      this.unblock("auth");
-   }
-
    public void onUpdateError(Update u, Throwable e) {
-      this.unblock("update");
+      Blocker.unblock((Blockable)this, (Object)"update");
    }
 
    public void onUpdateDownloading(Update u) {
-      this.block("update");
+      Blocker.block((Blockable)this, (Object)"update");
    }
 
    public void onUpdateDownloadError(Update u, Throwable e) {
-      this.unblock("update");
+      Blocker.unblock((Blockable)this, (Object)"update");
    }
 
    public void onUpdateReady(Update u) {
@@ -308,7 +297,7 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
    public void onUpdateFound(Update upd) {
       if (Updater.isAutomode()) {
          upd.addListener(this);
-         this.block("update");
+         Blocker.block((Blockable)this, (Object)"update");
       }
    }
 

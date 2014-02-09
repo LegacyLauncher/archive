@@ -25,7 +25,7 @@ import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class AccountChoicePanel extends BlockablePanel implements ProfileListener, LocalizableComponent {
+public class AccountChoicePanel extends BlockablePanel implements ProfileListener, LocalizableComponent, LoginListener {
    private static final long serialVersionUID = -8152546672896025263L;
    private static final String EMPTY = "empty";
    private final LoginForm lf;
@@ -67,14 +67,14 @@ public class AccountChoicePanel extends BlockablePanel implements ProfileListene
       this.pm.addListener(this);
       this.listener = new AuthUIListener(new AuthenticatorListener() {
          public void onAuthPassing(Authenticator auth) {
-            Blocker.block((Blockable)AccountChoicePanel.this.lf, (Object)Blocker.WEAK_BLOCK);
+            Blocker.block((Blockable)AccountChoicePanel.this.lf, (Object)"AUTH");
          }
 
          public void onAuthPassingError(Authenticator auth, Throwable e) {
             if (e.getCause() instanceof IOException) {
                AccountChoicePanel.this.lf.runLogin();
             } else {
-               Blocker.unblock((Blockable)AccountChoicePanel.this.lf, (Object)Blocker.WEAK_BLOCK);
+               Blocker.unblock((Blockable)AccountChoicePanel.this.lf, (Object)"AUTH");
             }
 
          }
@@ -178,5 +178,16 @@ public class AccountChoicePanel extends BlockablePanel implements ProfileListene
 
    public void updateLocale() {
       this.onAccountsRefreshed(this.pm.getAuthDatabase());
+   }
+
+   public boolean onLogin() {
+      return true;
+   }
+
+   public void onLoginFailed() {
+      Blocker.unblock((Blockable)this.lf, (Object)"AUTH");
+   }
+
+   public void onLoginSuccess() {
    }
 }

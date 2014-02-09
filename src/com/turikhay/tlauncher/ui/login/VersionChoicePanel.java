@@ -211,30 +211,32 @@ public class VersionChoicePanel extends BlockablePanel implements RefreshedListe
    }
 
    public boolean onLogin() {
-      if (!this.foundlocal) {
+      if (this.selected != null && this.foundlocal) {
+         if (this.selected.isOnRemote() && this.selected.isInstalled() && !this.selected.isUpToDate()) {
+            if (!Alert.showQuestion("versions.found-update", false)) {
+               try {
+                  CompleteVersion complete = this.vm.getLocalVersionList().getCompleteVersion(this.version);
+                  complete.setUpdatedTime(this.selected.getLatestVersion().getUpdatedTime());
+                  this.vm.getLocalVersionList().saveVersion(complete);
+               } catch (IOException var2) {
+                  Alert.showError("versions.found-update.error");
+               }
+
+               return true;
+            } else {
+               this.lf.checkbox.setForceUpdate(true);
+               return true;
+            }
+         } else {
+            return true;
+         }
+      } else {
          this.refresh();
          if (!this.foundlocal) {
             Alert.showError("versions.notfound");
          }
 
          return false;
-      } else if (this.selected.isOnRemote() && this.selected.isInstalled() && !this.selected.isUpToDate()) {
-         if (!Alert.showQuestion("versions.found-update", false)) {
-            try {
-               CompleteVersion complete = this.vm.getLocalVersionList().getCompleteVersion(this.version);
-               complete.setUpdatedTime(this.selected.getLatestVersion().getUpdatedTime());
-               this.vm.getLocalVersionList().saveVersion(complete);
-            } catch (IOException var2) {
-               Alert.showError("versions.found-update.error");
-            }
-
-            return true;
-         } else {
-            this.lf.checkbox.setForceUpdate(true);
-            return true;
-         }
-      } else {
-         return true;
       }
    }
 
