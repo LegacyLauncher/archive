@@ -80,7 +80,7 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
       this.setEastString(path, true, vars);
    }
 
-   public void setStrings(String west, String center, String east, boolean acceptNull, boolean saveVars) {
+   public void setStrings(String west, String center, String east, boolean acceptNull, boolean repaint, boolean saveVars) {
       if (acceptNull || west != null) {
          this.setWestString(west, false, (Object[])(saveVars ? this.westVars : Localizable.EMPTY_VARS));
       }
@@ -96,8 +96,8 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
       this.repaint();
    }
 
-   public void setStrings(String west, String center, String east, boolean acceptNull) {
-      this.setStrings(west, center, east, acceptNull, false);
+   public void setStrings(String west, String center, String east, boolean acceptNull, boolean repaint) {
+      this.setStrings(west, center, east, acceptNull, repaint, false);
    }
 
    public void updateLocale() {

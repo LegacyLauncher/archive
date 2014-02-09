@@ -29,15 +29,9 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.properties = new Properties();
    }
 
-   public SimpleConfiguration(InputStream stream) {
+   public SimpleConfiguration(InputStream stream) throws IOException {
       this();
-
-      try {
-         loadFromStream(this.properties, stream);
-      } catch (IOException var3) {
-         this.log("Cannot load from stream:", var3, "Creating empty config");
-      }
-
+      loadFromStream(this.properties, stream);
       this.input = stream;
    }
 
@@ -46,22 +40,16 @@ public class SimpleConfiguration implements AbstractConfiguration {
 
       try {
          loadFromFile(this.properties, file);
-      } catch (IOException var3) {
-         this.log("Cannot load from stream:", var3, "Creating empty config");
+      } catch (Exception var3) {
+         this.log("Error loading config from file:", var3);
       }
 
       this.input = file;
    }
 
-   public SimpleConfiguration(URL url) {
+   public SimpleConfiguration(URL url) throws IOException {
       this();
-
-      try {
-         loadFromURL(this.properties, url);
-      } catch (IOException var3) {
-         this.log("Cannot load from stream:", var3, "Creating empty config");
-      }
-
+      loadFromURL(this.properties, url);
       this.input = url;
    }
 

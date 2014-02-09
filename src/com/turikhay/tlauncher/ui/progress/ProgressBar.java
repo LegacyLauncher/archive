@@ -69,7 +69,7 @@ public class ProgressBar extends JProgressBar {
       }
    }
 
-   public void setStrings(String west, String center, String east, boolean acceptNull) {
+   public void setStrings(String west, String center, String east, boolean acceptNull, boolean repaint) {
       if (acceptNull || west != null) {
          this.setWestString(west, false);
       }
@@ -82,7 +82,10 @@ public class ProgressBar extends JProgressBar {
          this.setEastString(east, false);
       }
 
-      this.repaint();
+      if (repaint) {
+         this.repaint();
+      }
+
    }
 
    public void setWestString(String string, boolean update) {
@@ -128,28 +131,20 @@ public class ProgressBar extends JProgressBar {
    }
 
    public void clearProgress() {
-      synchronized(this.sync) {
-         this.setIndeterminate(false);
-         this.setValue(0);
-         this.setWestString((String)null, false);
-         this.setCenterString((String)null, false);
-         this.setEastString((String)null, false);
-      }
+      this.setIndeterminate(false);
+      this.setValue(0);
+      this.setStrings((String)null, (String)null, (String)null, false, false);
    }
 
    public void startProgress() {
-      synchronized(this.sync) {
-         this.clearProgress();
-         this.updateSize();
-         this.setVisible(true);
-      }
+      this.clearProgress();
+      this.updateSize();
+      this.setVisible(true);
    }
 
    public void stopProgress() {
-      synchronized(this.sync) {
-         this.setVisible(false);
-         this.clearProgress();
-      }
+      this.setVisible(false);
+      this.clearProgress();
    }
 
    private void draw(Graphics g) {
@@ -202,27 +197,27 @@ public class ProgressBar extends JProgressBar {
    }
 
    public void update(Graphics g) {
-      synchronized(this.sync) {
-         try {
-            super.update(g);
-         } catch (Exception var4) {
-            U.log("Error updating progress bar:", var4.toString());
-            return;
-         }
+      try {
+         super.update(g);
+      } catch (Exception var4) {
+         U.log("Error updating progress bar:", var4.toString());
+         return;
+      }
 
+      synchronized(this.sync) {
          this.draw(g);
       }
    }
 
    public void paint(Graphics g) {
-      synchronized(this.sync) {
-         try {
-            super.paint(g);
-         } catch (Exception var4) {
-            U.log("Error paining progress bar:", var4.toString());
-            return;
-         }
+      try {
+         super.paint(g);
+      } catch (Exception var4) {
+         U.log("Error paining progress bar:", var4.toString());
+         return;
+      }
 
+      synchronized(this.sync) {
          this.draw(g);
       }
    }

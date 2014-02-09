@@ -126,6 +126,8 @@ public class TLauncherFrame extends JFrame {
    public static void initFontSize() {
       try {
          UIDefaults defaults = UIManager.getDefaults();
+         int minSize = 12;
+         int maxSize = 14;
          Enumeration e = defaults.keys();
 
          while(e.hasMoreElements()) {
@@ -134,10 +136,10 @@ public class TLauncherFrame extends JFrame {
             if (value instanceof Font) {
                Font font = (Font)value;
                int size = font.getSize();
-               if (size < 12) {
-                  size = 12;
-               } else if (size > 14) {
-                  size = 14;
+               if (size < minSize) {
+                  size = minSize;
+               } else if (size > maxSize) {
+                  size = maxSize;
                }
 
                if (value instanceof FontUIResource) {
@@ -147,8 +149,8 @@ public class TLauncherFrame extends JFrame {
                }
             }
          }
-      } catch (Exception var6) {
-         log("Cannot change font sizes!", var6);
+      } catch (Exception var8) {
+         log("Cannot change font sizes!", var8);
       }
 
    }

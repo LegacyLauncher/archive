@@ -34,7 +34,10 @@ public class TLauncherNoGraphics implements MinecraftLauncherListener {
       this.args = this.t.getArguments();
       this.exit = !this.args.has("console");
       this.launcher = new MinecraftLauncher(this, this.d, this.g, this.vm, this.pm, this.args.has("force"), !this.args.has("nocheck"));
-      this.launcher.getConsole().setCloseAction(Console.CloseAction.EXIT);
+      if (this.launcher.getConsole() != null) {
+         this.launcher.getConsole().setCloseAction(Console.CloseAction.EXIT);
+      }
+
       this.launcher.start();
       U.log("Loaded NoGraphics mode.");
    }

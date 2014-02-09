@@ -22,7 +22,7 @@ public class LocalVersionList extends FileBasedVersionList {
 
    public LocalVersionList(File baseDirectory) throws IOException {
       if (baseDirectory == null) {
-         throw new IllegalArgumentException("Base directory is not a folder!");
+         throw new IllegalArgumentException("Base directory is NULL");
       } else {
          FileUtil.createFolder(baseDirectory);
          this.log(new Object[]{"Base directory:", baseDirectory.getAbsolutePath()});
