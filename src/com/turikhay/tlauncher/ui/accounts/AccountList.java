@@ -5,10 +5,11 @@ import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileListener;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.ui.ImageButton;
 import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
+import com.turikhay.tlauncher.ui.swing.AccountCellRenderer;
+import com.turikhay.tlauncher.ui.swing.ImageButton;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -42,6 +43,7 @@ public class AccountList extends CenterPanel {
       this.panel.add("North", this.label);
       this.model = new DefaultListModel();
       this.list = new JList(this.model);
+      this.list.setCellRenderer(new AccountCellRenderer(AccountCellRenderer.AccountCellType.EDITOR));
       this.list.addListSelectionListener(new ListSelectionListener() {
          public void valueChanged(ListSelectionEvent e) {
             Account account = (Account)AccountList.this.list.getSelectedValue();
@@ -109,9 +111,7 @@ public class AccountList extends CenterPanel {
          this.model.addElement(account);
       }
 
-      if (!this.model.isEmpty()) {
-         this.list.setSelectedIndex(0);
-      } else {
+      if (this.model.isEmpty()) {
          this.scene.handler.notifyEmpty();
       }
 

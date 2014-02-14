@@ -14,7 +14,15 @@ public abstract class LocalizableTextField extends ExtendedTextField implements 
    }
 
    public LocalizableTextField(CenterPanel panel, String placeholderPath) {
-      super(panel, placeholderPath, (String)null);
+      this(panel, placeholderPath, (String)null);
+   }
+
+   public LocalizableTextField(String placeholderPath) {
+      this((CenterPanel)null, placeholderPath, (String)null);
+   }
+
+   public LocalizableTextField() {
+      this((CenterPanel)null, (String)null, (String)null);
    }
 
    public void setPlaceholder(String placeholderPath) {

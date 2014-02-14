@@ -4,19 +4,18 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.minecraft.auth.Authenticator;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorException;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import java.io.IOException;
 
 public class AuthUIListener implements AuthenticatorListener {
    private final AuthenticatorListener listener;
+   private final boolean showErrorOnce;
+   private boolean errorShown;
 
-   public AuthUIListener(AuthenticatorListener listener) {
+   public AuthUIListener(boolean showErrorOnce, AuthenticatorListener listener) {
       this.listener = listener;
-   }
-
-   public AuthUIListener() {
-      this.listener = null;
+      this.showErrorOnce = showErrorOnce;
    }
 
    public void onAuthPassing(Authenticator auth) {
@@ -26,15 +25,11 @@ public class AuthUIListener implements AuthenticatorListener {
    }
 
    public void onAuthPassingError(Authenticator auth, Throwable e) {
-      this.onAuthPassingError(auth, e, true);
-   }
-
-   public void onAuthPassingError(Authenticator auth, Throwable e, boolean showError) {
       if (this.listener != null) {
          this.listener.onAuthPassingError(auth, e);
       }
 
-      if (showError) {
+      if (!this.showErrorOnce || !this.errorShown) {
          String langpath = "unknown";
          if (e instanceof AuthenticatorException) {
             AuthenticatorException ae = (AuthenticatorException)e;
@@ -43,6 +38,7 @@ public class AuthUIListener implements AuthenticatorListener {
          }
 
          Alert.showError(Localizable.get("auth.error.title"), Localizable.get("auth.error." + langpath), e);
+         this.errorShown = true;
       }
    }
 

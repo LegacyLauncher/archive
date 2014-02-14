@@ -2,8 +2,8 @@ package com.turikhay.tlauncher.ui.console;
 
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
-import com.turikhay.tlauncher.ui.TextPopup;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import com.turikhay.tlauncher.ui.swing.TextPopup;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import java.awt.BorderLayout;

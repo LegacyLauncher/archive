@@ -13,21 +13,17 @@ public class Blocker {
    public static final Object UNIVERSAL_UNBLOCK = "lol, nigga";
    public static final Object WEAK_BLOCK = "weak";
 
-   public static void add(Blockable blockable) {
+   private static void add(Blockable blockable) {
       if (blockable == null) {
          throw new NullPointerException();
-      } else if (blockMap.containsKey(blockable)) {
-         throw new IllegalArgumentException("Blockable is already added: " + blockable);
       } else {
          blockMap.put(blockable, Collections.synchronizedList(new ArrayList()));
       }
    }
 
-   public static void remove(Blockable blockable) {
+   public static void cleanUp(Blockable blockable) {
       if (blockable == null) {
          throw new NullPointerException();
-      } else if (!blockMap.containsKey(blockable)) {
-         throw new IllegalArgumentException("Blockable is not added: " + blockable);
       } else {
          blockMap.remove(blockable);
       }
@@ -45,9 +41,11 @@ public class Blocker {
       if (blockable != null) {
          if (reason == null) {
             throw new NullPointerException("Reason is NULL!");
-         } else if (!blockMap.containsKey(blockable)) {
-            throw new IllegalArgumentException("Blockable is not added: " + blockable);
          } else {
+            if (!blockMap.containsKey(blockable)) {
+               add(blockable);
+            }
+
             List reasons = (List)blockMap.get(blockable);
             if (!reasons.contains(reason)) {
                boolean blocked = !reasons.isEmpty();
@@ -80,6 +78,8 @@ public class Blocker {
          return false;
       } else if (reason == null) {
          throw new NullPointerException("Reason is NULL!");
+      } else if (!blockMap.containsKey(blockable)) {
+         return true;
       } else {
          List reasons = (List)blockMap.get(blockable);
          reasons.remove(reason);
@@ -128,7 +128,7 @@ public class Blocker {
       if (blockable == null) {
          throw new NullPointerException();
       } else if (!blockMap.containsKey(blockable)) {
-         throw new IllegalArgumentException("Blockable is not added: " + blockable);
+         return false;
       } else {
          return !((List)blockMap.get(blockable)).isEmpty();
       }
@@ -137,9 +137,11 @@ public class Blocker {
    public static List getBlockList(Blockable blockable) {
       if (blockable == null) {
          throw new NullPointerException();
-      } else if (!blockMap.containsKey(blockable)) {
-         throw new IllegalArgumentException("Blockable is not added: " + blockable);
       } else {
+         if (!blockMap.containsKey(blockable)) {
+            add(blockable);
+         }
+
          return Collections.unmodifiableList((List)blockMap.get(blockable));
       }
    }

@@ -5,8 +5,8 @@ import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.auth.Authenticator;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.accounts.helper.HelperState;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.listeners.AuthUIListener;
@@ -46,7 +46,7 @@ public class AccountHandler {
          }
       }
 
-      this.listener = new AuthUIListener(new AuthenticatorListener() {
+      this.listener = new AuthUIListener(false, new AuthenticatorListener() {
          public void onAuthPassing(Authenticator auth) {
             AccountHandler.this.block();
          }
@@ -77,9 +77,10 @@ public class AccountHandler {
          this.lastAccount = account;
          Blocker.unblock((Blockable)this.editor, (Object)"empty");
          this.editor.fill(account);
-         if (account != this.tempAccount) {
-            this.scene.getMainPane().defaultScene.loginForm.accountchoice.selectAccount(account);
+         if (!account.equals(this.tempAccount)) {
+            this.scene.getMainPane().defaultScene.loginForm.accounts.setAccount(this.lastAccount);
          }
+
       }
    }
 
@@ -87,8 +88,7 @@ public class AccountHandler {
       this.lastAccount = null;
       this.editor.clear();
       if (!this.list.model.isEmpty()) {
-         this.list.list.setSelectedIndex(0);
-         this.refreshEditor((Account)this.list.list.getSelectedValue());
+         this.list.list.setSelectedValue(this.lastAccount, true);
       }
 
    }
@@ -148,9 +148,9 @@ public class AccountHandler {
    }
 
    void registerTemp() {
-      this.scene.getMainPane().defaultScene.loginForm.accountchoice.fireUpdate(this.lastAccount.getUsername());
       if (this.tempAccount != null) {
          this.manager.getAuthDatabase().registerAccount(this.tempAccount);
+         this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount.getUsername());
          this.tempAccount = null;
       }
    }

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class Account {
    protected String username;
@@ -36,6 +37,10 @@ public class Account {
 
    public String getUsername() {
       return this.username;
+   }
+
+   public boolean hasUsername() {
+      return this.username != null;
    }
 
    public void setUsername(String username) {
@@ -230,6 +235,10 @@ public class Account {
 
    public String toString() {
       return this.username == null ? "..." : this.username + (this.displayName != null && this.hasLicense() ? " (" + this.displayName + ")" : "");
+   }
+
+   public static Account randomAccount() {
+      return new Account("random" + (new Random()).nextLong());
    }
 
    public static enum AccountType {

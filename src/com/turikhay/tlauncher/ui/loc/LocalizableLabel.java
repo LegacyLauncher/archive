@@ -1,14 +1,13 @@
 package com.turikhay.tlauncher.ui.loc;
 
-import javax.swing.JLabel;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 
-public class LocalizableLabel extends JLabel implements LocalizableComponent {
+public class LocalizableLabel extends ExtendedLabel implements LocalizableComponent {
    private static final long serialVersionUID = 7628068160047735335L;
    private String path;
    private String[] variables;
 
    public LocalizableLabel(String path, Object... vars) {
-      this.setOpaque(false);
       this.setText(path, vars);
    }
 

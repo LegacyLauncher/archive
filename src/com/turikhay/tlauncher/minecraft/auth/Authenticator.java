@@ -60,6 +60,36 @@ public class Authenticator {
       }
    }
 
+   public void pass(AuthenticatorListener l) {
+      if (l != null) {
+         l.onAuthPassing(this.instance);
+      }
+
+      try {
+         this.instance.pass();
+      } catch (Exception var3) {
+         this.log("Cannot authenticate:", var3);
+         if (l != null) {
+            l.onAuthPassingError(this.instance, var3);
+         }
+
+         return;
+      }
+
+      if (l != null) {
+         l.onAuthPassed(this.instance);
+      }
+
+   }
+
+   public void asyncPass(final AuthenticatorListener l) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Authenticator.this.pass(l);
+         }
+      });
+   }
+
    protected void passwordLogin() throws AuthenticatorException {
       this.log("Loggining in with password");
       AuthenticationRequest request = new AuthenticationRequest(this);
@@ -107,32 +137,6 @@ public class Authenticator {
       } else {
          throw new AuthenticatorException(result.getErrorMessage(), "internal");
       }
-   }
-
-   public void asyncPass(final AuthenticatorListener l) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            if (l != null) {
-               l.onAuthPassing(Authenticator.this.instance);
-            }
-
-            try {
-               Authenticator.this.instance.pass();
-            } catch (Exception var2) {
-               Authenticator.this.log("Cannot authenticate:", var2);
-               if (l != null) {
-                  l.onAuthPassingError(Authenticator.this.instance, var2);
-               }
-
-               return;
-            }
-
-            if (l != null) {
-               l.onAuthPassed(Authenticator.this.instance);
-            }
-
-         }
-      });
    }
 
    protected void log(Object... o) {

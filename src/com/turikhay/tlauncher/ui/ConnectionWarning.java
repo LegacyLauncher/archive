@@ -1,7 +1,9 @@
 package com.turikhay.tlauncher.ui;
 
 import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.images.ImageCache;
+import com.turikhay.tlauncher.ui.swing.ImagePanel;
 import com.turikhay.tlauncher.updater.Ad;
 import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.Updater;

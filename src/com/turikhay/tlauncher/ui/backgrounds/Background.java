@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.backgrounds;
 
-import com.turikhay.tlauncher.ui.AnimatedVisibility;
-import com.turikhay.tlauncher.ui.ExtendedLayeredPane;
 import com.turikhay.tlauncher.ui.MainPane;
+import com.turikhay.tlauncher.ui.swing.AnimatedVisibility;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
 public abstract class Background extends ExtendedLayeredPane implements AnimatedVisibility, AnimatedBackground {
    private static final long serialVersionUID = -1353975966057230209L;

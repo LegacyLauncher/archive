@@ -3,6 +3,7 @@ package com.turikhay.tlauncher.ui;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;

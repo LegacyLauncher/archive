@@ -1,14 +1,22 @@
 package com.turikhay.tlauncher.ui.loc;
 
-import javax.swing.JButton;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 
-public class LocalizableButton extends JButton implements LocalizableComponent {
+public class LocalizableButton extends ExtendedButton implements LocalizableComponent {
    private static final long serialVersionUID = 1073130908385613323L;
    private String path;
    private String[] variables;
 
+   public LocalizableButton() {
+   }
+
+   public LocalizableButton(String path) {
+      this();
+      this.setText(path);
+   }
+
    public LocalizableButton(String path, Object... vars) {
-      this.setOpaque(false);
+      this();
       this.setText(path, vars);
    }
 

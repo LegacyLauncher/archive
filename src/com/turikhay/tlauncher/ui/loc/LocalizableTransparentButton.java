@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui.loc;
 
-import com.turikhay.tlauncher.ui.TransparentButton;
+import com.turikhay.tlauncher.ui.swing.TransparentButton;
 
 public class LocalizableTransparentButton extends TransparentButton implements LocalizableComponent {
    private static final long serialVersionUID = -1357535949476677157L;

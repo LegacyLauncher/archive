@@ -1,10 +1,10 @@
 package com.turikhay.tlauncher.ui.accounts.helper;
 
-import com.turikhay.tlauncher.ui.ExtendedLayeredPane;
 import com.turikhay.tlauncher.ui.MainPane;
 import com.turikhay.tlauncher.ui.accounts.AccountHandler;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import java.awt.Component;
 import java.awt.FontMetrics;
 import java.awt.Insets;

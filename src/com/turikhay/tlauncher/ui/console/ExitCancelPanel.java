@@ -20,7 +20,7 @@ public class ExitCancelPanel extends JPanel {
       this.setBackground(Color.black);
       this.label = new LocalizableLabel(0);
       this.label.setForeground(Color.white);
-      this.button = new LocalizableButton("console.close.cancel", new Object[0]);
+      this.button = new LocalizableButton("console.close.cancel");
       this.label.setFont(this.font);
       this.label.setForeground(Color.white);
       this.button.addActionListener(new ActionListener() {
@@ -39,6 +39,6 @@ public class ExitCancelPanel extends JPanel {
    }
 
    void setTimeout(int timeout) {
-      this.label.setText("console.close.text", "s", timeout);
+      this.label.setText("console.close.text", timeout);
    }
 }

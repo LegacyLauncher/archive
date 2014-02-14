@@ -6,23 +6,27 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.launcher.OperatingSystem;
+import net.minecraft.launcher.versions.ReleaseType;
 
 public class ConfigurationDefaults {
-   private static final int version = 1;
+   private static final int version = 2;
    private final Map d = new HashMap();
 
    ConfigurationDefaults() {
-      this.d.put("settings.version", 1);
+      this.d.put("settings.version", 2);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 3);
       this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
       this.d.put("minecraft.javadir", OperatingSystem.getCurrentPlatform().getJavaDir());
       this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
-      this.d.put("minecraft.versions.snapshots", true);
-      this.d.put("minecraft.versions.beta", false);
-      this.d.put("minecraft.versions.alpha", false);
-      this.d.put("minecraft.versions.modified", true);
-      this.d.put("minecraft.versions.old", true);
+      ReleaseType[] var4;
+      int var3 = (var4 = ReleaseType.getDefinable()).length;
+
+      for(int var2 = 0; var2 < var3; ++var2) {
+         ReleaseType type = var4[var2];
+         this.d.put("minecraft.versions." + type, true);
+      }
+
       this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
       this.d.put("gui.console", Configuration.ConsoleType.getDefault());
       this.d.put("gui.console.width", 620);
@@ -33,7 +37,7 @@ public class ConfigurationDefaults {
    }
 
    public static int getVersion() {
-      return 1;
+      return 2;
    }
 
    public Map getMap() {

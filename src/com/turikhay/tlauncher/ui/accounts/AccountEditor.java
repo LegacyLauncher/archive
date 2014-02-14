@@ -1,13 +1,12 @@
 package com.turikhay.tlauncher.ui.accounts;
 
 import com.turikhay.tlauncher.minecraft.auth.Account;
-import com.turikhay.tlauncher.ui.CheckBoxListener;
 import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableButton;
 import com.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
-import com.turikhay.tlauncher.ui.login.UsernameField;
 import com.turikhay.tlauncher.ui.progress.ProgressBar;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
+import com.turikhay.tlauncher.ui.swing.CheckBoxListener;
 import com.turikhay.tlauncher.ui.text.ExtendedPasswordField;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -47,7 +46,7 @@ public class AccountEditor extends CenterPanel {
             AccountEditor.this.defocus();
          }
       });
-      this.save = new LocalizableButton("account.save", new Object[0]);
+      this.save = new LocalizableButton("account.save");
       this.save.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             AccountEditor.this.defocus();

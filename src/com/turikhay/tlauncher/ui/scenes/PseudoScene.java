@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.scenes;
 
-import com.turikhay.tlauncher.ui.AnimatedVisibility;
-import com.turikhay.tlauncher.ui.ExtendedLayeredPane;
 import com.turikhay.tlauncher.ui.MainPane;
+import com.turikhay.tlauncher.ui.swing.AnimatedVisibility;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
 public abstract class PseudoScene extends ExtendedLayeredPane implements AnimatedVisibility {
    private static final long serialVersionUID = -1L;
