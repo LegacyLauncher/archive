@@ -1,28 +1,21 @@
 package com.turikhay.tlauncher.ui.block;
 
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import java.awt.Container;
 import java.awt.LayoutManager;
-import javax.swing.JPanel;
 
-public class BlockablePanel extends JPanel implements Blockable {
+public class BlockablePanel extends ExtendedPanel implements Blockable {
    private static final long serialVersionUID = 1L;
 
    public BlockablePanel(LayoutManager layout, boolean isDoubleBuffered) {
       super(layout, isDoubleBuffered);
-      this.init();
    }
 
    public BlockablePanel(LayoutManager layout) {
       super(layout);
-      this.init();
    }
 
    public BlockablePanel() {
-      this.init();
-   }
-
-   private void init() {
-      Blocker.add(this);
    }
 
    public void block(Object reason) {

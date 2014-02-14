@@ -1,31 +1,35 @@
 package com.turikhay.tlauncher.ui.login;
 
+import com.turikhay.tlauncher.ui.login.buttons.ButtonPanel;
+import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 
-public class Autologin implements LoginListener {
+public class AutoLogin implements LoginListener {
    public static final int DEFAULT_TIMEOUT = 3;
+   public static final int MIN_TIMEOUT = 2;
    public static final int MAX_TIMEOUT = 10;
-   private final LoginForm lf;
-   public final int timeout;
-   boolean enabled;
-   boolean active;
-   private Runnable task;
+   private boolean enabled;
+   private boolean active;
+   private int timeout;
    private int sec;
+   private Runnable task;
+   private final LoginForm loginForm;
 
-   Autologin(LoginForm loginform, boolean enabled, int timeout) {
-      if (timeout < 2) {
-         timeout = 2;
+   AutoLogin(LoginForm lf) {
+      this.loginForm = lf;
+      this.enabled = lf.global.getBoolean("login.auto");
+      int timeout = lf.global.getInteger("login.timeout");
+      if (timeout < 2 || timeout > 10) {
+         timeout = 3;
       }
 
-      this.lf = loginform;
-      this.enabled = enabled;
-      this.timeout = this.sec = timeout;
+      this.timeout = timeout;
       this.task = new Runnable() {
          public void run() {
-            while(Autologin.this.sec > 0) {
-               Autologin.this.sleepFor(1000L);
-               if (Autologin.this.updateLogin()) {
-                  Autologin.this.callLogin();
+            while(AutoLogin.this.sec > 0) {
+               U.sleepFor(1000L);
+               if (AutoLogin.this.updateLogin()) {
+                  AutoLogin.this.loginForm.callLogin();
                }
             }
 
@@ -33,62 +37,65 @@ public class Autologin implements LoginListener {
       };
    }
 
-   public void startLogin() {
-      this.active = true;
+   private boolean updateLogin() {
+      --this.sec;
+      this.loginForm.buttons.cancel.setText("loginform.cancel", new Object[]{this.sec});
+      if (this.sec != 0) {
+         return false;
+      } else {
+         this.stopActive();
+         return true;
+      }
+   }
+
+   public void setActive(boolean active) {
+      if (this.active != active) {
+         this.active = active;
+         if (active) {
+            this.startActive();
+         } else {
+            this.stopActive();
+         }
+
+      }
+   }
+
+   public boolean isActive() {
+      return this.active;
+   }
+
+   private void startActive() {
+      this.sec = this.timeout;
       AsyncThread.execute(this.task);
    }
 
-   public void stopLogin() {
+   private void stopActive() {
       this.sec = -1;
+      this.loginForm.buttons.setState(ButtonPanel.ButtonPanelState.MANAGE_BUTTONS);
+   }
+
+   public void setEnabled(boolean enabled) {
+      if (this.enabled != enabled) {
+         this.enabled = enabled;
+         if (this.active) {
+            this.setActive(enabled);
+         }
+
+         this.loginForm.checkbox.autologin.setSelected(enabled);
+         this.loginForm.global.set("login.auto", enabled);
+      }
    }
 
    public boolean isEnabled() {
       return this.enabled;
    }
 
-   public void cancel() {
-      this.enabled = false;
-      this.stopLogin();
-      this.lf.checkbox.uncheckAutologin();
-      this.lf.buttons.toggleSouthButton();
-      if (this.active) {
-         this.lf.versionchoice.asyncRefresh();
-      }
-
+   public int getTimeout() {
+      return this.timeout;
    }
 
-   private boolean updateLogin() {
-      --this.sec;
-      this.lf.buttons.cancel.setText("loginform.cancel", this.sec);
-      if (this.sec != 0) {
-         return false;
-      } else {
-         this.stopLogin();
-         return true;
-      }
-   }
-
-   private void callLogin() {
-      this.lf.callLogin();
-   }
-
-   private void sleepFor(long millis) {
-      try {
-         Thread.sleep(millis);
-      } catch (Exception var4) {
-      }
-
-   }
-
-   public boolean onLogin() {
-      if (!this.enabled) {
-         return true;
-      } else {
-         this.stopLogin();
-         this.active = false;
-         this.lf.buttons.toggleSouthButton();
-         return true;
-      }
+   public void onLogin() throws LoginException {
+      this.setActive(false);
    }
 
    public void onLoginFailed() {

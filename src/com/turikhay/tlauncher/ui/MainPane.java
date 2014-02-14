@@ -6,6 +6,7 @@ import com.turikhay.tlauncher.ui.progress.DownloaderProgress;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.scenes.PseudoScene;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import java.awt.Component;
 import java.awt.Point;
 

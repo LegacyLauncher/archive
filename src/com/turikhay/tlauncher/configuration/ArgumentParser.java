@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.configuration;
 
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;

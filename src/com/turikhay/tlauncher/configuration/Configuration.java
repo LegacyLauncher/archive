@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import joptsimple.OptionSet;
+import net.minecraft.launcher.updater.VersionFilter;
+import net.minecraft.launcher.versions.ReleaseType;
 
 public class Configuration extends SimpleConfiguration {
    private ConfigurationDefaults defaults;
@@ -67,11 +69,11 @@ public class Configuration extends SimpleConfiguration {
       this.set(this.constants, false);
       this.log(new Object[]{"Constant values:", this.constants});
       int version = ConfigurationDefaults.getVersion();
-      if (this.getDouble("version") != (double)version) {
+      if (this.getDouble("settings.version") != (double)version) {
          this.clear();
       }
 
-      this.set("version", version, false);
+      this.set("settings.version", version, false);
       Iterator var4 = this.defaults.getMap().entrySet().iterator();
 
       while(var4.hasNext()) {
@@ -113,7 +115,6 @@ public class Configuration extends SimpleConfiguration {
          }
       }
 
-      FileUtil.deleteFile(MinecraftUtil.getSystemRelatedFile("tlauncher.ini"));
    }
 
    public boolean isFirstRun() {
@@ -165,6 +166,24 @@ public class Configuration extends SimpleConfiguration {
    public int[] getDefaultWindowSize() {
       String plainValue = this.getDefault("minecraft.size");
       return IntegerArray.parseIntegerArray(plainValue).toArray();
+   }
+
+   public VersionFilter getVersionFilter() {
+      VersionFilter filter = new VersionFilter();
+      ReleaseType[] var5;
+      int var4 = (var5 = ReleaseType.values()).length;
+
+      for(int var3 = 0; var3 < var4; ++var3) {
+         ReleaseType type = var5[var3];
+         if (!type.equals(ReleaseType.RELEASE)) {
+            boolean include = this.getBoolean("minecraft.versions." + type);
+            if (!include) {
+               filter.excludeType(type);
+            }
+         }
+      }
+
+      return filter;
    }
 
    public String getDefault(String key) {

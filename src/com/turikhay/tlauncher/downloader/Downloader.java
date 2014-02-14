@@ -335,6 +335,7 @@ public class Downloader extends Thread {
          l.onDownloaderFileComplete(this, d);
       }
 
+      U.log("Complete0");
       int[] var6;
       int var5 = (var6 = this.remain).length;
 
@@ -345,6 +346,7 @@ public class Downloader extends Thread {
          }
       }
 
+      U.log("Complete1");
       var4 = this.listeners.iterator();
 
       while(var4.hasNext()) {

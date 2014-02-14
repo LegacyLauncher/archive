@@ -1,92 +1,62 @@
 package com.turikhay.tlauncher.ui.login;
 
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
+import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import com.turikhay.tlauncher.ui.swing.CheckBoxListener;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 
 public class CheckBoxPanel extends BlockablePanel implements LoginListener {
-   private static final long serialVersionUID = 1808335203922301270L;
-   private final LoginForm lf;
-   LocalizableCheckbox autologinbox;
-   LocalizableCheckbox forceupdatebox;
-   private boolean forceupdate;
+   private static final long serialVersionUID = 768489049585749260L;
+   public final LocalizableCheckbox autologin;
+   public final LocalizableCheckbox forceupdate;
+   private boolean state;
+   private final LoginForm loginForm;
 
-   CheckBoxPanel(LoginForm loginform, boolean autologin_enabled, boolean console_enabled) {
-      this.lf = loginform;
+   CheckBoxPanel(LoginForm lf) {
       BoxLayout lm = new BoxLayout(this, 3);
       this.setLayout(lm);
       this.setOpaque(false);
       this.setAlignmentX(0.5F);
-      this.setAlignmentY(0.5F);
-      this.autologinbox = new LocalizableCheckbox("loginform.checkbox.autologin", autologin_enabled);
-      this.autologinbox.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            boolean newstate = e.getStateChange() == 1;
-            CheckBoxPanel.this.lf.setAutoLogin(newstate);
-            CheckBoxPanel.this.lf.defocus();
+      this.loginForm = lf;
+      this.autologin = new LocalizableCheckbox("loginform.checkbox.autologin", lf.global.getBoolean("login.auto"));
+      this.autologin.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean newstate) {
+            CheckBoxPanel.this.loginForm.autologin.setEnabled(newstate);
+            if (newstate) {
+               Alert.showAsyncMessage("loginform.checkbox.autologin.tip", Localizable.get("loginform.checkbox.autologin.tip.arg"));
+            }
+
          }
       });
-      this.forceupdatebox = new LocalizableCheckbox("loginform.checkbox.forceupdate");
-      this.forceupdatebox.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            boolean newstate = e.getStateChange() == 1;
-            CheckBoxPanel.this.forceupdate = newstate;
-            CheckBoxPanel.this.onForceUpdateChanged();
-            CheckBoxPanel.this.lf.defocus();
+      this.forceupdate = new LocalizableCheckbox("loginform.checkbox.forceupdate");
+      this.forceupdate.addItemListener(new CheckBoxListener() {
+         public void itemStateChanged(boolean newstate) {
+            CheckBoxPanel.this.state = newstate;
+            CheckBoxPanel.this.loginForm.buttons.play.updateState();
          }
       });
-      this.add(this.autologinbox);
+      this.add(this.autologin);
       this.add(Box.createHorizontalGlue());
-      this.add(this.forceupdatebox);
+      this.add(this.forceupdate);
    }
 
-   public void setForceUpdate(boolean s) {
-      this.forceupdate = s;
-      this.onForceUpdateChanged();
-   }
-
-   public boolean getForceUpdate() {
-      return this.forceupdate;
-   }
-
-   private void onForceUpdateChanged() {
-      this.lf.buttons.updateEnterButton();
-      this.forceupdatebox.setState(this.forceupdate);
-   }
-
-   void uncheckAutologin() {
-      this.autologinbox.setState(false);
-   }
-
-   public void block(Object reason) {
-      this.setEnabled(false);
-   }
-
-   public void unblock(Object reason) {
-      this.setEnabled(true);
-   }
-
-   public boolean onLogin() {
-      VersionSyncInfo syncInfo = this.lf.versionchoice.getSyncVersionInfo();
-      if (syncInfo == null) {
-         return true;
-      } else {
+   public void onLogin() throws LoginException {
+      VersionSyncInfo syncInfo = this.loginForm.versions.getVersion();
+      if (syncInfo != null) {
          boolean supporting = syncInfo.isOnRemote();
          boolean installed = syncInfo.isInstalled();
-         if (this.getForceUpdate()) {
+         if (this.state) {
             if (!supporting) {
                Alert.showWarning("forceupdate.onlylibraries");
             } else if (installed && !Alert.showQuestion("forceupdate.question", true)) {
-               return false;
+               throw new LoginException("User has cancelled force updating.");
             }
          }
 
-         return true;
       }
    }
 
@@ -94,6 +64,5 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
    }
 
    public void onLoginSuccess() {
-      this.setForceUpdate(false);
    }
 }

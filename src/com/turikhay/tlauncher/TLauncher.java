@@ -8,13 +8,15 @@ import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.ui.Alert;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.tlauncher.ui.listeners.UpdaterUIListener;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.updater.Updater;
+import com.turikhay.util.FileUtil;
+import com.turikhay.util.MinecraftUtil;
 import com.turikhay.util.Time;
 import com.turikhay.util.U;
 import com.turikhay.util.logger.MirroredLinkedStringStream;
@@ -27,7 +29,7 @@ import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.598D;
+   private static final double VERSION = 0.6D;
    private static final String SETTINGS = "tlauncher.cfg";
    private static final String BRAND = "Original";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -74,6 +76,7 @@ public class TLauncher {
          this.pm = new ProfileManager();
          this.init();
          U.log("Started! (" + Time.stop(this) + " ms.)");
+         FileUtil.deleteFile(MinecraftUtil.getSystemRelatedFile("tlauncher.ini"));
       }
    }
 
@@ -88,7 +91,7 @@ public class TLauncher {
          LoginForm lf = this.frame.mp.defaultScene.loginForm;
          if (lf.autologin.isEnabled()) {
             this.vm.refreshVersions(true);
-            lf.autologin.startLogin();
+            lf.autologin.setActive(true);
          } else {
             this.vm.asyncRefresh();
             this.updater.asyncFindUpdate();
@@ -185,7 +188,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.598D;
+      return 0.6D;
    }
 
    public static String getBrand() {
@@ -222,7 +225,8 @@ public class TLauncher {
       try {
          launch(args);
       } catch (Throwable var3) {
-         U.log("Error launching TLauncher:", var3);
+         U.log("Error launching TLauncher:");
+         var3.printStackTrace(print);
          Alert.showError(var3, true);
       }
 
@@ -230,7 +234,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.598D);
+      U.log("Starting TLauncher", "Original", 0.6D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;

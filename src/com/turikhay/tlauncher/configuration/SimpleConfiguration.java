@@ -72,11 +72,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
          }
 
          if (flush && this.isSaveable()) {
-            try {
-               this.save();
-            } catch (IOException var5) {
-               this.log("Cannot flush value!", var5);
-            }
+            this.store();
          }
 
       }
@@ -101,11 +97,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       }
 
       if (flush && this.isSaveable()) {
-         try {
-            this.save();
-         } catch (IOException var7) {
-            this.log("Cannot flush map!", var7);
-         }
+         this.store();
       }
 
    }
@@ -221,6 +213,15 @@ public class SimpleConfiguration implements AbstractConfiguration {
          File file = (File)this.input;
          this.properties.store(new FileOutputStream(file), this.comments);
       }
+   }
+
+   public void store() {
+      try {
+         this.save();
+      } catch (IOException var2) {
+         this.log("Cannot store values!", var2);
+      }
+
    }
 
    public void clear() {

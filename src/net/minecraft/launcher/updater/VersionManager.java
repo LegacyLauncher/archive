@@ -2,6 +2,7 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.DownloadableContainer;
 import com.turikhay.util.FileUtil;
@@ -126,16 +127,28 @@ public class VersionManager {
       this.refreshVersions(false);
    }
 
-   public void asyncRefresh(final boolean local) {
+   public void asyncRefresh(final Runnable onComplete, final boolean local) {
       AsyncThread.execute(new Runnable() {
          public void run() {
             VersionManager.this.refreshVersions(local);
+            if (onComplete != null) {
+               onComplete.run();
+            }
+
          }
       });
    }
 
+   public void asyncRefresh(Runnable onComplete) {
+      this.asyncRefresh(onComplete, false);
+   }
+
+   public void asyncRefresh(boolean local) {
+      this.asyncRefresh((Runnable)null, local);
+   }
+
    public void asyncRefresh() {
-      this.asyncRefresh(false);
+      this.asyncRefresh((Runnable)null, false);
    }
 
    private void silentlyRefreshVersions(boolean local) throws Throwable {
@@ -227,12 +240,12 @@ public class VersionManager {
    }
 
    public List getVersions() {
-      return this.getVersions((VersionFilter)null);
+      return this.getVersions(TLauncher.getInstance() == null ? null : TLauncher.getInstance().getSettings().getVersionFilter());
    }
 
    public List getVersions(VersionFilter filter) {
       if (!this.versionRefreshes.isEmpty()) {
-         return new ArrayList();
+         return null;
       } else {
          if (filter == null) {
             filter = new VersionFilter();

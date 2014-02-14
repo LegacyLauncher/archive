@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.console;
 
-import com.turikhay.tlauncher.ui.ImageButton;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.images.ImageCache;
+import com.turikhay.tlauncher.ui.swing.ImageButton;
 import java.awt.AlphaComposite;
 import java.awt.Button;
 import java.awt.Color;
@@ -27,7 +27,7 @@ public class SearchButton extends Button implements Blockable {
    protected int margin;
    private boolean pressed;
    // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation;
+   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
 
    SearchButton(final SearchPanel sp) {
       this.rotation = ImageButton.ImageRotation.CENTER;
@@ -74,7 +74,7 @@ public class SearchButton extends Button implements Blockable {
          }
 
          int ix;
-         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation()[this.rotation.ordinal()]) {
+         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation()[this.rotation.ordinal()]) {
          case 1:
             ix = width / 2 - twidth / 2 - iwidth - rmargin;
             break;
@@ -139,8 +139,8 @@ public class SearchButton extends Button implements Blockable {
    }
 
    // $FF: synthetic method
-   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation() {
-      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation;
+   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation() {
+      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
       if (var10000 != null) {
          return var10000;
       } else {
@@ -161,7 +161,7 @@ public class SearchButton extends Button implements Blockable {
          } catch (NoSuchFieldError var1) {
          }
 
-         $SWITCH_TABLE$com$turikhay$tlauncher$ui$ImageButton$ImageRotation = var0;
+         $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation = var0;
          return var0;
       }
    }

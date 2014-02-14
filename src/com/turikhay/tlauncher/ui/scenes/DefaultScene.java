@@ -5,7 +5,7 @@ import com.turikhay.tlauncher.ui.animate.Animator;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.login.LoginForm;
-import com.turikhay.tlauncher.ui.settings.SettingsForm;
+import com.turikhay.tlauncher.ui.settings.SettingsPanel;
 
 public class DefaultScene extends PseudoScene {
    private static final long serialVersionUID = -1460877989848190921L;
@@ -15,7 +15,7 @@ public class DefaultScene extends PseudoScene {
    final int SETTINGSFORM_HEIGHT;
    final int MARGIN;
    public final LoginForm loginForm;
-   public final SettingsForm settingsForm;
+   public final SettingsPanel settingsForm;
    private boolean settings;
 
    public DefaultScene(MainPane main) {
@@ -24,13 +24,13 @@ public class DefaultScene extends PseudoScene {
       this.SETTINGSFORM_WIDTH = 500;
       this.SETTINGSFORM_HEIGHT = 450;
       this.MARGIN = 25;
-      this.settingsForm = new SettingsForm(this);
+      this.settingsForm = new SettingsPanel(this);
       this.settingsForm.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);
       this.add(this.settingsForm);
       this.loginForm = new LoginForm(this);
       this.loginForm.setSize(this.LOGINFORM_WIDTH, this.LOGINFORM_HEIGHT);
       this.add(this.loginForm);
-      this.setSettings(this.settings, false);
+      this.setSettings(false, false);
    }
 
    public void onResize() {
@@ -47,8 +47,7 @@ public class DefaultScene extends PseudoScene {
          }
 
          if (update) {
-            this.settingsForm.updateIfSaveable();
-            this.settingsForm.save();
+            this.settingsForm.saveValues();
          }
 
          int w = this.getWidth();

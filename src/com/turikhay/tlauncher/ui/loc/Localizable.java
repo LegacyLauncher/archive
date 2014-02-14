@@ -22,6 +22,10 @@ public class Localizable {
       return lang.get(path);
    }
 
+   public static String get(String path, Object... vars) {
+      return lang.get(path, vars);
+   }
+
    public static String[] checkVariables(Object[] check) {
       if (check == null) {
          throw new NullPointerException();

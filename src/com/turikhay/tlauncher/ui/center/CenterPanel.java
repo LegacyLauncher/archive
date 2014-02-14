@@ -3,10 +3,10 @@ package com.turikhay.tlauncher.ui.center;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
-import com.turikhay.tlauncher.ui.Del;
-import com.turikhay.tlauncher.ui.awt.UnmodifiableInsets;
 import com.turikhay.tlauncher.ui.block.BlockablePanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import com.turikhay.tlauncher.ui.swing.Del;
+import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -23,9 +23,9 @@ public class CenterPanel extends BlockablePanel {
    private static final long serialVersionUID = -1975869198322761508L;
    public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
    public static final CenterPanelTheme tipTheme = new TipPanelTheme();
-   public static final Insets defaultInsets = new UnmodifiableInsets(5, 24, 18, 24);
-   public static final Insets squareInsets = new UnmodifiableInsets(15, 15, 15, 15);
-   public static final Insets smallSquareInsets = new UnmodifiableInsets(7, 7, 7, 7);
+   public static final Insets defaultInsets = new Insets(5, 24, 18, 24);
+   public static final Insets squareInsets = new Insets(15, 15, 15, 15);
+   public static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
    private final Insets insets;
    private final CenterPanelTheme theme;
    protected final JPanel messagePanel;
@@ -52,7 +52,6 @@ public class CenterPanel extends BlockablePanel {
       this.insets = insets == null ? defaultInsets : insets;
       this.setLayout(new BoxLayout(this, 3));
       this.setBackground(theme.getPanelBackground());
-      this.setOpaque(false);
       this.messageLabel = new LocalizableLabel("  ");
       this.messageLabel.setFont(this.getFont().deriveFont(1));
       this.messageLabel.setVerticalAlignment(0);
@@ -112,18 +111,15 @@ public class CenterPanel extends BlockablePanel {
    public static JPanel sepPan(LayoutManager manager, Component... components) {
       BlockablePanel panel = new BlockablePanel(manager);
       panel.setOpaque(false);
-      Component[] var6 = components;
-      int var5 = components.length;
-
-      for(int var4 = 0; var4 < var5; ++var4) {
-         Component comp = var6[var4];
-         panel.add(comp);
-      }
-
+      panel.add(components);
       return panel;
    }
 
    public static JPanel sepPan(Component... components) {
       return sepPan(new GridLayout(0, 1), components);
+   }
+
+   protected void log(Object... o) {
+      U.log("[" + this.getClass().getSimpleName() + "]", o);
    }
 }

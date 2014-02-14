@@ -5,8 +5,6 @@ import com.turikhay.tlauncher.downloader.Downloadable;
 import java.io.File;
 import java.net.URL;
 import net.minecraft.launcher.OperatingSystem;
-import net.minecraft.launcher.updater.VersionFilter;
-import net.minecraft.launcher.versions.ReleaseType;
 
 public class MinecraftUtil {
    // $FF: synthetic field
@@ -81,41 +79,6 @@ public class MinecraftUtil {
 
    public static Downloadable getDownloadable(String url) {
       return getDownloadable(url, false);
-   }
-
-   public static VersionFilter getVersionFilter() {
-      TLauncher t = TLauncher.getInstance();
-      if (t == null) {
-         throw new IllegalStateException("TLauncher instance is not defined!");
-      } else {
-         VersionFilter r = new VersionFilter();
-         boolean snaps = t.getSettings().getBoolean("minecraft.versions.snapshots");
-         boolean beta = t.getSettings().getBoolean("minecraft.versions.beta");
-         boolean alpha = t.getSettings().getBoolean("minecraft.versions.alpha");
-         boolean modified = t.getSettings().getBoolean("minecraft.versions.modified");
-         boolean old = t.getSettings().getBoolean("minecraft.versions.old");
-         if (!snaps) {
-            r.excludeType(ReleaseType.SNAPSHOT);
-         }
-
-         if (!beta) {
-            r.excludeType(ReleaseType.OLD_BETA);
-         }
-
-         if (!alpha) {
-            r.excludeType(ReleaseType.OLD_ALPHA);
-         }
-
-         if (!modified) {
-            r.excludeType(ReleaseType.MODIFIED);
-         }
-
-         if (!old) {
-            r.excludeType(ReleaseType.OLD);
-         }
-
-         return r;
-      }
    }
 
    // $FF: synthetic method

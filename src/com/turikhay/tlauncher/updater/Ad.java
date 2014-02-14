@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.updater;
 
 import com.turikhay.tlauncher.configuration.SimpleConfiguration;
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.util.U;
 import java.net.URI;
 import net.minecraft.launcher.OperatingSystem;

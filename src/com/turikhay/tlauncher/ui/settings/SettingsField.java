@@ -1,13 +1,9 @@
 package com.turikhay.tlauncher.ui.settings;
 
 public interface SettingsField {
-   String getSettingsPath();
+   String getSettingsValue();
 
-   String getValue();
+   void setSettingsValue(String var1);
 
    boolean isValueValid();
-
-   void setValue(String var1);
-
-   void setToDefault();
 }

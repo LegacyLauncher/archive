@@ -16,7 +16,9 @@ public class ImageCache {
    }
 
    public static Image getImage(String uri, boolean throwIfError) {
-      if (imageCache.containsKey(uri)) {
+      if (uri == null) {
+         throw new NullPointerException("URL is NULL");
+      } else if (imageCache.containsKey(uri)) {
          return (Image)imageCache.get(uri);
       } else {
          try {

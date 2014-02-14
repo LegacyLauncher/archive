@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.handlers;
 
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 public class ExceptionHandler implements UncaughtExceptionHandler {

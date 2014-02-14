@@ -7,7 +7,7 @@ import com.turikhay.tlauncher.minecraft.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherException;
 import com.turikhay.tlauncher.minecraft.MinecraftLauncherListener;
 import com.turikhay.tlauncher.minecraft.profiles.ProfileManager;
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.util.U;
 import joptsimple.OptionSet;

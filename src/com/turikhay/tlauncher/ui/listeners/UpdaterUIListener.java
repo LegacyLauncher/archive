@@ -3,7 +3,7 @@ package com.turikhay.tlauncher.ui.listeners;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
-import com.turikhay.tlauncher.ui.Alert;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.updater.Ad;
