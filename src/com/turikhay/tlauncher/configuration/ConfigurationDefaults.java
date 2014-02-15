@@ -5,19 +5,17 @@ import com.turikhay.util.MinecraftUtil;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class ConfigurationDefaults {
-   private static final int version = 2;
+   private static final int version = 3;
    private final Map d = new HashMap();
 
    ConfigurationDefaults() {
-      this.d.put("settings.version", 2);
+      this.d.put("settings.version", 3);
       this.d.put("login.auto", false);
       this.d.put("login.auto.timeout", 3);
       this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
-      this.d.put("minecraft.javadir", OperatingSystem.getCurrentPlatform().getJavaDir());
       this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
       ReleaseType[] var4;
       int var3 = (var4 = ReleaseType.getDefinable()).length;
@@ -37,7 +35,7 @@ public class ConfigurationDefaults {
    }
 
    public static int getVersion() {
-      return 2;
+      return 3;
    }
 
    public Map getMap() {

@@ -417,4 +417,17 @@ public class FileUtil {
    public static String getFolder(URL url) {
       return getFolder(url, "/");
    }
+
+   public static File getNeighborFile(File file, String filename) {
+      File parent = file.getParentFile();
+      if (parent == null) {
+         parent = new File("/");
+      }
+
+      return new File(parent, filename);
+   }
+
+   public static File getNeighborFile(String filename) {
+      return getNeighborFile(getRunningJar(), filename);
+   }
 }

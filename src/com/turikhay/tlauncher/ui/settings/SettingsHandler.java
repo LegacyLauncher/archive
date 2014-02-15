@@ -1,7 +1,6 @@
 package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.configuration.Configuration;
-import com.turikhay.util.U;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +54,6 @@ public abstract class SettingsHandler {
    }
 
    public void setValue(Object obj) {
-      U.log(this.path, this.value, obj);
       String val = obj == null ? null : obj.toString();
       this.onChange(val);
       this.setValue0(this.value);

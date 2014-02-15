@@ -3,7 +3,6 @@ package com.turikhay.tlauncher.configuration;
 import com.turikhay.tlauncher.exceptions.ParseException;
 import com.turikhay.util.IntegerArray;
 import com.turikhay.util.StringUtil;
-import java.io.File;
 
 public class PlainParser {
    public static void parse(Object plainValue, Object defaultValue) throws ParseException {
@@ -34,14 +33,8 @@ public class PlainParser {
                         throw new ParseException("Cannot parse ConsoleType");
                      }
 
-                     if (defaultValue instanceof Configuration.ConnectionQuality) {
-                        if (!Configuration.ConnectionQuality.parse(value)) {
-                           throw new ParseException("Caanot parse ConnectionQuality");
-                        }
-
-                        if (defaultValue instanceof File) {
-                           parseFile(value);
-                        }
+                     if (defaultValue instanceof Configuration.ConnectionQuality && !Configuration.ConnectionQuality.parse(value)) {
+                        throw new ParseException("Caanot parse ConnectionQuality");
                      }
                   }
                }
@@ -54,14 +47,6 @@ public class PlainParser {
                }
             }
          }
-      }
-   }
-
-   public static void parseFile(Object obj) throws ParseException {
-      if (obj == null) {
-         throw new ParseException("File is NULL");
-      } else if (!(new File(obj.toString())).canRead()) {
-         throw new ParseException("File is not accessible");
       }
    }
 }

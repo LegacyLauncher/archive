@@ -25,21 +25,36 @@ public class AuthUIListener implements AuthenticatorListener {
    }
 
    public void onAuthPassingError(Authenticator auth, Throwable e) {
+      this.showError(e);
       if (this.listener != null) {
          this.listener.onAuthPassingError(auth, e);
       }
 
-      if (!this.showErrorOnce || !this.errorShown) {
-         String langpath = "unknown";
-         if (e instanceof AuthenticatorException) {
-            AuthenticatorException ae = (AuthenticatorException)e;
-            langpath = ae.getLangpath() == null ? "unknown" : ae.getLangpath();
-            e = null;
+   }
+
+   private void showError(Throwable e) {
+      boolean serious = true;
+      String langpath = "unknown";
+      if (e instanceof AuthenticatorException) {
+         Throwable cause = e.getCause();
+         if (cause instanceof IOException) {
+            serious = false;
          }
 
-         Alert.showError(Localizable.get("auth.error.title"), Localizable.get("auth.error." + langpath), e);
+         if (this.showErrorOnce && this.errorShown && !serious) {
+            return;
+         }
+
+         AuthenticatorException ae = (AuthenticatorException)e;
+         langpath = ae.getLangpath() == null ? "unknown" : ae.getLangpath();
+         e = null;
+      }
+
+      Alert.showError(Localizable.get("auth.error.title"), Localizable.get("auth.error." + langpath), e);
+      if (!serious) {
          this.errorShown = true;
       }
+
    }
 
    public void onAuthPassed(Authenticator auth) {

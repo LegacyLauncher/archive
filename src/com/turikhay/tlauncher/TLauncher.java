@@ -29,7 +29,7 @@ import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class TLauncher {
-   private static final double VERSION = 0.6D;
+   private static final double VERSION = 0.61D;
    private static final String SETTINGS = "tlauncher.cfg";
    private static final String BRAND = "Original";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -52,6 +52,7 @@ public class TLauncher {
    public final OptionSet args;
    private MinecraftLauncher launcher;
    private UpdaterUIListener updaterListener;
+   private boolean ready;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
@@ -77,6 +78,7 @@ public class TLauncher {
          this.init();
          U.log("Started! (" + Time.stop(this) + " ms.)");
          FileUtil.deleteFile(MinecraftUtil.getSystemRelatedFile("tlauncher.ini"));
+         this.ready = true;
       }
    }
 
@@ -150,6 +152,10 @@ public class TLauncher {
       return this.updaterListener;
    }
 
+   public boolean isReady() {
+      return this.ready;
+   }
+
    public void reloadLocale() throws IOException {
       Locale locale = this.settings.getLocale();
       U.log("Selected locale: " + locale);
@@ -188,7 +194,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.6D;
+      return 0.61D;
    }
 
    public static String getBrand() {
@@ -234,7 +240,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.6D);
+      U.log("Starting TLauncher", "Original", 0.61D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;

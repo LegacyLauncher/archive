@@ -18,17 +18,24 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.BoxLayout;
+import javax.swing.JScrollPane;
+import javax.swing.border.Border;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class SettingsPanel extends CenterPanel {
    private static final long serialVersionUID = 3896900830909661270L;
    private static final int PANELS = 4;
    public final DefaultScene scene;
+   private final JScrollPane scrollPane;
+   protected final ExtendedPanel container;
    protected final ExtendedPanel[] panels;
    protected final GridBagConstraints[] constraints;
    public final SettingsFieldHandler directory;
@@ -48,36 +55,57 @@ public class SettingsPanel extends CenterPanel {
    public SettingsPanel(DefaultScene sc) {
       super(squareInsets);
       this.scene = sc;
+      FocusListener warning = new FocusListener() {
+         public void focusGained(FocusEvent e) {
+            SettingsPanel.this.setMessage("settings.warning");
+         }
+
+         public void focusLost(FocusEvent e) {
+            SettingsPanel.this.setMessage((String)null);
+         }
+      };
+      FocusListener restart = new FocusListener() {
+         public void focusGained(FocusEvent e) {
+            SettingsPanel.this.setMessage("settings.restart");
+         }
+
+         public void focusLost(FocusEvent e) {
+            SettingsPanel.this.setMessage((String)null);
+         }
+      };
+      this.container = new ExtendedPanel();
+      this.container.setLayout(new BoxLayout(this.container, 3));
       this.panels = new ExtendedPanel[4];
       this.constraints = new GridBagConstraints[4];
-      this.add(this.messagePanel);
 
       for(int i = 0; i < 4; ++i) {
          this.panels[i] = new ExtendedPanel(new GridBagLayout());
          this.panels[i].getInsets().set(0, 0, 0, 0);
          this.constraints[i] = new GridBagConstraints();
          this.constraints[i].fill = 2;
-         this.add(this.panels[i], this.del(0));
+         this.container.add(this.panels[i], this.del(0));
       }
 
       this.handlers = new ArrayList();
       byte pane = 0;
       byte row = 0;
-      this.directory = new SettingsFieldHandler("minecraft.gamedir", new SettingsTextField("settings.client.gamedir.prompt"));
+      this.directory = new SettingsFieldHandler("minecraft.gamedir", new SettingsTextField("settings.client.gamedir.prompt"), warning);
       this.directory.addListener(new SettingsFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
-            try {
-               TLauncher.getInstance().getVersionManager().recreate();
-            } catch (IOException var4) {
-               Alert.showError("settings.client.gamedir.noaccess", (Throwable)var4);
-            }
+            if (SettingsPanel.this.tlauncher.isReady()) {
+               try {
+                  SettingsPanel.this.tlauncher.getVersionManager().recreate();
+               } catch (IOException var4) {
+                  Alert.showError("settings.client.gamedir.noaccess", (Throwable)var4);
+               }
 
-            TLauncher.getInstance().getVersionManager().asyncRefresh();
+               SettingsPanel.this.tlauncher.getVersionManager().asyncRefresh();
+            }
          }
       });
       byte row = (byte)(row + 1);
       this.add(pane, row, new SettingsPair("settings.client.gamedir.label", new SettingsHandler[]{this.directory}));
-      this.resolution = new SettingsFieldHandler("minecraft.size", new SettingsResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global));
+      this.resolution = new SettingsFieldHandler("minecraft.size", new SettingsResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global), restart);
       this.add(pane, row++, new SettingsPair("settings.client.resolution.label", new SettingsHandler[]{this.resolution}));
       byte pane = (byte)(pane + 1);
       row = 0;
@@ -99,11 +127,11 @@ public class SettingsPanel extends CenterPanel {
       this.add(pane, row, new SettingsPair("settings.versions.label", versions));
       ++pane;
       row = 0;
-      this.javaArgs = new SettingsFieldHandler("minecraft.javaargs", new SettingsTextField("settings.java.args.jvm", true));
-      this.args = new SettingsFieldHandler("minecraft.args", new SettingsTextField("settings.java.args.minecraft", true));
+      this.javaArgs = new SettingsFieldHandler("minecraft.javaargs", new SettingsTextField("settings.java.args.jvm", true), warning);
+      this.args = new SettingsFieldHandler("minecraft.args", new SettingsTextField("settings.java.args.minecraft", true), warning);
       row = (byte)(row + 1);
       this.add(pane, row, new SettingsPair("settings.java.args.label", new SettingsHandler[]{this.javaArgs, this.args}));
-      this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsTextField("settings.java.path.prompt"));
+      this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsTextField("settings.java.path.prompt", true), warning);
       this.add(pane, row++, new SettingsPair("settings.java.path.label", new SettingsHandler[]{this.javaPath}));
       ++pane;
       row = 0;
@@ -189,7 +217,14 @@ public class SettingsPanel extends CenterPanel {
             SettingsPanel.this.resetValues();
          }
       });
-      this.add(sepPan(new Component[]{this.saveButton, this.defaultButton}));
+      this.container.add(sepPan(new Component[]{this.saveButton, this.defaultButton}));
+      this.scrollPane = new JScrollPane(this.container);
+      this.scrollPane.setOpaque(false);
+      this.scrollPane.getViewport().setOpaque(false);
+      this.scrollPane.setBorder((Border)null);
+      this.scrollPane.setHorizontalScrollBarPolicy(30);
+      this.scrollPane.setVerticalScrollBarPolicy(20);
+      this.add(this.messagePanel, this.scrollPane);
       this.updateValues();
    }
 
@@ -265,13 +300,16 @@ public class SettingsPanel extends CenterPanel {
          SettingsHandler handler = (SettingsHandler)var2.next();
          String path = handler.getPath();
          String value = this.global.getDefault(path);
-         if (value == null) {
-            return;
+         this.log("Resetting:", handler.getClass().getSimpleName(), path, value);
+         if (value != null) {
+            this.log("Reset!");
+            handler.setValue(value);
          }
-
-         U.log("Resetting:", handler.getClass().getSimpleName(), path, value);
-         handler.setValue(value);
       }
 
+   }
+
+   protected void log(Object... o) {
+      U.log("[SettingsPanel]", o);
    }
 }

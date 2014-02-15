@@ -60,7 +60,7 @@ public class Authenticator {
       }
    }
 
-   public void pass(AuthenticatorListener l) {
+   public boolean pass(AuthenticatorListener l) {
       if (l != null) {
          l.onAuthPassing(this.instance);
       }
@@ -73,13 +73,14 @@ public class Authenticator {
             l.onAuthPassingError(this.instance, var3);
          }
 
-         return;
+         return false;
       }
 
       if (l != null) {
          l.onAuthPassed(this.instance);
       }
 
+      return true;
    }
 
    public void asyncPass(final AuthenticatorListener l) {

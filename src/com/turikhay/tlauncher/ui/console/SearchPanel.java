@@ -23,6 +23,7 @@ public class SearchPanel extends BlockablePanel {
    int lastend;
 
    SearchPanel(ConsoleFrame cf) {
+      this.setOpaque(true);
       this.cf = cf;
       BorderLayout layout = new BorderLayout();
       layout.setVgap(2);

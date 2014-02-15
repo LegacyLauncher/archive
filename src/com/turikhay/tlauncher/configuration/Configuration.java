@@ -5,6 +5,7 @@ import com.turikhay.tlauncher.exceptions.ParseException;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.IntegerArray;
 import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.U;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -43,14 +44,20 @@ public class Configuration extends SimpleConfiguration {
 
    public static Configuration createConfiguration(OptionSet set) throws IOException {
       Object path = set != null ? set.valueOf("settings") : null;
+      String defaultName = TLauncher.getSettingsFile();
+      File file;
       if (path == null) {
-         URL resource = Configuration.class.getResource("/settings.ini");
-         if (resource != null) {
-            return new Configuration(resource, set);
+         File neighbor = FileUtil.getNeighborFile(defaultName);
+         if (neighbor.isFile()) {
+            file = neighbor;
+         } else {
+            file = MinecraftUtil.getSystemRelatedFile(defaultName);
          }
+      } else {
+         file = new File(path.toString());
       }
 
-      File file = path == null ? MinecraftUtil.getSystemRelatedFile(TLauncher.getSettingsFile()) : new File(path.toString());
+      U.log("Loading configuration from file:", file);
       boolean firstRun = !file.exists();
       Configuration config = new Configuration(file, set);
       config.firstRun = firstRun;
@@ -231,6 +238,10 @@ public class Configuration extends SimpleConfiguration {
          File file = (File)this.input;
          temp.store(new FileOutputStream(file), this.comments);
       }
+   }
+
+   public File getFile() {
+      return !this.isSaveable() ? null : (File)this.input;
    }
 
    private List getSupportedLocales() {

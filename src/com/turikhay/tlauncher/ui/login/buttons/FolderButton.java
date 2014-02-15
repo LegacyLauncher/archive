@@ -3,11 +3,9 @@ package com.turikhay.tlauncher.ui.login.buttons;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
-import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.ui.swing.ImageButton;
 import com.turikhay.util.MinecraftUtil;
-import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,7 +33,6 @@ public class FolderButton extends ImageButton implements Blockable {
    }
 
    public void openFolder() {
-      U.log(Blocker.getBlockList(this.lf));
       AsyncThread.execute(new Runnable() {
          public void run() {
             File dir = MinecraftUtil.getWorkingDirectory();
