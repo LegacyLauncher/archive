@@ -22,7 +22,7 @@ public class DefaultScene extends PseudoScene {
       super(main);
       this.LOGINFORM_WIDTH = this.LOGINFORM_HEIGHT = 240;
       this.SETTINGSFORM_WIDTH = 500;
-      this.SETTINGSFORM_HEIGHT = 450;
+      this.SETTINGSFORM_HEIGHT = 475;
       this.MARGIN = 25;
       this.settingsForm = new SettingsPanel(this);
       this.settingsForm.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);

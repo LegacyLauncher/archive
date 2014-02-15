@@ -26,6 +26,10 @@ public class Localizable {
       return lang.get(path, vars);
    }
 
+   public static String nget(String path) {
+      return lang.nget(path);
+   }
+
    public static String[] checkVariables(Object[] check) {
       if (check == null) {
          throw new NullPointerException();

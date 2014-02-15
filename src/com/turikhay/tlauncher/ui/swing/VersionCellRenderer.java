@@ -28,26 +28,19 @@ public class VersionCellRenderer implements ListCellRenderer {
       } else if (value.equals(EMPTY)) {
          renderer.setText(Localizable.get("versions.notfound.tip"));
       } else {
+         ReleaseType type = value.getLatestVersion().getType();
          String id = value.getId();
-         String label;
+         String label = Localizable.nget("version." + type);
          switch($SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType()[value.getLatestVersion().getType().ordinal()]) {
-         case 1:
-            label = Localizable.get("version.release", id);
-            break;
-         case 2:
-            label = Localizable.get("version.snapshot", id);
-            break;
          case 3:
-            label = Localizable.get("version.old-beta", id.substring(1));
+            id = id.substring(1);
             break;
          case 4:
-            label = Localizable.get("version.old-alpha", id.startsWith("a") ? id.substring(1) : id);
-            break;
-         default:
-            label = id;
+            id = id.startsWith("a") ? id.substring(1) : id;
          }
 
-         renderer.setText(label);
+         String text = label != null ? label + " " + id : id;
+         renderer.setText(text);
       }
 
       return renderer;

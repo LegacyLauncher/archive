@@ -1,6 +1,6 @@
 package com.turikhay.util.async;
 
-public class AsyncThread extends Thread {
+public class AsyncThread extends ExtendedThread {
    private static long threadNum;
    private long wait;
    private Runnable runnable;

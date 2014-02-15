@@ -20,6 +20,7 @@ import com.turikhay.tlauncher.updater.UpdateListener;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
 import com.turikhay.util.U;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -164,6 +165,10 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
 
    public void onAuthPassingError(Authenticator auth, Throwable e) {
       Blocker.unblock((Blockable)this, (Object)"auth");
+      Throwable cause = e.getCause();
+      if (cause == null || !(e.getCause() instanceof IOException)) {
+         throw new LoginException("Cannot auth!");
+      }
    }
 
    public void onAuthPassed(Authenticator auth) {

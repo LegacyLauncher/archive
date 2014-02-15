@@ -24,14 +24,14 @@ public class ExtendedComboBox extends JComboBox {
       this((ListCellRenderer)null);
    }
 
+   public Object getValueAt(int i) {
+      Object value = this.getItemAt(i);
+      return this.returnAs(value);
+   }
+
    public Object getSelectedValue() {
       Object selected = this.getSelectedItem();
-
-      try {
-         return selected;
-      } catch (ClassCastException var3) {
-         return null;
-      }
+      return this.returnAs(selected);
    }
 
    public void setSelectedValue(Object value) {
@@ -41,7 +41,7 @@ public class ExtendedComboBox extends JComboBox {
    public void setSelectedValue(String string) {
       Object value = this.convert(string);
       if (value != null) {
-         this.setSelectedItem(value);
+         this.setSelectedValue(value);
       }
    }
 
@@ -53,7 +53,8 @@ public class ExtendedComboBox extends JComboBox {
       this.converter = converter;
    }
 
-   protected String convert(Object from) {
+   protected String convert(Object obj) {
+      Object from = this.returnAs(obj);
       if (this.converter != null) {
          return this.converter.toValue(from);
       } else {
@@ -63,5 +64,13 @@ public class ExtendedComboBox extends JComboBox {
 
    protected Object convert(String from) {
       return this.converter != null ? this.converter.fromString(from) : null;
+   }
+
+   private Object returnAs(Object obj) {
+      try {
+         return obj;
+      } catch (ClassCastException var3) {
+         return null;
+      }
    }
 }

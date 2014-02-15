@@ -4,6 +4,7 @@ import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import com.turikhay.util.IntegerArray;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
@@ -87,5 +88,16 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
 
       this.w.setText(width);
       this.h.setText(height);
+   }
+
+   public void setBackground(Color bg) {
+      if (this.w != null) {
+         this.w.setBackground(bg);
+      }
+
+      if (this.h != null) {
+         this.h.setBackground(bg);
+      }
+
    }
 }

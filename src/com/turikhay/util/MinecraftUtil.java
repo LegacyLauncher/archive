@@ -1,8 +1,10 @@
 package com.turikhay.util;
 
 import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import net.minecraft.launcher.OperatingSystem;
 
@@ -14,12 +16,20 @@ public class MinecraftUtil {
       if (TLauncher.getInstance() == null) {
          return getDefaultWorkingDirectory();
       } else {
-         String sdir = TLauncher.getInstance().getSettings().get("minecraft.gamedir");
+         Configuration settings = TLauncher.getInstance().getSettings();
+         String sdir = settings.get("minecraft.gamedir");
          if (sdir == null) {
             return getDefaultWorkingDirectory();
          } else {
             File dir = new File(sdir);
-            return !dir.canRead() ? getDefaultWorkingDirectory() : dir;
+
+            try {
+               FileUtil.createFolder(dir);
+               return dir;
+            } catch (IOException var4) {
+               U.log("Cannot create specified Minecraft folder:", dir.getAbsolutePath());
+               return getDefaultWorkingDirectory();
+            }
          }
       }
    }

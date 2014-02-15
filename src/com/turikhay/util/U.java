@@ -2,6 +2,7 @@ package com.turikhay.util;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.util.async.ExtendedThread;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -469,6 +470,16 @@ public class U {
    }
 
    public static String stackTrace(Throwable e) {
+      Thread current = Thread.currentThread();
+      String callerTrace = null;
+      if (current instanceof ExtendedThread) {
+         callerTrace = "\nThread called by: " + stackTrace0(((ExtendedThread)current).getCaller());
+      }
+
+      return stackTrace0(e) + (callerTrace == null ? "" : callerTrace);
+   }
+
+   private static String stackTrace0(Throwable e) {
       if (e == null) {
          return null;
       } else {
@@ -498,7 +509,7 @@ public class U {
 
          Throwable cause = e.getCause();
          if (cause != null) {
-            t = t + "\nCaused by: " + stackTrace(cause);
+            t = t + "\nCaused by: " + stackTrace0(cause);
          }
 
          return t;

@@ -2,7 +2,6 @@ package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.ui.converter.StringConverter;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
-import com.turikhay.util.U;
 
 public class SettingsComboBox extends ExtendedComboBox implements SettingsField {
    private static final long serialVersionUID = -2320340434786516374L;
@@ -27,16 +26,8 @@ public class SettingsComboBox extends ExtendedComboBox implements SettingsField 
    }
 
    public void setSettingsValue(String string) {
-      if (string != null) {
-         for(int i = 0; i < this.getItemCount(); ++i) {
-            U.log(string, this.convert(this.getItemAt(i)), string.equals(this.convert(this.getItemAt(i))));
-            if (string.equals(this.convert(this.getItemAt(i)))) {
-               this.setSelectedIndex(i);
-               return;
-            }
-         }
-
-      }
+      Object value = this.convert(string);
+      this.setSelectedValue(value);
    }
 
    public boolean isValueValid() {
