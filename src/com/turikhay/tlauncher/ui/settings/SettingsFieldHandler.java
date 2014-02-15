@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui.settings;
 
+import com.turikhay.tlauncher.ui.block.Blocker;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.FocusListener;
@@ -54,5 +55,13 @@ public class SettingsFieldHandler extends SettingsHandler {
          }
       }
 
+   }
+
+   public void block(Object reason) {
+      Blocker.blockComponents(reason, this.getComponent());
+   }
+
+   public void unblock(Object reason) {
+      Blocker.unblockComponents(reason, this.getComponent());
    }
 }

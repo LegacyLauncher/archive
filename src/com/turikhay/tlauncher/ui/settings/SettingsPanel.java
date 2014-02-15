@@ -3,6 +3,8 @@ package com.turikhay.tlauncher.ui.settings;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.alert.Alert;
+import com.turikhay.tlauncher.ui.block.Blockable;
+import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
 import com.turikhay.tlauncher.ui.converter.ConnectionQualityConverter;
@@ -10,10 +12,13 @@ import com.turikhay.tlauncher.ui.converter.ConsoleTypeConverter;
 import com.turikhay.tlauncher.ui.converter.LocaleConverter;
 import com.turikhay.tlauncher.ui.loc.LocalizableButton;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import com.turikhay.tlauncher.ui.login.LoginException;
+import com.turikhay.tlauncher.ui.login.LoginListener;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import com.turikhay.util.U;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -30,7 +35,7 @@ import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import net.minecraft.launcher.versions.ReleaseType;
 
-public class SettingsPanel extends CenterPanel {
+public class SettingsPanel extends CenterPanel implements LoginListener {
    private static final long serialVersionUID = 3896900830909661270L;
    private static final int PANELS = 4;
    public final DefaultScene scene;
@@ -263,15 +268,25 @@ public class SettingsPanel extends CenterPanel {
    }
 
    public void updateValues() {
-      Iterator var2 = this.handlers.iterator();
+      boolean globalUnSaveable = !this.global.isSaveable();
+      Iterator var3 = this.handlers.iterator();
 
-      while(var2.hasNext()) {
-         SettingsHandler handler = (SettingsHandler)var2.next();
-         String path = handler.getPath();
-         String value = this.global.get(path);
-         handler.setValue(value);
+      while(true) {
+         SettingsHandler handler;
+         String path;
+         do {
+            if (!var3.hasNext()) {
+               return;
+            }
+
+            handler = (SettingsHandler)var3.next();
+            path = handler.getPath();
+            String value = this.global.get(path);
+            handler.setValue(value);
+         } while(!globalUnSaveable && this.global.isSaveable(path));
+
+         Blocker.block((Blockable)handler, (Object)"unsaveable");
       }
-
    }
 
    public boolean saveValues() {
@@ -307,6 +322,27 @@ public class SettingsPanel extends CenterPanel {
          }
       }
 
+   }
+
+   public void block(Object reason) {
+      Blocker.blockComponents((Container)this.container, (Object)reason);
+   }
+
+   public void unblock(Object reason) {
+      Blocker.unblockComponents((Container)this.container, (Object)reason);
+   }
+
+   public void onLogin() throws LoginException {
+      if (!this.checkValues()) {
+         this.scene.setSettings(true);
+         throw new LoginException("Invalid settings!");
+      }
+   }
+
+   public void onLoginFailed() {
+   }
+
+   public void onLoginSuccess() {
    }
 
    protected void log(Object... o) {

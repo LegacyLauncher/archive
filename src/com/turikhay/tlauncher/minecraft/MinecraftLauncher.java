@@ -49,7 +49,7 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class MinecraftLauncher extends Thread implements JavaProcessListener {
-   public static final int VERSION = 13;
+   public static final int VERSION = 14;
    public static final int TLAUNCHER_VERSION = 6;
    final String prefix;
    final OperatingSystem os;
@@ -147,7 +147,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
             this.c = new Console(this.s, this.logger, "Minecraft Logger", this.console);
          }
 
-         this.log("Minecraft Launcher [13;6] is started!");
+         this.log("Minecraft Launcher [14;6] is started!");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
          this.log("Current machine:", OperatingSystem.getCurrentInfo());
          this.log("Launching version:", this.version_name);
@@ -210,7 +210,7 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
                         this.showWarning("Version " + this.version_name + " is incompatible with your environment.", "incompatible");
                      }
 
-                     if (this.version.getMinimumLauncherVersion() > 13) {
+                     if (this.version.getMinimumLauncherVersion() > 14) {
                         this.showWarning("Current launcher version is incompatible with selected version " + this.version_name + " (version " + this.version.getMinimumLauncherVersion() + " required).", "incompatible.launcher");
                      }
                   }

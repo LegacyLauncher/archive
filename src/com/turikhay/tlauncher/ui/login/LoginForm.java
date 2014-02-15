@@ -152,11 +152,11 @@ public class LoginForm extends CenterPanel implements MinecraftLauncherListener,
          Blocker.block((Blockable)this.accounts, (Object)reason);
       }
 
-      Blocker.block(reason, this.versions, this.checkbox, this.buttons);
+      Blocker.block(reason, this.settings, this.versions, this.checkbox, this.buttons);
    }
 
    public void unblock(Object reason) {
-      Blocker.unblock(reason, this.accounts, this.versions, this.checkbox, this.buttons);
+      Blocker.unblock(reason, this.settings, this.accounts, this.versions, this.checkbox, this.buttons);
    }
 
    public void onAuthPassing(Authenticator auth) {

@@ -72,7 +72,6 @@ public class Configuration extends SimpleConfiguration {
       this.comments = " TLauncher configuration file\n Created in " + TLauncher.getBrand() + " " + TLauncher.getVersion();
       this.defaults = new ConfigurationDefaults();
       this.constants = ArgumentParser.parse(set);
-      this.constants.put("minecraft.versions.modified", true);
       this.set(this.constants, false);
       this.log(new Object[]{"Constant values:", this.constants});
       int version = ConfigurationDefaults.getVersion();
@@ -106,10 +105,12 @@ public class Configuration extends SimpleConfiguration {
       this.supportedLocales = this.getSupportedLocales();
       Locale selected = getLocaleOf(this.get("locale"));
       if (selected == null) {
+         this.log(new Object[]{"Selected locale is not supported, rolling back to default one"});
          selected = Locale.getDefault();
       }
 
       if (!this.supportedLocales.contains(selected)) {
+         this.log(new Object[]{"Default locale is not supported, rolling back to global default one"});
          selected = Locale.US;
       }
 

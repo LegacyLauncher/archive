@@ -20,4 +20,12 @@ public class SettingsCheckBox extends LocalizableCheckbox implements SettingsFie
    public boolean isValueValid() {
       return true;
    }
+
+   public void block(Object reason) {
+      this.setEnabled(false);
+   }
+
+   public void unblock(Object reason) {
+      this.setEnabled(true);
+   }
 }
