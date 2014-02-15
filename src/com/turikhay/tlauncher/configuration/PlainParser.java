@@ -27,16 +27,12 @@ public class PlainParser {
                   if (!Configuration.ActionOnLaunch.parse(value)) {
                      throw new ParseException("Cannot parse ActionOnLaunch");
                   }
-
-                  if (defaultValue instanceof Configuration.ConsoleType) {
-                     if (!Configuration.ConsoleType.parse(value)) {
-                        throw new ParseException("Cannot parse ConsoleType");
-                     }
-
-                     if (defaultValue instanceof Configuration.ConnectionQuality && !Configuration.ConnectionQuality.parse(value)) {
-                        throw new ParseException("Caanot parse ConnectionQuality");
-                     }
+               } else if (defaultValue instanceof Configuration.ConsoleType) {
+                  if (!Configuration.ConsoleType.parse(value)) {
+                     throw new ParseException("Cannot parse ConsoleType");
                   }
+               } else if (defaultValue instanceof Configuration.ConnectionQuality && !Configuration.ConnectionQuality.parse(value)) {
+                  throw new ParseException("Cannot parse ConnectionQuality");
                }
 
             } catch (Exception var4) {

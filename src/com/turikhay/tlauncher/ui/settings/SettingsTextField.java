@@ -35,4 +35,12 @@ public class SettingsTextField extends LocalizableTextField implements SettingsF
       String text = this.getValue();
       return text != null || this.canBeEmpty;
    }
+
+   public void block(Object reason) {
+      this.setEnabled(false);
+   }
+
+   public void unblock(Object reason) {
+      this.setEnabled(true);
+   }
 }

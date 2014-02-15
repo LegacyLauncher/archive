@@ -1,13 +1,14 @@
 package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.ui.block.Blockable;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class SettingsHandler {
+public abstract class SettingsHandler implements Blockable {
    protected static Configuration settings;
    protected final String path;
    protected String value;

@@ -2,7 +2,6 @@ package com.turikhay.tlauncher.ui.scenes;
 
 import com.turikhay.tlauncher.ui.MainPane;
 import com.turikhay.tlauncher.ui.animate.Animator;
-import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.ui.settings.SettingsPanel;
@@ -87,10 +86,10 @@ public class DefaultScene extends PseudoScene {
    }
 
    public void block(Object reason) {
-      Blocker.block((Blockable)this.loginForm, (Object)reason);
+      Blocker.block(reason, this.loginForm, this.settingsForm);
    }
 
    public void unblock(Object reason) {
-      Blocker.unblock((Blockable)this.loginForm, (Object)reason);
+      Blocker.unblock(reason, this.loginForm, this.settingsForm);
    }
 }

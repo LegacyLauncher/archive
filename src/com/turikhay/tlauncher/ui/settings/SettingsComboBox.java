@@ -33,4 +33,12 @@ public class SettingsComboBox extends ExtendedComboBox implements SettingsField 
    public boolean isValueValid() {
       return true;
    }
+
+   public void block(Object reason) {
+      this.setEnabled(false);
+   }
+
+   public void unblock(Object reason) {
+      this.setEnabled(true);
+   }
 }

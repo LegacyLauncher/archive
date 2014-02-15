@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import com.turikhay.util.IntegerArray;
@@ -99,5 +100,13 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
          this.h.setBackground(bg);
       }
 
+   }
+
+   public void block(Object reason) {
+      Blocker.blockComponents(reason, this.w, this.h);
+   }
+
+   public void unblock(Object reason) {
+      Blocker.unblockComponents(reason, this.w, this.h);
    }
 }
