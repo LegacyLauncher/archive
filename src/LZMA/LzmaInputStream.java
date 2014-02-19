@@ -5,336 +5,324 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class LzmaInputStream extends FilterInputStream {
-   boolean isClosed = false;
-   CRangeDecoder RangeDecoder;
-   byte[] dictionary;
-   int dictionarySize;
-   int dictionaryPos;
-   int GlobalPos;
-   int rep0;
-   int rep1;
-   int rep2;
-   int rep3;
-   int lc;
-   int lp;
-   int pb;
-   int State;
-   boolean PreviousIsMatch;
-   int RemainLen;
-   int[] probs;
-   byte[] uncompressed_buffer;
-   int uncompressed_size;
-   int uncompressed_offset;
-   long GlobalNowPos;
-   long GlobalOutSize;
-   static final int LZMA_BASE_SIZE = 1846;
-   static final int LZMA_LIT_SIZE = 768;
-   static final int kBlockSize = 65536;
-   static final int kNumStates = 12;
-   static final int kStartPosModelIndex = 4;
-   static final int kEndPosModelIndex = 14;
-   static final int kNumFullDistances = 128;
-   static final int kNumPosSlotBits = 6;
-   static final int kNumLenToPosStates = 4;
-   static final int kNumAlignBits = 4;
-   static final int kAlignTableSize = 16;
-   static final int kMatchMinLen = 2;
-   static final int IsMatch = 0;
-   static final int IsRep = 192;
-   static final int IsRepG0 = 204;
-   static final int IsRepG1 = 216;
-   static final int IsRepG2 = 228;
-   static final int IsRep0Long = 240;
-   static final int PosSlot = 432;
-   static final int SpecPos = 688;
-   static final int Align = 802;
-   static final int LenCoder = 818;
-   static final int RepLenCoder = 1332;
-   static final int Literal = 1846;
+	boolean isClosed;
+	CRangeDecoder RangeDecoder;
+	byte  [] dictionary;
+	int dictionarySize;
+	int dictionaryPos;
+	int GlobalPos;
+	int rep0, rep1, rep2, rep3;
+	int lc;
+	int lp;
+	int pb;
+	int State;
+	boolean PreviousIsMatch;
+	int RemainLen;
+	int [] probs;
 
-   public LzmaInputStream(InputStream in) throws IOException {
-      super(in);
-      this.readHeader();
-      this.fill_buffer();
-   }
+	byte [] uncompressed_buffer;
+	int uncompressed_size;
+	int uncompressed_offset;
+	long GlobalNowPos;
+	long GlobalOutSize;
 
-   private void LzmaDecode(int outSize) throws IOException {
-      int posStateMask = (1 << this.pb) - 1;
-      int literalPosMask = (1 << this.lp) - 1;
-      this.uncompressed_size = 0;
-      if (this.RemainLen != -1) {
-         int posState;
-         for(; this.RemainLen > 0 && this.uncompressed_size < outSize; --this.RemainLen) {
-            posState = this.dictionaryPos - this.rep0;
-            if (posState < 0) {
-               posState += this.dictionarySize;
-            }
+	static final int LZMA_BASE_SIZE = 1846;
+	static final int LZMA_LIT_SIZE  = 768;
 
-            this.uncompressed_buffer[this.uncompressed_size++] = this.dictionary[this.dictionaryPos] = this.dictionary[posState];
-            if (++this.dictionaryPos == this.dictionarySize) {
-               this.dictionaryPos = 0;
-            }
-         }
+	final static int kBlockSize = 0x10000;
 
-         byte previousbyte;
-         if (this.dictionaryPos == 0) {
-            previousbyte = this.dictionary[this.dictionarySize - 1];
-         } else {
-            previousbyte = this.dictionary[this.dictionaryPos - 1];
-         }
+	static final int kNumStates = 12;
 
-         while(this.uncompressed_size < outSize) {
-            posState = this.uncompressed_size + this.GlobalPos & posStateMask;
-            int pos;
-            int pos;
-            if (this.RangeDecoder.BitDecode(this.probs, 0 + (this.State << 4) + posState) == 0) {
-               pos = 1846 + 768 * (((this.uncompressed_size + this.GlobalPos & literalPosMask) << this.lc) + ((previousbyte & 255) >> 8 - this.lc));
-               if (this.State < 4) {
-                  this.State = 0;
-               } else if (this.State < 10) {
-                  this.State -= 3;
-               } else {
-                  this.State -= 6;
-               }
+	static final int kStartPosModelIndex = 4;
+	static final int kEndPosModelIndex   = 14;
+	static final int kNumFullDistances   = (1 << (kEndPosModelIndex >> 1));
 
-               if (this.PreviousIsMatch) {
-                  pos = this.dictionaryPos - this.rep0;
-                  if (pos < 0) {
-                     pos += this.dictionarySize;
-                  }
+	static final int kNumPosSlotBits    = 6;
+	static final int kNumLenToPosStates = 4;
 
-                  byte matchbyte = this.dictionary[pos];
-                  previousbyte = this.RangeDecoder.LzmaLiteralDecodeMatch(this.probs, pos, matchbyte);
-                  this.PreviousIsMatch = false;
-               } else {
-                  previousbyte = this.RangeDecoder.LzmaLiteralDecode(this.probs, pos);
-               }
+	static final int kNumAlignBits   = 4;
+	static final int kAlignTableSize = (1 << kNumAlignBits);
 
-               this.uncompressed_buffer[this.uncompressed_size++] = previousbyte;
-               this.dictionary[this.dictionaryPos] = previousbyte;
-               if (++this.dictionaryPos == this.dictionarySize) {
-                  this.dictionaryPos = 0;
-               }
-            } else {
-               this.PreviousIsMatch = true;
-               if (this.RangeDecoder.BitDecode(this.probs, 192 + this.State) == 1) {
-                  if (this.RangeDecoder.BitDecode(this.probs, 204 + this.State) == 0) {
-                     if (this.RangeDecoder.BitDecode(this.probs, 240 + (this.State << 4) + posState) == 0) {
-                        if (this.uncompressed_size + this.GlobalPos == 0) {
-                           throw new LzmaException("LZMA : Data Error");
-                        }
+	static final int kMatchMinLen = 2;
 
-                        this.State = this.State < 7 ? 9 : 11;
-                        pos = this.dictionaryPos - this.rep0;
-                        if (pos < 0) {
-                           pos += this.dictionarySize;
-                        }
+	static final int IsMatch     = 0;
+	static final int IsRep       = (IsMatch + (kNumStates << CRangeDecoder.kNumPosBitsMax));
+	static final int IsRepG0     = (IsRep + kNumStates);
+	static final int IsRepG1     = (IsRepG0 + kNumStates);
+	static final int IsRepG2     = (IsRepG1 + kNumStates);
+	static final int IsRep0Long  = (IsRepG2 + kNumStates);
+	static final int PosSlot     = (IsRep0Long + (kNumStates << CRangeDecoder.kNumPosBitsMax));
+	static final int SpecPos     = (PosSlot + (kNumLenToPosStates << kNumPosSlotBits));
+	static final int Align       = (SpecPos + kNumFullDistances - kEndPosModelIndex);
+	static final int LenCoder    = (Align + kAlignTableSize);
+	static final int RepLenCoder = (LenCoder + CRangeDecoder.kNumLenProbs);
+	static final int Literal     = (RepLenCoder + CRangeDecoder.kNumLenProbs);
 
-                        previousbyte = this.dictionary[pos];
-                        this.dictionary[this.dictionaryPos] = previousbyte;
-                        if (++this.dictionaryPos == this.dictionarySize) {
-                           this.dictionaryPos = 0;
-                        }
+	public LzmaInputStream (InputStream in) throws IOException {
+		super(in);
 
-                        this.uncompressed_buffer[this.uncompressed_size++] = previousbyte;
-                        continue;
-                     }
-                  } else {
-                     if (this.RangeDecoder.BitDecode(this.probs, 216 + this.State) == 0) {
-                        pos = this.rep1;
-                     } else {
-                        if (this.RangeDecoder.BitDecode(this.probs, 228 + this.State) == 0) {
-                           pos = this.rep2;
-                        } else {
-                           pos = this.rep3;
-                           this.rep3 = this.rep2;
-                        }
+		isClosed = false;
 
-                        this.rep2 = this.rep1;
-                     }
+		readHeader();
 
-                     this.rep1 = this.rep0;
-                     this.rep0 = pos;
-                  }
+		fill_buffer();
+	}
 
-                  this.RemainLen = this.RangeDecoder.LzmaLenDecode(this.probs, 1332, posState);
-                  this.State = this.State < 7 ? 8 : 11;
-               } else {
-                  this.rep3 = this.rep2;
-                  this.rep2 = this.rep1;
-                  this.rep1 = this.rep0;
-                  this.State = this.State < 7 ? 7 : 10;
-                  this.RemainLen = this.RangeDecoder.LzmaLenDecode(this.probs, 818, posState);
-                  pos = this.RangeDecoder.BitTreeDecode(this.probs, 432 + ((this.RemainLen < 4 ? this.RemainLen : 3) << 6), 6);
-                  if (pos >= 4) {
-                     pos = (pos >> 1) - 1;
-                     this.rep0 = (2 | pos & 1) << pos;
-                     if (pos < 14) {
-                        this.rep0 += this.RangeDecoder.ReverseBitTreeDecode(this.probs, 688 + this.rep0 - pos - 1, pos);
-                     } else {
-                        this.rep0 += this.RangeDecoder.DecodeDirectBits(pos - 4) << 4;
-                        this.rep0 += this.RangeDecoder.ReverseBitTreeDecode(this.probs, 802, 4);
-                     }
-                  } else {
-                     this.rep0 = pos;
-                  }
+	private void LzmaDecode(int outSize)  throws IOException {
+		byte previousbyte;
+		int posStateMask = (1 << (pb)) - 1;
+		int literalPosMask = (1 << (lp)) - 1;
 
-                  ++this.rep0;
-               }
+		uncompressed_size = 0;
 
-               if (this.rep0 == 0) {
-                  this.RemainLen = -1;
-                  break;
-               }
+		if (RemainLen == -1) {
+			return ;
+		}
 
-               if (this.rep0 > this.uncompressed_size + this.GlobalPos) {
-                  throw new LzmaException("LZMA : Data Error");
-               }
+		while(RemainLen > 0 && uncompressed_size < outSize) {
+			int pos = dictionaryPos - rep0;
+			if (pos < 0)
+				pos += dictionarySize;
+			uncompressed_buffer[uncompressed_size++] = dictionary[dictionaryPos] = dictionary[pos];
+			if (++dictionaryPos == dictionarySize)
+				dictionaryPos = 0;
+			RemainLen--;
+		}
+		if (dictionaryPos == 0)
+			previousbyte = dictionary[dictionarySize - 1];
+		else
+			previousbyte = dictionary[dictionaryPos - 1];
 
-               this.RemainLen += 2;
+		while(uncompressed_size < outSize) {
+			int posState = (int)( (uncompressed_size + GlobalPos ) & posStateMask);
 
-               while(true) {
-                  pos = this.dictionaryPos - this.rep0;
-                  if (pos < 0) {
-                     pos += this.dictionarySize;
-                  }
+			if (RangeDecoder.BitDecode(probs, IsMatch + (State << CRangeDecoder.kNumPosBitsMax) + posState) == 0) {
+				int ind_prob = Literal + (LZMA_LIT_SIZE * (((
+				                                (uncompressed_size + GlobalPos )
+				                                & literalPosMask) << lc) + ((previousbyte & 0xFF) >> (8 - lc))));
 
-                  previousbyte = this.dictionary[pos];
-                  this.dictionary[this.dictionaryPos] = previousbyte;
-                  if (++this.dictionaryPos == this.dictionarySize) {
-                     this.dictionaryPos = 0;
-                  }
+				if (State < 4)
+					State = 0;
+				else if (State < 10)
+					State -= 3;
+				else
+					State -= 6;
+				if (PreviousIsMatch) {
+					int pos = dictionaryPos - rep0;
+					if (pos < 0)
+						pos += dictionarySize;
+					byte matchbyte = dictionary[pos];
 
-                  this.uncompressed_buffer[this.uncompressed_size++] = previousbyte;
-                  --this.RemainLen;
-                  if (this.RemainLen <= 0 || this.uncompressed_size >= outSize) {
-                     break;
-                  }
-               }
-            }
-         }
+					previousbyte = RangeDecoder.LzmaLiteralDecodeMatch(probs,ind_prob, matchbyte);
+					PreviousIsMatch = false;
+				} else {
+					previousbyte = RangeDecoder.LzmaLiteralDecode(probs,ind_prob);
+				}
 
-         this.GlobalPos += this.uncompressed_size;
-      }
-   }
+				uncompressed_buffer[uncompressed_size++] = previousbyte;
 
-   private void fill_buffer() throws IOException {
-      if (this.GlobalNowPos < this.GlobalOutSize) {
-         this.uncompressed_offset = 0;
-         long lblockSize = this.GlobalOutSize - this.GlobalNowPos;
-         int blockSize;
-         if (lblockSize > 65536L) {
-            blockSize = 65536;
-         } else {
-            blockSize = (int)lblockSize;
-         }
+				dictionary[dictionaryPos] = previousbyte;
+				if (++dictionaryPos == dictionarySize)
+					dictionaryPos = 0;
 
-         this.LzmaDecode(blockSize);
-         if (this.uncompressed_size == 0) {
-            this.GlobalOutSize = this.GlobalNowPos;
-         } else {
-            this.GlobalNowPos += (long)this.uncompressed_size;
-         }
-      }
+			} else {
+				PreviousIsMatch = true;
+				if (RangeDecoder.BitDecode(probs, IsRep + State) == 1) {
+					if (RangeDecoder.BitDecode(probs, IsRepG0 + State) == 0) {
+						if (RangeDecoder.BitDecode(probs, IsRep0Long + (State << CRangeDecoder.kNumPosBitsMax) + posState) == 0) {
 
-   }
+							if ((uncompressed_size + GlobalPos) == 0) {
+								throw new LzmaException ("LZMA : Data Error");
+							}
+							State = State < 7 ? 9 : 11;
 
-   private void readHeader() throws IOException {
-      byte[] properties = new byte[5];
-      if (5 != this.in.read(properties)) {
-         throw new LzmaException("LZMA header corrupted : Properties error");
-      } else {
-         this.GlobalOutSize = 0L;
+							int pos = dictionaryPos - rep0;
+							if (pos < 0)
+								pos += dictionarySize;
+							previousbyte = dictionary[pos];
+							dictionary[dictionaryPos] = previousbyte;
+							if (++dictionaryPos == dictionarySize)
+								dictionaryPos = 0;
 
-         int prop0;
-         int lzmaInternalSize;
-         for(prop0 = 0; prop0 < 8; ++prop0) {
-            lzmaInternalSize = this.in.read();
-            if (lzmaInternalSize == -1) {
-               throw new LzmaException("LZMA header corrupted : Size error");
-            }
+							uncompressed_buffer[uncompressed_size++] = previousbyte;
+							continue;
+						}
+					} else {
+						int distance;
+						if(RangeDecoder.BitDecode(probs, IsRepG1 + State) == 0)
+							distance = rep1;
+						else {
+							if(RangeDecoder.BitDecode(probs, IsRepG2 + State) == 0)
+								distance = rep2;
+							else {
+								distance = rep3;
+								rep3 = rep2;
+							}
+							rep2 = rep1;
+						}
+						rep1 = rep0;
+						rep0 = distance;
+					}
+					RemainLen = RangeDecoder.LzmaLenDecode(probs, RepLenCoder, posState);
+					State = State < 7 ? 8 : 11;
+				} else {
+					rep3 = rep2;
+					rep2 = rep1;
+					rep1 = rep0;
+					State = State < 7 ? 7 : 10;
+					RemainLen = RangeDecoder.LzmaLenDecode(probs, LenCoder, posState);
+					int posSlot = RangeDecoder.BitTreeDecode(probs , PosSlot +
+					                                     ((RemainLen < kNumLenToPosStates ? RemainLen : kNumLenToPosStates - 1) <<
+					                                      kNumPosSlotBits), kNumPosSlotBits);
+					if (posSlot >= kStartPosModelIndex) {
+						int numDirectBits = ((posSlot >> 1) - 1);
+						rep0 = ((2 | (posSlot & 1)) << numDirectBits);
+						if (posSlot < kEndPosModelIndex) {
+							rep0 += RangeDecoder.ReverseBitTreeDecode(
+							            probs, SpecPos + rep0 - posSlot - 1, numDirectBits);
+						} else {
+							rep0 += RangeDecoder.DecodeDirectBits(
+							            numDirectBits - kNumAlignBits) << kNumAlignBits;
+							rep0 += RangeDecoder.ReverseBitTreeDecode(probs, Align, kNumAlignBits);
+						}
+					} else
+						rep0 = posSlot;
+					rep0++;
+				}
+				if (rep0 == 0) {
 
-            this.GlobalOutSize += (long)lzmaInternalSize << prop0 * 8;
-         }
+					RemainLen = -1;
+					break;
+				}
+				if (rep0 > uncompressed_size
 
-         if (this.GlobalOutSize == -1L) {
-            this.GlobalOutSize = Long.MAX_VALUE;
-         }
+				        + GlobalPos
 
-         prop0 = properties[0] & 255;
-         if (prop0 >= 225) {
-            throw new LzmaException("LZMA header corrupted : Properties error");
-         } else {
-            for(this.pb = 0; prop0 >= 45; prop0 -= 45) {
-               ++this.pb;
-            }
+				   ) {
+					throw new LzmaException ("LZMA : Data Error");
+				}
+				RemainLen += kMatchMinLen;
+				do {
 
-            for(this.lp = 0; prop0 >= 9; prop0 -= 9) {
-               ++this.lp;
-            }
+					int pos = dictionaryPos - rep0;
+					if (pos < 0)
+						pos += dictionarySize;
+					previousbyte = dictionary[pos];
+					dictionary[dictionaryPos] = previousbyte;
+					if (++dictionaryPos == dictionarySize)
+						dictionaryPos = 0;
 
-            this.lc = prop0;
-            lzmaInternalSize = 1846 + (768 << this.lc + this.lp);
-            this.probs = new int[lzmaInternalSize];
-            this.dictionarySize = 0;
+					uncompressed_buffer[uncompressed_size++] = previousbyte;
+					RemainLen--;
+				} while(RemainLen > 0 && uncompressed_size < outSize);
+			}
+		}
 
-            int numProbs;
-            for(numProbs = 0; numProbs < 4; ++numProbs) {
-               this.dictionarySize += (properties[1 + numProbs] & 255) << numProbs * 8;
-            }
+		GlobalPos = GlobalPos + uncompressed_size;
+	}
 
-            this.dictionary = new byte[this.dictionarySize];
-            if (this.dictionary == null) {
-               throw new LzmaException("LZMA : can't allocate");
-            } else {
-               numProbs = 1846 + (768 << this.lc + this.lp);
-               this.RangeDecoder = new CRangeDecoder(this.in);
-               this.dictionaryPos = 0;
-               this.GlobalPos = 0;
-               this.rep0 = this.rep1 = this.rep2 = this.rep3 = 1;
-               this.State = 0;
-               this.PreviousIsMatch = false;
-               this.RemainLen = 0;
-               this.dictionary[this.dictionarySize - 1] = 0;
+	private void fill_buffer() throws IOException {
+		if (GlobalNowPos < GlobalOutSize) {
+			uncompressed_offset = 0;
+			long lblockSize = GlobalOutSize - GlobalNowPos;
+			int blockSize;
+			if (lblockSize > kBlockSize)
+				blockSize = kBlockSize;
+			else
+				blockSize = (int)lblockSize;
 
-               for(int i = 0; i < numProbs; ++i) {
-                  this.probs[i] = 1024;
-               }
+			LzmaDecode(blockSize);
 
-               this.uncompressed_buffer = new byte[65536];
-               this.uncompressed_size = 0;
-               this.uncompressed_offset = 0;
-               this.GlobalNowPos = 0L;
-            }
-         }
-      }
-   }
+			if (uncompressed_size == 0) {
+				GlobalOutSize = GlobalNowPos;
+			} else {
+				GlobalNowPos += uncompressed_size;
+			}
+		}
+	}
 
-   public int read(byte[] buf, int off, int len) throws IOException {
-      if (this.isClosed) {
-         throw new IOException("stream closed");
-      } else if ((off | len | off + len | buf.length - (off + len)) < 0) {
-         throw new IndexOutOfBoundsException();
-      } else if (len == 0) {
-         return 0;
-      } else {
-         if (this.uncompressed_offset == this.uncompressed_size) {
-            this.fill_buffer();
-         }
+	private void readHeader() throws IOException {
+		byte [] properties = new byte[5];
 
-         if (this.uncompressed_offset == this.uncompressed_size) {
-            return -1;
-         } else {
-            int l = Math.min(len, this.uncompressed_size - this.uncompressed_offset);
-            System.arraycopy(this.uncompressed_buffer, this.uncompressed_offset, buf, off, l);
-            this.uncompressed_offset += l;
-            return l;
-         }
-      }
-   }
+		if (5 != in.read(properties))
+			throw new LzmaException ("LZMA header corrupted : Properties error");
 
-   public void close() throws IOException {
-      this.isClosed = true;
-      super.close();
-   }
+		GlobalOutSize = 0;
+		for (int ii = 0; ii < 8; ii++) {
+			int b = in.read();
+			if (b == -1)
+				throw new LzmaException ("LZMA header corrupted : Size error");
+			GlobalOutSize += ((long)b) << (ii * 8);
+		}
+
+                if (GlobalOutSize == -1) GlobalOutSize=Long.MAX_VALUE;
+
+		int prop0 = properties[0] & 0xFF;
+		if (prop0 >= (9*5*5)) {
+			throw new LzmaException ("LZMA header corrupted : Properties error");
+		}
+
+		for (pb = 0; prop0 >= (9 * 5); pb++, prop0 -= (9 * 5))
+			;
+		for (lp = 0; prop0 >= 9; lp++, prop0 -= 9)
+			;
+		lc = prop0;
+
+		int lzmaInternalSize = (LZMA_BASE_SIZE + (LZMA_LIT_SIZE << (lc + lp)));
+
+		probs = new int[lzmaInternalSize];
+
+		dictionarySize = 0;
+		for (int i = 0; i < 4; i++)
+			dictionarySize += (properties[1 + i]&0xFF) << (i * 8);
+		dictionary = new byte[dictionarySize];
+		if (dictionary == null) {
+			throw new LzmaException ("LZMA : can't allocate");
+		}
+
+		int numProbs = Literal + (LZMA_LIT_SIZE << (lc + lp));
+
+		RangeDecoder = new CRangeDecoder(in);
+		dictionaryPos = 0;
+		GlobalPos = 0;
+		rep0 = rep1 = rep2 = rep3 = 1;
+		State = 0;
+		PreviousIsMatch = false;
+		RemainLen = 0;
+		dictionary[dictionarySize - 1] = 0;
+		for (int i = 0; i < numProbs; i++)
+			probs[i] = CRangeDecoder.kBitModelTotal >> 1;
+
+		uncompressed_buffer = new byte [kBlockSize];
+		uncompressed_size = 0;
+		uncompressed_offset = 0;
+
+		GlobalNowPos = 0;
+	}
+
+	public int read (byte[] buf, int off, int len) throws IOException {
+		if (isClosed)
+			throw new IOException ("stream closed");
+
+		if ((off | len | (off + len) | (buf.length - (off + len))) < 0) {
+			throw new IndexOutOfBoundsException();
+		}
+		if (len == 0)
+			return 0;
+
+		if (uncompressed_offset == uncompressed_size)
+			fill_buffer();
+		if (uncompressed_offset == uncompressed_size)
+			return -1;
+
+		int l = Math.min(len,uncompressed_size-uncompressed_offset);
+		System.arraycopy (uncompressed_buffer, uncompressed_offset, buf, off, l);
+		uncompressed_offset += l;
+		return l;
+	}
+
+	public void close () throws IOException {
+		isClosed = true;
+		super.close ();
+	}
 }

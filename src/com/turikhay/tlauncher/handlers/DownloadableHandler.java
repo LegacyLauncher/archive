@@ -1,11 +1,8 @@
 package com.turikhay.tlauncher.handlers;
 
 public interface DownloadableHandler {
-   void onStart();
-
-   void onCompleteError();
-
-   void onComplete();
-
-   void onAbort();
+	public void onStart();
+	public void onCompleteError();
+	public void onComplete();
+	public void onAbort();
 }

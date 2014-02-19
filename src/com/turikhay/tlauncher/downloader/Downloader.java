@@ -1,379 +1,255 @@
 package com.turikhay.tlauncher.downloader;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.util.U;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class Downloader extends Thread {
-   private final int limitThreads;
-   public final String name;
-   private int maxThreads;
-   private int minTries;
-   private int maxTries;
-   private boolean launched;
-   private boolean available;
-   private boolean list_;
-   private boolean listeners_;
-   private DownloaderThread[] threads;
-   private List list;
-   private List queue;
-   private List listeners;
-   private int[] remain;
-   private int[] progress;
-   private double[] speed;
-   private int av_progress;
-   private int runningThreads;
-   private double av_speed;
-
-   public Downloader(TLauncher tlauncher) {
-      this.limitThreads = 10;
-      this.available = true;
-      this.list_ = true;
-      this.listeners_ = true;
-      this.list = new ArrayList();
-      this.queue = new ArrayList();
-      this.listeners = new ArrayList();
-      this.name = "Tl";
-      this.loadConfiguration(tlauncher.getSettings());
-      this.threads = new DownloaderThread[10];
-      this.start();
-   }
-
-   public Downloader(String name, int minTries, int maxTries, int threads) {
-      this.limitThreads = 10;
-      this.available = true;
-      this.list_ = true;
-      this.listeners_ = true;
-      this.list = new ArrayList();
-      this.queue = new ArrayList();
-      this.listeners = new ArrayList();
-      this.name = name;
-      this.maxThreads = threads;
-      this.minTries = minTries;
-      this.maxThreads = maxTries;
-      this.threads = new DownloaderThread[10];
-      this.start();
-   }
-
-   public Downloader(int minTries, int maxTries, int threads) {
-      this("", minTries, maxTries, threads);
-   }
-
-   public void run() {
-      this.check();
-
-      while(!this.launched) {
-         this.sleepFor(500L);
-      }
-
-      while(!this.list_) {
-         this.sleepFor(100L);
-      }
-
-      this.available = false;
-      this.list_ = false;
-      this.list.addAll(this.queue);
-      this.queue.clear();
-      this.av_progress = this.runningThreads = 0;
-      this.remain = new int[this.maxThreads];
-      this.progress = new int[this.maxThreads];
-      this.speed = new double[this.maxThreads];
-      int len = this.list.size();
-      int each = U.getMaxMultiply(len, this.maxThreads);
-      int x = 0;
-      int y = -1;
-      if (len > 0) {
-         this.onDownloaderStart(len);
-      }
-
-      int i;
-      for(; len > 0; each = U.getMaxMultiply(len, this.maxThreads)) {
-         for(i = 0; i < this.maxThreads; ++i) {
-            ++y;
-            ++this.runningThreads;
-            len -= each;
-            int[] var10000 = this.remain;
-            var10000[i] += each;
-            DownloaderThread curthread = this.threads[i];
-            if (curthread == null) {
-               curthread = this.threads[i] = new DownloaderThread(this, i);
-            }
-
-            for(y = x; y < x + each; ++y) {
-               curthread.add((Downloadable)this.list.get(y));
-            }
-
-            x = y;
-            if (len == 0) {
-               break;
-            }
-         }
-      }
-
-      for(i = 0; i < this.maxThreads; ++i) {
-         if (this.threads[i] != null) {
-            this.threads[i].startLaunch();
-         }
-      }
-
-      this.list.clear();
-      this.list_ = true;
-      this.launched = false;
-
-      while(!this.launched) {
-         this.sleepFor(500L);
-      }
-
-      while(!this.list_) {
-         this.sleepFor(100L);
-      }
-
-      this.list_ = false;
-      this.list.addAll(this.queue);
-      this.queue.clear();
-      this.list_ = true;
-      this.available = true;
-      this.run();
-   }
-
-   public void add(Downloadable d) {
-      while(!this.list_) {
-         this.sleepFor(100L);
-      }
-
-      this.list_ = false;
-      if (this.available) {
-         this.list.add(d);
-      } else {
-         this.queue.add(d);
-      }
-
-      this.list_ = true;
-   }
-
-   public void add(DownloadableContainer c) {
-      while(!this.list_) {
-         this.sleepFor(100L);
-      }
-
-      this.list_ = false;
-      if (this.available) {
-         this.list.addAll(c.elems);
-      } else {
-         this.queue.addAll(c.elems);
-      }
-
-      this.list_ = true;
-   }
-
-   public void addListener(DownloadListener l) {
-      while(!this.listeners_) {
-         this.sleepFor(100L);
-      }
-
-      this.listeners_ = false;
-      this.listeners.add(l);
-      this.listeners_ = true;
-   }
-
-   public void removeListener(DownloadListener l) {
-      while(!this.listeners_) {
-         this.sleepFor(100L);
-      }
-
-      this.listeners_ = false;
-      this.listeners.remove(l);
-      this.listeners_ = true;
-   }
-
-   public boolean isAvailable() {
-      return this.available;
-   }
-
-   public boolean isLaunched() {
-      return this.launched;
-   }
-
-   public int getRemaining() {
-      return U.getSum(this.remain);
-   }
-
-   public void startLaunch() {
-      this.launched = true;
-   }
-
-   public void stopLaunch() {
-      DownloaderThread[] var4;
-      int var3 = (var4 = this.threads).length;
-
-      for(int var2 = 0; var2 < var3; ++var2) {
-         DownloaderThread thread = var4[var2];
-         if (thread != null) {
-            thread.stopLaunch();
-         }
-      }
-
-      boolean has = true;
-
-      while(true) {
-         while(has) {
-            has = false;
-            DownloaderThread[] var5;
-            int var10 = (var5 = this.threads).length;
-
-            for(var3 = 0; var3 < var10; ++var3) {
-               DownloaderThread thread = var5[var3];
-               if (thread != null && !thread.isAvailable()) {
-                  has = true;
-                  break;
-               }
-            }
-         }
-
-         U.gc();
-         Iterator var9 = this.listeners.iterator();
-
-         while(var9.hasNext()) {
-            DownloadListener l = (DownloadListener)var9.next();
-            l.onDownloaderAbort(this);
-         }
-
-         return;
-      }
-   }
-
-   public int getMinTries() {
-      return this.minTries;
-   }
-
-   public void setMinTries(int i) {
-      this.minTries = i;
-   }
-
-   public int getMaxTries() {
-      return this.maxTries;
-   }
-
-   public void setMaxTries(int i) {
-      this.maxTries = i;
-   }
-
-   public int getMaxThreads() {
-      return this.maxThreads;
-   }
-
-   public void setMaxThreads(int i) {
-      if (i > 10) {
-         throw new IllegalArgumentException("Thread limit exceed!");
-      } else {
-         this.maxThreads = i;
-      }
-   }
-
-   void onDownloaderStart(int files) {
-      Iterator var3 = this.listeners.iterator();
-
-      while(var3.hasNext()) {
-         DownloadListener l = (DownloadListener)var3.next();
-         l.onDownloaderStart(this, files);
-      }
-
-   }
-
-   void onDownloaderStop() {
-      Iterator var2 = this.listeners.iterator();
-
-      while(var2.hasNext()) {
-         DownloadListener l = (DownloadListener)var2.next();
-         l.onDownloaderComplete(this);
-      }
-
-   }
-
-   void onStart(int id, Downloadable d) {
-   }
-
-   void onError(int id, Downloadable d) {
-      int var10002 = this.remain[id]--;
-      Throwable error = this.threads[id].getError();
-      Iterator var5 = this.listeners.iterator();
-
-      while(var5.hasNext()) {
-         DownloadListener l = (DownloadListener)var5.next();
-         l.onDownloaderError(this, d, error);
-      }
-
-   }
-
-   void onProgress(int id, int curprogress, double curspeed) {
-      this.progress[id] = curprogress;
-      this.speed[id] = curspeed;
-      int old_progress = this.av_progress;
-      this.av_progress = U.getAverage(this.progress, this.runningThreads);
-      if (this.av_progress != old_progress) {
-         this.av_speed = U.getSum(this.speed);
-         Iterator var7 = this.listeners.iterator();
-
-         while(var7.hasNext()) {
-            DownloadListener l = (DownloadListener)var7.next();
-            l.onDownloaderProgress(this, this.av_progress, this.av_speed);
-         }
-
-      }
-   }
-
-   void onComplete(int id, Downloadable d) {
-      int var10002 = this.remain[id]--;
-      Iterator var4 = this.listeners.iterator();
-
-      DownloadListener l;
-      while(var4.hasNext()) {
-         l = (DownloadListener)var4.next();
-         l.onDownloaderFileComplete(this, d);
-      }
-
-      U.log("Complete0");
-      int[] var6;
-      int var5 = (var6 = this.remain).length;
-
-      for(int var8 = 0; var8 < var5; ++var8) {
-         int curremain = var6[var8];
-         if (curremain != 0) {
-            return;
-         }
-      }
-
-      U.log("Complete1");
-      var4 = this.listeners.iterator();
-
-      while(var4.hasNext()) {
-         l = (DownloadListener)var4.next();
-         l.onDownloaderComplete(this);
-      }
-
-   }
-
-   private void check() {
-      if (!this.available) {
-         throw new IllegalStateException("Downloader is unavailable!");
-      }
-   }
-
-   private void sleepFor(long millis) {
-      try {
-         Thread.sleep(millis);
-      } catch (Exception var4) {
-      }
-
-   }
-
-   public void loadConfiguration(Configuration settings) {
-      int[] conf = settings.getConnectionQuality().getConfiguration();
-      this.setMinTries(conf[0]);
-      this.setMaxTries(conf[1]);
-      this.setMaxThreads(conf[2]);
-   }
+	private final int limitThreads = 10;
+	
+	public final String name;
+	
+	private int maxThreads;
+	private int minTries, maxTries;
+	
+	private boolean launched, available = true, list_ = true, listeners_ = true;
+	
+	private DownloaderThread[] threads;
+	
+	private List<Downloadable> list = new ArrayList<Downloadable>();
+	private List<Downloadable> queue = new ArrayList<Downloadable>();
+	
+	private List<DownloadListener> listeners = new ArrayList<DownloadListener>();
+	
+	private int[] remain, progress;
+	private double[] speed;
+	
+	private int av_progress, runningThreads;
+	private double av_speed;
+	
+	public Downloader(TLauncher tlauncher){
+		this.name = "Tl";
+		
+		this.loadConfiguration(tlauncher.getSettings());
+		
+		this.threads = new DownloaderThread[ limitThreads ];
+		
+		this.start();
+	}
+	
+	public Downloader(String name, int minTries, int maxTries, int threads){
+		this.name = name;
+		
+		this.maxThreads = threads;
+		
+		this.minTries = minTries;
+		this.maxThreads = maxTries;
+		
+		this.threads = new DownloaderThread[ limitThreads ];
+		
+		this.start();
+	}
+	
+	public Downloader(int minTries, int maxTries, int threads){ this("", minTries, maxTries, threads); }
+	
+	public void run(){ check();
+		while(!launched) sleepFor(500);
+		while(!list_) sleepFor(100);
+		available = false;
+		list_= false;
+		
+		list.addAll(queue);
+		queue.clear();
+		
+		av_progress = runningThreads = 0;
+		
+		remain = new int[ maxThreads ];
+		progress = new int[ maxThreads ];
+		speed = new double[ maxThreads ];
+		
+		int len = list.size(), each = U.getMaxMultiply(len, maxThreads), x = 0, y = -1;
+		
+		if(len > 0) onDownloaderStart(len);
+		
+		while(len > 0){		
+			for(int i=0;i<maxThreads;i++){ ++y; ++runningThreads;
+				len -= each;
+				
+				remain[i] += each;
+				
+				DownloaderThread curthread = threads[i];
+				
+				if(curthread == null){ curthread = threads[i] = new DownloaderThread(this, i); /* LOL :D */ }
+				for(y=x;y<x+each;y++) curthread.add(list.get(y));
+				x = y;
+				
+				if(len == 0) break;
+			}
+			each = U.getMaxMultiply(len, maxThreads);
+		}
+		
+		for(int i=0;i<maxThreads;i++)
+			if(threads[i] != null) threads[i].startLaunch();
+		
+		list.clear();
+		
+		list_ = true;
+		launched = false;
+		while(!launched) sleepFor(500);
+		while(!list_) sleepFor(100);
+		list_= false;
+		
+		list.addAll(queue);
+		queue.clear();
+		
+		list_ = true;
+		
+		available = true;
+		
+		run();
+	}
+	
+	public void add(Downloadable d){
+		while(!list_) sleepFor(100);
+		
+		list_ = false;
+		if(available) list.add(d); else queue.add(d);
+		list_ = true;
+	}
+	public void add(DownloadableContainer c){
+		while(!list_) sleepFor(100);
+	
+		list_ = false;
+		if(available) list.addAll(c.elems); else queue.addAll(c.elems);
+		list_ = true;
+	}
+	public void addListener(DownloadListener l){
+		while(!listeners_) sleepFor(100);
+		
+		listeners_ = false;
+		listeners.add(l);
+		listeners_ = true;
+	}
+	public void removeListener(DownloadListener l){
+		while(!listeners_) sleepFor(100);
+		
+		listeners_ = false;
+		listeners.remove(l);
+		listeners_ = true;
+	}
+	public boolean isAvailable(){ return available; }
+	public boolean isLaunched(){ return launched; }
+	
+	public int getRemaining(){ return U.getSum(remain); }
+	
+	public void startLaunch(){ launched = true; }
+	public void stopLaunch(){
+		for(DownloaderThread thread : threads)
+			if(thread != null) thread.stopLaunch();
+		
+		boolean has = true;
+		
+		while(has){ // Wait while threads abort their downloads and become available again.
+			has = false;
+			
+			for(DownloaderThread thread : threads)
+				if(thread == null)
+					continue;
+				else
+					if(!thread.isAvailable()){
+						has = true;
+						break;
+					}
+		}
+		
+		U.gc();
+		
+		for(DownloadListener l : listeners)
+			l.onDownloaderAbort(this);
+	}
+	
+	public int getMinTries(){
+		return minTries;
+	}
+	
+	public void setMinTries(int i){
+		this.minTries = i;
+	}
+	
+	public int getMaxTries(){
+		return maxTries;
+	}
+	
+	public void setMaxTries(int i){
+		this.maxTries = i;
+	}
+	
+	public int getMaxThreads(){
+		return this.maxThreads;
+	}
+	
+	public void setMaxThreads(int i){
+		if(i > limitThreads)
+			throw new IllegalArgumentException("Thread limit exceed!");
+		
+		this.maxThreads = i;
+	}
+	
+	void onDownloaderStart(int files){
+		for(DownloadListener l : listeners)
+			l.onDownloaderStart(this, files);
+	}
+	void onDownloaderStop(){
+		for(DownloadListener l : listeners)
+			l.onDownloaderComplete(this);
+	}
+	void onStart(int id, Downloadable d) {
+		
+	}
+	void onError(int id, Downloadable d) { --remain[id];
+		Throwable error = threads[id].getError();
+		
+		for(DownloadListener l : listeners)
+			l.onDownloaderError(this, d, error);
+	}
+	void onProgress(int id, int curprogress, double curspeed) {
+		progress[id] = curprogress;
+		speed[id] = curspeed;
+		
+		int old_progress = av_progress;
+		av_progress = U.getAverage(progress, runningThreads); if(av_progress == old_progress) return;
+		av_speed = U.getSum(speed);
+		
+		for(DownloadListener l : listeners)
+			l.onDownloaderProgress(this, av_progress, av_speed);
+	}
+	void onComplete(int id, Downloadable d) { --remain[id];
+		for(DownloadListener l : listeners)
+			l.onDownloaderFileComplete(this, d);
+	
+		for(int curremain : remain) if(curremain != 0) return;
+		
+		for(DownloadListener l : listeners)
+			l.onDownloaderComplete(this);
+	}
+	
+	private void check(){
+		if(available) return;
+		throw new IllegalStateException("Downloader is unavailable!");
+	}
+	
+	private void sleepFor(long millis){
+		try{ Thread.sleep(millis); }catch(Exception e){}
+	}
+	
+	public void loadConfiguration(Configuration settings){
+		int[] conf = settings.getConnectionQuality().getConfiguration();
+		
+		this.setMinTries(conf[0]);
+		this.setMaxTries(conf[1]);
+		this.setMaxThreads(conf[2]);
+	}
 }

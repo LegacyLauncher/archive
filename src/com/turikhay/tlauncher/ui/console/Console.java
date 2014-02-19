@@ -1,5 +1,15 @@
 package com.turikhay.tlauncher.ui.console;
 
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
@@ -9,334 +19,256 @@ import com.turikhay.util.async.AsyncThread;
 import com.turikhay.util.logger.LinkedStringStream;
 import com.turikhay.util.logger.Logger;
 import com.turikhay.util.logger.PrintLogger;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 
 public class Console implements Logger {
-   private static List frames = Collections.synchronizedList(new ArrayList());
-   private final Configuration global;
-   private final ConsoleFrame frame;
-   private final String name;
-   private LinkedStringStream stream;
-   private PrintLogger logger;
-   private Console.CloseAction close;
-   private boolean killed;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$console$Console$CloseAction;
+	private static List<ConsoleFrame> frames = Collections.synchronizedList(new ArrayList<ConsoleFrame>());
+	
+	private final Configuration global;
+	private final ConsoleFrame frame;
+	private final String name;
+	
+	private LinkedStringStream stream;
+	private PrintLogger logger;
+	
+	private CloseAction close;
+	private boolean killed;
+	
+	public Console(Configuration global, PrintLogger logger, String name, boolean show){
+		this.global = global;		
+		this.name = name;
+		
+		TLauncherFrame.initLookAndFeel();
+		
+		this.frame = new ConsoleFrame(this, global, name);
+		frames.add(frame);
+		
+		this.update();
+		
+		frame.addWindowListener(new WindowListener(){
+			public void windowOpened(WindowEvent e) {}
+			public void windowClosing(WindowEvent e) { save(); onClose(); }
+			public void windowClosed(WindowEvent e) { }
+			public void windowIconified(WindowEvent e) {}
+			public void windowDeiconified(WindowEvent e) {}
+			public void windowActivated(WindowEvent e) {}
+			public void windowDeactivated(WindowEvent e) {}
+		});
+		
+		frame.addComponentListener(new ComponentListener(){
+			public void componentResized(ComponentEvent e) {
+				save(false);
+			}
+			public void componentMoved(ComponentEvent e) {
+				save(false);
+			}
+			public void componentShown(ComponentEvent e) {
+				save(true);
+			}
+			public void componentHidden(ComponentEvent e) {
+				save(true);
+			}
+	    });
+		
+		
+		if(logger == null){
+			this.logger = null;
+			this.stream = new LinkedStringStream();
+			this.stream.setLogger(this);
+		} else {
+			this.logger = logger; logger.setMirror(this);
+			this.stream = logger.getStream();
+		}
+		
+		if(show) show();
+		
+		if(stream.getLength() != 0)		
+			rawlog(stream.getOutput());
+	}
+	
+	public void log(String s) {		
+		if(logger != null) logger.rawlog(s);
+		else stream.write(s.toCharArray());
+	}
+	
+	public void log(Object... o) {	
+		log(U.toLog(o));
+	}
+	
+	public void rawlog(String s){
+		if(StringUtil.lastChar(s) == '\n')
+			frame.print(s);
+		else
+			frame.println(s);
+	}
+	
+	public void rawlog(Object...o){
+		rawlog(U.toLog(o));
+	}
 
-   public Console(Configuration global, PrintLogger logger, String name, boolean show) {
-      this.global = global;
-      this.name = name;
-      TLauncherFrame.initLookAndFeel();
-      this.frame = new ConsoleFrame(this, global, name);
-      frames.add(this.frame);
-      this.update();
-      this.frame.addWindowListener(new WindowListener() {
-         public void windowOpened(WindowEvent e) {
-         }
+	public void rawlog(char[] c) {
+		rawlog(new String(c));
+	}
+	
+	public PrintLogger getLogger(){
+		return logger;
+	}
+	
+	public String getOutput(){
+		return stream.getOutput();
+	}
+	
+	public void update(){ check();
+		if(global == null) return;
+		
+		String
+			prefix = "gui.console.";
+		int
+			width = global.getInteger(prefix + "width", ConsoleFrame.minWidth),
+			height = global.getInteger(prefix + "height", ConsoleFrame.minHeight),
+			x = global.getInteger(prefix + "x", 0),
+			y = global.getInteger(prefix + "y", 0);
+		//
+			prefix += "search.";
+		boolean
+			mcase = global.getBoolean(prefix + "mcase"),
+			whole = global.getBoolean(prefix + "whole"),
+			cycle = global.getBoolean(prefix + "cycle"),
+			regexp = global.getBoolean(prefix + "regexp");
+		
+		frame.setSize(width, height);
+		frame.setLocation(x, y);
+		
+		SearchPrefs sf = frame.getSearchPrefs();
+		sf.setCaseSensetive(mcase);
+		sf.setWordSearch(whole);
+		sf.setCycled(cycle);
+		sf.setRegExp(regexp);
+	}
+	
+	public void save(){
+		save(false);
+	}
+	
+	public void save(boolean flush){ check();
+		if(global == null) return;
+		
+		String
+			prefix = "gui.console.";
+		int[] size = getSize(), position = getPosition();
+		
+		global.set(prefix + "width", size[0], false);
+		global.set(prefix + "height", size[1], false);
+		global.set(prefix + "x", position[0], false);
+		global.set(prefix + "y", position[1], false);
+		
+			prefix += "search.";
+		boolean[] prefs = frame.getSearchPrefs().get();
+		
+		global.set(prefix + "mcase", prefs[0], false);
+		global.set(prefix + "whole", prefs[1], false);
+		global.set(prefix + "cycle", prefs[2], false);
+		global.set(prefix + "regexp", prefs[3], flush);		
+	}
+	
+	private void check(){
+		if(killed)
+			throw new IllegalStateException("Console is already killed!");
+	}
+	
+	public void setShown(boolean shown){
+		if(shown) show(); else hide();
+	}
+	
+	public void show(){
+		show(true);
+	}
+	
+	public void show(boolean toFront){ check();
+		frame.setVisible(true);
+		frame.scrollBottom();
+		
+		if(toFront) frame.toFront();
+	}
+	
+	public void hide(){ check();
+		frame.setVisible(false);
+	}
+	
+	public void clear(){ check();
+		frame.clear();
+	}
+	
+	public void kill(){ check(); save();
+		frame.setVisible(false); frame.clear();
+		
+		frames.remove(frame);
+		killed = true;
+	}
 
-         public void windowClosing(WindowEvent e) {
-            Console.this.save();
-            Console.this.onClose();
-         }
+	public void killIn(long millis){ check(); save();
+		frame.hideIn(millis);
+	
+		AsyncThread.execute(new Runnable(){
+			public void run(){
+				if(isHidden())
+					kill();
+			}
+		}, millis + 1000);
+	}
 
-         public void windowClosed(WindowEvent e) {
-         }
+	public boolean isKilled(){ check();
+		return killed;
+	}
+	
+	public boolean isHidden(){ check();
+		return !frame.isShowing();
+	}
+	
+	public String getName(){
+		return name;
+	}
 
-         public void windowIconified(WindowEvent e) {
-         }
+	public Point getPositionPoint(){ check();
+		return frame.getLocation();
+	}
 
-         public void windowDeiconified(WindowEvent e) {
-         }
+	public int[] getPosition(){ check();
+		Point p = this.getPositionPoint();
+		return new int[]{p.x, p.y};
+	}
 
-         public void windowActivated(WindowEvent e) {
-         }
+	public Dimension getDimension(){ check();
+		return frame.getSize();
+	}
 
-         public void windowDeactivated(WindowEvent e) {
-         }
-      });
-      this.frame.addComponentListener(new ComponentListener() {
-         public void componentResized(ComponentEvent e) {
-            Console.this.save(false);
-         }
-
-         public void componentMoved(ComponentEvent e) {
-            Console.this.save(false);
-         }
-
-         public void componentShown(ComponentEvent e) {
-            Console.this.save(true);
-         }
-
-         public void componentHidden(ComponentEvent e) {
-            Console.this.save(true);
-         }
-      });
-      if (logger == null) {
-         this.logger = null;
-         this.stream = new LinkedStringStream();
-         this.stream.setLogger(this);
-      } else {
-         this.logger = logger;
-         logger.setMirror(this);
-         this.stream = logger.getStream();
-      }
-
-      if (show) {
-         this.show();
-      }
-
-      if (this.stream.getLength() != 0) {
-         this.rawlog(this.stream.getOutput());
-      }
-
-   }
-
-   public void log(String s) {
-      if (this.logger != null) {
-         this.logger.rawlog(s);
-      } else {
-         this.stream.write(s.toCharArray());
-      }
-
-   }
-
-   public void log(Object... o) {
-      this.log(U.toLog(o));
-   }
-
-   public void rawlog(String s) {
-      if (StringUtil.lastChar(s) == '\n') {
-         this.frame.print(s);
-      } else {
-         this.frame.println(s);
-      }
-
-   }
-
-   public void rawlog(Object... o) {
-      this.rawlog(U.toLog(o));
-   }
-
-   public void rawlog(char[] c) {
-      this.rawlog(new String(c));
-   }
-
-   public PrintLogger getLogger() {
-      return this.logger;
-   }
-
-   public String getOutput() {
-      return this.stream.getOutput();
-   }
-
-   public void update() {
-      this.check();
-      if (this.global != null) {
-         String prefix = "gui.console.";
-         int width = this.global.getInteger(prefix + "width", 620);
-         int height = this.global.getInteger(prefix + "height", 400);
-         int x = this.global.getInteger(prefix + "x", 0);
-         int y = this.global.getInteger(prefix + "y", 0);
-         prefix = prefix + "search.";
-         boolean mcase = this.global.getBoolean(prefix + "mcase");
-         boolean whole = this.global.getBoolean(prefix + "whole");
-         boolean cycle = this.global.getBoolean(prefix + "cycle");
-         boolean regexp = this.global.getBoolean(prefix + "regexp");
-         this.frame.setSize(width, height);
-         this.frame.setLocation(x, y);
-         SearchPrefs sf = this.frame.getSearchPrefs();
-         sf.setCaseSensetive(mcase);
-         sf.setWordSearch(whole);
-         sf.setCycled(cycle);
-         sf.setRegExp(regexp);
-      }
-   }
-
-   public void save() {
-      this.save(false);
-   }
-
-   public void save(boolean flush) {
-      this.check();
-      if (this.global != null) {
-         String prefix = "gui.console.";
-         int[] size = this.getSize();
-         int[] position = this.getPosition();
-         this.global.set(prefix + "width", size[0], false);
-         this.global.set(prefix + "height", size[1], false);
-         this.global.set(prefix + "x", position[0], false);
-         this.global.set(prefix + "y", position[1], false);
-         prefix = prefix + "search.";
-         boolean[] prefs = this.frame.getSearchPrefs().get();
-         this.global.set(prefix + "mcase", prefs[0], false);
-         this.global.set(prefix + "whole", prefs[1], false);
-         this.global.set(prefix + "cycle", prefs[2], false);
-         this.global.set(prefix + "regexp", prefs[3], flush);
-      }
-   }
-
-   private void check() {
-      if (this.killed) {
-         throw new IllegalStateException("Console is already killed!");
-      }
-   }
-
-   public void setShown(boolean shown) {
-      if (shown) {
-         this.show();
-      } else {
-         this.hide();
-      }
-
-   }
-
-   public void show() {
-      this.show(true);
-   }
-
-   public void show(boolean toFront) {
-      this.check();
-      this.frame.setVisible(true);
-      this.frame.scrollBottom();
-      if (toFront) {
-         this.frame.toFront();
-      }
-
-   }
-
-   public void hide() {
-      this.check();
-      this.frame.setVisible(false);
-   }
-
-   public void clear() {
-      this.check();
-      this.frame.clear();
-   }
-
-   public void kill() {
-      this.check();
-      this.save();
-      this.frame.setVisible(false);
-      this.frame.clear();
-      frames.remove(this.frame);
-      this.killed = true;
-   }
-
-   public void killIn(long millis) {
-      this.check();
-      this.save();
-      this.frame.hideIn(millis);
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            if (Console.this.isHidden()) {
-               Console.this.kill();
-            }
-
-         }
-      }, millis + 1000L);
-   }
-
-   public boolean isKilled() {
-      this.check();
-      return this.killed;
-   }
-
-   public boolean isHidden() {
-      this.check();
-      return !this.frame.isShowing();
-   }
-
-   public String getName() {
-      return this.name;
-   }
-
-   public Point getPositionPoint() {
-      this.check();
-      return this.frame.getLocation();
-   }
-
-   public int[] getPosition() {
-      this.check();
-      Point p = this.getPositionPoint();
-      return new int[]{p.x, p.y};
-   }
-
-   public Dimension getDimension() {
-      this.check();
-      return this.frame.getSize();
-   }
-
-   public int[] getSize() {
-      this.check();
-      Dimension d = this.getDimension();
-      return new int[]{d.width, d.height};
-   }
-
-   public Console.CloseAction getCloseAction() {
-      return this.close;
-   }
-
-   public void setCloseAction(Console.CloseAction action) {
-      this.close = action;
-   }
-
-   private void onClose() {
-      if (this.close != null) {
-         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$console$Console$CloseAction()[this.close.ordinal()]) {
-         case 1:
-            this.kill();
-         case 2:
-            TLauncher.kill();
-         default:
-         }
-      }
-   }
-
-   public static void updateLocale() {
-      Iterator var1 = frames.iterator();
-
-      while(var1.hasNext()) {
-         ConsoleFrame frame = (ConsoleFrame)var1.next();
-         frame.updateLocale();
-      }
-
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$console$Console$CloseAction() {
-      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$ui$console$Console$CloseAction;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[Console.CloseAction.values().length];
-
-         try {
-            var0[Console.CloseAction.EXIT.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[Console.CloseAction.KILL.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$com$turikhay$tlauncher$ui$console$Console$CloseAction = var0;
-         return var0;
-      }
-   }
-
-   public static enum CloseAction {
-      KILL,
-      EXIT;
-   }
+	public int[] getSize(){ check();
+		Dimension d = this.getDimension();
+		return new int[]{d.width, d.height};
+	}
+	
+	public CloseAction getCloseAction(){
+		return this.close;
+	}
+	
+	public void setCloseAction(CloseAction action){
+		this.close = action;
+	}
+	
+	private void onClose(){
+		if(close == null) return;
+		
+		switch(close){
+		case KILL: kill();
+		case EXIT: TLauncher.kill();
+		}
+	}
+	
+	public static void updateLocale(){
+		for(ConsoleFrame frame : frames)
+			frame.updateLocale();
+	}
+	
+	public enum CloseAction {
+		KILL, EXIT;
+	}
 }

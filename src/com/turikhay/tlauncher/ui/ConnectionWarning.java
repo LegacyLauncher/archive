@@ -10,38 +10,34 @@ import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
 
 public class ConnectionWarning extends ImagePanel implements UpdaterListener {
-   private static final long serialVersionUID = 8089346864504410975L;
-   private final String langPath = "firewall";
+	private static final long serialVersionUID = 8089346864504410975L;
+	
+	private final String langPath;
+	
+	public ConnectionWarning(){
+		super(ImageCache.getImage("warning.png"), 1.0F, 0.75F, false, false);
+		
+		this.langPath = "firewall";
+		
+		TLauncher.getInstance().getUpdater().addListener(this);
+	}
+    
+    protected boolean onClick(){    	
+    	if(!super.onClick()) return false;
+    	
+    	Alert.showAsyncWarning(langPath);
+    	return true;
+    }
 
-   public ConnectionWarning() {
-      super(ImageCache.getImage("warning.png"), 1.0F, 0.75F, false, false);
-      TLauncher.getInstance().getUpdater().addListener(this);
-   }
-
-   protected boolean onClick() {
-      if (!super.onClick()) {
-         return false;
-      } else {
-         Alert.showAsyncWarning(this.langPath);
-         return true;
-      }
-   }
-
-   public void onUpdaterRequestError(Updater u) {
-      this.show();
-   }
-
-   public void onUpdaterRequesting(Updater u) {
-   }
-
-   public void onUpdateFound(Update upd) {
-      this.hide();
-   }
-
-   public void onUpdaterNotFoundUpdate(Updater u) {
-      this.hide();
-   }
-
-   public void onAdFound(Updater u, Ad ad) {
-   }
+	public void onUpdaterRequestError(Updater u) {
+		this.show();
+	}
+	public void onUpdaterRequesting(Updater u) {}
+	public void onUpdateFound(Update upd) {
+		this.hide();
+	}
+	public void onUpdaterNotFoundUpdate(Updater u) {
+		this.hide();
+	}
+	public void onAdFound(Updater u, Ad ad) {}
 }

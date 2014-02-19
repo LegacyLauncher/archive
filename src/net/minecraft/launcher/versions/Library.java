@@ -1,189 +1,113 @@
 package net.minecraft.launcher.versions;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+
 import net.minecraft.launcher.OperatingSystem;
+
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.minecraft.repository.VersionRepository;
+
 public class Library {
-   private static final String LIBRARY_DOWNLOAD_BASE = "https://libraries.minecraft.net/";
-   private static final StrSubstitutor SUBSTITUTOR = createSubstitutor();
-   private String name;
-   private List rules;
-   private Map natives;
-   private ExtractRules extract;
-   private String url;
-   private String exact_url;
+	private static final StrSubstitutor SUBSTITUTOR;
+	
+	private String name;
+	private List<Rule> rules;
+	private Map<OperatingSystem, String> natives;
+	private ExtractRules extract;
+	private String url, exact_url;
+	
+	public String getName() {
+		return name;
+	}
+	
+	public List<Rule> getRules(){
+		return Collections.unmodifiableList(rules);
+	}
+	
+	public boolean appliesToCurrentEnvironment() {
+	    if(this.rules == null) return true;
+	    
+	    Rule.Action lastAction = Rule.Action.DISALLOW;
 
-   public Library() {
-   }
+	    for(Rule rule : this.rules) {
+	      Rule.Action action = rule.getAppliedAction();
+	      
+	      if (action != null) lastAction = action;
+	    }
 
-   public Library(String name) {
-      if (name != null && name.length() != 0) {
-         this.name = name;
-      } else {
-         throw new IllegalArgumentException("Library name cannot be null or empty");
-      }
-   }
+	    return lastAction == Rule.Action.ALLOW;
+	}
+	
+	public Map<OperatingSystem, String> getNatives() {
+		return this.natives;
+	}
 
-   public Library(Library library) {
-      this.name = library.name;
-      this.url = library.url;
-      if (library.extract != null) {
-         this.extract = new ExtractRules(library.extract);
-      }
+	public ExtractRules getExtractRules() {
+		return this.extract;
+	}
+	
+	public String getArtifactBaseDir() {
+		if(name == null)
+			throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
+		
+		String[] parts = this.name.split(":", 3);
+		return String.format("%s/%s/%s", new Object[] { parts[0].replaceAll("\\.", "/"), parts[1], parts[2] });
+	}
 
-      Iterator var3;
-      if (library.rules != null) {
-         this.rules = new ArrayList();
-         var3 = library.rules.iterator();
+	public String getArtifactPath() {
+		return getArtifactPath(null);
+	}
 
-         while(var3.hasNext()) {
-            Rule rule = (Rule)var3.next();
-            this.rules.add(new Rule(rule));
-         }
-      }
+	public String getArtifactPath(String classifier) {
+		if(name == null)
+			throw new IllegalStateException("Cannot get artifact path of empty/blank artifact");
+		
+		return String.format("%s/%s", new Object[] { getArtifactBaseDir(), getArtifactFilename(classifier) });
+	}
 
-      if (library.natives != null) {
-         this.natives = new LinkedHashMap();
-         var3 = library.getNatives().entrySet().iterator();
+	public String getArtifactFilename(String classifier) {
+		if(this.name == null)
+			throw new IllegalStateException("Cannot get artifact filename of empty/blank artifact");
 
-         while(var3.hasNext()) {
-            Entry entry = (Entry)var3.next();
-            this.natives.put((OperatingSystem)entry.getKey(), (String)entry.getValue());
-         }
-      }
+		String[] parts = this.name.split(":", 3); 
+		String result;
+		    
+		if(classifier == null)
+			result = String.format("%s-%s.jar", new Object[] { parts[1], parts[2] });
+		else
+			result = String.format("%s-%s%s.jar", new Object[] { parts[1], parts[2], "-" + classifier });
 
-   }
-
-   public String getName() {
-      return this.name;
-   }
-
-   public Library addNative(OperatingSystem operatingSystem, String name) {
-      if (operatingSystem != null && operatingSystem.isSupported()) {
-         if (name != null && name.length() != 0) {
-            if (this.natives == null) {
-               this.natives = new EnumMap(OperatingSystem.class);
-            }
-
-            this.natives.put(operatingSystem, name);
-            return this;
-         } else {
-            throw new IllegalArgumentException("Cannot add native for null or empty name");
-         }
-      } else {
-         throw new IllegalArgumentException("Cannot add native for unsupported OS");
-      }
-   }
-
-   public List getRules() {
-      return this.rules;
-   }
-
-   public boolean appliesToCurrentEnvironment() {
-      if (this.rules == null) {
-         return true;
-      } else {
-         Rule.Action lastAction = Rule.Action.DISALLOW;
-         Iterator var3 = this.rules.iterator();
-
-         while(var3.hasNext()) {
-            Rule rule = (Rule)var3.next();
-            Rule.Action action = rule.getAppliedAction();
-            if (action != null) {
-               lastAction = action;
-            }
-         }
-
-         if (lastAction == Rule.Action.ALLOW) {
-            return true;
-         } else {
-            return false;
-         }
-      }
-   }
-
-   public Map getNatives() {
-      return this.natives;
-   }
-
-   public ExtractRules getExtractRules() {
-      return this.extract;
-   }
-
-   public Library setExtractRules(ExtractRules rules) {
-      this.extract = rules;
-      return this;
-   }
-
-   public String getArtifactBaseDir() {
-      if (this.name == null) {
-         throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
-      } else {
-         String[] parts = this.name.split(":", 3);
-         return String.format("%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
-      }
-   }
-
-   public String getArtifactPath() {
-      return this.getArtifactPath((String)null);
-   }
-
-   public String getArtifactPath(String classifier) {
-      if (this.name == null) {
-         throw new IllegalStateException("Cannot get artifact path of empty/blank artifact");
-      } else {
-         return String.format("%s/%s", this.getArtifactBaseDir(), this.getArtifactFilename(classifier));
-      }
-   }
-
-   public String getArtifactFilename(String classifier) {
-      if (this.name == null) {
-         throw new IllegalStateException("Cannot get artifact filename of empty/blank artifact");
-      } else {
-         String[] parts = this.name.split(":", 3);
-         String result;
-         if (classifier == null) {
-            result = String.format("%s-%s.jar", parts[1], parts[2]);
-         } else {
-            result = String.format("%s-%s%s.jar", parts[1], parts[2], "-" + classifier);
-         }
-
-         return SUBSTITUTOR.replace(result);
-      }
-   }
-
-   public String toString() {
-      return "Library{name='" + this.name + '\'' + ", rules=" + this.rules + ", natives=" + this.natives + ", extract=" + this.extract + '}';
-   }
-
-   public boolean hasCustomUrl() {
-      return this.url != null;
-   }
-
-   public boolean hasExactUrl() {
-      return this.exact_url != null;
-   }
-
-   public String getExactDownloadUrl() {
-      return this.exact_url;
-   }
-
-   public String getDownloadUrl() {
-      return this.url != null ? this.url : "https://libraries.minecraft.net/";
-   }
-
-   private static StrSubstitutor createSubstitutor() {
-      HashMap map = new HashMap();
-      OperatingSystem os = OperatingSystem.getCurrentPlatform();
-      map.put("arch", os.getArch());
-      return new StrSubstitutor(map);
-   }
+		return SUBSTITUTOR.replace(result);
+	}
+	
+	public String toString() {
+		return "Library{name='" + this.name + '\'' + ", rules=" + this.rules + ", natives=" + this.natives + ", extract=" + this.extract + '}';
+	}
+	
+	public String getURL(VersionRepository source, OperatingSystem os) {
+		if(exact_url != null) return exact_url;
+		
+		String nativePath = natives != null && appliesToCurrentEnvironment() ? natives.get(os) : null;
+		String download_url;
+		
+		if(url == null) download_url = TLauncher.getLibraryRepo()[0]; // TODO change return type to downloadable
+		else download_url = (url.startsWith("/"))? source.getSelectedRepo() + url.substring(1) : url;
+		
+		return download_url + getArtifactPath(nativePath);
+	}
+	
+	static {
+		HashMap<String, String> map = new HashMap<String, String>();
+		OperatingSystem os = OperatingSystem.getCurrentPlatform();
+		
+		map.put("platform", os.getName());
+		map.put("arch", os.getArch());
+		  
+		SUBSTITUTOR = new StrSubstitutor(map);
+	}
 }
