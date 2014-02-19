@@ -1,23 +1,24 @@
 package com.turikhay.tlauncher.ui.login;
 
 public class LoginWaitException extends LoginException {
-   private static final long serialVersionUID = -6606669907221918306L;
-   private final LoginWaitException.LoginWaitTask waitTask;
+	private static final long serialVersionUID = -6606669907221918306L;
+	
+	private final LoginWaitTask waitTask;
+	
+	public LoginWaitException(String reason, final LoginWaitTask loginWaitTask){
+		super(reason);
+		
+		if(loginWaitTask == null)
+			throw new NullPointerException();
+		
+		this.waitTask = loginWaitTask;
+	}
 
-   public LoginWaitException(String reason, LoginWaitException.LoginWaitTask loginWaitTask) {
-      super(reason);
-      if (loginWaitTask == null) {
-         throw new NullPointerException();
-      } else {
-         this.waitTask = loginWaitTask;
-      }
-   }
-
-   public LoginWaitException.LoginWaitTask getWaitTask() {
-      return this.waitTask;
-   }
-
-   public interface LoginWaitTask {
-      void runTask() throws LoginException;
-   }
+	public LoginWaitTask getWaitTask(){
+		return waitTask;
+	}
+	
+	public interface LoginWaitTask {
+		public void runTask() throws LoginException;
+	}
 }

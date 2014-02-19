@@ -1,22 +1,27 @@
 package com.turikhay.tlauncher.ui.converter;
 
-import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.configuration.Configuration.ConnectionQuality;
 import com.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
 
-public class ConnectionQualityConverter extends LocalizableStringConverter {
-   public ConnectionQualityConverter() {
-      super("settings.connection");
-   }
+public class ConnectionQualityConverter extends LocalizableStringConverter<ConnectionQuality> {
 
-   public Configuration.ConnectionQuality fromString(String from) {
-      return Configuration.ConnectionQuality.get(from);
-   }
+	public ConnectionQualityConverter() {
+		super("settings.connection");
+	}
 
-   public String toValue(Configuration.ConnectionQuality from) {
-      return from.toString();
-   }
+	@Override
+	public ConnectionQuality fromString(String from) {
+		return ConnectionQuality.get(from);
+	}
 
-   public String toPath(Configuration.ConnectionQuality from) {
-      return from.toString();
-   }
+	@Override
+	public String toValue(ConnectionQuality from) {
+		return from.toString();
+	}
+
+	@Override
+	public String toPath(ConnectionQuality from) {
+		return from.toString();
+	}
+
 }
