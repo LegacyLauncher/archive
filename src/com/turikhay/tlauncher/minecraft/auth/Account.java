@@ -77,10 +77,8 @@ public class Account {
 	}
 	
 	public void setAccessToken(String accessToken){
-		if("null".equals(accessToken)) accessToken = null;
-		
 		this.accessToken = accessToken;
-		this.type = (accessToken == null)? AccountType.PIRATE : AccountType.LICENSE;
+		if(accessToken != null) type = AccountType.LICENSE;
 	}
 	
 	public String getUUID(){
@@ -156,7 +154,7 @@ public class Account {
 		if(type == null)
 			throw new NullPointerException();
 		
-		this.type = type;
+		this.type = type;		
 	}
 	
 	public boolean hasLicense(){
@@ -201,6 +199,8 @@ public class Account {
 		
 		setUUID(map.containsKey("uuid")? map.get("uuid").toString() : null);
 		setAccessToken(map.containsKey("accessToken")? map.get("accessToken").toString() : null);
+		
+		setType(map.containsKey("accessToken")? AccountType.LICENSE : AccountType.PIRATE);		
 	}
 	
 	public void complete(Account acc){

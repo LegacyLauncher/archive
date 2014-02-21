@@ -2,7 +2,6 @@ package net.minecraft.launcher.updater;
 
 import java.io.IOException;
 
-import com.google.gson.JsonSyntaxException;
 import com.turikhay.tlauncher.minecraft.repository.VersionRepository;
 
 import net.minecraft.launcher.OperatingSystem;
@@ -27,15 +26,6 @@ public class RepositoryBasedVersionList extends RemoteVersionList {
 			version.setSource(repository);
 		
 		return rawList;
-	}
-	
-	@Override
-	public CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
-		CompleteVersion complete = super.getCompleteVersion(version);
-		
-		complete.setSource(repository);
-		
-		return complete;
 	}
 
 	@Override

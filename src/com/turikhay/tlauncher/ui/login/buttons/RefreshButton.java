@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.component.managers.ComponentManager;
 import com.turikhay.tlauncher.component.managers.ComponentManagerListener;
+import com.turikhay.tlauncher.component.managers.VersionManager;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.login.LoginForm;
@@ -21,6 +22,7 @@ public class RefreshButton extends ImageButton implements Blockable, ComponentMa
 	public final static int TYPE_REFRESH = 0, TYPE_CANCEL = 1;
 	
 	private LoginForm lf;
+	private VersionManager vm;
 	private int type;
 	private final Image
 		refresh = loadImage("refresh.png"),
@@ -29,6 +31,7 @@ public class RefreshButton extends ImageButton implements Blockable, ComponentMa
 	
 	RefreshButton(LoginForm loginform, int type){
 		this.lf = loginform;
+		this.vm = lf.tlauncher.getVersionManager();
 		
 		this.rotation = ImageRotation.CENTER;
 		this.setType(type, false);
@@ -48,10 +51,10 @@ public class RefreshButton extends ImageButton implements Blockable, ComponentMa
 		switch(type){
 		case TYPE_REFRESH:
 			if(updaterFlag != null) updaterFlag.asyncFindUpdate();
-			TLauncher.getInstance().getManager().startAsyncRefresh();
+			vm.asyncRefresh();
 			break;
 		case TYPE_CANCEL:
-			TLauncher.getInstance().getManager().stopRefresh();
+			vm.stopRefresh();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown type: "+type+". Use RefreshButton.TYPE_* constants.");

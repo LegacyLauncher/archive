@@ -35,8 +35,6 @@ public class Repository {
 		
 		this.setTimeout(timeout);
 		Collections.addAll(repos, urls);
-		
-		log("Repository has been created:", repos);
 	}
 	
 	public Repository(String name, String[] urls){
@@ -146,10 +144,6 @@ public class Repository {
 	  
 	public String getUrl(String uri) throws IOException {
 		return this.getUrl(uri, false);
-	}
-	
-	public String getUrl() throws IOException {
-		return this.getUrl("", false);
 	}
 	  
 	public String getRawUrl(String uri) throws IOException {

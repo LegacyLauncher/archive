@@ -8,7 +8,6 @@ import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 
-// TODO rewrite
 public class Alert {
 	private static final int wrap = 100;
 	
@@ -45,8 +44,6 @@ public class Alert {
 	public static void showError(String title, String message){ showError(title, message, null, null, DEFAULT_EXIT); }
 	
 	public static void showError(String path){ showError(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE)); }
-	
-	public static void showAsyncError(final String title, final String message, final Object textarea){ AsyncThread.execute(new Runnable(){ public void run() { showError(title, message, textarea); }  }); }
 	
 	public static void showWarning(String title, String message, Object textarea){
 		JFrame frame = new JFrame();
@@ -98,7 +95,6 @@ public class Alert {
 	public static void showMessage(String path, Object textarea){ showMessage(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), textarea); }
 	public static void showAsyncMessage(final String path, final Object textarea){ AsyncThread.execute(new Runnable(){ public void run(){ showMessage(path, textarea); } }); }
 	public static void showAsyncMessage(String path){ showAsyncMessage(path, null); }
-	public static void showAsyncMessage(final String title, final String message, final Object textarea){ AsyncThread.execute(new Runnable(){ public void run(){ showMessage(title, message, textarea); } }); }
 	
 	private static String getLocal(String path, String message){
 		try{

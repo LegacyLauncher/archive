@@ -57,7 +57,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
 
 	@Override
 	public String get(String key) {
-		return getStringOf(properties.getProperty(key));
+		return properties.getProperty(key);
 	}
 	
 	protected static String getStringOf(Object obj){

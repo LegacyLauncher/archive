@@ -3,7 +3,7 @@ package com.turikhay.tlauncher.minecraft.repository;
 import com.turikhay.tlauncher.TLauncher;
 
 public class VersionRepository extends Repository {
-	public static final int DEFAULT_TIMEOUT = 5000;
+	public static final int DEFAULT_TIMEOUT = 10000;
 	
 	public static final VersionRepository
 		LOCAL = new VersionRepository("local"),

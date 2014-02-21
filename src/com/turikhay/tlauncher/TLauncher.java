@@ -33,7 +33,7 @@ import com.turikhay.util.logger.MirroredLinkedStringStream;
 import com.turikhay.util.logger.PrintLogger;
 
 public class TLauncher {
-	private final static double VERSION = 0.65;
+	private final static double VERSION = 0.7;
 	private final static String SETTINGS = "tlauncher.cfg", BRAND = "Original";
 	private final static String[] DEFAULT_UPDATE_REPO = {
         "http://u.to/tlauncher-original-update-mirror-3/D9wMBg",
@@ -55,8 +55,7 @@ public class TLauncher {
 		};
 	private final static String[]
 		LIBRARY_REPO = {"https://libraries.minecraft.net/"},
-		ASSETS_REPO = {"http://resources.download.minecraft.net/"},
-		SERVER_LIST = null;
+		ASSETS_REPO = {"http://resources.download.minecraft.net/"};
 	
 	private static TLauncher instance;
 	private static String[] sargs;
@@ -202,7 +201,6 @@ public class TLauncher {
 	public static String[] getExtraRepo(){ return EXTRA_REPO; }
 	public static String[] getLibraryRepo(){ return LIBRARY_REPO; }
 	public static String[] getAssetsRepo(){ return ASSETS_REPO; }
-	public static String[] getServerList(){ return SERVER_LIST; }
 	
 	/*___________________________________*/
 	

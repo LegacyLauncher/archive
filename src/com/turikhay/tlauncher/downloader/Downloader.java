@@ -229,8 +229,12 @@ public class Downloader extends Thread {
 	void onComplete(int id, Downloadable d) { --remain[id];
 		for(DownloadListener l : listeners)
 			l.onDownloaderFileComplete(this, d);
+		
+		U.log("Complete0");
 	
 		for(int curremain : remain) if(curremain != 0) return;
+		
+		U.log("Complete1");
 		
 		for(DownloadListener l : listeners)
 			l.onDownloaderComplete(this);
