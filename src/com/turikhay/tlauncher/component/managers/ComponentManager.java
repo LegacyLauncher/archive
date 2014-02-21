@@ -1,7 +1,6 @@
 package com.turikhay.tlauncher.component.managers;
 
 import com.turikhay.tlauncher.component.*;
-import com.turikhay.util.async.AsyncThread;
 
 public class ComponentManager {
 	private final VersionLists versionLists;
@@ -47,25 +46,8 @@ public class ComponentManager {
 		return profileManager;
 	}
 	
-	public ServerListManager getServerListManager(){
-		return null;
-	}
-	
 	public LauncherComponent[] getComponents(){
 		return components;
-	}
-	
-	public void startAsyncRefresh(){
-		for(LauncherComponent component : components)
-			if(component instanceof RefreshableComponent){
-				final RefreshableComponent interruptible = (RefreshableComponent) component;
-				AsyncThread.execute(new Runnable(){
-					@Override
-					public void run() {
-						interruptible.refreshComponent();
-					}
-				});
-			}
 	}
 	
 	public void startRefresh(){
@@ -82,16 +64,5 @@ public class ComponentManager {
 				InterruptibleComponent interruptible = (InterruptibleComponent) component;
 				interruptible.stopRefresh();
 			}
-	}
-	
-	public boolean contains(Class<?> componentClass) {
-		if(componentClass == null)
-			throw new NullPointerException();
-		
-		for(LauncherComponent component : components)
-			if(component.getClass().equals(componentClass))
-				return true;
-		
-		return false;
 	}
 }

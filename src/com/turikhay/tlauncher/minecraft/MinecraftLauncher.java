@@ -336,11 +336,6 @@ public class MinecraftLauncher extends Thread implements JavaProcessListener {
 			this.deleteEntries();
 		} catch (IOException e){ throw new MinecraftLauncherException("Cannot delete entries!", "delete-entries", e); }
 		
-		if(TLauncher.getInstance().getManager().getServerListManager() != null)
-			try {
-				TLauncher.getInstance().getManager().getServerListManager().reconstructList(version_name, new File(gameDir, "servers.dat"));
-			}catch(Throwable e){ U.log("Cannot reconstruct server list!", e); }
-		
 	    processLauncher = new JavaProcessLauncher(javadir, new String[0]);
 	    processLauncher.directory(gameDir);
 	    

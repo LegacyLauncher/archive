@@ -16,6 +16,7 @@ import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.tlauncher.ui.login.LoginWaitException.LoginWaitTask;
 import com.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
+import com.turikhay.util.U;
 
 public class AccountComboBox extends ExtendedComboBox<Account> implements Blockable, LoginListener, ProfileManagerListener, LocalizableComponent {
 	private static final long serialVersionUID = 6618039863712810645L;
@@ -110,6 +111,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
 		removeAllItems();
 		
 		Collection<Account> list = db.getAccounts();
+		U.log("list:", list);
 		
 		if(list.isEmpty())
 			addItem(EMPTY);

@@ -6,7 +6,7 @@ import com.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 public class SettingsComboBox<T> extends ExtendedComboBox<T> implements SettingsField {
 	private static final long serialVersionUID = -2320340434786516374L;
 	
-	public SettingsComboBox(StringConverter<T> converter, T[] values){
+	public SettingsComboBox(StringConverter<T> converter, T... values){
 		super(converter);
 		
 		if(values == null) return;

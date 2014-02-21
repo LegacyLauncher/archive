@@ -239,7 +239,6 @@ public class VersionManager extends InterruptibleComponent {
 	
 	public List<VersionSyncInfo> getInstalledVersions(VersionFilter filter) {
 		if(filter == null) filter = new VersionFilter();
-		
 		List<VersionSyncInfo> result = new ArrayList<VersionSyncInfo>();
 		
 		for(Version version : localList.getVersions())
@@ -249,7 +248,7 @@ public class VersionManager extends InterruptibleComponent {
 	}
 	
 	public List<VersionSyncInfo> getInstalledVersions() {
-		return getInstalledVersions(TLauncher.getInstance() == null ? null : TLauncher.getInstance().getSettings().getVersionFilter());
+		return getInstalledVersions(null);
 	}
 	
 	public CompleteVersion getCompleteVersion(VersionSyncInfo syncInfo, boolean latest) throws IOException {
@@ -258,8 +257,6 @@ public class VersionManager extends InterruptibleComponent {
 		if(latest) version = syncInfo.getLatestVersion();
 		else if(syncInfo.isInstalled()) version = syncInfo.getLocal();
 		else version = syncInfo.getRemote();
-		
-		U.log("Got comlete from: ", latest, syncInfo.isInstalled()); // TODO remove
 			
 		return version.getVersionList().getCompleteVersion(version);
 	}

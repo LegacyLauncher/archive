@@ -16,7 +16,7 @@ public class AsyncObjectContainer<T> {
 		this.values = new HashMap<AsyncObject<T>, T>();
 	}
 	
-	public AsyncObjectContainer(AsyncObject<T>[] asyncObjects){
+	public AsyncObjectContainer(AsyncObject<T>...asyncObjects){
 		this();
 		
 		for(AsyncObject<T> object : asyncObjects)
