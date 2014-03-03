@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.ui.console;
 
+import com.turikhay.tlauncher.ui.block.BlockablePanel;
+import com.turikhay.util.StringUtil;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Insets;
@@ -7,108 +9,105 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import com.turikhay.tlauncher.ui.block.BlockablePanel;
-import com.turikhay.util.StringUtil;
-
 public class SearchPanel extends BlockablePanel {
-	private static final long serialVersionUID = -2659114952397165370L;
-	protected Insets insets = new Insets(5, 10, 5, 10);
-	
-	ConsoleFrame cf;
-	
-	SearchField field;
-	SearchPrefs prefs;
-	SearchButton button;
-	
-	String regexp;
-	Pattern pt;
-	Matcher mt;
-	int plastend, lastend;
-	
-	SearchPanel(ConsoleFrame cf){
-		setOpaque(true);
-		this.cf = cf;
-		
-		BorderLayout layout = new BorderLayout();
-		layout.setVgap(2);
-		layout.setHgap(5);
-		this.setLayout(layout);
-		
-		this.setBackground(Color.black);
-		this.setForeground(Color.white);
-		
-		add("Center", field = new SearchField(this));
-		add("East", button = new SearchButton(this));
-		add("South", prefs = new SearchPrefs(this));
-	}
-	
-	public void search(){ focus();
-		String c_regexp = (prefs.isRegExp())? field.getValue() : StringUtil.addSlashes(field.getValue(), StringUtil.EscapeGroup.REGEXP);
-		if(c_regexp == null || c_regexp.trim().length() == 0) return;
-		
-		if(c_regexp.equalsIgnoreCase("fuck you")){
-			log("No, fuck you! :C");
-			cf.scrollBottom();
-			return;
-		}
-		
-		int flags = Pattern.MULTILINE;
-		if(!prefs.isCaseSensetive()) flags |= Pattern.CASE_INSENSITIVE;
-		if(prefs.isWordSearch()) c_regexp = "^[.]*(\\s){0,1}("+ c_regexp +")(?:\\1|[\\s]|[\\s]{0,1})";
-		
-		try{ pt = Pattern.compile(c_regexp, flags); }
-		catch(PatternSyntaxException e){ log("Invalid pattern.\n", e.toString()); field.setInvalid(null); return; }
-	
-		if(!c_regexp.equals(regexp)){
-			this.regexp = c_regexp;
-			this.lastend = 0;
-		}
-	
-		this.find();
-	}
-	
-	private void find(){
-		field.setValid();
-		
-		String text = cf.getOutput();
-		
-		this.mt = pt.matcher(text);
-		
-		if(!mt.find(lastend)){
-			if(prefs.isCycled() && plastend != lastend){
-				plastend = lastend = 0;
-				
-				search();
-				return;
-			}
-			
-			field.setInvalid(null);
-			return;
-		}
-		
-		int 
-			group = prefs.isWordSearch()? 2 : 0,
-			start = mt.start(group); lastend = mt.end(group);
-		
-		cf.update = false;
-		cf.textArea.requestFocus();
-		cf.textArea.select(start, lastend);
-	}
-	
-	protected void focus(){
-		field.requestFocusInWindow();
-	}
-	
-	public Insets getInsets() {
-		return insets;
-	}
-	
-	private void log(Object... o){ cf.c.log("[CONSOLE]", o); cf.scrollBottom(); }
+   private static final long serialVersionUID = -2659114952397165370L;
+   protected Insets insets = new Insets(5, 10, 5, 10);
+   ConsoleFrame cf;
+   SearchField field;
+   SearchPrefs prefs;
+   SearchButton button;
+   String regexp;
+   Pattern pt;
+   Matcher mt;
+   int plastend;
+   int lastend;
 
-	public void block(Object reason) {
-	}
+   SearchPanel(ConsoleFrame cf) {
+      this.setOpaque(true);
+      this.cf = cf;
+      BorderLayout layout = new BorderLayout();
+      layout.setVgap(2);
+      layout.setHgap(5);
+      this.setLayout(layout);
+      this.setBackground(Color.black);
+      this.setForeground(Color.white);
+      this.add("Center", this.field = new SearchField(this));
+      this.add("East", this.button = new SearchButton(this));
+      this.add("South", this.prefs = new SearchPrefs(this));
+   }
 
-	public void unblock(Object reason) {
-	}
+   public void search() {
+      this.focus();
+      String c_regexp = this.prefs.isRegExp() ? this.field.getValue() : StringUtil.addSlashes(this.field.getValue(), StringUtil.EscapeGroup.REGEXP);
+      if (c_regexp != null && c_regexp.trim().length() != 0) {
+         if (c_regexp.equalsIgnoreCase("fuck you")) {
+            this.log("No, fuck you! :C");
+            this.cf.scrollBottom();
+         } else {
+            int flags = 8;
+            if (!this.prefs.isCaseSensetive()) {
+               flags |= 2;
+            }
 
+            if (this.prefs.isWordSearch()) {
+               c_regexp = "^[.]*(\\s){0,1}(" + c_regexp + ")(?:\\1|[\\s]|[\\s]{0,1})";
+            }
+
+            try {
+               this.pt = Pattern.compile(c_regexp, flags);
+            } catch (PatternSyntaxException var4) {
+               this.log("Invalid pattern.\n", var4.toString());
+               this.field.setInvalid((String)null);
+               return;
+            }
+
+            if (!c_regexp.equals(this.regexp)) {
+               this.regexp = c_regexp;
+               this.lastend = 0;
+            }
+
+            this.find();
+         }
+      }
+   }
+
+   private void find() {
+      this.field.setValid();
+      String text = this.cf.getOutput();
+      this.mt = this.pt.matcher(text);
+      if (!this.mt.find(this.lastend)) {
+         if (this.prefs.isCycled() && this.plastend != this.lastend) {
+            this.plastend = this.lastend = 0;
+            this.search();
+         } else {
+            this.field.setInvalid((String)null);
+         }
+      } else {
+         int group = this.prefs.isWordSearch() ? 2 : 0;
+         int start = this.mt.start(group);
+         this.lastend = this.mt.end(group);
+         this.cf.update = false;
+         this.cf.textArea.requestFocus();
+         this.cf.textArea.select(start, this.lastend);
+      }
+   }
+
+   protected void focus() {
+      this.field.requestFocusInWindow();
+   }
+
+   public Insets getInsets() {
+      return this.insets;
+   }
+
+   private void log(Object... o) {
+      this.cf.c.log("[CONSOLE]", o);
+      this.cf.scrollBottom();
+   }
+
+   public void block(Object reason) {
+   }
+
+   public void unblock(Object reason) {
+   }
 }

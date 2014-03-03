@@ -1,10 +1,13 @@
 package com.turikhay.tlauncher.updater;
 
 public interface UpdaterListener {
-	public void onUpdaterRequesting(Updater u);
-	public void onUpdaterRequestError(Updater u);
-	public void onUpdateFound(Update upd);
-	public void onUpdaterNotFoundUpdate(Updater u);
-	
-	public void onAdFound(Updater u, Ad ad);
+   void onUpdaterRequesting(Updater var1);
+
+   void onUpdaterRequestError(Updater var1);
+
+   void onUpdateFound(Update var1);
+
+   void onUpdaterNotFoundUpdate(Updater var1);
+
+   void onAdFound(Updater var1, Ad var2);
 }

@@ -1,17 +1,15 @@
 package com.turikhay.tlauncher.component;
 
-/**
- * An abstract <code>LauncherComponent</code> that uses Internet connection or receives information
- * from outside.
- * 
- * @author Artur Khusainov
- *
- */
-public abstract class RefreshableComponent implements LauncherComponent {
-	
-	public boolean refreshComponent() {
-		return refresh();
-	}
-	
-	protected abstract boolean refresh();
+import com.turikhay.tlauncher.component.managers.ComponentManager;
+
+public abstract class RefreshableComponent extends LauncherComponent {
+   public RefreshableComponent(ComponentManager manager) throws Exception {
+      super(manager);
+   }
+
+   public boolean refreshComponent() {
+      return this.refresh();
+   }
+
+   protected abstract boolean refresh();
 }

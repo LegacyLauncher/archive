@@ -1,7 +1,11 @@
 package com.turikhay.tlauncher.downloader;
 
 public interface DownloadableHandler {
-	public void onStart();
-	public void onCompleteError();
-	public void onComplete();
+   void onStart(Downloadable var1);
+
+   void onAbort(Downloadable var1);
+
+   void onComplete(Downloadable var1) throws RetryDownloadException;
+
+   void onError(Downloadable var1, Throwable var2);
 }

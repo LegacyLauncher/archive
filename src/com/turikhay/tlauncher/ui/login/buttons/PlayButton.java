@@ -1,67 +1,67 @@
 package com.turikhay.tlauncher.ui.login.buttons;
 
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import net.minecraft.launcher.updater.VersionSyncInfo;
-
 import com.turikhay.tlauncher.ui.loc.LocalizableButton;
 import com.turikhay.tlauncher.ui.login.LoginForm;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import net.minecraft.launcher.updater.VersionSyncInfo;
 
 public class PlayButton extends LocalizableButton {
-	private static final long serialVersionUID = 6944074583143406549L;
-	
-	private PlayButtonState state;
-	
-	private final LoginForm loginForm;
-	
-	PlayButton(LoginForm lf){
-		this.loginForm = lf;
-		
-		this.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				loginForm.callLogin();
-			}
-		});
-		this.setFont(getFont().deriveFont(Font.BOLD).deriveFont(16.0F));
-		this.setState(PlayButtonState.PLAY);
-	}
-	
-	public PlayButtonState getState(){
-		return state;
-	}
-	
-	public void setState(PlayButtonState state){
-		if(state == null)
-			throw new NullPointerException();
-		
-		this.state = state;
-		this.setText(state.getPath());
-	}
-	
-	public void updateState(){
-		VersionSyncInfo vs = loginForm.versions.getVersion();
-		if(vs == null) return;
-		
-		boolean installed = vs.isInstalled(), force = loginForm.checkbox.forceupdate.getState();
-		
-		if(!installed) setState(PlayButtonState.INSTALL);
-		else setState(force? PlayButtonState.REINSTALL : PlayButtonState.PLAY);
-	}
+   private static final long serialVersionUID = 6944074583143406549L;
+   private PlayButton.PlayButtonState state;
+   private final LoginForm loginForm;
 
-	public enum PlayButtonState {
-		REINSTALL("loginform.enter.reinstall"), INSTALL("loginform.enter.install"), PLAY("loginform.enter");
-		
-		private final String path;
-		
-		PlayButtonState(String path){
-			this.path = path;
-		}
-		
-		public String getPath(){
-			return path;
-		}
-	}
+   PlayButton(LoginForm lf) {
+      this.loginForm = lf;
+      this.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            PlayButton.this.loginForm.callLogin();
+         }
+      });
+      this.setFont(this.getFont().deriveFont(1).deriveFont(16.0F));
+      this.setState(PlayButton.PlayButtonState.PLAY);
+   }
+
+   public PlayButton.PlayButtonState getState() {
+      return this.state;
+   }
+
+   public void setState(PlayButton.PlayButtonState state) {
+      if (state == null) {
+         throw new NullPointerException();
+      } else {
+         this.state = state;
+         this.setText(state.getPath());
+      }
+   }
+
+   public void updateState() {
+      VersionSyncInfo vs = this.loginForm.versions.getVersion();
+      if (vs != null) {
+         boolean installed = vs.isInstalled();
+         boolean force = this.loginForm.checkbox.forceupdate.getState();
+         if (!installed) {
+            this.setState(PlayButton.PlayButtonState.INSTALL);
+         } else {
+            this.setState(force ? PlayButton.PlayButtonState.REINSTALL : PlayButton.PlayButtonState.PLAY);
+         }
+
+      }
+   }
+
+   public static enum PlayButtonState {
+      REINSTALL("loginform.enter.reinstall"),
+      INSTALL("loginform.enter.install"),
+      PLAY("loginform.enter");
+
+      private final String path;
+
+      private PlayButtonState(String path) {
+         this.path = path;
+      }
+
+      public String getPath() {
+         return this.path;
+      }
+   }
 }
