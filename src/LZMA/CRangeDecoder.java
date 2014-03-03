@@ -4,161 +4,155 @@ import java.io.IOException;
 import java.io.InputStream;
 
 class CRangeDecoder {
+   static final int kNumTopBits = 24;
+   static final int kTopValue = 16777216;
+   static final int kTopValueMask = -16777216;
+   static final int kNumBitModelTotalBits = 11;
+   static final int kBitModelTotal = 2048;
+   static final int kNumMoveBits = 5;
+   InputStream inStream;
+   int Range;
+   int Code;
+   byte[] buffer = new byte[16384];
+   int buffer_size;
+   int buffer_ind;
+   static final int kNumPosBitsMax = 4;
+   static final int kNumPosStatesMax = 16;
+   static final int kLenNumLowBits = 3;
+   static final int kLenNumLowSymbols = 8;
+   static final int kLenNumMidBits = 3;
+   static final int kLenNumMidSymbols = 8;
+   static final int kLenNumHighBits = 8;
+   static final int kLenNumHighSymbols = 256;
+   static final int LenChoice = 0;
+   static final int LenChoice2 = 1;
+   static final int LenLow = 2;
+   static final int LenMid = 130;
+   static final int LenHigh = 258;
+   static final int kNumLenProbs = 514;
 
-	final static int kNumTopBits = 24;
-	final static int kTopValue = (1 << kNumTopBits);
-	final static int kTopValueMask = ~(kTopValue-1);
+   CRangeDecoder(InputStream iStream) throws IOException {
+      this.inStream = iStream;
+      this.Code = 0;
+      this.Range = -1;
 
-	final static int kNumBitModelTotalBits = 11;
-	final static int kBitModelTotal = (1 << kNumBitModelTotalBits);
-	final static int kNumMoveBits = 5;
+      for(int i = 0; i < 5; ++i) {
+         this.Code = this.Code << 8 | this.Readbyte();
+      }
 
-	InputStream inStream;
+   }
 
-	int Range;
-	int Code;
+   int Readbyte() throws IOException {
+      if (this.buffer_size == this.buffer_ind) {
+         this.buffer_size = this.inStream.read(this.buffer);
+         this.buffer_ind = 0;
+         if (this.buffer_size < 1) {
+            throw new LzmaException("LZMA : Data Error");
+         }
+      }
 
-	byte buffer[];
-	int buffer_size;
-	int buffer_ind;
+      return this.buffer[this.buffer_ind++] & 255;
+   }
 
-	CRangeDecoder( InputStream iStream ) throws IOException {
-		this.buffer = new byte[1<<14];
-		this.inStream = iStream;
-		this.Code = 0;
-		this.Range = -1; // 0xFFFFFFFFL;
-		for(int i = 0; i < 5; i++)
-			this.Code = (this.Code << 8) | (Readbyte());
-	}
+   int DecodeDirectBits(int numTotalBits) throws IOException {
+      int result = 0;
 
-	int Readbyte() throws IOException {
-		if (buffer_size == buffer_ind) {
-			buffer_size = inStream.read(buffer);
-			buffer_ind = 0;
+      for(int i = numTotalBits; i > 0; --i) {
+         this.Range >>>= 1;
+         int t = this.Code - this.Range >>> 31;
+         this.Code -= this.Range & t - 1;
+         result = result << 1 | 1 - t;
+         if (this.Range < 16777216) {
+            this.Code = this.Code << 8 | this.Readbyte();
+            this.Range <<= 8;
+         }
+      }
 
-			if (buffer_size < 1)
-				throw new LzmaException ("LZMA : Data Error");
-		}
-		return buffer[buffer_ind++] & 0xFF;
-	}
+      return result;
+   }
 
-	int DecodeDirectBits(int numTotalBits) throws IOException {
-		int result = 0;
-		for (int i = numTotalBits; i > 0; i--) {
-			Range >>>= 1;
-			int t = ((Code - Range) >>> 31);
-			Code -= Range & (t - 1);
-			result = (result << 1) | (1 - t);
-            
-			if (Range < kTopValue) // because of "Range >>>= 1",   0 <= Range <= 0x7FFFFFFF
-			{
-				Code = (Code << 8) | Readbyte();
-				Range <<= 8;
-			}
-		}
-		return result;
-	}
+   int BitDecode(int[] prob, int index) throws IOException {
+      int newBound = (this.Range >>> 11) * prob[index];
+      if (((long)this.Code & 4294967295L) < ((long)newBound & 4294967295L)) {
+         this.Range = newBound;
+         prob[index] += 2048 - prob[index] >>> 5;
+         if ((this.Range & -16777216) == 0) {
+            this.Code = this.Code << 8 | this.Readbyte();
+            this.Range <<= 8;
+         }
 
-	int BitDecode(int prob[],int index) throws IOException {
-		int newBound = (this.Range >>> kNumBitModelTotalBits) * prob[index];
-		if ((this.Code & 0xFFFFFFFFL) < (newBound & 0xFFFFFFFFL)) // unsigned comparison
-		{
-			this.Range = newBound;
-			prob[index] += (kBitModelTotal - prob[index]) >>> kNumMoveBits;
-			// if ((this.Range & 0xFFFFFFFFL) < Decoder.kTopValue)
-			if ((this.Range & kTopValueMask) == 0) {
-				this.Code = (this.Code << 8) | Readbyte();
-			this.Range <<= 8;
-			}
-			return 0;
-		} else {
-			this.Range -= newBound;
-			this.Code -= newBound;
-			prob[index] -= (prob[index]) >>> kNumMoveBits;
-			// if ((this.Range & 0xFFFFFFFFL) < Decoder.kTopValue)
-			if ((this.Range & kTopValueMask) == 0) {
-				this.Code = (this.Code << 8) | this.Readbyte();
-				this.Range <<= 8;
-			}
-			return 1;
-		}
-	}
+         return 0;
+      } else {
+         this.Range -= newBound;
+         this.Code -= newBound;
+         prob[index] -= prob[index] >>> 5;
+         if ((this.Range & -16777216) == 0) {
+            this.Code = this.Code << 8 | this.Readbyte();
+            this.Range <<= 8;
+         }
 
-	int BitTreeDecode(int probs [], int index , int numLevels) throws IOException {
-		int mi = 1;
-		for(int i = numLevels; i > 0; i--) {
-			mi = (mi + mi) + BitDecode(probs, index + mi);
-		}
-		return mi - (1 << numLevels);
-	}
+         return 1;
+      }
+   }
 
-	int ReverseBitTreeDecode(int probs[] ,int index, int numLevels) throws IOException {
-		int mi = 1;
-		int symbol = 0;
+   int BitTreeDecode(int[] probs, int index, int numLevels) throws IOException {
+      int mi = 1;
 
-		for(int i = 0; i < numLevels; i++) {
-			int bit = BitDecode(probs, index + mi);
-			mi = mi + mi + bit;
-			symbol |= (bit << i);
-		}
-		return symbol;
-	}
+      for(int i = numLevels; i > 0; --i) {
+         mi = mi + mi + this.BitDecode(probs, index + mi);
+      }
 
-	byte LzmaLiteralDecode(int probs[],int index) throws IOException {
-		int symbol = 1;
-		do {
-			symbol = (symbol + symbol) | BitDecode(probs, index + symbol);
-		} while (symbol < 0x100);
+      return mi - (1 << numLevels);
+   }
 
-		return (byte)symbol;
-	}
+   int ReverseBitTreeDecode(int[] probs, int index, int numLevels) throws IOException {
+      int mi = 1;
+      int symbol = 0;
 
-	byte LzmaLiteralDecodeMatch(int probs [], int index, byte matchbyte) throws IOException {
-		int symbol = 1;
-		do {
-			int matchBit = (matchbyte >> 7) & 1;
-			matchbyte <<= 1;
-			int bit = BitDecode(probs , index + ((1 + matchBit) << 8) + symbol);
-			symbol = (symbol << 1) | bit;
+      for(int i = 0; i < numLevels; ++i) {
+         int bit = this.BitDecode(probs, index + mi);
+         mi = mi + mi + bit;
+         symbol |= bit << i;
+      }
 
-			if (matchBit != bit) {
-				while (symbol < 0x100) {
-					symbol = (symbol + symbol) | BitDecode(probs , index + symbol);
-				}
-				break;
-			}
-		} while (symbol < 0x100);
+      return symbol;
+   }
 
-		return (byte)symbol;
-	}
+   byte LzmaLiteralDecode(int[] probs, int index) throws IOException {
+      int symbol = 1;
 
-	final static int kNumPosBitsMax = 4;
-	final static int kNumPosStatesMax = (1 << kNumPosBitsMax);
+      do {
+         symbol = symbol + symbol | this.BitDecode(probs, index + symbol);
+      } while(symbol < 256);
 
-	final static int kLenNumLowBits = 3;
-	final static int kLenNumLowSymbols = (1 << kLenNumLowBits);
-	final static int kLenNumMidBits = 3;
-	final static int kLenNumMidSymbols = (1 << kLenNumMidBits);
-	final static int kLenNumHighBits = 8;
-	final static int kLenNumHighSymbols = (1 << kLenNumHighBits);
+      return (byte)symbol;
+   }
 
-	final static int LenChoice = 0;
-	final static int LenChoice2 = (LenChoice + 1);
-	final static int LenLow = (LenChoice2 + 1);
-	final static int LenMid = (LenLow + (kNumPosStatesMax << kLenNumLowBits));
-	final static int LenHigh = (LenMid + (kNumPosStatesMax << kLenNumMidBits));
-	final static int kNumLenProbs = (LenHigh + kLenNumHighSymbols);
+   byte LzmaLiteralDecodeMatch(int[] probs, int index, byte matchbyte) throws IOException {
+      int symbol = 1;
 
-	int LzmaLenDecode(int probs[], int index, int posState) throws IOException {
-		if(BitDecode(probs, index + LenChoice) == 0)
-			return BitTreeDecode(probs, index + LenLow +
-			                     (posState << kLenNumLowBits), kLenNumLowBits);
+      do {
+         int matchBit = matchbyte >> 7 & 1;
+         matchbyte = (byte)(matchbyte << 1);
+         int bit = this.BitDecode(probs, index + (1 + matchBit << 8) + symbol);
+         symbol = symbol << 1 | bit;
+         if (matchBit != bit) {
+            while(symbol < 256) {
+               symbol = symbol + symbol | this.BitDecode(probs, index + symbol);
+            }
 
-		if(BitDecode(probs, index + LenChoice2) == 0)
-			return kLenNumLowSymbols + BitTreeDecode(probs, index + LenMid +
-			        (posState << kLenNumMidBits), kLenNumMidBits);
+            return (byte)symbol;
+         }
+      } while(symbol < 256);
 
-		return kLenNumLowSymbols + kLenNumMidSymbols +
-		       BitTreeDecode(probs, index + LenHigh, kLenNumHighBits);
-	}
+      return (byte)symbol;
+   }
+
+   int LzmaLenDecode(int[] probs, int index, int posState) throws IOException {
+      if (this.BitDecode(probs, index + 0) == 0) {
+         return this.BitTreeDecode(probs, index + 2 + (posState << 3), 3);
+      } else {
+         return this.BitDecode(probs, index + 1) == 0 ? 8 + this.BitTreeDecode(probs, index + 130 + (posState << 3), 3) : 16 + this.BitTreeDecode(probs, index + 258, 8);
+      }
+   }
 }

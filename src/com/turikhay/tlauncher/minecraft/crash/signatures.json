@@ -1,0 +1,40 @@
+{
+    variables: {
+        "forge": "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}",
+        "crash": "^.*[\\#\\@\\!\\@\\#][ ]Game[ ]crashed!.+[\\#\\@\\!\\@\\#][ ](.+)$",
+        "start_crash": "${forge}---- Minecraft Crash Report ----"
+    },
+    signatures: [
+        {
+            name: "Bad video drivers",
+            path: "opengl",
+            pattern: '[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated',
+            forge: true
+        },
+        {
+            name: "Invalid META-INF",
+            path: "meta-inf",
+            exit: 1,
+            pattern: 'Exception in thread "main" java.lang.SecurityException: SHA1 digest error for .+',
+            forge: true
+        },
+        {
+            name: "Direct close bug",
+            exit: 1,
+            pattern: 'Someone is closing me!',
+            forge: true,
+            fake: true
+        },
+        {
+            name: "Missing main class",
+            path: "missing-main",
+            exit: 1,
+            pattern: '^Error: Could not find or load main class .+'
+        },
+        {
+            name: "PermGen error",
+            path: "permgen-error",
+            exit: -805306369
+        }
+    ]
+}

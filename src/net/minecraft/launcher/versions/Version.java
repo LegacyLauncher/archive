@@ -1,23 +1,25 @@
 package net.minecraft.launcher.versions;
 
+import com.turikhay.tlauncher.repository.Repository;
 import java.util.Date;
-
 import net.minecraft.launcher.updater.VersionList;
 
-import com.turikhay.tlauncher.minecraft.repository.VersionRepository;
-
 public interface Version {
-	public String getID();
-	public void setID(String id);
-	
-	public ReleaseType getReleaseType();
-	
-	public VersionRepository getSource();
-	public void setSource(VersionRepository repository);
-	
-	public Date getUpdatedTime();
-	public Date getReleaseTime();
-	
-	public VersionList getVersionList();
-	public void setVersionList(VersionList list);
+   String getID();
+
+   void setID(String var1);
+
+   ReleaseType getReleaseType();
+
+   Repository getSource();
+
+   void setSource(Repository var1);
+
+   Date getUpdatedTime();
+
+   Date getReleaseTime();
+
+   VersionList getVersionList();
+
+   void setVersionList(VersionList var1);
 }
