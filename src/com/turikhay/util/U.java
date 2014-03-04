@@ -592,4 +592,14 @@ public class U {
          return quality == null ? 15000 : quality.getTimeout();
       }
    }
+
+   public static Object getRandom(Object[] array) {
+      if (array == null) {
+         return null;
+      } else if (array.length == 0) {
+         return null;
+      } else {
+         return array.length == 1 ? array[0] : array[(new Random()).nextInt(array.length)];
+      }
+   }
 }

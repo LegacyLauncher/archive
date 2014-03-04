@@ -33,7 +33,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   private static final double VERSION = 0.712D;
+   private static final double VERSION = 0.72D;
    private static TLauncher instance;
    private static String[] sargs;
    private static MirroredLinkedStringStream stream;
@@ -56,7 +56,7 @@ public class TLauncher {
    private MinecraftUIListener minecraftListener;
    private boolean ready;
    private static final String SETTINGS = "tlauncher.cfg";
-   private static final String BRAND = "Original Beta";
+   private static final String BRAND = "Original";
    private static final String FOLDER = "minecraft";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
@@ -253,7 +253,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original Beta", 0.712D);
+      U.log("Starting TLauncher", "Original", 0.72D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -291,11 +291,11 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.712D;
+      return 0.72D;
    }
 
    public static String getBrand() {
-      return "Original Beta";
+      return "Original";
    }
 
    public static String getFolder() {
