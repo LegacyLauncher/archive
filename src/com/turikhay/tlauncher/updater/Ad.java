@@ -7,6 +7,7 @@ import com.turikhay.util.U;
 import java.net.URL;
 
 public class Ad {
+   private static final String[] RANDOM_CHARS = new String[]{"creeper", "sheep", "skeleton", "steve", "wither", "zombie"};
    private final String content;
    private final int[] size;
    private final URL image;
@@ -38,14 +39,21 @@ public class Ad {
    }
 
    private static URL getInternal(String path) {
-      return path == null ? null : ImageCache.getRes(path);
+      if (path == null) {
+         return null;
+      } else {
+         if (path.equals("random")) {
+            path = (String)U.getRandom(RANDOM_CHARS) + ".png";
+         }
+
+         return ImageCache.getRes(path);
+      }
    }
 
    static Ad parseFrom(SimpleConfiguration configuration) {
       try {
          return new Ad(configuration);
       } catch (RuntimeException var2) {
-         U.log(var2);
          return null;
       }
    }
