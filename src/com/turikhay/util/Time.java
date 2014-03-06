@@ -1,7 +1,6 @@
 package com.turikhay.util;
 
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -41,7 +40,7 @@ public class Time {
    }
 
    public int[] unix(long unixtime) {
-      Calendar ca = GregorianCalendar.getInstance();
+      Calendar ca = Calendar.getInstance();
       ca.setTimeZone(TimeZone.getTimeZone("UTC"));
       ca.setTimeInMillis(unixtime);
       int[] toret = new int[]{ca.get(3) - 1, ca.get(7) - 5, ca.get(11), ca.get(12), ca.get(13)};
@@ -53,13 +52,13 @@ public class Time {
    }
 
    public static String presentDate(long unix, String format) {
-      Calendar p = GregorianCalendar.getInstance();
+      Calendar p = Calendar.getInstance();
       p.setTimeInMillis(unix);
       return presentDate(p, format);
    }
 
    public static String presentDate(long unix) {
-      Calendar p = GregorianCalendar.getInstance();
+      Calendar p = Calendar.getInstance();
       p.setTimeInMillis(unix);
       return presentDate(p, "[day.month hour:minute]");
    }

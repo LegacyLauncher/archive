@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.ui.backgrounds;
+package com.turikhay.tlauncher.ui.background;
 
 import com.turikhay.tlauncher.ui.MainPane;
 import java.awt.Graphics;
@@ -39,6 +39,7 @@ public abstract class PaintBackground extends Background {
 
       Graphics2D g = (Graphics2D)this.vImage.getGraphics();
       this.draw(g, force);
+      this.vImage.validate(this.getGraphicsConfiguration());
       return this.vImage;
    }
 

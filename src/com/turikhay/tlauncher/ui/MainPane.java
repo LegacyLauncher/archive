@@ -1,8 +1,9 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.ui.backgrounds.Background;
-import com.turikhay.tlauncher.ui.backgrounds.DefaultBackground;
+import com.turikhay.tlauncher.ui.background.Background;
+import com.turikhay.tlauncher.ui.background.DefaultBackground;
 import com.turikhay.tlauncher.ui.progress.DownloaderProgress;
+import com.turikhay.tlauncher.ui.progress.ProgressBar;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.scenes.PseudoScene;
@@ -114,7 +115,7 @@ public class MainPane extends ExtendedLayeredPane {
 
    public void onResize() {
       super.onResize();
-      this.progress.setBounds(0, this.getHeight() - DownloaderProgress.DEFAULT_HEIGHT, this.getWidth(), DownloaderProgress.DEFAULT_HEIGHT);
+      this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
    }
 
    public Point getLocationOf(Component comp) {

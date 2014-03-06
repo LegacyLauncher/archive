@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JScrollPane;
 import javax.swing.border.Border;
+import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class SettingsPanel extends CenterPanel implements LoginListener {
@@ -102,7 +104,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
                try {
                   ((VersionLists)SettingsPanel.this.tlauncher.getManager().getComponent(VersionLists.class)).updateLocal();
                } catch (IOException var4) {
-                  Alert.showError("settings.client.gamedir.noaccess", (Throwable)var4);
+                  Alert.showLocError("settings.client.gamedir.noaccess", var4);
                }
 
                SettingsPanel.this.tlauncher.getVersionManager().asyncRefresh();
@@ -137,7 +139,32 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       this.args = new SettingsFieldHandler("minecraft.args", new SettingsTextField("settings.java.args.minecraft", true), warning);
       row = (byte)(row + 1);
       this.add(pane, row, new SettingsPair("settings.java.args.label", new SettingsHandler[]{this.javaArgs, this.args}));
-      this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsTextField("settings.java.path.prompt", true), warning);
+      this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsTextField("settings.java.path.prompt", true) {
+         private static final long serialVersionUID = -2220392073262107659L;
+
+         public boolean isValueValid() {
+            if (!OperatingSystem.getCurrentPlatform().equals(OperatingSystem.WINDOWS)) {
+               return true;
+            } else {
+               String path = this.getValue();
+               if (path == null) {
+                  return true;
+               } else {
+                  File javaDir = new File(path);
+                  if (javaDir.isFile()) {
+                     return true;
+                  } else {
+                     Alert.showLocAsyncError("settings.java.path.doesnotexist");
+                     return false;
+                  }
+               }
+            }
+         }
+      }, warning);
+      this.javaPath.addListener(new SettingsFieldListener() {
+         protected void onChange(SettingsHandler handler, String oldValue, String newValue) {
+         }
+      });
       this.add(pane, row++, new SettingsPair("settings.java.path.label", new SettingsHandler[]{this.javaPath}));
       ++pane;
       row = 0;

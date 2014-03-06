@@ -1,198 +1,182 @@
 package com.turikhay.tlauncher.ui.alert;
 
-import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.configuration.LangConfiguration;
-import com.turikhay.util.U;
+import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.util.async.AsyncThread;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 public class Alert {
-   private static final int wrap = 100;
-   private static LangConfiguration lang;
-   private static String PREFIX = "TLauncher : ";
+   private static final JFrame frame = new JFrame();
+   private static final String PREFIX = "TLauncher : ";
+   private static final String MISSING_TITLE = "MISSING TITLE";
+   private static final String MISSING_MESSAGE = "MISSING MESSAGE";
+   private static final String MISSING_QUESTION = "MISSING QUESTION";
    private static String DEFAULT_TITLE = "An error occurred";
    private static String DEFAULT_MESSAGE = "An unexpected error occurred";
-   private static String MISSING_TITLE = "MISSING TITLE";
-   private static String MISSING_MESSAGE = "MISSING MESSAGE";
-   private static final boolean DEFAULT_EXIT = false;
-
-   public static void showError(String title, String message, Object textarea, Throwable e, boolean exit) {
-      JFrame frame = new JFrame();
-      String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_throwable = e != null ? w(U.stackTrace(e)) : null;
-      String t_textarea = textarea != null ? w(textarea.toString()) : null;
-      AlertPanel panel = new AlertPanel(t_message);
-      if (t_textarea != null) {
-         panel.addTextArea(t_textarea);
-      }
-
-      if (t_throwable != null) {
-         panel.addTextArea(t_throwable);
-      }
-
-      frame.requestFocus();
-      JOptionPane.showMessageDialog(frame, panel, t_title, 0);
-      if (exit) {
-         System.exit(1);
-      }
-
-   }
-
-   public static void showError(String title, String message, Throwable e) {
-      showError(title, message, (Object)null, e, false);
-   }
-
-   public static void showError(String message, Throwable e) {
-      showError(DEFAULT_TITLE, message, (Object)null, e, false);
-   }
-
-   public static void showError(Throwable e, boolean exit) {
-      showError(DEFAULT_TITLE, DEFAULT_MESSAGE, (Object)null, e, exit);
-   }
 
    public static void showError(String title, String message, Object textarea) {
-      showError(title, message, textarea, (Throwable)null, false);
+      showMonolog(0, title, message, textarea);
    }
 
    public static void showError(String title, String message) {
-      showError(title, message, (Object)null, (Throwable)null, false);
+      showError(title, message, (Object)null);
    }
 
-   public static void showError(String path) {
-      showError(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE));
+   public static void showError(String message, Object textarea) {
+      showError(DEFAULT_TITLE, message, textarea);
    }
 
-   public static void showAsyncError(final String title, final String message, final Object textarea) {
+   public static void showError(Object textarea, boolean exit) {
+      showError(DEFAULT_TITLE, DEFAULT_MESSAGE, textarea);
+      if (exit) {
+         System.exit(-1);
+      }
+
+   }
+
+   public static void showError(Object textarea) {
+      showError(textarea, false);
+   }
+
+   public static void showLocError(String titlePath, String messagePath, Object textarea) {
+      showError(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
+   }
+
+   public static void showLocError(String path, Object textarea) {
+      showError(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
+   }
+
+   public static void showLocError(String path) {
+      showLocError(path, (Object)null);
+   }
+
+   public static void showLocAsyncError(final String path) {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            Alert.showError(title, message, textarea);
+            Alert.showLocError(path);
+         }
+      });
+   }
+
+   public static void showMessage(String title, String message, Object textarea) {
+      showMonolog(1, title, message, textarea);
+   }
+
+   public static void showMessage(String title, String message) {
+      showMessage(title, message, (Object)null);
+   }
+
+   public static void showLocMessage(String titlePath, String messagePath, Object textarea) {
+      showMessage(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
+   }
+
+   public static void showLocAsyncMessage(final String titlePath, final String messagePath, final Object textarea) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Alert.showLocMessage(titlePath, messagePath, textarea);
+         }
+      });
+   }
+
+   public static void showLocMessage(String path, Object textarea) {
+      showMessage(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
+   }
+
+   public static void showLocMessage(String path) {
+      showLocMessage(path, (Object)null);
+   }
+
+   public static void showLocAsyncMessage(final String path) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Alert.showLocMessage(path);
          }
       });
    }
 
    public static void showWarning(String title, String message, Object textarea) {
-      JFrame frame = new JFrame();
-      String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_textarea = textarea != null ? w(textarea.toString()) : null;
-      AlertPanel panel = new AlertPanel(t_message);
-      if (t_textarea != null) {
-         panel.addTextArea(t_textarea);
-      }
-
-      frame.requestFocus();
-      JOptionPane.showMessageDialog(frame, panel, t_title, 2);
-   }
-
-   public static void showAsyncWarning(final String title, final String message, final Object textarea) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showWarning(title, message, textarea);
-         }
-      });
-   }
-
-   public static void showAsyncWarning(String title, String message) {
-      showAsyncWarning(title, message, (Object)null);
-   }
-
-   public static void showAsyncWarning(final String path) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showWarning(path);
-         }
-      });
+      showMonolog(2, title, message, textarea);
    }
 
    public static void showWarning(String title, String message) {
       showWarning(title, message, (Object)null);
    }
 
-   public static void showWarning(String path) {
-      showWarning(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), (Object)null);
+   public static void showLocWarning(String titlePath, String messagePath, Object textarea) {
+      showWarning(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
    }
 
-   public static boolean showQuestion(String title, String message, Object textarea, boolean force) {
-      JFrame frame = new JFrame();
-      String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_textarea = textarea != null ? w(textarea.toString()) : null;
-      AlertPanel panel = new AlertPanel(t_message);
-      if (t_textarea != null) {
-         panel.addTextArea(t_textarea);
-      }
-
-      frame.requestFocus();
-      boolean result = JOptionPane.showConfirmDialog(frame, panel, t_title, 0) == 0;
-      return result;
+   public static void showLocWarning(String titlePath, String messagePath) {
+      showWarning(titlePath, messagePath, (Object)null);
    }
 
-   public static boolean showQuestion(String path, Object textarea, boolean force) {
-      return showQuestion(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), textarea, force);
-   }
-
-   public static boolean showQuestion(String path, boolean force) {
-      return showQuestion(path, (Object)null, force);
-   }
-
-   public static void showMessage(String title, String message, Object textarea) {
-      JFrame frame = new JFrame();
-      String t_title = PREFIX + title;
-      String t_message = message != null ? "<html><div align=\"justify\">" + w(message).replace("\n", "<br/>") + "</div></html>" : null;
-      String t_textarea = textarea != null ? w(textarea.toString()) : null;
-      AlertPanel panel = new AlertPanel(t_message);
-      if (t_textarea != null) {
-         panel.addTextArea(t_textarea);
-      }
-
-      frame.requestFocus();
-      JOptionPane.showMessageDialog(frame, panel, t_title, 1);
-   }
-
-   public static void showMessage(String path, Object textarea) {
-      showMessage(getLocal(path + ".title", MISSING_TITLE), getLocal(path, MISSING_MESSAGE), textarea);
-   }
-
-   public static void showAsyncMessage(final String path, final Object textarea) {
+   public static void showLocAsyncWarning(final String titlePath, final String messagePath) {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            Alert.showMessage(path, textarea);
+            Alert.showLocWarning(titlePath, messagePath);
          }
       });
    }
 
-   public static void showAsyncMessage(String path) {
-      showAsyncMessage(path, (Object)null);
+   public static void showLocWarning(String path, Object textarea) {
+      showWarning(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
    }
 
-   public static void showAsyncMessage(final String title, final String message, final Object textarea) {
+   public static void showLocWarning(String path) {
+      showLocWarning(path, (String)null);
+   }
+
+   public static void showLocAsyncWarning(final String path) {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            Alert.showMessage(title, message, textarea);
+            Alert.showLocWarning(path);
          }
       });
    }
 
-   private static String getLocal(String path, String message) {
-      try {
-         if (lang == null) {
-            lang = TLauncher.getInstance().getLang();
-         }
+   public static boolean showQuestion(String title, String question, Object textarea) {
+      return showConfirmDialog(0, 3, title, question, textarea) == 0;
+   }
 
-         return lang.get(path);
-      } catch (Throwable var3) {
-         return message;
-      }
+   public static boolean showQuestion(String title, String question) {
+      return showQuestion(title, question, (Object)null);
+   }
+
+   public static boolean showLocQuestion(String titlePath, String questionPath, Object textarea) {
+      return showQuestion(getLoc(titlePath, "MISSING TITLE"), getLoc(questionPath, "MISSING QUESTION"), textarea);
+   }
+
+   public static boolean showLocQuestion(String titlePath, String questionPath) {
+      return showQuestion(titlePath, questionPath, (Object)null);
+   }
+
+   public static boolean showLocQuestion(String path, Object textarea) {
+      return showQuestion(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING QUESTION"), (Object)null);
+   }
+
+   public static boolean showLocQuestion(String path) {
+      return showLocQuestion(path, (Object)null);
+   }
+
+   private static void showMonolog(int messageType, String title, String message, Object textarea) {
+      JOptionPane.showMessageDialog(frame, new AlertPanel(message, textarea), getTitle(title), messageType);
+   }
+
+   private static int showConfirmDialog(int optionType, int messageType, String title, String message, Object textarea) {
+      return JOptionPane.showConfirmDialog(frame, new AlertPanel(message, textarea), getTitle(title), optionType, messageType);
    }
 
    public static void prepareLocal() {
-      DEFAULT_TITLE = getLocal("alert.error.title", DEFAULT_TITLE);
-      DEFAULT_MESSAGE = getLocal("alert.error.message", DEFAULT_MESSAGE);
+      DEFAULT_TITLE = getLoc("alert.error.title", DEFAULT_TITLE);
+      DEFAULT_MESSAGE = getLoc("alert.error.message", DEFAULT_MESSAGE);
    }
 
-   private static String w(String s) {
-      return U.w(s, 100);
+   private static String getTitle(String title) {
+      return "TLauncher : " + (title == null ? "MISSING TITLE" : title);
+   }
+
+   private static String getLoc(String path, String fallbackMessage) {
+      String result = Localizable.get(path);
+      return result == null ? fallbackMessage : result;
    }
 }

@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.ui.backgrounds;
+package com.turikhay.tlauncher.ui.background;
 
 import com.turikhay.tlauncher.ui.MainPane;
 

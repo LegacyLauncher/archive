@@ -22,7 +22,7 @@ public class ConnectionWarning extends ImagePanel implements UpdaterListener {
       if (!super.onClick()) {
          return false;
       } else {
-         Alert.showAsyncWarning(this.langPath);
+         Alert.showLocAsyncWarning(this.langPath);
          return true;
       }
    }

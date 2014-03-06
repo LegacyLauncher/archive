@@ -57,6 +57,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       this.checkbox = new CheckBoxPanel(this);
       this.buttons = new ButtonPanel(this);
       this.listeners.add(this.autologin);
+      this.listeners.add(this.settings);
       this.listeners.add(this.checkbox);
       this.listeners.add(this.versions);
       this.listeners.add(this.accounts);
@@ -274,7 +275,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             try {
                this.loginForm.runLogin();
             } catch (Throwable var2) {
-               Alert.showError(var2, false);
+               Alert.showError(var2);
             }
          }
       }

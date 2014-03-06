@@ -5,7 +5,6 @@ import com.turikhay.tlauncher.minecraft.auth.Authenticator;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorException;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import com.turikhay.tlauncher.ui.alert.Alert;
-import com.turikhay.tlauncher.ui.loc.Localizable;
 import java.io.IOException;
 
 public class AuthUIListener implements AuthenticatorListener {
@@ -50,7 +49,7 @@ public class AuthUIListener implements AuthenticatorListener {
          e = null;
       }
 
-      Alert.showError(Localizable.get("auth.error.title"), Localizable.get("auth.error." + langpath), e);
+      Alert.showLocError("auth.error.title", "auth.error." + langpath, e);
       if (!serious) {
          this.errorShown = true;
       }
@@ -69,7 +68,7 @@ public class AuthUIListener implements AuthenticatorListener {
       try {
          TLauncher.getInstance().getProfileManager().saveProfiles();
       } catch (IOException var2) {
-         Alert.showError("auth.profiles.save-error");
+         Alert.showLocError("auth.profiles.save-error");
       }
 
    }

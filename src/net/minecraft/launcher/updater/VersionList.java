@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 
 public abstract class VersionList {
    protected final Gson gson;
-   private final Map byName = new HashMap();
+   private final Map byName = new Hashtable();
    private final List versions = new ArrayList();
 
    public VersionList() {
@@ -38,7 +38,9 @@ public abstract class VersionList {
    }
 
    public List getVersions() {
-      return Collections.unmodifiableList(this.versions);
+      synchronized(this.versions) {
+         return Collections.unmodifiableList(this.versions);
+      }
    }
 
    public Version getVersion(String name) {

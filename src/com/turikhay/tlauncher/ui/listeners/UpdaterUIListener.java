@@ -71,7 +71,7 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    public void onUpdateError(Update u, Throwable e) {
       if (this.hiddenUpdate != null) {
          this.hiddenError = e;
-      } else if (Alert.showQuestion(this.lang.get("updater.error.title"), this.lang.get("updater.download-error"), e, true)) {
+      } else if (Alert.showLocQuestion("updater.error.title", "updater.download-error", e)) {
          this.openUpdateLink(u.getDownloadLink());
       }
 
@@ -100,7 +100,7 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    }
 
    public void onUpdateApplyError(Update u, Throwable e) {
-      if (Alert.showQuestion(this.lang.get("updater.save-error.title"), this.lang.get("updater.save-error"), e, true)) {
+      if (Alert.showLocQuestion("updater.save-error.title", "updater.save-error", e)) {
          this.openUpdateLink(u.getDownloadLink());
       }
 
@@ -112,7 +112,7 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
          OperatingSystem.openLink(uri);
          return true;
       } catch (Exception var3) {
-         Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), (Object)uri);
+         Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), uri);
          return false;
       }
    }

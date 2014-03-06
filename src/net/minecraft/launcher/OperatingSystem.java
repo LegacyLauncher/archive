@@ -1,5 +1,7 @@
 package net.minecraft.launcher;
 
+import com.turikhay.tlauncher.ui.alert.Alert;
+import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.U;
 import java.awt.Desktop;
@@ -86,36 +88,50 @@ public enum OperatingSystem {
       return this.arch;
    }
 
-   public static boolean openLink(URI link) {
-      if (!Desktop.isDesktopSupported()) {
-         return false;
-      } else {
-         Desktop desktop = Desktop.getDesktop();
+   private static void rawOpenLink(URI uri) throws Throwable {
+      Desktop desktop = Desktop.getDesktop();
+      desktop.browse(uri);
+   }
 
-         try {
-            desktop.browse(link);
-            return true;
-         } catch (Exception var3) {
-            U.log("Failed to open link: " + link);
-            return false;
+   public static boolean openLink(URI uri, boolean showError) {
+      try {
+         rawOpenLink(uri);
+         return true;
+      } catch (Throwable var3) {
+         U.log("Cannot browser link:", uri);
+         if (showError) {
+            Alert.showError(Localizable.get("ui.error.openlink.title"), Localizable.get("ui.error.openlink", uri), var3);
          }
+
+         return false;
+      }
+   }
+
+   public static boolean openLink(URI uri) {
+      return openLink(uri, true);
+   }
+
+   private static void rawOpenFile(File file) throws Throwable {
+      Desktop desktop = Desktop.getDesktop();
+      desktop.open(file);
+   }
+
+   public static boolean openFile(File file, boolean showError) {
+      try {
+         rawOpenFile(file);
+         return true;
+      } catch (Throwable var3) {
+         U.log("Cannot open file:", file);
+         if (showError) {
+            Alert.showError(Localizable.get("ui.error.openfile.title"), Localizable.get("ui.error.openfile", file), var3);
+         }
+
+         return false;
       }
    }
 
    public static boolean openFile(File file) {
-      if (!Desktop.isDesktopSupported()) {
-         return false;
-      } else {
-         Desktop desktop = Desktop.getDesktop();
-
-         try {
-            desktop.open(file);
-            return true;
-         } catch (Exception var3) {
-            U.log("Failed to open file: " + file);
-            return false;
-         }
-      }
+      return openFile(file, true);
    }
 
    public int getRecommendedMemory() {

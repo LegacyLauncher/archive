@@ -84,7 +84,7 @@ public class TLauncherFrame extends JFrame {
       this.mp.showBackground();
       this.setVisible(true);
       if (this.settings.isFirstRun()) {
-         Alert.showAsyncWarning("firstrun");
+         Alert.showLocAsyncWarning("firstrun");
       }
 
    }

@@ -97,12 +97,12 @@ public class AccountHandler {
       if (this.lastAccount != null) {
          Account acc = this.editor.get();
          if (acc.getUsername() == null) {
-            Alert.showError("auth.error.nousername");
+            Alert.showLocError("auth.error.nousername");
          } else {
             this.lastAccount.complete(acc);
             if (this.lastAccount.hasLicense()) {
                if (this.lastAccount.getAccessToken() == null && this.lastAccount.getPassword() == null) {
-                  Alert.showError("auth.error.nopass");
+                  Alert.showLocError("auth.error.nopass");
                   return;
                }
 
