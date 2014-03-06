@@ -27,7 +27,7 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
          public void itemStateChanged(boolean newstate) {
             CheckBoxPanel.this.loginForm.autologin.setEnabled(newstate);
             if (newstate) {
-               Alert.showAsyncMessage("loginform.checkbox.autologin.tip", Localizable.get("loginform.checkbox.autologin.tip.arg"));
+               Alert.showLocAsyncMessage("loginform.checkbox.autologin.tip.title", "loginform.checkbox.autologin.tip", Localizable.get("loginform.checkbox.autologin.tip.arg"));
             }
 
          }
@@ -51,11 +51,11 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
          boolean installed = syncInfo.isInstalled();
          if (this.state) {
             if (!supporting) {
-               Alert.showError("forceupdate.impossible");
+               Alert.showLocError("forceupdate.impossible");
                throw new LoginException("This version cannot be updated.");
             }
 
-            if (installed && !Alert.showQuestion("forceupdate.question", true)) {
+            if (installed && !Alert.showLocQuestion("forceupdate.question")) {
                throw new LoginException("User has cancelled force updating.");
             }
          }

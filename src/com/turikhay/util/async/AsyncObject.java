@@ -9,7 +9,7 @@ public abstract class AsyncObject extends Thread {
       try {
          this.value = this.execute();
       } catch (Throwable var2) {
-         this.error = new AsyncObjectGotErrorException(this, this.error);
+         this.error = new AsyncObjectGotErrorException(this, var2);
          return;
       }
 

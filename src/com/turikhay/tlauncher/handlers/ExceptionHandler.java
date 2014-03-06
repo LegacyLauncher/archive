@@ -21,7 +21,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
       e.printStackTrace();
 
       try {
-         Alert.showError("Exception in thread " + t.getName(), e);
+         Alert.showError("Exception in thread " + t.getName(), (Object)e);
       } catch (Exception var4) {
          System.exit(2);
       }

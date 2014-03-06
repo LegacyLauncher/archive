@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.ui.backgrounds;
+package com.turikhay.tlauncher.ui.background;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.ui.MainPane;
@@ -22,7 +22,7 @@ public class DayBackground extends LightBackground {
       super(main, loc);
       this.MIN = -0.5D;
       this.MAX = 1.5D;
-      this.TICK = 100;
+      this.TICK = 250;
    }
 
    public void start() {
@@ -61,15 +61,8 @@ public class DayBackground extends LightBackground {
             this.sunLocation -= 0.001D;
          }
 
-         long start = System.nanoTime();
          this.repaint();
-         long end = System.nanoTime();
-         long diff = end - start;
-         if (diff > 1000000L) {
-            log("Sun is probably lagging (" + diff + " ns > 1000000 ns).");
-         }
-
-         U.sleepFor(100L);
+         U.sleepFor(250L);
       }
    }
 

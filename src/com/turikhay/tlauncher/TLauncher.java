@@ -33,7 +33,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   private static final double VERSION = 0.72D;
+   private static final double VERSION = 0.74D;
    private static TLauncher instance;
    private static String[] sargs;
    private static MirroredLinkedStringStream stream;
@@ -122,7 +122,6 @@ public class TLauncher {
          this.loader = new TLauncherLite(this);
       }
 
-      this.downloader.startDownload();
    }
 
    public Downloader getDownloader() {
@@ -194,8 +193,8 @@ public class TLauncher {
          this.lang.setSelected(locale);
       }
 
-      Alert.prepareLocal();
       Localizable.setLang(this.lang);
+      Alert.prepareLocal();
    }
 
    public void launch(MinecraftListener listener, boolean forceupdate) {
@@ -253,7 +252,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.72D);
+      U.log("Starting TLauncher", "Original", 0.74D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -291,7 +290,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.72D;
+      return 0.74D;
    }
 
    public static String getBrand() {

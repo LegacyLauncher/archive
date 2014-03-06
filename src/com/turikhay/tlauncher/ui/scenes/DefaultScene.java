@@ -54,10 +54,6 @@ public class DefaultScene extends PseudoScene {
             this.settingsForm.block("");
          }
 
-         if (update) {
-            this.settingsForm.saveValues();
-         }
-
          int w = this.getWidth();
          int h = this.getHeight();
          int hw = w / 2;

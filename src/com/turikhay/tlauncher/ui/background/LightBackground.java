@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.ui.backgrounds;
+package com.turikhay.tlauncher.ui.background;
 
 import com.turikhay.tlauncher.ui.MainPane;
 import com.turikhay.tlauncher.ui.images.ImageCache;
@@ -40,10 +40,7 @@ public abstract class LightBackground extends PaintBackground {
    }
 
    public void draw(Graphics2D g, boolean force) {
-      if (force) {
-         this.drawGrass(g);
-      }
-
+      this.drawGrass(g);
       this.drawGlow(g);
       this.drawSun(g);
    }

@@ -2,7 +2,6 @@ package com.turikhay.tlauncher.ui.login.buttons;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
-import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.tlauncher.ui.login.LoginForm;
@@ -45,10 +44,7 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
    public void openURL() {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            if (!OperatingSystem.openLink(SupportButton.this.uri)) {
-               Alert.showError(SupportButton.this.l.get("support.error.title"), SupportButton.this.l.get("support.error"), (Object)SupportButton.this.path);
-            }
-
+            OperatingSystem.openLink(SupportButton.this.uri);
          }
       });
    }

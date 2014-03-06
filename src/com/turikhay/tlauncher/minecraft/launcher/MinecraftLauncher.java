@@ -359,11 +359,11 @@ public class MinecraftLauncher implements JavaProcessListener {
                         throw new MinecraftException("Alternative launcher is incompatible with launching version!", "incompatible", new Object[0]);
                      } else {
                         if (this.version.getMinimumCustomLauncherVersion() == 0 && this.version.getMinimumLauncherVersion() > 14) {
-                           Alert.showAsyncWarning("launcher.warning.incompatible.launcher");
+                           Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.launcher");
                         }
 
                         if (!this.version.appliesToCurrentEnvironment()) {
-                           Alert.showAsyncWarning("launcher.warning.incompatible.environment");
+                           Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.environment");
                         }
 
                         this.downloadResources();
@@ -814,6 +814,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             this.process.safeSetExitRunnable(this);
             this.minecraftWorking = true;
          } catch (Exception var3) {
+            this.notifyClose();
             throw new MinecraftException("Cannot start the game!", "start", var3);
          }
 

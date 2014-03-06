@@ -1,7 +1,5 @@
 package com.turikhay.tlauncher.ui.login.buttons;
 
-import com.turikhay.tlauncher.configuration.LangConfiguration;
-import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.ui.swing.ImageButton;
@@ -16,11 +14,9 @@ public class FolderButton extends ImageButton implements Blockable {
    private static final long serialVersionUID = 1621745146166800209L;
    private final FolderButton instance = this;
    private final LoginForm lf;
-   private final LangConfiguration l;
 
    FolderButton(LoginForm loginform) {
       this.lf = loginform;
-      this.l = this.lf.lang;
       this.image = loadImage("folder.png");
       this.rotation = ImageButton.ImageRotation.CENTER;
       this.addActionListener(new ActionListener() {
@@ -36,10 +32,7 @@ public class FolderButton extends ImageButton implements Blockable {
       AsyncThread.execute(new Runnable() {
          public void run() {
             File dir = MinecraftUtil.getWorkingDirectory();
-            if (!OperatingSystem.openFile(dir)) {
-               Alert.showError(FolderButton.this.l.get("folder.error.title"), FolderButton.this.l.get("folder.error"), (Object)dir);
-            }
-
+            OperatingSystem.openFile(dir);
          }
       });
    }

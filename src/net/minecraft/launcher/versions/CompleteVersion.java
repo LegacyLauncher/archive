@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -280,6 +281,12 @@ public class CompleteVersion implements Version, Cloneable {
       }
 
       public CompleteVersion deserialize(JsonElement elem, Type type, JsonDeserializationContext context) throws JsonParseException {
+         JsonObject object = elem.getAsJsonObject();
+         JsonElement sourceElement = object.get("source");
+         if (sourceElement != null && !sourceElement.isJsonPrimitive()) {
+            object.remove("source");
+         }
+
          CompleteVersion version = (CompleteVersion)this.defaultContext.fromJson(elem, CompleteVersion.class);
          if (version.id == null) {
             throw new JsonParseException("Version ID is NULL!");

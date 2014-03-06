@@ -72,7 +72,7 @@ public class DownloaderThread extends ExtendedThread {
          this.currentProgress = this.doneProgress = 0.0D;
          Iterator var2 = this.list.iterator();
 
-         label47:
+         label57:
          while(var2.hasNext()) {
             Downloadable d = (Downloadable)var2.next();
             this.current = d;
@@ -81,6 +81,7 @@ public class DownloaderThread extends ExtendedThread {
             Object error = null;
 
             int max;
+            Iterator var8;
             while(attempt < (max = this.downloader.getConfiguration().getTries(d.isFast()))) {
                ++attempt;
                this.dlog("Attempting to download (repo: " + d.getRepository() + ") [" + attempt + "/" + max + "]...");
@@ -102,6 +103,14 @@ public class DownloaderThread extends ExtendedThread {
                }
 
                if (attempt >= max) {
+                  FileUtil.deleteFile(d.getDestination());
+                  var8 = d.getAdditionalDestinations().iterator();
+
+                  while(var8.hasNext()) {
+                     File file = (File)var8.next();
+                     FileUtil.deleteFile(file);
+                  }
+
                   this.dlog("Gave up trying to download this file.", error);
                   this.onError((Throwable)error);
                }
@@ -109,11 +118,11 @@ public class DownloaderThread extends ExtendedThread {
 
             if (error instanceof AbortedDownloadException) {
                this.tlog("Thread is aborting...");
-               Iterator var8 = this.list.iterator();
+               var8 = this.list.iterator();
 
                while(true) {
                   if (!var8.hasNext()) {
-                     break label47;
+                     break label57;
                   }
 
                   Downloadable downloadable = (Downloadable)var8.next();

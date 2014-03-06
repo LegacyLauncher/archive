@@ -60,20 +60,20 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
             public void runTask() throws LoginException {
                VersionComboBox.this.manager.startRefresh();
                if (VersionComboBox.this.getVersion() == null) {
-                  Alert.showError("versions.notfound");
+                  Alert.showLocError("versions.notfound");
                }
 
                throw new LoginException("Giving user a second chance to choose correct version...");
             }
          });
       } else if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate()) {
-         if (!Alert.showQuestion("versions.found-update", false)) {
+         if (!Alert.showLocQuestion("versions.found-update")) {
             try {
                CompleteVersion complete = this.manager.getLocalList().getCompleteVersion(selected.getLocal());
                complete.setUpdatedTime(selected.getLatestVersion().getUpdatedTime());
                this.manager.getLocalList().saveVersion(complete);
             } catch (IOException var3) {
-               Alert.showError("versions.found-update.error");
+               Alert.showLocError("versions.found-update.error");
             }
 
          } else {

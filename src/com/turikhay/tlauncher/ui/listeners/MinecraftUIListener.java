@@ -51,28 +51,28 @@ public class MinecraftUIListener implements MinecraftListener {
       String title = Localizable.get(p + "title");
       String report = crash.getFile();
       if (!crash.isRecognized()) {
-         Alert.showError(title, Localizable.get(p + "unknown"), (Throwable)null);
+         Alert.showLocError(title, p + "unknown", (Object)null);
       } else {
          Iterator var6 = crash.getSignatures().iterator();
 
          while(var6.hasNext()) {
             CrashSignatureContainer.CrashSignature sign = (CrashSignatureContainer.CrashSignature)var6.next();
             String path = sign.getPath();
-            String message = Localizable.get(p + path);
-            String url = Localizable.get(p + path + ".url");
+            String message = p + path;
+            String url = message + ".url";
             URI uri = U.makeURI(url);
             if (uri != null) {
-               if (Alert.showQuestion(title, message, report, false)) {
+               if (Alert.showLocQuestion(title, message, report)) {
                   OperatingSystem.openLink(uri);
                }
             } else {
-               Alert.showMessage(title, message, report);
+               Alert.showLocMessage(title, message, report);
             }
          }
       }
 
       if (report != null) {
-         if (Alert.showQuestion(p + "store", false)) {
+         if (Alert.showLocQuestion(p + "store")) {
             U.log("Removing crash report...");
             File file = new File(report);
             if (!file.exists()) {
@@ -84,21 +84,21 @@ public class MinecraftUIListener implements MinecraftListener {
                   }
                } catch (Exception var11) {
                   U.log("Can't delete crash report file. Okay.");
-                  Alert.showAsyncMessage(p + "store.failed", var11);
+                  Alert.showLocMessage(p + "store.failed", var11);
                   return;
                }
 
                U.log("Yay, crash report file doesn't exist by now.");
             }
 
-            Alert.showAsyncMessage(p + "store.success");
+            Alert.showLocMessage(p + "store.success");
          }
 
       }
    }
 
    public void onMinecraftError(Throwable e) {
-      Alert.showError(this.lang.get("launcher.error.title"), this.lang.get("launcher.error.unknown"), e);
+      Alert.showLocError("launcher.error.title", "launcher.error.unknown", e);
    }
 
    public void onMinecraftKnownError(MinecraftException e) {

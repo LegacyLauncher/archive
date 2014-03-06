@@ -121,13 +121,20 @@ public class Downloader extends ExtendedThread {
       }
    }
 
-   public void startDownload() {
-      this.unblockThread("iteration");
+   public boolean startDownload() {
+      boolean haveWork = !this.list.isEmpty();
+      if (haveWork) {
+         this.unblockThread("iteration");
+      }
+
+      return haveWork;
    }
 
    public void startDownloadAndWait() {
-      this.startDownload();
-      this.waitWork();
+      if (this.startDownload()) {
+         this.waitWork();
+      }
+
    }
 
    private void waitWork() {
@@ -187,33 +194,24 @@ public class Downloader extends ExtendedThread {
 
    public void run() {
       this.checkCurrent();
-      boolean firstRun = true;
 
       while(true) {
-         if (this.list.isEmpty()) {
-            this.blockThread("iteration");
+         this.blockThread("iteration");
+         this.log("Files in queue", this.list.size());
+         synchronized(this.list) {
+            this.sortOut();
          }
 
-         if (!this.list.isEmpty()) {
-            synchronized(this.list) {
-               this.sortOut();
-            }
-
-            for(int i = 0; i < this.runningThreads; ++i) {
-               this.threads[i].startDownload();
-            }
-
-            if (!firstRun) {
-               this.blockThread("download");
-            }
+         for(int i = 0; i < this.runningThreads; ++i) {
+            this.threads[i].startDownload();
          }
 
+         this.blockThread("download");
          this.notifyWork();
          Arrays.fill(this.speedContainer, 0.0D);
          Arrays.fill(this.progressContainer, 0.0D);
          this.averageProgress = 0.0D;
          this.lastAverageProgress = 0.0D;
-         firstRun = false;
       }
    }
 
