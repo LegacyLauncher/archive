@@ -11,7 +11,6 @@ public class AccountEditorScene extends PseudoScene {
    private static final long serialVersionUID = -151325577614420989L;
    private final int ELEMENT_WIDTH = 225;
    private final int ELEMENT_HEIGHT = 225;
-   private final int MARGIN = 10;
    public final AccountEditor editor = new AccountEditor(this);
    public final AccountList list;
    public final AccountEditorHelper helper;
@@ -45,7 +44,8 @@ public class AccountEditorScene extends PseudoScene {
       int hh = this.getHeight() / 2;
       int heh = 112;
       int y = hh - heh;
-      this.editor.setLocation(hw - 225 - 10, y);
-      this.list.setLocation(hw + 10, y);
+      int MARGIN = 10;
+      this.editor.setLocation(hw - 225 - MARGIN, y);
+      this.list.setLocation(hw + MARGIN, y);
    }
 }

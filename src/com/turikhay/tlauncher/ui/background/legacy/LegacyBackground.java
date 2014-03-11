@@ -1,6 +1,6 @@
-package com.turikhay.tlauncher.ui.background;
+package com.turikhay.tlauncher.ui.background.legacy;
 
-import com.turikhay.tlauncher.ui.MainPane;
+import com.turikhay.tlauncher.ui.background.BackgroundHolder;
 import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.util.U;
 import java.awt.Color;
@@ -8,22 +8,22 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.ImageObserver;
 
-public abstract class LightBackground extends PaintBackground {
+public class LegacyBackground extends PaintBackground {
    private static final long serialVersionUID = -3732711088655124975L;
-   protected Image grass = ImageCache.getImage("grass.png");
-   protected Image sun = ImageCache.getImage("sun.png");
-   protected Image glow = ImageCache.getImage("glow.png");
-   protected final int grassW;
-   protected final int grassH;
-   protected final int sunW;
-   protected final int sunH;
-   protected final int glowW;
-   protected final int glowH;
-   protected double sunLocation;
-   protected Color backgroundColor = new Color(141, 189, 233);
+   private Image grass = ImageCache.getImage("grass.png");
+   private Image sun = ImageCache.getImage("sun.png");
+   private Image glow = ImageCache.getImage("glow.png");
+   private final int grassW;
+   private final int grassH;
+   private final int sunW;
+   private final int sunH;
+   private final int glowW;
+   private final int glowH;
+   double sunLocation;
+   private Color backgroundColor = new Color(141, 189, 233);
 
-   public LightBackground(MainPane main, double loc) {
-      super(main);
+   public LegacyBackground(BackgroundHolder holder, double loc) {
+      super(holder);
       this.setBackground(this.backgroundColor);
       this.grassW = this.grass.getWidth((ImageObserver)null);
       this.grassH = this.grass.getHeight((ImageObserver)null);
@@ -39,20 +39,20 @@ public abstract class LightBackground extends PaintBackground {
 
    }
 
-   public void draw(Graphics2D g, boolean force) {
+   protected void draw(Graphics2D g, boolean force) {
       this.drawGrass(g);
       this.drawGlow(g);
       this.drawSun(g);
    }
 
-   public void drawGrass(Graphics2D g) {
+   void drawGrass(Graphics2D g) {
       for(int rw = 0; rw <= this.width; rw += this.grassW) {
          g.drawImage(this.grass, rw, this.height - this.grassH, (ImageObserver)null);
       }
 
    }
 
-   public void drawSun(Graphics2D g) {
+   void drawSun(Graphics2D g) {
       int x = (int)((double)this.width * this.sunLocation - (double)(this.sunW / 2));
       int y = this.height - this.grassH - this.sunH;
       g.drawImage(this.sun, x, y, this.sunW, this.sunH, (ImageObserver)null);
@@ -62,7 +62,7 @@ public abstract class LightBackground extends PaintBackground {
       g.fillRect(x + this.sunW, y, this.sunW, this.sunH - this.glowH);
    }
 
-   public void drawGlow(Graphics2D g) {
+   void drawGlow(Graphics2D g) {
       for(int rw = 0; rw <= this.width; rw += this.glowW) {
          g.drawImage(this.glow, rw, this.height - this.grassH - this.glowH, (ImageObserver)null);
       }

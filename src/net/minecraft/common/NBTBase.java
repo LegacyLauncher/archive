@@ -12,9 +12,9 @@ public abstract class NBTBase {
 
    abstract void load(DataInput var1, int var2) throws IOException;
 
-   public abstract byte getId();
+   protected abstract byte getId();
 
-   protected NBTBase(String par1Str) {
+   NBTBase(String par1Str) {
       if (par1Str == null) {
          this.name = "";
       } else {
@@ -23,7 +23,7 @@ public abstract class NBTBase {
 
    }
 
-   public NBTBase setName(String par1Str) {
+   NBTBase setName(String par1Str) {
       if (par1Str == null) {
          this.name = "";
       } else {
@@ -33,7 +33,7 @@ public abstract class NBTBase {
       return this;
    }
 
-   public String getName() {
+   String getName() {
       return this.name == null ? "" : this.name;
    }
 
@@ -41,7 +41,7 @@ public abstract class NBTBase {
       return func_130104_b(par0DataInput, 0);
    }
 
-   public static NBTBase func_130104_b(DataInput par0DataInput, int par1) throws IOException {
+   static NBTBase func_130104_b(DataInput par0DataInput, int par1) throws IOException {
       byte var2 = par0DataInput.readByte();
       if (var2 == 0) {
          return new NBTTagEnd();
@@ -62,7 +62,7 @@ public abstract class NBTBase {
 
    }
 
-   public static NBTBase newTag(byte par0, String par1Str) {
+   static NBTBase newTag(byte par0, String par1Str) {
       switch(par0) {
       case 0:
          return new NBTTagEnd();
@@ -93,7 +93,7 @@ public abstract class NBTBase {
       }
    }
 
-   public static String getTagName(byte par0) {
+   static String getTagName(byte par0) {
       switch(par0) {
       case 0:
          return "TAG_End";
@@ -124,14 +124,14 @@ public abstract class NBTBase {
       }
    }
 
-   public abstract NBTBase copy();
+   protected abstract NBTBase copy();
 
    public boolean equals(Object par1Obj) {
       if (!(par1Obj instanceof NBTBase)) {
          return false;
       } else {
          NBTBase var2 = (NBTBase)par1Obj;
-         return this.getId() != var2.getId() ? false : (this.name == null && var2.name != null || this.name != null && var2.name == null ? false : this.name == null || this.name.equals(var2.name));
+         return this.getId() == var2.getId() && (this.name != null || var2.name == null) && (this.name == null || var2.name != null) && (this.name == null || this.name.equals(var2.name));
       }
    }
 

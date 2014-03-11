@@ -8,17 +8,17 @@ import java.util.Map;
 import java.util.Random;
 
 public class Account {
-   protected String username;
-   protected String userID;
-   protected String displayName;
-   protected String password;
-   protected String accessToken;
-   protected String uuid;
-   protected List userProperties;
-   protected Account.AccountType type;
-   protected GameProfile[] profiles;
-   protected GameProfile selectedProfile;
-   protected User user;
+   private String username;
+   private String userID;
+   private String displayName;
+   private String password;
+   private String accessToken;
+   private String uuid;
+   private List userProperties;
+   private Account.AccountType type;
+   private GameProfile[] profiles;
+   private GameProfile selectedProfile;
+   private User user;
    private final Authenticator auth;
 
    public Account() {
@@ -64,7 +64,7 @@ public class Account {
       return this.password;
    }
 
-   public void setPassword(String password) {
+   void setPassword(String password) {
       this.password = password;
       if (password != null) {
          this.type = Account.AccountType.LICENSE;
@@ -122,11 +122,7 @@ public class Account {
    }
 
    public void setUser(User user) {
-      if (user == null) {
-         throw new NullPointerException();
-      } else {
-         this.user = user;
-      }
+      this.user = user;
    }
 
    public Map getProperties() {
@@ -164,7 +160,7 @@ public class Account {
       return map;
    }
 
-   public void setProperties(List properties) {
+   void setProperties(List properties) {
       this.userProperties = properties;
    }
 
@@ -172,7 +168,7 @@ public class Account {
       return this.type;
    }
 
-   public void setType(Account.AccountType type) {
+   void setType(Account.AccountType type) {
       if (type == null) {
          throw new NullPointerException();
       } else {
@@ -192,7 +188,7 @@ public class Account {
       return this.auth;
    }
 
-   public Map createMap() {
+   Map createMap() {
       Map r = new HashMap();
       r.put("username", this.username);
       r.put("userid", this.userID);
@@ -209,7 +205,7 @@ public class Account {
       return r;
    }
 
-   public void fillFromMap(Map map) {
+   void fillFromMap(Map map) {
       if (map.containsKey("username")) {
          this.setUsername(map.get("username").toString());
       }

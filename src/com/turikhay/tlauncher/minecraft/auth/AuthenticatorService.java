@@ -16,15 +16,15 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 
-public class AuthenticatorService {
-   protected static void log(Object... o) {
+class AuthenticatorService {
+   private static void log(Object... o) {
       U.log("[AUTHSERV]", o);
    }
 
-   protected static void debug(Object... o) {
+   private static void debug(Object... o) {
    }
 
-   protected static HttpURLConnection createUrlConnection(URL url) throws IOException {
+   private static HttpURLConnection createUrlConnection(URL url) throws IOException {
       Validate.notNull(url);
       debug("Opening connection to " + url);
       HttpURLConnection connection = (HttpURLConnection)url.openConnection();

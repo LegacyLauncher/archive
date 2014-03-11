@@ -14,7 +14,7 @@ public class ExtendedTextField extends JTextField {
    private String placeholder;
    private String oldPlaceholder;
 
-   public ExtendedTextField(CenterPanel panel, String placeholder, String value) {
+   protected ExtendedTextField(CenterPanel panel, String placeholder, String value) {
       this.theme = panel == null ? CenterPanel.defaultTheme : panel.getTheme();
       this.placeholder = placeholder;
       this.addFocusListener(new FocusListener() {
@@ -85,7 +85,7 @@ public class ExtendedTextField extends JTextField {
       super.setText("");
    }
 
-   protected void updateStyle() {
+   void updateStyle() {
       this.setForeground(this.getValue() == null ? this.theme.getFocusLost() : this.theme.getFocus());
    }
 
@@ -93,7 +93,7 @@ public class ExtendedTextField extends JTextField {
       this.setText(obj == null ? null : obj.toString());
    }
 
-   public void setValue(String s) {
+   protected void setValue(String s) {
       this.setText(s);
    }
 
@@ -101,7 +101,7 @@ public class ExtendedTextField extends JTextField {
       return this.placeholder;
    }
 
-   public void setPlaceholder(String placeholder) {
+   protected void setPlaceholder(String placeholder) {
       this.oldPlaceholder = this.placeholder;
       this.placeholder = placeholder;
       if (this.getValue() == null) {
@@ -110,11 +110,11 @@ public class ExtendedTextField extends JTextField {
 
    }
 
-   public CenterPanelTheme getTheme() {
+   CenterPanelTheme getTheme() {
       return this.theme;
    }
 
-   public void setTheme(CenterPanelTheme theme) {
+   protected void setTheme(CenterPanelTheme theme) {
       if (theme == null) {
          theme = CenterPanel.defaultTheme;
       }
@@ -123,20 +123,20 @@ public class ExtendedTextField extends JTextField {
       this.updateStyle();
    }
 
-   protected void onFocusGained() {
+   void onFocusGained() {
       if (this.getValue() == null) {
          this.setEmpty();
       }
 
    }
 
-   protected void onFocusLost() {
+   void onFocusLost() {
       if (this.getValue() == null) {
          this.setPlaceholder();
       }
 
    }
 
-   protected void onChange() {
+   void onChange() {
    }
 }

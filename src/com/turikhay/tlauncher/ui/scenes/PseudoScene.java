@@ -6,10 +6,10 @@ import com.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
 public abstract class PseudoScene extends ExtendedLayeredPane implements AnimatedVisibility {
    private static final long serialVersionUID = -1L;
-   protected final MainPane main;
+   private final MainPane main;
    private boolean shown = true;
 
-   public PseudoScene(MainPane main) {
+   PseudoScene(MainPane main) {
       super(main);
       this.main = main;
       this.setBounds(0, 0, main.getWidth(), main.getHeight());

@@ -14,7 +14,7 @@ public class ExtendedPasswordField extends JPasswordField {
    private CenterPanelTheme theme;
    private String placeholder;
 
-   public ExtendedPasswordField(CenterPanel panel, String placeholder) {
+   private ExtendedPasswordField(CenterPanel panel, String placeholder) {
       this.theme = panel == null ? CenterPanel.defaultTheme : panel.getTheme();
       this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
       this.addFocusListener(new FocusListener() {
@@ -90,7 +90,7 @@ public class ExtendedPasswordField extends JPasswordField {
       super.setText("");
    }
 
-   protected void updateStyle() {
+   void updateStyle() {
       this.setForeground(this.getValue() == null ? this.theme.getFocusLost() : this.theme.getFocus());
    }
 
@@ -119,20 +119,20 @@ public class ExtendedPasswordField extends JPasswordField {
       this.updateStyle();
    }
 
-   protected void onFocusGained() {
+   void onFocusGained() {
       if (this.getValue() == null) {
          this.setEmpty();
       }
 
    }
 
-   protected void onFocusLost() {
+   void onFocusLost() {
       if (this.getValue() == null) {
          this.setPlaceholder();
       }
 
    }
 
-   protected void onChange() {
+   void onChange() {
    }
 }

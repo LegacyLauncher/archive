@@ -11,9 +11,9 @@ import java.awt.GridBagLayout;
 
 public class SettingsResolutionField extends ExtendedPanel implements SettingsField {
    private static final long serialVersionUID = -5565607141889620750L;
-   SettingsNaturalIntegerField w;
-   SettingsNaturalIntegerField h;
-   ExtendedLabel x;
+   private SettingsNaturalIntegerField w;
+   private SettingsNaturalIntegerField h;
+   private ExtendedLabel x;
    private final int[] defaults;
 
    SettingsResolutionField() {
@@ -24,7 +24,7 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
       this(promptW, promptH, settings.getDefaultWindowSize());
    }
 
-   SettingsResolutionField(String promptW, String promptH, int[] defaults) {
+   private SettingsResolutionField(String promptW, String promptH, int[] defaults) {
       if (defaults == null) {
          throw new NullPointerException();
       } else if (defaults.length != 2) {
@@ -63,7 +63,7 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
       return this.w.getSettingsValue() + ';' + this.h.getSettingsValue();
    }
 
-   public int[] getResolution() {
+   int[] getResolution() {
       try {
          IntegerArray arr = IntegerArray.parseIntegerArray(this.getSettingsValue());
          return arr.toArray();

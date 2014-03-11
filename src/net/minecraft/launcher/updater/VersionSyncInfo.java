@@ -106,7 +106,7 @@ public class VersionSyncInfo {
       return this.getCompleteVersion(true);
    }
 
-   public Set getRequiredDownloadables(OperatingSystem os, File targetDirectory, boolean force) throws IOException {
+   Set getRequiredDownloadables(OperatingSystem os, File targetDirectory, boolean force) throws IOException {
       Set neededFiles = new HashSet();
       if (!this.hasRemote()) {
          return neededFiles;

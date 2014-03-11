@@ -1,4 +1,4 @@
-package com.turikhay.util.streams;
+package com.turikhay.util.stream;
 
 import java.io.IOException;
 import java.io.OutputStream;

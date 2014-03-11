@@ -11,16 +11,16 @@ import java.util.regex.PatternSyntaxException;
 
 public class SearchPanel extends BlockablePanel {
    private static final long serialVersionUID = -2659114952397165370L;
-   protected Insets insets = new Insets(5, 10, 5, 10);
-   ConsoleFrame cf;
+   private Insets insets = new Insets(5, 10, 5, 10);
+   private ConsoleFrame cf;
    SearchField field;
    SearchPrefs prefs;
    SearchButton button;
-   String regexp;
-   Pattern pt;
-   Matcher mt;
-   int plastend;
-   int lastend;
+   private String regexp;
+   private Pattern pt;
+   private Matcher mt;
+   private int plastend;
+   private int lastend;
 
    SearchPanel(ConsoleFrame cf) {
       this.setOpaque(true);
@@ -92,7 +92,7 @@ public class SearchPanel extends BlockablePanel {
       }
    }
 
-   protected void focus() {
+   void focus() {
       this.field.requestFocusInWindow();
    }
 

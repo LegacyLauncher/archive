@@ -16,7 +16,7 @@ public class RotatedIcon implements Icon {
       this(icon, RotatedIcon.Rotate.UP);
    }
 
-   public RotatedIcon(Icon icon, RotatedIcon.Rotate rotate) {
+   private RotatedIcon(Icon icon, RotatedIcon.Rotate rotate) {
       this.icon = icon;
       this.rotate = rotate;
    }

@@ -1,9 +1,9 @@
 package com.turikhay.tlauncher.component;
 
-import com.turikhay.tlauncher.component.managers.ComponentManager;
+import com.turikhay.tlauncher.managers.ComponentManager;
 
 public abstract class RefreshableComponent extends LauncherComponent {
-   public RefreshableComponent(ComponentManager manager) throws Exception {
+   protected RefreshableComponent(ComponentManager manager) throws Exception {
       super(manager);
    }
 

@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import java.io.File;
 import java.io.IOException;

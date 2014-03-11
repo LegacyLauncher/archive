@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.launcher.versions.ReleaseType;
 
-public class ConfigurationDefaults {
+class ConfigurationDefaults {
    private static final int version = 3;
    private final Map d = new HashMap();
 

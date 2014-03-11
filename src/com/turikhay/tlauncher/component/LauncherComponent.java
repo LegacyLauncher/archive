@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.component;
 
-import com.turikhay.tlauncher.component.managers.ComponentManager;
+import com.turikhay.tlauncher.managers.ComponentManager;
 import com.turikhay.util.U;
 
 public abstract class LauncherComponent {

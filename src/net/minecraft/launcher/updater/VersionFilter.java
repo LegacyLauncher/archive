@@ -37,7 +37,7 @@ public class VersionFilter {
       return this;
    }
 
-   public VersionFilter includeTypes(ReleaseType[] types) {
+   VersionFilter includeTypes(ReleaseType[] types) {
       if (types != null) {
          Collections.addAll(this.types, types);
       }
@@ -45,7 +45,7 @@ public class VersionFilter {
       return this;
    }
 
-   public VersionFilter includeType(ReleaseType type) {
+   VersionFilter includeType(ReleaseType type) {
       this.types.add(type);
       return this;
    }

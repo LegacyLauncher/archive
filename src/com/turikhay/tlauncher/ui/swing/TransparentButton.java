@@ -13,7 +13,7 @@ import javax.swing.JButton;
 public class TransparentButton extends JButton {
    private static final long serialVersionUID = -5329305793566047719L;
 
-   public TransparentButton() {
+   protected TransparentButton() {
       this.setBorderPainted(false);
       this.setContentAreaFilled(false);
       this.setFocusPainted(false);

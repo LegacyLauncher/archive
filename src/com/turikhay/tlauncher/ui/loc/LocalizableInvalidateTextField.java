@@ -7,13 +7,13 @@ public class LocalizableInvalidateTextField extends InvalidateTextField implemen
    private static final long serialVersionUID = -3999545292427982797L;
    private String placeholderPath;
 
-   public LocalizableInvalidateTextField(CenterPanel panel, String placeholderPath, String value) {
+   private LocalizableInvalidateTextField(CenterPanel panel, String placeholderPath, String value) {
       super(panel, (String)null, value);
       this.placeholderPath = placeholderPath;
       this.setValue(value);
    }
 
-   public LocalizableInvalidateTextField(String placeholderPath) {
+   protected LocalizableInvalidateTextField(String placeholderPath) {
       this((CenterPanel)null, placeholderPath, (String)null);
    }
 

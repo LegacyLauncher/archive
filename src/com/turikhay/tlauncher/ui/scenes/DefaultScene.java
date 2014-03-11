@@ -11,21 +11,21 @@ import java.awt.Component;
 
 public class DefaultScene extends PseudoScene {
    private static final long serialVersionUID = -1460877989848190921L;
-   final int LOGINFORM_WIDTH;
-   final int LOGINFORM_HEIGHT;
-   final int SETTINGSFORM_WIDTH;
-   final int SETTINGSFORM_HEIGHT;
-   final int MARGIN;
+   private final int LOGINFORM_WIDTH;
+   private final int LOGINFORM_HEIGHT;
+   private final int SETTINGSFORM_WIDTH;
+   private final int SETTINGSFORM_HEIGHT;
+   private final int MARGIN;
    public final LoginForm loginForm;
    public final SettingsPanel settingsForm;
-   public final InfoPanel infoPanel;
+   private final InfoPanel infoPanel;
    private boolean settings;
 
    public DefaultScene(MainPane main) {
       super(main);
       this.LOGINFORM_WIDTH = this.LOGINFORM_HEIGHT = 240;
       this.SETTINGSFORM_WIDTH = 500;
-      this.SETTINGSFORM_HEIGHT = 475;
+      this.SETTINGSFORM_HEIGHT = 450;
       this.MARGIN = 25;
       this.settingsForm = new SettingsPanel(this);
       this.settingsForm.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);
@@ -46,7 +46,7 @@ public class DefaultScene extends PseudoScene {
       }
    }
 
-   public void setSettings(boolean shown, boolean update) {
+   void setSettings(boolean shown, boolean update) {
       if (this.settings != shown || !update) {
          if (shown) {
             this.settingsForm.unblock("");

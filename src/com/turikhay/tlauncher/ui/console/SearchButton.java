@@ -22,9 +22,9 @@ import java.awt.image.ImageObserver;
 
 public class SearchButton extends Button implements Blockable {
    private static final long serialVersionUID = 682875580116075167L;
-   protected Image image;
-   protected ImageButton.ImageRotation rotation;
-   protected int margin;
+   private Image image;
+   private ImageButton.ImageRotation rotation;
+   private int margin;
    private boolean pressed;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;

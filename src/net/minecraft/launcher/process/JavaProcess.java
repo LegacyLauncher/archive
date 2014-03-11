@@ -8,12 +8,12 @@ public class JavaProcess {
    private final Process process;
    private final LimitedCapacityList sysOutLines = new LimitedCapacityList(String.class, 5);
    private JavaProcessListener onExit;
-   private ProcessMonitorThread monitor = new ProcessMonitorThread(this);
 
    public JavaProcess(List commands, Process process) {
       this.commands = commands;
       this.process = process;
-      this.monitor.start();
+      ProcessMonitorThread monitor = new ProcessMonitorThread(this);
+      monitor.start();
    }
 
    public Process getRawProcess() {
@@ -41,7 +41,7 @@ public class JavaProcess {
       }
    }
 
-   public void setExitRunnable(JavaProcessListener runnable) {
+   void setExitRunnable(JavaProcessListener runnable) {
       this.onExit = runnable;
    }
 

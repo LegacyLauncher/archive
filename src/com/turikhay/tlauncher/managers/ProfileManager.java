@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,7 +26,7 @@ import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 
 public class ProfileManager extends RefreshableComponent {
    public static final String DEFAULT_PROFILE_NAME = "TLauncher";
-   public static final String DEFAULT_PROFILE_FILENAME = "launcher_profiles.json";
+   private static final String DEFAULT_PROFILE_FILENAME = "launcher_profiles.json";
    private final List listeners;
    private final AccountListener accountListener;
    private final JsonParser parser;
@@ -127,7 +127,7 @@ public class ProfileManager extends RefreshableComponent {
       return this.file;
    }
 
-   public void setFile(File file) {
+   void setFile(File file) {
       if (file == null) {
          throw new NullPointerException();
       } else {

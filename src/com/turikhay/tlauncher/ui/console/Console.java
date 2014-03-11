@@ -142,7 +142,7 @@ public class Console implements Logger {
       return this.stream.getOutput();
    }
 
-   public void update() {
+   void update() {
       this.check();
       if (this.global != null) {
          String prefix = "gui.console.";
@@ -165,11 +165,11 @@ public class Console implements Logger {
       }
    }
 
-   public void save() {
+   void save() {
       this.save(false);
    }
 
-   public void save(boolean flush) {
+   void save(boolean flush) {
       this.check();
       if (this.global != null) {
          String prefix = "gui.console.";
@@ -227,7 +227,7 @@ public class Console implements Logger {
       this.frame.clear();
    }
 
-   public void kill() {
+   void kill() {
       this.check();
       this.save();
       this.frame.setVisible(false);
@@ -255,7 +255,7 @@ public class Console implements Logger {
       return this.killed;
    }
 
-   public boolean isHidden() {
+   boolean isHidden() {
       this.check();
       return !this.frame.isShowing();
    }
@@ -264,23 +264,23 @@ public class Console implements Logger {
       return this.name;
    }
 
-   public Point getPositionPoint() {
+   Point getPositionPoint() {
       this.check();
       return this.frame.getLocation();
    }
 
-   public int[] getPosition() {
+   int[] getPosition() {
       this.check();
       Point p = this.getPositionPoint();
       return new int[]{p.x, p.y};
    }
 
-   public Dimension getDimension() {
+   Dimension getDimension() {
       this.check();
       return this.frame.getSize();
    }
 
-   public int[] getSize() {
+   int[] getSize() {
       this.check();
       Dimension d = this.getDimension();
       return new int[]{d.width, d.height};

@@ -11,7 +11,6 @@ import joptsimple.OptionSet;
 public class TLauncherLite implements MinecraftListener {
    private final TLauncher tlauncher;
    private final OptionSet args;
-   private final MinecraftLauncher launcher;
 
    TLauncherLite(TLauncher tlauncher) {
       if (tlauncher == null) {
@@ -21,14 +20,14 @@ public class TLauncherLite implements MinecraftListener {
          tlauncher.getVersionManager().startRefresh(true);
          tlauncher.getProfileManager().refreshComponent();
          this.args = tlauncher.getArguments();
-         this.launcher = new MinecraftLauncher(this, this.args);
-         this.launcher.addListener(tlauncher.getMinecraftListener());
-         this.launcher.addListener(this);
-         if (this.launcher.getConsole() != null) {
-            this.launcher.getConsole().setCloseAction(Console.CloseAction.EXIT);
+         MinecraftLauncher launcher = new MinecraftLauncher(this, this.args);
+         launcher.addListener(tlauncher.getMinecraftListener());
+         launcher.addListener(this);
+         if (launcher.getConsole() != null) {
+            launcher.getConsole().setCloseAction(Console.CloseAction.EXIT);
          }
 
-         this.launcher.start();
+         launcher.start();
       }
    }
 

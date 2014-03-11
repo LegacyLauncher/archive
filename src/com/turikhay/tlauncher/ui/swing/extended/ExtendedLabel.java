@@ -6,7 +6,7 @@ import javax.swing.JLabel;
 public class ExtendedLabel extends JLabel {
    private static final long serialVersionUID = -758117308854118352L;
 
-   public ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
+   private ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
       super(text, icon, horizontalAlignment);
       this.setOpaque(false);
    }
@@ -27,7 +27,7 @@ public class ExtendedLabel extends JLabel {
       this((String)null, image, 0);
    }
 
-   public ExtendedLabel() {
+   protected ExtendedLabel() {
       this((String)null, (Icon)null, 10);
    }
 }

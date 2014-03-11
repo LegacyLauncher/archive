@@ -22,27 +22,27 @@ import javax.swing.JPanel;
 public class CenterPanel extends BlockablePanel {
    private static final long serialVersionUID = -1975869198322761508L;
    public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
-   public static final CenterPanelTheme tipTheme = new TipPanelTheme();
-   public static final Insets defaultInsets = new Insets(5, 24, 18, 24);
-   public static final Insets squareInsets = new Insets(15, 15, 15, 15);
-   public static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
+   protected static final CenterPanelTheme tipTheme = new TipPanelTheme();
+   private static final Insets defaultInsets = new Insets(5, 24, 18, 24);
+   protected static final Insets squareInsets = new Insets(15, 15, 15, 15);
+   protected static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
    private final Insets insets;
    private final CenterPanelTheme theme;
    protected final JPanel messagePanel;
-   protected final LocalizableLabel messageLabel;
+   private final LocalizableLabel messageLabel;
    public final TLauncher tlauncher;
    public final Configuration global;
    public final LangConfiguration lang;
 
-   public CenterPanel() {
+   protected CenterPanel() {
       this((CenterPanelTheme)null, (Insets)null);
    }
 
-   public CenterPanel(Insets insets) {
+   protected CenterPanel(Insets insets) {
       this((CenterPanelTheme)null, insets);
    }
 
-   public CenterPanel(CenterPanelTheme theme, Insets insets) {
+   protected CenterPanel(CenterPanelTheme theme, Insets insets) {
       this.tlauncher = TLauncher.getInstance();
       this.global = this.tlauncher.getSettings();
       this.lang = this.tlauncher.getLang();
@@ -84,7 +84,7 @@ public class CenterPanel extends BlockablePanel {
       return this.insets;
    }
 
-   public Del del(int aligment) {
+   protected Del del(int aligment) {
       return new Del(1, aligment, this.theme.getBorder());
    }
 
@@ -102,7 +102,7 @@ public class CenterPanel extends BlockablePanel {
       return false;
    }
 
-   public boolean setMessage(String message) {
+   protected boolean setMessage(String message) {
       this.messageLabel.setForeground(this.theme.getSuccess());
       this.messageLabel.setText(message != null && message.length() != 0 ? message : " ");
       return true;
@@ -110,7 +110,6 @@ public class CenterPanel extends BlockablePanel {
 
    public static JPanel sepPan(LayoutManager manager, Component... components) {
       BlockablePanel panel = new BlockablePanel(manager);
-      panel.setOpaque(false);
       panel.add(components);
       return panel;
    }

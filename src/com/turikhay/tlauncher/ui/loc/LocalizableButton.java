@@ -7,7 +7,7 @@ public class LocalizableButton extends ExtendedButton implements LocalizableComp
    private String path;
    private String[] variables;
 
-   public LocalizableButton() {
+   protected LocalizableButton() {
    }
 
    public LocalizableButton(String path) {

@@ -7,7 +7,7 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
    private String path;
    private String[] variables;
 
-   public LocalizableLabel(String path, Object... vars) {
+   private LocalizableLabel(String path, Object... vars) {
       this.setText(path, vars);
    }
 

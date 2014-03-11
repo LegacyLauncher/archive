@@ -7,21 +7,21 @@ public abstract class LocalizableTextField extends ExtendedTextField implements 
    private static final long serialVersionUID = 359096767189321072L;
    private String placeholderPath;
 
-   public LocalizableTextField(CenterPanel panel, String placeholderPath, String value) {
+   private LocalizableTextField(CenterPanel panel, String placeholderPath, String value) {
       super(panel, (String)null, value);
       this.setValue(value);
       this.setPlaceholder(placeholderPath);
    }
 
-   public LocalizableTextField(CenterPanel panel, String placeholderPath) {
+   protected LocalizableTextField(CenterPanel panel, String placeholderPath) {
       this(panel, placeholderPath, (String)null);
    }
 
-   public LocalizableTextField(String placeholderPath) {
+   protected LocalizableTextField(String placeholderPath) {
       this((CenterPanel)null, placeholderPath, (String)null);
    }
 
-   public LocalizableTextField() {
+   protected LocalizableTextField() {
       this((CenterPanel)null, (String)null, (String)null);
    }
 

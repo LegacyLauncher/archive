@@ -67,7 +67,7 @@ public abstract class ExtendedThread extends Thread {
       }
    }
 
-   protected void threadLog(Object... o) {
+   void threadLog(Object... o) {
       U.log("[" + this.getName() + "]", o);
    }
 

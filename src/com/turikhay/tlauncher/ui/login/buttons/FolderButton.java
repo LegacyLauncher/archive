@@ -28,7 +28,7 @@ public class FolderButton extends ImageButton implements Blockable {
       this.initImage();
    }
 
-   public void openFolder() {
+   void openFolder() {
       AsyncThread.execute(new Runnable() {
          public void run() {
             File dir = MinecraftUtil.getWorkingDirectory();

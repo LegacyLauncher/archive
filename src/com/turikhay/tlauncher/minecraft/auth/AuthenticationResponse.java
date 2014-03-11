@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
-public class AuthenticationResponse extends Response {
+class AuthenticationResponse extends Response {
    private String accessToken;
    private String clientToken;
    private GameProfile selectedProfile;

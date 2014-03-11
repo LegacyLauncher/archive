@@ -105,7 +105,7 @@ public class DownloadableContainer {
       this.locked = locked;
    }
 
-   protected void checkLocked() {
+   void checkLocked() {
       if (this.locked) {
          throw new IllegalStateException("Downloadable is locked!");
       }

@@ -18,22 +18,22 @@ public class ImagePanel extends ExtendedPanel {
    private static final long serialVersionUID = 1L;
    public static final float DEFAULT_ACTIVE_OPACITY = 1.0F;
    public static final float DEFAULT_NON_ACTIVE_OPACITY = 0.75F;
-   protected Object animationLock;
-   protected Image image;
-   protected float activeOpacity;
-   protected float nonActiveOpacity;
-   protected boolean antiAlias;
-   protected int timeFrame;
-   protected float opacity;
-   protected boolean hover;
-   protected boolean shown;
-   protected boolean animating;
+   private final Object animationLock;
+   private Image image;
+   private float activeOpacity;
+   private float nonActiveOpacity;
+   private boolean antiAlias;
+   private int timeFrame;
+   private float opacity;
+   private boolean hover;
+   private boolean shown;
+   private boolean animating;
 
    public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
       this(ImageCache.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
    }
 
-   public ImagePanel(Image image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
+   protected ImagePanel(Image image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
       this.animationLock = new Object();
       this.setImage(image);
       this.setActiveOpacity(activeOpacity);
@@ -64,7 +64,7 @@ public class ImagePanel extends ExtendedPanel {
       });
    }
 
-   public void setImage(Image image, boolean resetSize) {
+   void setImage(Image image, boolean resetSize) {
       if (image == null) {
          throw new NullPointerException();
       } else {
@@ -75,11 +75,11 @@ public class ImagePanel extends ExtendedPanel {
       }
    }
 
-   public void setImage(Image image) {
+   void setImage(Image image) {
       this.setImage(image, true);
    }
 
-   public void setActiveOpacity(float opacity) {
+   void setActiveOpacity(float opacity) {
       if (!(opacity > 1.0F) && !(opacity < 0.0F)) {
          this.activeOpacity = opacity;
       } else {
@@ -87,7 +87,7 @@ public class ImagePanel extends ExtendedPanel {
       }
    }
 
-   public void setNonActiveOpacity(float opacity) {
+   void setNonActiveOpacity(float opacity) {
       if (!(opacity > 1.0F) && !(opacity < 0.0F)) {
          this.nonActiveOpacity = opacity;
       } else {
@@ -95,7 +95,7 @@ public class ImagePanel extends ExtendedPanel {
       }
    }
 
-   public void setAntiAlias(boolean set) {
+   void setAntiAlias(boolean set) {
       this.antiAlias = set;
    }
 
@@ -161,7 +161,7 @@ public class ImagePanel extends ExtendedPanel {
       return this.shown;
    }
 
-   protected void onMouseEntered() {
+   void onMouseEntered() {
       this.hover = true;
       if (!this.animating && this.shown) {
          this.opacity = this.activeOpacity;
@@ -169,7 +169,7 @@ public class ImagePanel extends ExtendedPanel {
       }
    }
 
-   protected void onMouseExited() {
+   void onMouseExited() {
       this.hover = false;
       if (!this.animating && this.shown) {
          this.opacity = this.nonActiveOpacity;

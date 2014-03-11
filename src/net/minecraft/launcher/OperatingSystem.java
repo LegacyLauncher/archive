@@ -28,7 +28,7 @@ public enum OperatingSystem {
       return this.name;
    }
 
-   public String[] getAliases() {
+   String[] getAliases() {
       return this.aliases;
    }
 
@@ -36,7 +36,7 @@ public enum OperatingSystem {
       return this != UNKNOWN;
    }
 
-   public String getJavaDir(boolean appendFile) {
+   String getJavaDir(boolean appendFile) {
       String separator = System.getProperty("file.separator");
       String path = System.getProperty("java.home") + separator;
       if (appendFile) {
@@ -93,7 +93,7 @@ public enum OperatingSystem {
       desktop.browse(uri);
    }
 
-   public static boolean openLink(URI uri, boolean showError) {
+   private static boolean openLink(URI uri, boolean showError) {
       try {
          rawOpenLink(uri);
          return true;
@@ -116,7 +116,7 @@ public enum OperatingSystem {
       desktop.open(file);
    }
 
-   public static boolean openFile(File file, boolean showError) {
+   private static boolean openFile(File file, boolean showError) {
       try {
          rawOpenFile(file);
          return true;

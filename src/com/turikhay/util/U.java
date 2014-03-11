@@ -11,9 +11,9 @@ import java.util.Random;
 
 public class U {
    public static final int DEFAULT_READ_TIMEOUT = 15000;
-   public static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
+   private static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
    private static String PREFIX;
-   private static Object lock = new Object();
+   private static final Object lock = new Object();
 
    public static void setPrefix(String prefix) {
       PREFIX = prefix;
@@ -37,13 +37,13 @@ public class U {
       hlog((String)null, what);
    }
 
-   public static void hlog(String prefix, Object[] append) {
+   private static void hlog(String prefix, Object[] append) {
       synchronized(lock) {
          System.out.println(toLog(prefix, append));
       }
    }
 
-   public static String toLog(String prefix, Object... append) {
+   private static String toLog(String prefix, Object... append) {
       StringBuilder b = new StringBuilder();
       boolean first = true;
       if (prefix != null) {
@@ -106,7 +106,7 @@ public class U {
       return toLog((String)null, append);
    }
 
-   public static String arrayToLog(Object e) {
+   private static String arrayToLog(Object e) {
       if (!e.getClass().isArray()) {
          throw new IllegalArgumentException("Given object is not an array!");
       } else {
@@ -427,7 +427,7 @@ public class U {
       }
    }
 
-   public static String w(String string, int normal, char newline, boolean rude) {
+   private static String w(String string, int normal, char newline, boolean rude) {
       char[] c = string.toCharArray();
       int len = c.length;
       int remaining = normal;
@@ -469,7 +469,7 @@ public class U {
       return nf.format(d).replace(",", ".");
    }
 
-   public static String stackTrace(Throwable e) {
+   private static String stackTrace(Throwable e) {
       Thread current = Thread.currentThread();
       String callerTrace = null;
       if (current instanceof ExtendedThread) {
@@ -516,15 +516,15 @@ public class U {
       }
    }
 
-   public static long getUsingSpace() {
+   private static long getUsingSpace() {
       return getTotalSpace() - getFreeSpace();
    }
 
-   public static long getFreeSpace() {
+   private static long getFreeSpace() {
       return Runtime.getRuntime().freeMemory() / 1048576L;
    }
 
-   public static long getTotalSpace() {
+   private static long getTotalSpace() {
       return Runtime.getRuntime().totalMemory() / 1048576L;
    }
 
@@ -563,7 +563,7 @@ public class U {
       return makeURI(makeURL(p));
    }
 
-   public static boolean interval(int min, int max, int num, boolean including) {
+   private static boolean interval(int min, int max, int num, boolean including) {
       return including ? num >= min && num <= max : num > max && num < max;
    }
 

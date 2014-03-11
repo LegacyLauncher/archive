@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.login;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.VersionManager;
-import com.turikhay.tlauncher.component.managers.VersionManagerListener;
+import com.turikhay.tlauncher.managers.VersionManager;
+import com.turikhay.tlauncher.managers.VersionManagerListener;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -19,8 +19,8 @@ import net.minecraft.launcher.versions.CompleteVersion;
 
 public class VersionComboBox extends ExtendedComboBox implements Blockable, VersionManagerListener, LocalizableComponent, LoginListener {
    private static final long serialVersionUID = -9122074452728842733L;
-   protected static final VersionSyncInfo LOADING;
-   protected static final VersionSyncInfo EMPTY;
+   private static final VersionSyncInfo LOADING;
+   private static final VersionSyncInfo EMPTY;
    private final VersionManager manager;
    private final LoginForm loginForm;
    private String selectedVersion;
@@ -104,7 +104,7 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
       this.updateList(this.manager.getVersions(), (String)null);
    }
 
-   public void updateList(List list, String select) {
+   void updateList(List list, String select) {
       if (select == null && this.selectedVersion != null) {
          select = this.selectedVersion;
       }

@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
-public class RefreshResponse extends Response {
+class RefreshResponse extends Response {
    private String accessToken;
    private String clientToken;
    private GameProfile selectedProfile;

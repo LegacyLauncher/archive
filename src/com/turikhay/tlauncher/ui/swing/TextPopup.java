@@ -19,7 +19,7 @@ public class TextPopup extends MouseAdapter implements LocalizableComponent {
    private static String COPY;
    private static String SELECTALL;
    private static String PASTE;
-   static LangConfiguration l;
+   private static LangConfiguration l;
 
    public TextPopup() {
       this.updateLocale();

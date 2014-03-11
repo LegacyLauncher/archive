@@ -6,9 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class SettingsGroupHandler {
-   private final SettingsHandler[] handlers;
-   private final SettingsFieldListener listener;
-   protected final List listeners;
+   private final List listeners;
    private final int checkedLimit;
    private int changedFlag;
    private int checkedFlag;
@@ -18,7 +16,7 @@ public class SettingsGroupHandler {
          throw new NullPointerException();
       } else {
          this.checkedLimit = handlers.length;
-         this.listener = new SettingsFieldListener() {
+         SettingsFieldListener listener = new SettingsFieldListener() {
             protected void onChange(SettingsHandler handler, String oldValue, String newValue) {
                if (newValue != null) {
                   SettingsGroupHandler var10000;
@@ -54,11 +52,11 @@ public class SettingsGroupHandler {
                throw new NullPointerException("Handler is NULL at " + i);
             }
 
-            handler.addListener(this.listener);
+            handler.addListener(listener);
          }
 
-         this.handlers = new SettingsHandler[handlers.length];
-         System.arraycopy(handlers, 0, this.handlers, 0, handlers.length);
+         SettingsHandler[] handlers1 = new SettingsHandler[handlers.length];
+         System.arraycopy(handlers, 0, handlers1, 0, handlers.length);
          this.listeners = Collections.synchronizedList(new ArrayList());
       }
    }

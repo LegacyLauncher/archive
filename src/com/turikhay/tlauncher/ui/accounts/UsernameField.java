@@ -5,7 +5,7 @@ import com.turikhay.tlauncher.ui.loc.LocalizableTextField;
 
 public class UsernameField extends LocalizableTextField {
    private static final long serialVersionUID = -5813187607562947592L;
-   UsernameField.UsernameState state;
+   private UsernameField.UsernameState state;
    String username;
 
    public UsernameField(CenterPanel pan, UsernameField.UsernameState state) {

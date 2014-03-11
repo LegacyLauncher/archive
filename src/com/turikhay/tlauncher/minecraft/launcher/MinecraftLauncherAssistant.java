@@ -3,9 +3,9 @@ package com.turikhay.tlauncher.minecraft.launcher;
 import com.turikhay.tlauncher.downloader.Downloader;
 
 public abstract class MinecraftLauncherAssistant {
-   protected final MinecraftLauncher launcher;
+   private final MinecraftLauncher launcher;
 
-   protected MinecraftLauncherAssistant(MinecraftLauncher launcher) {
+   MinecraftLauncherAssistant(MinecraftLauncher launcher) {
       if (launcher == null) {
          throw new NullPointerException();
       } else {

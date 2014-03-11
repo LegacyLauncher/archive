@@ -6,9 +6,9 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 public class Del extends JPanel {
-   public static final int TOP = -1;
+   private static final int TOP = -1;
    public static final int CENTER = 0;
-   public static final int BOTTOM = 1;
+   private static final int BOTTOM = 1;
    private static final long serialVersionUID = -2252007533187803762L;
    private int size;
    private int aligment;

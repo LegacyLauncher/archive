@@ -4,7 +4,7 @@ import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import java.awt.Component;
 
-public class HelperStep extends CenterPanel {
+class HelperStep extends CenterPanel {
    private static final long serialVersionUID = -2410428259993661598L;
    public final String name;
    public final LocalizableLabel label;

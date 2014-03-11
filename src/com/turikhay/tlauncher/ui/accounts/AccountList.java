@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.accounts;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.ProfileManager;
-import com.turikhay.tlauncher.component.managers.ProfileManagerListener;
+import com.turikhay.tlauncher.managers.ProfileManager;
+import com.turikhay.tlauncher.managers.ProfileManagerListener;
 import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import com.turikhay.tlauncher.ui.center.CenterPanel;
@@ -18,29 +18,28 @@ import java.util.Iterator;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 public class AccountList extends CenterPanel {
    private static final long serialVersionUID = 3280495266368287215L;
    private final AccountEditorScene scene;
-   private final JPanel panel;
-   private final LocalizableLabel label;
    public final DefaultListModel model;
    public final JList list;
-   private final ProfileManagerListener listener;
    public final ImageButton add;
-   public final ImageButton remove;
+   private final ImageButton remove;
    public final ImageButton help;
    public final ImageButton back;
 
    public AccountList(AccountEditorScene sc) {
       super(squareInsets);
       this.scene = sc;
-      this.panel = new JPanel(new BorderLayout(0, 5));
-      this.panel.setOpaque(false);
-      this.label = new LocalizableLabel("account.list");
-      this.panel.add("North", this.label);
+      JPanel panel = new JPanel(new BorderLayout(0, 5));
+      panel.setOpaque(false);
+      LocalizableLabel label = new LocalizableLabel("account.list");
+      panel.add("North", label);
       this.model = new DefaultListModel();
       this.list = new JList(this.model);
       this.list.setCellRenderer(new AccountCellRenderer(AccountCellRenderer.AccountCellType.EDITOR));
@@ -50,7 +49,13 @@ public class AccountList extends CenterPanel {
             AccountList.this.scene.handler.refreshEditor(account);
          }
       });
-      this.panel.add("Center", this.list);
+      JScrollPane scroll = new JScrollPane(this.list);
+      scroll.setOpaque(false);
+      scroll.getViewport().setOpaque(false);
+      scroll.setBorder((Border)null);
+      scroll.setHorizontalScrollBarPolicy(31);
+      scroll.setVerticalScrollBarPolicy(20);
+      panel.add("Center", scroll);
       JPanel buttons = new JPanel(new GridLayout(0, 4));
       buttons.setOpaque(false);
       this.add = new ImageButton("add.png");
@@ -84,9 +89,9 @@ public class AccountList extends CenterPanel {
          }
       });
       buttons.add(this.back);
-      this.panel.add("South", buttons);
-      this.add(this.panel);
-      this.listener = new ProfileManagerListener() {
+      panel.add("South", buttons);
+      this.add(panel);
+      ProfileManagerListener listener = new ProfileManagerListener() {
          public void onProfilesRefreshed(ProfileManager pm) {
             AccountList.this.refreshFrom(pm.getAuthDatabase());
          }
@@ -99,7 +104,7 @@ public class AccountList extends CenterPanel {
             AccountList.this.refreshFrom(db);
          }
       };
-      TLauncher.getInstance().getProfileManager().addListener(this.listener);
+      TLauncher.getInstance().getProfileManager().addListener(listener);
    }
 
    void refreshFrom(AuthenticatorDatabase db) {

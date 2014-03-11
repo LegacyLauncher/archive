@@ -11,7 +11,7 @@ import net.minecraft.launcher.versions.Version;
 public class RepositoryBasedVersionList extends RemoteVersionList {
    private final Repository repository;
 
-   public RepositoryBasedVersionList(Repository repository) {
+   RepositoryBasedVersionList(Repository repository) {
       if (repository == null) {
          throw new NullPointerException();
       } else {

@@ -1,9 +1,9 @@
 package com.turikhay.tlauncher.ui.login.buttons;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.ComponentManager;
-import com.turikhay.tlauncher.component.managers.ComponentManagerListener;
-import com.turikhay.tlauncher.component.managers.ComponentManagerListenerHelper;
+import com.turikhay.tlauncher.managers.ComponentManager;
+import com.turikhay.tlauncher.managers.ComponentManagerListener;
+import com.turikhay.tlauncher.managers.ComponentManagerListenerHelper;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.login.LoginForm;
@@ -18,15 +18,15 @@ import java.awt.event.ActionListener;
 
 public class RefreshButton extends ImageButton implements Blockable, ComponentManagerListener, UpdaterListener {
    private static final long serialVersionUID = -1334187593288746348L;
-   public static final int TYPE_REFRESH = 0;
-   public static final int TYPE_CANCEL = 1;
+   private static final int TYPE_REFRESH = 0;
+   private static final int TYPE_CANCEL = 1;
    private LoginForm lf;
    private int type;
    private final Image refresh;
    private final Image cancel;
    private Updater updaterFlag;
 
-   RefreshButton(LoginForm loginform, int type) {
+   private RefreshButton(LoginForm loginform, int type) {
       this.refresh = loadImage("refresh.png");
       this.cancel = loadImage("cancel.png");
       this.lf = loginform;
@@ -65,11 +65,11 @@ public class RefreshButton extends ImageButton implements Blockable, ComponentMa
       this.lf.defocus();
    }
 
-   public void setType(int type) {
+   void setType(int type) {
       this.setType(type, true);
    }
 
-   public void setType(int type, boolean repaint) {
+   void setType(int type, boolean repaint) {
       switch(type) {
       case 0:
          this.image = this.refresh;

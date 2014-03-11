@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.component.ComponentDependence;
@@ -97,7 +97,7 @@ public class ComponentManager {
       }
    }
 
-   public boolean hasComponent(Class classOfT) {
+   boolean hasComponent(Class classOfT) {
       if (classOfT == null) {
          return false;
       } else {
@@ -136,7 +136,7 @@ public class ComponentManager {
       this.refresher.unblockThread("refresh");
    }
 
-   public void startRefresh() {
+   void startRefresh() {
       Iterator var2 = this.components.iterator();
 
       while(var2.hasNext()) {

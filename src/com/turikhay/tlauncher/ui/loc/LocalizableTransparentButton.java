@@ -12,7 +12,7 @@ public class LocalizableTransparentButton extends TransparentButton implements L
       this.setText(path, vars);
    }
 
-   public void setText(String path, Object... vars) {
+   void setText(String path, Object... vars) {
       this.path = path;
       this.variables = Localizable.checkVariables(vars);
       String value = Localizable.get(path);

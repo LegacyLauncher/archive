@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class DownloaderThread extends ExtendedThread {
-   static final String ITERATION_BLOCK = "iteration";
+   private static final String ITERATION_BLOCK = "iteration";
    private static final int CONTAINER_SIZE = 100;
    private final int ID;
    private final String LOGGER_PREFIX;

@@ -6,7 +6,7 @@ public class SettingsTextField extends LocalizableTextField implements SettingsF
    private static final long serialVersionUID = 3920711425159165958L;
    private final boolean canBeEmpty;
 
-   SettingsTextField(boolean canBeEmpty) {
+   private SettingsTextField(boolean canBeEmpty) {
       this.canBeEmpty = canBeEmpty;
    }
 

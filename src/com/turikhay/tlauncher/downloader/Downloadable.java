@@ -12,8 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Downloadable {
-   public static final boolean DEFAULT_FORCE = false;
-   public static final boolean DEFAULT_FAST = false;
+   private static final boolean DEFAULT_FORCE = false;
+   private static final boolean DEFAULT_FAST = false;
    private String path;
    private Repository repo;
    private File destination;
@@ -46,7 +46,7 @@ public class Downloadable {
       this(repo, path, destination, false, false);
    }
 
-   public Downloadable(String url, File destination, boolean forceDownload, boolean fastDownload) {
+   private Downloadable(String url, File destination, boolean forceDownload, boolean fastDownload) {
       this();
       this.setURL(url);
       this.setDestination(destination);
@@ -88,7 +88,7 @@ public class Downloadable {
       return this.repo != null;
    }
 
-   public void setURL(Repository repo, String path) {
+   void setURL(Repository repo, String path) {
       if (repo == null) {
          throw new NullPointerException("Repository is NULL!");
       } else if (path == null) {
@@ -100,7 +100,7 @@ public class Downloadable {
       }
    }
 
-   public void setURL(String url) {
+   void setURL(String url) {
       if (url == null) {
          throw new NullPointerException();
       } else if (url.isEmpty()) {
@@ -120,7 +120,7 @@ public class Downloadable {
       return FileUtil.getFilename(this.path);
    }
 
-   public void setDestination(File file) {
+   void setDestination(File file) {
       if (file == null) {
          throw new NullPointerException();
       } else {
@@ -176,7 +176,7 @@ public class Downloadable {
       this.locked = locked;
    }
 
-   protected void checkLocked() {
+   void checkLocked() {
       if (this.locked) {
          throw new IllegalStateException("Downloadable is locked!");
       }

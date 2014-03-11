@@ -12,15 +12,15 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
    private String[] centerVars;
    private String[] eastVars;
 
-   public LocalizableProgressBar(Component parentComp) {
+   protected LocalizableProgressBar(Component parentComp) {
       super(parentComp);
    }
 
-   public LocalizableProgressBar() {
+   protected LocalizableProgressBar() {
       this((Component)null);
    }
 
-   public void setWestString(String path, boolean update, Object... vars) {
+   void setWestString(String path, boolean update, Object... vars) {
       this.westPath = path;
       this.westVars = Localizable.checkVariables(vars);
       String value = Localizable.get(path);
@@ -40,7 +40,7 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
       this.setWestString(path, true, vars);
    }
 
-   public void setCenterString(String path, boolean update, Object... vars) {
+   void setCenterString(String path, boolean update, Object... vars) {
       this.centerPath = path;
       this.centerVars = Localizable.checkVariables(vars);
       String value = Localizable.get(path);
@@ -60,7 +60,7 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
       this.setCenterString(path, true, vars);
    }
 
-   public void setEastString(String path, boolean update, Object... vars) {
+   void setEastString(String path, boolean update, Object... vars) {
       this.eastPath = path;
       this.eastVars = Localizable.checkVariables(vars);
       String value = Localizable.get(path);

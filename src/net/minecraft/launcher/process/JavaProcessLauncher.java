@@ -38,7 +38,7 @@ public class JavaProcessLauncher {
       return this.process;
    }
 
-   public List getFullCommands() {
+   List getFullCommands() {
       List result = new ArrayList(this.commands);
       result.add(0, this.getJavaPath());
       return result;
@@ -98,7 +98,7 @@ public class JavaProcessLauncher {
       return this.directory;
    }
 
-   protected String getJavaPath() {
+   String getJavaPath() {
       return this.jvmPath;
    }
 

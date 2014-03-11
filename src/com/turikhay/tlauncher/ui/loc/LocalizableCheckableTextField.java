@@ -7,7 +7,7 @@ public abstract class LocalizableCheckableTextField extends CheckableTextField i
    private static final long serialVersionUID = 1L;
    private String placeholderPath;
 
-   public LocalizableCheckableTextField(CenterPanel panel, String placeholderPath, String value) {
+   private LocalizableCheckableTextField(CenterPanel panel, String placeholderPath, String value) {
       super(panel, (String)null, (String)null);
       this.placeholderPath = placeholderPath;
       this.setValue(value);

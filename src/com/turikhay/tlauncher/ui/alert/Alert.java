@@ -58,7 +58,7 @@ public class Alert {
       });
    }
 
-   public static void showMessage(String title, String message, Object textarea) {
+   private static void showMessage(String title, String message, Object textarea) {
       showMonolog(1, title, message, textarea);
    }
 
@@ -106,8 +106,8 @@ public class Alert {
       showWarning(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
    }
 
-   public static void showLocWarning(String titlePath, String messagePath) {
-      showWarning(titlePath, messagePath, (Object)null);
+   private static void showLocWarning(String titlePath, String messagePath) {
+      showLocWarning(titlePath, messagePath, (Object)null);
    }
 
    public static void showLocAsyncWarning(final String titlePath, final String messagePath) {
@@ -122,8 +122,8 @@ public class Alert {
       showWarning(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
    }
 
-   public static void showLocWarning(String path) {
-      showLocWarning(path, (String)null);
+   private static void showLocWarning(String path) {
+      showLocWarning(path, (Object)null);
    }
 
    public static void showLocAsyncWarning(final String path) {
@@ -134,7 +134,7 @@ public class Alert {
       });
    }
 
-   public static boolean showQuestion(String title, String question, Object textarea) {
+   private static boolean showQuestion(String title, String question, Object textarea) {
       return showConfirmDialog(0, 3, title, question, textarea) == 0;
    }
 
@@ -150,7 +150,7 @@ public class Alert {
       return showQuestion(titlePath, questionPath, (Object)null);
    }
 
-   public static boolean showLocQuestion(String path, Object textarea) {
+   private static boolean showLocQuestion(String path, Object textarea) {
       return showQuestion(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING QUESTION"), (Object)null);
    }
 

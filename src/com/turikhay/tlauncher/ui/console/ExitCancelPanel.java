@@ -9,11 +9,11 @@ import java.awt.event.ActionListener;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
-public class ExitCancelPanel extends JPanel {
+class ExitCancelPanel extends JPanel {
    private static final long serialVersionUID = -1998881418330942647L;
-   LocalizableLabel label;
-   LocalizableButton button;
-   Font font = new Font("", 1, 12);
+   private LocalizableLabel label;
+   private LocalizableButton button;
+   private Font font = new Font("", 1, 12);
 
    ExitCancelPanel(final ConsoleFrame cf) {
       this.setLayout(new BoxLayout(this, 1));

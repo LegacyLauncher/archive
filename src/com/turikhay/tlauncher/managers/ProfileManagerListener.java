@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.turikhay.tlauncher.minecraft.auth.AccountListener;
 

@@ -16,7 +16,7 @@ public class PrintLogger extends PrintStream implements Logger {
       this.mirror = mirror;
    }
 
-   public PrintLogger(LinkedStringStream stream, Logger mirror) {
+   private PrintLogger(LinkedStringStream stream, Logger mirror) {
       super(stream);
       this.stream = stream;
       this.mirror = mirror;

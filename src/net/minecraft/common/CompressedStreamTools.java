@@ -85,7 +85,7 @@ public class CompressedStreamTools {
       }
    }
 
-   public static void write(NBTTagCompound par0NBTTagCompound, File par1File) throws IOException {
+   private static void write(NBTTagCompound par0NBTTagCompound, File par1File) throws IOException {
       DataOutputStream var2 = new DataOutputStream(new FileOutputStream(par1File));
 
       try {

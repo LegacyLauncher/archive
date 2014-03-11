@@ -4,7 +4,7 @@ import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import com.turikhay.tlauncher.ui.swing.extended.VPanel;
 import java.awt.Component;
 
-public class SettingsPair {
+class SettingsPair {
    private final LocalizableLabel label;
    private final SettingsHandler[] handlers;
    private final Component[] fields;

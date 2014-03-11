@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.ui.converter;
 
-import com.turikhay.tlauncher.component.managers.ProfileManager;
+import com.turikhay.tlauncher.managers.ProfileManager;
 import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableStringConverter;

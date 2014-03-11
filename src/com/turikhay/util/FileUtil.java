@@ -26,7 +26,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
-   public static final String DEFAULT_CHARSET = "UTF-8";
+   private static final String DEFAULT_CHARSET = "UTF-8";
 
    public static Charset getCharset() {
       try {
@@ -46,7 +46,7 @@ public class FileUtil {
       os.close();
    }
 
-   public static String readFile(File file, String charset) throws IOException {
+   private static String readFile(File file, String charset) throws IOException {
       if (file == null) {
          throw new NullPointerException("File is NULL!");
       } else if (!file.exists()) {
@@ -124,7 +124,7 @@ public class FileUtil {
       return String.format("%1$0" + hashLength + "x", new BigInteger(1, digest.digest()));
    }
 
-   public static byte[] createChecksum(File file, String algorithm) {
+   private static byte[] createChecksum(File file, String algorithm) {
       BufferedInputStream fis = null;
 
       try {
@@ -174,7 +174,7 @@ public class FileUtil {
       }
    }
 
-   public static void close(Closeable a) {
+   private static void close(Closeable a) {
       try {
          a.close();
       } catch (Exception var2) {
@@ -309,7 +309,7 @@ public class FileUtil {
       }
    }
 
-   public static boolean createFile(File file) throws IOException {
+   private static boolean createFile(File file) throws IOException {
       if (file.isFile()) {
          return false;
       } else {
@@ -387,7 +387,7 @@ public class FileUtil {
       }
    }
 
-   public static String getResource(URL resource, String charset) throws IOException {
+   private static String getResource(URL resource, String charset) throws IOException {
       InputStream is = new BufferedInputStream(resource.openStream());
       InputStreamReader reader = new InputStreamReader(is, charset);
       StringBuilder b = new StringBuilder();
@@ -404,7 +404,7 @@ public class FileUtil {
       return getResource(resource, "UTF-8");
    }
 
-   public static String getFolder(URL url, String separator) {
+   private static String getFolder(URL url, String separator) {
       String[] folders = url.toString().split(separator);
       String s = "";
 
@@ -419,7 +419,7 @@ public class FileUtil {
       return getFolder(url, "/");
    }
 
-   public static File getNeighborFile(File file, String filename) {
+   private static File getNeighborFile(File file, String filename) {
       File parent = file.getParentFile();
       if (parent == null) {
          parent = new File("/");

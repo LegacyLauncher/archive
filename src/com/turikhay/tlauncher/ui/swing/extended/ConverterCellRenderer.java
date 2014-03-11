@@ -3,10 +3,10 @@ package com.turikhay.tlauncher.ui.swing.extended;
 import com.turikhay.tlauncher.ui.converter.StringConverter;
 import javax.swing.ListCellRenderer;
 
-public abstract class ConverterCellRenderer implements ListCellRenderer {
-   protected final StringConverter converter;
+abstract class ConverterCellRenderer implements ListCellRenderer {
+   final StringConverter converter;
 
-   public ConverterCellRenderer(StringConverter converter) {
+   ConverterCellRenderer(StringConverter converter) {
       if (converter == null) {
          throw new NullPointerException();
       } else {

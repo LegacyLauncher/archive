@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.ui.accounts;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.ProfileManager;
+import com.turikhay.tlauncher.managers.ProfileManager;
 import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.auth.Authenticator;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
@@ -9,7 +9,7 @@ import com.turikhay.tlauncher.ui.accounts.helper.HelperState;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
-import com.turikhay.tlauncher.ui.listeners.AuthUIListener;
+import com.turikhay.tlauncher.ui.listener.AuthUIListener;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.util.U;
 import java.awt.event.ActionEvent;
@@ -17,7 +17,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JPopupMenu;
 
 public class AccountHandler {
-   public final AccountEditorScene scene;
+   private final AccountEditorScene scene;
    public final AccountList list;
    public final AccountEditor editor;
    private final ProfileManager manager = TLauncher.getInstance().getProfileManager();
@@ -89,6 +89,8 @@ public class AccountHandler {
       this.editor.clear();
       if (!this.list.model.isEmpty()) {
          this.list.list.setSelectedValue(this.lastAccount, true);
+      } else {
+         this.notifyEmpty();
       }
 
    }
