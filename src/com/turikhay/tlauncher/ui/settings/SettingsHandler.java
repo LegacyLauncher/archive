@@ -9,10 +9,10 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class SettingsHandler implements Blockable {
-   protected static Configuration settings;
-   protected final String path;
-   protected String value;
-   protected final List listeners;
+   private static Configuration settings;
+   private final String path;
+   private String value;
+   private final List listeners;
 
    SettingsHandler(String path) {
       if (path == null) {
@@ -39,7 +39,7 @@ public abstract class SettingsHandler implements Blockable {
       }
    }
 
-   protected void onChange(String newvalue) {
+   void onChange(String newvalue) {
       Iterator var3 = this.listeners.iterator();
 
       while(var3.hasNext()) {

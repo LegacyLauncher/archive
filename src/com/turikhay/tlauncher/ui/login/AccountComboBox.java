@@ -1,13 +1,13 @@
 package com.turikhay.tlauncher.ui.login;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.ProfileManager;
-import com.turikhay.tlauncher.component.managers.ProfileManagerListener;
+import com.turikhay.tlauncher.managers.ProfileManager;
+import com.turikhay.tlauncher.managers.ProfileManagerListener;
 import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import com.turikhay.tlauncher.ui.block.Blockable;
-import com.turikhay.tlauncher.ui.listeners.AuthUIListener;
+import com.turikhay.tlauncher.ui.listener.AuthUIListener;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
@@ -19,8 +19,8 @@ import javax.swing.ListCellRenderer;
 
 public class AccountComboBox extends ExtendedComboBox implements Blockable, LoginListener, ProfileManagerListener, LocalizableComponent {
    private static final long serialVersionUID = 6618039863712810645L;
-   public static final Account EMPTY;
-   public static final Account MANAGE;
+   private static final Account EMPTY;
+   private static final Account MANAGE;
    private final ProfileManager manager;
    private final LoginForm loginForm;
    private final AuthenticatorListener listener;
@@ -68,7 +68,7 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
       }
    }
 
-   public void setAccount(String username) {
+   void setAccount(String username) {
       if (username != null) {
          this.setSelectedItem(this.manager.getAuthDatabase().getByUsername(username));
       }

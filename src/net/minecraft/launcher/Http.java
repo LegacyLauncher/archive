@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Http {
-   public static String buildQuery(Map query) {
+   private static String buildQuery(Map query) {
       StringBuilder builder = new StringBuilder();
       Iterator var3 = query.entrySet().iterator();
 
@@ -122,7 +122,7 @@ public class Http {
       try {
          return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20").replaceAll("\\%3A", ":").replaceAll("\\%2F", "/").replaceAll("\\%21", "!").replaceAll("\\%27", "'").replaceAll("\\%28", "(").replaceAll("\\%29", ")").replaceAll("\\%7E", "~");
       } catch (UnsupportedEncodingException var2) {
-         throw new RuntimeException("Encoding UTF-8 is not suuported.", var2);
+         throw new RuntimeException("UTF-8 is not supported.", var2);
       }
    }
 
@@ -130,7 +130,7 @@ public class Http {
       try {
          return URLDecoder.decode(s, "UTF-8");
       } catch (UnsupportedEncodingException var2) {
-         return s;
+         throw new RuntimeException("UTF-8 is not supported.", var2);
       }
    }
 }

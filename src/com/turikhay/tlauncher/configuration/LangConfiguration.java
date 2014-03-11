@@ -105,7 +105,7 @@ public class LangConfiguration extends SimpleConfiguration {
       return super.get(key);
    }
 
-   public static String[] checkVariables(Object[] check) {
+   private static String[] checkVariables(Object[] check) {
       if (check == null) {
          throw new NullPointerException();
       } else if (check.length == 1 && check[0] == null) {

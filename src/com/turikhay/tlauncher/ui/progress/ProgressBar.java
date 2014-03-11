@@ -15,13 +15,13 @@ import javax.swing.JProgressBar;
 
 public class ProgressBar extends JProgressBar {
    public static int DEFAULT_HEIGHT = 20;
-   public static int BOUNDS_SIZE = 3;
-   public static int BORDER_SIZE = 10;
-   public static int EDGE_CHARS = 50;
-   public static int CENTER_CHARS = 20;
+   private static int BOUNDS_SIZE = 3;
+   private static int BORDER_SIZE = 10;
+   private static int EDGE_CHARS = 50;
+   private static int CENTER_CHARS = 20;
    private static final long serialVersionUID = -8095192709934629794L;
-   protected final Object sync;
-   protected final Component parent;
+   private final Object sync;
+   private final Component parent;
    private String wS;
    private String cS;
    private String eS;
@@ -88,6 +88,10 @@ public class ProgressBar extends JProgressBar {
 
    }
 
+   public void setStrings(String west, String center, String east) {
+      this.setStrings(west, center, east, true, true);
+   }
+
    public void setWestString(String string, boolean update) {
       string = U.r(string, EDGE_CHARS);
       this.wS_changed = this.wS != string;
@@ -133,7 +137,7 @@ public class ProgressBar extends JProgressBar {
    public void clearProgress() {
       this.setIndeterminate(false);
       this.setValue(0);
-      this.setStrings((String)null, (String)null, (String)null, false, false);
+      this.setStrings((String)null, (String)null, (String)null, true, false);
    }
 
    public void startProgress() {

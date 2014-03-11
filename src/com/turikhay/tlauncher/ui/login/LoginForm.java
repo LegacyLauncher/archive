@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.login;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.VersionManager;
-import com.turikhay.tlauncher.component.managers.VersionManagerListener;
+import com.turikhay.tlauncher.managers.VersionManager;
+import com.turikhay.tlauncher.managers.VersionManagerListener;
 import com.turikhay.tlauncher.minecraft.auth.Authenticator;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import com.turikhay.tlauncher.minecraft.crash.Crash;
@@ -16,29 +16,24 @@ import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.login.buttons.ButtonPanel;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.settings.SettingsPanel;
-import com.turikhay.tlauncher.updater.Ad;
-import com.turikhay.tlauncher.updater.Update;
-import com.turikhay.tlauncher.updater.UpdateListener;
-import com.turikhay.tlauncher.updater.Updater;
-import com.turikhay.tlauncher.updater.UpdaterListener;
 import com.turikhay.util.async.ExtendedThread;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, UpdaterListener, UpdateListener {
+public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener {
    private static final long serialVersionUID = -7539492515708852727L;
    public static final String LOGIN_BLOCK = "login";
    public static final String REFRESH_BLOCK = "refresh";
-   public static final String LAUNCH_BLOCK = "launch";
-   public static final String AUTH_BLOCK = "auth";
+   private static final String LAUNCH_BLOCK = "launch";
+   private static final String AUTH_BLOCK = "auth";
    public static final String UPDATER_BLOCK = "update";
-   final List listeners = new ArrayList();
-   final LoginForm.LoginThread thread;
+   private final List listeners = new ArrayList();
+   private final LoginForm.LoginThread thread;
    public final DefaultScene scene;
-   final LoginForm instance = this;
-   final SettingsPanel settings;
+   private final LoginForm instance = this;
+   private final SettingsPanel settings;
    final MainPane pane;
    public final AccountComboBox accounts;
    public final VersionComboBox versions;
@@ -192,12 +187,11 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       Blocker.block((Blockable)this, (Object)"launch");
    }
 
-   public void onMinecraftLaunch() {
+   public void onMinecraftAbort() {
       Blocker.unblock((Blockable)this, (Object)"launch");
    }
 
-   public void onMinecraftAbort() {
-      Blocker.unblock((Blockable)this, (Object)"launch");
+   public void onMinecraftLaunch() {
    }
 
    public void onMinecraftClose() {
@@ -213,46 +207,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
    }
 
    public void onMinecraftCrash(Crash crash) {
-   }
-
-   public void onUpdateError(Update u, Throwable e) {
-      Blocker.unblock((Blockable)this, (Object)"update");
-   }
-
-   public void onUpdateDownloading(Update u) {
-      Blocker.block((Blockable)this, (Object)"update");
-   }
-
-   public void onUpdateDownloadError(Update u, Throwable e) {
-      Blocker.unblock((Blockable)this, (Object)"update");
-   }
-
-   public void onUpdateReady(Update u) {
-   }
-
-   public void onUpdateApplying(Update u) {
-   }
-
-   public void onUpdateApplyError(Update u, Throwable e) {
-   }
-
-   public void onUpdaterRequesting(Updater u) {
-   }
-
-   public void onUpdaterRequestError(Updater u) {
-   }
-
-   public void onUpdateFound(Update upd) {
-      if (Updater.isAutomode()) {
-         upd.addListener(this);
-         Blocker.block((Blockable)this, (Object)"update");
-      }
-   }
-
-   public void onUpdaterNotFoundUpdate(Updater u) {
-   }
-
-   public void onAdFound(Updater u, Ad ad) {
    }
 
    class LoginThread extends ExtendedThread {

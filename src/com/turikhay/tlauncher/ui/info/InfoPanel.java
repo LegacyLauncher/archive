@@ -32,10 +32,7 @@ import net.minecraft.launcher.OperatingSystem;
 public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener {
    private static final long serialVersionUID = 3310876991994323902L;
    private static final int MARGIN = 20;
-   private final StyleSheet css;
-   private final HTMLEditorKit html;
    private final JEditorPane browser;
-   private final Font font;
    private final DefaultScene parent;
    private final Object animationLock = new Object();
    private final int timeFrame = 5;
@@ -68,16 +65,16 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
          }
       });
       this.parent = parent;
-      this.font = this.getFont().deriveFont(12.0F);
-      this.css = new StyleSheet();
-      this.css.importStyleSheet(this.getClass().getResource("infopanel.css"));
-      this.css.addRule("body { font-family: " + this.font.getFamily() + "; font-size: " + this.font.getSize() + "pt; }");
-      this.html = new HTMLEditorKit();
-      this.html.setStyleSheet(this.css);
+      Font font = this.getFont().deriveFont(12.0F);
+      StyleSheet css = new StyleSheet();
+      css.importStyleSheet(this.getClass().getResource("infopanel.css"));
+      css.addRule("body { font-family: " + font.getFamily() + "; font-size: " + font.getSize() + "pt; }");
+      HTMLEditorKit html = new HTMLEditorKit();
+      html.setStyleSheet(css);
       this.browser = new JEditorPane();
       this.browser.getDocument().putProperty("IgnoreCharsetDirective", Boolean.TRUE);
       this.browser.setMargin(new Insets(0, 0, 0, 0));
-      this.browser.setEditorKit(this.html);
+      this.browser.setEditorKit(html);
       this.browser.setEditable(false);
       this.browser.setOpaque(false);
       this.browser.addHyperlinkListener(new HyperlinkListener() {
@@ -101,7 +98,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
       TLauncher.getInstance().getUpdater().addListener(this);
    }
 
-   public void setContent(String text, int width, int height) {
+   void setContent(String text, int width, int height) {
       if (width >= 1 && height >= 1) {
          this.width = width;
          this.height = height;
@@ -167,7 +164,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
       this.show(true);
    }
 
-   public void hide(boolean animate) {
+   void hide(boolean animate) {
       if (this.shown) {
          synchronized(this.animationLock) {
             if (animate) {
@@ -205,7 +202,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
 
    }
 
-   protected boolean onClick() {
+   boolean onClick() {
       return this.shown;
    }
 

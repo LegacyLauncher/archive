@@ -29,12 +29,12 @@ public class ExtendedComboBox extends JComboBox {
       return this.returnAs(value);
    }
 
-   public Object getSelectedValue() {
+   protected Object getSelectedValue() {
       Object selected = this.getSelectedItem();
       return this.returnAs(selected);
    }
 
-   public void setSelectedValue(Object value) {
+   protected void setSelectedValue(Object value) {
       this.setSelectedItem(value);
    }
 

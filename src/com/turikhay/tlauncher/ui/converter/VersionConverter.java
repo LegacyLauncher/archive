@@ -1,14 +1,14 @@
 package com.turikhay.tlauncher.ui.converter;
 
-import com.turikhay.tlauncher.component.managers.VersionManager;
+import com.turikhay.tlauncher.managers.VersionManager;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class VersionConverter extends LocalizableStringConverter {
-   public static final VersionSyncInfo LOADING = VersionSyncInfo.createEmpty();
-   public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
+   private static final VersionSyncInfo LOADING = VersionSyncInfo.createEmpty();
+   private static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
    private final VersionManager vm;
 
    public VersionConverter(VersionManager vm) {

@@ -1,12 +1,12 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
-public class RefreshRequest extends Request {
+class RefreshRequest extends Request {
    private String clientToken;
    private String accessToken;
    private GameProfile selectedProfile;
    private boolean requestUser;
 
-   RefreshRequest(String clientToken, String accessToken, GameProfile profile) {
+   private RefreshRequest(String clientToken, String accessToken, GameProfile profile) {
       this.requestUser = true;
       this.clientToken = clientToken;
       this.accessToken = accessToken;
@@ -17,7 +17,7 @@ public class RefreshRequest extends Request {
       this(clientToken, accessToken, (GameProfile)null);
    }
 
-   RefreshRequest(Authenticator auth, GameProfile profile) {
+   private RefreshRequest(Authenticator auth, GameProfile profile) {
       this(auth.getClientToken().toString(), auth.account.getAccessToken(), profile);
    }
 

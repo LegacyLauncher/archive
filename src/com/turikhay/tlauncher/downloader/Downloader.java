@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Downloader extends ExtendedThread {
-   public static final int MAX_THREADS = 8;
+   private static final int MAX_THREADS = 8;
    static final String ITERATION_BLOCK = "iteration";
-   static final String DOWNLOAD_BLOCK = "download";
+   private static final String DOWNLOAD_BLOCK = "download";
    private final DownloaderThread[] threads;
    private final List list;
    private final List listeners;
@@ -29,7 +29,7 @@ public class Downloader extends ExtendedThread {
    private double averageSpeed;
    private final Object workLock;
 
-   public Downloader(Configuration.ConnectionQuality configuration) {
+   private Downloader(Configuration.ConnectionQuality configuration) {
       super("MD");
       this.setConfiguration(configuration);
       this.remainingObjects = new AtomicInteger();
@@ -184,7 +184,7 @@ public class Downloader extends ExtendedThread {
       }
    }
 
-   public void setConfiguration(Configuration.ConnectionQuality configuration) {
+   void setConfiguration(Configuration.ConnectionQuality configuration) {
       if (configuration == null) {
          throw new NullPointerException();
       } else {

@@ -5,7 +5,7 @@ import com.turikhay.tlauncher.ui.converter.StringConverter;
 public abstract class LocalizableStringConverter implements StringConverter {
    private final String prefix;
 
-   public LocalizableStringConverter(String prefix) {
+   protected LocalizableStringConverter(String prefix) {
       this.prefix = prefix;
    }
 
@@ -13,7 +13,7 @@ public abstract class LocalizableStringConverter implements StringConverter {
       return Localizable.get(this.getPath(from));
    }
 
-   public String getPath(Object from) {
+   String getPath(Object from) {
       String prefix = this.getPrefix();
       if (prefix != null && !prefix.isEmpty()) {
          String path = this.toPath(from);
@@ -23,9 +23,9 @@ public abstract class LocalizableStringConverter implements StringConverter {
       }
    }
 
-   public String getPrefix() {
+   String getPrefix() {
       return this.prefix;
    }
 
-   public abstract String toPath(Object var1);
+   protected abstract String toPath(Object var1);
 }

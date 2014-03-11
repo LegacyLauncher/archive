@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.component.ComponentDependence;
@@ -56,7 +56,7 @@ public class VersionManager extends InterruptibleComponent {
       return this.localList;
    }
 
-   protected boolean refresh(int refreshID, boolean local) {
+   boolean refresh(int refreshID, boolean local) {
       this.refreshList[refreshID] = true;
       this.log(new Object[]{"Refreshing versions..."});
       Iterator var4 = this.listeners.iterator();
@@ -136,7 +136,7 @@ public class VersionManager extends InterruptibleComponent {
       this.startRefresh(true);
    }
 
-   public void asyncRefresh(final boolean local) {
+   void asyncRefresh(final boolean local) {
       AsyncThread.execute(new Runnable() {
          public void run() {
             VersionManager.this.startRefresh(local);
@@ -176,7 +176,7 @@ public class VersionManager extends InterruptibleComponent {
 
    }
 
-   public VersionSyncInfo getVersionSyncInfo(Version version) {
+   VersionSyncInfo getVersionSyncInfo(Version version) {
       return this.getVersionSyncInfo(version.getID());
    }
 
@@ -202,7 +202,7 @@ public class VersionManager extends InterruptibleComponent {
       }
    }
 
-   public List getVersions(VersionFilter filter) {
+   List getVersions(VersionFilter filter) {
       synchronized(this.versionFlushLock) {
          return this.getVersions0(filter);
       }
@@ -257,7 +257,7 @@ public class VersionManager extends InterruptibleComponent {
       return result;
    }
 
-   public List getInstalledVersions(VersionFilter filter) {
+   List getInstalledVersions(VersionFilter filter) {
       if (filter == null) {
          new VersionFilter();
       }
@@ -319,7 +319,7 @@ public class VersionManager extends InterruptibleComponent {
          this.remoteList = remoteList;
       }
 
-      protected RemoteVersionList getVersionList() {
+      RemoteVersionList getVersionList() {
          return this.remoteList;
       }
 

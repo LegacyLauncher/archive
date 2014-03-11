@@ -7,7 +7,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class SearchField extends LocalizableInvalidateTextField {
+class SearchField extends LocalizableInvalidateTextField {
    private static final long serialVersionUID = -6453744340240419870L;
    private static final CenterPanelTheme darkTheme = new DefaultCenterPanelTheme() {
       public final Color backgroundColor = new Color(0, 0, 0, 255);

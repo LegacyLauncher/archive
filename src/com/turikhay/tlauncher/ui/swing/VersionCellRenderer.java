@@ -12,7 +12,7 @@ import net.minecraft.launcher.versions.ReleaseType;
 public class VersionCellRenderer implements ListCellRenderer {
    public static final VersionSyncInfo LOADING = VersionSyncInfo.createEmpty();
    public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
-   protected final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+   private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
 

@@ -5,10 +5,10 @@ import com.turikhay.tlauncher.exceptions.ParseException;
 public class IntegerArray {
    public static final char defaultDelimiter = ';';
    private final int[] integers;
-   public final char delimiter;
-   public final int length;
+   private final char delimiter;
+   private final int length;
 
-   public IntegerArray(char del, int... values) {
+   private IntegerArray(char del, int... values) {
       this.delimiter = del;
       this.length = values.length;
       this.integers = new int[this.length];
@@ -61,7 +61,7 @@ public class IntegerArray {
       return sb.toString();
    }
 
-   public static IntegerArray parseIntegerArray(String val, char del) throws ParseException {
+   private static IntegerArray parseIntegerArray(String val, char del) throws ParseException {
       if (val == null) {
          throw new ParseException("String cannot be NULL!");
       } else if (val.length() <= 1) {
@@ -91,7 +91,7 @@ public class IntegerArray {
       return parseIntegerArray(val, ';');
    }
 
-   public static int[] toArray(String val, char del) throws ParseException {
+   private static int[] toArray(String val, char del) throws ParseException {
       IntegerArray arr = parseIntegerArray(val, del);
       return arr.toArray();
    }

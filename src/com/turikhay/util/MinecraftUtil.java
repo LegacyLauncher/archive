@@ -69,7 +69,7 @@ public class MinecraftUtil {
       return getFile("options.txt");
    }
 
-   public static File getFile(String name) {
+   private static File getFile(String name) {
       return new File(getWorkingDirectory(), name);
    }
 

@@ -57,7 +57,7 @@ public class NBTTagCompound extends NBTBase {
       this.tagMap.put(par1Str, par2NBTBase.setName(par1Str));
    }
 
-   public void setByte(String par1Str, byte par2) {
+   void setByte(String par1Str, byte par2) {
       this.tagMap.put(par1Str, new NBTTagByte(par1Str, par2));
    }
 
@@ -109,7 +109,7 @@ public class NBTTagCompound extends NBTBase {
       return this.tagMap.containsKey(par1Str);
    }
 
-   public byte getByte(String par1Str) {
+   byte getByte(String par1Str) {
       try {
          return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTTagByte)this.tagMap.get(par1Str)).data;
       } catch (ClassCastException var3) {

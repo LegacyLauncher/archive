@@ -1,31 +1,33 @@
-package com.turikhay.tlauncher.ui.background;
+package com.turikhay.tlauncher.ui.background.legacy;
 
-import com.turikhay.tlauncher.ui.MainPane;
+import com.turikhay.tlauncher.ui.background.Background;
+import com.turikhay.tlauncher.ui.background.BackgroundHolder;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.ImageObserver;
 import java.awt.image.VolatileImage;
 
-public abstract class PaintBackground extends Background {
+abstract class PaintBackground extends Background {
    private static final long serialVersionUID = 1251234865840478018L;
-   protected int width;
-   protected int height;
-   protected double relativeSize = 1.0D;
-   protected VolatileImage vImage;
+   int width;
+   int height;
+   double relativeSize = 1.0D;
+   private VolatileImage vImage;
 
-   public PaintBackground(MainPane main) {
-      super(main);
+   protected PaintBackground(BackgroundHolder holder) {
+      super(holder, Color.black);
    }
 
    public void update(Graphics g0) {
       super.update(g0);
    }
 
-   public void paint(Graphics g0) {
+   public void paintBackground(Graphics g0) {
       g0.drawImage(this.draw(g0), 0, 0, this.getWidth(), this.getHeight(), (ImageObserver)null);
    }
 
-   public VolatileImage draw(Graphics g0) {
+   VolatileImage draw(Graphics g0) {
       int iw = this.getWidth();
       int w = (int)((double)iw * this.relativeSize);
       int ih = this.getHeight();

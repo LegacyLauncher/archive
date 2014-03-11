@@ -8,7 +8,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 
 public class StringUtil {
-   public static String addQuotes(String a, char quote) {
+   private static String addQuotes(String a, char quote) {
       if (a == null) {
          return null;
       } else {
@@ -27,12 +27,13 @@ public class StringUtil {
          StringBuffer s = new StringBuffer(str);
 
          for(int i = 0; i < s.length(); ++i) {
-            char[] var7;
-            int var6 = (var7 = group.getChars()).length;
+            char curChar = s.charAt(i);
+            char[] var8;
+            int var7 = (var8 = group.getChars()).length;
 
-            for(int var5 = 0; var5 < var6; ++var5) {
-               char c = var7[var5];
-               if (s.charAt(i) == c) {
+            for(int var6 = 0; var6 < var7; ++var6) {
+               char c = var8[var6];
+               if (curChar == c) {
                   s.insert(i++, '\\');
                }
             }
@@ -140,10 +141,7 @@ public class StringUtil {
             this.chars[x] = extend.chars[x];
          }
 
-         for(int i = 0; i < symbols.length; ++i) {
-            this.chars[i + x] = symbols[i];
-         }
-
+         System.arraycopy(symbols, 0, this.chars, x, symbols.length);
       }
 
       public char[] getChars() {

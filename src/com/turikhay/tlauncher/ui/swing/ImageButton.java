@@ -19,18 +19,18 @@ public class ImageButton extends ExtendedButton {
    private static final long serialVersionUID = 1L;
    protected Image image;
    protected ImageButton.ImageRotation rotation;
-   protected int margin;
+   private int margin;
    private boolean pressed;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
 
-   public ImageButton() {
+   protected ImageButton() {
       this.rotation = ImageButton.ImageRotation.CENTER;
       this.margin = 4;
       this.initListeners();
    }
 
-   public ImageButton(String label, Image image, ImageButton.ImageRotation rotation, int margin) {
+   private ImageButton(String label, Image image, ImageButton.ImageRotation rotation, int margin) {
       super(label);
       this.rotation = ImageButton.ImageRotation.CENTER;
       this.margin = 4;
@@ -40,11 +40,11 @@ public class ImageButton extends ExtendedButton {
       this.initListeners();
    }
 
-   public ImageButton(String label, Image image, ImageButton.ImageRotation rotation) {
+   private ImageButton(String label, Image image, ImageButton.ImageRotation rotation) {
       this(label, (Image)image, rotation, 4);
    }
 
-   public ImageButton(String label, Image image) {
+   private ImageButton(String label, Image image) {
       this(label, image, ImageButton.ImageRotation.CENTER);
    }
 

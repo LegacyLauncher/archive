@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.ui.listeners;
+package com.turikhay.tlauncher.ui.listener;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
@@ -36,9 +36,9 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    public void onUpdaterNotFoundUpdate(Updater u) {
    }
 
-   public void onUpdateFound(Update upd, boolean force, boolean async) {
+   void onUpdateFound(Update upd, boolean force, boolean async) {
       boolean download = true;
-      if (!force && this.t.isLauncherWorking()) {
+      if (!force && this.t.isLauncherWorking() && this.t.getLauncher().isLaunchAssist()) {
          download = this.global.getConnectionQuality().equals(Configuration.ConnectionQuality.GOOD);
          this.hiddenUpdate = upd;
       }
@@ -89,7 +89,7 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
       this.onUpdateReady(u, false, false);
    }
 
-   public void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
+   void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
       if (force || !u.equals(this.hiddenUpdate)) {
          Alert.showWarning(this.lang.get("updater.downloaded.title"), this.lang.get("updater.downloaded"), showChangeLog ? u.getDescription() : null);
          u.apply();
@@ -134,7 +134,6 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
                return;
             case 2:
                this.onUpdateReady(this.hiddenUpdate, true, true);
-               return;
             default:
             }
          }

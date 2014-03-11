@@ -1,7 +1,7 @@
 package com.turikhay.util.logger;
 
 public class BufferedStringStream extends StringStream {
-   protected int caretFlush;
+   int caretFlush;
 
    public void write(char b) {
       super.write(b);

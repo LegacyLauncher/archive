@@ -5,9 +5,9 @@ import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 
 public class AutoLogin implements LoginListener {
-   public static final int DEFAULT_TIMEOUT = 3;
-   public static final int MIN_TIMEOUT = 2;
-   public static final int MAX_TIMEOUT = 10;
+   private static final int DEFAULT_TIMEOUT = 3;
+   private static final int MIN_TIMEOUT = 2;
+   private static final int MAX_TIMEOUT = 10;
    private boolean enabled;
    private boolean active;
    private int timeout;

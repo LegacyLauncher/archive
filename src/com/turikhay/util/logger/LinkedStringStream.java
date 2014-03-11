@@ -6,7 +6,7 @@ public class LinkedStringStream extends BufferedStringStream {
    public LinkedStringStream() {
    }
 
-   public LinkedStringStream(Logger logger) {
+   LinkedStringStream(Logger logger) {
       this.logger = logger;
    }
 

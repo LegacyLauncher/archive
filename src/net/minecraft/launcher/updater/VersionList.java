@@ -23,11 +23,11 @@ import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 
 public abstract class VersionList {
-   protected final Gson gson;
+   final Gson gson;
    private final Map byName = new Hashtable();
    private final List versions = new ArrayList();
 
-   public VersionList() {
+   VersionList() {
       GsonBuilder builder = new GsonBuilder();
       builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
       builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
@@ -101,7 +101,7 @@ public abstract class VersionList {
       this.refreshVersions(this.getRawList());
    }
 
-   public CompleteVersion addVersion(CompleteVersion version) {
+   CompleteVersion addVersion(CompleteVersion version) {
       if (version.getID() == null) {
          throw new IllegalArgumentException("Cannot add blank version");
       } else if (this.getVersion(version.getID()) != null) {
@@ -114,7 +114,7 @@ public abstract class VersionList {
       }
    }
 
-   public void removeVersion(Version version) {
+   void removeVersion(Version version) {
       if (version == null) {
          throw new NullPointerException("Version cannot be NULL!");
       } else {
@@ -130,7 +130,7 @@ public abstract class VersionList {
       }
    }
 
-   public String serializeVersion(CompleteVersion version) {
+   String serializeVersion(CompleteVersion version) {
       if (version == null) {
          throw new NullPointerException("CompleteVersion cannot be NULL!");
       } else {
@@ -142,12 +142,12 @@ public abstract class VersionList {
 
    protected abstract String getUrl(String var1) throws IOException;
 
-   protected void clearCache() {
+   void clearCache() {
       this.byName.clear();
       this.versions.clear();
    }
 
-   protected void log(Object... obj) {
+   void log(Object... obj) {
       U.log("[" + this.getClass().getSimpleName() + "]", obj);
    }
 

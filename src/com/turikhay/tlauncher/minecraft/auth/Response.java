@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
-public class Response {
+class Response {
    private String error;
    private String errorMessage;
    private String cause;

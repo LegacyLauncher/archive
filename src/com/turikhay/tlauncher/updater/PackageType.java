@@ -18,7 +18,7 @@ public enum PackageType {
       return getCurrent() == pt;
    }
 
-   public static boolean isWrapped() {
+   private static boolean isWrapped() {
       return FileUtil.getRunningJar().toString().endsWith(".exe");
    }
 }

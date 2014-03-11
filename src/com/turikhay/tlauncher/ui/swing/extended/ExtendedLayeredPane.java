@@ -15,7 +15,7 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
       this.parent = null;
    }
 
-   public ExtendedLayeredPane(Component parent) {
+   protected ExtendedLayeredPane(Component parent) {
       this.parent = parent;
       if (parent != null) {
          parent.addComponentListener(new ComponentListener() {

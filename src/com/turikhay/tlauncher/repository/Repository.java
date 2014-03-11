@@ -20,7 +20,7 @@ public enum Repository {
    SERVERLIST_REPO(TLauncher.getServerList()),
    MODLIST_REPO(TLauncher.getModList());
 
-   public static final int DEFAULT_TIMEOUT = 5000;
+   private static final int DEFAULT_TIMEOUT = 5000;
    private final String lowerName;
    private final List repos;
    private int primaryTimeout;
@@ -54,7 +54,7 @@ public enum Repository {
       return this.primaryTimeout;
    }
 
-   public int getSelected() {
+   int getSelected() {
       return this.selected;
    }
 
@@ -65,7 +65,7 @@ public enum Repository {
 
    }
 
-   public void setSelected(int pos) {
+   void setSelected(int pos) {
       if (!this.isSelectable()) {
          throw new IllegalStateException();
       } else {
@@ -78,7 +78,7 @@ public enum Repository {
       return (String)this.repos.get(this.selected);
    }
 
-   public String getRepo(int pos) {
+   String getRepo(int pos) {
       return (String)this.repos.get(pos);
    }
 
@@ -90,7 +90,7 @@ public enum Repository {
       return this.repos.size();
    }
 
-   public boolean isSelected() {
+   boolean isSelected() {
       return this.isSelected;
    }
 
@@ -98,7 +98,7 @@ public enum Repository {
       return !this.repos.isEmpty();
    }
 
-   public String getUrl(String uri, boolean selectPath) throws IOException {
+   String getUrl(String uri, boolean selectPath) throws IOException {
       boolean canSelect = this.isSelectable();
       if (!canSelect) {
          return this.getRawUrl(uri);
@@ -157,7 +157,7 @@ public enum Repository {
       return this.getUrl("", false);
    }
 
-   public String getRawUrl(String uri) throws IOException {
+   String getRawUrl(String uri) throws IOException {
       String url = this.getSelectedRepo() + Http.encode(uri);
 
       try {
@@ -172,7 +172,7 @@ public enum Repository {
       return this.lowerName;
    }
 
-   public void setTimeout(int ms) {
+   void setTimeout(int ms) {
       if (ms < 0) {
          throw new IllegalArgumentException("Negative timeout: " + ms);
       } else {
@@ -180,7 +180,7 @@ public enum Repository {
       }
    }
 
-   protected void log(Object... obj) {
+   void log(Object... obj) {
       U.log("[REPO][" + this.name() + "]", obj);
    }
 }

@@ -4,7 +4,7 @@ import com.turikhay.tlauncher.exceptions.ParseException;
 import com.turikhay.util.IntegerArray;
 import com.turikhay.util.StringUtil;
 
-public class PlainParser {
+class PlainParser {
    public static void parse(Object plainValue, Object defaultValue) throws ParseException {
       if (defaultValue != null) {
          if (plainValue == null) {

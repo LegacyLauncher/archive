@@ -102,7 +102,7 @@ public class AuthenticatorDatabase {
          return new AuthenticatorDatabase(services);
       }
 
-      protected Map deserializeCredentials(JsonObject json, JsonDeserializationContext context) {
+      Map deserializeCredentials(JsonObject json, JsonDeserializationContext context) {
          Map result = new LinkedHashMap();
          Iterator var5 = json.entrySet().iterator();
 

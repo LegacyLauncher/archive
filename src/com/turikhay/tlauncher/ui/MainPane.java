@@ -1,8 +1,7 @@
 package com.turikhay.tlauncher.ui;
 
-import com.turikhay.tlauncher.ui.background.Background;
-import com.turikhay.tlauncher.ui.background.DefaultBackground;
-import com.turikhay.tlauncher.ui.progress.DownloaderProgress;
+import com.turikhay.tlauncher.ui.background.BackgroundHolder;
+import com.turikhay.tlauncher.ui.progress.LaunchProgress;
 import com.turikhay.tlauncher.ui.progress.ProgressBar;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
@@ -14,75 +13,39 @@ import java.awt.Point;
 public class MainPane extends ExtendedLayeredPane {
    private static final long serialVersionUID = -8854598755786867602L;
    private final TLauncherFrame rootFrame;
-   private Background background;
    private PseudoScene scene;
-   private final ConnectionWarning warning;
-   private final DownloaderProgress progress;
-   public final DefaultBackground defaultBackground;
+   public final BackgroundHolder background;
+   public final LaunchProgress progress;
    public final DefaultScene defaultScene;
    public final AccountEditorScene accountEditor;
 
    MainPane(TLauncherFrame frame) {
       super((Component)null);
       this.rootFrame = frame;
-      this.background = this.defaultBackground = new DefaultBackground(this);
-      this.add(this.defaultBackground);
+      this.background = new BackgroundHolder(this);
+      this.background.setBackground(this.background.SLIDE_BACKGROUND, false);
+      this.add(this.background);
       this.defaultScene = new DefaultScene(this);
       this.add(this.defaultScene);
       this.accountEditor = new AccountEditorScene(this);
       this.add(this.accountEditor);
-      this.progress = new DownloaderProgress(frame);
+      this.progress = new LaunchProgress(frame);
       this.add(this.progress);
-      this.warning = new ConnectionWarning();
-      this.warning.setLocation(10, 10);
-      this.add(this.warning);
+      ConnectionWarning warning = new ConnectionWarning();
+      warning.setLocation(10, 10);
+      this.add(warning);
       this.setScene(this.defaultScene, false);
-   }
-
-   public void showBackground() {
-      this.background.setShown(true);
-   }
-
-   public void hideBackground() {
-      this.background.setShown(false);
-   }
-
-   public Background getBackgroundPane() {
-      return this.background;
-   }
-
-   public void setBackgroundPane(Background background) {
-      if (background == null) {
-         throw new NullPointerException();
-      } else if (!this.background.equals(background)) {
-         Component[] var5;
-         int var4 = (var5 = this.getComponents()).length;
-
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component comp = var5[var3];
-            if (!comp.equals(background) && comp instanceof Background) {
-               ((Background)comp).setShown(false);
-            }
-         }
-
-         this.background = background;
-         this.background.setShown(true);
-      }
-   }
-
-   public DefaultBackground getDefaultBackgroundPane() {
-      return this.defaultBackground;
    }
 
    public PseudoScene getScene() {
       return this.scene;
    }
 
-   public void setScene(PseudoScene scene) {
+   void setScene(PseudoScene scene) {
       this.setScene(scene, true);
    }
 
-   public void setScene(PseudoScene scene, boolean animate) {
+   void setScene(PseudoScene scene, boolean animate) {
       if (scene == null) {
          throw new NullPointerException();
       } else if (!scene.equals(this.scene)) {
@@ -111,6 +74,10 @@ public class MainPane extends ExtendedLayeredPane {
 
    public TLauncherFrame getRootFrame() {
       return this.rootFrame;
+   }
+
+   public LaunchProgress getProgress() {
+      return this.progress;
    }
 
    public void onResize() {

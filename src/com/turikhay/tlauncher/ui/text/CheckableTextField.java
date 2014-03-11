@@ -6,7 +6,7 @@ public abstract class CheckableTextField extends ExtendedTextField {
    private static final long serialVersionUID = 2835507963141686372L;
    private CenterPanel parent;
 
-   public CheckableTextField(CenterPanel panel, String placeholder, String value) {
+   protected CheckableTextField(CenterPanel panel, String placeholder, String value) {
       super(panel, placeholder, value);
       this.parent = panel;
    }
@@ -23,7 +23,7 @@ public abstract class CheckableTextField extends ExtendedTextField {
       this(panel, (String)null, (String)null);
    }
 
-   public boolean check() {
+   boolean check() {
       String text = this.getValue();
       String result = this.check(text);
       return result == null ? this.setValid() : this.setInvalid(result);

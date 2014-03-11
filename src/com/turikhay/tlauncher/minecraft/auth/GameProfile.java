@@ -7,7 +7,7 @@ public class GameProfile {
    private final String id;
    private final String name;
 
-   public GameProfile(String id, String name) {
+   private GameProfile(String id, String name) {
       if (StringUtils.isBlank(id) && StringUtils.isBlank(name)) {
          throw new IllegalArgumentException("Name and ID cannot both be blank");
       } else {
@@ -33,11 +33,7 @@ public class GameProfile {
          return true;
       } else if (o != null && this.getClass() == o.getClass()) {
          GameProfile that = (GameProfile)o;
-         if (!this.id.equals(that.id)) {
-            return false;
-         } else {
-            return this.name.equals(that.name);
-         }
+         return !this.id.equals(that.id) ? false : this.name.equals(that.name);
       } else {
          return false;
       }

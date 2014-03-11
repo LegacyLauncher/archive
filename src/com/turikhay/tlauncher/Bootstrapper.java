@@ -26,7 +26,7 @@ public class Bootstrapper {
       System.exit(0);
    }
 
-   public static JavaProcessLauncher createLauncher(String[] args) {
+   private static JavaProcessLauncher createLauncher(String[] args) {
       File file = FileUtil.getRunningJar();
       File dir = file.getParentFile();
       JavaProcessLauncher launcher = new JavaProcessLauncher((String)null, new String[0]);

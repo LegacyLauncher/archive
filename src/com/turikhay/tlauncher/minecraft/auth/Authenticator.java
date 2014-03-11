@@ -35,7 +35,7 @@ public class Authenticator {
       TLauncher.getInstance().getProfileManager().setClientToken(uuid);
    }
 
-   public void pass() throws AuthenticatorException {
+   void pass() throws AuthenticatorException {
       if (!this.account.hasLicense()) {
          throw new IllegalArgumentException("Invalid account type!");
       } else if (this.account.getPassword() == null && this.account.getAccessToken() == null) {
@@ -91,7 +91,7 @@ public class Authenticator {
       });
    }
 
-   protected void passwordLogin() throws AuthenticatorException {
+   void passwordLogin() throws AuthenticatorException {
       this.log("Loggining in with password");
       AuthenticationRequest request = new AuthenticationRequest(this);
       AuthenticationResponse response = (AuthenticationResponse)this.makeRequest(ROUTE_AUTHENTICATE, request, AuthenticationResponse.class);
@@ -108,7 +108,7 @@ public class Authenticator {
 
    }
 
-   protected void tokenLogin() throws AuthenticatorException {
+   void tokenLogin() throws AuthenticatorException {
       this.log("Loggining in with token");
       RefreshRequest request = new RefreshRequest(this);
       RefreshResponse response = (RefreshResponse)this.makeRequest(ROUTE_REFRESH, request, RefreshResponse.class);
@@ -118,7 +118,7 @@ public class Authenticator {
       this.account.setUser(response.getUser());
    }
 
-   protected Response makeRequest(URL url, Request input, Class classOfT) throws AuthenticatorException {
+   Response makeRequest(URL url, Request input, Class classOfT) throws AuthenticatorException {
       String jsonResult;
       try {
          jsonResult = input == null ? AuthenticatorService.performGetRequest(url) : AuthenticatorService.performPostRequest(url, this.gson.toJson((Object)input), "application/json");
@@ -140,7 +140,7 @@ public class Authenticator {
       }
    }
 
-   protected void log(Object... o) {
+   void log(Object... o) {
       U.log("[AUTH]", o);
    }
 }

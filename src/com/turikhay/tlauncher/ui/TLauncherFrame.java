@@ -30,11 +30,12 @@ import javax.swing.plaf.FontUIResource;
 
 public class TLauncherFrame extends JFrame {
    private static final long serialVersionUID = 5077131443679431434L;
+   public static final int[] maxSize = new int[]{1920, 1080};
    private static final List favicons = new ArrayList();
    private final TLauncherFrame instance = this;
-   public final TLauncher tlauncher;
-   public final Configuration settings;
-   public final LangConfiguration lang;
+   private final TLauncher tlauncher;
+   private final Configuration settings;
+   private final LangConfiguration lang;
    private final int[] windowSize;
    public final MainPane mp;
 
@@ -64,14 +65,14 @@ public class TLauncherFrame extends JFrame {
             TLauncherFrame.this.instance.validate();
             TLauncherFrame.this.instance.repaint();
             TLauncherFrame.this.instance.toFront();
-            TLauncherFrame.this.mp.showBackground();
+            TLauncherFrame.this.mp.background.startBackground();
          }
 
          public void componentMoved(ComponentEvent e) {
          }
 
          public void componentHidden(ComponentEvent e) {
-            TLauncherFrame.this.mp.hideBackground();
+            TLauncherFrame.this.mp.background.suspendBackground();
          }
       });
       log("Preparing main pane...");
@@ -81,7 +82,7 @@ public class TLauncherFrame extends JFrame {
       this.pack();
       log("Resizing main pane...");
       this.mp.onResize();
-      this.mp.showBackground();
+      this.mp.background.startBackground();
       this.setVisible(true);
       if (this.settings.isFirstRun()) {
          Alert.showLocAsyncWarning("firstrun");
@@ -105,9 +106,11 @@ public class TLauncherFrame extends JFrame {
    }
 
    private void setWindowSize() {
-      Dimension sizes = new Dimension(this.windowSize[0], this.windowSize[1]);
-      this.setPreferredSize(sizes);
-      this.setMinimumSize(sizes);
+      int width = this.windowSize[0] > maxSize[0] ? maxSize[0] : this.windowSize[0];
+      int height = this.windowSize[1] > maxSize[1] ? maxSize[1] : this.windowSize[1];
+      Dimension size = new Dimension(width, height);
+      this.setPreferredSize(size);
+      this.setMinimumSize(size);
       this.setLocationRelativeTo((Component)null);
    }
 
@@ -124,7 +127,7 @@ public class TLauncherFrame extends JFrame {
       UIManager.put("OptionPane.cancelButtonText", this.lang.nget("ui.cancel"));
    }
 
-   public static void initFontSize() {
+   private static void initFontSize() {
       try {
          UIDefaults defaults = UIManager.getDefaults();
          int minSize = 12;

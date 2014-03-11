@@ -58,7 +58,7 @@ public enum ReleaseType {
       this(name, true, false);
    }
 
-   public String getName() {
+   String getName() {
       return this.name;
    }
 

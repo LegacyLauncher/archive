@@ -30,7 +30,7 @@ public class Update {
    private Map links = new HashMap();
    private final Updater upd;
    private final Downloader d;
-   private List listeners = Collections.synchronizedList(new ArrayList());
+   private final List listeners = Collections.synchronizedList(new ArrayList());
 
    public void addListener(UpdateListener l) {
       this.listeners.add(l);
@@ -84,7 +84,7 @@ public class Update {
       return this.upd;
    }
 
-   public URI getDownloadLinkFor(PackageType pt) {
+   URI getDownloadLinkFor(PackageType pt) {
       return (URI)this.links.get(pt);
    }
 
@@ -116,7 +116,7 @@ public class Update {
       this.download(true);
    }
 
-   public void downloadFor(PackageType pt, boolean async) {
+   void downloadFor(PackageType pt, boolean async) {
       try {
          this.downloadFor_(pt, async);
       } catch (Exception var4) {
@@ -171,7 +171,7 @@ public class Update {
       this.applyFor(PackageType.getCurrent());
    }
 
-   public void applyFor(PackageType pt) {
+   void applyFor(PackageType pt) {
       try {
          this.applyFor_(pt);
       } catch (Exception var3) {

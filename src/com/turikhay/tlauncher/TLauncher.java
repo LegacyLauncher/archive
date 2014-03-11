@@ -1,22 +1,22 @@
 package com.turikhay.tlauncher;
 
 import com.google.gson.Gson;
-import com.turikhay.tlauncher.component.managers.ComponentManager;
-import com.turikhay.tlauncher.component.managers.ComponentManagerListenerHelper;
-import com.turikhay.tlauncher.component.managers.ProfileManager;
-import com.turikhay.tlauncher.component.managers.VersionManager;
 import com.turikhay.tlauncher.configuration.ArgumentParser;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
+import com.turikhay.tlauncher.managers.ComponentManager;
+import com.turikhay.tlauncher.managers.ComponentManagerListenerHelper;
+import com.turikhay.tlauncher.managers.ProfileManager;
+import com.turikhay.tlauncher.managers.VersionManager;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
-import com.turikhay.tlauncher.ui.listeners.MinecraftUIListener;
-import com.turikhay.tlauncher.ui.listeners.UpdaterUIListener;
+import com.turikhay.tlauncher.ui.listener.MinecraftUIListener;
+import com.turikhay.tlauncher.ui.listener.UpdaterUIListener;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.updater.Updater;
@@ -33,10 +33,9 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   private static final double VERSION = 0.74D;
+   private static final double VERSION = 0.78D;
    private static TLauncher instance;
    private static String[] sargs;
-   private static MirroredLinkedStringStream stream;
    private static PrintLogger print;
    private static Console console;
    private static Gson gson;
@@ -50,7 +49,7 @@ public class TLauncher {
    private ComponentManager manager;
    private VersionManager versionManager;
    private ProfileManager profileManager;
-   public final OptionSet args;
+   private final OptionSet args;
    private MinecraftLauncher launcher;
    private UpdaterUIListener updaterListener;
    private MinecraftUIListener minecraftListener;
@@ -69,7 +68,7 @@ public class TLauncher {
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
 
-   public TLauncher(TLauncher.TLauncherState state, OptionSet set) throws Exception {
+   private TLauncher(TLauncher.TLauncherState state, OptionSet set) throws Exception {
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
@@ -172,6 +171,10 @@ public class TLauncher {
       return this.profileManager;
    }
 
+   public MinecraftLauncher getLauncher() {
+      return this.launcher;
+   }
+
    public UpdaterUIListener getUpdaterListener() {
       return this.updaterListener;
    }
@@ -201,6 +204,7 @@ public class TLauncher {
       this.launcher = new MinecraftLauncher(this, forceupdate);
       this.launcher.addListener(this.minecraftListener);
       this.launcher.addListener(listener);
+      this.launcher.addListener(this.frame.mp.getProgress());
       this.launcher.start();
    }
 
@@ -233,7 +237,7 @@ public class TLauncher {
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
       U.setPrefix("[TLauncher]");
-      stream = new MirroredLinkedStringStream();
+      MirroredLinkedStringStream stream = new MirroredLinkedStringStream();
       stream.setMirror(System.out);
       print = new PrintLogger(stream);
       stream.setLogger(print);
@@ -242,17 +246,17 @@ public class TLauncher {
 
       try {
          launch(args);
-      } catch (Throwable var3) {
+      } catch (Throwable var4) {
          U.log("Error launching TLauncher:");
-         var3.printStackTrace(print);
-         Alert.showError(var3, true);
+         var4.printStackTrace(print);
+         Alert.showError(var4, true);
       }
 
    }
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.74D);
+      U.log("Starting TLauncher", "Original", 0.78D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -290,7 +294,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.74D;
+      return 0.78D;
    }
 
    public static String getBrand() {

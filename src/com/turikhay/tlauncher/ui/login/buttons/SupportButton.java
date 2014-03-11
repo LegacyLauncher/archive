@@ -20,8 +20,6 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
    private final SupportButton instance = this;
    private final LoginForm lf;
    private final LangConfiguration l;
-   private String path;
-   private URL url;
    private URI uri;
    private final Image vk = loadImage("vk.png");
    private final Image mail = loadImage("mail.png");
@@ -41,7 +39,7 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
       this.initImage();
    }
 
-   public void openURL() {
+   void openURL() {
       AsyncThread.execute(new Runnable() {
          public void run() {
             OperatingSystem.openLink(SupportButton.this.uri);
@@ -55,9 +53,9 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
    }
 
    private void updateURL() {
-      this.path = this.l.get("support.url");
-      this.url = U.makeURL(this.path);
-      this.uri = U.makeURI(this.url);
+      String path = this.l.get("support.url");
+      URL url = U.makeURL(path);
+      this.uri = U.makeURI(url);
    }
 
    public void updateLocale() {

@@ -9,10 +9,10 @@ import javax.swing.JPanel;
 
 public class SearchPrefs extends JPanel {
    private static final long serialVersionUID = -5187427203445160236L;
-   LocalizableCheckbox pcase;
-   LocalizableCheckbox pwhole;
-   LocalizableCheckbox pcycle;
-   LocalizableCheckbox pregexp;
+   private LocalizableCheckbox pcase;
+   private LocalizableCheckbox pwhole;
+   private LocalizableCheckbox pcycle;
+   private LocalizableCheckbox pregexp;
 
    SearchPrefs(SearchPanel sp) {
       LayoutManager layout = new BoxLayout(this, 2);

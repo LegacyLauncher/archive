@@ -19,10 +19,10 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Updater {
-   public static final String[] links = TLauncher.getUpdateRepos();
-   public static final URI[] URIs = makeURIs();
+   private static final String[] links = TLauncher.getUpdateRepos();
+   private static final URI[] URIs = makeURIs();
    private final Downloader d;
-   private List listeners;
+   private final List listeners;
    private Update found;
    private SimpleConfiguration parsed;
    private Updater.UpdaterState state;
@@ -37,7 +37,7 @@ public class Updater {
       this.listeners.remove(l);
    }
 
-   public Updater(Downloader d) {
+   private Updater(Downloader d) {
       this.listeners = Collections.synchronizedList(new ArrayList());
       this.d = d;
       if (!PackageType.isCurrent(PackageType.JAR)) {
@@ -59,7 +59,7 @@ public class Updater {
       return this.state;
    }
 
-   public Updater.UpdaterState findUpdate() {
+   Updater.UpdaterState findUpdate() {
       try {
          return this.state = this.findUpdate_();
       } catch (Throwable var2) {
@@ -209,7 +209,7 @@ public class Updater {
       }
    }
 
-   public static boolean isAutomodeFor(PackageType pt) {
+   private static boolean isAutomodeFor(PackageType pt) {
       if (pt == null) {
          throw new NullPointerException("PackageType is NULL!");
       } else {
@@ -253,11 +253,11 @@ public class Updater {
       return getUpdateFileFor(PackageType.getCurrent());
    }
 
-   public static File getTempFileFor(PackageType pt) {
+   private static File getTempFileFor(PackageType pt) {
       return new File(getFileFor(pt).getAbsolutePath() + ".replace");
    }
 
-   public static File getTempFile() {
+   private static File getTempFile() {
       return getTempFileFor(PackageType.getCurrent());
    }
 

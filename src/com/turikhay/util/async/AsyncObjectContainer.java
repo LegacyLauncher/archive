@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 public class AsyncObjectContainer {
-   private List objects;
-   private Map values;
+   private final List objects;
+   private final Map values;
    private boolean executionLock;
 
    public AsyncObjectContainer() {

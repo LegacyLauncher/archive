@@ -1,8 +1,8 @@
 package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.managers.VersionLists;
 import com.turikhay.tlauncher.configuration.Configuration;
+import com.turikhay.tlauncher.managers.VersionLists;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
@@ -41,24 +41,23 @@ import net.minecraft.launcher.versions.ReleaseType;
 public class SettingsPanel extends CenterPanel implements LoginListener {
    private static final long serialVersionUID = 3896900830909661270L;
    private static final int PANELS = 4;
-   public final DefaultScene scene;
-   private final JScrollPane scrollPane;
-   protected final ExtendedPanel container;
-   protected final ExtendedPanel[] panels;
-   protected final GridBagConstraints[] constraints;
-   public final SettingsFieldHandler directory;
-   public final SettingsFieldHandler resolution;
-   public final SettingsFieldHandler javaPath;
-   public final SettingsFieldHandler javaArgs;
-   public final SettingsFieldHandler args;
-   public final SettingsFieldHandler console;
-   public final SettingsFieldHandler connection;
-   public final SettingsFieldHandler action;
-   public final SettingsFieldHandler lang;
-   public final SettingsGroupHandler versionHandler;
-   protected final LocalizableButton saveButton;
-   protected final LocalizableButton defaultButton;
-   protected final List handlers;
+   private final DefaultScene scene;
+   private final ExtendedPanel container;
+   private final ExtendedPanel[] panels;
+   private final GridBagConstraints[] constraints;
+   private final SettingsFieldHandler directory;
+   private final SettingsFieldHandler resolution;
+   private final SettingsFieldHandler javaPath;
+   private final SettingsFieldHandler javaArgs;
+   private final SettingsFieldHandler args;
+   private final SettingsFieldHandler console;
+   private final SettingsFieldHandler connection;
+   private final SettingsFieldHandler action;
+   private final SettingsFieldHandler lang;
+   private final SettingsGroupHandler versionHandler;
+   private final LocalizableButton saveButton;
+   private final LocalizableButton defaultButton;
+   private final List handlers;
 
    public SettingsPanel(DefaultScene sc) {
       super(squareInsets);
@@ -251,17 +250,17 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
          }
       });
       this.container.add(sepPan(new Component[]{this.saveButton, this.defaultButton}));
-      this.scrollPane = new JScrollPane(this.container);
-      this.scrollPane.setOpaque(false);
-      this.scrollPane.getViewport().setOpaque(false);
-      this.scrollPane.setBorder((Border)null);
-      this.scrollPane.setHorizontalScrollBarPolicy(30);
-      this.scrollPane.setVerticalScrollBarPolicy(20);
-      this.add(this.messagePanel, this.scrollPane);
+      JScrollPane scrollPane = new JScrollPane(this.container);
+      scrollPane.setOpaque(false);
+      scrollPane.getViewport().setOpaque(false);
+      scrollPane.setBorder((Border)null);
+      scrollPane.setHorizontalScrollBarPolicy(30);
+      scrollPane.setVerticalScrollBarPolicy(20);
+      this.add(this.messagePanel, scrollPane);
       this.updateValues();
    }
 
-   protected void add(int pane, int row, SettingsPair pair) {
+   void add(int pane, int row, SettingsPair pair) {
       LocalizableLabel label = pair.getLabel();
       ExtendedPanel field = pair.getPanel();
       ExtendedPanel panel = this.panels[pane];
@@ -279,7 +278,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       Collections.addAll(this.handlers, pair.getHandlers());
    }
 
-   protected boolean checkValues() {
+   boolean checkValues() {
       boolean allValid = true;
       Iterator var3 = this.handlers.iterator();
 
@@ -295,7 +294,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       return allValid;
    }
 
-   public void updateValues() {
+   void updateValues() {
       boolean globalUnSaveable = !this.global.isSaveable();
       Iterator var3 = this.handlers.iterator();
 
@@ -317,7 +316,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       }
    }
 
-   public boolean saveValues() {
+   boolean saveValues() {
       if (!this.checkValues()) {
          return false;
       } else {
@@ -336,7 +335,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       }
    }
 
-   public void resetValues() {
+   void resetValues() {
       Iterator var2 = this.handlers.iterator();
 
       while(var2.hasNext()) {

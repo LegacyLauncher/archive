@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.ui.listeners;
+package com.turikhay.tlauncher.ui.listener;
 
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.LangConfiguration;

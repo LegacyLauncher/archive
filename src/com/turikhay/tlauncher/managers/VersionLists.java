@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.turikhay.tlauncher.component.LauncherComponent;
 import com.turikhay.util.MinecraftUtil;
@@ -10,13 +10,13 @@ import net.minecraft.launcher.updater.RemoteVersionList;
 
 public class VersionLists extends LauncherComponent {
    private final LocalVersionList localList = new LocalVersionList(MinecraftUtil.getWorkingDirectory());
-   private final OfficialVersionList officialList = new OfficialVersionList();
-   private final ExtraVersionList extraList = new ExtraVersionList();
    private final RemoteVersionList[] remoteLists;
 
    public VersionLists(ComponentManager manager) throws Exception {
       super(manager);
-      this.remoteLists = new RemoteVersionList[]{this.officialList, this.extraList};
+      OfficialVersionList officialList = new OfficialVersionList();
+      ExtraVersionList extraList = new ExtraVersionList();
+      this.remoteLists = new RemoteVersionList[]{officialList, extraList};
    }
 
    public LocalVersionList getLocal() {

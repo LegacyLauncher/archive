@@ -21,7 +21,7 @@ public class AccountEditor extends CenterPanel {
    public final ExtendedPasswordField password;
    public final LocalizableCheckbox premiumBox;
    public final LocalizableButton save;
-   public final ProgressBar progressBar;
+   private final ProgressBar progressBar;
 
    public AccountEditor(AccountEditorScene sc) {
       super(squareInsets);

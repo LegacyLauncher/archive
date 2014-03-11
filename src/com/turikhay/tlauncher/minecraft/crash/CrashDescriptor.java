@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class CrashDescriptor {
    private static CrashSignatureContainer container;
    public static final int universalExitCode = 0;
-   public static final String loggerPrefix = "[Crash]";
+   private static final String loggerPrefix = "[Crash]";
    private final MinecraftLauncher launcher;
 
    static {

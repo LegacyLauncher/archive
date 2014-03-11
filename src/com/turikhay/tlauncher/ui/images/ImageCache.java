@@ -27,7 +27,7 @@ public class ImageCache {
             return image;
          } catch (Exception var3) {
             if (throwIfError) {
-               throw new TLauncherException("Cannot load required image:" + uri, var3);
+               throw new TLauncherException("Cannot load required image: " + uri, var3);
             } else {
                var3.printStackTrace();
                return null;

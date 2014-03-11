@@ -6,7 +6,7 @@ import javax.swing.BoxLayout;
 public class VPanel extends ExtendedPanel {
    private static final long serialVersionUID = -7956156442842177101L;
 
-   public VPanel(boolean isDoubleBuffered) {
+   private VPanel(boolean isDoubleBuffered) {
       super(isDoubleBuffered);
       this.setLayout(new BoxLayout(this, 3));
    }

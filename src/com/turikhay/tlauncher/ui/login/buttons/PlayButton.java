@@ -26,7 +26,7 @@ public class PlayButton extends LocalizableButton {
       return this.state;
    }
 
-   public void setState(PlayButton.PlayButtonState state) {
+   void setState(PlayButton.PlayButtonState state) {
       if (state == null) {
          throw new NullPointerException();
       } else {

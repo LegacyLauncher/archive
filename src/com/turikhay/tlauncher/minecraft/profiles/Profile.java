@@ -5,7 +5,7 @@ import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class Profile {
-   public static final ReleaseType[] DEFAULT_RELEASE_TYPES;
+   private static final ReleaseType[] DEFAULT_RELEASE_TYPES;
    private String name;
    private File gameDir;
    private String lastVersionId;

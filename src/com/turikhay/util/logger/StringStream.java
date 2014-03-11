@@ -1,16 +1,19 @@
 package com.turikhay.util.logger;
 
-import com.turikhay.util.streams.SafeOutputStream;
+import com.turikhay.util.stream.SafeOutputStream;
 
 public class StringStream extends SafeOutputStream {
-   protected final StringBuffer buffer = new StringBuffer();
-   protected int caret;
+   final StringBuffer buffer = new StringBuffer();
+   int caret;
+
+   StringStream() {
+   }
 
    public void write(int b) {
       this.write((char)b);
    }
 
-   public void write(char c) {
+   void write(char c) {
       this.buffer.append(c);
       ++this.caret;
    }

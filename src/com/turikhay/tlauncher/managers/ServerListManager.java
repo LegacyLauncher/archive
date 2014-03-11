@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -20,7 +20,7 @@ public class ServerListManager extends InterruptibleComponent {
    private ServerList serverList;
    private final List listeners;
 
-   public ServerListManager(ComponentManager manager, Repository repository) throws Exception {
+   private ServerListManager(ComponentManager manager, Repository repository) throws Exception {
       super(manager);
       if (repository == null) {
          throw new NullPointerException("Repository cannot be NULL!");

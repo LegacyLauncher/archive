@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -55,7 +55,7 @@ public class AssetsManager extends LauncherComponent {
       return result;
    }
 
-   public List getResourceFiles(CompleteVersion version, File baseDirectory, boolean local) {
+   List getResourceFiles(CompleteVersion version, File baseDirectory, boolean local) {
       List list = null;
       if (!local) {
          try {
@@ -149,7 +149,7 @@ public class AssetsManager extends LauncherComponent {
       return result;
    }
 
-   public List checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
+   List checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
       this.log("Checking resources...");
       List r = new ArrayList();
       List list;

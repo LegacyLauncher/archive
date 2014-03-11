@@ -32,30 +32,23 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    private static final long serialVersionUID = 5667131709333334581L;
    public static final int minWidth = 670;
    public static final int minHeight = 500;
-   private Font font;
    private int w = 670;
    private int h = 500;
    private int v = 0;
-   private Dimension sizes;
-   boolean update;
-   private Object busy;
+   boolean update = true;
+   private final Object busy = new Object();
    private final JPanel panel;
    private final SearchPanel sp;
    private final ExitCancelPanel ecp;
    private final TextPopup textpopup;
    final JTextArea textArea;
-   private final JScrollPane scrollPane;
    private final JScrollBar scrollBar;
    private final BoundedRangeModel scrollBarModel;
    final Console c;
-   boolean hiding;
+   private boolean hiding = false;
 
    public ConsoleFrame(Console c, Configuration s, String name) {
       super(name);
-      this.sizes = new Dimension(this.w, this.h);
-      this.update = true;
-      this.busy = new Object();
-      this.hiding = false;
       if (c == null) {
          throw new NullPointerException("Console can't be NULL!");
       } else {
@@ -64,13 +57,13 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          this.panel = new JPanel(layout);
          this.panel.setAlignmentX(0.5F);
          this.panel.setAlignmentY(0.5F);
-         this.font = new Font("DialogInput", 0, 14);
+         Font font = new Font("DialogInput", 0, 14);
          this.textpopup = new TextPopup();
          this.textArea = new JTextArea();
          this.textArea.setLineWrap(true);
          this.textArea.setEditable(false);
          this.textArea.setMargin(new Insets(0, 0, 0, 0));
-         this.textArea.setFont(this.font);
+         this.textArea.setFont(font);
          this.textArea.setForeground(Color.white);
          this.textArea.setCaretColor(Color.white);
          this.textArea.setBackground(Color.black);
@@ -78,10 +71,10 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          this.textArea.setAutoscrolls(true);
          ((DefaultCaret)this.textArea.getCaret()).setUpdatePolicy(2);
          this.textArea.addMouseListener(this.textpopup);
-         this.scrollPane = new JScrollPane(this.textArea);
-         this.scrollPane.setBorder((Border)null);
-         this.scrollPane.setVerticalScrollBarPolicy(20);
-         this.scrollBar = this.scrollPane.getVerticalScrollBar();
+         JScrollPane scrollPane = new JScrollPane(this.textArea);
+         scrollPane.setBorder((Border)null);
+         scrollPane.setVerticalScrollBarPolicy(20);
+         this.scrollBar = scrollPane.getVerticalScrollBar();
          this.scrollBarModel = this.scrollBar.getModel();
          this.scrollBar.addAdjustmentListener(new AdjustmentListener() {
             public void adjustmentValueChanged(AdjustmentEvent e) {
@@ -119,13 +112,14 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
             public void componentHidden(ComponentEvent e) {
             }
          });
-         this.setFont(this.font);
+         this.setFont(font);
          this.setBackground(Color.black);
-         this.setSize(this.sizes);
-         this.setMinimumSize(this.sizes);
+         Dimension sizes = new Dimension(this.w, this.h);
+         this.setSize(sizes);
+         this.setMinimumSize(sizes);
          this.setLocation(0, 0);
          this.setIconImages(TLauncherFrame.getFavicons());
-         this.panel.add("Center", this.scrollPane);
+         this.panel.add("Center", scrollPane);
          this.panel.add("South", this.sp);
          this.add(this.panel);
       }

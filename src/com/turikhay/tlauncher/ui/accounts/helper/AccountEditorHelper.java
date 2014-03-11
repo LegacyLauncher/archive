@@ -13,21 +13,20 @@ import java.util.Arrays;
 
 public class AccountEditorHelper extends ExtendedLayeredPane {
    private static final int MARGIN = 5;
-   public static final byte LEFT = 0;
-   public static final byte UP = 1;
-   public static final byte RIGHT = 2;
+   private static final byte LEFT = 0;
+   private static final byte UP = 1;
+   private static final byte RIGHT = 2;
    public static final byte DOWN = 3;
    private static final long serialVersionUID = -8240523754377261945L;
-   private final AccountHandler handler;
    private final MainPane pane;
    private final HelperStep[] steps;
    private HelperState state;
 
    public AccountEditorHelper(AccountEditorScene scene) {
       super(scene);
-      this.handler = scene.handler;
+      AccountHandler handler = scene.handler;
       this.pane = scene.getMainPane();
-      this.steps = new HelperStep[]{new HelperStep("add", this.handler.list.add, this.handler.list, (byte)3, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("username", this.handler.editor.username, this.handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("checkbox", this.handler.editor.premiumBox, this.handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("password", this.handler.editor.password, this.handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE}), new HelperStep("button", this.handler.editor.save, this.handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("exit", this.handler.list.back, this.handler.list, (byte)2, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("help", this.handler.list.help, this.handler.list, (byte)3, new HelperState[]{HelperState.HELP})};
+      this.steps = new HelperStep[]{new HelperStep("add", handler.list.add, handler.list, (byte)3, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("username", handler.editor.username, handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("checkbox", handler.editor.premiumBox, handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("password", handler.editor.password, handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE}), new HelperStep("button", handler.editor.save, handler.editor, (byte)0, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("exit", handler.list.back, handler.list, (byte)2, new HelperState[]{HelperState.LICENSE, HelperState.PIRATE}), new HelperStep("help", handler.list.help, handler.list, (byte)3, new HelperState[]{HelperState.HELP})};
       this.add(this.steps);
       this.setState(HelperState.NONE);
    }
@@ -36,7 +35,7 @@ public class AccountEditorHelper extends ExtendedLayeredPane {
       return this.state;
    }
 
-   public void updateState() {
+   void updateState() {
       this.setState(this.state);
    }
 

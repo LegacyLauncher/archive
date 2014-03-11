@@ -10,7 +10,7 @@ import javax.swing.JButton;
 public class ExtendedButton extends JButton {
    private static final long serialVersionUID = -2009736184875993130L;
 
-   public ExtendedButton() {
+   protected ExtendedButton() {
       this.init();
    }
 
@@ -19,7 +19,7 @@ public class ExtendedButton extends JButton {
       this.init();
    }
 
-   public ExtendedButton(String text) {
+   protected ExtendedButton(String text) {
       super(text);
       this.init();
    }

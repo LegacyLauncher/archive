@@ -1,4 +1,4 @@
-package com.turikhay.util.streams;
+package com.turikhay.util.stream;
 
 public class EmptyOutputStream extends SafeOutputStream {
    public void write(int b) {

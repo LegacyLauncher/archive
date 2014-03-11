@@ -14,8 +14,8 @@ import javax.swing.ListCellRenderer;
 public class AccountCellRenderer implements ListCellRenderer {
    public static final Account EMPTY = Account.randomAccount();
    public static final Account MANAGE = Account.randomAccount();
-   public static final Icon MANAGE_ICON = new ImageIcon(ImageCache.getImage("gear.png"));
-   public static final Icon CROWN_ICON = new ImageIcon(ImageCache.getImage("crown.png"));
+   private static final Icon MANAGE_ICON = new ImageIcon(ImageCache.getImage("gear.png"));
+   private static final Icon CROWN_ICON = new ImageIcon(ImageCache.getImage("crown.png"));
    private final DefaultListCellRenderer defaultRenderer;
    private AccountCellRenderer.AccountCellType type;
    // $FF: synthetic field

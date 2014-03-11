@@ -6,8 +6,8 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
 import javax.swing.JList;
 
-public class DefaultConverterCellRenderer extends ConverterCellRenderer {
-   protected final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+class DefaultConverterCellRenderer extends ConverterCellRenderer {
+   private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 
    public DefaultConverterCellRenderer(StringConverter converter) {
       super(converter);

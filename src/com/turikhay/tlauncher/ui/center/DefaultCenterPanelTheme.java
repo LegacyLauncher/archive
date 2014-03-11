@@ -3,17 +3,16 @@ package com.turikhay.tlauncher.ui.center;
 import java.awt.Color;
 
 public class DefaultCenterPanelTheme extends CenterPanelTheme {
-   public final Color backgroundColor = new Color(255, 255, 255, 255);
-   public final Color panelBackgroundColor = new Color(255, 255, 255, 128);
-   public final Color focusColor = new Color(0, 0, 0, 255);
-   public final Color focusLostColor = new Color(128, 128, 128, 255);
-   public final Color successColor = Color.getHSBColor(0.25F, 0.66F, 0.66F);
-   public final Color failureColor = Color.getHSBColor(0.0F, 0.3F, 1.0F);
-   public final Color borderColor;
-   public final Color delPanelColor;
+   private final Color backgroundColor = new Color(255, 255, 255, 255);
+   private final Color panelBackgroundColor = new Color(255, 255, 255, 168);
+   private final Color focusColor = new Color(0, 0, 0, 255);
+   private final Color focusLostColor = new Color(128, 128, 128, 255);
+   private final Color successColor = new Color(78, 196, 78, 255);
+   final Color failureColor = Color.getHSBColor(0.0F, 0.3F, 1.0F);
+   private final Color borderColor = new Color(28, 128, 28, 255);
+   private final Color delPanelColor;
 
    public DefaultCenterPanelTheme() {
-      this.borderColor = this.successColor;
       this.delPanelColor = this.successColor;
    }
 

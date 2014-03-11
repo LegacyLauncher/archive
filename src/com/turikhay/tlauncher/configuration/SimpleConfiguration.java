@@ -21,11 +21,11 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 public class SimpleConfiguration implements AbstractConfiguration {
-   protected final Properties properties;
-   protected Object input;
-   protected String comments;
+   final Properties properties;
+   Object input;
+   String comments;
 
-   public SimpleConfiguration() {
+   SimpleConfiguration() {
       this.properties = new Properties();
    }
 
@@ -35,7 +35,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.input = stream;
    }
 
-   public SimpleConfiguration(File file) {
+   SimpleConfiguration(File file) {
       this();
 
       try {
@@ -47,7 +47,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.input = file;
    }
 
-   public SimpleConfiguration(URL url) throws IOException {
+   SimpleConfiguration(URL url) throws IOException {
       this();
       loadFromURL(this.properties, url);
       this.input = url;
@@ -57,7 +57,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return getStringOf(this.properties.getProperty(key));
    }
 
-   protected static String getStringOf(Object obj) {
+   static String getStringOf(Object obj) {
       String s;
       if (obj == null) {
          s = null;
@@ -71,7 +71,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return s;
    }
 
-   public void set(String key, Object value, boolean flush) {
+   void set(String key, Object value, boolean flush) {
       if (key == null) {
          throw new NullPointerException();
       } else {
@@ -92,7 +92,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.set(key, value, true);
    }
 
-   public void set(Map map, boolean flush) {
+   void set(Map map, boolean flush) {
       Iterator var4 = map.entrySet().iterator();
 
       while(var4.hasNext()) {
@@ -140,7 +140,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return this.getInteger(key, 0);
    }
 
-   protected static int getIntegerOf(Object obj, int def) {
+   static int getIntegerOf(Object obj, int def) {
       try {
          return Integer.parseInt(obj.toString());
       } catch (Exception var3) {
@@ -152,7 +152,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return getDoubleOf(this.get(key), 0.0D);
    }
 
-   protected static double getDoubleOf(Object obj, double def) {
+   static double getDoubleOf(Object obj, double def) {
       try {
          return Double.parseDouble(obj.toString());
       } catch (Exception var4) {
@@ -164,7 +164,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return getFloatOf(this.get(key), 0.0F);
    }
 
-   protected static float getFloatOf(Object obj, float def) {
+   static float getFloatOf(Object obj, float def) {
       try {
          return Float.parseFloat(obj.toString());
       } catch (Exception var3) {
@@ -176,7 +176,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return getLongOf(this.get(key), 0L);
    }
 
-   protected static long getLongOf(Object obj, long def) {
+   static long getLongOf(Object obj, long def) {
       try {
          return Long.parseLong(obj.toString());
       } catch (Exception var4) {
@@ -188,7 +188,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return getBooleanOf(this.get(key), false);
    }
 
-   protected static boolean getBooleanOf(Object obj, boolean def) {
+   static boolean getBooleanOf(Object obj, boolean def) {
       try {
          return StringUtil.parseBoolean(obj.toString());
       } catch (Exception var3) {
@@ -242,7 +242,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return this.input != null && this.input instanceof File;
    }
 
-   protected static void loadFromStream(Properties properties, InputStream stream) throws IOException {
+   private static void loadFromStream(Properties properties, InputStream stream) throws IOException {
       if (stream == null) {
          throw new NullPointerException();
       } else {
@@ -252,13 +252,13 @@ public class SimpleConfiguration implements AbstractConfiguration {
       }
    }
 
-   protected static Properties loadFromStream(InputStream stream) throws IOException {
+   static Properties loadFromStream(InputStream stream) throws IOException {
       Properties properties = new Properties();
       loadFromStream(properties, stream);
       return properties;
    }
 
-   protected static void loadFromFile(Properties properties, File file) throws IOException {
+   private static void loadFromFile(Properties properties, File file) throws IOException {
       if (file == null) {
          throw new NullPointerException();
       } else {
@@ -273,7 +273,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return properties;
    }
 
-   protected static void loadFromURL(Properties properties, URL url) throws IOException {
+   private static void loadFromURL(Properties properties, URL url) throws IOException {
       if (url == null) {
          throw new NullPointerException();
       } else {
@@ -288,7 +288,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return properties;
    }
 
-   protected static void copyProperties(Properties src, Properties dest, boolean wipe) {
+   static void copyProperties(Properties src, Properties dest, boolean wipe) {
       if (src == null) {
          throw new NullPointerException("src is NULL");
       } else if (dest == null) {
@@ -310,13 +310,13 @@ public class SimpleConfiguration implements AbstractConfiguration {
       }
    }
 
-   protected static Properties copyProperties(Properties src) {
+   static Properties copyProperties(Properties src) {
       Properties properties = new Properties();
       copyProperties(src, properties, false);
       return properties;
    }
 
-   protected void log(Object... o) {
+   void log(Object... o) {
       U.log("[" + this.getClass().getSimpleName() + "]", o);
    }
 }

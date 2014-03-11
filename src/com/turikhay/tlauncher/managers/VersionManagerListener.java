@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.component.managers;
+package com.turikhay.tlauncher.managers;
 
 public interface VersionManagerListener {
    void onVersionsRefreshing(VersionManager var1);

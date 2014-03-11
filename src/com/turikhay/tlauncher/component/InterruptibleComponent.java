@@ -1,16 +1,16 @@
 package com.turikhay.tlauncher.component;
 
-import com.turikhay.tlauncher.component.managers.ComponentManager;
+import com.turikhay.tlauncher.managers.ComponentManager;
 
 public abstract class InterruptibleComponent extends RefreshableComponent {
    protected final boolean[] refreshList;
-   protected int lastRefreshID;
+   private int lastRefreshID;
 
-   public InterruptibleComponent(ComponentManager manager) throws Exception {
+   protected InterruptibleComponent(ComponentManager manager) throws Exception {
       this(manager, 64);
    }
 
-   public InterruptibleComponent(ComponentManager manager, int listSize) throws Exception {
+   private InterruptibleComponent(ComponentManager manager, int listSize) throws Exception {
       super(manager);
       if (listSize < 1) {
          throw new IllegalArgumentException("Invalid list size: " + listSize + " < 1");

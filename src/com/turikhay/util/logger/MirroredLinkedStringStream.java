@@ -9,7 +9,7 @@ public class MirroredLinkedStringStream extends LinkedStringStream {
    public MirroredLinkedStringStream() {
    }
 
-   public MirroredLinkedStringStream(Logger logger, OutputStream mirror) {
+   private MirroredLinkedStringStream(Logger logger, OutputStream mirror) {
       super(logger);
       this.mirror = mirror;
    }
