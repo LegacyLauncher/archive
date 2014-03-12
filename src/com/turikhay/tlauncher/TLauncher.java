@@ -26,6 +26,7 @@ import com.turikhay.util.Time;
 import com.turikhay.util.U;
 import com.turikhay.util.logger.MirroredLinkedStringStream;
 import com.turikhay.util.logger.PrintLogger;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Locale;
@@ -33,9 +34,10 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   private static final double VERSION = 0.78D;
+   private static final double VERSION = 0.79D;
    private static TLauncher instance;
    private static String[] sargs;
+   private static File directory;
    private static PrintLogger print;
    private static Console console;
    private static Gson gson;
@@ -256,7 +258,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.78D);
+      U.log("Starting TLauncher", "Original", 0.79D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -285,6 +287,14 @@ public class TLauncher {
       return sargs;
    }
 
+   public static File getDirectory() {
+      if (directory == null) {
+         directory = new File(".");
+      }
+
+      return directory;
+   }
+
    public static TLauncher getInstance() {
       return instance;
    }
@@ -294,7 +304,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.78D;
+      return 0.79D;
    }
 
    public static String getBrand() {

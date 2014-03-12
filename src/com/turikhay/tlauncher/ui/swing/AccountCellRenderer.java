@@ -60,13 +60,11 @@ public class AccountCellRenderer implements ListCellRenderer {
                   renderer.setIcon(CROWN_ICON);
                }
 
-               if (value.hasUsername()) {
-                  renderer.setText(value.getUsername());
-               } else {
+               if (!value.hasUsername()) {
                   renderer.setText(Localizable.get("account.creating"));
                   renderer.setFont(renderer.getFont().deriveFont(2));
+                  break;
                }
-               break;
             default:
                renderer.setText(value.getUsername());
             }
