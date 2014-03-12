@@ -2,7 +2,7 @@ package com.turikhay.tlauncher;
 
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.util.FileUtil;
-import java.io.File;
+import com.turikhay.util.U;
 import java.io.IOException;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 
@@ -27,14 +27,13 @@ public class Bootstrapper {
    }
 
    private static JavaProcessLauncher createLauncher(String[] args) {
-      File file = FileUtil.getRunningJar();
-      File dir = file.getParentFile();
       JavaProcessLauncher launcher = new JavaProcessLauncher((String)null, new String[0]);
-      launcher.directory(dir);
+      launcher.directory(TLauncher.getDirectory());
       launcher.addCommand("-Xmx128m");
-      launcher.addCommand("-cp", file.getAbsolutePath());
+      launcher.addCommand("-cp", FileUtil.getRunningJar());
       launcher.addCommand("com.turikhay.tlauncher.TLauncher");
       launcher.addCommands(args);
+      U.log("Process built:", launcher.getCommandsAsString());
       return launcher;
    }
 

@@ -46,7 +46,7 @@ public class AuthenticatorDatabase {
 
          while(var3.hasNext()) {
             Account acc = (Account)var3.next();
-            if (acc.getUsername().equals(username)) {
+            if (username.equals(acc.getUsername())) {
                return acc;
             }
          }
