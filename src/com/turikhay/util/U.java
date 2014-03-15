@@ -7,7 +7,10 @@ import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.Map.Entry;
 
 public class U {
    public static final int DEFAULT_READ_TIMEOUT = 15000;
@@ -498,7 +501,7 @@ public class U {
                ++found_out;
             }
 
-            if (found_out >= 5 || x >= 15) {
+            if (found_out >= 10 || x >= 20) {
                int remain = elems.length - x - 1;
                if (remain != 0) {
                   t = t + "\n... and " + remain + " more";
@@ -600,6 +603,40 @@ public class U {
          return null;
       } else {
          return array.length == 1 ? array[0] : array[(new Random()).nextInt(array.length)];
+      }
+   }
+
+   public static LinkedHashMap sortMap(Map map, Object[] sortedKeys) {
+      if (map == null) {
+         return null;
+      } else if (sortedKeys == null) {
+         throw new NullPointerException("Keys cannot be NULL!");
+      } else {
+         LinkedHashMap result = new LinkedHashMap();
+         Object[] var6 = sortedKeys;
+         int var5 = sortedKeys.length;
+
+         for(int var4 = 0; var4 < var5; ++var4) {
+            Object key = var6[var4];
+            Iterator var8 = map.entrySet().iterator();
+
+            while(var8.hasNext()) {
+               Entry entry = (Entry)var8.next();
+               Object entryKey = entry.getKey();
+               Object value = entry.getValue();
+               if (key == null && entryKey == null) {
+                  result.put((Object)null, value);
+                  break;
+               }
+
+               if (key != null && key.equals(entryKey)) {
+                  result.put(key, value);
+                  break;
+               }
+            }
+         }
+
+         return result;
       }
    }
 }

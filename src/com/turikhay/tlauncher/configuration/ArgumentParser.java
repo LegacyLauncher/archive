@@ -70,8 +70,7 @@ public class ArgumentParser {
       r.put("username", "login.username");
       r.put("javaargs", "minecraft.javaargs");
       r.put("margs", "minecraft.args");
-      r.put("width", "minecraft.size.width");
-      r.put("height", "minecraft.size.height");
+      r.put("window", "minecraft.size");
       return r;
    }
 
@@ -85,10 +84,7 @@ public class ArgumentParser {
       parser.accepts("username", "Specifies username").withRequiredArg();
       parser.accepts("javaargs", "Specifies JVM arguments").withRequiredArg();
       parser.accepts("margs", "Specifies Minecraft arguments").withRequiredArg();
-      parser.accepts("width", "Specifies window width").withRequiredArg().ofType(Integer.class);
-      parser.accepts("height", "Specifies window height").withRequiredArg().ofType(Integer.class);
-      parser.accepts("force", "Specifies state of force updating");
-      parser.accepts("nocheck", "Disables file checking");
+      parser.accepts("window", "Specifies window size in format: width;height").withRequiredArg();
       parser.accepts("settings", "Specifies path to settings file").withRequiredArg();
       return parser;
    }

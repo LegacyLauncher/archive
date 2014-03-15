@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Downloader extends ExtendedThread {
-   private static final int MAX_THREADS = 8;
+   public static final int MAX_THREADS = 8;
    static final String ITERATION_BLOCK = "iteration";
    private static final String DOWNLOAD_BLOCK = "download";
    private final DownloaderThread[] threads;
@@ -184,10 +184,11 @@ public class Downloader extends ExtendedThread {
       }
    }
 
-   void setConfiguration(Configuration.ConnectionQuality configuration) {
+   public void setConfiguration(Configuration.ConnectionQuality configuration) {
       if (configuration == null) {
          throw new NullPointerException();
       } else {
+         this.log("Loaded configuration:", configuration);
          this.configuration = configuration;
       }
    }
@@ -225,7 +226,7 @@ public class Downloader extends ExtendedThread {
          this.onStart(size);
 
          for(; size > 0; downloadablesAtThread = U.getMaxMultiply(size, 8)) {
-            for(int i = 0; i < 8; ++i) {
+            for(int i = 0; i < this.configuration.getMaxThreads(); ++i) {
                size -= downloadablesAtThread;
                if (this.threads[i] == null) {
                   this.threads[i] = new DownloaderThread(this, ++this.runningThreads);

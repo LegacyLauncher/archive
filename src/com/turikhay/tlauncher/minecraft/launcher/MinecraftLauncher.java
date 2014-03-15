@@ -838,21 +838,14 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.log("Launching Minecraft...");
       Iterator var2 = this.listeners.iterator();
 
-      MinecraftListener listener;
       while(var2.hasNext()) {
-         listener = (MinecraftListener)var2.next();
+         MinecraftListener listener = (MinecraftListener)var2.next();
          listener.onMinecraftLaunch();
       }
 
       U.gc();
       this.log("Starting Minecraft " + this.versionName + "...");
       this.log("Launching in:", this.gameDir.getAbsolutePath());
-      var2 = this.listeners.iterator();
-
-      while(var2.hasNext()) {
-         listener = (MinecraftListener)var2.next();
-         listener.onMinecraftLaunch();
-      }
 
       try {
          JavaProcess process = this.launcher.start();

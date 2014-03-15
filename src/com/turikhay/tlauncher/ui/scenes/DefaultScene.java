@@ -11,23 +11,18 @@ import java.awt.Component;
 
 public class DefaultScene extends PseudoScene {
    private static final long serialVersionUID = -1460877989848190921L;
-   private final int LOGINFORM_WIDTH;
-   private final int LOGINFORM_HEIGHT;
-   private final int SETTINGSFORM_WIDTH;
-   private final int SETTINGSFORM_HEIGHT;
-   private final int MARGIN;
+   private final int LOGINFORM_WIDTH = 250;
+   private final int LOGINFORM_HEIGHT = 240;
+   private final int SETTINGSFORM_WIDTH = 500;
+   private final int SETTINGSFORM_HEIGHT = 450;
+   private final int MARGIN = 25;
    public final LoginForm loginForm;
-   public final SettingsPanel settingsForm;
+   public final SettingsPanel settingsForm = new SettingsPanel(this);
    private final InfoPanel infoPanel;
    private boolean settings;
 
    public DefaultScene(MainPane main) {
       super(main);
-      this.LOGINFORM_WIDTH = this.LOGINFORM_HEIGHT = 240;
-      this.SETTINGSFORM_WIDTH = 500;
-      this.SETTINGSFORM_HEIGHT = 450;
-      this.MARGIN = 25;
-      this.settingsForm = new SettingsPanel(this);
       this.settingsForm.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);
       this.add(this.settingsForm);
       this.loginForm = new LoginForm(this);

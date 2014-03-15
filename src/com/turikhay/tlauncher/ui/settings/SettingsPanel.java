@@ -220,6 +220,11 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       row = (byte)(row + 1);
       this.add(pane, row, new SettingsPair("settings.console.label", new SettingsHandler[]{this.console}));
       this.connection = new SettingsFieldHandler("connection", new SettingsComboBox(new ConnectionQualityConverter(), Configuration.ConnectionQuality.values()));
+      this.connection.addListener(new SettingsFieldChangeListener() {
+         protected void onChange(String oldValue, String newValue) {
+            SettingsPanel.this.tlauncher.getDownloader().setConfiguration(SettingsPanel.this.global.getConnectionQuality());
+         }
+      });
       this.add(pane, row++, new SettingsPair("settings.connection.label", new SettingsHandler[]{this.connection}));
       this.action = new SettingsFieldHandler("minecraft.onlaunch", new SettingsComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
       this.add(pane, row++, new SettingsPair("settings.launch-action.label", new SettingsHandler[]{this.action}));

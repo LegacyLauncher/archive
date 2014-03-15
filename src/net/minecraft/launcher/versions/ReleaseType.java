@@ -15,7 +15,8 @@ public enum ReleaseType {
    UNKNOWN("unknown", false, false);
 
    private static final Map lookup = new HashMap();
-   private static ReleaseType[] defaultTypes;
+   private static ReleaseType[] defineableTypes;
+   private static ReleaseType[] updateableTypes;
    private final String name;
    private final boolean isDefault;
    private final boolean isDesired;
@@ -29,19 +30,20 @@ public enum ReleaseType {
          lookup.put(type.getName(), type);
       }
 
-      List types = new ArrayList();
+      List defTypes = new ArrayList();
       ReleaseType[] var4;
       int var7 = (var4 = values()).length;
 
       for(var2 = 0; var2 < var7; ++var2) {
          ReleaseType type = var4[var2];
          if (type.isDefault) {
-            types.add(type);
+            defTypes.add(type);
          }
       }
 
-      defaultTypes = new ReleaseType[types.size()];
-      types.toArray(defaultTypes);
+      defineableTypes = new ReleaseType[defTypes.size()];
+      defTypes.toArray(defineableTypes);
+      updateableTypes = new ReleaseType[]{RELEASE, SNAPSHOT, MODIFIED};
    }
 
    private ReleaseType(String name, boolean isDefault, boolean isDesired) {
@@ -83,6 +85,10 @@ public enum ReleaseType {
    }
 
    public static ReleaseType[] getDefinable() {
-      return defaultTypes;
+      return defineableTypes;
+   }
+
+   public static ReleaseType[] getUpdateable() {
+      return updateableTypes;
    }
 }

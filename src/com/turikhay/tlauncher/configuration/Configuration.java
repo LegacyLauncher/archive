@@ -346,8 +346,8 @@ public class Configuration extends SimpleConfiguration {
    }
 
    public static enum ConnectionQuality {
-      GOOD(2, 5, 10, 15000),
-      NORMAL(5, 10, 5, 45000),
+      GOOD(2, 5, 8, 15000),
+      NORMAL(5, 10, 4, 45000),
       BAD(10, 20, 1, 120000);
 
       private final int minTries;

@@ -51,8 +51,8 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
          boolean installed = syncInfo.isInstalled();
          if (this.state) {
             if (!supporting) {
-               Alert.showLocError("forceupdate.impossible");
-               throw new LoginException("This version cannot be updated.");
+               Alert.showLocError("forceupdate.local");
+               throw new LoginException("Cannot update local version!");
             }
 
             if (installed && !Alert.showLocQuestion("forceupdate.question")) {

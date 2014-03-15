@@ -122,7 +122,7 @@ public class Alert {
       showWarning(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
    }
 
-   private static void showLocWarning(String path) {
+   public static void showLocWarning(String path) {
       showLocWarning(path, (Object)null);
    }
 

@@ -14,6 +14,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
@@ -26,6 +27,7 @@ public abstract class VersionList {
    final Gson gson;
    private final Map byName = new Hashtable();
    private final List versions = new ArrayList();
+   private final Map latest = new Hashtable();
 
    VersionList() {
       GsonBuilder builder = new GsonBuilder();
@@ -41,6 +43,10 @@ public abstract class VersionList {
       synchronized(this.versions) {
          return Collections.unmodifiableList(this.versions);
       }
+   }
+
+   public Map getLatestVersions() {
+      return Collections.unmodifiableMap(this.latest);
    }
 
    public Version getVersion(String name) {
@@ -70,6 +76,14 @@ public abstract class VersionList {
       return version == null ? null : this.getCompleteVersion(version);
    }
 
+   public Version getLatestVersion(ReleaseType type) {
+      if (type == null) {
+         throw new NullPointerException();
+      } else {
+         return (Version)this.latest.get(type);
+      }
+   }
+
    public VersionList.RawVersionList getRawList() throws IOException {
       Object lock = new Object();
       Time.start(lock);
@@ -93,6 +107,23 @@ public abstract class VersionList {
          Version version = (Version)var3.next();
          this.versions.add(version);
          this.byName.put(version.getID(), version);
+      }
+
+      var3 = versionList.latest.entrySet().iterator();
+
+      while(var3.hasNext()) {
+         Entry en = (Entry)var3.next();
+         ReleaseType releaseType = (ReleaseType)en.getKey();
+         if (releaseType == null) {
+            this.log("Unknown release type for latest version entry:", en);
+         } else {
+            Version version = this.getVersion((String)en.getValue());
+            if (version == null) {
+               throw new NullPointerException("Cannot find version for latest version entry: " + en);
+            }
+
+            this.latest.put(releaseType, version);
+         }
       }
 
    }
@@ -130,7 +161,7 @@ public abstract class VersionList {
       }
    }
 
-   String serializeVersion(CompleteVersion version) {
+   public String serializeVersion(CompleteVersion version) {
       if (version == null) {
          throw new NullPointerException("CompleteVersion cannot be NULL!");
       } else {
@@ -145,6 +176,7 @@ public abstract class VersionList {
    void clearCache() {
       this.byName.clear();
       this.versions.clear();
+      this.latest.clear();
    }
 
    void log(Object... obj) {

@@ -6,6 +6,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+import net.minecraft.launcher.updater.LatestVersionSyncInfo;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
 
@@ -26,9 +27,10 @@ public class VersionCellRenderer implements ListCellRenderer {
       } else if (value.equals(EMPTY)) {
          renderer.setText(Localizable.get("versions.notfound.tip"));
       } else {
+         LatestVersionSyncInfo asLatest = value instanceof LatestVersionSyncInfo ? (LatestVersionSyncInfo)value : null;
          ReleaseType type = value.getLatestVersion().getReleaseType();
-         String id = value.getID();
-         String label = Localizable.nget("version." + type);
+         String id = asLatest != null ? asLatest.getVersionID() : value.getID();
+         String label = Localizable.nget(asLatest != null ? "version.latest." + type : "version." + type);
          switch($SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType()[value.getLatestVersion().getReleaseType().ordinal()]) {
          case 3:
             id = id.substring(1);
