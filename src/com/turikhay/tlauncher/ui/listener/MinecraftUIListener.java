@@ -39,11 +39,13 @@ public class MinecraftUIListener implements MinecraftListener {
    }
 
    public void onMinecraftClose() {
-      this.t.show();
-      if (this.t.getUpdater() != null) {
-         this.t.getUpdaterListener().applyDelayedUpdate();
-      }
+      if (this.t.getLauncher().isLaunchAssist()) {
+         this.t.show();
+         if (this.t.getUpdater() != null) {
+            this.t.getUpdaterListener().applyDelayedUpdate();
+         }
 
+      }
    }
 
    public void onMinecraftCrash(Crash crash) {
@@ -78,13 +80,9 @@ public class MinecraftUIListener implements MinecraftListener {
             if (!file.exists()) {
                U.log("File is already removed. LOL.");
             } else {
-               try {
-                  if (!file.delete()) {
-                     throw new Exception("file.delete() returned false");
-                  }
-               } catch (Exception var11) {
+               if (!file.delete()) {
                   U.log("Can't delete crash report file. Okay.");
-                  Alert.showLocMessage(p + "store.failed", var11);
+                  Alert.showLocMessage(p + "store.failed");
                   return;
                }
 
@@ -102,6 +100,6 @@ public class MinecraftUIListener implements MinecraftListener {
    }
 
    public void onMinecraftKnownError(MinecraftException e) {
-      Alert.showError(this.lang.get("launcher.error.title"), this.lang.get("launcher.error." + e.getLangPath(), e.getLangVars()), e.getCause());
+      Alert.showError(this.lang.get("launcher.error.title"), this.lang.get("launcher.error." + e.getLangPath(), e.getLangVars()), e);
    }
 }

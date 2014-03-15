@@ -12,10 +12,11 @@ import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.Version;
 
 public class VersionSyncInfo {
-   private final Version localVersion;
-   private final Version remoteVersion;
+   protected final Version localVersion;
+   protected final Version remoteVersion;
    private CompleteVersion completeLocal;
    private CompleteVersion completeRemote;
+   private String id;
 
    public VersionSyncInfo(Version localVersion, Version remoteVersion) {
       if (localVersion == null && remoteVersion == null) {
@@ -29,9 +30,17 @@ public class VersionSyncInfo {
       }
    }
 
+   public VersionSyncInfo(VersionSyncInfo info) {
+      this(info.getLocal(), info.getRemote());
+   }
+
    private VersionSyncInfo() {
       this.localVersion = null;
       this.remoteVersion = null;
+   }
+
+   public Object clone() {
+      return new VersionSyncInfo(this);
    }
 
    public Version getLocal() {
@@ -43,10 +52,20 @@ public class VersionSyncInfo {
    }
 
    public String getID() {
-      if (this.localVersion != null) {
+      if (this.id != null) {
+         return this.id;
+      } else if (this.localVersion != null) {
          return this.localVersion.getID();
       } else {
          return this.remoteVersion != null ? this.remoteVersion.getID() : null;
+      }
+   }
+
+   public void setID(String id) {
+      if (id != null && id.isEmpty()) {
+         throw new IllegalArgumentException("ID cannot be empty!");
+      } else {
+         this.id = id;
       }
    }
 
@@ -73,7 +92,7 @@ public class VersionSyncInfo {
    }
 
    public String toString() {
-      return "VersionSyncInfo{id='" + this.getID() + "',\nlocal=" + this.localVersion + ",\nremote=" + this.remoteVersion + ", isInstalled=" + this.isInstalled() + ", hasRemote=" + this.hasRemote() + ", isUpToDate=" + this.isUpToDate() + "}";
+      return this.getClass().getSimpleName() + "{id='" + this.getID() + "',\nlocal=" + this.localVersion + ",\nremote=" + this.remoteVersion + ", isInstalled=" + this.isInstalled() + ", hasRemote=" + this.hasRemote() + ", isUpToDate=" + this.isUpToDate() + "}";
    }
 
    public CompleteVersion getCompleteVersion(boolean latest) throws IOException {
@@ -108,43 +127,39 @@ public class VersionSyncInfo {
 
    Set getRequiredDownloadables(OperatingSystem os, File targetDirectory, boolean force) throws IOException {
       Set neededFiles = new HashSet();
-      if (!this.hasRemote()) {
+      CompleteVersion version = this.getCompleteVersion(force);
+      Repository source = this.hasRemote() ? this.remoteVersion.getSource() : Repository.OFFICIAL_VERSION_REPO;
+      if (!source.isSelectable()) {
          return neededFiles;
       } else {
-         CompleteVersion version = this.getCompleteVersion(force);
-         Repository source = this.remoteVersion.getSource();
-         if (!source.isSelectable()) {
-            return neededFiles;
-         } else {
-            Iterator var8 = version.getRelevantLibraries().iterator();
+         Iterator var8 = version.getRelevantLibraries().iterator();
 
-            while(true) {
-               Library library;
-               File local;
+         while(true) {
+            Library library;
+            File local;
+            do {
+               String file;
                do {
-                  String file;
-                  do {
-                     if (!var8.hasNext()) {
-                        return neededFiles;
+                  if (!var8.hasNext()) {
+                     return neededFiles;
+                  }
+
+                  library = (Library)var8.next();
+                  file = null;
+                  if (library.getNatives() != null) {
+                     String natives = (String)library.getNatives().get(os);
+                     if (natives != null) {
+                        file = library.getArtifactPath(natives);
                      }
+                  } else {
+                     file = library.getArtifactPath();
+                  }
+               } while(file == null);
 
-                     library = (Library)var8.next();
-                     file = null;
-                     if (library.getNatives() != null) {
-                        String natives = (String)library.getNatives().get(os);
-                        if (natives != null) {
-                           file = library.getArtifactPath(natives);
-                        }
-                     } else {
-                        file = library.getArtifactPath();
-                     }
-                  } while(file == null);
+               local = new File(targetDirectory, "libraries/" + file);
+            } while(!force && local.isFile() && local.length() > 0L);
 
-                  local = new File(targetDirectory, "libraries/" + file);
-               } while(!force && local.isFile() && local.length() > 0L);
-
-               neededFiles.add(library.getDownloadable(source, local, os));
-            }
+            neededFiles.add(library.getDownloadable(source, local, os));
          }
       }
    }

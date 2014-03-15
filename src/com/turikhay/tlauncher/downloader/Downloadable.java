@@ -238,6 +238,10 @@ public class Downloadable {
       }
    }
 
+   public String toString() {
+      return this.getClass().getSimpleName() + "{path='" + this.path + "'; " + "repo=" + this.repo + "; " + "destinations=" + this.destination + "," + this.additionalDestinations + "; " + "force=" + this.forceDownload + "; " + "fast=" + this.fastDownload + "; " + "locked=" + this.locked + "; " + "container=" + this.container + "; " + "handlers=" + this.handlers + "; " + "error=" + this.error + ";" + "}";
+   }
+
    public static HttpURLConnection setUp(URLConnection connection0, int timeout, boolean fake) {
       if (connection0 == null) {
          throw new NullPointerException();

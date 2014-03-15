@@ -1,8 +1,8 @@
 package com.turikhay.util.async;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +13,7 @@ public class AsyncObjectContainer {
 
    public AsyncObjectContainer() {
       this.objects = new ArrayList();
-      this.values = new HashMap();
+      this.values = new LinkedHashMap();
    }
 
    public AsyncObjectContainer(AsyncObject[] asyncObjects) {
