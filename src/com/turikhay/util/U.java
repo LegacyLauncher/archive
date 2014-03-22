@@ -3,6 +3,7 @@ package com.turikhay.util;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.util.async.ExtendedThread;
+import java.awt.Color;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -638,5 +639,10 @@ public class U {
 
          return result;
       }
+   }
+
+   public static Color getRandomColor() {
+      Random random = new Random();
+      return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
    }
 }

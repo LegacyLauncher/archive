@@ -53,7 +53,7 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
    }
 
    private void updateURL() {
-      String path = this.l.get("support.url");
+      String path = this.l.nget("support.url");
       URL url = U.makeURL(path);
       this.uri = U.makeURI(url);
    }

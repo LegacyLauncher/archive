@@ -309,7 +309,7 @@ public class FileUtil {
       }
    }
 
-   private static boolean createFile(File file) throws IOException {
+   public static boolean createFile(File file) throws IOException {
       if (file.isFile()) {
          return false;
       } else {

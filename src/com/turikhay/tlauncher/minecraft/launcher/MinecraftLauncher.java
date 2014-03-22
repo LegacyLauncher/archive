@@ -252,7 +252,6 @@ public class MinecraftLauncher implements JavaProcessListener {
    private void collectInfo() throws MinecraftException, AbortedDownloadException {
       this.checkStep(MinecraftLauncher.MinecraftLauncherStep.NONE, MinecraftLauncher.MinecraftLauncherStep.COLLECTING);
       this.log("Collecting info...");
-      this.log("Listeners:", this.listeners.size(), this.extListeners.size());
       Iterator var2 = this.listeners.iterator();
 
       while(var2.hasNext()) {

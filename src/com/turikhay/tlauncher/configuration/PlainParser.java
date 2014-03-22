@@ -1,6 +1,6 @@
 package com.turikhay.tlauncher.configuration;
 
-import com.turikhay.tlauncher.exceptions.ParseException;
+import com.turikhay.exceptions.ParseException;
 import com.turikhay.util.IntegerArray;
 import com.turikhay.util.StringUtil;
 

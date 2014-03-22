@@ -1,4 +1,4 @@
-package com.turikhay.tlauncher.exceptions;
+package com.turikhay.exceptions;
 
 public class ParseException extends RuntimeException {
    private static final long serialVersionUID = -3231272464953548141L;

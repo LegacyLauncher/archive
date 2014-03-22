@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.configuration;
 
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.util.StringUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
@@ -74,7 +76,11 @@ public class LangConfiguration extends SimpleConfiguration {
 
    public String get(String key) {
       String value = this.nget(key);
-      return value == null ? key : value;
+      if (value == null) {
+         return key;
+      } else {
+         return TLauncher.JOKING ? StringUtil.randomize(value) : value;
+      }
    }
 
    public String nget(String key, Object... vars) {
