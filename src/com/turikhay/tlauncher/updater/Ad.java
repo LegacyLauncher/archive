@@ -8,7 +8,7 @@ import java.net.URL;
 
 public class Ad {
    private static final String[] RANDOM_CHARS = new String[]{"creeper", "sheep", "skeleton", "steve", "wither", "zombie"};
-   private final String content;
+   private String content;
    private final int[] size;
    private final URL image;
 

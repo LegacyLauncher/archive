@@ -54,10 +54,10 @@ public class SimpleConfiguration implements AbstractConfiguration {
    }
 
    public String get(String key) {
-      return getStringOf(this.properties.getProperty(key));
+      return this.getStringOf(this.properties.getProperty(key));
    }
 
-   static String getStringOf(Object obj) {
+   protected String getStringOf(Object obj) {
       String s;
       if (obj == null) {
          s = null;
@@ -122,7 +122,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
 
       while(var3.hasNext()) {
          Object obj = var3.next();
-         set.add(getStringOf(obj));
+         set.add(this.getStringOf(obj));
       }
 
       return Collections.unmodifiableSet(set);
@@ -133,65 +133,65 @@ public class SimpleConfiguration implements AbstractConfiguration {
    }
 
    public int getInteger(String key, int def) {
-      return getIntegerOf(this.get(key), 0);
+      return this.getIntegerOf(this.get(key), 0);
    }
 
    public int getInteger(String key) {
       return this.getInteger(key, 0);
    }
 
-   static int getIntegerOf(Object obj, int def) {
+   protected int getIntegerOf(Object obj, int def) {
       try {
          return Integer.parseInt(obj.toString());
-      } catch (Exception var3) {
+      } catch (Exception var4) {
          return def;
       }
    }
 
    public double getDouble(String key) {
-      return getDoubleOf(this.get(key), 0.0D);
+      return this.getDoubleOf(this.get(key), 0.0D);
    }
 
-   static double getDoubleOf(Object obj, double def) {
+   protected double getDoubleOf(Object obj, double def) {
       try {
          return Double.parseDouble(obj.toString());
-      } catch (Exception var4) {
+      } catch (Exception var5) {
          return def;
       }
    }
 
    public float getFloat(String key) {
-      return getFloatOf(this.get(key), 0.0F);
+      return this.getFloatOf(this.get(key), 0.0F);
    }
 
-   static float getFloatOf(Object obj, float def) {
+   protected float getFloatOf(Object obj, float def) {
       try {
          return Float.parseFloat(obj.toString());
-      } catch (Exception var3) {
-         return def;
-      }
-   }
-
-   public long getLong(String key) {
-      return getLongOf(this.get(key), 0L);
-   }
-
-   static long getLongOf(Object obj, long def) {
-      try {
-         return Long.parseLong(obj.toString());
       } catch (Exception var4) {
          return def;
       }
    }
 
-   public boolean getBoolean(String key) {
-      return getBooleanOf(this.get(key), false);
+   public long getLong(String key) {
+      return this.getLongOf(this.get(key), 0L);
    }
 
-   static boolean getBooleanOf(Object obj, boolean def) {
+   protected long getLongOf(Object obj, long def) {
+      try {
+         return Long.parseLong(obj.toString());
+      } catch (Exception var5) {
+         return def;
+      }
+   }
+
+   public boolean getBoolean(String key) {
+      return this.getBooleanOf(this.get(key), false);
+   }
+
+   protected boolean getBooleanOf(Object obj, boolean def) {
       try {
          return StringUtil.parseBoolean(obj.toString());
-      } catch (Exception var3) {
+      } catch (Exception var4) {
          return def;
       }
    }

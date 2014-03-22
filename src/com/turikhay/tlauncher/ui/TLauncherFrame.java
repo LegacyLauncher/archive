@@ -8,6 +8,7 @@ import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
+import com.turikhay.util.StringUtil;
 import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.Container;
@@ -118,7 +119,12 @@ public class TLauncherFrame extends JFrame {
       String translator = this.lang.nget("translator");
       String copyright = "(by turikhay" + (translator != null ? ", translated by " + translator : "") + ")";
       String brand = TLauncher.getBrand() + " " + TLauncher.getVersion();
-      this.setTitle("TLauncher " + brand + " " + copyright);
+      String title = "TLauncher " + brand + " " + copyright;
+      if (TLauncher.JOKING) {
+         title = StringUtil.randomize(title);
+      }
+
+      this.setTitle(title);
    }
 
    private void setUILocale() {

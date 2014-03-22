@@ -1,6 +1,6 @@
 package com.turikhay.util;
 
-import com.turikhay.tlauncher.exceptions.ParseException;
+import com.turikhay.exceptions.ParseException;
 
 public class IntegerArray {
    public static final char defaultDelimiter = ';';

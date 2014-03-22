@@ -47,17 +47,17 @@ public class Time {
       return toret;
    }
 
-   private static String presentDate(Calendar cal, String format) {
+   public static String presentDate(Calendar cal, String format) {
       return format.replaceAll("day", zero(cal.get(5))).replaceAll("month", zero(cal.get(2) + 1)).replaceAll("year", String.valueOf(cal.get(1))).replaceAll("hour", zero(cal.get(11))).replaceAll("minute", zero(cal.get(12))).replaceAll("second", zero(cal.get(13)));
    }
 
-   private static String presentDate(long unix, String format) {
+   public static String presentDate(long unix, String format) {
       Calendar p = Calendar.getInstance();
       p.setTimeInMillis(unix);
       return presentDate(p, format);
    }
 
-   private static String presentDate(long unix) {
+   public static String presentDate(long unix) {
       Calendar p = Calendar.getInstance();
       p.setTimeInMillis(unix);
       return presentDate(p, "[day.month hour:minute]");

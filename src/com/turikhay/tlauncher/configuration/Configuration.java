@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.configuration;
 
+import com.turikhay.exceptions.ParseException;
 import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.exceptions.ParseException;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.IntegerArray;
 import com.turikhay.util.MinecraftUtil;
@@ -195,27 +195,27 @@ public class Configuration extends SimpleConfiguration {
    }
 
    public String getDefault(String key) {
-      return getStringOf(this.defaults.get(key));
+      return this.getStringOf(this.defaults.get(key));
    }
 
    public int getDefaultInteger(String key) {
-      return getIntegerOf(this.defaults.get(key), 0);
+      return this.getIntegerOf(this.defaults.get(key), 0);
    }
 
    public double getDefaultDouble(String key) {
-      return getDoubleOf(this.defaults.get(key), 0.0D);
+      return this.getDoubleOf(this.defaults.get(key), 0.0D);
    }
 
    public float getDefaultFloat(String key) {
-      return getFloatOf(this.defaults.get(key), 0.0F);
+      return this.getFloatOf(this.defaults.get(key), 0.0F);
    }
 
    public long getDefaultLong(String key) {
-      return getLongOf(this.defaults.get(key), 0L);
+      return this.getLongOf(this.defaults.get(key), 0L);
    }
 
    public boolean getDefaultBoolean(String key) {
-      return getBooleanOf(this.defaults.get(key), false);
+      return this.getBooleanOf(this.defaults.get(key), false);
    }
 
    public void set(String key, Object value, boolean flush) {

@@ -1,11 +1,12 @@
 package com.turikhay.util;
 
-import com.turikhay.tlauncher.exceptions.ParseException;
+import com.turikhay.exceptions.ParseException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.util.Random;
 
 public class StringUtil {
    private static String addQuotes(String a, char quote) {
@@ -120,6 +121,112 @@ public class StringUtil {
             return len == 1 ? str.charAt(0) : str.charAt(len - 1);
          }
       }
+   }
+
+   public static String randomizeWord(String str, boolean softly) {
+      if (str == null) {
+         return null;
+      } else {
+         int len = str.length();
+         if (len < 4) {
+            return str;
+         } else {
+            boolean[] reversedFlag = new boolean[len];
+            if (softly) {
+               reversedFlag[0] = true;
+            }
+
+            boolean chosenLastLetter = !softly;
+            char[] chars = str.toCharArray();
+
+            int i;
+            int tries;
+            for(i = len - 1; i > -1; --i) {
+               char curChar = chars[i];
+               tries = Character.getType(curChar);
+               boolean canBeReversed = tries == 1 || tries == 2;
+               reversedFlag[i] |= !canBeReversed;
+               if (canBeReversed && !chosenLastLetter) {
+                  reversedFlag[i] = true;
+                  chosenLastLetter = true;
+               }
+            }
+
+            for(i = 0; i < len; ++i) {
+               if (!reversedFlag[i]) {
+                  int newPos = i;
+                  tries = 0;
+
+                  while(tries < 3) {
+                     ++tries;
+                     newPos = (new Random()).nextInt(len);
+                     if (!reversedFlag[newPos]) {
+                        tries = 10;
+                        break;
+                     }
+                  }
+
+                  if (tries == 10) {
+                     char curChar = chars[i];
+                     char replaceChar = chars[newPos];
+                     chars[i] = replaceChar;
+                     chars[newPos] = curChar;
+                     reversedFlag[i] = true;
+                     reversedFlag[newPos] = true;
+                  }
+               }
+            }
+
+            return new String(chars);
+         }
+      }
+   }
+
+   public static String randomizeWord(String str) {
+      return randomizeWord(str, true);
+   }
+
+   public static String randomize(String str, boolean softly) {
+      if (str == null) {
+         return null;
+      } else if (str.isEmpty()) {
+         return str;
+      } else {
+         String[] lines = str.split("\n");
+         StringBuilder lineBuilder = new StringBuilder();
+         boolean isFirstLine = true;
+
+         for(int l = 0; l < lines.length; ++l) {
+            String line = lines[l];
+            String[] words = line.split(" ");
+            StringBuilder wordBuilder = new StringBuilder();
+            boolean isFirstWord = true;
+
+            for(int w = 0; w < words.length; ++w) {
+               if (isFirstWord) {
+                  isFirstWord = false;
+               } else {
+                  wordBuilder.append(' ');
+               }
+
+               wordBuilder.append(randomizeWord(words[w]));
+            }
+
+            if (isFirstLine) {
+               isFirstLine = false;
+            } else {
+               lineBuilder.append('\n');
+            }
+
+            lineBuilder.append(wordBuilder);
+         }
+
+         return lineBuilder.toString();
+      }
+   }
+
+   public static String randomize(String str) {
+      return randomize(str, true);
    }
 
    public static enum EscapeGroup {
