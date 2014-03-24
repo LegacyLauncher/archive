@@ -36,7 +36,7 @@ import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
    public static final boolean JOKING = Calendar.getInstance().get(2) == 3 && Calendar.getInstance().get(5) == 1;
-   private static final double VERSION = 0.83D;
+   private static final double VERSION = 0.84D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -61,7 +61,7 @@ public class TLauncher {
    private static final String SETTINGS = "tlauncher.cfg";
    private static final String BRAND = "Original";
    private static final String FOLDER = "minecraft";
-   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
    private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://s1.mmods.ru/launcher/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
    private static final String[] FORGE_REPO = new String[0];
@@ -76,6 +76,10 @@ public class TLauncher {
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
+         if (JOKING) {
+            U.log("Алдакчы!");
+         }
+
          U.log("TLauncher is loading in state", state);
          Time.start(this);
          instance = this;
@@ -269,7 +273,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.83D);
+      U.log("Starting TLauncher", "Original", 0.84D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -315,7 +319,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.83D;
+      return 0.84D;
    }
 
    public static String getBrand() {

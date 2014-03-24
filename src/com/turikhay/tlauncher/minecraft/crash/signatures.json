@@ -35,6 +35,12 @@
             name: "PermGen error",
             path: "permgen-error",
             exit: -805306369
+        },
+        {
+        	name: "OutOfMemory error",
+        	path: "outofmemory",
+        	exit: -1,
+        	pattern: '^java.lang.OutOfMemoryError: .+'
         }
     ]
 }
