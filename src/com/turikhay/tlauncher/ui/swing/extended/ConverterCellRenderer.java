@@ -3,8 +3,8 @@ package com.turikhay.tlauncher.ui.swing.extended;
 import com.turikhay.tlauncher.ui.converter.StringConverter;
 import javax.swing.ListCellRenderer;
 
-abstract class ConverterCellRenderer implements ListCellRenderer {
-   final StringConverter converter;
+public abstract class ConverterCellRenderer implements ListCellRenderer {
+   protected final StringConverter converter;
 
    ConverterCellRenderer(StringConverter converter) {
       if (converter == null) {

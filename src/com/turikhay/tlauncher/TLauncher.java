@@ -24,19 +24,23 @@ import com.turikhay.util.FileUtil;
 import com.turikhay.util.MinecraftUtil;
 import com.turikhay.util.Time;
 import com.turikhay.util.U;
+import com.turikhay.util.async.AsyncThread;
 import com.turikhay.util.logger.MirroredLinkedStringStream;
 import com.turikhay.util.logger.PrintLogger;
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Calendar;
 import java.util.Locale;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   public static final boolean JOKING = Calendar.getInstance().get(2) == 3 && Calendar.getInstance().get(5) == 1;
-   private static final double VERSION = 0.84D;
+   public static final boolean JOKING = true;
+   private static final double VERSION = 0.887D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -76,10 +80,7 @@ public class TLauncher {
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
-         if (JOKING) {
-            U.log("Алдакчы!");
-         }
-
+         U.log("Алдакчы!");
          U.log("TLauncher is loading in state", state);
          Time.start(this);
          instance = this;
@@ -129,15 +130,25 @@ public class TLauncher {
          this.loader = new TLauncherLite(this);
       }
 
-      if (JOKING) {
-         while(true) {
-            this.frame.mp.background.cover.removeCover();
-            this.frame.mp.background.cover.setColor(U.getRandomColor(), false);
-            this.frame.mp.background.cover.makeCover();
-            U.sleepFor(5000L);
-         }
-      }
+      AsyncThread.execute(new Runnable() {
+         private final Localizable.LocalizableFilter filter = new Localizable.LocalizableFilter() {
+            public boolean localize(Component comp) {
+               return comp instanceof JLabel || comp instanceof JButton || comp instanceof JCheckBox;
+            }
+         };
 
+         public void run() {
+            while(true) {
+               if (!TLauncher.instance.isLauncherWorking()) {
+                  Localizable.updateContainer(TLauncher.this.frame, this.filter);
+                  TLauncher.this.frame.setWindowTitle();
+                  U.sleepFor(50L);
+               } else {
+                  U.sleepFor(10000L);
+               }
+            }
+         }
+      });
    }
 
    public Downloader getDownloader() {
@@ -273,7 +284,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.84D);
+      U.log("Starting TLauncher", "Original", 0.887D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -319,7 +330,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.84D;
+      return 0.887D;
    }
 
    public static String getBrand() {

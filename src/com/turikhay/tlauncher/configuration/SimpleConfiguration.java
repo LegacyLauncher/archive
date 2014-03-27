@@ -21,11 +21,11 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 public class SimpleConfiguration implements AbstractConfiguration {
-   final Properties properties;
-   Object input;
-   String comments;
+   protected final Properties properties;
+   protected Object input;
+   protected String comments;
 
-   SimpleConfiguration() {
+   public SimpleConfiguration() {
       this.properties = new Properties();
    }
 
@@ -35,7 +35,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.input = stream;
    }
 
-   SimpleConfiguration(File file) {
+   public SimpleConfiguration(File file) {
       this();
 
       try {
@@ -47,7 +47,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.input = file;
    }
 
-   SimpleConfiguration(URL url) throws IOException {
+   public SimpleConfiguration(URL url) throws IOException {
       this();
       loadFromURL(this.properties, url);
       this.input = url;
@@ -71,7 +71,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return s;
    }
 
-   void set(String key, Object value, boolean flush) {
+   public void set(String key, Object value, boolean flush) {
       if (key == null) {
          throw new NullPointerException();
       } else {
@@ -92,7 +92,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       this.set(key, value, true);
    }
 
-   void set(Map map, boolean flush) {
+   public void set(Map map, boolean flush) {
       Iterator var4 = map.entrySet().iterator();
 
       while(var4.hasNext()) {
@@ -288,7 +288,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       return properties;
    }
 
-   static void copyProperties(Properties src, Properties dest, boolean wipe) {
+   protected static void copyProperties(Properties src, Properties dest, boolean wipe) {
       if (src == null) {
          throw new NullPointerException("src is NULL");
       } else if (dest == null) {
@@ -310,7 +310,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       }
    }
 
-   static Properties copyProperties(Properties src) {
+   protected static Properties copyProperties(Properties src) {
       Properties properties = new Properties();
       copyProperties(src, properties, false);
       return properties;

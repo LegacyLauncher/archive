@@ -4,6 +4,7 @@ import com.turikhay.util.U;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -156,7 +157,8 @@ public class ProgressBar extends JProgressBar {
       boolean drawCenter = this.cS != null;
       boolean drawEast = this.eS != null;
       if (drawWest || drawCenter || drawEast) {
-         FontMetrics fm = g.getFontMetrics();
+         Font font = g.getFont().deriveFont(12.0F);
+         FontMetrics fm = g.getFontMetrics(font);
          int width = this.getWidth();
          boolean force = width != this.oldWidth;
          this.oldWidth = width;
@@ -188,6 +190,7 @@ public class ProgressBar extends JProgressBar {
          Graphics2D g2D = (Graphics2D)g;
          g.setColor(Color.black);
          g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+         g.setFont(font);
          this.drawString(g, this.wS, this.wS_bounds);
          this.drawString(g, this.cS, this.cS_bounds);
          this.drawString(g, this.eS, this.eS_bounds);
@@ -196,6 +199,15 @@ public class ProgressBar extends JProgressBar {
 
    private void drawString(Graphics g, String s, int[] bounds) {
       if (s != null) {
+         g.setColor(Color.white);
+
+         for(int x = -1; x < 2; ++x) {
+            for(int y = -1; y < 2; ++y) {
+               g.drawString(s, bounds[0] + x, bounds[2] + y);
+            }
+         }
+
+         g.setColor(Color.black);
          g.drawString(s, bounds[0], bounds[2]);
       }
    }

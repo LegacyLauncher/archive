@@ -20,6 +20,15 @@ public abstract class ExtendedThread extends Thread {
       return this.caller;
    }
 
+   public void startAndWait() {
+      super.start();
+
+      while(!this.isThreadBlocked()) {
+         U.sleepFor(100L);
+      }
+
+   }
+
    public abstract void run();
 
    protected synchronized void blockThread(String reason) {
@@ -67,7 +76,7 @@ public abstract class ExtendedThread extends Thread {
       }
    }
 
-   void threadLog(Object... o) {
+   protected void threadLog(Object... o) {
       U.log("[" + this.getName() + "]", o);
    }
 

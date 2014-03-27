@@ -20,27 +20,51 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
    }
 
    public void uncaughtException(Thread t, Throwable e) {
-      if (!(e instanceof OutOfMemoryError) || !reduceMemory((OutOfMemoryError)e)) {
-         try {
-            Alert.showError("Exception in thread " + t.getName(), (Object)e);
-         } catch (Exception var4) {
-            System.exit(2);
+      OutOfMemoryError asOOM = (OutOfMemoryError)U.getAs(e, OutOfMemoryError.class);
+      if (asOOM == null || !reduceMemory(asOOM)) {
+         if (scanTrace(e)) {
+            try {
+               Alert.showError("Exception in thread " + t.getName(), (Object)e);
+            } catch (Exception var5) {
+               System.exit(2);
+            }
+         } else {
+            U.log("Hidden exception in thread " + t.getName(), e);
          }
 
       }
    }
 
    public static boolean reduceMemory(OutOfMemoryError e) {
-      U.log("OutOfMemory error has occurred, solving...");
-      long currentTime = System.currentTimeMillis();
-      long diff = Math.abs(currentTime - gcLastCall);
-      if (diff > 5000L) {
-         gcLastCall = currentTime;
-         U.gc();
-         return true;
-      } else {
-         U.log("GC is unable to reduce memory usage");
+      if (e == null) {
          return false;
+      } else {
+         U.log("OutOfMemory error has occurred, solving...");
+         long currentTime = System.currentTimeMillis();
+         long diff = Math.abs(currentTime - gcLastCall);
+         if (diff > 5000L) {
+            gcLastCall = currentTime;
+            U.gc();
+            return true;
+         } else {
+            U.log("GC is unable to reduce memory usage");
+            return false;
+         }
       }
+   }
+
+   private static boolean scanTrace(Throwable e) {
+      StackTraceElement[] elements = e.getStackTrace();
+      StackTraceElement[] var5 = elements;
+      int var4 = elements.length;
+
+      for(int var3 = 0; var3 < var4; ++var3) {
+         StackTraceElement element = var5[var3];
+         if (element.getClassName().startsWith("com.turikhay")) {
+            return true;
+         }
+      }
+
+      return false;
    }
 }

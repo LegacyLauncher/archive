@@ -207,6 +207,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
    }
 
    public void onMinecraftCrash(Crash crash) {
+      Blocker.unblock((Blockable)this, (Object)"launch");
    }
 
    class LoginThread extends ExtendedThread {
