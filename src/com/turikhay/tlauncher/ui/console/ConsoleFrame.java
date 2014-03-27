@@ -2,6 +2,7 @@ package com.turikhay.tlauncher.ui.console;
 
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
+import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.tlauncher.ui.swing.TextPopup;
 import com.turikhay.util.U;
@@ -10,6 +11,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.AdjustmentEvent;
@@ -125,6 +127,22 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       }
    }
 
+   public void paint(Graphics g) {
+      try {
+         super.paint(g);
+      } catch (Exception var3) {
+      }
+
+   }
+
+   public void update(Graphics g) {
+      try {
+         super.update(g);
+      } catch (Exception var3) {
+      }
+
+   }
+
    public void println(String string) {
       this.print(string + '\n');
    }
@@ -223,7 +241,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    }
 
    public void updateLocale() {
-      TLauncherFrame.updateContainer(this, true);
+      Localizable.updateContainer(this);
       this.textpopup.updateLocale();
    }
 }

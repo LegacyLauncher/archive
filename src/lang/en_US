@@ -79,7 +79,7 @@ forceupdate.question=Are you sure want to reinstall this version?\nRemember that
 # Loginform.info
 loginform.checkbox.autologin.tip.title=Autologin tip
 loginform.checkbox.autologin.tip=Next time TLauncher will launch Minecraft automatically.\nIf you want to connect to the server on start, please use special Minecraft argument that you can specify in settings:
-loginform.checkbox.autologin.tip.arg=--server SERVER_ADDRESS:PORT
+loginform.checkbox.autologin.tip.arg=--server SERVER_ADDRESS --port PORT
 # Progressbar
 progressBar.init=Initializating...
 progressBar.speed=kb/s

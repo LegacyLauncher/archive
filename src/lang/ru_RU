@@ -79,7 +79,7 @@ forceupdate.question=Вы уверены, что хотите сбросить �
 # Loginform.info
 loginform.checkbox.autologin.tip.title=Сообщение об автоматическом входе
 loginform.checkbox.autologin.tip=При следующем входе лаунчер автоматически запустит Minecraft.\nДля мгновенного запуска сетевой игры Вы можете использовать специальный аргумент, который задаётся в настройках лаунчера:
-loginform.checkbox.autologin.tip.arg=--server АДРЕС_СЕРВЕРА:ПОРТ
+loginform.checkbox.autologin.tip.arg=--server АДРЕС_СЕРВЕРА --port ПОРТ
 # Progressbar
 progressBar.init=Инициализация...
 progressBar.speed=kb/s
@@ -162,9 +162,8 @@ settings.java.path.doesnotexist=Введенный Вами путь до исп
 settings.java.args.label=Аргументы:
 settings.java.args.jvm=JVM-аргументы (напр. -Xmx1G)
 settings.java.args.minecraft=Minecraft-аргументы (напр. --server 127.0.0.1)
-settings.java.memory.label=Память (МБ):
-settings.java.memory.parse=Нераспознанное число!
-settings.java.memory.incorrect=Неверно задан объем памяти. Макс.: %0 Мб.
+settings.slideshow.list.label=Файлы слайдшоу:
+settings.slideshow.list.prompt=Пути к изображениям или папкам с ними, через ";"
 settings.console.label=Консоль разработчика:
 settings.console.global=Общая
 settings.console.minecraft=Только в Minecraft

@@ -1,6 +1,5 @@
 package com.turikhay.tlauncher.configuration;
 
-import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.util.StringUtil;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,9 +26,9 @@ public class LangConfiguration extends SimpleConfiguration {
             }
 
             String localeName = locale.toString();
-            InputStream stream = this.getClass().getResourceAsStream("/lang/" + localeName + ".ini");
+            InputStream stream = this.getClass().getResourceAsStream("/lang/" + localeName);
             if (stream == null) {
-               throw new IOException("Cannot find locale file for locale: " + localeName);
+               throw new IOException("Cannot find locale file for: " + localeName);
             }
 
             this.prop[i] = loadFromStream(stream);
@@ -76,11 +75,7 @@ public class LangConfiguration extends SimpleConfiguration {
 
    public String get(String key) {
       String value = this.nget(key);
-      if (value == null) {
-         return key;
-      } else {
-         return TLauncher.JOKING ? StringUtil.randomize(value) : value;
-      }
+      return value == null ? key : StringUtil.randomize(value);
    }
 
    public String nget(String key, Object... vars) {

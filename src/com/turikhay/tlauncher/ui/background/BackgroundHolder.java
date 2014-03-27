@@ -7,7 +7,7 @@ import java.awt.Color;
 
 public class BackgroundHolder extends ExtendedLayeredPane {
    private static final long serialVersionUID = 8722087129402330131L;
-   private final MainPane pane;
+   public final MainPane pane;
    private Background currentBackground;
    public final BackgroundCover cover;
    public final SlideBackground SLIDE_BACKGROUND;
@@ -18,10 +18,6 @@ public class BackgroundHolder extends ExtendedLayeredPane {
       this.cover = new BackgroundCover(this);
       this.SLIDE_BACKGROUND = new SlideBackground(this);
       this.add(this.cover, Integer.MAX_VALUE);
-   }
-
-   public MainPane getMainPane() {
-      return this.pane;
    }
 
    public Background getBackgroundPane() {

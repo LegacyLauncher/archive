@@ -22,6 +22,7 @@ public class Downloader extends ExtendedThread {
    private Configuration.ConnectionQuality configuration;
    private final AtomicInteger remainingObjects;
    private int runningThreads;
+   private int workingThreads;
    private final double[] speedContainer;
    private final double[] progressContainer;
    private double lastAverageProgress;
@@ -213,6 +214,7 @@ public class Downloader extends ExtendedThread {
          Arrays.fill(this.progressContainer, 0.0D);
          this.averageProgress = 0.0D;
          this.lastAverageProgress = 0.0D;
+         this.workingThreads = 0;
       }
    }
 
@@ -228,6 +230,7 @@ public class Downloader extends ExtendedThread {
          for(; size > 0; downloadablesAtThread = U.getMaxMultiply(size, 8)) {
             for(int i = 0; i < this.configuration.getMaxThreads(); ++i) {
                size -= downloadablesAtThread;
+               ++this.workingThreads;
                if (this.threads[i] == null) {
                   this.threads[i] = new DownloaderThread(this, ++this.runningThreads);
                }
@@ -273,7 +276,7 @@ public class Downloader extends ExtendedThread {
       int id = thread.getID() - 1;
       this.progressContainer[id] = curprogress;
       this.speedContainer[id] = curspeed;
-      this.averageProgress = U.getAverage(this.progressContainer, this.runningThreads);
+      this.averageProgress = U.getAverage(this.progressContainer, this.workingThreads);
       if (!(this.averageProgress - this.lastAverageProgress < 0.01D)) {
          this.lastAverageProgress = this.averageProgress;
          this.averageSpeed = U.getSum(this.speedContainer);

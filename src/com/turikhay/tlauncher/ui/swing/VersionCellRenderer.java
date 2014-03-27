@@ -1,6 +1,8 @@
 package com.turikhay.tlauncher.ui.swing;
 
 import com.turikhay.tlauncher.ui.loc.Localizable;
+import com.turikhay.util.U;
+import java.awt.Color;
 import java.awt.Component;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
@@ -14,6 +16,7 @@ public class VersionCellRenderer implements ListCellRenderer {
    public static final VersionSyncInfo LOADING = VersionSyncInfo.createEmpty();
    public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
    private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+   private final int averageColor = (new Color(128, 128, 128, 255)).getRGB();
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
 
@@ -41,6 +44,11 @@ public class VersionCellRenderer implements ListCellRenderer {
 
          String text = label != null ? label + " " + id : id;
          renderer.setText(text);
+         if (!value.isInstalled()) {
+            Color currentColor = renderer.getBackground();
+            int colorShift = currentColor.getRGB() < this.averageColor ? 30 : -30;
+            renderer.setBackground(U.shiftColor(currentColor, colorShift));
+         }
       }
 
       return renderer;

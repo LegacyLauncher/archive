@@ -4,6 +4,7 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.util.async.ExtendedThread;
 import java.awt.Color;
+import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -14,10 +15,15 @@ import java.util.Random;
 import java.util.Map.Entry;
 
 public class U {
-   public static final int DEFAULT_READ_TIMEOUT = 15000;
-   private static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
+   public static final String PROGRAM_PACKAGE = "com.turikhay";
+   public static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
+   private static final int ST_TOTAL = 100;
+   private static final int ST_PROGRAM = 10;
    private static String PREFIX;
    private static final Object lock = new Object();
+
+   private U() {
+   }
 
    public static void setPrefix(String prefix) {
       PREFIX = prefix;
@@ -79,7 +85,13 @@ public class U {
                b.append(stackTrace((Throwable)e));
                b.append("\n");
             } else {
-               if (e instanceof Iterator) {
+               if (e instanceof File) {
+                  if (!first) {
+                     b.append(" ");
+                  }
+
+                  b.append(((File)e).getAbsolutePath());
+               } else if (e instanceof Iterator) {
                   Iterator i = (Iterator)e;
 
                   while(i.hasNext()) {
@@ -474,38 +486,40 @@ public class U {
    }
 
    private static String stackTrace(Throwable e) {
-      Thread current = Thread.currentThread();
-      String callerTrace = null;
-      if (current instanceof ExtendedThread) {
-         callerTrace = "\nThread called by: " + stackTrace0(((ExtendedThread)current).getCaller());
+      StringBuilder trace = rawStackTrace(e);
+      ExtendedThread currentAsExtended = (ExtendedThread)getAs(Thread.currentThread(), ExtendedThread.class);
+      if (currentAsExtended != null) {
+         trace.append("\nThread called by: ").append(rawStackTrace(currentAsExtended.getCaller()));
       }
 
-      return stackTrace0(e) + (callerTrace == null ? "" : callerTrace);
+      return trace.toString();
    }
 
-   private static String stackTrace0(Throwable e) {
+   private static StringBuilder rawStackTrace(Throwable e) {
       if (e == null) {
          return null;
       } else {
-         String t = e.toString();
-         if (t == null) {
-            t = "";
-         }
-
          StackTraceElement[] elems = e.getStackTrace();
-         int found_out = 0;
+         int programElements = 0;
+         int totalElements = 0;
+         StringBuilder builder = new StringBuilder();
+         builder.append(e.toString());
+         StackTraceElement[] var8 = elems;
+         int var7 = elems.length;
 
-         for(int x = 0; x < elems.length; ++x) {
-            String elem = elems[x].toString();
-            t = t + "\nat " + elem;
-            if (elem.startsWith("com.turikhay")) {
-               ++found_out;
+         for(int var6 = 0; var6 < var7; ++var6) {
+            StackTraceElement elem = var8[var6];
+            ++totalElements;
+            String description = elem.toString();
+            if (description.startsWith("com.turikhay")) {
+               ++programElements;
             }
 
-            if (found_out >= 10 || x >= 20) {
-               int remain = elems.length - x - 1;
+            builder.append("\nat ").append(description);
+            if (totalElements == 100 || programElements == 10) {
+               int remain = elems.length - totalElements;
                if (remain != 0) {
-                  t = t + "\n... and " + remain + " more";
+                  builder.append("\n... and ").append(remain).append(" more");
                }
                break;
             }
@@ -513,10 +527,10 @@ public class U {
 
          Throwable cause = e.getCause();
          if (cause != null) {
-            t = t + "\nCaused by: " + stackTrace0(cause);
+            builder.append("\nCaused by: ").append(rawStackTrace(cause));
          }
 
-         return t;
+         return builder;
       }
    }
 
@@ -573,6 +587,14 @@ public class U {
 
    public static boolean interval(int min, int max, int num) {
       return interval(min, max, num, true);
+   }
+
+   public static int fitInterval(int val, int min, int max) {
+      if (val > max) {
+         return max;
+      } else {
+         return val < min ? min : val;
+      }
    }
 
    public static long m() {
@@ -641,8 +663,29 @@ public class U {
       }
    }
 
-   public static Color getRandomColor() {
+   public static Color randomColor() {
       Random random = new Random();
       return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+   }
+
+   public static Color shiftColor(Color color, int bits) {
+      if (color == null) {
+         return null;
+      } else if (bits == 0) {
+         return color;
+      } else {
+         int newRed = fitInterval(color.getRed() + bits, 0, 255);
+         int newGreen = fitInterval(color.getGreen() + bits, 0, 255);
+         int newBlue = fitInterval(color.getBlue() + bits, 0, 255);
+         return new Color(newRed, newGreen, newBlue, color.getAlpha());
+      }
+   }
+
+   public static Object getAs(Object o, Class classOfT) {
+      if (classOfT == null) {
+         throw new NullPointerException();
+      } else {
+         return classOfT.isInstance(o) ? classOfT.cast(o) : null;
+      }
    }
 }

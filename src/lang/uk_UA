@@ -1,5 +1,5 @@
 # TLauncher language file UTF-8
-# Have questions? Ask: seventype@ya.ru
+# Have questions? Ask: turikhay@gmail.com
 translator=Elower
 # Loginform
 loginform.checkbox.autologin=Автоматичний вхід
@@ -79,7 +79,7 @@ forceupdate.question=Ви впевнені, що хочете скинути в�
 # Loginform.info
 loginform.checkbox.autologin.tip.title=Повідомлення про автоматичний вхід
 loginform.checkbox.autologin.tip=При наступному вході лаунчер автоматично запустить Minecraft.\nДля миттєвого запуску мультіплеєру Ви можете використовувати спеціальний аргумент, який задається в настройках лаунчера:
-loginform.checkbox.autologin.tip.arg=--server АДРЕСА_СЕРВЕРА:ПОРТ
+loginform.checkbox.autologin.tip.arg=--server АДРЕСА_СЕРВЕРА --port ПОРТ
 # Progressbar
 progressBar.init=Ініціалізація...
 progressBar.speed=kb/s

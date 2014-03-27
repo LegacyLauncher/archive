@@ -1,6 +1,6 @@
 package com.turikhay.util.async;
 
-public abstract class AsyncObject extends Thread {
+public abstract class AsyncObject extends ExtendedThread {
    private boolean gotValue;
    private Object value;
    private AsyncObjectGotErrorException error;

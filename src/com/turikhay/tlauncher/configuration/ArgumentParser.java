@@ -71,6 +71,7 @@ public class ArgumentParser {
       r.put("javaargs", "minecraft.javaargs");
       r.put("margs", "minecraft.args");
       r.put("window", "minecraft.size");
+      r.put("background", "gui.background");
       return r;
    }
 
@@ -86,6 +87,7 @@ public class ArgumentParser {
       parser.accepts("margs", "Specifies Minecraft arguments").withRequiredArg();
       parser.accepts("window", "Specifies window size in format: width;height").withRequiredArg();
       parser.accepts("settings", "Specifies path to settings file").withRequiredArg();
+      parser.accepts("background", "Specifies background image. URL links, JPEG and PNG formats are supported.").withRequiredArg();
       return parser;
    }
 }

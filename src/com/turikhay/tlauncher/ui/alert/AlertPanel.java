@@ -10,7 +10,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.border.Border;
 
 class AlertPanel extends JPanel {
    private static final long serialVersionUID = -8032765825488193573L;
@@ -37,7 +36,6 @@ class AlertPanel extends JPanel {
          JScrollPane scroll = new JScrollPane(area);
          scroll.setAlignmentX(0.0F);
          scroll.setMaximumSize(maxSize);
-         scroll.setBorder((Border)null);
          scroll.setVerticalScrollBarPolicy(20);
          int textAreaHeight = StringUtil.countLines(textareaContent) * this.getFontMetrics(this.getFont()).getHeight();
          if (textAreaHeight > 300) {

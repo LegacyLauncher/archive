@@ -6,12 +6,11 @@ import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.tlauncher.ui.images.ImageCache;
-import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import com.turikhay.util.StringUtil;
 import com.turikhay.util.U;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
@@ -103,7 +102,16 @@ public class TLauncherFrame extends JFrame {
       LocalizableMenuItem.updateLocales();
       this.setWindowTitle();
       this.setUILocale();
-      updateContainer(this, true);
+      Localizable.updateContainer(this);
+   }
+
+   public void setWindowTitle() {
+      String translator = this.lang.nget("translator");
+      String copyright = "(by turikhay" + (translator != null ? ", translated by " + translator : "") + ")";
+      String brand = TLauncher.getBrand() + " " + TLauncher.getVersion();
+      String title = "TLauncher " + brand + " " + copyright;
+      title = StringUtil.randomize(title);
+      this.setTitle(title);
    }
 
    private void setWindowSize() {
@@ -113,18 +121,6 @@ public class TLauncherFrame extends JFrame {
       this.setPreferredSize(size);
       this.setMinimumSize(size);
       this.setLocationRelativeTo((Component)null);
-   }
-
-   private void setWindowTitle() {
-      String translator = this.lang.nget("translator");
-      String copyright = "(by turikhay" + (translator != null ? ", translated by " + translator : "") + ")";
-      String brand = TLauncher.getBrand() + " " + TLauncher.getVersion();
-      String title = "TLauncher " + brand + " " + copyright;
-      if (TLauncher.JOKING) {
-         title = StringUtil.randomize(title);
-      }
-
-      this.setTitle(title);
    }
 
    private void setUILocale() {
@@ -171,23 +167,6 @@ public class TLauncherFrame extends JFrame {
       } catch (Exception var1) {
          log("Can't set system look and feel.");
          var1.printStackTrace();
-      }
-
-   }
-
-   public static void updateContainer(Container container, boolean deep) {
-      Component[] var5;
-      int var4 = (var5 = container.getComponents()).length;
-
-      for(int var3 = 0; var3 < var4; ++var3) {
-         Component c = var5[var3];
-         if (c instanceof LocalizableComponent) {
-            ((LocalizableComponent)c).updateLocale();
-         }
-
-         if (c instanceof Container && deep) {
-            updateContainer((Container)c, true);
-         }
       }
 
    }
