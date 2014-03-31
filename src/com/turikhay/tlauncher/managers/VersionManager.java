@@ -310,9 +310,9 @@ public class VersionManager extends InterruptibleComponent {
 
       Collections.sort(plainResult, new Comparator() {
          public int compare(VersionSyncInfo a, VersionSyncInfo b) {
-            Date aVer = a.getLatestVersion().getReleaseTime();
-            Date bVer = b.getLatestVersion().getReleaseTime();
-            return aVer != null && bVer != null ? bVer.compareTo(aVer) : 0;
+            Date aDate = a.getLatestVersion().getReleaseTime();
+            Date bDate = b.getLatestVersion().getReleaseTime();
+            return aDate != null && bDate != null ? bDate.compareTo(aDate) : 1;
          }
       });
       result.addAll(plainResult);

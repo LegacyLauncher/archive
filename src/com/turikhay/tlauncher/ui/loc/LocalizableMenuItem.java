@@ -10,24 +10,39 @@ public class LocalizableMenuItem extends JMenuItem implements LocalizableCompone
    private static final long serialVersionUID = 1364363532569997394L;
    private static List items = Collections.synchronizedList(new ArrayList());
    private String path;
+   private String[] variables;
 
-   public LocalizableMenuItem(String path) {
-      this.init(path);
+   public LocalizableMenuItem(String path, Object... vars) {
+      items.add(this);
+      this.setText(path, vars);
    }
 
-   private void init(String path) {
+   public LocalizableMenuItem(String path) {
+      this(path, Localizable.EMPTY_VARS);
+   }
+
+   public void setText(String path, Object... vars) {
       this.path = path;
-      this.setText(path);
-      items.add(this);
+      this.variables = Localizable.checkVariables(vars);
+      String value = Localizable.get(path);
+
+      for(int i = 0; i < this.variables.length; ++i) {
+         value = value.replace("%" + i, this.variables[i]);
+      }
+
+      super.setText(value);
    }
 
    public void setText(String path) {
-      this.path = path;
-      super.setText(Localizable.exists() ? Localizable.get(path) : path);
+      this.setText(path, Localizable.EMPTY_VARS);
+   }
+
+   public void setVariables(Object... vars) {
+      this.setText(this.path, vars);
    }
 
    public void updateLocale() {
-      this.setText(this.path);
+      this.setText(this.path, this.variables);
    }
 
    public static void updateLocales() {

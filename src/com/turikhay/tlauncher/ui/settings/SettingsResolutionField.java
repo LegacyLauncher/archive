@@ -34,15 +34,17 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
          this.setAlignmentX(0.5F);
          this.setAlignmentY(0.5F);
          this.w = new SettingsNaturalIntegerField(promptW);
+         this.w.setColumns(4);
          this.w.setHorizontalAlignment(0);
          this.h = new SettingsNaturalIntegerField(promptH);
+         this.h.setColumns(4);
          this.h.setHorizontalAlignment(0);
-         this.x = new ExtendedLabel("X");
+         this.x = new ExtendedLabel("X", 0);
          this.setLayout(new GridBagLayout());
          GridBagConstraints c = new GridBagConstraints();
          c.anchor = 10;
          c.gridx = 0;
-         c.weightx = 1.0D;
+         c.weightx = 0.5D;
          c.insets.set(0, 0, 0, 0);
          c.fill = 1;
          this.add(this.w, c);
@@ -52,7 +54,7 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
          c.fill = 3;
          this.add(this.x, c);
          c.gridx = 2;
-         c.weightx = 1.25D;
+         c.weightx = 0.5D;
          c.insets.set(0, 0, 0, 0);
          c.fill = 1;
          this.add(this.h, c);
@@ -109,6 +111,6 @@ public class SettingsResolutionField extends ExtendedPanel implements SettingsFi
    }
 
    public void unblock(Object reason) {
-      Blocker.unblockComponents(reason, this.w, this.h);
+      Blocker.unblockComponents(Blocker.UNIVERSAL_UNBLOCK, this.w, this.h);
    }
 }

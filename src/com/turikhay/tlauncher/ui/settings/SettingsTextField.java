@@ -6,21 +6,22 @@ public class SettingsTextField extends LocalizableTextField implements SettingsF
    private static final long serialVersionUID = 3920711425159165958L;
    private final boolean canBeEmpty;
 
-   private SettingsTextField(boolean canBeEmpty) {
-      this.canBeEmpty = canBeEmpty;
-   }
-
-   SettingsTextField() {
-      this(false);
-   }
-
    SettingsTextField(String prompt, boolean canBeEmpty) {
       super(prompt);
       this.canBeEmpty = canBeEmpty;
+      this.setColumns(1);
    }
 
    SettingsTextField(String prompt) {
       this(prompt, false);
+   }
+
+   SettingsTextField(boolean canBeEmpty) {
+      this((String)null, canBeEmpty);
+   }
+
+   SettingsTextField() {
+      this(false);
    }
 
    public String getSettingsValue() {

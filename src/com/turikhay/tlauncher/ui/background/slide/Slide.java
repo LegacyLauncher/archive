@@ -1,7 +1,6 @@
 package com.turikhay.tlauncher.ui.background.slide;
 
 import com.turikhay.util.U;
-import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -55,23 +54,14 @@ public class Slide {
 
       try {
          tempImage = ImageIO.read(this.url);
-      } catch (IOException var6) {
-         this.log("Cannot load slide!", var6);
+      } catch (IOException var3) {
+         this.log("Cannot load slide!", var3);
          return;
       }
 
       if (tempImage == null) {
          this.log("Image seems to be corrupted.");
       } else {
-         for(int x = 0; x < tempImage.getWidth(); ++x) {
-            for(int y = 0; y < tempImage.getHeight(); ++y) {
-               int rgba = tempImage.getRGB(x, y);
-               Color col = new Color(rgba, true);
-               col = new Color(255 - col.getRed(), 255 - col.getGreen(), 255 - col.getBlue());
-               tempImage.setRGB(x, y, col.getRGB());
-            }
-         }
-
          this.log("Loaded successfully!");
          this.image = tempImage;
       }

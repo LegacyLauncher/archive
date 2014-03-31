@@ -1,6 +1,5 @@
 package com.turikhay.tlauncher.ui.settings;
 
-import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import java.awt.Component;
 import java.util.ArrayList;
@@ -9,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class SettingsHandler implements Blockable {
-   private static Configuration settings;
    private final String path;
    private String value;
    private final List listeners;
@@ -54,14 +52,15 @@ public abstract class SettingsHandler implements Blockable {
       return this.path;
    }
 
-   public void setValue(Object obj) {
+   public void updateValue(Object obj) {
       String val = obj == null ? null : obj.toString();
       this.onChange(val);
       this.setValue0(this.value);
    }
 
-   public void setDefault() {
-      this.setValue(settings.getDefault(this.path));
+   public void setValue(Object obj) {
+      String val = obj == null ? null : obj.toString();
+      this.setValue0(val);
    }
 
    public abstract boolean isValid();

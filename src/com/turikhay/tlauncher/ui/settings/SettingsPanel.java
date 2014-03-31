@@ -11,8 +11,11 @@ import com.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
 import com.turikhay.tlauncher.ui.converter.ConnectionQualityConverter;
 import com.turikhay.tlauncher.ui.converter.ConsoleTypeConverter;
 import com.turikhay.tlauncher.ui.converter.LocaleConverter;
+import com.turikhay.tlauncher.ui.explorer.FileExplorer;
+import com.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import com.turikhay.tlauncher.ui.loc.LocalizableButton;
 import com.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import com.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import com.turikhay.tlauncher.ui.login.LoginException;
 import com.turikhay.tlauncher.ui.login.LoginListener;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
@@ -22,10 +25,13 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +39,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import net.minecraft.launcher.OperatingSystem;
@@ -40,7 +48,7 @@ import net.minecraft.launcher.versions.ReleaseType;
 
 public class SettingsPanel extends CenterPanel implements LoginListener {
    private static final long serialVersionUID = 3896900830909661270L;
-   private static final int PANELS = 4;
+   private static final int PANELS = 5;
    private final DefaultScene scene;
    private final ExtendedPanel container;
    private final ExtendedPanel[] panels;
@@ -50,6 +58,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
    private final SettingsFieldHandler javaPath;
    private final SettingsFieldHandler javaArgs;
    private final SettingsFieldHandler args;
+   private final SettingsFieldHandler slide;
    private final SettingsFieldHandler console;
    private final SettingsFieldHandler connection;
    private final SettingsFieldHandler action;
@@ -58,9 +67,13 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
    private final LocalizableButton saveButton;
    private final LocalizableButton defaultButton;
    private final List handlers;
+   private final JPopupMenu popup;
+   private final LocalizableMenuItem infoItem;
+   private final LocalizableMenuItem defaultItem;
+   private SettingsHandler selectedHandler;
 
    public SettingsPanel(DefaultScene sc) {
-      super(squareInsets);
+      super(new Insets(0, 15, 15, 15));
       this.scene = sc;
       FocusListener warning = new FocusListener() {
          public void focusGained(FocusEvent e) {
@@ -82,10 +95,10 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       };
       this.container = new ExtendedPanel();
       this.container.setLayout(new BoxLayout(this.container, 3));
-      this.panels = new ExtendedPanel[4];
-      this.constraints = new GridBagConstraints[4];
+      this.panels = new ExtendedPanel[5];
+      this.constraints = new GridBagConstraints[5];
 
-      for(int i = 0; i < 4; ++i) {
+      for(int i = 0; i < 5; ++i) {
          this.panels[i] = new ExtendedPanel(new GridBagLayout());
          this.panels[i].getInsets().set(0, 0, 0, 0);
          this.constraints[i] = new GridBagConstraints();
@@ -96,7 +109,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       this.handlers = new ArrayList();
       byte pane = 0;
       byte row = 0;
-      this.directory = new SettingsFieldHandler("minecraft.gamedir", new SettingsTextField("settings.client.gamedir.prompt"), warning);
+      this.directory = new SettingsFieldHandler("minecraft.gamedir", new SettingsFileField("settings.client.gamedir.prompt", new FileExplorer(1, true)), warning);
       this.directory.addListener(new SettingsFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
@@ -104,9 +117,11 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
                   ((VersionLists)SettingsPanel.this.tlauncher.getManager().getComponent(VersionLists.class)).updateLocal();
                } catch (IOException var4) {
                   Alert.showLocError("settings.client.gamedir.noaccess", var4);
+                  return;
                }
 
                SettingsPanel.this.tlauncher.getVersionManager().asyncRefresh();
+               SettingsPanel.this.tlauncher.getProfileManager().recreate();
             }
          }
       });
@@ -138,14 +153,15 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       this.args = new SettingsFieldHandler("minecraft.args", new SettingsTextField("settings.java.args.minecraft", true), warning);
       row = (byte)(row + 1);
       this.add(pane, row, new SettingsPair("settings.java.args.label", new SettingsHandler[]{this.javaArgs, this.args}));
-      this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsTextField("settings.java.path.prompt", true) {
+      final boolean isWindows = OperatingSystem.getCurrentPlatform().equals(OperatingSystem.WINDOWS);
+      this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsFileField("settings.java.path.prompt", true, new FileExplorer(isWindows ? 0 : 1, true)) {
          private static final long serialVersionUID = -2220392073262107659L;
 
          public boolean isValueValid() {
-            if (!OperatingSystem.getCurrentPlatform().equals(OperatingSystem.WINDOWS)) {
+            if (!isWindows) {
                return true;
             } else {
-               String path = this.getValue();
+               String path = this.getSettingsValue();
                if (path == null) {
                   return true;
                } else {
@@ -160,11 +176,19 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
             }
          }
       }, warning);
-      this.javaPath.addListener(new SettingsFieldListener() {
-         protected void onChange(SettingsHandler handler, String oldValue, String newValue) {
+      this.add(pane, row++, new SettingsPair("settings.java.path.label", new SettingsHandler[]{this.javaPath}));
+      ++pane;
+      row = 0;
+      this.slide = new SettingsFieldHandler("gui.background", new SettingsFileField("settings.slide.list.prompt", true, new ImageFileExplorer()));
+      this.slide.addListener(new SettingsFieldChangeListener() {
+         protected void onChange(String oldValue, String newValue) {
+            if (SettingsPanel.this.tlauncher.isReady()) {
+               SettingsPanel.this.tlauncher.getFrame().mp.background.SLIDE_BACKGROUND.getThread().asyncRefreshSlide();
+            }
          }
       });
-      this.add(pane, row++, new SettingsPair("settings.java.path.label", new SettingsHandler[]{this.javaPath}));
+      row = (byte)(row + 1);
+      this.add(pane, row, new SettingsPair("settings.slide.list.label", new SettingsHandler[]{this.slide}));
       ++pane;
       row = 0;
       this.console = new SettingsFieldHandler("gui.console", new SettingsComboBox(new ConsoleTypeConverter(), Configuration.ConsoleType.values()));
@@ -254,7 +278,34 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
             SettingsPanel.this.resetValues();
          }
       });
-      this.container.add(sepPan(new Component[]{this.saveButton, this.defaultButton}));
+      this.popup = new JPopupMenu();
+      this.infoItem = new LocalizableMenuItem("settings.popup.info");
+      this.infoItem.setEnabled(false);
+      this.popup.add(this.infoItem);
+      this.defaultItem = new LocalizableMenuItem("settings.popup.default");
+      this.defaultItem.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            if (SettingsPanel.this.selectedHandler != null) {
+               SettingsPanel.this.resetValue(SettingsPanel.this.selectedHandler);
+            }
+         }
+      });
+      this.popup.add(this.defaultItem);
+      Iterator var10 = this.handlers.iterator();
+
+      while(var10.hasNext()) {
+         final SettingsHandler handler = (SettingsHandler)var10.next();
+         Component handlerComponent = handler.getComponent();
+         handlerComponent.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+               if (e.getButton() == 3) {
+                  SettingsPanel.this.callPopup(e, handler);
+               }
+            }
+         });
+      }
+
+      this.container.add((Component)sepPan(new Component[]{this.saveButton, this.defaultButton}));
       JScrollPane scrollPane = new JScrollPane(this.container);
       scrollPane.setOpaque(false);
       scrollPane.getViewport().setOpaque(false);
@@ -314,7 +365,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
             handler = (SettingsHandler)var3.next();
             path = handler.getPath();
             String value = this.global.get(path);
-            handler.setValue(value);
+            handler.updateValue(value);
          } while(!globalUnSaveable && this.global.isSaveable(path));
 
          Blocker.block((Blockable)handler, (Object)"unsaveable");
@@ -345,7 +396,14 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
 
       while(var2.hasNext()) {
          SettingsHandler handler = (SettingsHandler)var2.next();
-         String path = handler.getPath();
+         this.resetValue(handler);
+      }
+
+   }
+
+   void resetValue(SettingsHandler handler) {
+      String path = handler.getPath();
+      if (this.global.isSaveable(path)) {
          String value = this.global.getDefault(path);
          this.log("Resetting:", handler.getClass().getSimpleName(), path, value);
          if (value != null) {
@@ -353,7 +411,25 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
             handler.setValue(value);
          }
       }
+   }
 
+   boolean canReset(SettingsHandler handler) {
+      String key = handler.getPath();
+      return this.global.isSaveable(key) && this.global.getDefault(handler.getPath()) != null;
+   }
+
+   void callPopup(MouseEvent e, SettingsHandler handler) {
+      if (this.popup.isShowing()) {
+         this.popup.setVisible(false);
+      }
+
+      this.defocus();
+      int x = e.getX();
+      int y = e.getY();
+      this.selectedHandler = handler;
+      this.infoItem.setVariables(handler.getPath());
+      this.defaultItem.setEnabled(this.canReset(handler));
+      this.popup.show((JComponent)e.getSource(), x, y);
    }
 
    public void block(Object reason) {

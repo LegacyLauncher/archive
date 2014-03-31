@@ -26,7 +26,7 @@ import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 
 public class ProfileManager extends RefreshableComponent {
    public static final String DEFAULT_PROFILE_NAME = "TLauncher";
-   private static final String DEFAULT_PROFILE_FILENAME = "launcher_profiles.json";
+   public static final String DEFAULT_PROFILE_FILENAME = "launcher_profiles.json";
    private final List listeners;
    private final AccountListener accountListener;
    private final JsonParser parser;
@@ -76,6 +76,7 @@ public class ProfileManager extends RefreshableComponent {
 
    public void recreate() {
       this.setFile(getDefaultFile());
+      this.refresh();
    }
 
    public boolean refresh() {
@@ -127,7 +128,7 @@ public class ProfileManager extends RefreshableComponent {
       return this.file;
    }
 
-   void setFile(File file) {
+   public void setFile(File file) {
       if (file == null) {
          throw new NullPointerException();
       } else {

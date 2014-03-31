@@ -189,7 +189,7 @@ public class ProgressBar extends JProgressBar {
 
          Graphics2D g2D = (Graphics2D)g;
          g.setColor(Color.black);
-         g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+         g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
          g.setFont(font);
          this.drawString(g, this.wS, this.wS_bounds);
          this.drawString(g, this.cS, this.cS_bounds);
