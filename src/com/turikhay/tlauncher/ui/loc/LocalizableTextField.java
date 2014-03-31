@@ -3,25 +3,25 @@ package com.turikhay.tlauncher.ui.loc;
 import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.text.ExtendedTextField;
 
-public abstract class LocalizableTextField extends ExtendedTextField implements LocalizableComponent {
+public class LocalizableTextField extends ExtendedTextField implements LocalizableComponent {
    private static final long serialVersionUID = 359096767189321072L;
    private String placeholderPath;
 
-   private LocalizableTextField(CenterPanel panel, String placeholderPath, String value) {
+   public LocalizableTextField(CenterPanel panel, String placeholderPath, String value) {
       super(panel, (String)null, value);
       this.setValue(value);
       this.setPlaceholder(placeholderPath);
    }
 
-   protected LocalizableTextField(CenterPanel panel, String placeholderPath) {
+   public LocalizableTextField(CenterPanel panel, String placeholderPath) {
       this(panel, placeholderPath, (String)null);
    }
 
-   protected LocalizableTextField(String placeholderPath) {
+   public LocalizableTextField(String placeholderPath) {
       this((CenterPanel)null, placeholderPath, (String)null);
    }
 
-   protected LocalizableTextField() {
+   public LocalizableTextField() {
       this((CenterPanel)null, (String)null, (String)null);
    }
 

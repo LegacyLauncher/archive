@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui.swing.extended;
 
+import com.turikhay.util.U;
 import java.awt.LayoutManager;
 import javax.swing.BoxLayout;
 
@@ -21,8 +22,12 @@ public class VPanel extends ExtendedPanel {
 
    public void setLayout(LayoutManager mgr) {
       if (mgr instanceof BoxLayout) {
-         super.setLayout(mgr);
+         int axis = ((BoxLayout)U.getAs(mgr, BoxLayout.class)).getAxis();
+         if (axis != 3 && axis != 1) {
+            throw new IllegalArgumentException("Illegal BoxLayout axis!");
+         } else {
+            super.setLayout(mgr);
+         }
       }
-
    }
 }

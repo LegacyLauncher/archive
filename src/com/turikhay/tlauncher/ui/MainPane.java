@@ -18,6 +18,7 @@ public class MainPane extends ExtendedLayeredPane {
    public final LaunchProgress progress;
    public final DefaultScene defaultScene;
    public final AccountEditorScene accountEditor;
+   public final ConnectionWarning warning;
 
    MainPane(TLauncherFrame frame) {
       super((Component)null);
@@ -31,9 +32,9 @@ public class MainPane extends ExtendedLayeredPane {
       this.add(this.accountEditor);
       this.progress = new LaunchProgress(frame);
       this.add(this.progress);
-      ConnectionWarning warning = new ConnectionWarning();
-      warning.setLocation(10, 10);
-      this.add(warning);
+      this.warning = new ConnectionWarning();
+      this.warning.setLocation(10, 10);
+      this.add(this.warning);
       this.setScene(this.defaultScene, false);
    }
 

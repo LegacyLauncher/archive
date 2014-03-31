@@ -123,20 +123,20 @@ public class ExtendedTextField extends JTextField {
       this.updateStyle();
    }
 
-   void onFocusGained() {
+   protected void onFocusGained() {
       if (this.getValue() == null) {
          this.setEmpty();
       }
 
    }
 
-   void onFocusLost() {
+   protected void onFocusLost() {
       if (this.getValue() == null) {
          this.setPlaceholder();
       }
 
    }
 
-   void onChange() {
+   protected void onChange() {
    }
 }

@@ -8,7 +8,6 @@ import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
-import com.turikhay.util.StringUtil;
 import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -109,9 +108,7 @@ public class TLauncherFrame extends JFrame {
       String translator = this.lang.nget("translator");
       String copyright = "(by turikhay" + (translator != null ? ", translated by " + translator : "") + ")";
       String brand = TLauncher.getBrand() + " " + TLauncher.getVersion();
-      String title = "TLauncher " + brand + " " + copyright;
-      title = StringUtil.randomize(title);
-      this.setTitle(title);
+      this.setTitle("TLauncher " + brand + " " + copyright);
    }
 
    private void setWindowSize() {
@@ -127,6 +124,61 @@ public class TLauncherFrame extends JFrame {
       UIManager.put("OptionPane.yesButtonText", this.lang.nget("ui.yes"));
       UIManager.put("OptionPane.noButtonText", this.lang.nget("ui.no"));
       UIManager.put("OptionPane.cancelButtonText", this.lang.nget("ui.cancel"));
+      UIManager.put("FileChooser.acceptAllFileFilterText", this.lang.nget("explorer.extension.all"));
+      UIManager.put("FileChooser.lookInLabelText", this.lang.nget("explorer.lookin"));
+      UIManager.put("FileChooser.saveInLabelText", this.lang.nget("explorer.lookin"));
+      UIManager.put("FileChooser.fileNameLabelText", this.lang.nget("explorer.input.filename"));
+      UIManager.put("FileChooser.folderNameLabelText", this.lang.nget("explorer.input.foldername"));
+      UIManager.put("FileChooser.filesOfTypeLabelText", this.lang.nget("explorer.input.type"));
+      UIManager.put("FileChooser.upFolderToolTipText", this.lang.nget("explorer.button.up.tip"));
+      UIManager.put("FileChooser.upFolderAccessibleName", this.lang.nget("explorer.button.up"));
+      UIManager.put("FileChooser.newFolderToolTipText", this.lang.nget("explorer.button.newfolder.tip"));
+      UIManager.put("FileChooser.newFolderAccessibleName", this.lang.nget("explorer.button.newfolder"));
+      UIManager.put("FileChooser.newFolderButtonToolTipText", this.lang.nget("explorer.button.newfolder.tip"));
+      UIManager.put("FileChooser.newFolderButtonText", this.lang.nget("explorer.button.newfolder"));
+      UIManager.put("FileChooser.other.newFolder", this.lang.nget("explorer.button.newfolder.name"));
+      UIManager.put("FileChooser.other.newFolder.subsequent", this.lang.nget("explorer.button.newfolder.name"));
+      UIManager.put("FileChooser.win32.newFolder", this.lang.nget("explorer.button.newfolder.name"));
+      UIManager.put("FileChooser.win32.newFolder.subsequent", this.lang.nget("explorer.button.newfolder.name"));
+      UIManager.put("FileChooser.homeFolderToolTipText", this.lang.nget("explorer.button.home.tip"));
+      UIManager.put("FileChooser.homeFolderAccessibleName", this.lang.nget("explorer.button.home"));
+      UIManager.put("FileChooser.listViewButtonToolTipText", this.lang.nget("explorer.button.list.tip"));
+      UIManager.put("FileChooser.listViewButtonAccessibleName", this.lang.nget("explorer.button.list"));
+      UIManager.put("FileChooser.detailsViewButtonToolTipText", this.lang.nget("explorer.button.details.tip"));
+      UIManager.put("FileChooser.detailsViewButtonAccessibleName", this.lang.nget("explorer.button.details"));
+      UIManager.put("FileChooser.viewMenuButtonToolTipText", this.lang.nget("explorer.button.view.tip"));
+      UIManager.put("FileChooser.viewMenuButtonAccessibleName", this.lang.nget("explorer.button.view"));
+      UIManager.put("FileChooser.newFolderErrorText", this.lang.nget("explorer.error.newfolder"));
+      UIManager.put("FileChooser.newFolderErrorSeparator", ": ");
+      UIManager.put("FileChooser.newFolderParentDoesntExistTitleText", this.lang.nget("explorer.error.newfolder-nopath"));
+      UIManager.put("FileChooser.newFolderParentDoesntExistText", this.lang.nget("explorer.error.newfolder-nopath"));
+      UIManager.put("FileChooser.fileDescriptionText", this.lang.nget("explorer.details.file"));
+      UIManager.put("FileChooser.directoryDescriptionText", this.lang.nget("explorer.details.dir"));
+      UIManager.put("FileChooser.saveButtonText", this.lang.nget("explorer.button.save"));
+      UIManager.put("FileChooser.openButtonText", this.lang.nget("explorer.button.open"));
+      UIManager.put("FileChooser.saveDialogTitleText", this.lang.nget("explorer.title.save"));
+      UIManager.put("FileChooser.openDialogTitleText", this.lang.nget("explorer.title.open"));
+      UIManager.put("FileChooser.cancelButtonText", this.lang.nget("explorer.button.cancel"));
+      UIManager.put("FileChooser.updateButtonText", this.lang.nget("explorer.button.update"));
+      UIManager.put("FileChooser.helpButtonText", this.lang.nget("explorer.button.help"));
+      UIManager.put("FileChooser.directoryOpenButtonText", this.lang.nget("explorer.button.open-dir"));
+      UIManager.put("FileChooser.saveButtonToolTipText", this.lang.nget("explorer.title.save.tip"));
+      UIManager.put("FileChooser.openButtonToolTipText", this.lang.nget("explorer.title.open.tip"));
+      UIManager.put("FileChooser.cancelButtonToolTipText", this.lang.nget("explorer.button.cancel.tip"));
+      UIManager.put("FileChooser.updateButtonToolTipText", this.lang.nget("explorer.button.update.tip"));
+      UIManager.put("FileChooser.helpButtonToolTipText", this.lang.nget("explorer.title.help.tip"));
+      UIManager.put("FileChooser.directoryOpenButtonToolTipText", this.lang.nget("explorer.button.open-dir.tip"));
+      UIManager.put("FileChooser.viewMenuLabelText", this.lang.nget("explorer.button.view"));
+      UIManager.put("FileChooser.refreshActionLabelText", this.lang.nget("explorer.context.refresh"));
+      UIManager.put("FileChooser.newFolderActionLabelText", this.lang.nget("explorer.context.newfolder"));
+      UIManager.put("FileChooser.listViewActionLabelText", this.lang.nget("explorer.view.list"));
+      UIManager.put("FileChooser.detailsViewActionLabelText", this.lang.nget("explorer.view.details"));
+      UIManager.put("FileChooser.filesListAccessibleName", this.lang.nget("explorer.view.list.name"));
+      UIManager.put("FileChooser.filesDetailsAccessibleName", this.lang.nget("explorer.view.details.name"));
+      UIManager.put("FileChooser.renameErrorTitleText", this.lang.nget("explorer.error.rename.title"));
+      UIManager.put("FileChooser.renameErrorText", this.lang.nget("explorer.error.rename") + "\n{0}");
+      UIManager.put("FileChooser.renameErrorFileExistsText", this.lang.nget("explorer.error.rename-exists"));
+      UIManager.put("FileChooser.readOnly", Boolean.TRUE);
    }
 
    private static void initFontSize() {

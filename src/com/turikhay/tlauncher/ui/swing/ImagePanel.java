@@ -10,8 +10,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 
 public class ImagePanel extends ExtendedPanel {
@@ -43,15 +43,9 @@ public class ImagePanel extends ExtendedPanel {
       this.opacity = shown ? nonActiveOpacity : 0.0F;
       this.timeFrame = 10;
       this.setBackground(new Color(0, 0, 0, 0));
-      this.addMouseListener(new MouseListener() {
+      this.addMouseListenerOriginally(new MouseAdapter() {
          public void mouseClicked(MouseEvent e) {
             ImagePanel.this.onClick();
-         }
-
-         public void mousePressed(MouseEvent e) {
-         }
-
-         public void mouseReleased(MouseEvent e) {
          }
 
          public void mouseEntered(MouseEvent e) {

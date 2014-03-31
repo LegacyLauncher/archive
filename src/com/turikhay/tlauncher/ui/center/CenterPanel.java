@@ -103,7 +103,7 @@ public class CenterPanel extends BlockablePanel {
    }
 
    protected boolean setMessage(String message) {
-      this.messageLabel.setForeground(this.theme.getSuccess());
+      this.messageLabel.setForeground(this.theme.getFocus());
       this.messageLabel.setText(message != null && message.length() != 0 ? message : " ");
       return true;
    }

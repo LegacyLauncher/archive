@@ -295,6 +295,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                } else {
                   String javaDirPath = this.settings.get("minecraft.javadir");
                   this.javaDir = new File(javaDirPath == null ? this.os.getJavaDir() : javaDirPath);
+                  this.log("Java path:", this.javaDir);
                   this.gameDir = new File(this.settings.get("minecraft.gamedir"));
 
                   try {

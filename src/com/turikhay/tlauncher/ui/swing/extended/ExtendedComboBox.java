@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui.swing.extended;
 
 import com.turikhay.tlauncher.ui.converter.StringConverter;
+import com.turikhay.util.U;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.ListCellRenderer;
@@ -12,7 +13,7 @@ public class ExtendedComboBox extends JComboBox {
    public ExtendedComboBox(ListCellRenderer renderer) {
       this.setRenderer(renderer);
       this.setOpaque(false);
-      ((JComponent)this.getEditor().getEditorComponent()).setOpaque(false);
+      ((JComponent)U.getAs(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
    }
 
    public ExtendedComboBox(StringConverter converter) {
@@ -63,7 +64,7 @@ public class ExtendedComboBox extends JComboBox {
    }
 
    protected Object convert(String from) {
-      return this.converter != null ? this.converter.fromString(from) : null;
+      return this.converter == null ? null : this.converter.fromString(from);
    }
 
    private Object returnAs(Object obj) {

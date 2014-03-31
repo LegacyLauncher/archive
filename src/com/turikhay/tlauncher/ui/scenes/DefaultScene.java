@@ -14,7 +14,7 @@ public class DefaultScene extends PseudoScene {
    private final int LOGINFORM_WIDTH = 250;
    private final int LOGINFORM_HEIGHT = 240;
    private final int SETTINGSFORM_WIDTH = 500;
-   private final int SETTINGSFORM_HEIGHT = 450;
+   private final int SETTINGSFORM_HEIGHT = 480;
    private final int MARGIN = 25;
    public final LoginForm loginForm;
    public final SettingsPanel settingsForm = new SettingsPanel(this);

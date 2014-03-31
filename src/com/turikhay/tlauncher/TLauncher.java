@@ -20,8 +20,6 @@ import com.turikhay.tlauncher.ui.listener.UpdaterUIListener;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.updater.Updater;
-import com.turikhay.util.FileUtil;
-import com.turikhay.util.MinecraftUtil;
 import com.turikhay.util.Time;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
@@ -39,8 +37,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   public static final boolean JOKING = true;
-   private static final double VERSION = 0.887D;
+   private static final double VERSION = 0.899D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -80,7 +77,6 @@ public class TLauncher {
       if (state == null) {
          throw new IllegalArgumentException("TLauncherState can't be NULL!");
       } else {
-         U.log("Алдакчы!");
          U.log("TLauncher is loading in state", state);
          Time.start(this);
          instance = this;
@@ -101,7 +97,6 @@ public class TLauncher {
          this.manager.loadComponent(ComponentManagerListenerHelper.class);
          this.init();
          U.log("Started! (" + Time.stop(this) + " ms.)");
-         FileUtil.deleteFile(MinecraftUtil.getSystemRelatedFile("tlauncher.ini"));
          this.ready = true;
       }
    }
@@ -284,7 +279,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.887D);
+      U.log("Starting TLauncher", "Original", 0.899D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -330,7 +325,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.887D;
+      return 0.899D;
    }
 
    public static String getBrand() {
