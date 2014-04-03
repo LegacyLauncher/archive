@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Исходники TLauncher</title>
+  
+  <script type="text/javascript">
+    function link(url, text) {
+        return '<a href="'+ url +'" target="_blank">'+ text +'</a>';
+    }
+    
+    TLauncher = {
+        version: 0.9,
+        date: '03.04.2014',
+        author: link('http://turikhay.ru', 'turikhay'),
+        source: link('http://www.rubukkit.org/threads/.49116/', 'на RuBukkit.org'),
+        lines: 21722
+    };
+    
+    document.getElementsByTagName('title')[0].innerHTML += ' ' + TLauncher.version;
+  </script>
+  
+  <style type="text/css">
+  body {
+    font-family: Tahoma;
+    background: white;
+    color: black;
+    font-size: 14pt;
+    margin: 0 auto;
+    width: 1000px;
+    height: auto;
+  }
+  small {
+    font-size: 11pt;
+  }
+  a {
+    color: black;
+    font-family: Tahoma;
+    text-decoration: underline;
+  }
+  a:visited {
+    color: #6a6a6a;
+    text-decoration: underline;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  a img {
+    border: none;
+  }
+  .h1, h1 {
+    font-family: tahoma, arial;
+    font-weight: bold;
+    font-size: 80pt;
+    margin-bottom: 5px;
+  }
+  .h2, h2 {
+    font-family: tahoma, arial;
+    font-weight: bold;
+    font-size: 48pt;
+    margin-bottom: 5px;
+  }
+  .h3, h3 {
+    font-family: tahoma, arial;
+    font-weight: bold;
+    font-size: 32pt;
+    margin-bottom: 5px;
+  }
+  .h4, h4 {
+    font-family: tahoma, arial;
+    font-weight: bold;
+    font-size: 24pt;
+    margin-bottom: 5px;
+  }
+  td {
+    vertical-align: top
+  }
+  hr {
+    color: black;
+    background: black;
+    border-width: 0;
+  }
+  </style>
+</head>
+<body>
+  <div id="logo" align="center">
+    <span class="h1">TLauncher</span>
+    <br/>
+    <span class="h3">альтернативный лаунчер</span>
+  </div>
+  
+  <h4>Общая информация</h4><hr />
+  <table id="info-table" width="50%" border="0" align="center">
+  <tr>
+    <td>Используемая версия:</td>
+    <td><script type="text/javascript">document.write(TLauncher.version);</script></td>
+  </tr>
+  <tr>
+    <td>Дата выхода:</td>
+    <td><script type="text/javascript">document.write(TLauncher.date);</script></td>
+  </tr>
+  <tr>
+    <td>Количество строк:</td>
+    <td><script type="text/javascript">document.write(TLauncher.lines);</script></td>
+  </tr>
+  <tr>
+    <td>Разработчик:</td>
+    <td><script type="text/javascript">document.write(TLauncher.author);</script></td>
+  </tr>
+  <tr>
+    <td>Исходники:</td>
+    <td><script type="text/javascript">document.write(TLauncher.source);</script></td>
+  </tr>
+  </table>
+  
+  <h4>Лицензия</h4><hr />
+  <p id="licence">
+    Данный текст лицензии действителен на момент релиза исходников версии <script type="text/javascript">document.write(TLauncher.version);</script>: <script type="text/javascript">document.write(TLauncher.date);</script>
+    <br /><br/>
+    При первом запуске лаунчера Вам выдаётся предупреждение о том, что данный лаунчер не следует использовать,
+    если Вы — пират, который не собирается приобретать игру. То же самое и с исходниками: не используйте
+    возможности лаунчера, если Вы не собираетесь приобретать игру. Однако, Вы всё же можете использовать те
+    части исходников, которые не относятся непосредственно к Minecraft. Например, util- классы и методы.
+    <br /><br />
+    Вы не можете передавать исходники TLauncher другим лицам, если автор не дал Вам право на это. Основным
+    источником распространения исходников должна оставаться тема TLauncher <script type="text/javascript">document.write(TLauncher.source);</script>.
+  </p>
+</body>
+</html>

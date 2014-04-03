@@ -6,89 +6,82 @@ import java.util.List;
 import java.util.Map;
 
 public enum ReleaseType {
-   RELEASE("release", false, true),
-   SNAPSHOT("snapshot"),
-   OLD_BETA("old-beta"),
-   OLD_ALPHA("old-alpha"),
-   OLD("old"),
-   MODIFIED("modified"),
-   UNKNOWN("unknown", false, false);
+	RELEASE("release", false, true), SNAPSHOT("snapshot"), OLD_BETA("old-beta"), OLD_ALPHA(
+			"old-alpha"), OLD("old"), MODIFIED("modified"), UNKNOWN("unknown",
+			false, false);
 
-   private static final Map lookup = new HashMap();
-   private static ReleaseType[] defineableTypes;
-   private static ReleaseType[] updateableTypes;
-   private final String name;
-   private final boolean isDefault;
-   private final boolean isDesired;
+	private static final Map<String, ReleaseType> lookup;
+	private static ReleaseType[] defineableTypes, updateableTypes;
 
-   static {
-      ReleaseType[] var3;
-      int var2 = (var3 = values()).length;
+	private final String name;
+	private final boolean isDefault, isDesired;
 
-      for(int var1 = 0; var1 < var2; ++var1) {
-         ReleaseType type = var3[var1];
-         lookup.put(type.getName(), type);
-      }
+	private ReleaseType(String name, boolean isDefault, boolean isDesired) {
+		this.name = name;
+		this.isDefault = isDefault;
+		this.isDesired = isDesired;
+	}
 
-      List defTypes = new ArrayList();
-      ReleaseType[] var4;
-      int var7 = (var4 = values()).length;
+	private ReleaseType(String name, boolean isDesired) {
+		this(name, true, isDesired);
+	}
 
-      for(var2 = 0; var2 < var7; ++var2) {
-         ReleaseType type = var4[var2];
-         if (type.isDefault) {
-            defTypes.add(type);
-         }
-      }
+	private ReleaseType(String name) {
+		this(name, true, false);
+	}
 
-      defineableTypes = new ReleaseType[defTypes.size()];
-      defTypes.toArray(defineableTypes);
-      updateableTypes = new ReleaseType[]{RELEASE, SNAPSHOT, MODIFIED};
-   }
+	String getName() {
+		return name;
+	}
 
-   private ReleaseType(String name, boolean isDefault, boolean isDesired) {
-      this.name = name;
-      this.isDefault = isDefault;
-      this.isDesired = isDesired;
-   }
+	public boolean isDesired() {
+		return isDesired;
+	}
 
-   private ReleaseType(String name, boolean isDesired) {
-      this(name, true, isDesired);
-   }
+	public boolean isDefault() {
+		return isDefault;
+	}
 
-   private ReleaseType(String name) {
-      this(name, true, false);
-   }
+	public boolean isOld() {
+		return name.startsWith("old");
+	}
 
-   String getName() {
-      return this.name;
-   }
+	@Override
+	public String toString() {
+		return super.toString().toLowerCase();
+	}
 
-   public boolean isDesired() {
-      return this.isDesired;
-   }
+	public static ReleaseType getByName(String name) {
+		return lookup.get(name);
+	}
 
-   public boolean isDefault() {
-      return this.isDefault;
-   }
+	public static ReleaseType[] getDefinable() {
+		return defineableTypes;
+	}
 
-   public boolean isOld() {
-      return this.name.startsWith("old");
-   }
+	public static ReleaseType[] getUpdateable() {
+		return updateableTypes;
+	}
 
-   public String toString() {
-      return super.toString().toLowerCase();
-   }
+	static {
+		// Creating lookup
+		lookup = new HashMap<String, ReleaseType>();
 
-   public static ReleaseType getByName(String name) {
-      return (ReleaseType)lookup.get(name);
-   }
+		for (ReleaseType type : values())
+			lookup.put(type.getName(), type);
 
-   public static ReleaseType[] getDefinable() {
-      return defineableTypes;
-   }
+		// Creating defaultTypes
+		List<ReleaseType> defTypes = new ArrayList<ReleaseType>();
 
-   public static ReleaseType[] getUpdateable() {
-      return updateableTypes;
-   }
+		for (ReleaseType type : values())
+			if (type.isDefault)
+				defTypes.add(type);
+
+		defineableTypes = new ReleaseType[defTypes.size()];
+		defTypes.toArray(defineableTypes);
+
+		// Creating updateableTypes
+		updateableTypes = new ReleaseType[] { ReleaseType.RELEASE,
+				ReleaseType.SNAPSHOT, ReleaseType.MODIFIED };
+	}
 }
