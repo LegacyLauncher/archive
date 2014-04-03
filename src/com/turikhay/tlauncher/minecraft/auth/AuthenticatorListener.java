@@ -1,9 +1,9 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
 public interface AuthenticatorListener {
-	void onAuthPassing(Authenticator auth);
+   void onAuthPassing(Authenticator var1);
 
-	void onAuthPassingError(Authenticator auth, Throwable e);
+   void onAuthPassingError(Authenticator var1, Throwable var2);
 
-	void onAuthPassed(Authenticator auth);
+   void onAuthPassed(Authenticator var1);
 }

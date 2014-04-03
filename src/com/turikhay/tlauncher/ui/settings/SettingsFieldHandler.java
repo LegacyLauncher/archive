@@ -1,67 +1,67 @@
 package com.turikhay.tlauncher.ui.settings;
 
+import com.turikhay.tlauncher.ui.block.Blocker;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.FocusListener;
 
-import com.turikhay.tlauncher.ui.block.Blocker;
-
 public class SettingsFieldHandler extends SettingsHandler {
-	private final SettingsField field;
-	private final Component component;
+   private final SettingsField field;
+   private final Component component;
 
-	SettingsFieldHandler(String path, Component comp, FocusListener focus) {
-		super(path);
+   SettingsFieldHandler(String path, Component comp, FocusListener focus) {
+      super(path);
+      if (!(comp instanceof SettingsField)) {
+         throw new IllegalArgumentException();
+      } else {
+         if (focus != null) {
+            this.addFocus(comp, focus);
+         }
 
-		if (!(comp instanceof SettingsField))
-			throw new IllegalArgumentException();
+         this.component = comp;
+         this.field = (SettingsField)comp;
+      }
+   }
 
-		if (focus != null)
-			addFocus(comp, focus);
+   SettingsFieldHandler(String path, Component comp) {
+      this(path, comp, (FocusListener)null);
+   }
 
-		this.component = comp;
-		this.field = (SettingsField) comp;
-	}
+   public Component getComponent() {
+      return this.component;
+   }
 
-	SettingsFieldHandler(String path, Component comp) {
-		this(path, comp, null);
-	}
+   public String getValue() {
+      return this.field.getSettingsValue();
+   }
 
-	@Override
-	public Component getComponent() {
-		return component;
-	}
+   protected void setValue0(String s) {
+      this.field.setSettingsValue(s);
+   }
 
-	@Override
-	public String getValue() {
-		return field.getSettingsValue();
-	}
+   public boolean isValid() {
+      return this.field.isValueValid();
+   }
 
-	@Override
-	protected void setValue0(String s) {
-		field.setSettingsValue(s);
-	}
+   private void addFocus(Component comp, FocusListener focus) {
+      comp.addFocusListener(focus);
+      if (comp instanceof Container) {
+         Component[] var6;
+         int var5 = (var6 = ((Container)comp).getComponents()).length;
 
-	@Override
-	public boolean isValid() {
-		return field.isValueValid();
-	}
+         for(int var4 = 0; var4 < var5; ++var4) {
+            Component curComp = var6[var4];
+            this.addFocus(curComp, focus);
+         }
+      }
 
-	private void addFocus(Component comp, FocusListener focus) {
-		comp.addFocusListener(focus);
+   }
 
-		if (comp instanceof Container)
-			for (Component curComp : ((Container) comp).getComponents())
-				addFocus(curComp, focus);
-	}
+   public void block(Object reason) {
+      Blocker.blockComponents(reason, this.getComponent());
+   }
 
-	@Override
-	public void block(Object reason) {
-		Blocker.blockComponents(reason, getComponent());
-	}
-
-	@Override
-	public void unblock(Object reason) {
-		Blocker.unblockComponents(reason, getComponent());
-	}
+   public void unblock(Object reason) {
+      Blocker.unblockComponents(reason, this.getComponent());
+   }
 }

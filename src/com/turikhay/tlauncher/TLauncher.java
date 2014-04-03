@@ -1,23 +1,9 @@
 package com.turikhay.tlauncher;
 
-import java.awt.Component;
-import java.io.File;
-import java.io.IOException;
-import java.util.Locale;
-
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-
-import joptsimple.OptionSet;
-import net.minecraft.launcher.OperatingSystem;
-
 import com.google.gson.Gson;
-
 import com.turikhay.tlauncher.configuration.ArgumentParser;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
-import com.turikhay.tlauncher.configuration.Configuration.ConsoleType;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
 import com.turikhay.tlauncher.managers.ComponentManager;
@@ -29,11 +15,9 @@ import com.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
-import com.turikhay.tlauncher.ui.console.Console.CloseAction;
 import com.turikhay.tlauncher.ui.listener.MinecraftUIListener;
 import com.turikhay.tlauncher.ui.listener.UpdaterUIListener;
 import com.turikhay.tlauncher.ui.loc.Localizable;
-import com.turikhay.tlauncher.ui.loc.Localizable.LocalizableFilter;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.util.Time;
@@ -41,381 +25,378 @@ import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import com.turikhay.util.logger.MirroredLinkedStringStream;
 import com.turikhay.util.logger.PrintLogger;
+import java.awt.Component;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Locale;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import joptsimple.OptionSet;
+import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-	private static final double VERSION = 0.9;
-
-	private static TLauncher instance;
-	private static String[] sargs;
-	private static File directory;
-
-	private static PrintLogger print;
-	private static Console console;
-
-	private static Gson gson;
-
-	private TLauncherState state;
-
-	private LangConfiguration lang;
-	private Configuration settings;
-	private Downloader downloader;
-	private Updater updater;
-
-	private TLauncherFrame frame;
-	private TLauncherLite loader;
-
-	private ComponentManager manager;
-	private VersionManager versionManager;
-	private ProfileManager profileManager;
-
-	private final OptionSet args;
-
-	private MinecraftLauncher launcher;
-
-	private UpdaterUIListener updaterListener;
-	private MinecraftUIListener minecraftListener;
-
-	private boolean ready;
-
-	private TLauncher(TLauncherState state, OptionSet set) throws Exception {
-		if (state == null)
-			throw new IllegalArgumentException("TLauncherState can't be NULL!");
-		
-		U.log("TLauncher is loading in state", state);
-
-		Time.start(this);
-		instance = this;
-		this.state = state;
-		this.args = set;
-
-		gson = new Gson();
-
-		settings = Configuration.createConfiguration(set);
-		reloadLocale();
-
-		console = new Console(settings, print, "TLauncher Dev Console",
-				settings.getConsoleType() == ConsoleType.GLOBAL);
-		if (state.equals(TLauncherState.MINIMAL))
-			console.setCloseAction(CloseAction.KILL);
-		Console.updateLocale();
-
-		manager = new ComponentManager(this);
-
-		versionManager = manager.loadComponent(VersionManager.class);
-		profileManager = manager.loadComponent(ProfileManager.class);
-
-		manager.loadComponent(ComponentManagerListenerHelper.class); // TODO invent something better
-
-		init();
-
-		U.log("Started! (" + Time.stop(this) + " ms.)");
-		this.ready = true;
-	}
-
-	private void init() {
-		downloader = new Downloader(this);
-		minecraftListener = new MinecraftUIListener(this);
-
-		switch (state) {
-		case FULL:
-			updaterListener = new UpdaterUIListener(this);
-
-			updater = new Updater(this);
-			updater.addListener(updaterListener);
-
-			frame = new TLauncherFrame(this);
-
-			LoginForm lf = frame.mp.defaultScene.loginForm;
-
-			if (lf.autologin.isEnabled()) {
-				versionManager.startRefresh(true);
-				lf.autologin.setActive(true);
-			} else {
-				versionManager.asyncRefresh();
-				updater.asyncFindUpdate();
-			}
-
-			profileManager.refresh();
-
-			break;
-		case MINIMAL:
-			loader = new TLauncherLite(this);
-			break;
-		}
-
-		AsyncThread.execute(new Runnable() {
-			private final LocalizableFilter filter = new LocalizableFilter() {
-				@Override
-				public boolean localize(Component comp) {
-					return comp instanceof JLabel || comp instanceof JButton
-							|| comp instanceof JCheckBox;
-				}
-			};
-
-			@Override
-			public void run() {
-				while (true) {
-					while (instance.isLauncherWorking())
-						U.sleepFor(10000);
-
-					Localizable.updateContainer(frame, filter);
-					frame.setWindowTitle();
-
-					U.sleepFor(50);
-				}
-			}
-		});
-	}
-
-	public Downloader getDownloader() {
-		return downloader;
-	}
-
-	public LangConfiguration getLang() {
-		return lang;
-	}
-
-	public Configuration getSettings() {
-		return settings;
-	}
-
-	public Updater getUpdater() {
-		return updater;
-	}
-
-	public OptionSet getArguments() {
-		return args;
-	}
-
-	public TLauncherFrame getFrame() {
-		return frame;
-	}
-
-	public TLauncherLite getLoader() {
-		return loader;
-	}
-
-	public static Console getConsole() {
-		return console;
-	}
-
-	public static Gson getGson() {
-		return gson;
-	}
-
-	public ComponentManager getManager() {
-		return manager;
-	}
-
-	public VersionManager getVersionManager() {
-		return versionManager;
-	}
-
-	public ProfileManager getProfileManager() {
-		return profileManager;
-	}
-
-	public MinecraftLauncher getLauncher() {
-		return launcher;
-	}
-
-	public UpdaterUIListener getUpdaterListener() {
-		return updaterListener;
-	}
-
-	public MinecraftUIListener getMinecraftListener() {
-		return minecraftListener;
-	}
-
-	public boolean isReady() {
-		return ready;
-	}
-
-	public void reloadLocale() throws IOException {
-		Locale locale = settings.getLocale();
-		U.log("Selected locale: " + locale);
-
-		if (lang == null)
-			lang = new LangConfiguration(settings.getLocales(), locale);
-		else
-			lang.setSelected(locale);
-
-		Localizable.setLang(lang);
-		Alert.prepareLocal();
-	}
-
-	public void launch(MinecraftListener listener, boolean forceupdate) {
-		this.launcher = new MinecraftLauncher(this, forceupdate);
-		launcher.addListener(minecraftListener);
-		launcher.addListener(listener);
-		launcher.addListener(frame.mp.getProgress());
-
-		launcher.start();
-	}
-
-	public boolean isLauncherWorking() {
-		return launcher != null && launcher.isWorking();
-	}
-
-	public static void kill() {
-		U.log("Good bye!");
-		System.exit(0);
-	}
-
-	public void hide() {
-		U.log("Hiding...");
-		if (frame != null)
-			frame.setVisible(false);
-	}
-
-	public void show() {
-		U.log("Here I am!");
-		if (frame != null)
-			frame.setVisible(true);
-	}
-
-	/* ___________________________________ */
-
-	public static void main(String[] args) {
-		ExceptionHandler handler = ExceptionHandler.getInstance();
-		Thread.setDefaultUncaughtExceptionHandler(handler);
-
-		U.setPrefix("[TLauncher]");
-
-		MirroredLinkedStringStream stream = new MirroredLinkedStringStream();
-		stream.setMirror(System.out);
-
-		print = new PrintLogger(stream);
-		stream.setLogger(print);
-		System.setOut(print);
-
-		TLauncherFrame.initLookAndFeel();
-
-		try {
-			launch(args);
-		} catch (Throwable e) {
-			U.log("Error launching TLauncher:");
-			e.printStackTrace(print);
-
-			Alert.showError(e, true);
-		}
-	}
-
-	private static void launch(String[] args) throws Exception {
-		U.log("Hello!");
-		U.log("Starting TLauncher", BRAND, VERSION);
-		U.log("Machine info:", OperatingSystem.getCurrentInfo());
-
-		U.log("---");
-
-		TLauncher.sargs = args;
-
-		OptionSet set = ArgumentParser.parseArgs(args);
-		if (set == null) {
-			new TLauncher(TLauncherState.FULL, null);
-			return;
-		}
-		if (set.has("help"))
-			ArgumentParser.getParser().printHelpOn(System.out);
-
-		TLauncherState state = TLauncherState.FULL;
-		if (set.has("nogui"))
-			state = TLauncherState.MINIMAL;
-
-		new TLauncher(state, set);
-	}
-
-	public static String[] getArgs() {
-		if (sargs == null)
-			sargs = new String[0];
-		return sargs;
-	}
-
-	public static File getDirectory() {
-		if (directory == null)
-			directory = new File(".");
-		return directory;
-	}
-
-	public static TLauncher getInstance() {
-		return instance;
-	}
-
-	public void newInstance() {
-		Bootstrapper.main(sargs);
-	}
-
-	public enum TLauncherState {
-		FULL, MINIMAL
-	}
-
-	/* ___________________________________ */
-
-	private final static String SETTINGS = "tlauncher.cfg", BRAND = "Original",
-			FOLDER = "minecraft";
-	private final static String[] DEFAULT_UPDATE_REPO = {
-			"http://u.to/tlauncher-original-update-mirror-3/D9wMBg",
-			"http://s1.mmods.ru/launcher/original.ini",
-			"http://u.to/tlauncher-original/BlPcBA",
-			"http://ru-minecraft.org/update/original.ini",
-			"http://u.to/tlauncher-original-update/T4ASBQ",
-			"http://5.9.120.11/update/original.ini",
-			"http://u.to/tlauncher-original-update-mirror2/BIQSBQ",
-			"http://dl.dropboxusercontent.com/u/6204017/update/original.ini" };
-	private final static String[] OFFICIAL_REPO = { "http://s3.amazonaws.com/Minecraft.Download/" },
-			EXTRA_REPO = { "http://5.9.120.11/update/versions/",
-					"http://s1.mmods.ru/launcher/",
-					"http://dl.dropboxusercontent.com/u/6204017/update/versions/" },
-			FORGE_REPO = {};
-	private final static String[] LIBRARY_REPO = { "https://libraries.minecraft.net/" },
-			ASSETS_REPO = { "http://resources.download.minecraft.net/" },
-			SERVER_LIST = {}, MOD_LIST = {};
-
-	public static double getVersion() {
-		return VERSION;
-	}
-
-	public static String getBrand() {
-		return BRAND;
-	}
-
-	public static String getFolder() {
-		return FOLDER;
-	}
-
-	public static String[] getUpdateRepos() {
-		return DEFAULT_UPDATE_REPO;
-	}
-
-	public static String getSettingsFile() {
-		return SETTINGS;
-	}
-
-	public static String[] getOfficialRepo() {
-		return OFFICIAL_REPO;
-	}
-
-	public static String[] getExtraRepo() {
-		return EXTRA_REPO;
-	}
-
-	public static String[] getForgeRepo() {
-		return FORGE_REPO;
-	}
-
-	public static String[] getLibraryRepo() {
-		return LIBRARY_REPO;
-	}
-
-	public static String[] getAssetsRepo() {
-		return ASSETS_REPO;
-	}
-
-	public static String[] getServerList() {
-		return SERVER_LIST;
-	}
-
-	public static String[] getModList() {
-		return MOD_LIST;
-	}
+   private static final double VERSION = 0.91D;
+   private static TLauncher instance;
+   private static String[] sargs;
+   private static File directory;
+   private static PrintLogger print;
+   private static Console console;
+   private static Gson gson;
+   private TLauncher.TLauncherState state;
+   private LangConfiguration lang;
+   private Configuration settings;
+   private Downloader downloader;
+   private Updater updater;
+   private TLauncherFrame frame;
+   private TLauncherLite loader;
+   private ComponentManager manager;
+   private VersionManager versionManager;
+   private ProfileManager profileManager;
+   private final OptionSet args;
+   private MinecraftLauncher launcher;
+   private UpdaterUIListener updaterListener;
+   private MinecraftUIListener minecraftListener;
+   private boolean ready;
+   private static final String SETTINGS = "tlauncher.cfg";
+   private static final String BRAND = "Original";
+   private static final String FOLDER = "minecraft";
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
+   private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://s1.mmods.ru/launcher/", "http://dl.dropboxusercontent.com/u/6204017/update/versions/"};
+   private static final String[] FORGE_REPO = new String[0];
+   private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/"};
+   private static final String[] ASSETS_REPO = new String[]{"http://resources.download.minecraft.net/"};
+   private static final String[] SERVER_LIST = new String[0];
+   private static final String[] MOD_LIST = new String[0];
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
+
+   private TLauncher(TLauncher.TLauncherState state, OptionSet set) throws Exception {
+      if (state == null) {
+         throw new IllegalArgumentException("TLauncherState can't be NULL!");
+      } else {
+         U.log("TLauncher is loading in state", state);
+         Time.start(this);
+         instance = this;
+         this.state = state;
+         this.args = set;
+         gson = new Gson();
+         this.settings = Configuration.createConfiguration(set);
+         this.reloadLocale();
+         console = new Console(this.settings, print, "TLauncher Dev Console", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
+         if (state.equals(TLauncher.TLauncherState.MINIMAL)) {
+            console.setCloseAction(Console.CloseAction.KILL);
+         }
+
+         Console.updateLocale();
+         this.manager = new ComponentManager(this);
+         this.versionManager = (VersionManager)this.manager.loadComponent(VersionManager.class);
+         this.profileManager = (ProfileManager)this.manager.loadComponent(ProfileManager.class);
+         this.manager.loadComponent(ComponentManagerListenerHelper.class);
+         this.init();
+         U.log("Started! (" + Time.stop(this) + " ms.)");
+         this.ready = true;
+      }
+   }
+
+   private void init() {
+      this.downloader = new Downloader(this);
+      this.minecraftListener = new MinecraftUIListener(this);
+      switch($SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState()[this.state.ordinal()]) {
+      case 1:
+         this.updaterListener = new UpdaterUIListener(this);
+         this.updater = new Updater(this);
+         this.updater.addListener(this.updaterListener);
+         this.frame = new TLauncherFrame(this);
+         LoginForm lf = this.frame.mp.defaultScene.loginForm;
+         if (lf.autologin.isEnabled()) {
+            this.versionManager.startRefresh(true);
+            lf.autologin.setActive(true);
+         } else {
+            this.versionManager.asyncRefresh();
+            this.updater.asyncFindUpdate();
+         }
+
+         this.profileManager.refresh();
+         break;
+      case 2:
+         this.loader = new TLauncherLite(this);
+      }
+
+      AsyncThread.execute(new Runnable() {
+         private final Localizable.LocalizableFilter filter = new Localizable.LocalizableFilter() {
+            public boolean localize(Component comp) {
+               return comp instanceof JLabel || comp instanceof JButton || comp instanceof JCheckBox;
+            }
+         };
+
+         public void run() {
+            while(true) {
+               if (!TLauncher.instance.isLauncherWorking()) {
+                  Localizable.updateContainer(TLauncher.this.frame, this.filter);
+                  TLauncher.this.frame.setWindowTitle();
+                  U.sleepFor(50L);
+               } else {
+                  U.sleepFor(10000L);
+               }
+            }
+         }
+      });
+   }
+
+   public Downloader getDownloader() {
+      return this.downloader;
+   }
+
+   public LangConfiguration getLang() {
+      return this.lang;
+   }
+
+   public Configuration getSettings() {
+      return this.settings;
+   }
+
+   public Updater getUpdater() {
+      return this.updater;
+   }
+
+   public OptionSet getArguments() {
+      return this.args;
+   }
+
+   public TLauncherFrame getFrame() {
+      return this.frame;
+   }
+
+   public TLauncherLite getLoader() {
+      return this.loader;
+   }
+
+   public static Console getConsole() {
+      return console;
+   }
+
+   public static Gson getGson() {
+      return gson;
+   }
+
+   public ComponentManager getManager() {
+      return this.manager;
+   }
+
+   public VersionManager getVersionManager() {
+      return this.versionManager;
+   }
+
+   public ProfileManager getProfileManager() {
+      return this.profileManager;
+   }
+
+   public MinecraftLauncher getLauncher() {
+      return this.launcher;
+   }
+
+   public UpdaterUIListener getUpdaterListener() {
+      return this.updaterListener;
+   }
+
+   public MinecraftUIListener getMinecraftListener() {
+      return this.minecraftListener;
+   }
+
+   public boolean isReady() {
+      return this.ready;
+   }
+
+   public void reloadLocale() throws IOException {
+      Locale locale = this.settings.getLocale();
+      U.log("Selected locale: " + locale);
+      if (this.lang == null) {
+         this.lang = new LangConfiguration(this.settings.getLocales(), locale);
+      } else {
+         this.lang.setSelected(locale);
+      }
+
+      Localizable.setLang(this.lang);
+      Alert.prepareLocal();
+   }
+
+   public void launch(MinecraftListener listener, boolean forceupdate) {
+      this.launcher = new MinecraftLauncher(this, forceupdate);
+      this.launcher.addListener(this.minecraftListener);
+      this.launcher.addListener(listener);
+      this.launcher.addListener(this.frame.mp.getProgress());
+      this.launcher.start();
+   }
+
+   public boolean isLauncherWorking() {
+      return this.launcher != null && this.launcher.isWorking();
+   }
+
+   public static void kill() {
+      U.log("Good bye!");
+      System.exit(0);
+   }
+
+   public void hide() {
+      U.log("Hiding...");
+      if (this.frame != null) {
+         this.frame.setVisible(false);
+      }
+
+   }
+
+   public void show() {
+      U.log("Here I am!");
+      if (this.frame != null) {
+         this.frame.setVisible(true);
+      }
+
+   }
+
+   public static void main(String[] args) {
+      ExceptionHandler handler = ExceptionHandler.getInstance();
+      Thread.setDefaultUncaughtExceptionHandler(handler);
+      U.setPrefix("[TLauncher]");
+      MirroredLinkedStringStream stream = new MirroredLinkedStringStream();
+      stream.setMirror(System.out);
+      print = new PrintLogger(stream);
+      stream.setLogger(print);
+      System.setOut(print);
+      TLauncherFrame.initLookAndFeel();
+
+      try {
+         launch(args);
+      } catch (Throwable var4) {
+         U.log("Error launching TLauncher:");
+         var4.printStackTrace(print);
+         Alert.showError(var4, true);
+      }
+
+   }
+
+   private static void launch(String[] args) throws Exception {
+      U.log("Hello!");
+      U.log("Starting TLauncher", "Original", 0.91D);
+      U.log("Machine info:", OperatingSystem.getCurrentInfo());
+      U.log("---");
+      sargs = args;
+      OptionSet set = ArgumentParser.parseArgs(args);
+      if (set == null) {
+         new TLauncher(TLauncher.TLauncherState.FULL, (OptionSet)null);
+      } else {
+         if (set.has("help")) {
+            ArgumentParser.getParser().printHelpOn((OutputStream)System.out);
+         }
+
+         TLauncher.TLauncherState state = TLauncher.TLauncherState.FULL;
+         if (set.has("nogui")) {
+            state = TLauncher.TLauncherState.MINIMAL;
+         }
+
+         new TLauncher(state, set);
+      }
+   }
+
+   public static String[] getArgs() {
+      if (sargs == null) {
+         sargs = new String[0];
+      }
+
+      return sargs;
+   }
+
+   public static File getDirectory() {
+      if (directory == null) {
+         directory = new File(".");
+      }
+
+      return directory;
+   }
+
+   public static TLauncher getInstance() {
+      return instance;
+   }
+
+   public void newInstance() {
+      Bootstrapper.main(sargs);
+   }
+
+   public static double getVersion() {
+      return 0.91D;
+   }
+
+   public static String getBrand() {
+      return "Original";
+   }
+
+   public static String getFolder() {
+      return "minecraft";
+   }
+
+   public static String[] getUpdateRepos() {
+      return DEFAULT_UPDATE_REPO;
+   }
+
+   public static String getSettingsFile() {
+      return "tlauncher.cfg";
+   }
+
+   public static String[] getOfficialRepo() {
+      return OFFICIAL_REPO;
+   }
+
+   public static String[] getExtraRepo() {
+      return EXTRA_REPO;
+   }
+
+   public static String[] getForgeRepo() {
+      return FORGE_REPO;
+   }
+
+   public static String[] getLibraryRepo() {
+      return LIBRARY_REPO;
+   }
+
+   public static String[] getAssetsRepo() {
+      return ASSETS_REPO;
+   }
+
+   public static String[] getServerList() {
+      return SERVER_LIST;
+   }
+
+   public static String[] getModList() {
+      return MOD_LIST;
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState() {
+      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[TLauncher.TLauncherState.values().length];
+
+         try {
+            var0[TLauncher.TLauncherState.FULL.ordinal()] = 1;
+         } catch (NoSuchFieldError var2) {
+         }
+
+         try {
+            var0[TLauncher.TLauncherState.MINIMAL.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$com$turikhay$tlauncher$TLauncher$TLauncherState = var0;
+         return var0;
+      }
+   }
+
+   public static enum TLauncherState {
+      FULL,
+      MINIMAL;
+   }
 }

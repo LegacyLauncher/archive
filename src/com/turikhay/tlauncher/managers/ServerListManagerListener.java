@@ -1,10 +1,9 @@
 package com.turikhay.tlauncher.managers;
 
 public interface ServerListManagerListener {
-	public void onServersRefreshing(ServerListManager sm);
+   void onServersRefreshing(ServerListManager var1);
 
-	public void onServersRefreshingFailed(ServerListManager sm);
+   void onServersRefreshingFailed(ServerListManager var1);
 
-	public void onServersRefreshed(ServerListManager sm);
-
+   void onServersRefreshed(ServerListManager var1);
 }

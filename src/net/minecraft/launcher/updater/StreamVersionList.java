@@ -6,25 +6,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public abstract class StreamVersionList extends VersionList {
-	@Override
-	protected String getUrl(String uri) throws IOException {
-		InputStream inputStream = getInputStream(uri);
+   protected String getUrl(String uri) throws IOException {
+      InputStream inputStream = this.getInputStream(uri);
+      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				inputStream));
-		StringBuilder result = new StringBuilder();
-		String line;
-		while ((line = reader.readLine()) != null) {
-			if (result.length() > 0)
-				result.append("\n");
-			result.append(line);
-		}
+      StringBuilder result;
+      String line;
+      for(result = new StringBuilder(); (line = reader.readLine()) != null; result.append(line)) {
+         if (result.length() > 0) {
+            result.append("\n");
+         }
+      }
 
-		reader.close();
+      reader.close();
+      return result.toString();
+   }
 
-		return result.toString();
-	}
-
-	protected abstract InputStream getInputStream(String paramString)
-			throws IOException;
+   protected abstract InputStream getInputStream(String var1) throws IOException;
 }

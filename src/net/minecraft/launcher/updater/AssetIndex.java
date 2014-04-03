@@ -6,69 +6,58 @@ import java.util.Map;
 import java.util.Set;
 
 public class AssetIndex {
-	public static final String DEFAULT_ASSET_NAME = "legacy";
-	private Map<String, AssetObject> objects;
-	private boolean virtual;
+   public static final String DEFAULT_ASSET_NAME = "legacy";
+   private Map objects = new LinkedHashMap();
+   private boolean virtual;
 
-	public AssetIndex() {
-		this.objects = new LinkedHashMap<String, AssetObject>();
-	}
+   public Map getFileMap() {
+      return this.objects;
+   }
 
-	public Map<String, AssetObject> getFileMap() {
-		return this.objects;
-	}
+   public Set getUniqueObjects() {
+      return new HashSet(this.objects.values());
+   }
 
-	public Set<AssetObject> getUniqueObjects() {
-		return new HashSet<AssetObject>(this.objects.values());
-	}
+   public boolean isVirtual() {
+      return this.virtual;
+   }
 
-	public boolean isVirtual() {
-		return this.virtual;
-	}
+   public class AssetObject {
+      private String filename;
+      private String hash;
+      private long size;
 
-	public class AssetObject {
-		private String filename;
-		private String hash;
-		private long size;
+      public String getHash() {
+         return this.hash;
+      }
 
-		public AssetObject() {
-		}
+      public long getSize() {
+         return this.size;
+      }
 
-		public String getHash() {
-			return this.hash;
-		}
+      public String getFilename() {
+         if (this.filename == null) {
+            this.filename = this.getHash().substring(0, 2) + "/" + this.getHash();
+         }
 
-		public long getSize() {
-			return this.size;
-		}
+         return this.filename;
+      }
 
-		public String getFilename() {
-			if (filename == null)
-				filename = getHash().substring(0, 2) + "/" + getHash();
-			return filename;
-		}
+      public boolean equals(Object o) {
+         if (this == o) {
+            return true;
+         } else if (o != null && this.getClass() == o.getClass()) {
+            AssetIndex.AssetObject that = (AssetIndex.AssetObject)o;
+            return this.size != that.size ? false : this.hash.equals(that.hash);
+         } else {
+            return false;
+         }
+      }
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			AssetObject that = (AssetObject) o;
-
-			if (this.size != that.size)
-				return false;
-
-			return hash.equals(that.hash);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = this.hash.hashCode();
-			result = 31 * result + (int) (this.size ^ this.size >>> 32);
-			return result;
-		}
-	}
+      public int hashCode() {
+         int result = this.hash.hashCode();
+         result = 31 * result + (int)(this.size ^ this.size >>> 32);
+         return result;
+      }
+   }
 }

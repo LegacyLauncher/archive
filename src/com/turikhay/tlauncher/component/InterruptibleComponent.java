@@ -2,69 +2,52 @@ package com.turikhay.tlauncher.component;
 
 import com.turikhay.tlauncher.managers.ComponentManager;
 
-/**
- * An abstract <code>RefreshableComponent</code> whose refresh process can be
- * cancelled.
- * 
- * @author Artur Khusainov
- * 
- */
 public abstract class InterruptibleComponent extends RefreshableComponent {
-	protected final boolean[] refreshList;
-	private int lastRefreshID;
+   protected final boolean[] refreshList;
+   private int lastRefreshID;
 
-	protected InterruptibleComponent(ComponentManager manager) throws Exception {
-		this(manager, 64); // default size.
-	}
+   protected InterruptibleComponent(ComponentManager manager) throws Exception {
+      this(manager, 64);
+   }
 
-	private InterruptibleComponent(ComponentManager manager, int listSize)
-			throws Exception {
-		super(manager);
+   private InterruptibleComponent(ComponentManager manager, int listSize) throws Exception {
+      super(manager);
+      if (listSize < 1) {
+         throw new IllegalArgumentException("Invalid list size: " + listSize + " < 1");
+      } else {
+         this.refreshList = new boolean[listSize];
+      }
+   }
 
-		if (listSize < 1)
-			throw new IllegalArgumentException("Invalid list size: " + listSize
-					+ " < 1");
+   public boolean startRefresh() {
+      return this.refresh(this.nextID());
+   }
 
-		this.refreshList = new boolean[listSize];
-	}
+   protected boolean refresh() {
+      return this.startRefresh();
+   }
 
-	/**
-	 * Starts a new refresh process with next queueID.
-	 */
-	public boolean startRefresh() {
-		return refresh(nextID());
-	}
+   public synchronized void stopRefresh() {
+      for(int i = 0; i < this.refreshList.length; ++i) {
+         this.refreshList[i] = false;
+      }
 
-	@Override
-	protected boolean refresh() {
-		return startRefresh();
-	}
+   }
 
-	/**
-	 * Sets every refresh process as stopped.
-	 */
-	public synchronized void stopRefresh() {
-		for (int i = 0; i < refreshList.length; i++)
-			refreshList[i] = false;
-	}
+   protected synchronized int nextID() {
+      int listSize = this.refreshList.length;
+      int next = this.lastRefreshID++;
+      if (next >= listSize) {
+         next = 0;
+      }
 
-	protected synchronized int nextID() {
-		int listSize = refreshList.length, next = lastRefreshID++;
+      this.lastRefreshID = next;
+      return next;
+   }
 
-		if (next >= listSize)
-			next = 0;
+   protected boolean isCancelled(int refreshID) {
+      return !this.refreshList[refreshID];
+   }
 
-		this.lastRefreshID = next;
-		return next;
-	}
-
-	protected boolean isCancelled(int refreshID) {
-		return !refreshList[refreshID];
-	}
-
-	/**
-	 * Refreshes information and then flushes it if the <code>refreshID</code>
-	 * is not set as stopped.
-	 */
-	protected abstract boolean refresh(int refreshID);
+   protected abstract boolean refresh(int var1);
 }

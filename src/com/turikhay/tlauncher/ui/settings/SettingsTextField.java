@@ -2,55 +2,46 @@ package com.turikhay.tlauncher.ui.settings;
 
 import com.turikhay.tlauncher.ui.loc.LocalizableTextField;
 
-public class SettingsTextField extends LocalizableTextField implements
-		SettingsField {
-	private static final long serialVersionUID = 3920711425159165958L;
+public class SettingsTextField extends LocalizableTextField implements SettingsField {
+   private static final long serialVersionUID = 3920711425159165958L;
+   private final boolean canBeEmpty;
 
-	private final boolean canBeEmpty;
+   SettingsTextField(String prompt, boolean canBeEmpty) {
+      super(prompt);
+      this.canBeEmpty = canBeEmpty;
+      this.setColumns(1);
+   }
 
-	SettingsTextField(String prompt, boolean canBeEmpty) {
-		super(prompt);
+   SettingsTextField(String prompt) {
+      this(prompt, false);
+   }
 
-		this.canBeEmpty = canBeEmpty;
-		this.setColumns(1);
-	}
+   SettingsTextField(boolean canBeEmpty) {
+      this((String)null, canBeEmpty);
+   }
 
-	SettingsTextField(String prompt) {
-		this(prompt, false);
-	}
+   SettingsTextField() {
+      this(false);
+   }
 
-	SettingsTextField(boolean canBeEmpty) {
-		this(null, canBeEmpty);
-	}
+   public String getSettingsValue() {
+      return this.getValue();
+   }
 
-	SettingsTextField() {
-		this(false);
-	}
+   public void setSettingsValue(String value) {
+      this.setText(value);
+   }
 
-	@Override
-	public String getSettingsValue() {
-		return getValue();
-	}
+   public boolean isValueValid() {
+      String text = this.getValue();
+      return text != null || this.canBeEmpty;
+   }
 
-	@Override
-	public void setSettingsValue(String value) {
-		setText(value);
-	}
+   public void block(Object reason) {
+      this.setEnabled(false);
+   }
 
-	@Override
-	public boolean isValueValid() {
-		String text = getValue();
-		return text != null || canBeEmpty;
-	}
-
-	@Override
-	public void block(Object reason) {
-		this.setEnabled(false);
-	}
-
-	@Override
-	public void unblock(Object reason) {
-		this.setEnabled(true);
-	}
-
+   public void unblock(Object reason) {
+      this.setEnabled(true);
+   }
 }

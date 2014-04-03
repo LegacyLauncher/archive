@@ -1,113 +1,105 @@
 package com.turikhay.tlauncher.ui.listener;
 
-import java.io.File;
-import java.net.URI;
-
-import net.minecraft.launcher.OperatingSystem;
-
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.minecraft.crash.Crash;
-import com.turikhay.tlauncher.minecraft.crash.CrashSignatureContainer.CrashSignature;
+import com.turikhay.tlauncher.minecraft.crash.CrashSignatureContainer;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.util.U;
+import java.io.File;
+import java.net.URI;
+import java.util.Iterator;
+import net.minecraft.launcher.OperatingSystem;
 
 public class MinecraftUIListener implements MinecraftListener {
-	private final TLauncher t;
-	private final LangConfiguration lang;
+   private final TLauncher t;
+   private final LangConfiguration lang;
 
-	public MinecraftUIListener(TLauncher tlauncher) {
-		this.t = tlauncher;
+   public MinecraftUIListener(TLauncher tlauncher) {
+      this.t = tlauncher;
+      this.lang = this.t.getLang();
+   }
 
-		this.lang = t.getLang();
-	}
+   public void onMinecraftPrepare() {
+   }
 
-	@Override
-	public void onMinecraftPrepare() {
-	}
+   public void onMinecraftAbort() {
+   }
 
-	@Override
-	public void onMinecraftAbort() {
-	}
+   public void onMinecraftLaunch() {
+      this.t.hide();
+      this.t.getVersionManager().asyncRefresh();
+      if (this.t.getUpdater() != null) {
+         this.t.getUpdater().asyncFindUpdate();
+      }
 
-	@Override
-	public void onMinecraftLaunch() {
-		t.hide();
-		t.getVersionManager().asyncRefresh();
+   }
 
-		if (t.getUpdater() != null)
-			t.getUpdater().asyncFindUpdate();
-	}
+   public void onMinecraftClose() {
+      if (this.t.getLauncher().isLaunchAssist()) {
+         this.t.show();
+         if (this.t.getUpdater() != null) {
+            this.t.getUpdaterListener().applyDelayedUpdate();
+         }
 
-	@Override
-	public void onMinecraftClose() {
-		if (!t.getLauncher().isLaunchAssist())
-			return;
+      }
+   }
 
-		t.show();
+   public void onMinecraftCrash(Crash crash) {
+      String p = "crash.";
+      String title = Localizable.get(p + "title");
+      String report = crash.getFile();
+      if (!crash.isRecognized()) {
+         Alert.showLocError(title, p + "unknown", (Object)null);
+      } else {
+         Iterator var6 = crash.getSignatures().iterator();
 
-		if (t.getUpdater() != null)
-			t.getUpdaterListener().applyDelayedUpdate();
-	}
+         while(var6.hasNext()) {
+            CrashSignatureContainer.CrashSignature sign = (CrashSignatureContainer.CrashSignature)var6.next();
+            String path = sign.getPath();
+            String message = p + path;
+            String url = message + ".url";
+            URI uri = U.makeURI(url);
+            if (uri != null) {
+               if (Alert.showLocQuestion(title, message, report)) {
+                  OperatingSystem.openLink(uri);
+               }
+            } else {
+               Alert.showLocMessage(title, message, report);
+            }
+         }
+      }
 
-	@Override
-	public void onMinecraftCrash(Crash crash) {
-		String p = "crash.", title = Localizable.get(p + "title"), report = crash
-				.getFile();
+      if (report != null) {
+         if (Alert.showLocQuestion(p + "store")) {
+            U.log("Removing crash report...");
+            File file = new File(report);
+            if (!file.exists()) {
+               U.log("File is already removed. LOL.");
+            } else {
+               if (!file.delete()) {
+                  U.log("Can't delete crash report file. Okay.");
+                  Alert.showLocMessage(p + "store.failed");
+                  return;
+               }
 
-		if (!crash.isRecognized()) {
-			Alert.showLocError(title, p + "unknown", null);
-		} else {
-			for (CrashSignature sign : crash.getSignatures()) {
-				String path = sign.getPath(), message = p + path, url = message
-						+ ".url";
-				URI uri = U.makeURI(url);
+               U.log("Yay, crash report file doesn't exist by now.");
+            }
 
-				if (uri != null) {
-					if (Alert.showLocQuestion(title, message, report))
-						OperatingSystem.openLink(uri);
-				} else
-					Alert.showLocMessage(title, message, report);
-			}
-		}
+            Alert.showLocMessage(p + "store.success");
+         }
 
-		if (report == null)
-			return;
+      }
+   }
 
-		if (Alert.showLocQuestion(p + "store")) {
-			U.log("Removing crash report...");
+   public void onMinecraftError(Throwable e) {
+      Alert.showLocError("launcher.error.title", "launcher.error.unknown", e);
+   }
 
-			File file = new File(report);
-			if (!file.exists())
-				U.log("File is already removed. LOL.");
-			else {
-
-				if (!file.delete()) {
-					U.log("Can't delete crash report file. Okay.");
-					Alert.showLocMessage(p + "store.failed");
-					return;
-				}
-
-				U.log("Yay, crash report file doesn't exist by now.");
-			}
-			Alert.showLocMessage(p + "store.success");
-		}
-	}
-
-	@Override
-	public void onMinecraftError(Throwable e) {
-		Alert.showLocError("launcher.error.title", "launcher.error.unknown", e);
-	}
-
-	@Override
-	public void onMinecraftKnownError(MinecraftException e) {
-		Alert.showError(
-				lang.get("launcher.error.title"),
-				lang.get("launcher.error." + e.getLangPath(),
-						(Object[]) e.getLangVars()), e);
-	}
-
+   public void onMinecraftKnownError(MinecraftException e) {
+      Alert.showError(this.lang.get("launcher.error.title"), this.lang.get("launcher.error." + e.getLangPath(), e.getLangVars()), e);
+   }
 }

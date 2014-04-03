@@ -1,14 +1,13 @@
 package com.turikhay.tlauncher.downloader;
 
 public interface DownloadableContainerHandler {
-	void onStart(DownloadableContainer c);
+   void onStart(DownloadableContainer var1);
 
-	void onAbort(DownloadableContainer c);
+   void onAbort(DownloadableContainer var1);
 
-	void onError(DownloadableContainer c, Downloadable d, Throwable e);
+   void onError(DownloadableContainer var1, Downloadable var2, Throwable var3);
 
-	void onComplete(DownloadableContainer c, Downloadable d)
-			throws RetryDownloadException;
+   void onComplete(DownloadableContainer var1, Downloadable var2) throws RetryDownloadException;
 
-	void onFullComplete(DownloadableContainer c);
+   void onFullComplete(DownloadableContainer var1);
 }

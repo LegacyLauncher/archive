@@ -1,7 +1,7 @@
 package com.turikhay.tlauncher.managers;
 
 public interface ComponentManagerListener {
-	public void onComponentsRefreshing(ComponentManager manager);
+   void onComponentsRefreshing(ComponentManager var1);
 
-	public void onComponentsRefreshed(ComponentManager manager);
+   void onComponentsRefreshed(ComponentManager var1);
 }

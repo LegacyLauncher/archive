@@ -1,61 +1,58 @@
 package com.turikhay.tlauncher.managers;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import com.turikhay.tlauncher.component.LauncherComponent;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
-public class ComponentManagerListenerHelper extends LauncherComponent implements
-		Blockable, VersionManagerListener {
-	private final List<ComponentManagerListener> listeners;
+public class ComponentManagerListenerHelper extends LauncherComponent implements Blockable, VersionManagerListener {
+   private final List listeners = Collections.synchronizedList(new ArrayList());
 
-	public ComponentManagerListenerHelper(ComponentManager manager)
-			throws Exception {
-		super(manager);
+   public ComponentManagerListenerHelper(ComponentManager manager) throws Exception {
+      super(manager);
+      ((VersionManager)manager.getComponent(VersionManager.class)).addListener(this);
+   }
 
-		this.listeners = Collections
-				.synchronizedList(new ArrayList<ComponentManagerListener>());
+   public void addListener(ComponentManagerListener listener) {
+      if (listener == null) {
+         throw new NullPointerException();
+      } else {
+         this.listeners.add(listener);
+      }
+   }
 
-		manager.getComponent(VersionManager.class).addListener(this);
-	}
+   public void onVersionsRefreshing(VersionManager manager) {
+      Blocker.block((Blockable)this, (Object)manager);
+   }
 
-	public void addListener(ComponentManagerListener listener) {
-		if (listener == null)
-			throw new NullPointerException();
+   public void onVersionsRefreshingFailed(VersionManager manager) {
+      Blocker.unblock((Blockable)this, (Object)manager);
+   }
 
-		this.listeners.add(listener);
-	}
+   public void onVersionsRefreshed(VersionManager manager) {
+      Blocker.unblock((Blockable)this, (Object)manager);
+   }
 
-	@Override
-	public void onVersionsRefreshing(VersionManager manager) {
-		Blocker.block(this, manager);
-	}
+   public void block(Object reason) {
+      Iterator var3 = this.listeners.iterator();
 
-	@Override
-	public void onVersionsRefreshingFailed(VersionManager manager) {
-		Blocker.unblock(this, manager);
-	}
+      while(var3.hasNext()) {
+         ComponentManagerListener listener = (ComponentManagerListener)var3.next();
+         listener.onComponentsRefreshing(this.manager);
+      }
 
-	@Override
-	public void onVersionsRefreshed(VersionManager manager) {
-		Blocker.unblock(this, manager);
-	}
+   }
 
-	//
+   public void unblock(Object reason) {
+      Iterator var3 = this.listeners.iterator();
 
-	@Override
-	public void block(Object reason) {
-		for (ComponentManagerListener listener : listeners)
-			listener.onComponentsRefreshing(manager);
-	}
+      while(var3.hasNext()) {
+         ComponentManagerListener listener = (ComponentManagerListener)var3.next();
+         listener.onComponentsRefreshed(this.manager);
+      }
 
-	@Override
-	public void unblock(Object reason) {
-		for (ComponentManagerListener listener : listeners)
-			listener.onComponentsRefreshed(manager);
-	}
-
+   }
 }

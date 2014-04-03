@@ -1,10 +1,5 @@
 package com.turikhay.tlauncher.ui.accounts;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JPopupMenu;
-
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.managers.ProfileManager;
 import com.turikhay.tlauncher.minecraft.auth.Account;
@@ -12,200 +7,175 @@ import com.turikhay.tlauncher.minecraft.auth.Authenticator;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import com.turikhay.tlauncher.ui.accounts.helper.HelperState;
 import com.turikhay.tlauncher.ui.alert.Alert;
+import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.block.Blocker;
 import com.turikhay.tlauncher.ui.listener.AuthUIListener;
 import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.util.U;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JPopupMenu;
 
 public class AccountHandler {
-	private final AccountEditorScene scene;
+   private final AccountEditorScene scene;
+   public final AccountList list;
+   public final AccountEditor editor;
+   private final ProfileManager manager = TLauncher.getInstance().getProfileManager();
+   private final AuthUIListener listener;
+   private Account lastAccount;
+   private Account tempAccount;
+   private JPopupMenu popup;
 
-	public final AccountList list;
-	public final AccountEditor editor;
+   public AccountHandler(AccountEditorScene sc) {
+      this.scene = sc;
+      this.list = this.scene.list;
+      this.editor = this.scene.editor;
+      this.popup = new JPopupMenu();
+      HelperState[] var5;
+      int var4 = (var5 = HelperState.values()).length;
 
-	private final ProfileManager manager;
-	private final AuthUIListener listener;
+      for(int var3 = 0; var3 < var4; ++var3) {
+         final HelperState state = var5[var3];
+         if (state.showInList) {
+            state.item.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  AccountHandler.this.scene.helper.setState(state);
+               }
+            });
+            this.popup.add(state.item);
+         }
+      }
 
-	private Account lastAccount;
-	private Account tempAccount;
+      this.listener = new AuthUIListener(false, new AuthenticatorListener() {
+         public void onAuthPassing(Authenticator auth) {
+            AccountHandler.this.block();
+         }
 
-	private JPopupMenu popup;
+         public void onAuthPassingError(Authenticator auth, Throwable e) {
+            AccountHandler.this.unblock();
+         }
 
-	public AccountHandler(AccountEditorScene sc) {
-		this.manager = TLauncher.getInstance().getProfileManager();
-		this.scene = sc;
+         public void onAuthPassed(Authenticator auth) {
+            AccountHandler.this.unblock();
+            AccountHandler.this.registerTemp();
+         }
+      });
+   }
 
-		this.list = scene.list;
-		this.editor = scene.editor;
+   public void selectAccount(Account acc) {
+      if (acc != null) {
+         if (!acc.equals((Account)this.list.list.getSelectedValue())) {
+            this.list.list.setSelectedValue(acc, true);
+         }
+      }
+   }
 
-		this.popup = new JPopupMenu();
+   void refreshEditor(Account account) {
+      if (account == null) {
+         this.clearEditor();
+      } else if (!account.equals(this.lastAccount)) {
+         this.lastAccount = account;
+         Blocker.unblock((Blockable)this.editor, (Object)"empty");
+         this.editor.fill(account);
+         if (!account.equals(this.tempAccount)) {
+            this.scene.getMainPane().defaultScene.loginForm.accounts.setAccount(this.lastAccount);
+         }
 
-		for (final HelperState state : HelperState.values()) {
-			if (!state.showInList)
-				continue;
+      }
+   }
 
-			state.item.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					scene.helper.setState(state);
-				}
-			});
+   void clearEditor() {
+      this.lastAccount = null;
+      this.editor.clear();
+      if (!this.list.model.isEmpty()) {
+         this.list.list.setSelectedValue(this.lastAccount, true);
+      } else {
+         this.notifyEmpty();
+      }
 
-			popup.add(state.item);
-		}
+   }
 
-		this.listener = new AuthUIListener(false, new AuthenticatorListener() {
-			@Override
-			public void onAuthPassing(Authenticator auth) {
-				block();
-			}
+   void saveEditor() {
+      if (this.lastAccount != null) {
+         Account acc = this.editor.get();
+         if (acc.getUsername() == null) {
+            Alert.showLocError("auth.error.nousername");
+         } else {
+            this.lastAccount.complete(acc);
+            if (this.lastAccount.hasLicense()) {
+               if (this.lastAccount.getAccessToken() == null && this.lastAccount.getPassword() == null) {
+                  Alert.showLocError("auth.error.nopass");
+                  return;
+               }
 
-			@Override
-			public void onAuthPassingError(Authenticator auth, Throwable e) {
-				unblock();
-			}
+               this.lastAccount.getAuthenticator().asyncPass(this.listener);
+            } else {
+               this.registerTemp();
+               this.listener.saveProfiles();
+            }
 
-			@Override
-			public void onAuthPassed(Authenticator auth) {
-				unblock();
-				registerTemp();
-			}
+         }
+      }
+   }
 
-		});
-	}
+   void exitEditor() {
+      this.scene.getMainPane().openDefaultScene();
+      this.listener.saveProfiles();
+   }
 
-	public void selectAccount(Account acc) {
-		if (acc == null)
-			return;
-		if (acc.equals(list.list.getSelectedValue()))
-			return;
+   void addAccount() {
+      if (this.tempAccount == null) {
+         this.tempAccount = new Account();
+         this.list.model.addElement(this.tempAccount);
+         this.list.list.setSelectedValue(this.tempAccount, true);
+         this.refreshEditor(this.tempAccount);
+      }
+   }
 
-		list.list.setSelectedValue(acc, true);
-	}
+   void removeAccount() {
+      if (this.lastAccount != null) {
+         Account acc = this.lastAccount;
+         this.list.model.removeElement(this.lastAccount);
+         this.lastAccount = acc;
+         if (this.tempAccount != null) {
+            this.tempAccount = null;
+            this.clearEditor();
+         } else {
+            U.log("Removing", this.lastAccount);
+            this.manager.getAuthDatabase().unregisterAccount(this.lastAccount);
+            this.clearEditor();
+            this.listener.saveProfiles();
+         }
+      }
+   }
 
-	void refreshEditor(Account account) {
-		if (account == null) {
-			clearEditor();
-			return;
-		}
+   void registerTemp() {
+      if (this.tempAccount != null) {
+         this.manager.getAuthDatabase().registerAccount(this.tempAccount);
+         this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount.getUsername());
+         this.tempAccount = null;
+      }
+   }
 
-		if (account.equals(lastAccount))
-			return;
+   void notifyEmpty() {
+      Blocker.block((Blockable)this.editor, (Object)"empty");
+      if (this.scene.helper.isShowing()) {
+         this.scene.helper.setState(HelperState.HELP);
+      }
 
-		lastAccount = account;
+   }
 
-		Blocker.unblock(editor, "empty");
-		editor.fill(account);
+   void callPopup() {
+      if (!this.popup.isShowing()) {
+         this.popup.show(this.list.help, 0, this.list.help.getHeight());
+      }
+   }
 
-		if (!account.equals(tempAccount))
-			scene.getMainPane().defaultScene.loginForm.accounts
-					.setAccount(lastAccount);
-	}
+   private void block() {
+      Blocker.block((Object)"auth", (Blockable[])(this.editor, this.list));
+   }
 
-	void clearEditor() {
-		lastAccount = null;
-		editor.clear();
-
-		if (!list.model.isEmpty())
-			list.list.setSelectedValue(lastAccount, true);
-		else
-			notifyEmpty();
-	}
-
-	void saveEditor() {
-		if (lastAccount == null)
-			return;
-
-		Account acc = editor.get();
-
-		if (acc.getUsername() == null) {
-			Alert.showLocError("auth.error.nousername");
-			return;
-		}
-
-		lastAccount.complete(acc);
-
-		if (lastAccount.hasLicense()) {
-			if (lastAccount.getAccessToken() == null
-					&& lastAccount.getPassword() == null) {
-				Alert.showLocError("auth.error.nopass");
-				return;
-			}
-			lastAccount.getAuthenticator().asyncPass(listener);
-		} else {
-			registerTemp();
-			listener.saveProfiles();
-		}
-	}
-
-	void exitEditor() {
-		scene.getMainPane().openDefaultScene();
-		listener.saveProfiles();
-	}
-
-	void addAccount() {
-		if (tempAccount != null)
-			return;
-
-		this.tempAccount = new Account();
-
-		list.model.addElement(tempAccount);
-		list.list.setSelectedValue(tempAccount, true);
-		refreshEditor(tempAccount);
-	}
-
-	void removeAccount() {
-		if (lastAccount == null)
-			return;
-
-		Account acc = lastAccount;
-
-		list.model.removeElement(lastAccount);
-
-		this.lastAccount = acc;
-
-		if (tempAccount != null) {
-			tempAccount = null;
-			clearEditor();
-			return;
-		}
-
-		U.log("Removing", lastAccount);
-		manager.getAuthDatabase().unregisterAccount(lastAccount);
-
-		clearEditor();
-		listener.saveProfiles();
-	}
-
-	void registerTemp() {
-		if (tempAccount == null)
-			return;
-
-		manager.getAuthDatabase().registerAccount(tempAccount);
-		scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(
-				manager.getAuthDatabase(), tempAccount.getUsername());
-
-		tempAccount = null;
-	}
-
-	void notifyEmpty() {
-		Blocker.block(editor, "empty");
-
-		if (scene.helper.isShowing())
-			scene.helper.setState(HelperState.HELP);
-	}
-
-	void callPopup() {
-		if (popup.isShowing())
-			return;
-		popup.show(list.help, 0, list.help.getHeight());
-	}
-
-	private void block() {
-		Blocker.block("auth", editor, list);
-	}
-
-	private void unblock() {
-		Blocker.unblock("auth", editor, list);
-	}
+   private void unblock() {
+      Blocker.unblock((Object)"auth", (Blockable[])(this.editor, this.list));
+   }
 }
