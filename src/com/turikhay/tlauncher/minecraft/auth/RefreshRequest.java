@@ -1,39 +1,42 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
 class RefreshRequest extends Request {
-   private String clientToken;
-   private String accessToken;
-   private GameProfile selectedProfile;
-   private boolean requestUser;
+	private String clientToken;
+	private String accessToken;
+	private GameProfile selectedProfile;
 
-   private RefreshRequest(String clientToken, String accessToken, GameProfile profile) {
-      this.requestUser = true;
-      this.clientToken = clientToken;
-      this.accessToken = accessToken;
-      this.selectedProfile = profile;
-   }
+	@SuppressWarnings("unused")
+	private boolean requestUser = true;
 
-   RefreshRequest(String clientToken, String accessToken) {
-      this(clientToken, accessToken, (GameProfile)null);
-   }
+	private RefreshRequest(String clientToken, String accessToken,
+			GameProfile profile) {
+		this.clientToken = clientToken;
+		this.accessToken = accessToken;
+		this.selectedProfile = profile;
+	}
 
-   private RefreshRequest(Authenticator auth, GameProfile profile) {
-      this(auth.getClientToken().toString(), auth.account.getAccessToken(), profile);
-   }
+	RefreshRequest(String clientToken, String accessToken) {
+		this(clientToken, accessToken, null);
+	}
 
-   RefreshRequest(Authenticator auth) {
-      this((Authenticator)auth, (GameProfile)null);
-   }
+	private RefreshRequest(Authenticator auth, GameProfile profile) {
+		this(auth.getClientToken().toString(), auth.account.getAccessToken(),
+				profile);
+	}
 
-   public String getClientToken() {
-      return this.clientToken;
-   }
+	RefreshRequest(Authenticator auth) {
+		this(auth, null);
+	}
 
-   public String getAccessToken() {
-      return this.accessToken;
-   }
+	public String getClientToken() {
+		return clientToken;
+	}
 
-   public GameProfile getProfile() {
-      return this.selectedProfile;
-   }
+	public String getAccessToken() {
+		return accessToken;
+	}
+
+	public GameProfile getProfile() {
+		return selectedProfile;
+	}
 }

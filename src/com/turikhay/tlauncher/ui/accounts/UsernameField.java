@@ -4,40 +4,40 @@ import com.turikhay.tlauncher.ui.center.CenterPanel;
 import com.turikhay.tlauncher.ui.loc.LocalizableTextField;
 
 public class UsernameField extends LocalizableTextField {
-   private static final long serialVersionUID = -5813187607562947592L;
-   private UsernameField.UsernameState state;
-   String username;
+	private static final long serialVersionUID = -5813187607562947592L;
 
-   public UsernameField(CenterPanel pan, UsernameField.UsernameState state) {
-      super(pan, "account.username");
-      this.setState(state);
-   }
+	private UsernameState state;
+	String username;
 
-   public UsernameField.UsernameState getState() {
-      return this.state;
-   }
+	public UsernameField(CenterPanel pan, UsernameState state) {
+		super(pan, "account.username");
+		this.setState(state);
+	}
 
-   public void setState(UsernameField.UsernameState state) {
-      if (state == null) {
-         throw new NullPointerException();
-      } else {
-         this.state = state;
-         this.setPlaceholder(state.placeholder);
-      }
-   }
+	public UsernameState getState() {
+		return state;
+	}
 
-   public static enum UsernameState {
-      USERNAME("account.username"),
-      EMAIL("account.email");
+	public void setState(UsernameState state) {
+		if (state == null)
+			throw new NullPointerException();
 
-      private final String placeholder;
+		this.state = state;
+		this.setPlaceholder(state.placeholder);
+	}
 
-      private UsernameState(String placeholder) {
-         this.placeholder = placeholder;
-      }
+	public enum UsernameState {
+		USERNAME("account.username"), EMAIL("account.email");
 
-      public String getPlaceholder() {
-         return this.placeholder;
-      }
-   }
+		private final String placeholder;
+
+		UsernameState(String placeholder) {
+			this.placeholder = placeholder;
+		}
+
+		public String getPlaceholder() {
+			return placeholder;
+		}
+	}
+
 }

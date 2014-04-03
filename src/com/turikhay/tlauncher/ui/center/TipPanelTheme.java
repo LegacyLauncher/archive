@@ -3,13 +3,11 @@ package com.turikhay.tlauncher.ui.center;
 import java.awt.Color;
 
 public class TipPanelTheme extends DefaultCenterPanelTheme {
-   private final Color borderColor;
+	private final Color borderColor = failureColor;
 
-   public TipPanelTheme() {
-      this.borderColor = this.failureColor;
-   }
+	@Override
+	public Color getBorder() {
+		return borderColor;
+	}
 
-   public Color getBorder() {
-      return this.borderColor;
-   }
 }
