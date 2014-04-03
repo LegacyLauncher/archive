@@ -1,5 +1,7 @@
 package com.turikhay.tlauncher.ui.swing;
 
+import com.turikhay.tlauncher.ui.images.ImageCache;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import java.awt.AlphaComposite;
 import java.awt.Composite;
 import java.awt.Dimension;
@@ -11,179 +13,197 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
-import com.turikhay.tlauncher.ui.images.ImageCache;
-import com.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
+import java.awt.image.ImageObserver;
 
 public class ImageButton extends ExtendedButton {
-	private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
+   protected Image image;
+   protected ImageButton.ImageRotation rotation;
+   private int margin;
+   private boolean pressed;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
 
-	protected Image image;
-	protected ImageRotation rotation = ImageRotation.CENTER;
-	private int margin = 4;
+   protected ImageButton() {
+      this.rotation = ImageButton.ImageRotation.CENTER;
+      this.margin = 4;
+      this.initListeners();
+   }
 
-	private boolean pressed;
+   private ImageButton(String label, Image image, ImageButton.ImageRotation rotation, int margin) {
+      super(label);
+      this.rotation = ImageButton.ImageRotation.CENTER;
+      this.margin = 4;
+      this.image = image;
+      this.rotation = rotation;
+      this.margin = margin;
+      this.initListeners();
+   }
 
-	protected ImageButton() {
-		this.initListeners();
-	}
+   private ImageButton(String label, Image image, ImageButton.ImageRotation rotation) {
+      this(label, (Image)image, rotation, 4);
+   }
 
-	private ImageButton(String label, Image image, ImageRotation rotation,
-			int margin) {
-		super(label);
+   private ImageButton(String label, Image image) {
+      this(label, image, ImageButton.ImageRotation.CENTER);
+   }
 
-		this.image = image;
-		this.rotation = rotation;
-		this.margin = margin;
+   public ImageButton(String imagepath) {
+      this((String)null, (Image)loadImage(imagepath));
+   }
 
-		this.initListeners();
-	}
+   public ImageButton(String label, String imagepath, ImageButton.ImageRotation rotation, int margin) {
+      this(label, loadImage(imagepath), rotation, margin);
+   }
 
-	private ImageButton(String label, Image image, ImageRotation rotation) {
-		this(label, image, rotation, 4);
-	}
+   public ImageButton(String label, String imagepath, ImageButton.ImageRotation rotation) {
+      this(label, loadImage(imagepath), rotation);
+   }
 
-	private ImageButton(String label, Image image) {
-		this(label, image, ImageRotation.CENTER);
-	}
+   public ImageButton(String label, String imagepath) {
+      this(label, loadImage(imagepath));
+   }
 
-	public ImageButton(String imagepath) {
-		this(null, loadImage(imagepath));
-	}
+   public Image getImage() {
+      return this.image;
+   }
 
-	public ImageButton(String label, String imagepath, ImageRotation rotation,
-			int margin) {
-		this(label, loadImage(imagepath), rotation, margin);
-	}
+   public ImageButton.ImageRotation getRotation() {
+      return this.rotation;
+   }
 
-	public ImageButton(String label, String imagepath, ImageRotation rotation) {
-		this(label, loadImage(imagepath), rotation);
-	}
+   public int getImageMargin() {
+      return this.margin;
+   }
 
-	public ImageButton(String label, String imagepath) {
-		this(label, loadImage(imagepath));
-	}
+   public void update(Graphics g) {
+      super.update(g);
+      this.paint(g);
+   }
 
-	public Image getImage() {
-		return image;
-	}
+   public void paint(Graphics g0) {
+      super.paint(g0);
+      if (this.image != null) {
+         Graphics2D g = (Graphics2D)g0;
+         String text = this.getText();
+         boolean drawtext = text != null && text.length() > 0;
+         FontMetrics fm = g.getFontMetrics();
+         float opacity = this.isEnabled() ? 1.0F : 0.5F;
+         int width = this.getWidth();
+         int height = this.getHeight();
+         int rmargin = this.margin;
+         int offset = this.pressed ? 1 : 0;
+         int iwidth = this.image.getWidth((ImageObserver)null);
+         int iheight = this.image.getHeight((ImageObserver)null);
+         int ix = false;
+         int iy = height / 2 - iheight / 2;
+         int twidth;
+         if (drawtext) {
+            twidth = fm.stringWidth(text);
+         } else {
+            rmargin = 0;
+            twidth = 0;
+         }
 
-	public ImageRotation getRotation() {
-		return rotation;
-	}
+         int ix;
+         switch($SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation()[this.rotation.ordinal()]) {
+         case 1:
+            ix = width / 2 - twidth / 2 - iwidth - rmargin;
+            break;
+         case 2:
+            ix = width / 2 - iwidth / 2;
+            break;
+         case 3:
+            ix = width / 2 + twidth / 2 + rmargin;
+            break;
+         default:
+            throw new IllegalStateException("Unknown rotation!");
+         }
 
-	public int getImageMargin() {
-		return margin;
-	}
+         Composite c = g.getComposite();
+         g.setComposite(AlphaComposite.getInstance(3, opacity));
+         g.drawImage(this.image, ix + offset, iy + offset, (ImageObserver)null);
+         g.setComposite(c);
+         this.pressed = false;
+      }
+   }
 
-	@Override
-	public void update(Graphics g) {
-		super.update(g);
-		this.paint(g);
-	}
+   protected static Image loadImage(String path) {
+      return ImageCache.getImage(path);
+   }
 
-	@Override
-	public void paint(Graphics g0) {
-		super.paint(g0);
-		if (image == null)
-			return;
+   protected void initImage() {
+      if (this.image != null) {
+         this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null) + 10));
+      }
+   }
 
-		Graphics2D g = (Graphics2D) g0;
+   private void initListeners() {
+      this.initImage();
+      this.addMouseListener(new MouseListener() {
+         public void mouseClicked(MouseEvent e) {
+         }
 
-		String text = getText();
-		boolean drawtext = text != null && text.length() > 0;
-		FontMetrics fm = g.getFontMetrics();
+         public void mouseEntered(MouseEvent e) {
+         }
 
-		float opacity = (isEnabled()) ? 1.0F : .5F;
-		int width = getWidth(), height = getHeight(), rmargin = margin;
-		int offset = (pressed) ? 1 : 0;
-		int iwidth = image.getWidth(null), iheight = image.getHeight(null), twidth;
-		int ix = 0, iy = height / 2 - iheight / 2;
+         public void mouseExited(MouseEvent e) {
+         }
 
-		if (drawtext)
-			twidth = fm.stringWidth(text);
-		else
-			twidth = rmargin = 0;
+         public void mousePressed(MouseEvent e) {
+            ImageButton.this.pressed = true;
+         }
 
-		switch (rotation) {
-		case LEFT:
-			ix = width / 2 - twidth / 2 - iwidth - rmargin;
-			break;
-		case CENTER:
-			ix = width / 2 - iwidth / 2;
-			break;
-		case RIGHT:
-			ix = width / 2 + twidth / 2 + rmargin;
-			break;
-		default:
-			throw new IllegalStateException("Unknown rotation!");
-		}
-		Composite c = g.getComposite();
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-				opacity));
-		g.drawImage(image, ix + offset, iy + offset, null);
-		g.setComposite(c);
+         public void mouseReleased(MouseEvent e) {
+         }
+      });
+      this.addKeyListener(new KeyListener() {
+         public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == 32) {
+               ImageButton.this.pressed = true;
+            }
+         }
 
-		pressed = false;
-	}
+         public void keyReleased(KeyEvent e) {
+            ImageButton.this.pressed = false;
+         }
 
-	protected static Image loadImage(String path) {
-		return ImageCache.getImage(path);
-	}
+         public void keyTyped(KeyEvent e) {
+         }
+      });
+   }
 
-	protected void initImage() {
-		if (image == null)
-			return;
-		this.setPreferredSize(new Dimension(image.getWidth(null), image
-				.getHeight(null) + 10));
-	}
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation() {
+      int[] var10000 = $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[ImageButton.ImageRotation.values().length];
 
-	private void initListeners() {
-		initImage();
+         try {
+            var0[ImageButton.ImageRotation.CENTER.ordinal()] = 2;
+         } catch (NoSuchFieldError var3) {
+         }
 
-		this.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-			}
+         try {
+            var0[ImageButton.ImageRotation.LEFT.ordinal()] = 1;
+         } catch (NoSuchFieldError var2) {
+         }
 
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
+         try {
+            var0[ImageButton.ImageRotation.RIGHT.ordinal()] = 3;
+         } catch (NoSuchFieldError var1) {
+         }
 
-			@Override
-			public void mouseExited(MouseEvent e) {
-			}
+         $SWITCH_TABLE$com$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation = var0;
+         return var0;
+      }
+   }
 
-			@Override
-			public void mousePressed(MouseEvent e) {
-				pressed = true;
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
-		});
-
-		this.addKeyListener(new KeyListener() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() != 32)
-					return;
-				pressed = true;
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				pressed = false;
-			}
-
-			@Override
-			public void keyTyped(KeyEvent e) {
-			}
-		});
-	}
-
-	public enum ImageRotation {
-		LEFT, CENTER, RIGHT
-	}
+   public static enum ImageRotation {
+      LEFT,
+      CENTER,
+      RIGHT;
+   }
 }

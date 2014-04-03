@@ -1,76 +1,77 @@
 package com.turikhay.tlauncher.ui.settings;
 
+import com.turikhay.tlauncher.ui.block.Blockable;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
-import com.turikhay.tlauncher.ui.block.Blockable;
-
 public abstract class SettingsHandler implements Blockable {
-	private final String path;
-	private String value;
+   private final String path;
+   private String value;
+   private final List listeners;
 
-	private final List<SettingsFieldListener> listeners;
+   SettingsHandler(String path) {
+      if (path == null) {
+         throw new NullPointerException();
+      } else {
+         this.path = path;
+         this.listeners = Collections.synchronizedList(new ArrayList());
+      }
+   }
 
-	SettingsHandler(String path) {
-		if (path == null)
-			throw new NullPointerException();
+   public boolean addListener(SettingsFieldListener listener) {
+      if (listener == null) {
+         throw new NullPointerException();
+      } else {
+         return this.listeners.add(listener);
+      }
+   }
 
-		this.path = path;
-		this.listeners = Collections
-				.synchronizedList(new ArrayList<SettingsFieldListener>());
-	}
+   public boolean removeListener(SettingsFieldListener listener) {
+      if (listener == null) {
+         throw new NullPointerException();
+      } else {
+         return this.listeners.remove(listener);
+      }
+   }
 
-	public boolean addListener(SettingsFieldListener listener) {
-		if (listener == null)
-			throw new NullPointerException();
+   void onChange(String newvalue) {
+      Iterator var3 = this.listeners.iterator();
 
-		return listeners.add(listener);
-	}
+      while(var3.hasNext()) {
+         SettingsFieldListener listener = (SettingsFieldListener)var3.next();
+         listener.onChange(this, this.value, newvalue);
+      }
 
-	public boolean removeListener(SettingsFieldListener listener) {
-		if (listener == null)
-			throw new NullPointerException();
+      this.value = newvalue;
+   }
 
-		return listeners.remove(listener);
-	}
+   public String getPath() {
+      return this.path;
+   }
 
-	void onChange(String newvalue) {
-		for (SettingsFieldListener listener : listeners)
-			listener.onChange(this, value, newvalue);
+   public void updateValue(Object obj) {
+      String val = obj == null ? null : obj.toString();
+      this.onChange(val);
+      this.setValue0(this.value);
+   }
 
-		this.value = newvalue;
-	}
+   public void setValue(Object obj) {
+      String val = obj == null ? null : obj.toString();
+      this.setValue0(val);
+   }
 
-	public String getPath() {
-		return path;
-	}
+   public abstract boolean isValid();
 
-	public void updateValue(Object obj) {
-		String val = (obj == null) ? null : obj.toString();
+   public abstract Component getComponent();
 
-		this.onChange(val);
-		this.setValue0(value);
-	}
+   public abstract String getValue();
 
-	public void setValue(Object obj) {
-		String val = (obj == null) ? null : obj.toString();
+   protected abstract void setValue0(String var1);
 
-		this.setValue0(val);
-	}
-
-	public abstract boolean isValid();
-
-	public abstract Component getComponent();
-
-	public abstract String getValue();
-
-	protected abstract void setValue0(String s);
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "{path='" + path + "', value='"
-				+ value + "'}";
-	}
+   public String toString() {
+      return this.getClass().getSimpleName() + "{path='" + this.path + "', value='" + this.value + "'}";
+   }
 }

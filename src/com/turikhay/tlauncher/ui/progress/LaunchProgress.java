@@ -1,105 +1,85 @@
 package com.turikhay.tlauncher.ui.progress;
 
-import java.awt.Component;
-
 import com.turikhay.tlauncher.minecraft.crash.Crash;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftExtendedListener;
+import java.awt.Component;
 
-public class LaunchProgress extends DownloaderProgress implements
-		MinecraftExtendedListener {
-	private static final long serialVersionUID = -1003141285749311799L;
+public class LaunchProgress extends DownloaderProgress implements MinecraftExtendedListener {
+   private static final long serialVersionUID = -1003141285749311799L;
 
-	public LaunchProgress(Component parentComp) {
-		super(parentComp);
-	}
+   public LaunchProgress(Component parentComp) {
+      super(parentComp);
+   }
 
-	@Override
-	public void clearProgress() {
-		this.setIndeterminate(false);
-		this.setValue(0);
+   public void clearProgress() {
+      this.setIndeterminate(false);
+      this.setValue(0);
+      this.setCenterString((String)null);
+      this.setEastString((String)null);
+   }
 
-		this.setCenterString(null);
-		this.setEastString(null);
-	}
+   private void setupBar() {
+      this.startProgress();
+      this.setIndeterminate(true);
+   }
 
-	private void setupBar() {
-		startProgress();
-		setIndeterminate(true);
-	}
+   public void onMinecraftPrepare() {
+      this.setupBar();
+   }
 
-	@Override
-	public void onMinecraftPrepare() {
-		setupBar();
-	}
+   public void onMinecraftCollecting() {
+      this.setWestString("launcher.step.collecting");
+   }
 
-	@Override
-	public void onMinecraftCollecting() {
-		setWestString("launcher.step.collecting");
-	}
+   public void onMinecraftComparingAssets() {
+      this.setWestString("launcher.step.comparing-assets");
+   }
 
-	@Override
-	public void onMinecraftComparingAssets() {
-		setWestString("launcher.step.comparing-assets");
-	}
+   public void onMinecraftDownloading() {
+      this.setWestString("launcher.step.downloading");
+   }
 
-	@Override
-	public void onMinecraftDownloading() {
-		setWestString("launcher.step.downloading");
-	}
+   public void onMinecraftReconstructingAssets() {
+      this.setupBar();
+      this.setWestString("launcher.step.reconstructing-assets");
+   }
 
-	@Override
-	public void onMinecraftReconstructingAssets() {
-		setupBar();
-		setWestString("launcher.step.reconstructing-assets");
-	}
+   public void onMinecraftUnpackingNatives() {
+      this.setWestString("launcher.step.unpacking-natives");
+   }
 
-	@Override
-	public void onMinecraftUnpackingNatives() {
-		setWestString("launcher.step.unpacking-natives");
-	}
+   public void onMinecraftDeletingEntries() {
+      this.setWestString("launcher.step.deleting-entries");
+   }
 
-	@Override
-	public void onMinecraftDeletingEntries() {
-		setWestString("launcher.step.deleting-entries");
-	}
+   public void onMinecraftConstructing() {
+      this.setWestString("launcher.step.constructing");
+   }
 
-	@Override
-	public void onMinecraftConstructing() {
-		setWestString("launcher.step.constructing");
-	}
+   public void onMinecraftPostLaunch() {
+   }
 
-	@Override
-	public void onMinecraftPostLaunch() {
-	}
+   public void onMinecraftAbort() {
+      this.stopProgress();
+   }
 
-	@Override
-	public void onMinecraftAbort() {
-		stopProgress();
-	}
+   public void onMinecraftLaunch() {
+      this.stopProgress();
+   }
 
-	@Override
-	public void onMinecraftLaunch() {
-		stopProgress();
-	}
+   public void onMinecraftClose() {
+   }
 
-	@Override
-	public void onMinecraftClose() {
-	}
+   public void onMinecraftError(Throwable e) {
+      this.stopProgress();
+   }
 
-	@Override
-	public void onMinecraftError(Throwable e) {
-		stopProgress();
-	}
+   public void onMinecraftKnownError(MinecraftException e) {
+      this.stopProgress();
+   }
 
-	@Override
-	public void onMinecraftKnownError(MinecraftException e) {
-		stopProgress();
-	}
-
-	@Override
-	public void onMinecraftCrash(Crash crash) {
-		stopProgress();
-	}
-
+   public void onMinecraftCrash(Crash crash) {
+      this.stopProgress();
+   }
 }

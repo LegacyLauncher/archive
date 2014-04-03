@@ -1,12 +1,14 @@
 package LZMA;
 
-class LzmaException extends java.io.IOException {
-	private static final long serialVersionUID = 3689351022372206390L;
+import java.io.IOException;
 
-	public LzmaException() {
-	}
+class LzmaException extends IOException {
+   private static final long serialVersionUID = 3689351022372206390L;
 
-	public LzmaException(String msg) {
-		super(msg);
-	}
+   public LzmaException() {
+   }
+
+   public LzmaException(String msg) {
+      super(msg);
+   }
 }

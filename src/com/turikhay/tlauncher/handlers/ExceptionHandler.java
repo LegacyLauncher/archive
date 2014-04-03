@@ -2,63 +2,69 @@ package com.turikhay.tlauncher.handlers;
 
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.util.U;
+import java.lang.Thread.UncaughtExceptionHandler;
 
-public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
-	private static ExceptionHandler instance;
-	private static long gcLastCall;
+public class ExceptionHandler implements UncaughtExceptionHandler {
+   private static ExceptionHandler instance;
+   private static long gcLastCall;
 
-	public static ExceptionHandler getInstance() {
-		if (instance == null)
-			instance = new ExceptionHandler();
-		return instance;
-	}
+   public static ExceptionHandler getInstance() {
+      if (instance == null) {
+         instance = new ExceptionHandler();
+      }
 
-	private ExceptionHandler() {
-	}
+      return instance;
+   }
 
-	@Override
-	public void uncaughtException(Thread t, Throwable e) {
-		OutOfMemoryError asOOM = U.getAs(e, OutOfMemoryError.class);
-		if (asOOM != null && reduceMemory(asOOM))
-			return;
+   private ExceptionHandler() {
+   }
 
-		if (scanTrace(e))
-			try {
-				Alert.showError("Exception in thread " + t.getName(), e);
-			} catch (Exception w) {
-				System.exit(2);
-			}
-		else
-			U.log("Hidden exception in thread " + t.getName(), e);
-	}
+   public void uncaughtException(Thread t, Throwable e) {
+      OutOfMemoryError asOOM = (OutOfMemoryError)U.getAs(e, OutOfMemoryError.class);
+      if (asOOM == null || !reduceMemory(asOOM)) {
+         if (scanTrace(e)) {
+            try {
+               Alert.showError("Exception in thread " + t.getName(), (Object)e);
+            } catch (Exception var5) {
+               System.exit(2);
+            }
+         } else {
+            U.log("Hidden exception in thread " + t.getName(), e);
+         }
 
-	public static boolean reduceMemory(OutOfMemoryError e) {
-		if (e == null)
-			return false;
+      }
+   }
 
-		U.log("OutOfMemory error has occurred, solving...");
-		long currentTime = System.currentTimeMillis(), diff = Math
-				.abs(currentTime - gcLastCall);
+   public static boolean reduceMemory(OutOfMemoryError e) {
+      if (e == null) {
+         return false;
+      } else {
+         U.log("OutOfMemory error has occurred, solving...");
+         long currentTime = System.currentTimeMillis();
+         long diff = Math.abs(currentTime - gcLastCall);
+         if (diff > 5000L) {
+            gcLastCall = currentTime;
+            U.gc();
+            return true;
+         } else {
+            U.log("GC is unable to reduce memory usage");
+            return false;
+         }
+      }
+   }
 
-		if (diff > 5000) {
-			gcLastCall = currentTime;
+   private static boolean scanTrace(Throwable e) {
+      StackTraceElement[] elements = e.getStackTrace();
+      StackTraceElement[] var5 = elements;
+      int var4 = elements.length;
 
-			U.gc();
+      for(int var3 = 0; var3 < var4; ++var3) {
+         StackTraceElement element = var5[var3];
+         if (element.getClassName().startsWith("com.turikhay")) {
+            return true;
+         }
+      }
 
-			return true;
-		}
-
-		U.log("GC is unable to reduce memory usage");
-		return false;
-	}
-
-	private static boolean scanTrace(Throwable e) {
-		StackTraceElement[] elements = e.getStackTrace();
-
-		for (StackTraceElement element : elements)
-			if (element.getClassName().startsWith(U.PROGRAM_PACKAGE))
-				return true;
-
-		return false;
-	}
+      return false;
+   }
 }

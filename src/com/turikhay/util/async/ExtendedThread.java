@@ -3,89 +3,84 @@ package com.turikhay.util.async;
 import com.turikhay.util.U;
 
 public abstract class ExtendedThread extends Thread {
-	private static int threadNum;
+   private static int threadNum;
+   private final ExtendedThread.ExtendedThreadCaller caller;
+   private String blockReason;
 
-	private final ExtendedThreadCaller caller;
-	private String blockReason;
+   public ExtendedThread(String name) {
+      super(name + "#" + threadNum++);
+      this.caller = new ExtendedThread.ExtendedThreadCaller();
+   }
 
-	public ExtendedThread(String name) {
-		super(name + "#" + (threadNum++));
+   public ExtendedThread() {
+      this("ExtendedThread");
+   }
 
-		this.caller = new ExtendedThreadCaller();
-	}
+   public ExtendedThread.ExtendedThreadCaller getCaller() {
+      return this.caller;
+   }
 
-	public ExtendedThread() {
-		this("ExtendedThread");
-	}
+   public void startAndWait() {
+      super.start();
 
-	public ExtendedThreadCaller getCaller() {
-		return caller;
-	}
+      while(!this.isThreadBlocked()) {
+         U.sleepFor(100L);
+      }
 
-	/**
-	 * Starts new thread with <code>start()</code> method and waits until it is
-	 * blocked.
-	 */
-	public void startAndWait() {
-		super.start();
+   }
 
-		while (!isThreadBlocked())
-			U.sleepFor(100);
-	}
+   public abstract void run();
 
-	@Override
-	public abstract void run();
+   protected synchronized void blockThread(String reason) {
+      if (reason == null) {
+         throw new NullPointerException();
+      } else {
+         this.checkCurrent();
+         this.blockReason = reason;
+         this.threadLog("Thread locked by:", this.blockReason);
 
-	protected synchronized void blockThread(String reason) {
-		if (reason == null)
-			throw new NullPointerException();
+         while(this.blockReason != null) {
+            try {
+               this.wait();
+            } catch (InterruptedException var3) {
+               return;
+            }
+         }
 
-		checkCurrent();
+         this.threadLog("Thread has been unlocked");
+      }
+   }
 
-		this.blockReason = reason;
+   public synchronized void unblockThread(String reason) {
+      if (reason == null) {
+         throw new NullPointerException();
+      } else if (this.blockReason != null && this.blockReason.equals(reason)) {
+         this.blockReason = null;
+         this.notifyAll();
+      } else {
+         throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
+      }
+   }
 
-		threadLog("Thread locked by:", blockReason);
+   public boolean isThreadBlocked() {
+      return this.blockReason != null;
+   }
 
-		while (blockReason != null)
-			try {
-				wait();
-			} catch (InterruptedException interrputed) {
-				return;
-			}
+   public boolean isCurrent() {
+      return Thread.currentThread().equals(this);
+   }
 
-		threadLog("Thread has been unlocked");
-	}
+   protected void checkCurrent() {
+      if (!this.isCurrent()) {
+         throw new IllegalStateException("Illegal thread!");
+      }
+   }
 
-	public synchronized void unblockThread(String reason) {
-		if (reason == null)
-			throw new NullPointerException();
+   protected void threadLog(Object... o) {
+      U.log("[" + this.getName() + "]", o);
+   }
 
-		if (blockReason == null || !blockReason.equals(reason))
-			throw new IllegalStateException("Unlocking denied! Locked with: "
-					+ blockReason + ", tried to unlock with: " + reason);
-
-		this.blockReason = null;
-		notifyAll();
-	}
-
-	public boolean isThreadBlocked() {
-		return blockReason != null;
-	}
-
-	public boolean isCurrent() {
-		return Thread.currentThread().equals(this);
-	}
-
-	protected void checkCurrent() {
-		if (!isCurrent())
-			throw new IllegalStateException("Illegal thread!");
-	}
-
-	protected void threadLog(Object... o) {
-		U.log("[" + getName() + "]", o);
-	}
-
-	public class ExtendedThreadCaller extends RuntimeException {
-		private static final long serialVersionUID = -9184403765829112550L;
-	}
+   public class ExtendedThreadCaller extends RuntimeException {
+      private static final long serialVersionUID = -9184403765829112550L;
+   }
 }

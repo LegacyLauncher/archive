@@ -1,173 +1,149 @@
 package com.turikhay.tlauncher.minecraft.auth;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.UUID;
-
-import net.minecraft.launcher.Http;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
+import java.io.IOException;
+import java.net.URL;
+import java.util.UUID;
+import net.minecraft.launcher.Http;
+import org.apache.commons.lang3.StringUtils;
 
 public class Authenticator {
-	private static final URL ROUTE_AUTHENTICATE = Http
-			.constantURL("https://authserver.mojang.com/authenticate");
-	private static final URL ROUTE_REFRESH = Http
-			.constantURL("https://authserver.mojang.com/refresh");
-	// private static final URL ROUTE_VALIDATE =
-	// Http.constantURL("https://authserver.mojang.com/validate");
-	// private static final URL ROUTE_INVALIDATE =
-	// Http.constantURL("https://authserver.mojang.com/invalidate");
-	// private static final URL ROUTE_SIGNOUT =
-	// Http.constantURL("https://authserver.mojang.com/signout");
+   private static final URL ROUTE_AUTHENTICATE = Http.constantURL("https://authserver.mojang.com/authenticate");
+   private static final URL ROUTE_REFRESH = Http.constantURL("https://authserver.mojang.com/refresh");
+   public final Account account;
+   private final Authenticator instance;
+   private final Gson gson;
 
-	public final Account account;
+   public Authenticator(Account account) {
+      if (account == null) {
+         throw new NullPointerException();
+      } else {
+         this.instance = this;
+         GsonBuilder builder = new GsonBuilder();
+         builder.registerTypeAdapter(UUID.class, new UUIDTypeAdapter());
+         this.gson = builder.create();
+         this.account = account;
+      }
+   }
 
-	private final Authenticator instance;
-	private final Gson gson;
+   public UUID getClientToken() {
+      return TLauncher.getInstance().getProfileManager().getClientToken();
+   }
 
-	public Authenticator(Account account) {
-		if (account == null)
-			throw new NullPointerException();
+   private void setClientToken(String uuid) {
+      TLauncher.getInstance().getProfileManager().setClientToken(uuid);
+   }
 
-		this.instance = this;
-		this.gson = new Gson();
+   void pass() throws AuthenticatorException {
+      if (!this.account.hasLicense()) {
+         throw new IllegalArgumentException("Invalid account type!");
+      } else if (this.account.getPassword() == null && this.account.getAccessToken() == null) {
+         throw new AuthenticatorException("Password and token are NULL!");
+      } else {
+         this.log("Staring to authenticate:");
+         this.log("hasUsername:", this.account.getUsername());
+         this.log("hasPassword:", this.account.getPassword() != null);
+         this.log("hasAccessToken:", this.account.getAccessToken() != null);
+         if (this.account.getPassword() == null) {
+            this.tokenLogin();
+         } else {
+            this.passwordLogin();
+         }
 
-		this.account = account;
-	}
+         this.log("Log in successful!");
+         this.log("hasUUID:", this.account.getUUID() != null);
+         this.log("hasAccessToken:", this.account.getAccessToken() != null);
+         this.log("hasProfiles:", this.account.getProfiles() != null);
+         this.log("hasProfile:", this.account.getProfiles() != null);
+         this.log("hasProperties:", this.account.getProperties() != null);
+      }
+   }
 
-	public UUID getClientToken() {
-		return TLauncher.getInstance().getProfileManager().getClientToken();
-	}
+   public boolean pass(AuthenticatorListener l) {
+      if (l != null) {
+         l.onAuthPassing(this.instance);
+      }
 
-	private void setClientToken(String uuid) {
-		TLauncher.getInstance().getProfileManager().setClientToken(uuid);
-	}
+      try {
+         this.instance.pass();
+      } catch (Exception var3) {
+         this.log("Cannot authenticate:", var3);
+         if (l != null) {
+            l.onAuthPassingError(this.instance, var3);
+         }
 
-	void pass() throws AuthenticatorException {
-		if (!account.hasLicense())
-			throw new IllegalArgumentException("Invalid account type!");
+         return false;
+      }
 
-		if (account.getPassword() == null && account.getAccessToken() == null)
-			throw new AuthenticatorException("Password and token are NULL!");
+      if (l != null) {
+         l.onAuthPassed(this.instance);
+      }
 
-		log("Staring to authenticate:");
-		log("hasUsername:", account.getUsername());
-		log("hasPassword:", account.getPassword() != null);
-		log("hasAccessToken:", account.getAccessToken() != null);
+      return true;
+   }
 
-		if (account.getPassword() == null)
-			tokenLogin();
-		else
-			passwordLogin();
+   public void asyncPass(final AuthenticatorListener l) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Authenticator.this.pass(l);
+         }
+      });
+   }
 
-		log("Log in successful!");
+   void passwordLogin() throws AuthenticatorException {
+      this.log("Loggining in with password");
+      AuthenticationRequest request = new AuthenticationRequest(this);
+      AuthenticationResponse response = (AuthenticationResponse)this.makeRequest(ROUTE_AUTHENTICATE, request, AuthenticationResponse.class);
+      this.account.setUserID(response.getUserID() != null ? response.getUserID() : this.account.getUsername());
+      this.account.setAccessToken(response.getAccessToken());
+      this.account.setProfiles(response.getAvailableProfiles());
+      this.account.setProfile(response.getSelectedProfile());
+      this.account.setUser(response.getUser());
+      this.setClientToken(response.getClientToken());
+      if (response.getSelectedProfile() != null) {
+         this.account.setUUID(response.getSelectedProfile().getId());
+         this.account.setDisplayName(response.getSelectedProfile().getName());
+      }
 
-		log("hasUUID:", account.getUUID() != null);
-		log("hasAccessToken:", account.getAccessToken() != null);
-		log("hasProfiles:", account.getProfiles() != null);
-		log("hasProfile:", account.getProfiles() != null);
-		log("hasProperties:", account.getProperties() != null);
-	}
+   }
 
-	public boolean pass(AuthenticatorListener l) {
-		if (l != null)
-			l.onAuthPassing(instance);
+   void tokenLogin() throws AuthenticatorException {
+      this.log("Loggining in with token");
+      RefreshRequest request = new RefreshRequest(this);
+      RefreshResponse response = (RefreshResponse)this.makeRequest(ROUTE_REFRESH, request, RefreshResponse.class);
+      this.setClientToken(response.getClientToken());
+      this.account.setAccessToken(response.getAccessToken());
+      this.account.setProfile(response.getSelectedProfile());
+      this.account.setUser(response.getUser());
+   }
 
-		try {
-			instance.pass();
-		} catch (Exception e) {
-			log("Cannot authenticate:", e);
-			if (l != null)
-				l.onAuthPassingError(instance, e);
-			return false;
-		}
-		if (l != null)
-			l.onAuthPassed(instance);
-		return true;
-	}
+   Response makeRequest(URL url, Request input, Class classOfT) throws AuthenticatorException {
+      String jsonResult;
+      try {
+         jsonResult = input == null ? AuthenticatorService.performGetRequest(url) : AuthenticatorService.performPostRequest(url, this.gson.toJson((Object)input), "application/json");
+      } catch (IOException var6) {
+         throw new AuthenticatorException("Error making request, uncaught IOException", "unreachable", var6);
+      }
 
-	public void asyncPass(final AuthenticatorListener l) {
-		AsyncThread.execute(new Runnable() {
-			@Override
-			public void run() {
-				pass(l);
-			}
-		});
-	}
+      Response result = (Response)this.gson.fromJson(jsonResult, classOfT);
+      if (result == null) {
+         return null;
+      } else if (StringUtils.isBlank(result.getError())) {
+         return result;
+      } else if ("UserMigratedException".equals(result.getCause())) {
+         throw new UserMigratedException();
+      } else if (result.getError().equals("ForbiddenOperationException")) {
+         throw new InvalidCredentialsException();
+      } else {
+         throw new AuthenticatorException(result.getErrorMessage(), "internal");
+      }
+   }
 
-	void passwordLogin() throws AuthenticatorException {
-		log("Loggining in with password");
-
-		AuthenticationRequest request = new AuthenticationRequest(this);
-		AuthenticationResponse response = makeRequest(ROUTE_AUTHENTICATE,
-				request, AuthenticationResponse.class);
-
-		account.setUserID((response.getUserID() != null) ? response.getUserID()
-				: account.getUsername());
-		account.setAccessToken(response.getAccessToken());
-		account.setProfiles(response.getAvailableProfiles());
-		account.setProfile(response.getSelectedProfile());
-		account.setUser(response.getUser());
-
-		this.setClientToken(response.getClientToken());
-
-		if (response.getSelectedProfile() != null) {
-			account.setUUID(response.getSelectedProfile().getId());
-			account.setDisplayName(response.getSelectedProfile().getName());
-		}
-	}
-
-	void tokenLogin() throws AuthenticatorException {
-		log("Loggining in with token");
-
-		RefreshRequest request = new RefreshRequest(this);
-		RefreshResponse response = makeRequest(ROUTE_REFRESH, request,
-				RefreshResponse.class);
-
-		this.setClientToken(response.getClientToken());
-
-		account.setAccessToken(response.getAccessToken());
-		account.setProfile(response.getSelectedProfile());
-		account.setUser(response.getUser());
-	}
-
-	<T extends Response> T makeRequest(URL url, Request input, Class<T> classOfT)
-			throws AuthenticatorException {
-		String jsonResult;
-
-		try {
-			jsonResult = (input == null) ? AuthenticatorService
-					.performGetRequest(url) : AuthenticatorService
-					.performPostRequest(url, this.gson.toJson(input),
-							"application/json");
-		} catch (IOException e) {
-			throw new AuthenticatorException(
-					"Error making request, uncaught IOException",
-					"unreachable", e);
-		}
-
-		T result = this.gson.fromJson(jsonResult, classOfT);
-
-		if (result == null)
-			return null;
-		if (StringUtils.isBlank(result.getError()))
-			return result;
-
-		if ("UserMigratedException".equals(result.getCause()))
-			throw new UserMigratedException();
-
-		if (result.getError().equals("ForbiddenOperationException"))
-			throw new InvalidCredentialsException();
-
-		throw new AuthenticatorException(result.getErrorMessage(), "internal");
-	}
-
-	void log(Object... o) {
-		U.log("[AUTH]", o);
-	}
+   void log(Object... o) {
+      U.log("[AUTH]", o);
+   }
 }
