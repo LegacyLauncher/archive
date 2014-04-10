@@ -1,5 +1,6 @@
 package net.minecraft.launcher;
 
+import com.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import com.turikhay.util.U;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -15,6 +16,7 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.net.ssl.HttpsURLConnection;
 
 public class Http {
    private static String buildQuery(Map query) {
@@ -56,6 +58,11 @@ public class Http {
       connection.setConnectTimeout(connTimeout);
       connection.setReadTimeout(readTimeout);
       connection.setRequestMethod("GET");
+      HttpsURLConnection securedConnection = (HttpsURLConnection)U.getAs(connection, HttpsURLConnection.class);
+      if (securedConnection != null) {
+         securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
+      }
+
       BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       StringBuilder response = new StringBuilder();
 
@@ -93,6 +100,11 @@ public class Http {
       connection.setUseCaches(false);
       connection.setDoInput(true);
       connection.setDoOutput(true);
+      HttpsURLConnection securedConnection = (HttpsURLConnection)U.getAs(connection, HttpsURLConnection.class);
+      if (securedConnection != null) {
+         securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
+      }
+
       DataOutputStream writer = new DataOutputStream(connection.getOutputStream());
       writer.write(paramAsBytes);
       writer.flush();

@@ -185,7 +185,7 @@ public class TLauncherFrame extends JFrame {
       try {
          UIDefaults defaults = UIManager.getDefaults();
          int minSize = 12;
-         int maxSize = 14;
+         int maxSize = 12;
          Enumeration e = defaults.keys();
 
          while(e.hasMoreElements()) {

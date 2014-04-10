@@ -481,7 +481,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       if (execContainer.isAborted()) {
          throw new AbortedDownloadException();
       } else if (!execContainer.getErrors().isEmpty()) {
-         throw new MinecraftException(execContainer.getErrors().size() + " errors occurred while trying to download executable files.", "download", new Object[0]);
+         throw new MinecraftException(execContainer.getErrors().size() + " error(s) occurred while trying to download executable files.\n" + "First error: " + U.toLog(execContainer.getErrors().get(0)) + "\nRest of stack trace:", "download", new Object[0]);
       } else {
          try {
             this.vm.getLocalList().saveVersion(this.version);

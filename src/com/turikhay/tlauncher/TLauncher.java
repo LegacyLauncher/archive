@@ -6,6 +6,7 @@ import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.configuration.LangConfiguration;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.handlers.ExceptionHandler;
+import com.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import com.turikhay.tlauncher.managers.ComponentManager;
 import com.turikhay.tlauncher.managers.ComponentManagerListenerHelper;
 import com.turikhay.tlauncher.managers.ProfileManager;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Locale;
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -37,7 +39,7 @@ import joptsimple.OptionSet;
 import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   private static final double VERSION = 0.91D;
+   private static final double VERSION = 0.95D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -259,6 +261,8 @@ public class TLauncher {
    public static void main(String[] args) {
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
+      Thread.currentThread().setUncaughtExceptionHandler(handler);
+      HttpsURLConnection.setDefaultHostnameVerifier(SimpleHostnameVerifier.getInstance());
       U.setPrefix("[TLauncher]");
       MirroredLinkedStringStream stream = new MirroredLinkedStringStream();
       stream.setMirror(System.out);
@@ -279,7 +283,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.91D);
+      U.log("Starting TLauncher", "Original", 0.95D);
       U.log("Machine info:", OperatingSystem.getCurrentInfo());
       U.log("---");
       sargs = args;
@@ -325,7 +329,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.91D;
+      return 0.95D;
    }
 
    public static String getBrand() {
