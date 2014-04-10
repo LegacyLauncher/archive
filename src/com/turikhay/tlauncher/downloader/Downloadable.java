@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.downloader;
 
+import com.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import com.turikhay.tlauncher.repository.Repository;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.U;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import javax.net.ssl.HttpsURLConnection;
 
 public class Downloadable {
    private static final boolean DEFAULT_FORCE = false;
@@ -235,6 +237,10 @@ public class Downloadable {
             handler.onError(this, e);
          }
 
+         if (this.container != null) {
+            this.container.onError(this, e);
+         }
+
       }
    }
 
@@ -256,6 +262,11 @@ public class Downloadable {
          connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
          connection.setRequestProperty("Expires", "0");
          connection.setRequestProperty("Pragma", "no-cache");
+         HttpsURLConnection securedConnection = (HttpsURLConnection)U.getAs(connection, HttpsURLConnection.class);
+         if (securedConnection != null) {
+            securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
+         }
+
          if (!fake) {
             return connection;
          } else {

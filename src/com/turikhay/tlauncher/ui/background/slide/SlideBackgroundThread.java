@@ -5,15 +5,14 @@ import com.turikhay.tlauncher.ui.explorer.ImageFileFilter;
 import com.turikhay.tlauncher.ui.images.ImageCache;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.U;
-import com.turikhay.util.async.ExtendedThread;
+import com.turikhay.util.async.LoopedThread;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.regex.Pattern;
 
-public class SlideBackgroundThread extends ExtendedThread {
-   private static final String REFRESH_BLOCK = "refresh";
+public class SlideBackgroundThread extends LoopedThread {
    private static final Pattern extensionPattern;
    private final SlideBackground background;
    final Slide defaultSlide;
@@ -46,7 +45,7 @@ public class SlideBackgroundThread extends ExtendedThread {
    }
 
    public void asyncRefreshSlide() {
-      this.unblockThread("refresh");
+      this.iterate();
    }
 
    public synchronized void setSlide(Slide slide, boolean animate) {
@@ -70,11 +69,8 @@ public class SlideBackgroundThread extends ExtendedThread {
       }
    }
 
-   public void run() {
-      while(true) {
-         this.blockThread("refresh");
-         this.refreshSlide(true);
-      }
+   protected void iterateOnce() {
+      this.refreshSlide(true);
    }
 
    private URL getImageURL(String path) {

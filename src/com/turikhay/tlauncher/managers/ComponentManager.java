@@ -5,7 +5,7 @@ import com.turikhay.tlauncher.component.ComponentDependence;
 import com.turikhay.tlauncher.component.InterruptibleComponent;
 import com.turikhay.tlauncher.component.LauncherComponent;
 import com.turikhay.tlauncher.component.RefreshableComponent;
-import com.turikhay.util.async.ExtendedThread;
+import com.turikhay.util.async.LoopedThread;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ComponentManager {
-   private static final String REFRESH_LOCK = "refresh";
    private final TLauncher tlauncher;
    private final List components;
    private final ComponentManager.ComponentManagerRefresher refresher;
@@ -133,7 +132,7 @@ public class ComponentManager {
    }
 
    public void startAsyncRefresh() {
-      this.refresher.unblockThread("refresh");
+      this.refresher.iterate();
    }
 
    void startRefresh() {
@@ -162,7 +161,7 @@ public class ComponentManager {
 
    }
 
-   class ComponentManagerRefresher extends ExtendedThread {
+   class ComponentManagerRefresher extends LoopedThread {
       private final ComponentManager parent;
 
       ComponentManagerRefresher(ComponentManager manager) {
@@ -170,11 +169,8 @@ public class ComponentManager {
          this.parent = manager;
       }
 
-      public void run() {
-         while(true) {
-            this.blockThread("refresh");
-            this.parent.startRefresh();
-         }
+      protected void iterateOnce() {
+         this.parent.startRefresh();
       }
    }
 }

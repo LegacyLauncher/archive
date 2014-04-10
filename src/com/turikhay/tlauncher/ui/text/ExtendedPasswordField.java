@@ -10,13 +10,13 @@ import javax.swing.event.DocumentListener;
 
 public class ExtendedPasswordField extends JPasswordField {
    private static final long serialVersionUID = 3175896797135831502L;
-   private static final String DEFAULT_PLACEHOLDER = "пассворд, лол";
+   private static final String DEFAULT_PLACEHOLDER = "РїР°СЃСЃРІРѕСЂРґ, Р»РѕР»";
    private CenterPanelTheme theme;
    private String placeholder;
 
    private ExtendedPasswordField(CenterPanel panel, String placeholder) {
       this.theme = panel == null ? CenterPanel.defaultTheme : panel.getTheme();
-      this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
+      this.placeholder = placeholder == null ? "РїР°СЃСЃРІРѕСЂРґ, Р»РѕР»" : placeholder;
       this.addFocusListener(new FocusListener() {
          public void focusGained(FocusEvent e) {
             ExtendedPasswordField.this.onFocusGained();
@@ -99,7 +99,7 @@ public class ExtendedPasswordField extends JPasswordField {
    }
 
    public void setPlaceholder(String placeholder) {
-      this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
+      this.placeholder = placeholder == null ? "РїР°СЃСЃРІРѕСЂРґ, Р»РѕР»" : placeholder;
       if (this.getValue() == null) {
          this.setPlaceholder();
       }
