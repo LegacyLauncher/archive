@@ -21,6 +21,7 @@ import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.console.Console;
 import com.turikhay.util.FileUtil;
 import com.turikhay.util.MinecraftUtil;
+import com.turikhay.util.OS;
 import com.turikhay.util.U;
 import com.turikhay.util.logger.LinkedStringStream;
 import com.turikhay.util.logger.PrintLogger;
@@ -44,7 +45,6 @@ import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import joptsimple.OptionSet;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessListener;
@@ -67,7 +67,6 @@ public class MinecraftLauncher implements JavaProcessListener {
    private final Thread parentThread;
    private final Gson gson;
    private final DateTypeAdapter dateAdapter;
-   private final OperatingSystem os;
    private final Downloader downloader;
    private final Configuration settings;
    private final boolean forceUpdate;
@@ -153,7 +152,6 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.parentThread = Thread.currentThread();
          this.gson = new Gson();
          this.dateAdapter = new DateTypeAdapter();
-         this.os = OperatingSystem.getCurrentPlatform();
          this.downloader = downloader;
          this.settings = configuration;
          this.assistants = manager.getComponentsOf(MinecraftLauncherAssistant.class);
@@ -171,7 +169,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.step = MinecraftLauncher.MinecraftLauncherStep.NONE;
          this.log("Minecraft Launcher [14;6] has initialized");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
-         this.log("Current machine:", OperatingSystem.getCurrentInfo());
+         this.log("Current machine:", OS.getSummary());
       }
    }
 
@@ -294,7 +292,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                   throw new NullPointerException("Complete version is NULL");
                } else {
                   String javaDirPath = this.settings.get("minecraft.javadir");
-                  this.javaDir = new File(javaDirPath == null ? this.os.getJavaDir() : javaDirPath);
+                  this.javaDir = new File(javaDirPath == null ? OS.getJavaPath() : javaDirPath);
                   this.log("Java path:", this.javaDir);
                   this.gameDir = new File(this.settings.get("minecraft.gamedir"));
 
@@ -545,7 +543,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       this.launcher = new JavaProcessLauncher(this.javaDir.getAbsolutePath(), new String[0]);
       this.launcher.directory(this.gameDir);
-      if (this.os.equals(OperatingSystem.OSX)) {
+      if (OS.OSX.isCurrent()) {
          File icon = null;
 
          try {
@@ -559,7 +557,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          }
       }
 
-      this.launcher.addCommand(this.os.is32Bit() ? "-Xmx512M" : "-Xmx1G");
+      this.launcher.addCommand("-Xmx" + OS.Arch.getRecommendedMemory() + "M");
       this.launcher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
       this.launcher.addCommand("-cp", this.constructClassPath(this.version));
       if (this.javaArgs != null) {
@@ -644,11 +642,12 @@ public class MinecraftLauncher implements JavaProcessListener {
    private void unpackNatives(boolean force) throws IOException {
       this.log("Unpacking natives...");
       Collection libraries = this.version.getRelevantLibraries();
+      OS os = OS.CURRENT;
       if (force) {
          this.nativeDir.delete();
       }
 
-      Iterator var6 = libraries.iterator();
+      Iterator var7 = libraries.iterator();
 
       label68:
       while(true) {
@@ -656,16 +655,16 @@ public class MinecraftLauncher implements JavaProcessListener {
          Map nativesPerOs;
          do {
             do {
-               if (!var6.hasNext()) {
+               if (!var7.hasNext()) {
                   return;
                }
 
-               library = (Library)var6.next();
+               library = (Library)var7.next();
                nativesPerOs = library.getNatives();
             } while(nativesPerOs == null);
-         } while(nativesPerOs.get(this.os) == null);
+         } while(nativesPerOs.get(os) == null);
 
-         File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String)nativesPerOs.get(this.os)));
+         File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String)nativesPerOs.get(os)));
          ZipFile zip = new ZipFile(file);
          ExtractRules extractRules = library.getExtractRules();
          Enumeration entries = zip.entries();
@@ -720,7 +719,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    private String constructClassPath(CompleteVersion version) throws MinecraftException {
       this.log("Constructing classpath...");
       StringBuilder result = new StringBuilder();
-      Collection classPath = version.getClassPath(this.os, this.gameDir);
+      Collection classPath = version.getClassPath(OS.CURRENT, this.gameDir);
       String separator = System.getProperty("path.separator");
 
       File file;

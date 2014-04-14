@@ -8,11 +8,11 @@ import com.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.loc.Localizable;
+import com.turikhay.util.OS;
 import com.turikhay.util.U;
 import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
-import net.minecraft.launcher.OperatingSystem;
 
 public class MinecraftUIListener implements MinecraftListener {
    private final TLauncher t;
@@ -65,7 +65,7 @@ public class MinecraftUIListener implements MinecraftListener {
             URI uri = U.makeURI(url);
             if (uri != null) {
                if (Alert.showLocQuestion(title, message, report)) {
-                  OperatingSystem.openLink(uri);
+                  OS.openLink(uri);
                }
             } else {
                Alert.showLocMessage(title, message, report);

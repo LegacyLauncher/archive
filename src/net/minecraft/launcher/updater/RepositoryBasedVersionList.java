@@ -2,9 +2,9 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
 import com.turikhay.tlauncher.repository.Repository;
+import com.turikhay.util.OS;
 import java.io.IOException;
 import java.util.Iterator;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Version;
 
@@ -37,7 +37,7 @@ public class RepositoryBasedVersionList extends RemoteVersionList {
       return complete;
    }
 
-   public boolean hasAllFiles(CompleteVersion paramCompleteVersion, OperatingSystem paramOperatingSystem) {
+   public boolean hasAllFiles(CompleteVersion paramCompleteVersion, OS paramOperatingSystem) {
       return true;
    }
 

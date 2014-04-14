@@ -224,6 +224,14 @@ public class Configuration extends SimpleConfiguration {
       }
    }
 
+   public void setForcefully(String key, Object value, boolean flush) {
+      super.set(key, value, flush);
+   }
+
+   public void setForcefully(String key, Object value) {
+      this.setForcefully(key, value, true);
+   }
+
    public void save() throws IOException {
       if (!this.isSaveable()) {
          throw new UnsupportedOperationException();

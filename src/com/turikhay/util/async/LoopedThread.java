@@ -11,7 +11,7 @@ public abstract class LoopedThread extends ExtendedThread {
       this("LoopedThread");
    }
 
-   protected synchronized void blockThread(String reason) {
+   protected final synchronized void blockThread(String reason) {
       if (reason == null) {
          throw new NullPointerException();
       } else if (!reason.equals("iteration")) {
@@ -21,18 +21,18 @@ public abstract class LoopedThread extends ExtendedThread {
       }
    }
 
-   public boolean isIterating() {
+   public final boolean isIterating() {
       return !this.isThreadBlocked();
    }
 
-   public void iterate() {
+   public final void iterate() {
       if (!this.isIterating()) {
          this.unblockThread("iteration");
       }
 
    }
 
-   public void run() {
+   public final void run() {
       while(true) {
          this.blockThread("iteration");
          this.iterateOnce();

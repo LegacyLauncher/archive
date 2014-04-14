@@ -26,6 +26,7 @@ public class CenterPanel extends BlockablePanel {
    private static final Insets defaultInsets = new Insets(5, 24, 18, 24);
    protected static final Insets squareInsets = new Insets(15, 15, 15, 15);
    protected static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
+   protected static final int ARC_SIZE = 32;
    private final Insets insets;
    private final CenterPanelTheme theme;
    protected final JPanel messagePanel;
@@ -62,14 +63,13 @@ public class CenterPanel extends BlockablePanel {
 
    public void paintComponent(Graphics g0) {
       Graphics2D g = (Graphics2D)g0;
-      int arc = 32;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g.setColor(this.getBackground());
-      g.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
+      g.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), 32, 32);
       g.setColor(this.theme.getBorder());
 
       for(int x = 1; x < 2; ++x) {
-         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, arc, arc);
+         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 32, 32);
       }
 
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);

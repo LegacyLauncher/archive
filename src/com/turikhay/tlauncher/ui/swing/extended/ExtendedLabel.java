@@ -8,6 +8,7 @@ public class ExtendedLabel extends JLabel {
 
    private ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
       super(text, icon, horizontalAlignment);
+      this.setFont(this.getFont().deriveFont(12.0F));
       this.setOpaque(false);
    }
 

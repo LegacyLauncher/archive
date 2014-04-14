@@ -21,14 +21,14 @@ public class VersionCellRenderer implements ListCellRenderer {
    private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
 
    public Component getListCellRendererComponent(JList list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
-      JLabel renderer = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-      renderer.setAlignmentY(0.5F);
+      JLabel mainText = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+      mainText.setAlignmentY(0.5F);
       if (value == null) {
-         renderer.setText("(null)");
+         mainText.setText("(null)");
       } else if (value.equals(LOADING)) {
-         renderer.setText(Localizable.get("versions.loading"));
+         mainText.setText(Localizable.get("versions.loading"));
       } else if (value.equals(EMPTY)) {
-         renderer.setText(Localizable.get("versions.notfound.tip"));
+         mainText.setText(Localizable.get("versions.notfound.tip"));
       } else {
          LatestVersionSyncInfo asLatest = value instanceof LatestVersionSyncInfo ? (LatestVersionSyncInfo)value : null;
          ReleaseType type = value.getLatestVersion().getReleaseType();
@@ -43,15 +43,13 @@ public class VersionCellRenderer implements ListCellRenderer {
          }
 
          String text = label != null ? label + " " + id : id;
-         renderer.setText(text);
+         mainText.setText(text);
          if (!value.isInstalled()) {
-            Color currentColor = renderer.getBackground();
-            int colorShift = currentColor.getRGB() < this.averageColor ? 30 : -30;
-            renderer.setBackground(U.shiftColor(currentColor, colorShift));
+            mainText.setBackground(U.shiftColor(mainText.getBackground(), mainText.getBackground().getRGB() < this.averageColor ? 32 : -32));
          }
       }
 
-      return renderer;
+      return mainText;
    }
 
    // $FF: synthetic method

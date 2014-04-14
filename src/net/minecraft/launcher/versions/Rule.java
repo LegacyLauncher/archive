@@ -1,8 +1,8 @@
 package net.minecraft.launcher.versions;
 
+import com.turikhay.util.OS;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.minecraft.launcher.OperatingSystem;
 
 public class Rule {
    private Rule.Action action;
@@ -35,7 +35,7 @@ public class Rule {
    }
 
    public class OSRestriction {
-      private OperatingSystem name;
+      private OS name;
       private String version;
 
       public OSRestriction(Rule.OSRestriction osRestriction) {
@@ -44,7 +44,7 @@ public class Rule {
       }
 
       public boolean isCurrentOperatingSystem() {
-         if (this.name != null && this.name != OperatingSystem.getCurrentPlatform()) {
+         if (this.name != null && this.name != OS.CURRENT) {
             return false;
          } else {
             if (this.version != null) {

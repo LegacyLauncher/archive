@@ -3,6 +3,7 @@ package net.minecraft.launcher.updater;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.turikhay.util.OS;
 import com.turikhay.util.Time;
 import com.turikhay.util.U;
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -169,7 +169,7 @@ public abstract class VersionList {
       }
    }
 
-   public abstract boolean hasAllFiles(CompleteVersion var1, OperatingSystem var2);
+   public abstract boolean hasAllFiles(CompleteVersion var1, OS var2);
 
    protected abstract String getUrl(String var1) throws IOException;
 

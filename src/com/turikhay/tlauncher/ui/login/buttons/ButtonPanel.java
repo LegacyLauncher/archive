@@ -10,10 +10,10 @@ public class ButtonPanel extends BlockablePanel {
    private static final long serialVersionUID = -2155145867054136409L;
    public final PlayButton play;
    private final JPanel manageButtonsPanel;
-   private final SupportButton support;
-   private final FolderButton folder;
-   private final RefreshButton refresh;
-   private final SettingsButton settings;
+   public final SupportButton support;
+   public final FolderButton folder;
+   public final RefreshButton refresh;
+   public final SettingsButton settings;
    public final CancelAutoLoginButton cancel;
    private ButtonPanel.ButtonPanelState state;
    // $FF: synthetic field

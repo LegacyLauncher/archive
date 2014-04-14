@@ -4,11 +4,10 @@ import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import java.io.File;
 import java.io.IOException;
-import net.minecraft.launcher.OperatingSystem;
 
 public class MinecraftUtil {
    // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem;
+   private static int[] $SWITCH_TABLE$com$turikhay$util$OS;
 
    public static File getWorkingDirectory() {
       if (TLauncher.getInstance() == null) {
@@ -35,7 +34,7 @@ public class MinecraftUtil {
    public static File getSystemRelatedFile(String path) {
       String userHome = System.getProperty("user.home", ".");
       File file;
-      switch($SWITCH_TABLE$net$minecraft$launcher$OperatingSystem()[OperatingSystem.getCurrentPlatform().ordinal()]) {
+      switch($SWITCH_TABLE$com$turikhay$util$OS()[OS.CURRENT.ordinal()]) {
       case 1:
       case 4:
          file = new File(userHome, path);
@@ -56,9 +55,9 @@ public class MinecraftUtil {
    }
 
    public static File getDefaultWorkingDirectory() {
-      OperatingSystem os = OperatingSystem.getCurrentPlatform();
+      OS os = OS.CURRENT;
       String path = "." + TLauncher.getFolder();
-      if (os == OperatingSystem.OSX || os == OperatingSystem.UNKNOWN) {
+      if (os == OS.OSX || os == OS.UNKNOWN) {
          path = TLauncher.getFolder();
       }
 
@@ -74,39 +73,39 @@ public class MinecraftUtil {
    }
 
    // $FF: synthetic method
-   static int[] $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem() {
-      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem;
+   static int[] $SWITCH_TABLE$com$turikhay$util$OS() {
+      int[] var10000 = $SWITCH_TABLE$com$turikhay$util$OS;
       if (var10000 != null) {
          return var10000;
       } else {
-         int[] var0 = new int[OperatingSystem.values().length];
+         int[] var0 = new int[OS.values().length];
 
          try {
-            var0[OperatingSystem.LINUX.ordinal()] = 1;
+            var0[OS.LINUX.ordinal()] = 1;
          } catch (NoSuchFieldError var5) {
          }
 
          try {
-            var0[OperatingSystem.OSX.ordinal()] = 3;
+            var0[OS.OSX.ordinal()] = 3;
          } catch (NoSuchFieldError var4) {
          }
 
          try {
-            var0[OperatingSystem.SOLARIS.ordinal()] = 4;
+            var0[OS.SOLARIS.ordinal()] = 4;
          } catch (NoSuchFieldError var3) {
          }
 
          try {
-            var0[OperatingSystem.UNKNOWN.ordinal()] = 5;
+            var0[OS.UNKNOWN.ordinal()] = 5;
          } catch (NoSuchFieldError var2) {
          }
 
          try {
-            var0[OperatingSystem.WINDOWS.ordinal()] = 2;
+            var0[OS.WINDOWS.ordinal()] = 2;
          } catch (NoSuchFieldError var1) {
          }
 
-         $SWITCH_TABLE$net$minecraft$launcher$OperatingSystem = var0;
+         $SWITCH_TABLE$com$turikhay$util$OS = var0;
          return var0;
       }
    }

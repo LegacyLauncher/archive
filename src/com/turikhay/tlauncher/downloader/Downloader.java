@@ -40,7 +40,7 @@ public class Downloader extends ExtendedThread {
       this.speedContainer = new double[8];
       this.progressContainer = new double[8];
       this.workLock = new Object();
-      this.start();
+      this.startAndWait();
    }
 
    public Downloader(TLauncher tlauncher) {

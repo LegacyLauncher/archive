@@ -1,5 +1,6 @@
 package com.turikhay.tlauncher.ui.explorer;
 
+import com.turikhay.util.OS;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -11,7 +12,6 @@ import java.io.File;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import net.minecraft.launcher.OperatingSystem;
 
 public class ImageFilePreview extends JComponent {
    private static final long serialVersionUID = -1465489971097254329L;
@@ -49,7 +49,7 @@ public class ImageFilePreview extends JComponent {
          public void mousePressed(MouseEvent e) {
             if (e.getButton() == 1) {
                if (ImageFilePreview.this.file != null) {
-                  OperatingSystem.openFile(ImageFilePreview.this.file);
+                  OS.openFile(ImageFilePreview.this.file);
                }
 
             }

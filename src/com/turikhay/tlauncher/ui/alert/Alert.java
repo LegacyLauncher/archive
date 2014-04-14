@@ -1,6 +1,7 @@
 package com.turikhay.tlauncher.ui.alert;
 
 import com.turikhay.tlauncher.ui.loc.Localizable;
+import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -15,6 +16,10 @@ public class Alert {
    private static String DEFAULT_MESSAGE = "An unexpected error occurred";
 
    public static void showError(String title, String message, Object textarea) {
+      if (textarea instanceof Throwable) {
+         U.log("Showing error:", textarea);
+      }
+
       showMonolog(0, title, message, textarea);
    }
 

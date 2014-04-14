@@ -69,8 +69,8 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
    private void saveValues() {
       this.log(new Object[]{"Saving values..."});
-      this.global.set("login.account", this.accounts.getAccount().getUsername(), false);
-      this.global.set("login.version", this.versions.getVersion().getID(), false);
+      this.global.setForcefully("login.account", this.accounts.getAccount().getUsername(), false);
+      this.global.setForcefully("login.version", this.versions.getVersion().getID(), false);
       this.global.store();
       this.log(new Object[]{"Values has been saved!"});
    }

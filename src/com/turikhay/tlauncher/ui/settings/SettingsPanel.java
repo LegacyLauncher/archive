@@ -20,6 +20,7 @@ import com.turikhay.tlauncher.ui.login.LoginException;
 import com.turikhay.tlauncher.ui.login.LoginListener;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import com.turikhay.util.OS;
 import com.turikhay.util.U;
 import java.awt.Component;
 import java.awt.Container;
@@ -43,7 +44,6 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.border.Border;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.ReleaseType;
 
 public class SettingsPanel extends CenterPanel implements LoginListener {
@@ -153,7 +153,7 @@ public class SettingsPanel extends CenterPanel implements LoginListener {
       this.args = new SettingsFieldHandler("minecraft.args", new SettingsTextField("settings.java.args.minecraft", true), warning);
       row = (byte)(row + 1);
       this.add(pane, row, new SettingsPair("settings.java.args.label", new SettingsHandler[]{this.javaArgs, this.args}));
-      final boolean isWindows = OperatingSystem.getCurrentPlatform().equals(OperatingSystem.WINDOWS);
+      final boolean isWindows = OS.WINDOWS.isCurrent();
       this.javaPath = new SettingsFieldHandler("minecraft.javadir", new SettingsFileField("settings.java.path.prompt", true, new FileExplorer(isWindows ? 0 : 1, true)) {
          private static final long serialVersionUID = -2220392073262107659L;
 

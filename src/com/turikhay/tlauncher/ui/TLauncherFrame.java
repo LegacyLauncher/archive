@@ -30,6 +30,7 @@ import javax.swing.plaf.FontUIResource;
 public class TLauncherFrame extends JFrame {
    private static final long serialVersionUID = 5077131443679431434L;
    public static final int[] maxSize = new int[]{1920, 1080};
+   public static final float fontSize = 12.0F;
    private static final List favicons = new ArrayList();
    private final TLauncherFrame instance = this;
    private final TLauncher tlauncher;
