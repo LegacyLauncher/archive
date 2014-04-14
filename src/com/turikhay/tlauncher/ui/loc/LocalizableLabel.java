@@ -9,6 +9,7 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
 
    private LocalizableLabel(String path, Object... vars) {
       this.setText(path, vars);
+      this.setFont(this.getFont().deriveFont(12.0F));
    }
 
    public LocalizableLabel(String path) {

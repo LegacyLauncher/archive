@@ -83,7 +83,7 @@ public class MainPane extends ExtendedLayeredPane {
 
    public void onResize() {
       super.onResize();
-      this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
+      this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
    }
 
    public Point getLocationOf(Component comp) {

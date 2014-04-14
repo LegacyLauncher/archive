@@ -35,6 +35,7 @@ public class ExtendedButton extends JButton {
    }
 
    private void init() {
+      this.setFont(this.getFont().deriveFont(12.0F));
       this.setOpaque(false);
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {

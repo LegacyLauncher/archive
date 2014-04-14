@@ -9,7 +9,7 @@ public abstract class ExtendedThread extends Thread {
 
    public ExtendedThread(String name) {
       super(name + "#" + threadNum++);
-      this.caller = new ExtendedThread.ExtendedThreadCaller();
+      this.caller = new ExtendedThread.ExtendedThreadCaller((ExtendedThread.ExtendedThreadCaller)null);
    }
 
    public ExtendedThread() {
@@ -54,11 +54,11 @@ public abstract class ExtendedThread extends Thread {
    public synchronized void unblockThread(String reason) {
       if (reason == null) {
          throw new NullPointerException();
-      } else if (this.blockReason != null && this.blockReason.equals(reason)) {
+      } else if (!reason.equals(this.blockReason)) {
+         throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
+      } else {
          this.blockReason = null;
          this.notifyAll();
-      } else {
-         throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
       }
    }
 
@@ -82,5 +82,13 @@ public abstract class ExtendedThread extends Thread {
 
    public class ExtendedThreadCaller extends RuntimeException {
       private static final long serialVersionUID = -9184403765829112550L;
+
+      private ExtendedThreadCaller() {
+      }
+
+      // $FF: synthetic method
+      ExtendedThreadCaller(ExtendedThread.ExtendedThreadCaller var2) {
+         this();
+      }
    }
 }

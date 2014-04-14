@@ -25,7 +25,7 @@ public class StringUtil {
       if (str == null) {
          return "";
       } else {
-         StringBuffer s = new StringBuffer(str);
+         StringBuilder s = new StringBuilder(str);
 
          for(int i = 0; i < s.length(); ++i) {
             char curChar = s.charAt(i);
@@ -230,7 +230,8 @@ public class StringUtil {
    }
 
    public static enum EscapeGroup {
-      COMMAND(new char[]{'\'', '"', ' '}),
+      DOUBLE_QUOTE(new char[]{'"'}),
+      COMMAND(DOUBLE_QUOTE, new char[]{'\'', ' '}),
       REGEXP(COMMAND, new char[]{'/', '\\', '?', '*', '+', '[', ']', ':', '{', '}', '(', ')'});
 
       private final char[] chars;

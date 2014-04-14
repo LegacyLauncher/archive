@@ -34,7 +34,6 @@ public class DownloaderThread extends ExtendedThread {
    private double speed;
    private Downloadable current;
    private boolean launched;
-   private final Object readyLock;
 
    DownloaderThread(Downloader d, int id) {
       super("DT#" + id);
@@ -43,9 +42,7 @@ public class DownloaderThread extends ExtendedThread {
       this.downloader = d;
       this.list = new ArrayList();
       this.averageSpeedContainer = new double[100];
-      this.readyLock = new Object();
-      this.start();
-      this.waitForReady();
+      this.startAndWait();
    }
 
    int getID() {
@@ -142,6 +139,7 @@ public class DownloaderThread extends ExtendedThread {
       boolean hasRepo = this.current.hasRepository();
       int attempt = 0;
       int max = hasRepo ? this.current.getRepository().getCount() : 1;
+      IOException cause = null;
 
       while(attempt < max) {
          ++attempt;
@@ -151,15 +149,16 @@ public class DownloaderThread extends ExtendedThread {
          try {
             this.downloadURL(url, timeout);
             return;
-         } catch (IOException var7) {
-            this.dlog("Failed to download from: " + url, var7);
+         } catch (IOException var8) {
+            this.dlog("Failed to download from: " + url, var8);
+            cause = var8;
             if (hasRepo) {
                this.current.getRepository().selectNext();
             }
          }
       }
 
-      throw new GaveUpDownloadException();
+      throw new GaveUpDownloadException(this.current, cause);
    }
 
    private void downloadURL(String path, int timeout) throws IOException, AbortedDownloadException, RetryDownloadException {
@@ -272,15 +271,6 @@ public class DownloaderThread extends ExtendedThread {
       this.downloader.onProgress(this, this.doneProgress, this.speed);
       this.downloader.onFileComplete(this, this.current);
       this.current.onComplete();
-   }
-
-   private void waitForReady() {
-      synchronized(this.readyLock) {
-         while(!this.isThreadBlocked()) {
-            U.sleepFor(100L);
-         }
-
-      }
    }
 
    private void tlog(Object... o) {

@@ -20,6 +20,7 @@ public class ProgressBar extends JProgressBar {
    private static int BORDER_SIZE = 10;
    private static int EDGE_CHARS = 50;
    private static int CENTER_CHARS = 20;
+   private static float DEFAULT_FONT_SIZE = 12.0F;
    private static final long serialVersionUID = -8095192709934629794L;
    private final Object sync;
    private final Component parent;
@@ -57,6 +58,7 @@ public class ProgressBar extends JProgressBar {
          });
       }
 
+      this.setFont(this.getFont().deriveFont(DEFAULT_FONT_SIZE));
       this.setOpaque(false);
    }
 
@@ -157,7 +159,7 @@ public class ProgressBar extends JProgressBar {
       boolean drawCenter = this.cS != null;
       boolean drawEast = this.eS != null;
       if (drawWest || drawCenter || drawEast) {
-         Font font = g.getFont().deriveFont(12.0F);
+         Font font = g.getFont();
          FontMetrics fm = g.getFontMetrics(font);
          int width = this.getWidth();
          boolean force = width != this.oldWidth;

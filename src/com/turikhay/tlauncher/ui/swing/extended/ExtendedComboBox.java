@@ -13,6 +13,7 @@ public class ExtendedComboBox extends JComboBox {
    public ExtendedComboBox(ListCellRenderer renderer) {
       this.setRenderer(renderer);
       this.setOpaque(false);
+      this.setFont(this.getFont().deriveFont(12.0F));
       ((JComponent)U.getAs(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
    }
 

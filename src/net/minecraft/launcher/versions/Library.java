@@ -2,13 +2,13 @@ package net.minecraft.launcher.versions;
 
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.repository.Repository;
+import com.turikhay.util.OS;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.launcher.OperatingSystem;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class Library {
@@ -22,9 +22,8 @@ public class Library {
 
    static {
       HashMap map = new HashMap();
-      OperatingSystem os = OperatingSystem.getCurrentPlatform();
-      map.put("platform", os.getName());
-      map.put("arch", os.getArch());
+      map.put("platform", OS.CURRENT.getName());
+      map.put("arch", OS.getArch().asString());
       SUBSTITUTOR = new StrSubstitutor(map);
    }
 
@@ -108,7 +107,7 @@ public class Library {
       return "Library{name='" + this.name + '\'' + ", rules=" + this.rules + ", natives=" + this.natives + ", extract=" + this.extract + '}';
    }
 
-   public Downloadable getDownloadable(Repository versionSource, File file, OperatingSystem os) {
+   public Downloadable getDownloadable(Repository versionSource, File file, OS os) {
       if (this.exact_url != null) {
          return new Downloadable(this.exact_url, file);
       } else {

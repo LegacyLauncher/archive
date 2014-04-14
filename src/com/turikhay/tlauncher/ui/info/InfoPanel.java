@@ -8,6 +8,7 @@ import com.turikhay.tlauncher.updater.Ad;
 import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
+import com.turikhay.util.OS;
 import com.turikhay.util.U;
 import java.awt.AlphaComposite;
 import java.awt.Composite;
@@ -27,7 +28,6 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
-import net.minecraft.launcher.OperatingSystem;
 
 public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener {
    private static final long serialVersionUID = 3310876991994323902L;
@@ -83,7 +83,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
                URL url = e.getURL();
                if (url != null) {
                   try {
-                     OperatingSystem.openLink(url.toURI());
+                     OS.openLink(url.toURI());
                   } catch (URISyntaxException var4) {
                      var4.printStackTrace();
                   }

@@ -27,10 +27,10 @@ class ConfigurationDefaults {
 
       this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
       this.d.put("gui.console", Configuration.ConsoleType.getDefault());
-      this.d.put("gui.console.width", 620);
-      this.d.put("gui.console.height", 400);
-      this.d.put("gui.console.x", 1);
-      this.d.put("gui.console.y", 1);
+      this.d.put("gui.console.width", 720);
+      this.d.put("gui.console.height", 500);
+      this.d.put("gui.console.x", 30);
+      this.d.put("gui.console.y", 30);
       this.d.put("connection", Configuration.ConnectionQuality.getDefault());
    }
 

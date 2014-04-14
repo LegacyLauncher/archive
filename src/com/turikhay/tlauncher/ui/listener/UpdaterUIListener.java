@@ -11,8 +11,8 @@ import com.turikhay.tlauncher.updater.Update;
 import com.turikhay.tlauncher.updater.UpdateListener;
 import com.turikhay.tlauncher.updater.Updater;
 import com.turikhay.tlauncher.updater.UpdaterListener;
+import com.turikhay.util.OS;
 import java.net.URI;
-import net.minecraft.launcher.OperatingSystem;
 
 public class UpdaterUIListener implements UpdaterListener, UpdateListener {
    private final TLauncher t;
@@ -109,7 +109,7 @@ public class UpdaterUIListener implements UpdaterListener, UpdateListener {
 
    private boolean openUpdateLink(URI uri) {
       try {
-         OperatingSystem.openLink(uri);
+         OS.openLink(uri);
          return true;
       } catch (Exception var3) {
          Alert.showError(this.lang.get("updater.found.cannotopen.title"), this.lang.get("updater.found.cannotopen"), uri);

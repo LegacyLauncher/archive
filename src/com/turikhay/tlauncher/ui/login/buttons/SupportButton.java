@@ -6,6 +6,7 @@ import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.ui.swing.ImageButton;
+import com.turikhay.util.OS;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
 import java.awt.Image;
@@ -13,7 +14,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
 import java.net.URL;
-import net.minecraft.launcher.OperatingSystem;
 
 public class SupportButton extends ImageButton implements Blockable, LocalizableComponent {
    private static final long serialVersionUID = 7903730373496194592L;
@@ -42,7 +42,7 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
    void openURL() {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            OperatingSystem.openLink(SupportButton.this.uri);
+            OS.openLink(SupportButton.this.uri);
          }
       });
    }

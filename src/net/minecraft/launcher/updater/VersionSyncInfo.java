@@ -1,12 +1,12 @@
 package net.minecraft.launcher.updater;
 
 import com.turikhay.tlauncher.repository.Repository;
+import com.turikhay.util.OS;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.Version;
@@ -125,7 +125,7 @@ public class VersionSyncInfo {
       return this.getCompleteVersion(true);
    }
 
-   Set getRequiredDownloadables(OperatingSystem os, File targetDirectory, boolean force) throws IOException {
+   Set getRequiredDownloadables(OS os, File targetDirectory, boolean force) throws IOException {
       Set neededFiles = new HashSet();
       CompleteVersion version = this.getCompleteVersion(force);
       Repository source = this.hasRemote() ? this.remoteVersion.getSource() : Repository.OFFICIAL_VERSION_REPO;
@@ -165,7 +165,7 @@ public class VersionSyncInfo {
    }
 
    public Set getRequiredDownloadables(File targetDirectory, boolean force) throws IOException {
-      return this.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), targetDirectory, force);
+      return this.getRequiredDownloadables(OS.CURRENT, targetDirectory, force);
    }
 
    public static VersionSyncInfo createEmpty() {

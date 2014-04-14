@@ -1,5 +1,6 @@
 package net.minecraft.launcher.process;
 
+import com.turikhay.util.OS;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.launcher.OperatingSystem;
 
 public class JavaProcessLauncher {
    private final String jvmPath;
@@ -17,7 +17,7 @@ public class JavaProcessLauncher {
 
    public JavaProcessLauncher(String jvmPath, String[] commands) {
       if (jvmPath == null) {
-         jvmPath = OperatingSystem.getCurrentPlatform().getJavaDir();
+         jvmPath = OS.getJavaPath();
       }
 
       this.jvmPath = jvmPath;

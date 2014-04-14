@@ -21,6 +21,7 @@ import com.turikhay.tlauncher.ui.listener.UpdaterUIListener;
 import com.turikhay.tlauncher.ui.loc.Localizable;
 import com.turikhay.tlauncher.ui.login.LoginForm;
 import com.turikhay.tlauncher.updater.Updater;
+import com.turikhay.util.OS;
 import com.turikhay.util.Time;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
@@ -36,10 +37,9 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import joptsimple.OptionSet;
-import net.minecraft.launcher.OperatingSystem;
 
 public class TLauncher {
-   private static final double VERSION = 0.95D;
+   private static final double VERSION = 0.961D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -283,8 +283,8 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 0.95D);
-      U.log("Machine info:", OperatingSystem.getCurrentInfo());
+      U.log("Starting TLauncher", "Original", 0.961D);
+      U.log("Machine info:", OS.getSummary());
       U.log("---");
       sargs = args;
       OptionSet set = ArgumentParser.parseArgs(args);
@@ -329,7 +329,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 0.95D;
+      return 0.961D;
    }
 
    public static String getBrand() {

@@ -3,6 +3,7 @@ package com.turikhay.tlauncher.ui.console;
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.configuration.Configuration;
 import com.turikhay.tlauncher.ui.TLauncherFrame;
+import com.turikhay.tlauncher.ui.swing.ExtendedComponentAdapter;
 import com.turikhay.util.StringUtil;
 import com.turikhay.util.U;
 import com.turikhay.util.async.AsyncThread;
@@ -61,6 +62,23 @@ public class Console implements Logger {
          }
 
          public void windowDeactivated(WindowEvent e) {
+         }
+      });
+      this.frame.addComponentListener(new ExtendedComponentAdapter(this.frame) {
+         public void componentShown(ComponentEvent e) {
+            Console.this.save(true);
+         }
+
+         public void componentHidden(ComponentEvent e) {
+            Console.this.save(true);
+         }
+
+         public void onComponentResized(ComponentEvent e) {
+            Console.this.save(true);
+         }
+
+         public void onComponentMoved(ComponentEvent e) {
+            Console.this.save(true);
          }
       });
       this.frame.addComponentListener(new ComponentListener() {

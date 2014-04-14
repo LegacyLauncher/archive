@@ -6,6 +6,7 @@ import com.turikhay.tlauncher.managers.ProfileManagerListener;
 import com.turikhay.tlauncher.minecraft.auth.Account;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import com.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
+import com.turikhay.tlauncher.ui.alert.Alert;
 import com.turikhay.tlauncher.ui.block.Blockable;
 import com.turikhay.tlauncher.ui.listener.AuthUIListener;
 import com.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -79,6 +80,7 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
       final Account account = this.getAccount();
       if (account == null) {
          this.loginForm.pane.openAccountEditor();
+         Alert.showLocError("account.empty.error");
          throw new LoginException("Account list is empty!");
       } else if (account.hasLicense()) {
          throw new LoginWaitException("Waiting for auth...", new LoginWaitException.LoginWaitTask() {

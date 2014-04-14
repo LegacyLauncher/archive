@@ -10,6 +10,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.turikhay.tlauncher.repository.Repository;
+import com.turikhay.util.OS;
 import com.turikhay.util.U;
 import java.io.File;
 import java.lang.reflect.Type;
@@ -22,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
@@ -201,7 +201,7 @@ public class CompleteVersion implements Version, Cloneable {
       return result;
    }
 
-   public Collection getClassPath(OperatingSystem os, File base) {
+   public Collection getClassPath(OS os, File base) {
       Collection libraries = this.getRelevantLibraries();
       Collection result = new ArrayList();
       Iterator var6 = libraries.iterator();
@@ -217,7 +217,7 @@ public class CompleteVersion implements Version, Cloneable {
       return result;
    }
 
-   public Collection getNatives(OperatingSystem os) {
+   public Collection getNatives(OS os) {
       Collection libraries = this.getRelevantLibraries();
       Collection result = new ArrayList();
       Iterator var5 = libraries.iterator();
@@ -233,7 +233,7 @@ public class CompleteVersion implements Version, Cloneable {
       return result;
    }
 
-   public Set getRequiredFiles(OperatingSystem os) {
+   public Set getRequiredFiles(OS os) {
       Set neededFiles = new HashSet();
       Iterator var4 = this.getRelevantLibraries().iterator();
 
@@ -252,7 +252,7 @@ public class CompleteVersion implements Version, Cloneable {
       return neededFiles;
    }
 
-   public Collection getExtractFiles(OperatingSystem os) {
+   public Collection getExtractFiles(OS os) {
       Collection libraries = this.getRelevantLibraries();
       Collection result = new ArrayList();
       Iterator var5 = libraries.iterator();

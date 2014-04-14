@@ -2,13 +2,13 @@ package net.minecraft.launcher.updater;
 
 import com.turikhay.tlauncher.repository.Repository;
 import com.turikhay.util.FileUtil;
+import com.turikhay.util.OS;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Set;
-import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.versions.CompleteVersion;
 
 public class LocalVersionList extends StreamVersionList {
@@ -75,7 +75,7 @@ public class LocalVersionList extends StreamVersionList {
       return new FileInputStream(new File(this.baseDirectory, uri));
    }
 
-   public boolean hasAllFiles(CompleteVersion version, OperatingSystem os) {
+   public boolean hasAllFiles(CompleteVersion version, OS os) {
       Set files = version.getRequiredFiles(os);
       Iterator var5 = files.iterator();
 
