@@ -1,5 +1,8 @@
 package com.turikhay.tlauncher.ui;
 
+import java.awt.Component;
+import java.awt.Point;
+
 import com.turikhay.tlauncher.ui.background.BackgroundHolder;
 import com.turikhay.tlauncher.ui.progress.LaunchProgress;
 import com.turikhay.tlauncher.ui.progress.ProgressBar;
@@ -7,88 +10,106 @@ import com.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import com.turikhay.tlauncher.ui.scenes.DefaultScene;
 import com.turikhay.tlauncher.ui.scenes.PseudoScene;
 import com.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
-import java.awt.Component;
-import java.awt.Point;
 
 public class MainPane extends ExtendedLayeredPane {
-   private static final long serialVersionUID = -8854598755786867602L;
-   private final TLauncherFrame rootFrame;
-   private PseudoScene scene;
-   public final BackgroundHolder background;
-   public final LaunchProgress progress;
-   public final DefaultScene defaultScene;
-   public final AccountEditorScene accountEditor;
-   public final ConnectionWarning warning;
+	private static final long serialVersionUID = -8854598755786867602L;
 
-   MainPane(TLauncherFrame frame) {
-      super((Component)null);
-      this.rootFrame = frame;
-      this.background = new BackgroundHolder(this);
-      this.background.setBackground(this.background.SLIDE_BACKGROUND, false);
-      this.add(this.background);
-      this.defaultScene = new DefaultScene(this);
-      this.add(this.defaultScene);
-      this.accountEditor = new AccountEditorScene(this);
-      this.add(this.accountEditor);
-      this.progress = new LaunchProgress(frame);
-      this.add(this.progress);
-      this.warning = new ConnectionWarning();
-      this.warning.setLocation(10, 10);
-      this.add(this.warning);
-      this.setScene(this.defaultScene, false);
-   }
+	private final TLauncherFrame rootFrame;
 
-   public PseudoScene getScene() {
-      return this.scene;
-   }
+	private PseudoScene scene;
 
-   void setScene(PseudoScene scene) {
-      this.setScene(scene, true);
-   }
+	public final BackgroundHolder background;
+	public final LaunchProgress progress;
 
-   void setScene(PseudoScene scene, boolean animate) {
-      if (scene == null) {
-         throw new NullPointerException();
-      } else if (!scene.equals(this.scene)) {
-         Component[] var6;
-         int var5 = (var6 = this.getComponents()).length;
+	public final DefaultScene defaultScene;
+	public final AccountEditorScene accountEditor;
 
-         for(int var4 = 0; var4 < var5; ++var4) {
-            Component comp = var6[var4];
-            if (!comp.equals(scene) && comp instanceof PseudoScene) {
-               ((PseudoScene)comp).setShown(false, animate);
-            }
-         }
+	public final ConnectionWarning warning;
 
-         this.scene = scene;
-         this.scene.setShown(true);
-      }
-   }
+	MainPane(TLauncherFrame frame) {
+		super(null); // TLauncherFrame will determine MainPane size with layout
+						// manager
 
-   public void openDefaultScene() {
-      this.setScene(this.defaultScene);
-   }
+		this.rootFrame = frame;
 
-   public void openAccountEditor() {
-      this.setScene(this.accountEditor);
-   }
+		this.background = new BackgroundHolder(this);
+		background.setBackground(background.SLIDE_BACKGROUND, false);
+		this.add(background);
 
-   public TLauncherFrame getRootFrame() {
-      return this.rootFrame;
-   }
+		this.defaultScene = new DefaultScene(this);
+		this.add(defaultScene);
 
-   public LaunchProgress getProgress() {
-      return this.progress;
-   }
+		this.accountEditor = new AccountEditorScene(this);
+		this.add(accountEditor);
 
-   public void onResize() {
-      super.onResize();
-      this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
-   }
+		this.progress = new LaunchProgress(frame);
+		this.add(progress);
 
-   public Point getLocationOf(Component comp) {
-      Point compLocation = comp.getLocationOnScreen();
-      Point paneLocation = this.getLocationOnScreen();
-      return new Point(compLocation.x - paneLocation.x, compLocation.y - paneLocation.y);
-   }
+		this.warning = new ConnectionWarning();
+		warning.setLocation(10, 10);
+		this.add(warning);
+
+		this.setScene(defaultScene, false);
+	}
+
+	public PseudoScene getScene() {
+		return scene;
+	}
+
+	void setScene(PseudoScene scene) {
+		this.setScene(scene, true);
+	}
+
+	void setScene(PseudoScene scene, boolean animate) {
+		if (scene == null)
+			throw new NullPointerException();
+
+		if (scene.equals(this.scene))
+			return;
+
+		for (Component comp : getComponents())
+			if (!comp.equals(scene) && comp instanceof PseudoScene)
+				((PseudoScene) comp).setShown(false, animate);
+
+		this.scene = scene;
+		this.scene.setShown(true);
+	}
+
+	public void openDefaultScene() {
+		setScene(defaultScene);
+	}
+
+	public void openAccountEditor() {
+		setScene(accountEditor);
+	}
+
+	public TLauncherFrame getRootFrame() {
+		return rootFrame;
+	}
+
+	public LaunchProgress getProgress() {
+		return progress;
+	}
+
+	@Override
+	public void onResize() {
+		super.onResize();
+
+		progress.setBounds(0, getHeight() - ProgressBar.DEFAULT_HEIGHT + 1,
+				getWidth(), ProgressBar.DEFAULT_HEIGHT);
+	}
+
+	/**
+	 * Location of some components can be determined only with
+	 * <code>getLocationOnScreen()</code> method. This method should help to
+	 * find out the location of a <code>Component</code> on the
+	 * <code>MainPane</code>.
+	 * 
+	 */
+	public Point getLocationOf(Component comp) {
+		Point compLocation = comp.getLocationOnScreen(), paneLocation = getLocationOnScreen();
+
+		return new Point(compLocation.x - paneLocation.x, compLocation.y
+				- paneLocation.y);
+	}
 }

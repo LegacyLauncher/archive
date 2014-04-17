@@ -1,12 +1,13 @@
 package com.turikhay.util.async;
 
 class AsyncObjectException extends Exception {
-   private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-   AsyncObjectException() {
-   }
+	AsyncObjectException() {
+	}
 
-   AsyncObjectException(Throwable cause) {
-      super(cause);
-   }
+	AsyncObjectException(Throwable cause) {
+		super(cause);
+	}
+
 }

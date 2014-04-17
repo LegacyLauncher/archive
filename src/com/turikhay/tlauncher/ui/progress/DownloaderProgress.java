@@ -1,60 +1,69 @@
 package com.turikhay.tlauncher.ui.progress;
 
+import java.awt.Component;
+
 import com.turikhay.tlauncher.TLauncher;
 import com.turikhay.tlauncher.downloader.Downloadable;
 import com.turikhay.tlauncher.downloader.Downloader;
 import com.turikhay.tlauncher.downloader.DownloaderListener;
 import com.turikhay.tlauncher.ui.loc.LocalizableProgressBar;
-import java.awt.Component;
 
-public class DownloaderProgress extends LocalizableProgressBar implements DownloaderListener {
-   private static final long serialVersionUID = -8382205925341380876L;
+public class DownloaderProgress extends LocalizableProgressBar implements
+		DownloaderListener {
+	private static final long serialVersionUID = -8382205925341380876L;
 
-   private DownloaderProgress(Component parentComp, Downloader downloader) {
-      super(parentComp);
-      if (downloader == null) {
-         throw new NullPointerException();
-      } else {
-         downloader.addListener(this);
-         this.stopProgress();
-      }
-   }
+	private DownloaderProgress(Component parentComp, Downloader downloader) {
+		super(parentComp);
 
-   public DownloaderProgress(Component parentComp) {
-      this(parentComp, TLauncher.getInstance().getDownloader());
-   }
+		if (downloader == null)
+			throw new NullPointerException();
 
-   public void onDownloaderStart(Downloader d, int files) {
-      this.startProgress();
-      this.setIndeterminate(true);
-      this.setCenterString("progressBar.init");
-      this.setEastString("progressBar.downloading", new Object[]{files});
-   }
+		downloader.addListener(this);
+		stopProgress(); // Hide the bar
+	}
 
-   public void onDownloaderAbort(Downloader d) {
-      this.stopProgress();
-   }
+	public DownloaderProgress(Component parentComp) {
+		this(parentComp, TLauncher.getInstance().getDownloader());
+	}
 
-   public void onDownloaderProgress(Downloader d, double dprogress, double speed) {
-      if (dprogress > 0.0D) {
-         int progress = (int)(dprogress * 100.0D);
-         if (this.getValue() > progress) {
-            return;
-         }
+	@Override
+	public void onDownloaderStart(Downloader d, int files) {
+		startProgress();
 
-         this.setIndeterminate(false);
-         this.setValue(progress);
-         this.setCenterString(progress + "%");
-      }
+		setIndeterminate(true);
 
-   }
+		setCenterString("progressBar.init");
+		setEastString("progressBar.downloading", files);
+	}
 
-   public void onDownloaderFileComplete(Downloader d, Downloadable file) {
-      this.setIndeterminate(false);
-      this.setEastString("progressBar.remaining", new Object[]{d.getRemaining()});
-   }
+	@Override
+	public void onDownloaderAbort(Downloader d) {
+		stopProgress();
+	}
 
-   public void onDownloaderComplete(Downloader d) {
-      this.stopProgress();
-   }
+	@Override
+	public void onDownloaderProgress(Downloader d, double dprogress,
+			double speed) {
+		if (dprogress > 0) {
+			int progress = (int) (dprogress * 100);
+			if (getValue() > progress)
+				return; // Something from a "lazy" thread, ignore.
+
+			setIndeterminate(false);
+			setValue(progress);
+			setCenterString(progress + "%");
+		}
+	}
+
+	@Override
+	public void onDownloaderFileComplete(Downloader d, Downloadable file) {
+		setIndeterminate(false);
+
+		setEastString("progressBar.remaining", d.getRemaining());
+	}
+
+	@Override
+	public void onDownloaderComplete(Downloader d) {
+		stopProgress();
+	}
 }

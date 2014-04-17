@@ -1,67 +1,73 @@
 package com.turikhay.tlauncher.ui.background.slide;
 
-import com.turikhay.tlauncher.ui.background.Background;
-import com.turikhay.tlauncher.ui.background.BackgroundHolder;
-import com.turikhay.util.U;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.image.ImageObserver;
+
+import com.turikhay.tlauncher.ui.background.Background;
+import com.turikhay.tlauncher.ui.background.BackgroundHolder;
+import com.turikhay.util.U;
 
 public class SlideBackground extends Background {
-   private static final long serialVersionUID = -4479685866688951989L;
-   private final SlideBackgroundThread thread;
-   final BackgroundHolder holder;
-   private Image image;
-   private double imageWidth;
-   private double imageHeight;
+	private static final long serialVersionUID = -4479685866688951989L;
 
-   public SlideBackground(BackgroundHolder holder) {
-      super(holder, Color.black);
-      this.holder = holder;
-      this.thread = new SlideBackgroundThread(this);
-      this.thread.setSlide(this.thread.defaultSlide, false);
-      this.thread.refreshSlide(false);
-   }
+	private final SlideBackgroundThread thread;
+	final BackgroundHolder holder;
 
-   public SlideBackgroundThread getThread() {
-      return this.thread;
-   }
+	private Image image;
+	private double imageWidth, imageHeight;
 
-   public Image getImage() {
-      return this.image;
-   }
+	public SlideBackground(BackgroundHolder holder) {
+		super(holder, Color.black);
 
-   public void setImage(Image image) {
-      if (image == null) {
-         throw new NullPointerException();
-      } else {
-         this.image = image;
-         this.imageWidth = (double)image.getWidth((ImageObserver)null);
-         this.imageHeight = (double)image.getHeight((ImageObserver)null);
-      }
-   }
+		this.holder = holder;
+		this.thread = new SlideBackgroundThread(this);
 
-   public void paintBackground(Graphics g) {
-      double windowWidth = (double)this.getWidth();
-      double windowHeight = (double)this.getHeight();
-      double ratio = Math.min(this.imageWidth / windowWidth, this.imageHeight / windowHeight);
-      double width;
-      double height;
-      if (ratio < 1.0D) {
-         width = this.imageWidth;
-         height = this.imageHeight;
-      } else {
-         width = this.imageWidth / ratio;
-         height = this.imageHeight / ratio;
-      }
+		this.thread.setSlide(thread.defaultSlide, false);
+		this.thread.refreshSlide(false);
+	}
 
-      double x = (windowWidth - width) / 2.0D;
-      double y = (windowHeight - height) / 2.0D;
-      g.drawImage(this.image, (int)x, (int)y, (int)width, (int)height, (ImageObserver)null);
-   }
+	public SlideBackgroundThread getThread() {
+		return thread;
+	}
 
-   protected void log(Object... w) {
-      U.log("[" + this.getClass().getSimpleName() + "]", w);
-   }
+	public Image getImage() {
+		return image;
+	}
+
+	public void setImage(Image image) {
+		if (image == null)
+			throw new NullPointerException();
+
+		this.image = image;
+		this.imageWidth = image.getWidth(null);
+		this.imageHeight = image.getHeight(null);
+	}
+
+	@Override
+	public void paintBackground(Graphics g) {
+		double windowWidth = getWidth(), windowHeight = getHeight();
+
+		double ratio = Math.min(imageWidth / windowWidth, imageHeight
+				/ windowHeight);
+		double width, height;
+
+		if (ratio < 1) {
+			// Oh, shi~, this guy has really huge screen. Or the image is too
+			// small.
+			width = imageWidth;
+			height = imageHeight;
+		} else {
+			width = imageWidth / ratio;
+			height = imageHeight / ratio;
+		}
+
+		double x = (windowWidth - width) / 2, y = (windowHeight - height) / 2;
+
+		g.drawImage(image, (int) x, (int) y, (int) width, (int) height, null);
+	}
+
+	protected void log(Object... w) {
+		U.log("[" + getClass().getSimpleName() + "]", w);
+	}
 }

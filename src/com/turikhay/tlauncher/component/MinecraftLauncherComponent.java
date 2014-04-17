@@ -4,5 +4,5 @@ import com.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import com.turikhay.tlauncher.minecraft.launcher.MinecraftLauncherAssistant;
 
 public interface MinecraftLauncherComponent {
-   MinecraftLauncherAssistant getAssistant(MinecraftLauncher var1);
+	public MinecraftLauncherAssistant getAssistant(MinecraftLauncher launcher);
 }

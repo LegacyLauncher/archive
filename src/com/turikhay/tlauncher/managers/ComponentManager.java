@@ -1,176 +1,155 @@
 package com.turikhay.tlauncher.managers;
 
-import com.turikhay.tlauncher.TLauncher;
-import com.turikhay.tlauncher.component.ComponentDependence;
-import com.turikhay.tlauncher.component.InterruptibleComponent;
-import com.turikhay.tlauncher.component.LauncherComponent;
-import com.turikhay.tlauncher.component.RefreshableComponent;
-import com.turikhay.util.async.LoopedThread;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
+import com.turikhay.tlauncher.TLauncher;
+import com.turikhay.tlauncher.component.*;
+import com.turikhay.util.async.LoopedThread;
+
 public class ComponentManager {
-   private final TLauncher tlauncher;
-   private final List components;
-   private final ComponentManager.ComponentManagerRefresher refresher;
+	private final TLauncher tlauncher;
 
-   public ComponentManager(TLauncher tlauncher) {
-      if (tlauncher == null) {
-         throw new NullPointerException();
-      } else {
-         this.tlauncher = tlauncher;
-         this.components = Collections.synchronizedList(new ArrayList());
-         this.refresher = new ComponentManager.ComponentManagerRefresher(this);
-         this.refresher.start();
-      }
-   }
+	private final List<LauncherComponent> components;
+	private final ComponentManagerRefresher refresher;
 
-   public TLauncher getLauncher() {
-      return this.tlauncher;
-   }
+	public ComponentManager(TLauncher tlauncher) {
+		if (tlauncher == null)
+			throw new NullPointerException();
 
-   public LauncherComponent loadComponent(Class classOfT) {
-      if (classOfT == null) {
-         throw new NullPointerException();
-      } else if (this.hasComponent(classOfT)) {
-         return this.getComponent(classOfT);
-      } else {
-         ComponentDependence dependence = (ComponentDependence)classOfT.getAnnotation(ComponentDependence.class);
-         if (dependence != null) {
-            Class[] var6;
-            int var5 = (var6 = dependence.value()).length;
+		this.tlauncher = tlauncher;
+		this.components = Collections
+				.synchronizedList(new ArrayList<LauncherComponent>());
 
-            for(int var4 = 0; var4 < var5; ++var4) {
-               Class requiredClass = var6[var4];
-               this.rawLoadComponent(requiredClass);
-            }
-         }
+		this.refresher = new ComponentManagerRefresher(this);
+		this.refresher.start();
+	}
 
-         return (LauncherComponent)this.rawLoadComponent(classOfT);
-      }
-   }
+	public TLauncher getLauncher() {
+		return tlauncher;
+	}
 
-   private Object rawLoadComponent(Class classOfT) {
-      if (classOfT == null) {
-         throw new NullPointerException();
-      } else if (!LauncherComponent.class.isAssignableFrom(classOfT)) {
-         throw new IllegalArgumentException("Given class is not a LauncherComponent: " + classOfT.getSimpleName());
-      } else {
-         Constructor constructor;
-         try {
-            constructor = classOfT.getConstructor(ComponentManager.class);
-         } catch (Exception var6) {
-            throw new IllegalStateException("Cannot get constructor for component: " + classOfT.getSimpleName(), var6);
-         }
+	public <T extends LauncherComponent> T loadComponent(Class<T> classOfT) {
+		if (classOfT == null)
+			throw new NullPointerException();
 
-         Object instance;
-         try {
-            instance = constructor.newInstance(this);
-         } catch (Exception var5) {
-            throw new IllegalStateException("Cannot create a new instance for component: " + classOfT.getSimpleName(), var5);
-         }
+		if (hasComponent(classOfT))
+			return getComponent(classOfT);
 
-         LauncherComponent component = (LauncherComponent)instance;
-         this.components.add(component);
-         return instance;
-      }
-   }
+		ComponentDependence dependence = classOfT
+				.getAnnotation(ComponentDependence.class);
+		if (dependence != null)
+			for (Class<?> requiredClass : dependence.value())
+				rawLoadComponent(requiredClass);
 
-   public LauncherComponent getComponent(Class classOfT) {
-      if (classOfT == null) {
-         throw new NullPointerException();
-      } else {
-         Iterator var3 = this.components.iterator();
+		return rawLoadComponent(classOfT);
+	}
 
-         while(var3.hasNext()) {
-            LauncherComponent component = (LauncherComponent)var3.next();
-            if (classOfT.isInstance(component)) {
-               return component;
-            }
-         }
+	private <T> T rawLoadComponent(Class<T> classOfT) {
+		if (classOfT == null)
+			throw new NullPointerException();
 
-         throw new IllegalArgumentException("Cannot find the component!");
-      }
-   }
+		if (!LauncherComponent.class.isAssignableFrom(classOfT))
+			throw new IllegalArgumentException(
+					"Given class is not a LauncherComponent: "
+							+ classOfT.getSimpleName());
 
-   boolean hasComponent(Class classOfT) {
-      if (classOfT == null) {
-         return false;
-      } else {
-         Iterator var3 = this.components.iterator();
+		Constructor<T> constructor;
 
-         while(var3.hasNext()) {
-            LauncherComponent component = (LauncherComponent)var3.next();
-            if (classOfT.isInstance(component)) {
-               return true;
-            }
-         }
+		try {
+			constructor = classOfT.getConstructor(ComponentManager.class);
+		} catch (Exception e) {
+			throw new IllegalStateException(
+					"Cannot get constructor for component: "
+							+ classOfT.getSimpleName(), e);
+		}
 
-         return false;
-      }
-   }
+		T instance;
 
-   public List getComponentsOf(Class classOfE) {
-      List list = new ArrayList();
-      if (classOfE == null) {
-         return list;
-      } else {
-         Iterator var4 = this.components.iterator();
+		try {
+			instance = constructor.newInstance(this);
+		} catch (Exception e) {
+			throw new IllegalStateException(
+					"Cannot create a new instance for component: "
+							+ classOfT.getSimpleName(), e);
+		}
 
-         while(var4.hasNext()) {
-            LauncherComponent component = (LauncherComponent)var4.next();
-            if (classOfE.isInstance(component)) {
-               list.add(component);
-            }
-         }
+		LauncherComponent component = (LauncherComponent) instance;
+		components.add(component);
 
-         return list;
-      }
-   }
+		return instance;
+	}
 
-   public void startAsyncRefresh() {
-      this.refresher.iterate();
-   }
+	@SuppressWarnings("unchecked")
+	public <T extends LauncherComponent> T getComponent(Class<T> classOfT) {
+		if (classOfT == null)
+			throw new NullPointerException();
 
-   void startRefresh() {
-      Iterator var2 = this.components.iterator();
+		for (LauncherComponent component : components)
+			if (classOfT.isInstance(component))
+				return (T) component;
 
-      while(var2.hasNext()) {
-         LauncherComponent component = (LauncherComponent)var2.next();
-         if (component instanceof RefreshableComponent) {
-            RefreshableComponent interruptible = (RefreshableComponent)component;
-            interruptible.refreshComponent();
-         }
-      }
+		throw new IllegalArgumentException("Cannot find the component!");
+	}
 
-   }
+	<T extends LauncherComponent> boolean hasComponent(Class<T> classOfT) {
+		if (classOfT == null)
+			return false;
 
-   public void stopRefresh() {
-      Iterator var2 = this.components.iterator();
+		for (LauncherComponent component : components)
+			if (classOfT.isInstance(component))
+				return true;
 
-      while(var2.hasNext()) {
-         LauncherComponent component = (LauncherComponent)var2.next();
-         if (component instanceof InterruptibleComponent) {
-            InterruptibleComponent interruptible = (InterruptibleComponent)component;
-            interruptible.stopRefresh();
-         }
-      }
+		return false;
+	}
 
-   }
+	@SuppressWarnings("unchecked")
+	public <T> List<T> getComponentsOf(Class<T> classOfE) {
+		List<T> list = new ArrayList<T>();
 
-   class ComponentManagerRefresher extends LoopedThread {
-      private final ComponentManager parent;
+		if (classOfE == null)
+			return list;
 
-      ComponentManagerRefresher(ComponentManager manager) {
-         super("ComponentManagerRefresher");
-         this.parent = manager;
-      }
+		for (LauncherComponent component : components)
+			if (classOfE.isInstance(component))
+				list.add((T) component);
 
-      protected void iterateOnce() {
-         this.parent.startRefresh();
-      }
-   }
+		return list;
+	}
+
+	public void startAsyncRefresh() {
+		refresher.iterate();
+	}
+
+	void startRefresh() {
+		for (LauncherComponent component : components)
+			if (component instanceof RefreshableComponent) {
+				RefreshableComponent interruptible = (RefreshableComponent) component;
+				interruptible.refreshComponent();
+			}
+	}
+
+	public void stopRefresh() {
+		for (LauncherComponent component : components)
+			if (component instanceof InterruptibleComponent) {
+				InterruptibleComponent interruptible = (InterruptibleComponent) component;
+				interruptible.stopRefresh();
+			}
+	}
+
+	class ComponentManagerRefresher extends LoopedThread {
+		private final ComponentManager parent;
+
+		ComponentManagerRefresher(ComponentManager manager) {
+			super("ComponentManagerRefresher");
+			this.parent = manager;
+		}
+
+		@Override
+		protected void iterateOnce() {
+			parent.startRefresh();
+		}
+	}
 }

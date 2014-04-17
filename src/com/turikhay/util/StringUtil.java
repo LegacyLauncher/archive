@@ -1,6 +1,5 @@
 package com.turikhay.util;
 
-import com.turikhay.exceptions.ParseException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -8,252 +7,261 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.util.Random;
 
+import com.turikhay.exceptions.ParseException;
+
 public class StringUtil {
-   private static String addQuotes(String a, char quote) {
-      if (a == null) {
-         return null;
-      } else {
-         return a.length() == 0 ? "" : quote + a.replaceAll("\\" + quote, "\\\\" + quote) + quote;
-      }
-   }
+	private static String addQuotes(String a, char quote) {
+		if (a == null)
+			return null;
+		if (a.length() == 0)
+			return "";
 
-   public static String addQuotes(String a) {
-      return addQuotes(a, '"');
-   }
+		return quote + a.replaceAll("\\" + quote, "\\\\" + quote) + quote;
+	}
 
-   public static String addSlashes(String str, StringUtil.EscapeGroup group) {
-      if (str == null) {
-         return "";
-      } else {
-         StringBuilder s = new StringBuilder(str);
+	public static String addQuotes(String a) {
+		return addQuotes(a, '"');
+	}
 
-         for(int i = 0; i < s.length(); ++i) {
-            char curChar = s.charAt(i);
-            char[] var8;
-            int var7 = (var8 = group.getChars()).length;
+	public static String addSlashes(String str, EscapeGroup group) {
+		if (str == null)
+			return "";
+		
+		StringBuilder s = new StringBuilder(str);
+		for (int i = 0; i < s.length(); i++) {
+			char curChar = s.charAt(i);
 
-            for(int var6 = 0; var6 < var7; ++var6) {
-               char c = var8[var6];
-               if (curChar == c) {
-                  s.insert(i++, '\\');
-               }
-            }
-         }
+			for (char c : group.getChars())
+				if (curChar == c)
+					s.insert(i++, '\\');
+		}
+		return s.toString();
+	}
 
-         return s.toString();
-      }
-   }
+	public static String[] addSlashes(String[] str, EscapeGroup group) {
+		if (str == null)
+			return null;
 
-   public static String[] addSlashes(String[] str, StringUtil.EscapeGroup group) {
-      if (str == null) {
-         return null;
-      } else {
-         int len = str.length;
-         String[] ret = new String[len];
+		int len = str.length;
+		String[] ret = new String[len];
 
-         for(int i = 0; i < len; ++i) {
-            ret[i] = addSlashes(str[i], group);
-         }
+		for (int i = 0; i < len; i++)
+			ret[i] = addSlashes(str[i], group);
 
-         return ret;
-      }
-   }
+		return ret;
+	}
 
-   public static String iconv(String inChar, String outChar, String str) {
-      Charset in = Charset.forName(inChar);
-      Charset out = Charset.forName(outChar);
-      CharsetDecoder decoder = in.newDecoder();
-      CharsetEncoder encoder = out.newEncoder();
+	public static String iconv(String inChar, String outChar, String str) {
+		Charset in = Charset.forName(inChar), out = Charset.forName(outChar);
+		CharsetDecoder decoder = in.newDecoder();
+		CharsetEncoder encoder = out.newEncoder();
 
-      try {
-         ByteBuffer bbuf = encoder.encode(CharBuffer.wrap(str));
-         CharBuffer cbuf = decoder.decode(bbuf);
-         return cbuf.toString();
-      } catch (Exception var9) {
-         var9.printStackTrace();
-         return null;
-      }
-   }
+		try {
+			// Convert a string to ISO-LATIN-1 bytes in a ByteBuffer
+			// The new ByteBuffer is ready to be read.
+			ByteBuffer bbuf = encoder.encode(CharBuffer.wrap(str));
 
-   public static boolean parseBoolean(String b) throws ParseException {
-      if (b == null) {
-         throw new ParseException("String cannot be NULL!");
-      } else if (b.equalsIgnoreCase("true")) {
-         return true;
-      } else if (b.equalsIgnoreCase("false")) {
-         return false;
-      } else {
-         throw new ParseException("Cannot parse value (" + b + ")!");
-      }
-   }
+			// Convert ISO-LATIN-1 bytes in a ByteBuffer to a character
+			// ByteBuffer and then to a string.
+			// The new ByteBuffer is ready to be read.
+			CharBuffer cbuf = decoder.decode(bbuf);
 
-   public static int countLines(String str) {
-      if (str != null && str.length() != 0) {
-         int lines = 1;
-         int len = str.length();
+			return cbuf.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-         for(int pos = 0; pos < len; ++pos) {
-            char c = str.charAt(pos);
-            if (c == '\r') {
-               ++lines;
-               if (pos + 1 < len && str.charAt(pos + 1) == '\n') {
-                  ++pos;
-               }
-            } else if (c == '\n') {
-               ++lines;
-            }
-         }
+	public static boolean parseBoolean(String b) throws ParseException {
+		if (b == null)
+			throw new ParseException("String cannot be NULL!");
 
-         return lines;
-      } else {
-         return 0;
-      }
-   }
+		if (b.equalsIgnoreCase("true"))
+			return true;
+		if (b.equalsIgnoreCase("false"))
+			return false;
 
-   public static char lastChar(String str) {
-      if (str == null) {
-         throw new NullPointerException();
-      } else {
-         int len = str.length();
-         if (len == 0) {
-            return '\u0000';
-         } else {
-            return len == 1 ? str.charAt(0) : str.charAt(len - 1);
-         }
-      }
-   }
+		throw new ParseException("Cannot parse value (" + b + ")!");
+	}
 
-   public static String randomizeWord(String str, boolean softly) {
-      if (str == null) {
-         return null;
-      } else {
-         int len = str.length();
-         if (len < 4) {
-            return str;
-         } else {
-            boolean[] reversedFlag = new boolean[len];
-            if (softly) {
-               reversedFlag[0] = true;
-            }
+	public static int countLines(String str) {
+		if (str == null || str.length() == 0)
+			return 0;
 
-            boolean chosenLastLetter = !softly;
-            char[] chars = str.toCharArray();
+		int lines = 1;
+		int len = str.length();
+		for (int pos = 0; pos < len; pos++) {
+			char c = str.charAt(pos);
+			if (c == '\r') {
+				lines++;
+				if (pos + 1 < len && str.charAt(pos + 1) == '\n')
+					pos++;
+			} else if (c == '\n') {
+				lines++;
+			}
+		}
 
-            int i;
-            int tries;
-            for(i = len - 1; i > -1; --i) {
-               char curChar = chars[i];
-               tries = Character.getType(curChar);
-               boolean canBeReversed = tries == 1 || tries == 2;
-               reversedFlag[i] |= !canBeReversed;
-               if (canBeReversed && !chosenLastLetter) {
-                  reversedFlag[i] = true;
-                  chosenLastLetter = true;
-               }
-            }
+		return lines;
+	}
 
-            for(i = 0; i < len; ++i) {
-               if (!reversedFlag[i]) {
-                  int newPos = i;
-                  tries = 0;
+	public static char lastChar(String str) {
+		if (str == null)
+			throw new NullPointerException();
+		
+		int len = str.length();
 
-                  while(tries < 3) {
-                     ++tries;
-                     newPos = (new Random()).nextInt(len);
-                     if (!reversedFlag[newPos]) {
-                        tries = 10;
-                        break;
-                     }
-                  }
+		if (len == 0)
+			return '\u0000';
 
-                  if (tries == 10) {
-                     char curChar = chars[i];
-                     char replaceChar = chars[newPos];
-                     chars[i] = replaceChar;
-                     chars[newPos] = curChar;
-                     reversedFlag[i] = true;
-                     reversedFlag[newPos] = true;
-                  }
-               }
-            }
+		if (len == 1)
+			return str.charAt(0);
 
-            return new String(chars);
-         }
-      }
-   }
+		return str.charAt(len - 1);
+	}
 
-   public static String randomizeWord(String str) {
-      return randomizeWord(str, true);
-   }
+	public static String randomizeWord(String str, boolean softly) {
+		if (str == null)
+			return null;
 
-   public static String randomize(String str, boolean softly) {
-      if (str == null) {
-         return null;
-      } else if (str.isEmpty()) {
-         return str;
-      } else {
-         String[] lines = str.split("\n");
-         StringBuilder lineBuilder = new StringBuilder();
-         boolean isFirstLine = true;
+		int len = str.length();
 
-         for(int l = 0; l < lines.length; ++l) {
-            String line = lines[l];
-            String[] words = line.split(" ");
-            StringBuilder wordBuilder = new StringBuilder();
-            boolean isFirstWord = true;
+		if (len < 4)
+			return str;
 
-            for(int w = 0; w < words.length; ++w) {
-               if (isFirstWord) {
-                  isFirstWord = false;
-               } else {
-                  wordBuilder.append(' ');
-               }
+		boolean[] reversedFlag = new boolean[len];
 
-               wordBuilder.append(randomizeWord(words[w]));
-            }
+		if (softly)
+			// Do not reverse first letter
+			reversedFlag[0] = true;
 
-            if (isFirstLine) {
-               isFirstLine = false;
-            } else {
-               lineBuilder.append('\n');
-            }
+		// Flag indicating if the last letter is chosen for "soft" random
+		boolean chosenLastLetter = !softly;
 
-            lineBuilder.append(wordBuilder);
-         }
+		char[] chars = str.toCharArray();
 
-         return lineBuilder.toString();
-      }
-   }
+		for (int i = len - 1; i > -1; i--) {
+			char curChar = chars[i];
+			int charType = Character.getType(curChar);
+			boolean canBeReversed = charType == Character.UPPERCASE_LETTER
+					|| charType == Character.LOWERCASE_LETTER;
 
-   public static String randomize(String str) {
-      return randomize(str, true);
-   }
+			reversedFlag[i] |= !canBeReversed;
 
-   public static enum EscapeGroup {
-      DOUBLE_QUOTE(new char[]{'"'}),
-      COMMAND(DOUBLE_QUOTE, new char[]{'\'', ' '}),
-      REGEXP(COMMAND, new char[]{'/', '\\', '?', '*', '+', '[', ']', ':', '{', '}', '(', ')'});
+			if (canBeReversed && !chosenLastLetter) {
+				reversedFlag[i] = true;
+				chosenLastLetter = true;
+			}
+		}
 
-      private final char[] chars;
+		for (int i = 0; i < len; i++) {
+			if (reversedFlag[i])
+				continue;
 
-      private EscapeGroup(char... symbols) {
-         this.chars = symbols;
-      }
+			int newPos = i, tries = 0;
 
-      private EscapeGroup(StringUtil.EscapeGroup extend, char... symbols) {
-         int len = extend.chars.length + symbols.length;
-         this.chars = new char[len];
+			while (tries < 3) {
+				tries++;
 
-         int x;
-         for(x = 0; x < extend.chars.length; ++x) {
-            this.chars[x] = extend.chars[x];
-         }
+				newPos = new Random().nextInt(len);
 
-         System.arraycopy(symbols, 0, this.chars, x, symbols.length);
-      }
+				if (reversedFlag[newPos])
+					continue;
 
-      public char[] getChars() {
-         return this.chars;
-      }
-   }
+				tries = 10;
+				break;
+			}
+
+			if (tries != 10)
+				continue;
+
+			char curChar = chars[i], replaceChar = chars[newPos];
+
+			chars[i] = replaceChar;
+			chars[newPos] = curChar;
+
+			reversedFlag[i] = true;
+			reversedFlag[newPos] = true;
+		}
+
+		return new String(chars);
+	}
+
+	public static String randomizeWord(String str) {
+		return randomizeWord(str, true);
+	}
+
+	public static String randomize(String str, boolean softly) {
+		if (str == null)
+			return null;
+
+		if (str.isEmpty())
+			return str;
+
+		String[] lines = str.split("\n");
+		StringBuilder lineBuilder = new StringBuilder();
+
+		boolean isFirstLine = true;
+
+		for (int l = 0; l < lines.length; l++) {
+			String line = lines[l];
+
+			String[] words = line.split(" ");
+			StringBuilder wordBuilder = new StringBuilder();
+
+			boolean isFirstWord = true;
+
+			for (int w = 0; w < words.length; w++) {
+
+				if (isFirstWord)
+					isFirstWord = false;
+				else
+					wordBuilder.append(' ');
+
+				wordBuilder.append(randomizeWord(words[w]));
+			}
+
+			if (isFirstLine)
+				isFirstLine = false;
+			else
+				lineBuilder.append('\n');
+
+			lineBuilder.append(wordBuilder);
+		}
+
+		return lineBuilder.toString();
+	}
+
+	public static String randomize(String str) {
+		return randomize(str, true);
+	}
+
+	public enum EscapeGroup {
+		DOUBLE_QUOTE('"'), COMMAND(DOUBLE_QUOTE, '\'', ' '),
+		REGEXP(COMMAND, '/', '\\', '?', '*', '+', '[', ']', ':', '{', '}', '(', ')');
+
+		private final char[] chars;
+
+		private EscapeGroup(char... symbols) {
+			this.chars = symbols;
+		}
+
+		private EscapeGroup(EscapeGroup extend, char... symbols) {
+			int len = extend.chars.length + symbols.length;
+			this.chars = new char[len];
+
+			int x = 0;
+			for (; x < extend.chars.length; x++)
+				this.chars[x] = extend.chars[x];
+
+			System.arraycopy(symbols, 0, this.chars, x, symbols.length);
+
+			// for (int i = 0; i < symbols.length; i++)
+			// this.chars[i + x] = symbols[i];
+		}
+
+		public char[] getChars() {
+			return chars;
+		}
+	}
 }

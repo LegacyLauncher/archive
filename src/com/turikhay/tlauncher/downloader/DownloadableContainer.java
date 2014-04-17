@@ -1,174 +1,161 @@
 package com.turikhay.tlauncher.downloader;
 
-import com.turikhay.tlauncher.ui.console.Console;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.turikhay.tlauncher.ui.console.Console;
+
 public class DownloadableContainer {
-   private final List handlers = Collections.synchronizedList(new ArrayList());
-   private final List errors = Collections.synchronizedList(new ArrayList());
-   final List list = Collections.synchronizedList(new ArrayList());
-   private Console console;
-   private final AtomicInteger sum = new AtomicInteger();
-   private boolean locked;
-   private boolean aborted;
+	private final List<DownloadableContainerHandler> handlers;
+	private final List<Throwable> errors;
+	final List<Downloadable> list;
 
-   public List getList() {
-      return Collections.unmodifiableList(this.list);
-   }
+	private Console console;
 
-   public void add(Downloadable d) {
-      if (d == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkLocked();
-         this.list.add(d);
-         d.setContainer(this);
-         this.sum.incrementAndGet();
-      }
-   }
+	private final AtomicInteger sum;
+	private boolean locked, aborted;
 
-   public void addAll(Downloadable... ds) {
-      if (ds == null) {
-         throw new NullPointerException();
-      } else {
-         for(int i = 0; i < ds.length; ++i) {
-            if (ds[i] == null) {
-               throw new NullPointerException("Downloadable at " + i + " is NULL!");
-            }
+	public DownloadableContainer() {
+		this.list = Collections.synchronizedList(new ArrayList<Downloadable>());
+		this.handlers = Collections
+				.synchronizedList(new ArrayList<DownloadableContainerHandler>());
+		this.errors = Collections.synchronizedList(new ArrayList<Throwable>());
 
-            this.list.add(ds[i]);
-            ds[i].setContainer(this);
-            this.sum.incrementAndGet();
-         }
+		this.sum = new AtomicInteger();
+	}
 
-      }
-   }
+	public List<Downloadable> getList() {
+		return Collections.unmodifiableList(list);
+	}
 
-   public void addAll(Collection coll) {
-      if (coll == null) {
-         throw new NullPointerException();
-      } else {
-         int i = -1;
-         Iterator var4 = coll.iterator();
+	public void add(Downloadable d) {
+		if (d == null)
+			throw new NullPointerException();
 
-         while(var4.hasNext()) {
-            Downloadable d = (Downloadable)var4.next();
-            ++i;
-            if (d == null) {
-               throw new NullPointerException("Downloadable at" + i + " is NULL!");
-            }
+		checkLocked();
 
-            this.list.add(d);
-            d.setContainer(this);
-            this.sum.incrementAndGet();
-         }
+		list.add(d);
+		d.setContainer(this);
 
-      }
-   }
+		sum.incrementAndGet();
+	}
 
-   public void addHandler(DownloadableContainerHandler handler) {
-      if (handler == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkLocked();
-         this.handlers.add(handler);
-      }
-   }
+	public void addAll(Downloadable... ds) {
+		if (ds == null)
+			throw new NullPointerException();
 
-   public List getErrors() {
-      return Collections.unmodifiableList(this.errors);
-   }
+		for (int i = 0; i < ds.length; i++) {
+			if (ds[i] == null)
+				throw new NullPointerException("Downloadable at " + i
+						+ " is NULL!");
 
-   public Console getConsole() {
-      return this.console;
-   }
+			list.add(ds[i]);
+			ds[i].setContainer(this);
 
-   public boolean hasConsole() {
-      return this.console != null;
-   }
+			sum.incrementAndGet();
+		}
+	}
 
-   public void setConsole(Console console) {
-      this.checkLocked();
-      this.console = console;
-   }
+	public void addAll(Collection<Downloadable> coll) {
+		if (coll == null)
+			throw new NullPointerException();
 
-   public boolean isAborted() {
-      return this.aborted;
-   }
+		int i = -1;
 
-   void setLocked(boolean locked) {
-      this.locked = locked;
-   }
+		for (Downloadable d : coll) {
+			++i;
 
-   void checkLocked() {
-      if (this.locked) {
-         throw new IllegalStateException("Downloadable is locked!");
-      }
-   }
+			if (d == null)
+				throw new NullPointerException("Downloadable at" + i
+						+ " is NULL!");
 
-   void onStart() {
-      Iterator var2 = this.handlers.iterator();
+			list.add(d);
+			d.setContainer(this);
 
-      while(var2.hasNext()) {
-         DownloadableContainerHandler handler = (DownloadableContainerHandler)var2.next();
-         handler.onStart(this);
-      }
+			sum.incrementAndGet();
+		}
+	}
 
-   }
+	public void addHandler(DownloadableContainerHandler handler) {
+		if (handler == null)
+			throw new NullPointerException();
 
-   void onComplete(Downloadable d) throws RetryDownloadException {
-      Iterator var3 = this.handlers.iterator();
+		checkLocked();
 
-      DownloadableContainerHandler handler;
-      while(var3.hasNext()) {
-         handler = (DownloadableContainerHandler)var3.next();
-         handler.onComplete(this, d);
-      }
+		handlers.add(handler);
+	}
 
-      if (this.sum.decrementAndGet() <= 0) {
-         var3 = this.handlers.iterator();
+	public List<Throwable> getErrors() {
+		return Collections.unmodifiableList(errors);
+	}
 
-         while(var3.hasNext()) {
-            handler = (DownloadableContainerHandler)var3.next();
-            handler.onFullComplete(this);
-         }
+	public Console getConsole() {
+		return console;
+	}
 
-      }
-   }
+	public boolean hasConsole() {
+		return console != null;
+	}
 
-   void onAbort(Downloadable d) {
-      this.aborted = true;
-      this.errors.add(d.getError());
-      if (this.sum.decrementAndGet() <= 0) {
-         Iterator var3 = this.handlers.iterator();
+	public void setConsole(Console console) {
+		checkLocked();
 
-         while(var3.hasNext()) {
-            DownloadableContainerHandler handler = (DownloadableContainerHandler)var3.next();
-            handler.onAbort(this);
-         }
+		this.console = console;
+	}
 
-      }
-   }
+	public boolean isAborted() {
+		return aborted;
+	}
 
-   void onError(Downloadable d, Throwable e) {
-      this.errors.add(e);
-      Iterator var4 = this.handlers.iterator();
+	void setLocked(boolean locked) {
+		this.locked = locked;
+	}
 
-      while(var4.hasNext()) {
-         DownloadableContainerHandler handler = (DownloadableContainerHandler)var4.next();
-         handler.onError(this, d, e);
-      }
+	void checkLocked() {
+		if (locked)
+			throw new IllegalStateException("Downloadable is locked!");
+	}
 
-   }
+	void onStart() {
+		for (DownloadableContainerHandler handler : handlers)
+			handler.onStart(this);
+	}
 
-   void log(Object... o) {
-      if (this.console != null) {
-         this.console.log(o);
-      }
-   }
+	void onComplete(Downloadable d) throws RetryDownloadException {
+		for (DownloadableContainerHandler handler : handlers)
+			handler.onComplete(this, d);
+
+		if (sum.decrementAndGet() > 0)
+			return;
+
+		for (DownloadableContainerHandler handler : handlers)
+			handler.onFullComplete(this);
+	}
+
+	void onAbort(Downloadable d) {
+		aborted = true;
+		errors.add(d.getError());
+
+		if (sum.decrementAndGet() > 0)
+			return;
+
+		for (DownloadableContainerHandler handler : handlers)
+			handler.onAbort(this);
+	}
+
+	void onError(Downloadable d, Throwable e) {
+		errors.add(e);
+
+		for (DownloadableContainerHandler handler : handlers)
+			handler.onError(this, d, e);
+	}
+
+	void log(Object... o) {
+		if (console == null)
+			return;
+		console.log(o);
+	}
 }
