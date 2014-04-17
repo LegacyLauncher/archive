@@ -1,127 +1,133 @@
 package net.minecraft.launcher.versions;
 
-import com.turikhay.tlauncher.downloader.Downloadable;
-import com.turikhay.tlauncher.repository.Repository;
-import com.turikhay.util.OS;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import com.turikhay.tlauncher.downloader.Downloadable;
+import com.turikhay.tlauncher.repository.Repository;
+import com.turikhay.util.OS;
+
 public class Library {
-   private static final StrSubstitutor SUBSTITUTOR;
-   private String name;
-   private List rules;
-   private Map natives;
-   private ExtractRules extract;
-   private String url;
-   private String exact_url;
+	private static final StrSubstitutor SUBSTITUTOR;
 
-   static {
-      HashMap map = new HashMap();
-      map.put("platform", OS.CURRENT.getName());
-      map.put("arch", OS.getArch().asString());
-      SUBSTITUTOR = new StrSubstitutor(map);
-   }
+	private String name;
+	private List<Rule> rules;
+	private Map<OS, String> natives;
+	private ExtractRules extract;
+	private String url, exact_url;
 
-   public String getName() {
-      return this.name;
-   }
+	public String getName() {
+		return name;
+	}
 
-   public List getRules() {
-      return Collections.unmodifiableList(this.rules);
-   }
+	public List<Rule> getRules() {
+		return Collections.unmodifiableList(rules);
+	}
 
-   public boolean appliesToCurrentEnvironment() {
-      if (this.rules == null) {
-         return true;
-      } else {
-         Rule.Action lastAction = Rule.Action.DISALLOW;
-         Iterator var3 = this.rules.iterator();
+	public boolean appliesToCurrentEnvironment() {
+		if (this.rules == null)
+			return true;
 
-         while(var3.hasNext()) {
-            Rule rule = (Rule)var3.next();
-            Rule.Action action = rule.getAppliedAction();
-            if (action != null) {
-               lastAction = action;
-            }
-         }
+		Rule.Action lastAction = Rule.Action.DISALLOW;
 
-         if (lastAction == Rule.Action.ALLOW) {
-            return true;
-         } else {
-            return false;
-         }
-      }
-   }
+		for (Rule rule : this.rules) {
+			Rule.Action action = rule.getAppliedAction();
 
-   public Map getNatives() {
-      return this.natives;
-   }
+			if (action != null)
+				lastAction = action;
+		}
 
-   public ExtractRules getExtractRules() {
-      return this.extract;
-   }
+		return lastAction == Rule.Action.ALLOW;
+	}
 
-   String getArtifactBaseDir() {
-      if (this.name == null) {
-         throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
-      } else {
-         String[] parts = this.name.split(":", 3);
-         return String.format("%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
-      }
-   }
+	public Map<OS, String> getNatives() {
+		return this.natives;
+	}
 
-   public String getArtifactPath() {
-      return this.getArtifactPath((String)null);
-   }
+	public ExtractRules getExtractRules() {
+		return this.extract;
+	}
 
-   public String getArtifactPath(String classifier) {
-      if (this.name == null) {
-         throw new IllegalStateException("Cannot get artifact path of empty/blank artifact");
-      } else {
-         return String.format("%s/%s", this.getArtifactBaseDir(), this.getArtifactFilename(classifier));
-      }
-   }
+	String getArtifactBaseDir() {
+		if (name == null)
+			throw new IllegalStateException(
+					"Cannot get artifact dir of empty/blank artifact");
 
-   String getArtifactFilename(String classifier) {
-      if (this.name == null) {
-         throw new IllegalStateException("Cannot get artifact filename of empty/blank artifact");
-      } else {
-         String[] parts = this.name.split(":", 3);
-         String result;
-         if (classifier == null) {
-            result = String.format("%s-%s.jar", parts[1], parts[2]);
-         } else {
-            result = String.format("%s-%s%s.jar", parts[1], parts[2], "-" + classifier);
-         }
+		String[] parts = this.name.split(":", 3);
+		return String.format("%s/%s/%s",
+				new Object[] { parts[0].replaceAll("\\.", "/"), parts[1],
+						parts[2] });
+	}
 
-         return SUBSTITUTOR.replace(result);
-      }
-   }
+	public String getArtifactPath() {
+		return getArtifactPath(null);
+	}
 
-   public String toString() {
-      return "Library{name='" + this.name + '\'' + ", rules=" + this.rules + ", natives=" + this.natives + ", extract=" + this.extract + '}';
-   }
+	public String getArtifactPath(String classifier) {
+		if (name == null)
+			throw new IllegalStateException(
+					"Cannot get artifact path of empty/blank artifact");
 
-   public Downloadable getDownloadable(Repository versionSource, File file, OS os) {
-      if (this.exact_url != null) {
-         return new Downloadable(this.exact_url, file);
-      } else {
-         String nativePath = this.natives != null && this.appliesToCurrentEnvironment() ? (String)this.natives.get(os) : null;
-         String path = this.getArtifactPath(nativePath);
-         Repository repo;
-         if (this.url == null) {
-            repo = Repository.LIBRARY_REPO;
-         } else {
-            repo = this.url.startsWith("/") ? versionSource : null;
-            path = this.url.substring(1) + path;
-         }
+		return String.format("%s/%s", new Object[] { getArtifactBaseDir(),
+				getArtifactFilename(classifier) });
+	}
 
-         return repo == null ? new Downloadable(path, file) : new Downloadable(repo, path, file);
-      }
-   }
+	String getArtifactFilename(String classifier) {
+		if (this.name == null)
+			throw new IllegalStateException(
+					"Cannot get artifact filename of empty/blank artifact");
+
+		String[] parts = this.name.split(":", 3);
+		String result;
+
+		if (classifier == null)
+			result = String.format("%s-%s.jar", new Object[] { parts[1],
+					parts[2] });
+		else
+			result = String.format("%s-%s%s.jar", new Object[] { parts[1],
+					parts[2], "-" + classifier });
+
+		return SUBSTITUTOR.replace(result);
+	}
+
+	@Override
+	public String toString() {
+		return "Library{name='" + this.name + '\'' + ", rules=" + this.rules
+				+ ", natives=" + this.natives + ", extract=" + this.extract
+				+ '}';
+	}
+
+	public Downloadable getDownloadable(Repository versionSource, File file,
+			OS os) {
+		if (exact_url != null)
+			return new Downloadable(exact_url, file);
+
+		String nativePath = natives != null && appliesToCurrentEnvironment() ? natives
+				.get(os) : null, path = getArtifactPath(nativePath);
+		Repository repo;
+
+		if (url == null) {
+			repo = Repository.LIBRARY_REPO;
+		} else {
+			repo = url.startsWith("/") ? versionSource : null;
+			path = url.substring(1) + path;
+		}
+
+		return repo == null ? new Downloadable(path, file) : new Downloadable(
+				repo, path, file);
+	}
+
+	static {
+		HashMap<String, String> map = new HashMap<String, String>();
+
+		map.put("platform", OS.CURRENT.getName());
+		map.put("arch", OS.getArch().asString());
+
+		SUBSTITUTOR = new StrSubstitutor(map);
+	}
 }

@@ -6,122 +6,139 @@ import java.util.Locale;
 import java.util.Properties;
 
 public class LangConfiguration extends SimpleConfiguration {
-   private final Locale[] locales;
-   private final Properties[] prop;
-   private int i;
+	private final Locale[] locales;
+	private final Properties[] prop;
 
-   public LangConfiguration(Locale[] locales, Locale select) throws IOException {
-      if (locales == null) {
-         throw new NullPointerException();
-      } else {
-         int size = locales.length;
-         this.locales = locales;
-         this.prop = new Properties[size];
+	private int i; // selected locale
 
-         for(int i = 0; i < size; ++i) {
-            Locale locale = locales[i];
-            if (locale == null) {
-               throw new NullPointerException("Locale at #" + i + " is NULL!");
-            }
+	public LangConfiguration(Locale[] locales, Locale select)
+			throws IOException {
+		if (locales == null)
+			throw new NullPointerException();
 
-            String localeName = locale.toString();
-            InputStream stream = this.getClass().getResourceAsStream("/lang/" + localeName);
-            if (stream == null) {
-               throw new IOException("Cannot find locale file for: " + localeName);
-            }
+		int size = locales.length;
 
-            this.prop[i] = loadFromStream(stream);
-            if (localeName.equals("en_US")) {
-               copyProperties(this.prop[i], this.properties, true);
-            }
-         }
+		this.locales = locales;
+		this.prop = new Properties[size];
 
-         this.setSelected(select);
-      }
-   }
+		for (int i = 0; i < size; i++) {
+			Locale locale = locales[i];
 
-   public Locale[] getLocales() {
-      return this.locales;
-   }
+			if (locale == null)
+				throw new NullPointerException("Locale at #" + i + " is NULL!");
 
-   public Locale getSelected() {
-      return this.locales[this.i];
-   }
+			String localeName = locale.toString();
+			InputStream stream = getClass().getResourceAsStream(
+					"/lang/" + localeName);
 
-   public void setSelected(Locale select) {
-      if (select == null) {
-         throw new NullPointerException();
-      } else {
-         for(int i = 0; i < this.locales.length; ++i) {
-            if (this.locales[i].equals(select)) {
-               this.i = i;
-               return;
-            }
-         }
+			if (stream == null)
+				throw new IOException("Cannot find locale file for: "
+						+ localeName);
 
-         throw new IllegalArgumentException("Cannot find Locale:" + select);
-      }
-   }
+			prop[i] = loadFromStream(stream);
 
-   public String nget(String key) {
-      if (key == null) {
-         return null;
-      } else {
-         String value = this.prop[this.i].getProperty(key);
-         return value == null ? this.getDefault(key) : value;
-      }
-   }
+			if (localeName.equals("en_US"))
+				// Set as default
+				copyProperties(prop[i], properties, true);
+		}
 
-   public String get(String key) {
-      String value = this.nget(key);
-      return value == null ? key : value;
-   }
+		this.setSelected(select);
+	}
 
-   public String nget(String key, Object... vars) {
-      String value = this.get(key);
-      if (value == null) {
-         return null;
-      } else {
-         String[] variables = checkVariables(vars);
+	public Locale[] getLocales() {
+		return locales;
+	}
 
-         for(int i = 0; i < variables.length; ++i) {
-            value = value.replace("%" + i, variables[i]);
-         }
+	public Locale getSelected() {
+		return locales[i];
+	}
 
-         return value;
-      }
-   }
+	public void setSelected(Locale select) {
+		if (select == null)
+			throw new NullPointerException();
 
-   public String get(String key, Object... vars) {
-      String value = this.nget(key, vars);
-      return value == null ? key : value;
-   }
+		for (int i = 0; i < locales.length; i++)
+			if (locales[i].equals(select)) {
+				this.i = i;
 
-   public void set(String key, Object value) {
-      throw new UnsupportedOperationException();
-   }
+				return;
+			}
 
-   public String getDefault(String key) {
-      return super.get(key);
-   }
+		throw new IllegalArgumentException("Cannot find Locale:" + select);
+	}
 
-   private static String[] checkVariables(Object[] check) {
-      if (check == null) {
-         throw new NullPointerException();
-      } else if (check.length == 1 && check[0] == null) {
-         return new String[0];
-      } else {
-         String[] string = new String[check.length];
+	public String nget(String key) {
+		if (key == null)
+			return null;
 
-         for(int i = 0; i < check.length; ++i) {
-            if (check[i] == null) {
-               throw new NullPointerException("Variable at index " + i + " is NULL!");
-            }
+		String value = prop[i].getProperty(key);
 
-            string[i] = check[i].toString();
-         }
+		if (value == null)
+			return getDefault(key);
 
-         return string;
-      }
-   }
+		return value;
+	}
+
+	@Override
+	public String get(String key) {
+		String value = nget(key);
+
+		if (value == null)
+			return key;
+
+		return value;
+	}
+
+	public String nget(String key, Object... vars) {
+		String value = get(key);
+
+		if (value == null)
+			return null;
+
+		String[] variables = checkVariables(vars);
+
+		for (int i = 0; i < variables.length; i++)
+			value = value.replace("%" + i, variables[i]);
+
+		return value;
+	}
+
+	public String get(String key, Object... vars) {
+		String value = nget(key, vars);
+
+		if (value == null)
+			return key;
+
+		return value;
+	}
+
+	@Override
+	public void set(String key, Object value) {
+		// Nope. Never.
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getDefault(String key) {
+		return super.get(key);
+	}
+
+	private static String[] checkVariables(Object[] check) {
+		if (check == null)
+			throw new NullPointerException();
+
+		if (check.length == 1 && check[0] == null)
+			return new String[0];
+
+		String[] string = new String[check.length];
+
+		for (int i = 0; i < check.length; i++)
+			if (check[i] == null)
+				throw new NullPointerException("Variable at index " + i
+						+ " is NULL!");
+			else
+				string[i] = check[i].toString();
+
+		return string;
+	}
 }

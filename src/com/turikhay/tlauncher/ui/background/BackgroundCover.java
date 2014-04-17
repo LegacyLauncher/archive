@@ -1,124 +1,125 @@
 package com.turikhay.tlauncher.ui.background;
 
-import com.turikhay.tlauncher.ui.swing.ResizeableComponent;
-import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import com.turikhay.util.U;
 import java.awt.Color;
 import java.awt.Graphics;
 
-public class BackgroundCover extends ExtendedPanel implements ResizeableComponent {
-   private static final long serialVersionUID = -1801217638400760969L;
-   private static final double opacityStep = 0.01D;
-   private static final int timeFrame = 5;
-   private final BackgroundHolder parent;
-   private final Object animationLock;
-   private double opacity;
-   private Color opacityColor;
-   private Color color;
+import com.turikhay.tlauncher.ui.swing.ResizeableComponent;
+import com.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import com.turikhay.util.U;
 
-   BackgroundCover(BackgroundHolder parent, Color opacityColor, double opacity) {
-      if (parent == null) {
-         throw new NullPointerException();
-      } else {
-         this.parent = parent;
-         this.setColor(opacityColor, false);
-         this.setOpacity(opacity, false);
-         this.animationLock = new Object();
-      }
-   }
+public class BackgroundCover extends ExtendedPanel implements
+		ResizeableComponent {
+	private static final long serialVersionUID = -1801217638400760969L;
 
-   BackgroundCover(BackgroundHolder parent) {
-      this(parent, Color.white, 0.0D);
-   }
+	private static final double opacityStep = 0.01;
+	private static final int timeFrame = 5;
 
-   public void makeCover(boolean animate) {
-      synchronized(this.animationLock) {
-         if (animate) {
-            while(this.opacity < 1.0D) {
-               this.setOpacity(this.opacity + 0.01D, true);
-               U.sleepFor(5L);
-            }
-         }
+	private final BackgroundHolder parent;
+	private final Object animationLock;
 
-         this.setOpacity(1.0D, true);
-      }
-   }
+	private double opacity;
+	private Color opacityColor;
 
-   public void makeCover() {
-      this.makeCover(true);
-   }
+	private Color color;
 
-   public void removeCover(boolean animate) {
-      synchronized(this.animationLock) {
-         if (animate) {
-            while(this.opacity > 0.0D) {
-               this.setOpacity(this.opacity - 0.01D, true);
-               U.sleepFor(5L);
-            }
-         }
+	BackgroundCover(BackgroundHolder parent, Color opacityColor, double opacity) {
+		if (parent == null)
+			throw new NullPointerException();
 
-         this.setOpacity(0.0D, true);
-      }
-   }
+		this.parent = parent;
 
-   public void removeCover() {
-      this.removeCover(true);
-   }
+		this.setColor(opacityColor, false);
+		this.setOpacity(opacity, false);
 
-   public boolean isCovered() {
-      return this.opacity == 1.0D;
-   }
+		this.animationLock = new Object();
+	}
 
-   public void toggleCover(boolean animate) {
-      if (this.isCovered()) {
-         this.removeCover(animate);
-      } else {
-         this.makeCover(animate);
-      }
+	BackgroundCover(BackgroundHolder parent) {
+		this(parent, Color.white, 0.0);
+	}
 
-   }
+	public void makeCover(boolean animate) {
+		synchronized (animationLock) {
+			if (animate)
+				while (opacity < 1) {
+					setOpacity(opacity + opacityStep, true);
+					U.sleepFor(timeFrame);
+				}
+			setOpacity(1.0, true);
+		}
+	}
 
-   public void paint(Graphics g) {
-      g.setColor(this.opacityColor);
-      g.fillRect(0, 0, this.getWidth(), this.getHeight());
-   }
+	public void makeCover() {
+		makeCover(true);
+	}
 
-   public double getOpacity() {
-      return this.opacity;
-   }
+	public void removeCover(boolean animate) {
+		synchronized (animationLock) {
+			if (animate)
+				while (opacity > 0) {
+					setOpacity(opacity - opacityStep, true);
+					U.sleepFor(timeFrame);
+				}
+			setOpacity(0.0, true);
+		}
+	}
 
-   public void setOpacity(double opacity, boolean repaint) {
-      if (opacity < 0.0D) {
-         opacity = 0.0D;
-      } else if (opacity > 1.0D) {
-         opacity = 1.0D;
-      }
+	public void removeCover() {
+		removeCover(true);
+	}
 
-      this.opacity = opacity;
-      this.opacityColor = new Color(this.color.getRed(), this.color.getGreen(), this.color.getBlue(), (int)(255.0D * opacity));
-      if (repaint) {
-         this.repaint();
-      }
+	public boolean isCovered() {
+		return opacity == 1;
+	}
 
-   }
+	public void toggleCover(boolean animate) {
+		if (isCovered())
+			removeCover(animate);
+		else
+			makeCover(animate);
+	}
 
-   public Color getColor() {
-      return this.color;
-   }
+	@Override
+	public void paint(Graphics g) {
+		g.setColor(opacityColor);
+		g.fillRect(0, 0, getWidth(), getHeight());
+	}
 
-   public void setColor(Color color, boolean repaint) {
-      if (color == null) {
-         throw new NullPointerException();
-      } else {
-         this.color = color;
-         if (repaint) {
-            this.repaint();
-         }
+	public double getOpacity() {
+		return opacity;
+	}
 
-      }
-   }
+	public void setOpacity(double opacity, boolean repaint) {
+		if (opacity < 0)
+			opacity = 0;
+		else if (opacity > 1)
+			opacity = 1;
 
-   public void onResize() {
-      this.setSize(this.parent.getWidth(), this.parent.getHeight());
-   }
+		this.opacity = opacity;
+		this.opacityColor = new Color(color.getRed(), color.getGreen(),
+				color.getBlue(), (int) (255 * opacity));
+
+		if (repaint)
+			repaint();
+	}
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color, boolean repaint) {
+		if (color == null)
+			throw new NullPointerException();
+
+		this.color = color;
+
+		if (repaint)
+			repaint();
+	}
+
+	@Override
+	public void onResize() {
+		this.setSize(parent.getWidth(), parent.getHeight());
+	}
+
 }

@@ -1,60 +1,70 @@
 package com.turikhay.tlauncher.ui.loc;
 
 import java.awt.event.ItemListener;
+
 import javax.swing.JCheckBox;
 
-public class LocalizableCheckbox extends JCheckBox implements LocalizableComponent {
-   private static final long serialVersionUID = 1L;
-   private String path;
+import com.turikhay.tlauncher.ui.TLauncherFrame;
 
-   public LocalizableCheckbox(String path) {
-      this.init();
-      this.setLabel(path);
-   }
+public class LocalizableCheckbox extends JCheckBox implements
+		LocalizableComponent {
+	private static final long serialVersionUID = 1L;
 
-   public LocalizableCheckbox(String path, boolean state) {
-      super("", state);
-      this.init();
-      this.setText(path);
-   }
+	private String path;
 
-   /** @deprecated */
-   @Deprecated
-   public void setLabel(String path) {
-      this.setText(path);
-   }
+	public LocalizableCheckbox(String path) {
+		init();
+		this.setLabel(path);
+	}
 
-   public void setText(String path) {
-      this.path = path;
-      super.setText(Localizable.get() == null ? path : Localizable.get().get(path));
-   }
+	public LocalizableCheckbox(String path, boolean state) {
+		super("", state);
+		init();
 
-   public String getLangPath() {
-      return this.path;
-   }
+		this.setText(path);
+	}
 
-   public boolean getState() {
-      return super.getModel().isSelected();
-   }
+	@Override
+	@Deprecated
+	public void setLabel(String path) {
+		this.setText(path);
+	}
 
-   public void setState(boolean state) {
-      super.getModel().setSelected(state);
-   }
+	@Override
+	public void setText(String path) {
+		this.path = path;
+		super.setText((Localizable.get() == null) ? path : Localizable.get()
+				.get(path));
+	}
 
-   public void addListener(ItemListener l) {
-      super.getModel().addItemListener(l);
-   }
+	public String getLangPath() {
+		return path;
+	}
 
-   public void removeListener(ItemListener l) {
-      super.getModel().removeItemListener(l);
-   }
+	public boolean getState() {
+		return super.getModel().isSelected();
+	}
 
-   public void updateLocale() {
-      this.setLabel(this.path);
-   }
+	public void setState(boolean state) {
+		super.getModel().setSelected(state);
+	}
 
-   private void init() {
-      this.setFont(this.getFont().deriveFont(12.0F));
-      this.setOpaque(false);
-   }
+	public void addListener(ItemListener l) {
+		super.getModel().addItemListener(l);
+	}
+
+	public void removeListener(ItemListener l) {
+		super.getModel().removeItemListener(l);
+	}
+
+	@Override
+	public void updateLocale() {
+		this.setLabel(path);
+	}
+
+	private void init() {
+		this.setFont(getFont().deriveFont(TLauncherFrame.fontSize));
+		this.setOpaque(false);
+		// this.setBackground(new Color(0, 0, 0, 0));
+	}
 }
