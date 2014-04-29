@@ -3,182 +3,191 @@ package net.minecraft.launcher.updater;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
-
-import com.turikhay.tlauncher.downloader.Downloadable;
-import com.turikhay.tlauncher.repository.Repository;
-import com.turikhay.util.OS;
-
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.Version;
+import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.util.OS;
 
 public class VersionSyncInfo {
-	protected final Version localVersion, remoteVersion;
-	private CompleteVersion completeLocal, completeRemote;
-	private String id;
+   protected final Version localVersion;
+   protected final Version remoteVersion;
+   private CompleteVersion completeLocal;
+   private CompleteVersion completeRemote;
+   private String id;
 
-	public VersionSyncInfo(Version localVersion, Version remoteVersion) {
-		if (localVersion == null && remoteVersion == null)
-			throw new NullPointerException(
-					"Cannot create sync info from NULLs!");
+   public VersionSyncInfo(Version localVersion, Version remoteVersion) {
+      if (localVersion == null && remoteVersion == null) {
+         throw new NullPointerException("Cannot create sync info from NULLs!");
+      } else {
+         this.localVersion = localVersion;
+         this.remoteVersion = remoteVersion;
+         if (localVersion != null && remoteVersion != null) {
+            localVersion.setVersionList(remoteVersion.getVersionList());
+         }
 
-		this.localVersion = localVersion;
-		this.remoteVersion = remoteVersion;
+         if (this.getID() == null) {
+            throw new NullPointerException("Cannot create sync info from versions that have NULL IDs");
+         }
+      }
+   }
 
-		if (getID() == null)
-			throw new NullPointerException(
-					"Cannot create sync info from versions that have NULL IDs");
-	}
+   public VersionSyncInfo(VersionSyncInfo info) {
+      this(info.getLocal(), info.getRemote());
+   }
 
-	public VersionSyncInfo(VersionSyncInfo info) {
-		this(info.getLocal(), info.getRemote());
-	}
+   private VersionSyncInfo() {
+      this.localVersion = null;
+      this.remoteVersion = null;
+   }
 
-	private VersionSyncInfo() {
-		this.localVersion = null;
-		this.remoteVersion = null;
-	}
+   public boolean equals(Object o) {
+      if (this == o) {
+         return true;
+      } else if (this.getID() != null && o != null && o instanceof VersionSyncInfo) {
+         VersionSyncInfo v = (VersionSyncInfo)o;
+         return this.getID().equals(v.getID());
+      } else {
+         return false;
+      }
+   }
 
-	@Override
-	public Object clone() {
-		return new VersionSyncInfo(this);
-	}
+   public Version getLocal() {
+      return this.localVersion;
+   }
 
-	public Version getLocal() {
-		return localVersion;
-	}
+   public Version getRemote() {
+      return this.remoteVersion;
+   }
 
-	public Version getRemote() {
-		return remoteVersion;
-	}
+   public String getID() {
+      if (this.id != null) {
+         return this.id;
+      } else if (this.localVersion != null) {
+         return this.localVersion.getID();
+      } else {
+         return this.remoteVersion != null ? this.remoteVersion.getID() : null;
+      }
+   }
 
-	public String getID() {
-		if (id != null)
-			return id;
+   public void setID(String id) {
+      if (id != null && id.isEmpty()) {
+         throw new IllegalArgumentException("ID cannot be empty!");
+      } else {
+         this.id = id;
+      }
+   }
 
-		if (localVersion != null)
-			return localVersion.getID();
+   public Version getLatestVersion() {
+      return this.remoteVersion != null ? this.remoteVersion : this.localVersion;
+   }
 
-		if (remoteVersion != null)
-			return remoteVersion.getID();
+   public Version getAvailableVersion() {
+      return this.localVersion != null ? this.localVersion : this.remoteVersion;
+   }
 
-		return null;
-	}
+   public boolean isInstalled() {
+      return this.localVersion != null;
+   }
 
-	public void setID(String id) {
-		if (id != null && id.isEmpty())
-			throw new IllegalArgumentException("ID cannot be empty!");
+   public boolean hasRemote() {
+      return this.remoteVersion != null;
+   }
 
-		this.id = id;
-	}
+   public boolean isUpToDate() {
+      if (this.localVersion == null) {
+         return false;
+      } else if (this.remoteVersion == null) {
+         return true;
+      } else {
+         return this.localVersion.getUpdatedTime().compareTo(this.remoteVersion.getUpdatedTime()) >= 0;
+      }
+   }
 
-	public Version getLatestVersion() {
-		if (remoteVersion != null)
-			return remoteVersion;
+   public String toString() {
+      return this.getClass().getSimpleName() + "{id='" + this.getID() + "',\nlocal=" + this.localVersion + ",\nremote=" + this.remoteVersion + ", isInstalled=" + this.isInstalled() + ", hasRemote=" + this.hasRemote() + ", isUpToDate=" + this.isUpToDate() + "}";
+   }
 
-		return localVersion;
-	}
+   public CompleteVersion getCompleteVersion(boolean latest) throws IOException {
+      Version version;
+      if (latest) {
+         version = this.getLatestVersion();
+      } else if (this.isInstalled()) {
+         version = this.getLocal();
+      } else {
+         version = this.getRemote();
+      }
 
-	public boolean isInstalled() {
-		return localVersion != null;
-	}
+      if (version.equals(this.localVersion) && this.completeLocal != null) {
+         return this.completeLocal;
+      } else if (version.equals(this.remoteVersion) && this.completeRemote != null) {
+         return this.completeRemote;
+      } else {
+         CompleteVersion complete = version.getVersionList().getCompleteVersion(version);
+         if (version.equals(this.localVersion)) {
+            this.completeLocal = complete;
+         } else if (version.equals(this.remoteVersion)) {
+            this.completeRemote = complete;
+         }
 
-	public boolean hasRemote() {
-		return remoteVersion != null;
-	}
+         return complete;
+      }
+   }
 
-	public boolean isUpToDate() {
-		if (localVersion == null)
-			return false;
-		if (remoteVersion == null)
-			return true;
+   public CompleteVersion getLatestCompleteVersion() throws IOException {
+      return this.getCompleteVersion(true);
+   }
 
-		return localVersion.getUpdatedTime().compareTo(
-				remoteVersion.getUpdatedTime()) >= 0;
-	}
+   public CompleteVersion getLocalCompleteVersion() {
+      return this.completeLocal;
+   }
 
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "{id='" + getID() + "',\nlocal="
-				+ localVersion + ",\nremote=" + remoteVersion
-				+ ", isInstalled=" + isInstalled() + ", hasRemote="
-				+ hasRemote() + ", isUpToDate=" + isUpToDate() + "}";
-	}
+   Set getRequiredDownloadables(OS os, File targetDirectory, boolean force) throws IOException {
+      Set neededFiles = new HashSet();
+      CompleteVersion version = this.getCompleteVersion(force);
+      Repository source = this.hasRemote() ? this.remoteVersion.getSource() : Repository.OFFICIAL_VERSION_REPO;
+      if (!source.isSelectable()) {
+         return neededFiles;
+      } else {
+         Iterator var8 = version.getRelevantLibraries().iterator();
 
-	public CompleteVersion getCompleteVersion(boolean latest)
-			throws IOException {
-		Version version;
+         while(true) {
+            Library library;
+            File local;
+            do {
+               String file;
+               do {
+                  if (!var8.hasNext()) {
+                     return neededFiles;
+                  }
 
-		if (latest)
-			version = getLatestVersion();
-		else if (isInstalled())
-			version = getLocal();
-		else
-			version = getRemote();
+                  library = (Library)var8.next();
+                  file = null;
+                  if (library.getNatives() != null) {
+                     String natives = (String)library.getNatives().get(os);
+                     if (natives != null) {
+                        file = library.getArtifactPath(natives);
+                     }
+                  } else {
+                     file = library.getArtifactPath();
+                  }
+               } while(file == null);
 
-		if (version.equals(localVersion) && completeLocal != null)
-			return completeLocal;
-		if (version.equals(remoteVersion) && completeRemote != null)
-			return completeRemote;
+               local = new File(targetDirectory, "libraries/" + file);
+            } while(!force && local.isFile() && local.length() > 0L);
 
-		CompleteVersion complete = version.getVersionList().getCompleteVersion(
-				version);
+            neededFiles.add(library.getDownloadable(source, local, os));
+         }
+      }
+   }
 
-		if (version.equals(localVersion))
-			this.completeLocal = complete;
-		else if (version.equals(remoteVersion))
-			this.completeRemote = complete;
+   public Set getRequiredDownloadables(File targetDirectory, boolean force) throws IOException {
+      return this.getRequiredDownloadables(OS.CURRENT, targetDirectory, force);
+   }
 
-		return complete;
-	}
-
-	public CompleteVersion getLatestCompleteVersion() throws IOException {
-		return getCompleteVersion(true);
-	}
-
-	Set<Downloadable> getRequiredDownloadables(OS os,
-			File targetDirectory, boolean force) throws IOException {
-		Set<Downloadable> neededFiles = new HashSet<Downloadable>();
-
-		CompleteVersion version = getCompleteVersion(force);
-		Repository source = hasRemote() ? remoteVersion.getSource()
-				: Repository.OFFICIAL_VERSION_REPO;
-
-		if (!source.isSelectable())
-			return neededFiles;
-
-		for (Library library : version.getRelevantLibraries()) {
-			String file = null;
-
-			if (library.getNatives() != null) {
-				String natives = library.getNatives().get(os);
-				if (natives != null)
-					file = library.getArtifactPath(natives);
-			} else {
-				file = library.getArtifactPath();
-			}
-
-			if (file == null)
-				continue;
-
-			File local = new File(targetDirectory, "libraries/" + file);
-			if (!force && local.isFile() && local.length() > 0)
-				continue;
-
-			neededFiles.add(library.getDownloadable(source, local, os));
-		}
-
-		return neededFiles;
-	}
-
-	public Set<Downloadable> getRequiredDownloadables(File targetDirectory,
-			boolean force) throws IOException {
-		return getRequiredDownloadables(OS.CURRENT,
-				targetDirectory, force);
-	}
-
-	public static VersionSyncInfo createEmpty() {
-		return new VersionSyncInfo();
-	}
+   public static VersionSyncInfo createEmpty() {
+      return new VersionSyncInfo();
+   }
 }
