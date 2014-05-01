@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.settings;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -42,6 +43,8 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginException;
 import ru.turikhay.tlauncher.ui.login.LoginListener;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
+import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.OS;
 
 public class SettingsPanel extends EditorPanel implements LoginListener {
@@ -60,6 +63,7 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
    private final EditorGroupHandler versionHandler;
    private final LocalizableButton saveButton;
    private final LocalizableButton defaultButton;
+   private final ImageButton homeButton;
    private final JPopupMenu popup;
    private final LocalizableMenuItem infoItem;
    private final LocalizableMenuItem defaultItem;
@@ -233,10 +237,7 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
       this.saveButton.setFont(this.saveButton.getFont().deriveFont(1));
       this.saveButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            if (SettingsPanel.this.saveValues()) {
-               SettingsPanel.this.scene.setSettings(false);
-            }
-
+            SettingsPanel.this.saveValues();
          }
       });
       this.defaultButton = new LocalizableButton("settings.default");
@@ -248,6 +249,22 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
 
          }
       });
+      this.homeButton = new ImageButton("home.png");
+      this.homeButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsPanel.this.updateValues();
+            SettingsPanel.this.scene.setSettings(false);
+         }
+      });
+      Dimension size = this.homeButton.getPreferredSize();
+      if (size != null) {
+         this.homeButton.setPreferredSize(new Dimension(size.width * 2, size.height));
+      }
+
+      BorderPanel controlPanel = new BorderPanel();
+      controlPanel.setCenter(sepPan(new Component[]{this.saveButton, this.defaultButton}));
+      controlPanel.setEast(uSepPan(new Component[]{this.homeButton}));
+      this.container.add((Component)controlPanel);
       this.popup = new JPopupMenu();
       this.infoItem = new LocalizableMenuItem("settings.popup.info");
       this.infoItem.setEnabled(false);
@@ -261,10 +278,10 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
          }
       });
       this.popup.add(this.defaultItem);
-      Iterator var8 = this.handlers.iterator();
+      Iterator var10 = this.handlers.iterator();
 
-      while(var8.hasNext()) {
-         final EditorHandler handler = (EditorHandler)var8.next();
+      while(var10.hasNext()) {
+         final EditorHandler handler = (EditorHandler)var10.next();
          Component handlerComponent = handler.getComponent();
          handlerComponent.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -275,7 +292,6 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
          });
       }
 
-      this.container.add((Component)sepPan(new Component[]{this.saveButton, this.defaultButton}));
       this.updateValues();
    }
 

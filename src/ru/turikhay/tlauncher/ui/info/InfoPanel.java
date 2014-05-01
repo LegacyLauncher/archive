@@ -9,7 +9,6 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import javax.swing.JEditorPane;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
@@ -24,7 +23,7 @@ import ru.turikhay.util.U;
 public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener {
    private static final long serialVersionUID = 3310876991994323902L;
    private static final int MARGIN = 20;
-   private final JEditorPane browser;
+   private final EditorPane browser;
    private final DefaultScene parent;
    private final Object animationLock = new Object();
    private final int timeFrame = 5;
