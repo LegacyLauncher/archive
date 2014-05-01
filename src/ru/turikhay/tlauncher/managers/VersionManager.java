@@ -72,8 +72,8 @@ public class VersionManager extends InterruptibleComponent {
    boolean refresh(int refreshID, boolean local) {
       this.refreshList[refreshID] = true;
       this.log(new Object[]{"Refreshing versions..."});
-      this.latestVersions.clear();
       if (!local) {
+         this.latestVersions.clear();
          Iterator var4 = this.listeners.iterator();
 
          while(var4.hasNext()) {

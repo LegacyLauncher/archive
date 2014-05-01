@@ -16,7 +16,7 @@ public class EditorPane extends JEditorPane {
    private static final long serialVersionUID = -2857352867725574106L;
 
    public EditorPane() {
-      Font font = this.getFont().deriveFont(12.0F);
+      Font font = (new ExtendedLabel()).getFont();
       StyleSheet css = new StyleSheet();
       css.importStyleSheet(this.getClass().getResource("EditorPane.css"));
       css.addRule("body { font-family: " + font.getFamily() + "; font-size: " + font.getSize() + "pt; }");

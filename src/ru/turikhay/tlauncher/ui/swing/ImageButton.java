@@ -37,6 +37,7 @@ public class ImageButton extends ExtendedButton {
       this.image = image;
       this.rotation = rotation;
       this.margin = margin;
+      this.initImage();
       this.initListeners();
    }
 
@@ -74,6 +75,7 @@ public class ImageButton extends ExtendedButton {
 
    public void setImage(Image image) {
       this.image = image;
+      this.initImage();
       this.repaint();
    }
 
@@ -143,7 +145,7 @@ public class ImageButton extends ExtendedButton {
 
    protected void initImage() {
       if (this.image != null) {
-         this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null) + 10));
+         this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null) + 10, this.image.getHeight((ImageObserver)null) + 10));
       }
    }
 

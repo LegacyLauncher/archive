@@ -8,7 +8,6 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.RenderingHints;
 import javax.swing.BoxLayout;
-import javax.swing.JPanel;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
@@ -16,6 +15,7 @@ import ru.turikhay.tlauncher.ui.block.BlockablePanel;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.Del;
+import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.U;
 
@@ -116,7 +116,7 @@ public class CenterPanel extends BlockablePanel {
       return this.setMessage(message, Localizable.EMPTY_VARS);
    }
 
-   public static JPanel sepPan(LayoutManager manager, Component... components) {
+   public static BlockablePanel sepPan(LayoutManager manager, Component... components) {
       BlockablePanel panel = new BlockablePanel(manager) {
          private static final long serialVersionUID = 1L;
 
@@ -128,8 +128,24 @@ public class CenterPanel extends BlockablePanel {
       return panel;
    }
 
-   public static JPanel sepPan(Component... components) {
+   public static BlockablePanel sepPan(Component... components) {
       return sepPan(new GridLayout(0, 1), components);
+   }
+
+   public static UnblockablePanel uSepPan(LayoutManager manager, Component... components) {
+      UnblockablePanel panel = new UnblockablePanel(manager) {
+         private static final long serialVersionUID = 1L;
+
+         public Insets getInsets() {
+            return CenterPanel.noInsets;
+         }
+      };
+      panel.add(components);
+      return panel;
+   }
+
+   public static UnblockablePanel uSepPan(Component... components) {
+      return uSepPan(new GridLayout(0, 1), components);
    }
 
    protected void log(Object... o) {
