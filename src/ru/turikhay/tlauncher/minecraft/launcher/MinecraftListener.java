@@ -3,17 +3,17 @@ package ru.turikhay.tlauncher.minecraft.launcher;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 
 public interface MinecraftListener {
-   void onMinecraftPrepare();
+	void onMinecraftPrepare();
 
-   void onMinecraftAbort();
+	void onMinecraftAbort();
 
-   void onMinecraftLaunch();
+	void onMinecraftLaunch();
 
-   void onMinecraftClose();
+	void onMinecraftClose();
 
-   void onMinecraftError(Throwable var1);
+	void onMinecraftError(Throwable e);
 
-   void onMinecraftKnownError(MinecraftException var1);
+	void onMinecraftKnownError(MinecraftException e);
 
-   void onMinecraftCrash(Crash var1);
+	void onMinecraftCrash(Crash crash);
 }

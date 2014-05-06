@@ -1,9 +1,9 @@
 package ru.turikhay.tlauncher.ui.login;
 
 public interface LoginListener {
-   void onLogin() throws LoginException;
+	public void onLogin() throws LoginException;
 
-   void onLoginFailed();
+	public void onLoginFailed();
 
-   void onLoginSuccess();
+	public void onLoginSuccess();
 }

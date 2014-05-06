@@ -178,8 +178,9 @@ crash.opengl=Minecraft has closed due to old graphics card drivers. Please updat
 crash.invalid-modify=Minecraft has closed due to error that usually occurres because of incorrect mod installation. Reinstall it and retry.
 crash.meta-inf=Java couldn't load classes of Minecraft. Remove folder /META-INF/ from JAR file of launching Minecraft version and retry.
 crash.missing-main=Java couldn't run Minecraft because the main class is missing. If you can't repair JAR file yourself, click "Force update".
-crash.permgen-error=Minecraft has closed due to PermGen error. You can do next:\n— Tick «Force update» and then press «Переустановить» to re-download invalid files.\n- Don't use mods and resource packs\n- Turn off the sounds in Minecraft.
+crash.permgen-error=Minecraft has closed due to PermGen error. You can do next:\n— Tick «Force update» and then press «Reinstall» to re-download invalid files.\n- Don't use mods and resource packs\n- Turn off the sounds in Minecraft.
 crash.outofmemory=Minecraft has closed due to lack of RAM.\nTry to allocate more memory using JVM argument "-Xmx".
+crash.old-videocard=Your card doesn't support OpenGL version, which is used in this version of Minecraft. The latest version supported by your video card is 1.7.2.
 # Settings
 settings.warning=Change if you know what you do.
 settings.restart=Will be applied after restart.
@@ -232,24 +233,25 @@ settings.back=Back
 settings.popup.info=Key: %0
 settings.popup.default=Reset value
 # Updater
-updater.found.title=An update found!
-updater.found=TLauncher %0 released!\nKeeping the launcher up to date is very important.
+updater.required.found.title=Found important update!
+updater.required.found.message=Warning! The critical update has been released.\nTLauncher will be updated to version %0.\nIf the application won't work after updating, download latest version by yourself.
 updater.found.cannotopen.title=Error occurred while opening the link
 updater.found.cannotopen=Error occurred while opening the link. Please, open it yourself.
 updater.error.title=Error occurred while requesting an update
 updater.error=Error occurred while requesting an update.
 updater.download-error=Error occurred while downloading the update. Do you want to download it yourself?
 updater.downloaded.title=Ready to update
-updater.downloaded=TLauncher is ready to be updated.\nApplication will be updated, closed and reloaded.
+updater.downloaded=TLauncher is ready to be updated.\nApplication will be updated and reopened.
 updater.save-error.title=Error occurred while saving an update.
 updater.save-error=Error occurred while saving an update. Do you want to download the update yourself?
 # Firstrun
 firstrun.title=Welcome!
 firstrun=Welcome to TLauncher for Minecraft!\n\nDeveloper reminds you that Minecraft is not a freeware application. If you're not a Premium user or you want to have profit using launcher features, please do not use TLauncher.\n\nPlease visit <a href="http://minecraft.net">official Minecraft site</a> to purchase Premium account.
-# Firewall
-firewall.warning=Warning!
-firewall.title=TLauncher may be blocked by your firewall
-firewall=TLauncher couldn't connect to the Internet to check for available updates.\nIf this machine is not connected, just ignore this message.\nIf it is, check your firewall because some of them can block TLauncher without any notification.
+# Left-side notifier
+notifier.left.failed.title=Connection may be blocked!
+notifier.left.failed=TLauncher couldn't connect to the Internet to check for updates.\nIf this machine is not connected at all, you can ignore this message.\nOtherwise, check your Internet connection and firewall settings.
+notifier.left.found.title=An update is available!
+notifier.left.found.question=TLauncher %0 has been released. Do you want to update?
 # Support button
 support.url=http://u.to/turikhay/u3_hBA
 support.error.title=Error occurred while opening the link.

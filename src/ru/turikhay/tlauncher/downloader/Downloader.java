@@ -4,343 +4,321 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.configuration.Configuration.ConnectionQuality;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class Downloader extends ExtendedThread {
-   public static final int MAX_THREADS = 6;
-   public static final String DOWNLOAD_BLOCK = "download";
-   static final String ITERATION_BLOCK = "iteration";
-   private final DownloaderThread[] threads;
-   private final List list;
-   private final List listeners;
-   private Configuration.ConnectionQuality configuration;
-   private final AtomicInteger remainingObjects;
-   private int runningThreads;
-   private int workingThreads;
-   private final double[] speedContainer;
-   private final double[] progressContainer;
-   private double lastAverageProgress;
-   private double averageProgress;
-   private double averageSpeed;
-   private boolean aborted;
-   private final Object workLock;
+	public final static int MAX_THREADS = 6;
+	public final static String DOWNLOAD_BLOCK = "download";
+	
+	final static String ITERATION_BLOCK = "iteration";
 
-   private Downloader(Configuration.ConnectionQuality configuration) {
-      super("MD");
-      this.setConfiguration(configuration);
-      this.remainingObjects = new AtomicInteger();
-      this.threads = new DownloaderThread[6];
-      this.list = Collections.synchronizedList(new ArrayList());
-      this.listeners = Collections.synchronizedList(new ArrayList());
-      this.speedContainer = new double[6];
-      this.progressContainer = new double[6];
-      this.workLock = new Object();
-      this.startAndWait();
-   }
+	private final DownloaderThread[] threads;
+	private final List<Downloadable> list;
+	private final List<DownloaderListener> listeners;
+	private ConnectionQuality configuration;
 
-   public Downloader(TLauncher tlauncher) {
-      this(tlauncher.getSettings().getConnectionQuality());
-   }
+	private final AtomicInteger remainingObjects;
+	private int runningThreads, workingThreads;
+	private final double[] speedContainer, progressContainer;
+	private double lastAverageProgress, averageProgress, averageSpeed;
+	
+	private boolean aborted;
 
-   public Configuration.ConnectionQuality getConfiguration() {
-      return this.configuration;
-   }
+	private final Object workLock;
 
-   public int getRemaining() {
-      return this.remainingObjects.get();
-   }
+	private Downloader(ConnectionQuality configuration) {
+		super("MD");
 
-   public double getProgress() {
-      return this.averageProgress;
-   }
+		this.setConfiguration(configuration);
 
-   public double getSpeed() {
-      return this.averageSpeed;
-   }
+		this.remainingObjects = new AtomicInteger();
+		this.threads = new DownloaderThread[MAX_THREADS];
+		this.list = Collections.synchronizedList(new ArrayList<Downloadable>());
+		this.listeners = Collections
+				.synchronizedList(new ArrayList<DownloaderListener>());
 
-   public void add(Downloadable d) {
-      if (d == null) {
-         throw new NullPointerException();
-      } else {
-         this.list.add(d);
-      }
-   }
+		this.speedContainer = new double[MAX_THREADS];
+		this.progressContainer = new double[MAX_THREADS];
 
-   public void add(DownloadableContainer c) {
-      if (c == null) {
-         throw new NullPointerException();
-      } else {
-         this.list.addAll(c.list);
-      }
-   }
+		this.workLock = new Object();
 
-   public void addAll(Downloadable... ds) {
-      if (ds == null) {
-         throw new NullPointerException();
-      } else {
-         for(int i = 0; i < ds.length; ++i) {
-            if (ds[i] == null) {
-               throw new NullPointerException("Downloadable at " + i + " is NULL!");
-            }
+		this.startAndWait();
+	}
 
-            this.list.add(ds[i]);
-         }
+	public Downloader(TLauncher tlauncher) {
+		this(tlauncher.getSettings().getConnectionQuality());
+	}
 
-      }
-   }
+	public ConnectionQuality getConfiguration() {
+		return configuration;
+	}
 
-   public void addAll(Collection coll) {
-      if (coll == null) {
-         throw new NullPointerException();
-      } else {
-         int i = -1;
-         Iterator var4 = coll.iterator();
+	public int getRemaining() {
+		return remainingObjects.get();
+	}
 
-         while(var4.hasNext()) {
-            Downloadable d = (Downloadable)var4.next();
-            ++i;
-            if (d == null) {
-               throw new NullPointerException("Downloadable at" + i + " is NULL!");
-            }
+	public double getProgress() {
+		return averageProgress;
+	}
 
-            this.list.add(d);
-         }
+	public double getSpeed() {
+		return averageSpeed;
+	}
 
-      }
-   }
+	public void add(Downloadable d) {
+		if (d == null)
+			throw new NullPointerException();
 
-   public void addListener(DownloaderListener listener) {
-      if (listener == null) {
-         throw new NullPointerException();
-      } else {
-         this.listeners.add(listener);
-      }
-   }
+		list.add(d);
+	}
 
-   public boolean startDownload() {
-      boolean haveWork = !this.list.isEmpty();
-      if (haveWork) {
-         this.unblockThread("iteration");
-      }
+	public void add(DownloadableContainer c) {
+		if (c == null)
+			throw new NullPointerException();
 
-      return haveWork;
-   }
+		list.addAll(c.list);
+	}
 
-   public void startDownloadAndWait() {
-      if (this.startDownload()) {
-         this.waitWork();
-      }
+	public void addAll(Downloadable... ds) {
+		if (ds == null)
+			throw new NullPointerException();
 
-   }
+		for (int i = 0; i < ds.length; i++) {
+			if (ds[i] == null)
+				throw new NullPointerException("Downloadable at " + i
+						+ " is NULL!");
 
-   private void waitWork() {
-      synchronized(this.workLock) {
-         try {
-            this.workLock.wait();
-         } catch (InterruptedException var3) {
-         }
+			list.add(ds[i]);
+		}
+	}
 
-      }
-   }
+	public void addAll(Collection<Downloadable> coll) {
+		if (coll == null)
+			throw new NullPointerException();
 
-   private void notifyWork() {
-      synchronized(this.workLock) {
-         this.workLock.notifyAll();
-      }
-   }
+		int i = -1;
 
-   public void stopDownload() {
-      if (!this.isThreadBlocked()) {
-         throw new IllegalStateException();
-      } else {
-         for(int i = 0; i < this.runningThreads; ++i) {
-            this.threads[i].stopDownload();
-         }
+		for (Downloadable d : coll) {
+			++i;
 
-         this.aborted = true;
-         this.unblockThread("download");
-      }
-   }
+			if (d == null)
+				throw new NullPointerException("Downloadable at" + i
+						+ " is NULL!");
 
-   public void stopDownloadAndWait() {
-      this.stopDownload();
-      this.waitForThreads();
-   }
+			list.add(d);
+		}
+	}
 
-   public void setConfiguration(Configuration.ConnectionQuality configuration) {
-      if (configuration == null) {
-         throw new NullPointerException();
-      } else {
-         this.log("Loaded configuration:", configuration);
-         this.configuration = configuration;
-      }
-   }
+	public void addListener(DownloaderListener listener) {
+		if (listener == null)
+			throw new NullPointerException();
 
-   public void run() {
-      this.checkCurrent();
+		listeners.add(listener);
+	}
 
-      while(true) {
-         this.blockThread("iteration");
-         this.log("Files in queue", this.list.size());
-         synchronized(this.list) {
-            this.sortOut();
-         }
+	public boolean startDownload() {
+		boolean haveWork = !list.isEmpty();
 
-         for(int i = 0; i < this.runningThreads; ++i) {
-            this.threads[i].startDownload();
-         }
+		if (haveWork)
+			unblockThread(ITERATION_BLOCK);
 
-         this.blockThread("download");
-         if (this.aborted) {
-            this.waitForThreads();
-            this.onAbort();
-            this.aborted = false;
-         }
+		return haveWork;
+	}
 
-         this.notifyWork();
-         Arrays.fill(this.speedContainer, 0.0D);
-         Arrays.fill(this.progressContainer, 0.0D);
-         this.averageProgress = 0.0D;
-         this.lastAverageProgress = 0.0D;
-         this.workingThreads = 0;
-         this.remainingObjects.set(0);
-      }
-   }
+	public void startDownloadAndWait() {
+		if (startDownload())
+			waitWork();
+	}
 
-   private void sortOut() {
-      int size = this.list.size();
-      if (size != 0) {
-         int downloadablesAtThread = U.getMaxMultiply(size, 6);
-         int x = 0;
-         int y = true;
-         this.log("Starting download " + size + " files...");
-         this.onStart(size);
-         int max = this.configuration.getMaxThreads();
+	private void waitWork() {
+		synchronized (workLock) {
+			try {
+				workLock.wait();
+			} catch (InterruptedException e) {
+			}
+		}
+	}
 
-         boolean[] workers;
-         for(workers = new boolean[max]; size > 0; downloadablesAtThread = U.getMaxMultiply(size, 6)) {
-            for(int i = 0; i < max; ++i) {
-               workers[i] = true;
-               size -= downloadablesAtThread;
-               if (this.threads[i] == null) {
-                  this.threads[i] = new DownloaderThread(this, ++this.runningThreads);
-               }
+	private void notifyWork() {
+		synchronized (workLock) {
+			workLock.notifyAll();
+		}
+	}
 
-               int y;
-               for(y = x; y < x + downloadablesAtThread; ++y) {
-                  this.threads[i].add((Downloadable)this.list.get(y));
-               }
+	public void stopDownload() {
+		if (!isThreadBlocked())
+			throw new IllegalStateException();
 
-               x = y;
-               if (size == 0) {
-                  break;
-               }
-            }
-         }
+		for (int i=0;i<runningThreads;i++)
+			threads[i].stopDownload();
+		
+		aborted = true;
+		unblockThread(DOWNLOAD_BLOCK);
+	}
 
-         boolean[] var10 = workers;
-         int var9 = workers.length;
+	public void stopDownloadAndWait() {
+		stopDownload();
+		waitForThreads();
+	}
 
-         for(int var8 = 0; var8 < var9; ++var8) {
-            boolean worker = var10[var8];
-            if (worker) {
-               ++this.workingThreads;
-            }
-         }
+	public void setConfiguration(ConnectionQuality configuration) {
+		if (configuration == null)
+			throw new NullPointerException();
 
-         this.list.clear();
-      }
-   }
+		log("Loaded configuration:", configuration);
+		this.configuration = configuration;
+	}
 
-   private void onStart(int size) {
-      Iterator var3 = this.listeners.iterator();
+	@Override
+	public void run() {
+		checkCurrent(); // Checks if this method is called from this Downloader
+						// thread.
 
-      while(var3.hasNext()) {
-         DownloaderListener listener = (DownloaderListener)var3.next();
-         listener.onDownloaderStart(this, size);
-      }
+		while (true) {
+			blockThread(ITERATION_BLOCK);
 
-      this.remainingObjects.addAndGet(size);
-   }
+			log("Files in queue", list.size());
 
-   void onAbort() {
-      Iterator var2 = this.listeners.iterator();
+			synchronized (list) {
+				sortOut();
+			}
 
-      while(var2.hasNext()) {
-         DownloaderListener listener = (DownloaderListener)var2.next();
-         listener.onDownloaderAbort(this);
-      }
+			for (int i = 0; i < runningThreads; i++)
+				threads[i].startDownload();
 
-   }
+			blockThread(DOWNLOAD_BLOCK);
+			
+			if(aborted) {
+				waitForThreads();
+				onAbort();
+				
+				aborted = false;
+			}
+			
+			notifyWork();
 
-   void onProgress(DownloaderThread thread, double curprogress, double curspeed) {
-      int id = thread.getID() - 1;
-      this.progressContainer[id] = curprogress;
-      this.speedContainer[id] = curspeed;
-      this.averageProgress = U.getAverage(this.progressContainer, this.workingThreads);
-      if (!(this.averageProgress - this.lastAverageProgress < 0.01D)) {
-         this.lastAverageProgress = this.averageProgress;
-         this.averageSpeed = U.getSum(this.speedContainer);
-         Iterator var8 = this.listeners.iterator();
+			Arrays.fill(speedContainer, 0.0);
+			Arrays.fill(progressContainer, 0.0);
 
-         while(var8.hasNext()) {
-            DownloaderListener listener = (DownloaderListener)var8.next();
-            listener.onDownloaderProgress(this, this.averageProgress, this.averageSpeed);
-         }
+			averageProgress = 0;
+			lastAverageProgress = 0;
+			workingThreads = 0;
+			remainingObjects.set(0);
+		}
+	}
 
-      }
-   }
+	private void sortOut() {
+		int size = list.size();
 
-   void onFileComplete(DownloaderThread thread, Downloadable file) {
-      int remaining = this.remainingObjects.decrementAndGet();
-      Iterator var5 = this.listeners.iterator();
+		if (size == 0)
+			return;
 
-      while(var5.hasNext()) {
-         DownloaderListener listener = (DownloaderListener)var5.next();
-         listener.onDownloaderFileComplete(this, file);
-      }
+		int downloadablesAtThread = U.getMaxMultiply(size, MAX_THREADS), x = 0, y = -1;
 
-      if (remaining == 0) {
-         this.onComplete();
-      }
+		log("Starting download " + size + " files...");
+		this.onStart(size);
+		
+		int max = configuration.getMaxThreads();		
+		boolean[] workers = new boolean[max];
 
-   }
+		while (size > 0) {
+			for (int i = 0; i < max; i++) {
+				workers[i] = true;
+				size -= downloadablesAtThread;
 
-   private void onComplete() {
-      Iterator var2 = this.listeners.iterator();
+				if (threads[i] == null)
+					threads[i] = new DownloaderThread(this, ++runningThreads);
 
-      while(var2.hasNext()) {
-         DownloaderListener listener = (DownloaderListener)var2.next();
-         listener.onDownloaderComplete(this);
-      }
+				for (y = x; y < x + downloadablesAtThread; y++)
+					threads[i].add(list.get(y));
 
-      this.unblockThread("download");
-   }
+				x = y;
 
-   private void waitForThreads() {
-      this.log("Waiting for", this.workingThreads, "threads...");
+				if (size == 0)
+					break;
+			}
+			downloadablesAtThread = U.getMaxMultiply(size, MAX_THREADS);
+		}
+		
+		for(boolean worker : workers)
+			if(worker) ++workingThreads;
 
-      boolean blocked;
-      do {
-         blocked = true;
+		list.clear();
+	}
 
-         for(int i = 0; i < this.workingThreads; ++i) {
-            if (!this.threads[i].isThreadBlocked()) {
-               blocked = false;
-            }
-         }
-      } while(!blocked);
+	private void onStart(int size) {
+		for (DownloaderListener listener : listeners)
+			listener.onDownloaderStart(this, size);
 
-      this.log("All threads are blocked by now");
-   }
+		remainingObjects.addAndGet(size);
+	}
 
-   private void log(Object... o) {
-      U.log("[Downloader2]", o);
-   }
+	void onAbort() {		
+		for (DownloaderListener listener : listeners)
+			listener.onDownloaderAbort(this);
+	}
+
+	void onProgress(DownloaderThread thread, double curprogress, double curspeed) {
+		int id = thread.getID() - 1;
+
+		this.progressContainer[id] = curprogress;
+		this.speedContainer[id] = curspeed;
+
+		averageProgress = U.getAverage(progressContainer, workingThreads);
+
+		if (averageProgress - lastAverageProgress < 0.01)
+			return; // Reduce update rate
+
+		lastAverageProgress = averageProgress;
+		averageSpeed = U.getSum(speedContainer);
+
+		for (DownloaderListener listener : listeners)
+			listener.onDownloaderProgress(this, averageProgress, averageSpeed);
+	}
+
+	void onFileComplete(DownloaderThread thread, Downloadable file) {
+		int remaining = remainingObjects.decrementAndGet();
+
+		for (DownloaderListener listener : listeners)
+			listener.onDownloaderFileComplete(this, file);
+
+		if (remaining == 0)
+			onComplete();
+	}
+
+	private void onComplete() {
+		for (DownloaderListener listener : listeners)
+			listener.onDownloaderComplete(this);
+
+		unblockThread(DOWNLOAD_BLOCK);
+	}
+
+	private void waitForThreads() {
+		log("Waiting for", workingThreads,"threads...");
+
+		boolean blocked;
+		
+		while(true) {
+			blocked = true;
+			
+			for (int i = 0; i < workingThreads; i++)
+				if (!threads[i].isThreadBlocked())
+					blocked = false;
+			
+			if(blocked)
+				break;
+		}
+		
+		log("All threads are blocked by now");
+	}
+
+	private void log(Object... o) {
+		U.log("[Downloader2]", o);
+	}
 }
