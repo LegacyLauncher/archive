@@ -1,20 +1,21 @@
 package ru.turikhay.tlauncher.ui.swing;
 
 import javax.swing.ListCellRenderer;
+
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 
-public abstract class ConverterCellRenderer implements ListCellRenderer {
-   protected final StringConverter converter;
+public abstract class ConverterCellRenderer<T> implements ListCellRenderer<T> {
+	protected final StringConverter<T> converter;
 
-   ConverterCellRenderer(StringConverter converter) {
-      if (converter == null) {
-         throw new NullPointerException();
-      } else {
-         this.converter = converter;
-      }
-   }
+	ConverterCellRenderer(StringConverter<T> converter) {
+		if (converter == null)
+			throw new NullPointerException();
 
-   public StringConverter getConverter() {
-      return this.converter;
-   }
+		this.converter = converter;
+	}
+
+	public StringConverter<T> getConverter() {
+		return converter;
+	}
+
 }

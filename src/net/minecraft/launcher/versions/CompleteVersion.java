@@ -1,5 +1,20 @@
 package net.minecraft.launcher.versions;
 
+import java.io.File;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.util.OS;
+import ru.turikhay.util.U;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -9,330 +24,332 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import java.io.File;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.U;
 
 public class CompleteVersion implements Version, Cloneable {
-   String id;
-   String original_id;
-   Date time;
-   Date releaseTime;
-   ReleaseType type;
-   String jvmArguments;
-   String minecraftArguments;
-   String mainClass;
-   List libraries;
-   List rules;
-   List unnecessaryEntries;
-   Integer minimumLauncherVersion = 0;
-   Integer tlauncherVersion = 0;
-   String assets;
-   Repository source;
-   VersionList list;
+	String id, original_id;
 
-   public String getID() {
-      return this.id;
-   }
+	Date time;
+	Date releaseTime;
 
-   public void setID(String id) {
-      if (id != null && !id.isEmpty()) {
-         this.id = id;
-      } else {
-         throw new IllegalArgumentException("ID is NULL or empty");
-      }
-   }
+	ReleaseType type;
 
-   public ReleaseType getReleaseType() {
-      return this.type;
-   }
+	String jvmArguments;
+	String minecraftArguments;
+	String mainClass;
 
-   public Repository getSource() {
-      return this.source;
-   }
+	List<Library> libraries;
+	List<Rule> rules;
+	List<String> unnecessaryEntries;
 
-   public void setSource(Repository repository) {
-      if (repository == null) {
-         throw new NullPointerException();
-      } else {
-         this.source = repository;
-      }
-   }
+	Integer minimumLauncherVersion = Integer.valueOf(0);
+	Integer tlauncherVersion = Integer.valueOf(0);
 
-   public Date getUpdatedTime() {
-      return this.time;
-   }
+	String assets;
 
-   public void setUpdatedTime(Date time) {
-      if (time == null) {
-         throw new NullPointerException("Time is NULL!");
-      } else {
-         this.time = time;
-      }
-   }
+	Repository source;
+	VersionList list;
 
-   public Date getReleaseTime() {
-      return this.releaseTime;
-   }
+	@Override
+	public String getID() {
+		return id;
+	}
 
-   public VersionList getVersionList() {
-      return this.list;
-   }
+	@Override
+	public void setID(String id) {
+		if (id == null || id.isEmpty())
+			throw new IllegalArgumentException("ID is NULL or empty");
+		this.id = id;
+	}
 
-   public void setVersionList(VersionList list) {
-      if (list == null) {
-         throw new NullPointerException("VersionList cannot be NULL!");
-      } else {
-         this.list = list;
-      }
-   }
+	@Override
+	public ReleaseType getReleaseType() {
+		return type;
+	}
 
-   public String getOriginal() {
-      return this.original_id;
-   }
+	@Override
+	public Repository getSource() {
+		return source;
+	}
 
-   public String getJVMArguments() {
-      return this.jvmArguments;
-   }
+	@Override
+	public void setSource(Repository repository) {
+		if (repository == null)
+			throw new NullPointerException();
 
-   public String getMinecraftArguments() {
-      return this.minecraftArguments;
-   }
+		this.source = repository;
+	}
 
-   public String getMainClass() {
-      return this.mainClass;
-   }
+	@Override
+	public Date getUpdatedTime() {
+		return time;
+	}
 
-   public List getLibraries() {
-      return Collections.unmodifiableList(this.libraries);
-   }
+	public void setUpdatedTime(Date time) {
+		if (time == null)
+			throw new NullPointerException("Time is NULL!");
+		this.time = time;
+	}
 
-   public List getRules() {
-      return Collections.unmodifiableList(this.rules);
-   }
+	@Override
+	public Date getReleaseTime() {
+		return releaseTime;
+	}
 
-   public List getRemovableEntries() {
-      return this.unnecessaryEntries;
-   }
+	@Override
+	public VersionList getVersionList() {
+		return list;
+	}
 
-   public int getMinimumLauncherVersion() {
-      return this.minimumLauncherVersion;
-   }
+	@Override
+	public void setVersionList(VersionList list) {
+		if (list == null)
+			throw new NullPointerException("VersionList cannot be NULL!");
 
-   public int getMinimumCustomLauncherVersion() {
-      return this.tlauncherVersion;
-   }
+		this.list = list;
+	}
 
-   public String getAssets() {
-      return this.assets;
-   }
+	public String getOriginal() {
+		return original_id;
+	}
 
-   public boolean equals(Object o) {
-      if (this == o) {
-         return true;
-      } else if (o == null) {
-         return false;
-      } else if (this.hashCode() == o.hashCode()) {
-         return true;
-      } else if (!(o instanceof Version)) {
-         return false;
-      } else {
-         Version compare = (Version)o;
-         return compare.getID() == null ? false : compare.getID().equals(this.id);
-      }
-   }
+	public String getJVMArguments() {
+		return jvmArguments;
+	}
 
-   public String toString() {
-      return this.getClass().getSimpleName() + "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", class=" + this.mainClass + ", minimumVersion=" + this.minimumLauncherVersion + ", assets='" + this.assets + "', source=" + this.source + ", list=" + this.list + ", libraries=" + this.libraries + "}";
-   }
+	public String getMinecraftArguments() {
+		return minecraftArguments;
+	}
 
-   public File getFile(File base) {
-      return new File(base, "versions/" + this.getID() + "/" + this.getID() + ".jar");
-   }
+	public String getMainClass() {
+		return mainClass;
+	}
 
-   public boolean appliesToCurrentEnvironment() {
-      if (this.rules == null) {
-         return true;
-      } else {
-         Iterator var2 = this.rules.iterator();
+	public List<Library> getLibraries() {
+		return Collections.unmodifiableList(libraries);
+	}
 
-         while(var2.hasNext()) {
-            Rule rule = (Rule)var2.next();
-            Rule.Action action = rule.getAppliedAction();
-            if (action == Rule.Action.DISALLOW) {
-               return false;
-            }
-         }
+	public List<Rule> getRules() {
+		return Collections.unmodifiableList(rules);
+	}
 
-         return true;
-      }
-   }
+	public List<String> getRemovableEntries() {
+		return unnecessaryEntries;
+	}
 
-   public Collection getRelevantLibraries() {
-      List result = new ArrayList();
-      Iterator var3 = this.libraries.iterator();
+	public int getMinimumLauncherVersion() {
+		return minimumLauncherVersion;
+	}
 
-      while(var3.hasNext()) {
-         Library library = (Library)var3.next();
-         if (library.appliesToCurrentEnvironment()) {
-            result.add(library);
-         }
-      }
+	public int getMinimumCustomLauncherVersion() {
+		return tlauncherVersion;
+	}
 
-      return result;
-   }
+	public String getAssets() {
+		return assets;
+	}
 
-   public Collection getClassPath(OS os, File base) {
-      Collection libraries = this.getRelevantLibraries();
-      Collection result = new ArrayList();
-      Iterator var6 = libraries.iterator();
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null)
+			return false;
+		if (this.hashCode() == o.hashCode())
+			return true;
 
-      while(var6.hasNext()) {
-         Library library = (Library)var6.next();
-         if (library.getNatives() == null) {
-            result.add(new File(base, "libraries/" + library.getArtifactPath()));
-         }
-      }
+		if (!(o instanceof Version))
+			return false;
 
-      result.add(new File(base, "versions/" + this.getID() + "/" + this.getID() + ".jar"));
-      return result;
-   }
+		Version compare = (Version) o;
+		if (compare.getID() == null)
+			return false;
 
-   public Collection getClassPath(File base) {
-      return this.getClassPath(OS.CURRENT, base);
-   }
+		return compare.getID().equals(id);
+	}
 
-   public Collection getNatives(OS os) {
-      Collection libraries = this.getRelevantLibraries();
-      Collection result = new ArrayList();
-      Iterator var5 = libraries.iterator();
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "{id='" + id + "', time=" + time
+				+ ", release=" + releaseTime + ", type=" + type + ", class="
+				+ mainClass + ", minimumVersion=" + minimumLauncherVersion
+				+ ", assets='" + assets + "', source=" + source + ", list="
+				+ list + ", libraries=" + libraries + "}";
+	}
 
-      while(var5.hasNext()) {
-         Library library = (Library)var5.next();
-         Map natives = library.getNatives();
-         if (natives != null && natives.containsKey(os)) {
-            result.add("libraries/" + library.getArtifactPath((String)natives.get(os)));
-         }
-      }
+	public File getFile(File base) {
+		return new File(base, "versions/" + getID() + "/" + getID() + ".jar");
+	}
 
-      return result;
-   }
+	public boolean appliesToCurrentEnvironment() {
+		if (this.rules == null)
+			return true;
 
-   public Collection getNatives() {
-      return this.getNatives(OS.CURRENT);
-   }
+		for (Rule rule : this.rules) {
+			Rule.Action action = rule.getAppliedAction();
 
-   public Set getRequiredFiles(OS os) {
-      Set neededFiles = new HashSet();
-      Iterator var4 = this.getRelevantLibraries().iterator();
+			if (action == Rule.Action.DISALLOW)
+				return false;
+		}
 
-      while(var4.hasNext()) {
-         Library library = (Library)var4.next();
-         if (library.getNatives() != null) {
-            String natives = (String)library.getNatives().get(os);
-            if (natives != null) {
-               neededFiles.add("libraries/" + library.getArtifactPath(natives));
-            }
-         } else {
-            neededFiles.add("libraries/" + library.getArtifactPath());
-         }
-      }
+		return true;
+	}
 
-      return neededFiles;
-   }
+	public Collection<Library> getRelevantLibraries() {
+		List<Library> result = new ArrayList<Library>();
 
-   public Object cloneSafely() {
-      try {
-         return super.clone();
-      } catch (CloneNotSupportedException var2) {
-         return null;
-      }
-   }
+		for (Library library : this.libraries)
+			if (library.appliesToCurrentEnvironment())
+				result.add(library);
 
-   public Collection getExtractFiles(OS os) {
-      Collection libraries = this.getRelevantLibraries();
-      Collection result = new ArrayList();
-      Iterator var5 = libraries.iterator();
+		return result;
+	}
 
-      while(var5.hasNext()) {
-         Library library = (Library)var5.next();
-         Map natives = library.getNatives();
-         if (natives != null && natives.containsKey(os)) {
-            result.add("libraries/" + library.getArtifactPath((String)natives.get(os)));
-         }
-      }
+	public Collection<File> getClassPath(OS os, File base) {
+		Collection<Library> libraries = getRelevantLibraries();
+		Collection<File> result = new ArrayList<File>();
 
-      return result;
-   }
+		for (Library library : libraries) {
+			if (library.getNatives() == null)
+				result.add(new File(base, "libraries/"
+						+ library.getArtifactPath()));
+		}
 
-   public static class CompleteVersionSerializer implements JsonSerializer, JsonDeserializer {
-      private final Gson defaultContext;
+		result.add(new File(base, "versions/" + getID() + "/" + getID()
+				+ ".jar"));
 
-      public CompleteVersionSerializer() {
-         GsonBuilder builder = new GsonBuilder();
-         builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
-         builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
-         builder.enableComplexMapKeySerialization();
-         builder.setPrettyPrinting();
-         this.defaultContext = builder.create();
-      }
+		return result;
+	}
+	
+	public Collection<File> getClassPath(File base) {
+		return getClassPath(OS.CURRENT, base);
+	}
 
-      public CompleteVersion deserialize(JsonElement elem, Type type, JsonDeserializationContext context) throws JsonParseException {
-         JsonObject object = elem.getAsJsonObject();
-         JsonElement sourceElement = object.get("source");
-         if (sourceElement != null && !sourceElement.isJsonPrimitive()) {
-            object.remove("source");
-         }
+	public Collection<String> getNatives(OS os) {
+		Collection<Library> libraries = getRelevantLibraries();
+		Collection<String> result = new ArrayList<String>();
 
-         CompleteVersion version = (CompleteVersion)this.defaultContext.fromJson(elem, CompleteVersion.class);
-         if (version.id == null) {
-            throw new JsonParseException("Version ID is NULL!");
-         } else {
-            if (version.type == null) {
-               version.type = ReleaseType.UNKNOWN;
-            }
+		for (Library library : libraries) {
+			Map<OS, String> natives = library.getNatives();
 
-            if (version.source == null) {
-               version.source = Repository.LOCAL_VERSION_REPO;
-            }
+			if (natives != null && natives.containsKey(os))
+				result.add("libraries/"
+						+ library.getArtifactPath(natives.get(os)));
+		}
 
-            if (version.time == null) {
-               version.time = new Date(0L);
-            }
+		return result;
+	}
+	
+	public Collection<String> getNatives() {
+		return getNatives(OS.CURRENT);
+	}
 
-            if (version.assets == null) {
-               version.assets = "legacy";
-            }
+	public Set<String> getRequiredFiles(OS os) {
+		Set<String> neededFiles = new HashSet<String>();
 
-            return version;
-         }
-      }
+		for (Library library : getRelevantLibraries()) {
+			if (library.getNatives() != null) {
+				String natives = library.getNatives().get(os);
 
-      public JsonElement serialize(CompleteVersion version0, Type type, JsonSerializationContext context) {
-         CompleteVersion version;
-         try {
-            version = (CompleteVersion)version0.clone();
-         } catch (CloneNotSupportedException var6) {
-            U.log("Cloning of CompleteVersion is not supported O_o", var6);
-            return this.defaultContext.toJsonTree(version0, type);
-         }
+				if (natives != null)
+					neededFiles.add("libraries/"
+							+ library.getArtifactPath(natives));
 
-         version.list = null;
-         return this.defaultContext.toJsonTree(version, type);
-      }
-   }
+			} else {
+				neededFiles.add("libraries/" + library.getArtifactPath());
+			}
+		}
+
+		return neededFiles;
+	}
+	
+	@Override
+	public Object cloneSafely() {
+		try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
+	}
+
+	public Collection<String> getExtractFiles(OS os) {
+		Collection<Library> libraries = getRelevantLibraries();
+		Collection<String> result = new ArrayList<String>();
+
+		for (Library library : libraries) {
+			Map<OS, String> natives = library.getNatives();
+
+			if (natives != null && natives.containsKey(os))
+				result.add("libraries/"
+						+ library.getArtifactPath(natives.get(os)));
+		}
+
+		return result;
+	}
+
+	public static class CompleteVersionSerializer implements
+			JsonSerializer<CompleteVersion>, JsonDeserializer<CompleteVersion> {
+		private final Gson defaultContext;
+
+		public CompleteVersionSerializer() {
+			GsonBuilder builder = new GsonBuilder();
+			builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
+			builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
+			builder.enableComplexMapKeySerialization();
+			builder.setPrettyPrinting();
+
+			this.defaultContext = builder.create();
+		}
+
+		@Override
+		public CompleteVersion deserialize(JsonElement elem, Type type,
+				JsonDeserializationContext context) throws JsonParseException {
+			// TODO remove in far future
+			JsonObject object = elem.getAsJsonObject();
+			JsonElement sourceElement = object.get("source");
+
+			if (sourceElement != null && !sourceElement.isJsonPrimitive())
+				object.remove("source");
+
+			CompleteVersion version = defaultContext.fromJson(elem,
+					CompleteVersion.class);
+
+			if (version.id == null)
+				throw new JsonParseException("Version ID is NULL!");
+
+			if (version.type == null)
+				version.type = ReleaseType.UNKNOWN;
+
+			if (version.source == null)
+				version.source = Repository.LOCAL_VERSION_REPO;
+
+			if (version.time == null)
+				version.time = new Date(0);
+
+			if (version.assets == null)
+				version.assets = "legacy";
+
+			return version;
+		}
+
+		@Override
+		public JsonElement serialize(CompleteVersion version0, Type type,
+				JsonSerializationContext context) {
+			CompleteVersion version;
+
+			try {
+				version = (CompleteVersion) version0.clone();
+			} catch (CloneNotSupportedException e) {
+				U.log("Cloning of CompleteVersion is not supported O_o", e);
+				return defaultContext.toJsonTree(version0, type);
+			}
+
+			version.list = null;
+
+			return defaultContext.toJsonTree(version, type);
+		}
+	}
 }

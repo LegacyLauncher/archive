@@ -7,8 +7,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.downloader.Downloadable;
@@ -19,294 +19,249 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 public class Updater {
-   private static final String[] links = TLauncher.getUpdateRepos();
-   private static final URI[] URIs = makeURIs();
-   private final Downloader d;
-   private final List listeners;
-   private Update found;
-   private SimpleConfiguration parsed;
-   private Updater.UpdaterState state;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$updater$PackageType;
+	private static final String[] links = TLauncher.getUpdateRepos();
+	private static final URI[] URIs = makeURIs();
 
-   public void addListener(UpdaterListener l) {
-      this.listeners.add(l);
-   }
+	private final Downloader d;
 
-   public void removeListener(UpdaterListener l) {
-      this.listeners.remove(l);
-   }
+	private final List<UpdaterListener> listeners = Collections
+			.synchronizedList(new ArrayList<UpdaterListener>());
 
-   private Updater(Downloader d) {
-      this.listeners = Collections.synchronizedList(new ArrayList());
-      this.d = d;
-      if (!PackageType.isCurrent(PackageType.JAR)) {
-         File oldfile = getTempFile();
-         if (oldfile.delete()) {
-            log("Old version has been deleted (.update)");
-         }
-      }
+	public void addListener(UpdaterListener l) {
+		listeners.add(l);
+	}
 
-      log("Initialized.");
-      log("Package type:", PackageType.getCurrent());
-   }
+	public void removeListener(UpdaterListener l) {
+		listeners.remove(l);
+	}
 
-   public Updater(TLauncher t) {
-      this(t.getDownloader());
-   }
+	private Update found;
+	private SimpleConfiguration parsed;
 
-   public Updater.UpdaterState getState() {
-      return this.state;
-   }
+	private UpdaterState state;
 
-   Updater.UpdaterState findUpdate() {
-      try {
-         return this.state = this.findUpdate_();
-      } catch (Throwable var2) {
-         this.state = Updater.UpdaterState.ERROR;
-         return this.state;
-      }
-   }
+	private Updater(Downloader d) {
+		this.d = d;
 
-   private Updater.UpdaterState findUpdate_() {
-      log("Requesting an update...");
-      this.onUpdaterRequests();
-      int attempt = 0;
-      URI[] var5;
-      int var4 = (var5 = URIs).length;
-      int var3 = 0;
+		if (!PackageType.isCurrent(PackageType.JAR)) {
+			File oldfile = Updater.getTempFile();
+			if (oldfile.delete())
+				log("Old version has been deleted (.update)");
+		}
 
-      while(var3 < var4) {
-         URI uri = var5[var3];
-         ++attempt;
-         log("Attempt #" + attempt + ". URL:", uri);
+		log("Initialized.");
+		log("Package type:", PackageType.getCurrent());
+	}
 
-         try {
-            URL url = uri.toURL();
-            HttpURLConnection connection = Downloadable.setUp(url.openConnection());
-            int code = connection.getResponseCode();
-            switch(code) {
-            case 200:
-               InputStream is = connection.getInputStream();
-               this.parsed = new SimpleConfiguration(is);
-               connection.disconnect();
-               Update update = new Update(this, this.d, this.parsed);
-               double version = update.getVersion();
-               log("Success!");
-               if (TLauncher.getVersion() > version) {
-                  log("Found version is older than running:", version, "(" + TLauncher.getVersion() + ")");
-               }
+	public Updater(TLauncher t) {
+		this(t.getDownloader());
+	}
 
-               if (update.getDownloadLink() == null) {
-                  log("An update for current package type is not available.");
-               } else if (TLauncher.getVersion() < version) {
-                  log("Found actual version:", version);
-                  this.found = update;
-                  this.onUpdateFound(update);
-                  return Updater.UpdaterState.FOUND;
-               }
+	public UpdaterState getState() {
+		return state;
+	}
 
-               Ad ad = Ad.parseFrom(this.parsed);
-               if (ad != null) {
-                  this.onAdFound(ad);
-               }
+	UpdaterState findUpdate() {
+		try {
+			return (this.state = findUpdate_());
+		} catch (Throwable e) {
+			this.state = UpdaterState.ERROR;
+		}
 
-               this.noUpdateFound();
-               return Updater.UpdaterState.NOT_FOUND;
-            default:
-               throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
-            }
-         } catch (Exception var14) {
-            log("Cannot get update information", var14);
-            ++var3;
-         }
-      }
+		return this.state;
+	}
 
-      log("Updating is impossible - cannot get any information.");
-      this.onUpdaterRequestError();
-      return Updater.UpdaterState.ERROR;
-   }
+	private UpdaterState findUpdate_() {
+		log("Requesting an update...");
+		this.onUpdaterRequests();
 
-   public void notifyAboutUpdate() {
-      if (this.found != null) {
-         this.onUpdateFound(this.found);
-      }
-   }
+		int attempt = 0;
+		for (URI uri : URIs) {
+			++attempt;
+			log("Attempt #" + attempt + ". URL:", uri);
+			try {
+				URL url = uri.toURL();
+				HttpURLConnection connection = Downloadable.setUp(url
+						.openConnection());
 
-   public Update getUpdate() {
-      return this.found;
-   }
+				int code = connection.getResponseCode();
+				switch (code) {
+				case 200:
+					break;
+				default:
+					throw new IllegalStateException("Response code (" + code
+							+ ") is not supported by Updater!");
+				}
 
-   public SimpleConfiguration getParsed() {
-      return this.parsed;
-   }
+				InputStream is = connection.getInputStream();
+				this.parsed = new SimpleConfiguration(is);
+				connection.disconnect();
 
-   public void asyncFindUpdate() {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Updater.this.findUpdate();
-         }
-      });
-   }
+				Update update = new Update(this, d, parsed);
+				double version = update.getVersion();
 
-   private void onUpdaterRequests() {
-      synchronized(this.listeners) {
-         Iterator var3 = this.listeners.iterator();
+				log("Success!");
 
-         while(var3.hasNext()) {
-            UpdaterListener l = (UpdaterListener)var3.next();
-            l.onUpdaterRequesting(this);
-         }
+				if (TLauncher.getVersion() > version)
+					log("Found version is older than running:", version, "("
+							+ TLauncher.getVersion() + ")");
 
-      }
-   }
+				if (update.getDownloadLink() == null)
+					log("An update for current package type is not available.");
+				else if (TLauncher.getVersion() < version) {
+					log("Found actual version:", version);
+					this.found = update;
 
-   private void onUpdaterRequestError() {
-      synchronized(this.listeners) {
-         Iterator var3 = this.listeners.iterator();
+					onUpdateFound(update);
+					return UpdaterState.FOUND;
+				}
 
-         while(var3.hasNext()) {
-            UpdaterListener l = (UpdaterListener)var3.next();
-            l.onUpdaterRequestError(this);
-         }
+				Ad ad = Ad.parseFrom(parsed);
+				if (ad != null)
+					onAdFound(ad);
 
-      }
-   }
+				noUpdateFound();
+				return UpdaterState.NOT_FOUND;
+			} catch (Exception e) {
+				log("Cannot get update information", e);
+			}
+		}
 
-   private void onUpdateFound(Update u) {
-      synchronized(this.listeners) {
-         Iterator var4 = this.listeners.iterator();
+		log("Updating is impossible - cannot get any information.");
+		this.onUpdaterRequestError();
 
-         while(var4.hasNext()) {
-            UpdaterListener l = (UpdaterListener)var4.next();
-            l.onUpdateFound(u);
-         }
+		return UpdaterState.ERROR;
+	}
 
-      }
-   }
+	public void notifyAboutUpdate() {
+		if (found == null)
+			return;
 
-   private void noUpdateFound() {
-      synchronized(this.listeners) {
-         Iterator var3 = this.listeners.iterator();
+		this.onUpdateFound(found);
+	}
 
-         while(var3.hasNext()) {
-            UpdaterListener l = (UpdaterListener)var3.next();
-            l.onUpdaterNotFoundUpdate(this);
-         }
+	public Update getUpdate() {
+		return found;
+	}
 
-      }
-   }
+	public SimpleConfiguration getParsed() {
+		return parsed;
+	}
 
-   private void onAdFound(Ad ad) {
-      synchronized(this.listeners) {
-         Iterator var4 = this.listeners.iterator();
+	public void asyncFindUpdate() {
+		AsyncThread.execute(new Runnable() {
+			@Override
+			public void run() {
+				findUpdate();
+			}
+		});
+	}
 
-         while(var4.hasNext()) {
-            UpdaterListener l = (UpdaterListener)var4.next();
-            l.onAdFound(this, ad);
-         }
+	private void onUpdaterRequests() {
+		synchronized (listeners) {
+			for (UpdaterListener l : listeners)
+				l.onUpdaterRequesting(this);
+		}
+	}
 
-      }
-   }
+	private void onUpdaterRequestError() {
+		synchronized (listeners) {
+			for (UpdaterListener l : listeners)
+				l.onUpdaterRequestError(this);
+		}
+	}
 
-   private static boolean isAutomodeFor(PackageType pt) {
-      if (pt == null) {
-         throw new NullPointerException("PackageType is NULL!");
-      } else {
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
-         case 1:
-         case 2:
-            return true;
-         default:
-            throw new IllegalArgumentException("Unknown PackageType!");
-         }
-      }
-   }
+	private void onUpdateFound(Update u) {
+		synchronized (listeners) {
+			for (UpdaterListener l : listeners)
+				l.onUpdateFound(u);
+		}
+	}
 
-   public static boolean isAutomode() {
-      return isAutomodeFor(PackageType.getCurrent());
-   }
+	private void noUpdateFound() {
+		synchronized (listeners) {
+			for (UpdaterListener l : listeners)
+				l.onUpdaterNotFoundUpdate(this);
+		}
+	}
 
-   public static File getFileFor(PackageType pt) {
-      if (pt == null) {
-         throw new NullPointerException("PackageType is NULL!");
-      } else {
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$updater$PackageType()[pt.ordinal()]) {
-         case 1:
-         case 2:
-            return FileUtil.getRunningJar();
-         default:
-            throw new IllegalArgumentException("Unknown PackageType!");
-         }
-      }
-   }
+	private void onAdFound(Ad ad) {
+		synchronized (listeners) {
+			for (UpdaterListener l : listeners)
+				l.onAdFound(this, ad);
+		}
+	}
 
-   public static File getFile() {
-      return getFileFor(PackageType.getCurrent());
-   }
+	private static boolean isAutomodeFor(PackageType pt) {
+		if (pt == null)
+			throw new NullPointerException("PackageType is NULL!");
 
-   public static File getUpdateFileFor(PackageType pt) {
-      return new File(getFileFor(pt).getAbsolutePath() + ".update");
-   }
+		switch (pt) {
+		case EXE:
+		case JAR:
+			return true;
+		default:
+			throw new IllegalArgumentException("Unknown PackageType!");
+		}
+	}
 
-   public static File getUpdateFile() {
-      return getUpdateFileFor(PackageType.getCurrent());
-   }
+	public static boolean isAutomode() {
+		return isAutomodeFor(PackageType.getCurrent());
+	}
 
-   private static File getTempFileFor(PackageType pt) {
-      return new File(getFileFor(pt).getAbsolutePath() + ".replace");
-   }
+	public static File getFileFor(PackageType pt) {
+		if (pt == null)
+			throw new NullPointerException("PackageType is NULL!");
 
-   private static File getTempFile() {
-      return getTempFileFor(PackageType.getCurrent());
-   }
+		switch (pt) {
+		case EXE:
+		case JAR:
+			return FileUtil.getRunningJar();
+		default:
+			throw new IllegalArgumentException("Unknown PackageType!");
+		}
+	}
 
-   private static URI[] makeURIs() {
-      int len = links.length;
-      URI[] r = new URI[len];
+	public static File getFile() {
+		return getFileFor(PackageType.getCurrent());
+	}
 
-      for(int i = 0; i < len; ++i) {
-         try {
-            r[i] = (new URL(links[i])).toURI();
-         } catch (Exception var4) {
-            throw new TLauncherException("Cannot create link from at i:" + i, var4);
-         }
-      }
+	public static File getUpdateFileFor(PackageType pt) {
+		return new File(getFileFor(pt).getAbsolutePath() + ".update");
+	}
 
-      return r;
-   }
+	public static File getUpdateFile() {
+		return getUpdateFileFor(PackageType.getCurrent());
+	}
 
-   private static void log(Object... obj) {
-      U.log("[Updater]", obj);
-   }
+	private static File getTempFileFor(PackageType pt) {
+		return new File(getFileFor(pt).getAbsolutePath() + ".replace");
+	}
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$updater$PackageType() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$updater$PackageType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[PackageType.values().length];
+	private static File getTempFile() {
+		return getTempFileFor(PackageType.getCurrent());
+	}
 
-         try {
-            var0[PackageType.EXE.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
+	private static URI[] makeURIs() {
+		int len = links.length;
+		URI[] r = new URI[len];
 
-         try {
-            var0[PackageType.JAR.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
+		for (int i = 0; i < len; i++)
+			try {
+				r[i] = new URL(links[i]).toURI();
+			} catch (Exception e) {
+				throw new TLauncherException("Cannot create link from at i:"
+						+ i, e);
+			}
 
-         $SWITCH_TABLE$ru$turikhay$tlauncher$updater$PackageType = var0;
-         return var0;
-      }
-   }
+		return r;
+	}
 
-   public static enum UpdaterState {
-      READY,
-      FOUND,
-      NOT_FOUND,
-      ERROR;
-   }
+	private static void log(Object... obj) {
+		U.log("[Updater]", obj);
+	}
+
+	public enum UpdaterState {
+		READY, FOUND, NOT_FOUND, ERROR
+	}
 }

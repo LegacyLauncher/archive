@@ -41,6 +41,12 @@
         	path: "outofmemory",
         	exit: -1,
         	pattern: '^java.lang.OutOfMemoryError: .+'
+        },
+        {
+        	name: "OpenGL unsupported by videocard",
+        	path: "old-videocard",
+        	exit: 1,
+        	pattern: '^# C \\[ig4dev32\\.dll\\+0x3e88\\]$'
         }
     ]
 }

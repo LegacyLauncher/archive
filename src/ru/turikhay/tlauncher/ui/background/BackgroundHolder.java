@@ -1,82 +1,86 @@
 package ru.turikhay.tlauncher.ui.background;
 
 import java.awt.Color;
+
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.background.slide.SlideBackground;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
 public class BackgroundHolder extends ExtendedLayeredPane {
-   private static final long serialVersionUID = 8722087129402330131L;
-   public final MainPane pane;
-   private Background currentBackground;
-   public final BackgroundCover cover;
-   public final SlideBackground SLIDE_BACKGROUND;
+	private static final long serialVersionUID = 8722087129402330131L;
 
-   public BackgroundHolder(MainPane parent) {
-      super(parent);
-      this.pane = parent;
-      this.cover = new BackgroundCover(this);
-      this.SLIDE_BACKGROUND = new SlideBackground(this);
-      this.add(this.cover, Integer.MAX_VALUE);
-   }
+	public final MainPane pane;
+	private Background currentBackground;
 
-   public Background getBackgroundPane() {
-      return this.currentBackground;
-   }
+	public final BackgroundCover cover;
 
-   public void setBackground(Background background, boolean animate) {
-      if (background == null) {
-         throw new NullPointerException();
-      } else {
-         Color coverColor = background.getCoverColor();
-         if (coverColor == null) {
-            coverColor = Color.black;
-         }
+	public final SlideBackground SLIDE_BACKGROUND;
 
-         this.cover.setColor(coverColor, animate);
-         this.cover.makeCover(animate);
-         if (this.currentBackground != null) {
-            this.remove(this.currentBackground);
-         }
+	public BackgroundHolder(MainPane parent) {
+		super(parent);
 
-         this.currentBackground = background;
-         this.add(this.currentBackground);
-         this.cover.removeCover(animate);
-      }
-   }
+		this.pane = parent;
+		this.cover = new BackgroundCover(this);
 
-   public void showBackground() {
-      this.cover.removeCover();
-   }
+		this.SLIDE_BACKGROUND = new SlideBackground(this);
 
-   public void hideBackground() {
-      this.cover.makeCover();
-   }
+		add(cover, Integer.valueOf(Integer.MAX_VALUE));
+	}
 
-   public void startBackground() {
-      if (this.currentBackground != null) {
-         if (this.currentBackground instanceof AnimatedBackground) {
-            ((AnimatedBackground)this.currentBackground).startBackground();
-         }
+	public Background getBackgroundPane() {
+		return currentBackground;
+	}
 
-      }
-   }
+	public void setBackground(Background background, boolean animate) {
+		if (background == null)
+			throw new NullPointerException();
 
-   public void suspendBackground() {
-      if (this.currentBackground != null) {
-         if (this.currentBackground instanceof AnimatedBackground) {
-            ((AnimatedBackground)this.currentBackground).suspendBackground();
-         }
+		Color coverColor = background.getCoverColor();
+		if (coverColor == null)
+			coverColor = Color.black;
 
-      }
-   }
+		cover.setColor(coverColor, animate);
 
-   public void stopBackground() {
-      if (this.currentBackground != null) {
-         if (this.currentBackground instanceof AnimatedBackground) {
-            ((AnimatedBackground)this.currentBackground).stopBackground();
-         }
+		cover.makeCover(animate);
 
-      }
-   }
+		if (currentBackground != null)
+			remove(currentBackground);
+		currentBackground = background;
+		add(currentBackground);
+
+		cover.removeCover(animate);
+	}
+
+	public void showBackground() {
+		cover.removeCover();
+	}
+
+	public void hideBackground() {
+		cover.makeCover();
+	}
+
+	public void startBackground() {
+		if (currentBackground == null)
+			return;
+
+		if (currentBackground instanceof AnimatedBackground)
+			((AnimatedBackground) currentBackground).startBackground();
+	}
+
+	public void suspendBackground() {
+		if (currentBackground == null)
+			return;
+
+		if (currentBackground instanceof AnimatedBackground)
+			((AnimatedBackground) currentBackground).suspendBackground();
+	}
+
+	public void stopBackground() {
+		if (currentBackground == null)
+			return;
+
+		if (currentBackground instanceof AnimatedBackground)
+			((AnimatedBackground) currentBackground).stopBackground();
+	}
+
 }

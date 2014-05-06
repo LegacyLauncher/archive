@@ -1,86 +1,106 @@
 package ru.turikhay.tlauncher.ui.progress;
 
 import java.awt.Component;
+
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftExtendedListener;
 
-public class LaunchProgress extends DownloaderProgress implements MinecraftExtendedListener {
-   private static final long serialVersionUID = -1003141285749311799L;
+public class LaunchProgress extends DownloaderProgress implements
+		MinecraftExtendedListener {
+	private static final long serialVersionUID = -1003141285749311799L;
 
-   public LaunchProgress(Component parentComp) {
-      super(parentComp);
-   }
+	public LaunchProgress(Component parentComp) {
+		super(parentComp);
+	}
 
-   public void clearProgress() {
-      this.setIndeterminate(false);
-      this.setValue(0);
-      this.setCenterString((String)null);
-      this.setEastString((String)null);
-   }
+	@Override
+	public void clearProgress() {
+		this.setIndeterminate(false);
+		this.setValue(0);
 
-   private void setupBar() {
-      this.startProgress();
-      this.setIndeterminate(true);
-   }
+		this.setCenterString(null);
+		this.setEastString(null);
+	}
 
-   public void onMinecraftPrepare() {
-      this.setupBar();
-   }
+	private void setupBar() {
+		startProgress();
+		setIndeterminate(true);
+	}
 
-   public void onMinecraftCollecting() {
-      this.setWestString("launcher.step.collecting");
-   }
+	@Override
+	public void onMinecraftPrepare() {
+		setupBar();
+	}
 
-   public void onMinecraftComparingAssets() {
-      this.setWestString("launcher.step.comparing-assets");
-   }
+	@Override
+	public void onMinecraftCollecting() {
+		setWestString("launcher.step.collecting");
+	}
 
-   public void onMinecraftDownloading() {
-      this.setWestString("launcher.step.downloading");
-   }
+	@Override
+	public void onMinecraftComparingAssets() {
+		setWestString("launcher.step.comparing-assets");
+	}
 
-   public void onMinecraftReconstructingAssets() {
-      this.setupBar();
-      this.setWestString("launcher.step.reconstructing-assets");
-   }
+	@Override
+	public void onMinecraftDownloading() {
+		setWestString("launcher.step.downloading");
+	}
 
-   public void onMinecraftUnpackingNatives() {
-      this.setWestString("launcher.step.unpacking-natives");
-   }
+	@Override
+	public void onMinecraftReconstructingAssets() {
+		setupBar();
+		setWestString("launcher.step.reconstructing-assets");
+	}
 
-   public void onMinecraftDeletingEntries() {
-      this.setWestString("launcher.step.deleting-entries");
-   }
+	@Override
+	public void onMinecraftUnpackingNatives() {
+		setWestString("launcher.step.unpacking-natives");
+	}
 
-   public void onMinecraftConstructing() {
-      this.setWestString("launcher.step.constructing");
-   }
+	@Override
+	public void onMinecraftDeletingEntries() {
+		setWestString("launcher.step.deleting-entries");
+	}
 
-   public void onMinecraftPostLaunch() {
-      this.setStrings((String)null, (String)null, (String)null);
-   }
+	@Override
+	public void onMinecraftConstructing() {
+		setWestString("launcher.step.constructing");
+	}
 
-   public void onMinecraftAbort() {
-      this.stopProgress();
-   }
+	@Override
+	public void onMinecraftPostLaunch() {
+		setStrings(null, null, null);
+	}
 
-   public void onMinecraftLaunch() {
-      this.stopProgress();
-   }
+	@Override
+	public void onMinecraftAbort() {
+		stopProgress();
+	}
 
-   public void onMinecraftClose() {
-   }
+	@Override
+	public void onMinecraftLaunch() {
+		stopProgress();
+	}
 
-   public void onMinecraftError(Throwable e) {
-      this.stopProgress();
-   }
+	@Override
+	public void onMinecraftClose() {
+	}
 
-   public void onMinecraftKnownError(MinecraftException e) {
-      this.stopProgress();
-   }
+	@Override
+	public void onMinecraftError(Throwable e) {
+		stopProgress();
+	}
 
-   public void onMinecraftCrash(Crash crash) {
-      this.stopProgress();
-   }
+	@Override
+	public void onMinecraftKnownError(MinecraftException e) {
+		stopProgress();
+	}
+
+	@Override
+	public void onMinecraftCrash(Crash crash) {
+		stopProgress();
+	}
+
 }

@@ -12,283 +12,323 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
+
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class DownloaderThread extends ExtendedThread {
-   private static final String ITERATION_BLOCK = "iteration";
-   private static final int CONTAINER_SIZE = 100;
-   private static final int NOTIFY_TIMER = 15000;
-   private final int ID;
-   private final String LOGGER_PREFIX;
-   private final Downloader downloader;
-   private final List list;
-   private final double[] averageSpeedContainer;
-   private int speedCaret;
-   private double currentProgress;
-   private double lastProgress;
-   private double doneProgress;
-   private double eachProgress;
-   private double speed;
-   private Downloadable current;
-   private boolean launched;
+	private final static String ITERATION_BLOCK = Downloader.ITERATION_BLOCK;
+	private final static int
+		CONTAINER_SIZE = 100, // Size of average values containers.
+		NOTIFY_TIMER = 1000 * 15; // Notify timer showing the file is still downloading
 
-   DownloaderThread(Downloader d, int id) {
-      super("DT#" + id);
-      this.ID = id;
-      this.LOGGER_PREFIX = "[D#" + id + "]";
-      this.downloader = d;
-      this.list = new ArrayList();
-      this.averageSpeedContainer = new double[100];
-      this.startAndWait();
-   }
+	private final int ID;
+	private final String LOGGER_PREFIX;
 
-   int getID() {
-      return this.ID;
-   }
+	private final Downloader downloader;
+	private final List<Downloadable> list;
 
-   void add(Downloadable d) {
-      this.list.add(d);
-   }
+	private final double[] averageSpeedContainer;
+	private int speedCaret;
 
-   void startDownload() {
-      this.launched = true;
-      this.unblockThread("iteration");
-   }
+	private double currentProgress, lastProgress, doneProgress, eachProgress,
+			speed;
 
-   void stopDownload() {
-      this.launched = false;
-   }
+	private Downloadable current;
+	private boolean launched;
 
-   public void run() {
-      while(true) {
-         this.launched = true;
-         this.eachProgress = 1.0D / (double)this.list.size();
-         this.currentProgress = this.doneProgress = 0.0D;
-         Iterator var2 = this.list.iterator();
+	DownloaderThread(Downloader d, int id) {
+		super("DT#" + id);
 
-         label57:
-         while(var2.hasNext()) {
-            Downloadable d = (Downloadable)var2.next();
-            this.current = d;
-            this.onStart();
-            int attempt = 0;
-            Object error = null;
+		ID = id;
+		LOGGER_PREFIX = "[D#" + id + "]";
 
-            int max;
-            Iterator var8;
-            while(attempt < (max = this.downloader.getConfiguration().getTries(d.isFast()))) {
-               ++attempt;
-               this.dlog("Attempting to download (repo: " + d.getRepository() + ") [" + attempt + "/" + max + "]...");
-               int timeout = attempt * this.downloader.getConfiguration().getTimeout();
+		this.downloader = d;
+		this.list = new ArrayList<Downloadable>();
+		this.averageSpeedContainer = new double[CONTAINER_SIZE];
 
-               try {
-                  this.download(timeout);
-                  break;
-               } catch (GaveUpDownloadException var9) {
-                  this.dlog("File is not reachable at all.");
-                  error = var9;
-               } catch (RetryDownloadException var10) {
-                  this.dlog("Will attempt to re-download this file:", var10.getMessage());
-                  error = var10;
-               } catch (AbortedDownloadException var11) {
-                  this.dlog("This download process has been aborted.");
-                  error = var11;
-                  break;
-               }
+		this.startAndWait();
+	}
 
-               if (attempt >= max) {
-                  FileUtil.deleteFile(d.getDestination());
-                  var8 = d.getAdditionalDestinations().iterator();
+	int getID() {
+		return ID;
+	}
 
-                  while(var8.hasNext()) {
-                     File file = (File)var8.next();
-                     FileUtil.deleteFile(file);
-                  }
+	void add(Downloadable d) {
+		list.add(d);
+	}
 
-                  this.dlog("Gave up trying to download this file.", error);
-                  this.onError((Throwable)error);
-               }
-            }
+	void startDownload() {
+		this.launched = true;
+		unblockThread(ITERATION_BLOCK);
+	}
 
-            if (error instanceof AbortedDownloadException) {
-               this.tlog("Thread is aborting...");
-               var8 = this.list.iterator();
+	void stopDownload() {
+		this.launched = false;
+	}
 
-               while(true) {
-                  if (!var8.hasNext()) {
-                     break label57;
-                  }
+	@Override
+	public void run() {
+		while (true) {
+			launched = true;
 
-                  Downloadable downloadable = (Downloadable)var8.next();
-                  downloadable.onAbort((AbortedDownloadException)error);
-               }
-            }
-         }
+			eachProgress = 1.0 / list.size();
+			currentProgress = doneProgress = 0.0;
 
-         Arrays.fill(this.averageSpeedContainer, 0.0D);
-         this.list.clear();
-         this.blockThread("iteration");
-         this.launched = false;
-      }
-   }
+			for (Downloadable d : list) {
+				this.current = d;
+				onStart();
 
-   private void download(int timeout) throws GaveUpDownloadException, RetryDownloadException, AbortedDownloadException {
-      boolean hasRepo = this.current.hasRepository();
-      int attempt = 0;
-      int max = hasRepo ? this.current.getRepository().getCount() : 1;
-      IOException cause = null;
+				int attempt = 0, max, timeout;
+				Throwable error = null;
 
-      while(attempt < max) {
-         ++attempt;
-         String url = hasRepo ? this.current.getRepository().getSelectedRepo() + this.current.getURL() : this.current.getURL();
-         this.dlog("Trying to download from: " + url);
+				while (attempt < (max = downloader.getConfiguration().getTries(
+						d.isFast()))) {
+					++attempt;
 
-         try {
-            this.downloadURL(url, timeout);
-            return;
-         } catch (IOException var8) {
-            this.dlog("Failed to download from: " + url, var8);
-            cause = var8;
-            if (hasRepo) {
-               this.current.getRepository().selectNext();
-            }
-         }
-      }
+					dlog("Attempting to download (repo: " + d.getRepository()
+							+ ") [" + attempt + "/" + max + "]...");
+					timeout = attempt
+							* downloader.getConfiguration().getTimeout();
 
-      throw new GaveUpDownloadException(this.current, cause);
-   }
+					try {
+						download(timeout);
+						break;
+					} catch (GaveUpDownloadException e) {
+						dlog("File is not reachable at all.");
+						error = e;
+					} catch (RetryDownloadException e) {
+						dlog("Will attempt to re-download this file:",
+								e.getMessage());
+						error = e;
+					} catch (AbortedDownloadException e) {
+						dlog("This download process has been aborted.");
+						error = e;
+						break;
+					}
 
-   private void downloadURL(String path, int timeout) throws IOException, AbortedDownloadException, RetryDownloadException {
-      URL url = new URL(path);
-      URLConnection urlConnection = url.openConnection();
-      if (!(urlConnection instanceof HttpURLConnection)) {
-         throw new IOException("Invalid protocol: " + url.getProtocol());
-      } else {
-         HttpURLConnection connection = (HttpURLConnection)urlConnection;
-         Downloadable.setUp(connection, timeout);
-         if (!this.launched) {
-            throw new AbortedDownloadException();
-         } else {
-            long reply_s = System.currentTimeMillis();
-            connection.connect();
-            long reply = System.currentTimeMillis() - reply_s;
-            this.dlog("Got reply in " + reply + " ms.");
-            InputStream in = new BufferedInputStream(connection.getInputStream());
-            File file = this.current.getDestination();
-            File temp = FileUtil.makeTemp(new File(file.getAbsolutePath() + ".tlauncherdownload"));
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
-            long read = 0L;
-            long length = (long)connection.getContentLength();
-            long downloaded_s = System.currentTimeMillis();
-            long speed_s = downloaded_s;
-            long timer = downloaded_s;
-            byte[] buffer = new byte[65536];
-            int curread = in.read(buffer);
+					if (attempt < max)
+						continue;
 
-            long downloaded_e;
-            double curdone;
-            while(curread > 0) {
-               if (!this.launched) {
-                  out.close();
-                  throw new AbortedDownloadException();
-               }
+					FileUtil.deleteFile(d.getDestination());
 
-               read += (long)curread;
-               out.write(buffer, 0, curread);
-               curread = in.read(buffer);
-               if (curread == -1) {
-                  break;
-               }
+					for (File file : d.getAdditionalDestinations())
+						FileUtil.deleteFile(file);
 
-               long speed_e = System.currentTimeMillis() - speed_s;
-               if (speed_e >= 50L) {
-                  speed_s = System.currentTimeMillis();
-                  downloaded_e = speed_s - downloaded_s;
-                  curdone = (double)((float)read / (float)length);
-                  double curspeed = (double)read / (double)downloaded_e;
-                  if (speed_s - timer > 15000L) {
-                     timer = speed_s;
-                     this.dlog("Still downloading:", (int)(curdone * 100.0D) + "% at speed", U.setFractional(curspeed, 2), "kb/s");
-                  }
+					dlog("Gave up trying to download this file.", error);
+					
+					onError(error);
+				}
 
-                  this.onProgress((double)curread, curdone, curspeed);
-               }
-            }
+				if (error instanceof AbortedDownloadException) {
+					tlog("Thread is aborting...");
 
-            downloaded_e = System.currentTimeMillis() - downloaded_s;
-            curdone = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
-            in.close();
-            out.close();
-            connection.disconnect();
-            if (!temp.renameTo(file)) {
-               FileUtil.copyFile(temp, file, true);
-               FileUtil.deleteFile(temp);
-            }
+					for (Downloadable downloadable : this.list)
+						downloadable.onAbort((AbortedDownloadException) error);
 
-            List copies = this.current.getAdditionalDestinations();
-            if (copies.size() > 0) {
-               this.dlog("Found additional destinations. Copying...");
-               Iterator var34 = copies.iterator();
+					break;
+				}
+			}
 
-               while(var34.hasNext()) {
-                  File copy = (File)var34.next();
-                  this.dlog("Copying " + copy + "...");
-                  FileUtil.copyFile(file, copy, this.current.isForce());
-                  this.dlog("Success!");
-               }
+			Arrays.fill(averageSpeedContainer, 0.0);
+			list.clear();
 
-               this.dlog("Copying completed.");
-            }
+			blockThread(ITERATION_BLOCK);
 
-            this.dlog("Downloaded in " + downloaded_e + " ms. at " + curdone + " kb/s");
-            this.onComplete();
-         }
-      }
-   }
+			launched = false;
+		}
+	}
 
-   private void onStart() {
-      this.current.onStart();
-   }
+	private void download(int timeout) throws GaveUpDownloadException,
+			RetryDownloadException, AbortedDownloadException {
+		boolean hasRepo = current.hasRepository();
+		int attempt = 0, max = hasRepo ? current.getRepository().getCount() : 1;
+		
+		IOException cause = null;
 
-   private void onError(Throwable e) {
-      this.current.onError(e);
-      this.downloader.onFileComplete(this, this.current);
-   }
+		while (attempt < max) {
+			++attempt;
 
-   private void onProgress(double curread, double curdone, double curspeed) {
-      if (++this.speedCaret == 100) {
-         this.speedCaret = 0;
-      }
+			String url = hasRepo ? current.getRepository().getSelectedRepo()
+					+ current.getURL() : current.getURL();
+			dlog("Trying to download from: " + url);
 
-      this.averageSpeedContainer[this.speedCaret] = curspeed;
-      this.currentProgress = this.doneProgress + this.eachProgress * curdone;
-      if (!(this.currentProgress - this.lastProgress < 0.01D)) {
-         this.lastProgress = this.currentProgress;
-         this.speed = U.getAverage(this.averageSpeedContainer);
-         this.downloader.onProgress(this, this.currentProgress, this.speed);
-      }
-   }
+			try {
+				downloadURL(url, timeout);
+				return;
+			} catch (IOException e) {
+				dlog("Failed to download from: " + url, e);
+				
+				cause = e;
+				
+				if (hasRepo)
+					current.getRepository().selectNext();
+			}
+		}
 
-   private void onComplete() throws RetryDownloadException {
-      this.doneProgress += this.eachProgress;
-      this.downloader.onProgress(this, this.doneProgress, this.speed);
-      this.downloader.onFileComplete(this, this.current);
-      this.current.onComplete();
-   }
+		throw new GaveUpDownloadException(current, cause);
+	}
 
-   private void tlog(Object... o) {
-      U.plog(this.LOGGER_PREFIX, o);
-   }
+	private void downloadURL(String path, int timeout) throws IOException,
+			AbortedDownloadException, RetryDownloadException {
+		URL url = new URL(path);
+		URLConnection urlConnection = url.openConnection();
 
-   private void dlog(Object... o) {
-      U.plog(this.LOGGER_PREFIX, "> " + this.current.getURL() + "\n ", o);
-      if (this.current.hasConsole()) {
-         this.current.getContainer().getConsole().log("> " + this.current.getURL() + "\n  ", o);
-      }
+		if (!(urlConnection instanceof HttpURLConnection))
+			throw new IOException("Invalid protocol: " + url.getProtocol());
 
-   }
+		HttpURLConnection connection = (HttpURLConnection) urlConnection;
+		Downloadable.setUp(connection, timeout);
+
+		if (!launched)
+			throw new AbortedDownloadException();
+
+		long reply_s = System.currentTimeMillis();
+		connection.connect();
+		long reply = System.currentTimeMillis() - reply_s;
+
+		dlog("Got reply in " + reply + " ms.");
+
+		InputStream in = new BufferedInputStream(connection.getInputStream());
+
+		File file = current.getDestination();
+		File temp = FileUtil.makeTemp(new File(file.getAbsolutePath()
+				+ ".tlauncherdownload"));
+		OutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
+
+		long
+			read = 0L,
+			length = connection.getContentLength(),
+			downloaded_s = System.currentTimeMillis(),
+			speed_s = downloaded_s, downloaded_e, speed_e,
+			timer = downloaded_s;
+
+		// Speed in kb/s:
+		// read (bytes) / time (ms)
+
+		// How does it works:
+		// Every second calculates speed using general variables: (read at all /
+		// download time)
+
+		byte[] buffer = new byte[65536];
+
+		int curread = in.read(buffer);
+		while (curread > 0) {
+			if (!launched) {
+				out.close();
+				throw new AbortedDownloadException();
+			}
+
+			read += curread;
+
+			out.write(buffer, 0, curread);
+
+			curread = in.read(buffer);
+
+			if (curread == -1)
+				break;
+
+			speed_e = System.currentTimeMillis() - speed_s;
+			
+			if (speed_e < 50)
+				continue; // This block was downloaded too fast
+
+			speed_s = System.currentTimeMillis(); // "clearing" variable for the
+													// next calculating
+			downloaded_e = speed_s - downloaded_s; // System.currentTimeMillis()
+													// - downloaded_s:
+													// calculating general
+													// download time.
+
+			double curdone = read / (float) length, curspeed = (read / (double) downloaded_e);
+			
+			if(speed_s - timer > NOTIFY_TIMER) {
+				timer = speed_s;
+				dlog("Still downloading:", (int) (curdone * 100) + "% at speed", U.setFractional(curspeed, 2), "kb/s");
+			}
+
+			onProgress(curread, curdone, curspeed);
+		}
+		downloaded_e = System.currentTimeMillis() - downloaded_s;
+
+		double downloadSpeed = (downloaded_e != 0) ? (read / (double) downloaded_e)
+				: 0.0;
+
+		in.close();
+		out.close();
+		connection.disconnect();
+
+		if (!temp.renameTo(file)) {
+			FileUtil.copyFile(temp, file, true);
+			FileUtil.deleteFile(temp);
+		}
+
+		List<File> copies = current.getAdditionalDestinations();
+		if (copies.size() > 0) {
+			dlog("Found additional destinations. Copying...");
+			for (File copy : copies) {
+				dlog("Copying " + copy + "...");
+
+				FileUtil.copyFile(file, copy, current.isForce());
+
+				dlog("Success!");
+			}
+			dlog("Copying completed.");
+		}
+
+		// current.setTime(downloaded_e);
+		// current.setSize(read);
+
+		dlog("Downloaded in " + downloaded_e + " ms. at " + downloadSpeed
+				+ " kb/s");
+
+		onComplete();
+	}
+
+	private void onStart() {
+		current.onStart();
+	}
+
+	private void onError(Throwable e) {
+		current.onError(e);
+		downloader.onFileComplete(this, current);
+	}
+
+	private void onProgress(double curread, double curdone, double curspeed) {
+		if (++speedCaret == CONTAINER_SIZE)
+			speedCaret = 0;
+		this.averageSpeedContainer[speedCaret] = curspeed;
+
+		currentProgress = doneProgress + (eachProgress * curdone);
+
+		if (currentProgress - lastProgress < 0.01)
+			return; // Reduce update rate
+
+		lastProgress = currentProgress;
+		speed = U.getAverage(averageSpeedContainer);
+
+		downloader.onProgress(this, currentProgress, speed);
+	}
+
+	private void onComplete() throws RetryDownloadException {
+		this.doneProgress += eachProgress;
+
+		downloader.onProgress(this, doneProgress, speed);
+		downloader.onFileComplete(this, current);
+		current.onComplete();
+	}
+
+	private void tlog(Object... o) {
+		U.plog(LOGGER_PREFIX, o);
+	}
+
+	private void dlog(Object... o) {
+		U.plog(LOGGER_PREFIX, "> " + current.getURL() + "\n ", o);
+
+		if (current.hasConsole())
+			current.getContainer().getConsole()
+					.log("> " + current.getURL() + "\n  ", o);
+	}
 }
