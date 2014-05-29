@@ -1,76 +1,77 @@
 package ru.turikhay.tlauncher.ui.editor;
 
-import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-
+import javax.swing.JComponent;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 
 public abstract class EditorHandler implements Blockable {
-	private final String path;
-	private String value;
+   private final String path;
+   private String value;
+   private final List listeners;
 
-	private final List<EditorFieldListener> listeners;
+   public EditorHandler(String path) {
+      if (path == null) {
+         throw new NullPointerException();
+      } else {
+         this.path = path;
+         this.listeners = Collections.synchronizedList(new ArrayList());
+      }
+   }
 
-	public EditorHandler(String path) {
-		if (path == null)
-			throw new NullPointerException();
+   public boolean addListener(EditorFieldListener listener) {
+      if (listener == null) {
+         throw new NullPointerException();
+      } else {
+         return this.listeners.add(listener);
+      }
+   }
 
-		this.path = path;
-		this.listeners = Collections
-				.synchronizedList(new ArrayList<EditorFieldListener>());
-	}
+   public boolean removeListener(EditorFieldListener listener) {
+      if (listener == null) {
+         throw new NullPointerException();
+      } else {
+         return this.listeners.remove(listener);
+      }
+   }
 
-	public boolean addListener(EditorFieldListener listener) {
-		if (listener == null)
-			throw new NullPointerException();
+   public void onChange(String newvalue) {
+      Iterator var3 = this.listeners.iterator();
 
-		return listeners.add(listener);
-	}
+      while(var3.hasNext()) {
+         EditorFieldListener listener = (EditorFieldListener)var3.next();
+         listener.onChange(this, this.value, newvalue);
+      }
 
-	public boolean removeListener(EditorFieldListener listener) {
-		if (listener == null)
-			throw new NullPointerException();
+      this.value = newvalue;
+   }
 
-		return listeners.remove(listener);
-	}
+   public String getPath() {
+      return this.path;
+   }
 
-	public void onChange(String newvalue) {
-		for (EditorFieldListener listener : listeners)
-			listener.onChange(this, value, newvalue);
+   public void updateValue(Object obj) {
+      String val = obj == null ? null : obj.toString();
+      this.onChange(val);
+      this.setValue0(this.value);
+   }
 
-		this.value = newvalue;
-	}
+   public void setValue(Object obj) {
+      String val = obj == null ? null : obj.toString();
+      this.setValue0(val);
+   }
 
-	public String getPath() {
-		return path;
-	}
+   public abstract boolean isValid();
 
-	public void updateValue(Object obj) {
-		String val = (obj == null) ? null : obj.toString();
+   public abstract JComponent getComponent();
 
-		this.onChange(val);
-		this.setValue0(value);
-	}
+   public abstract String getValue();
 
-	public void setValue(Object obj) {
-		String val = (obj == null) ? null : obj.toString();
+   protected abstract void setValue0(String var1);
 
-		this.setValue0(val);
-	}
-
-	public abstract boolean isValid();
-
-	public abstract Component getComponent();
-
-	public abstract String getValue();
-
-	protected abstract void setValue0(String s);
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "{path='" + path + "', value='"
-				+ value + "'}";
-	}
+   public String toString() {
+      return this.getClass().getSimpleName() + "{path='" + this.path + "', value='" + this.value + "'}";
+   }
 }

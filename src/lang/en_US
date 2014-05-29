@@ -194,6 +194,7 @@ settings.client.resolution.width=Width (pix.)
 settings.client.resolution.width.invalid=Invalid width!
 settings.client.resolution.height=Height (pix.)
 settings.client.resolution.height.invalid=Invalid height!
+settings.client.resolution.fullscreen=Fullscreen
 settings.versions.label=Versions
 settings.versions.snapshot=Show Snapshots
 settings.versions.old_beta=Show Beta

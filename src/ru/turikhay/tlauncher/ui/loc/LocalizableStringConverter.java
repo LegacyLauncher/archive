@@ -2,31 +2,30 @@ package ru.turikhay.tlauncher.ui.loc;
 
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 
-public abstract class LocalizableStringConverter<T> implements StringConverter<T> {
-	private final String prefix;
+public abstract class LocalizableStringConverter implements StringConverter {
+   private final String prefix;
 
-	public LocalizableStringConverter(String prefix) {
-		this.prefix = prefix;
-	}
+   public LocalizableStringConverter(String prefix) {
+      this.prefix = prefix;
+   }
 
-	@Override
-	public String toString(T from) {
-		return Localizable.get(getPath(from));
-	}
+   public String toString(Object from) {
+      return Localizable.get(this.getPath(from));
+   }
 
-	String getPath(T from) {
-		String prefix = getPrefix();
+   String getPath(Object from) {
+      String prefix = this.getPrefix();
+      if (prefix != null && !prefix.isEmpty()) {
+         String path = this.toPath(from);
+         return prefix + "." + path;
+      } else {
+         return this.toPath(from);
+      }
+   }
 
-		if (prefix == null || prefix.isEmpty())
-			return toPath(from);
+   String getPrefix() {
+      return this.prefix;
+   }
 
-		String path = toPath(from);
-		return prefix + "." + path;
-	}
-
-	String getPrefix() {
-		return prefix;
-	}
-
-	protected abstract String toPath(T from);
+   protected abstract String toPath(Object var1);
 }

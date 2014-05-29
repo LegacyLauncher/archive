@@ -193,6 +193,7 @@ settings.client.resolution.width=Ширина (пікс.)
 settings.client.resolution.width.invalid=Неприпустима ширина!
 settings.client.resolution.height=Висота (пікс.)
 settings.client.resolution.height.invalid=Неприпустима высота!
+settings.client.resolution.fullscreen=Повноекранний режим
 settings.versions.label=Версії:
 settings.versions.snapshot=Відображати Збірки ("snapshots")
 settings.versions.old_beta=Відображати Бета

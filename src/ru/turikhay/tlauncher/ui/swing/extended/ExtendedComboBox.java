@@ -3,85 +3,83 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.ListCellRenderer;
-
-import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.swing.DefaultConverterCellRenderer;
+import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.util.U;
 
-public class ExtendedComboBox<T> extends JComboBox<T> {
-	private static final long serialVersionUID = -4509947341182373649L;
-	private StringConverter<T> converter;
+public class ExtendedComboBox extends JComboBox {
+   private static final long serialVersionUID = -4509947341182373649L;
+   private StringConverter converter;
 
-	public ExtendedComboBox(ListCellRenderer<T> renderer) {
-		setRenderer(renderer);
-		setOpaque(false);
-		setFont(getFont().deriveFont(TLauncherFrame.fontSize));
+   public ExtendedComboBox(ListCellRenderer renderer) {
+      this.setModel(new SimpleComboBoxModel());
+      this.setRenderer(renderer);
+      this.setOpaque(false);
+      this.setFont(this.getFont().deriveFont(12.0F));
+      ((JComponent)U.getAs(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
+   }
 
-		U.getAs(getEditor().getEditorComponent(), JComponent.class).setOpaque(
-				false);
-	}
+   public ExtendedComboBox(StringConverter converter) {
+      this((ListCellRenderer)(new DefaultConverterCellRenderer(converter)));
+      this.converter = converter;
+   }
 
-	public ExtendedComboBox(StringConverter<T> converter) {
-		this(new DefaultConverterCellRenderer<T>(converter));
-		this.converter = converter;
-	}
+   public ExtendedComboBox() {
+      this((ListCellRenderer)null);
+   }
 
-	public ExtendedComboBox() {
-		this((ListCellRenderer<T>) null);
-	}
+   public SimpleComboBoxModel getSimpleModel() {
+      return (SimpleComboBoxModel)this.getModel();
+   }
 
-	public T getValueAt(int i) {
-		Object value = getItemAt(i);
-		return returnAs(value);
-	}
+   public Object getValueAt(int i) {
+      Object value = this.getItemAt(i);
+      return this.returnAs(value);
+   }
 
-	protected T getSelectedValue() {
-		Object selected = getSelectedItem();
-		return returnAs(selected);
-	}
+   public Object getSelectedValue() {
+      Object selected = this.getSelectedItem();
+      return this.returnAs(selected);
+   }
 
-	protected void setSelectedValue(T value) {
-		setSelectedItem(value);
-	}
+   public void setSelectedValue(Object value) {
+      this.setSelectedItem(value);
+   }
 
-	public void setSelectedValue(String string) {
-		T value = convert(string);
-		if (value == null)
-			return;
+   public void setSelectedValue(String string) {
+      Object value = this.convert(string);
+      if (value != null) {
+         this.setSelectedValue(value);
+      }
+   }
 
-		setSelectedValue(value);
-	}
+   public StringConverter getConverter() {
+      return this.converter;
+   }
 
-	public StringConverter<T> getConverter() {
-		return converter;
-	}
+   public void setConverter(StringConverter converter) {
+      this.converter = converter;
+   }
 
-	public void setConverter(StringConverter<T> converter) {
-		this.converter = converter;
-	}
+   protected String convert(Object obj) {
+      Object from = this.returnAs(obj);
+      if (this.converter != null) {
+         return this.converter.toValue(from);
+      } else {
+         return from == null ? null : from.toString();
+      }
+   }
 
-	protected String convert(T obj) {
-		T from = returnAs(obj);
+   protected Object convert(String from) {
+      return this.converter == null ? null : this.converter.fromString(from);
+   }
 
-		if (converter != null)
-			return converter.toValue(from);
-		return from == null ? null : from.toString();
-	}
-
-	protected T convert(String from) {
-		if (converter == null)
-			return null;
-		return converter.fromString(from);
-	}
-
-	@SuppressWarnings("unchecked")
-	private T returnAs(Object obj) {
-		try {
-			return (T) obj;
-		} catch (ClassCastException ce) {
-			return null;
-		}
-	}
-
+   private Object returnAs(Object obj) {
+      try {
+         return obj;
+      } catch (ClassCastException var3) {
+         return null;
+      }
+   }
 }

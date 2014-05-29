@@ -4,73 +4,70 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-
 import javax.imageio.ImageIO;
-
 import ru.turikhay.util.U;
 
 public class Slide {
-	private final URL url;
-	private Image image;
+   private final URL url;
+   private Image image;
 
-	Slide(URL url) {
-		if (url == null)
-			throw new NullPointerException();
+   Slide(URL url) {
+      if (url == null) {
+         throw new NullPointerException();
+      } else {
+         this.url = url;
+         if (this.isLocal()) {
+            this.load();
+         }
 
-		this.url = url;
+      }
+   }
 
-		if (isLocal())
-			load();
-	}
+   public boolean equals(Object o) {
+      if (o == null) {
+         return false;
+      } else {
+         Slide slide = (Slide)U.getAs(o, Slide.class);
+         return slide == null ? false : this.url.equals(slide.url);
+      }
+   }
 
-	@Override
-	public boolean equals(Object o) {
-		if (o == null)
-			return false;
+   public URL getURL() {
+      return this.url;
+   }
 
-		Slide slide = U.getAs(o, Slide.class);
-		if (slide == null)
-			return false;
+   public boolean isLocal() {
+      return this.url.getProtocol().equals("file");
+   }
 
-		return url.equals(slide.url);
-	}
+   public Image getImage() {
+      if (this.image == null) {
+         this.load();
+      }
 
-	public URL getURL() {
-		return url;
-	}
+      return this.image;
+   }
 
-	public boolean isLocal() {
-		return url.getProtocol().equals("file");
-	}
+   private void load() {
+      this.log("Loading from:", this.url);
+      BufferedImage tempImage = null;
 
-	public Image getImage() {
-		if (image == null)
-			load();
-		return image;
-	}
+      try {
+         tempImage = ImageIO.read(this.url);
+      } catch (IOException var3) {
+         this.log("Cannot load slide!", var3);
+         return;
+      }
 
-	private void load() {
-		log("Loading from:", url);
+      if (tempImage == null) {
+         this.log("Image seems to be corrupted.");
+      } else {
+         this.log("Loaded successfully!");
+         this.image = tempImage;
+      }
+   }
 
-		BufferedImage tempImage = null;
-
-		try {
-			tempImage = ImageIO.read(url);
-		} catch (IOException e) {
-			log("Cannot load slide!", e);
-			return;
-		}
-
-		if (tempImage == null) {
-			log("Image seems to be corrupted.");
-			return;
-		}
-
-		log("Loaded successfully!");
-		this.image = tempImage;
-	}
-
-	protected void log(Object... w) {
-		U.log("[" + getClass().getSimpleName() + "]", w);
-	}
+   protected void log(Object... w) {
+      U.log("[" + this.getClass().getSimpleName() + "]", w);
+   }
 }

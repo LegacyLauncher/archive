@@ -2,54 +2,35 @@ package ru.turikhay.util.logger;
 
 import ru.turikhay.util.stream.SafeOutputStream;
 
-/**
- * <code>StringStream</code> is the <code>{@link SafeOutputStream}</code> that
- * allows you to get output data as <code>String</code> <br/>
- * This class uses <code>{@link StringBuffer}</code> as data storage, so use of
- * <code>write()</code> is thread-safe.
- * 
- * @author Artur Khusainov
- * 
- */
 public class StringStream extends SafeOutputStream {
-	protected final StringBuffer buffer;
-	protected int caret;
+   protected final StringBuffer buffer = new StringBuffer();
+   protected int caret;
 
-	public StringStream() {
-		this.buffer = new StringBuffer();
-	}
+   public void write(int b) {
+      this.write((char)b);
+   }
 
-	/**
-	 * Writes specified int as char.
-	 */
-	@Override
-	public void write(int b) {
-		this.write((char) b);
-	}
+   void write(char c) {
+      this.buffer.append(c);
+      ++this.caret;
+   }
 
-	void write(char c) {
-		this.buffer.append(c);
+   public void write(char[] c) {
+      if (c == null) {
+         throw new NullPointerException();
+      } else if (c.length != 0) {
+         for(int i = 0; i < c.length; ++i) {
+            this.write(c[i]);
+         }
 
-		this.caret++;
-	}
+      }
+   }
 
-	public void write(char[] c) {
-		if (c == null)
-			throw new NullPointerException();
+   public String getOutput() {
+      return this.buffer.toString();
+   }
 
-		if (c.length == 0)
-			return;
-
-		for (int i = 0; i < c.length; i++)
-			write(c[i]);
-	}
-
-	public String getOutput() {
-		return buffer.toString();
-	}
-
-	public int getLength() {
-		return buffer.length();
-	}
-
+   public int getLength() {
+      return this.buffer.length();
+   }
 }
