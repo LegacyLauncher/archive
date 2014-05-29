@@ -4,274 +4,385 @@ import java.awt.Desktop;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
-
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
-/**
- * <code>OS</code> enum-class is used for getting OS-dependant information. <br/>
- * Based on <code>OperatingSystem</code> enum-class in official Minecraft launcher.
- * @author turikhay
- */
 public enum OS {
-	LINUX("linux", "unix"),
-	WINDOWS("win"),
-	OSX("mac"),
-	SOLARIS("solaris", "sunos"),
-	UNKNOWN("unknown");
-	
-	public static final OS CURRENT = getCurrent();
-	public static final Arch ARCH = Arch.getCurrent();
-	
-	private final String name;
-	private final String[] aliases;
-	
-	OS(String... aliases) {
-		if(aliases == null)
-			throw new NullPointerException();
-		
-		this.name = toString().toLowerCase();
-		this.aliases = aliases;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public boolean isUnsupported() {
-		return this == UNKNOWN;
-	}
-	
-	public boolean isCurrent() {
-		return this == CURRENT;
-	}
-	
-	public static OS getCurrent() {
-		String osName = System.getProperty("os.name").toLowerCase();
+   LINUX(new String[]{"linux", "unix"}),
+   WINDOWS(new String[]{"win"}),
+   OSX(new String[]{"mac"}),
+   SOLARIS(new String[]{"solaris", "sunos"}),
+   UNKNOWN(new String[]{"unknown"});
 
-		for(OS os : values())
-			for(String alias : os.aliases)
-				if(osName.contains(alias))
-					return os;
+   public static final OS CURRENT = getCurrent();
+   private final String name;
+   private final String[] aliases;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS;
 
-		return UNKNOWN;
-	}
-	
-	public static boolean is(OS...any) {
-		if(any == null)
-			throw new NullPointerException();
-		
-		if(any.length == 0)
-			return false;
-		
-		for(OS compare : values())
-			for(OS current : any)
-				if(current.equals(compare))
-					return true;
-		
-		return false;
-	}
-	
-	public static Arch getArch() {
-		return Arch.getCurrent();
-	}
-	
-	public static String getJavaPath(boolean appendBinFolder) {
-		char separator = File.separatorChar;
-		String path = System.getProperty("java.home") + separator;
-		
-		if(appendBinFolder) {
-			path += "bin" + separator + "java";
-			
-			if(CURRENT == WINDOWS)
-				path += "w.exe"; // javaw.exe
-		}
-		
-		return path;
-	}
-	
-	public static String getJavaPath() {
-		return getJavaPath(true);
-	}
-	
-	public static String getSummary() {
-		return System.getProperty("os.name") + " " + System.getProperty("os.version") + ", " + "Java " + System.getProperty("java.version");
-	}
-	
-	private static void rawOpenLink(URI uri) throws Throwable {
-		Desktop.getDesktop().browse(uri);
-	}
-	
-	public static boolean openLink(URI uri, boolean alertError) {
-		log("Trying to open link with default browser:", uri);
-		
-		try { Desktop.getDesktop().browse(uri); }
-		catch(Throwable e) {
-			log("Failed to open link with default browser:", uri, e);
-			
-			if(alertError)
-				Alert.showLocError("ui.error.openlink", uri);
-			
-			return false;
-		}
-		return true;
-	}
-	
-	public static boolean openLink(URI uri) {
-		return openLink(uri, true);
-	}
-	
-	public static boolean openLink(URL url, boolean alertError) {
-		log("Trying to open URL with default browser:", url);
-		
-		URI uri = null;
-		
-		try { uri = url.toURI(); }
-		catch(Exception e){}
-		
-		return openLink(uri, alertError);
-	}
-	
-	public static boolean openLink(URL url) {
-		return openLink(url, true);
-	}
-	
-	private static void openPath(File path, boolean appendSeparator) throws Throwable {
-		String absPath = path.getAbsolutePath() + File.separatorChar;
-		Runtime r = Runtime.getRuntime();
-		Throwable t = null;
-		
-		switch(CURRENT) {
-		case OSX:
-			String[] cmdArr = { "/usr/bin/open", absPath };
-			
-			try {
-				r.exec(cmdArr);
-				return;
-			} catch(Throwable e) {
-				t = e;
-				
-				log("Cannot open folder using:\n", cmdArr, e);
-				break;
-			}
-		case WINDOWS:
-			String cmd =
-				String.format("cmd.exe /C start \"Open path\" \"%s\"", absPath);
-			
-			try {
-				r.exec(cmd);
-				return;
-			} catch(Throwable e) {
-				t = e;
-				
-				log("Cannot open folder using CMD.exe:\n", cmd, e);
-				break;
-			}
-		default:
-			log("... will use desktop");
-			break;
-		}
-		
-		try { rawOpenLink(path.toURI()); }
-		catch(Throwable e) {
-			t = e;
-		}
-		
-		if(t == null) return; // Path opened successfully.
-		throw t;
-	}
-	
-	public static boolean openFolder(File folder, boolean alertError) {
-		log("Trying to open folder:", folder);
-		
-		if(!folder.isDirectory()) {
-			log("This path is not a directory, sorry.");
-			return false;
-		}
-		
-		try { openPath(folder, true); }catch(Throwable e) {
-			log("Failed to open folder:", e);
-			
-			if(alertError)
-				Alert.showLocError("ui.error.openfolder", folder);
-			
-			return false;
-		}
-		
-		return true;
-	}
-	
-	public static boolean openFolder(File folder) {
-		return openFolder(folder, true);
-	}
-	
-	public static boolean openFile(File file, boolean alertError) {
-		log("Trying to open file:", file);
-		
-		if(!file.isFile()) {
-			log("This path is not a file, sorry.");
-			return false;
-		}
-		
-		try { openPath(file, false); }catch(Throwable e) {
-			log("Failed to open file:", e);
-			
-			if(alertError)
-				Alert.showLocError("ui.error.openfolder", file);
-			
-			return false;
-		}
-		
-		return true;
-	}
-	
-	public static boolean openFile(File file) {
-		return openFile(file, true);
-	}
-	
-	public enum Arch {
-		x32, x64, UNKNOWN;
-		
-		public static final Arch CURRENT = getCurrent();
-		
-		private final String asString;
-		private final int asInt;
-		
-		Arch() {
-			this.asString = toString().substring(1);
-			
-			int asInt_temp = 0; 
-			try{ asInt_temp = Integer.parseInt(asString); }
-			catch(RuntimeException e){}
-			
-			this.asInt = asInt_temp;
-		}
-		
-		public String asString() {
-			return asString;
-		}
-		
-		public int asInteger() {
-			return asInt;
-		}
-		
-		public boolean isCurrent() {
-			return this == CURRENT;
-		}
-		
-		public static Arch getCurrent() {
-			String curArch = System.getProperty("sun.arch.data.model");
-			
-			for(Arch arch : values())
-				if(arch.asString.equals(curArch))
-					return arch;
-			
-			return UNKNOWN;
-		}
-		
-		public static int getRecommendedMemory() {
-			return CURRENT == x32 || CURRENT == UNKNOWN? 512 : 1024;
-		}
-	}
-	
-	protected static void log(Object...o) { U.log("[OS]", o); }
+   private OS(String... aliases) {
+      if (aliases == null) {
+         throw new NullPointerException();
+      } else {
+         this.name = this.toString().toLowerCase();
+         this.aliases = aliases;
+      }
+   }
+
+   public String getName() {
+      return this.name;
+   }
+
+   public boolean isUnsupported() {
+      return this == UNKNOWN;
+   }
+
+   public boolean isCurrent() {
+      return this == CURRENT;
+   }
+
+   private static OS getCurrent() {
+      String osName = System.getProperty("os.name").toLowerCase();
+      OS[] var4;
+      int var3 = (var4 = values()).length;
+
+      for(int var2 = 0; var2 < var3; ++var2) {
+         OS os = var4[var2];
+         String[] var8;
+         int var7 = (var8 = os.aliases).length;
+
+         for(int var6 = 0; var6 < var7; ++var6) {
+            String alias = var8[var6];
+            if (osName.contains(alias)) {
+               return os;
+            }
+         }
+      }
+
+      return UNKNOWN;
+   }
+
+   public static boolean is(OS... any) {
+      if (any == null) {
+         throw new NullPointerException();
+      } else if (any.length == 0) {
+         return false;
+      } else {
+         OS[] var4;
+         int var3 = (var4 = values()).length;
+
+         for(int var2 = 0; var2 < var3; ++var2) {
+            OS compare = var4[var2];
+            OS[] var8 = any;
+            int var7 = any.length;
+
+            for(int var6 = 0; var6 < var7; ++var6) {
+               OS current = var8[var6];
+               if (current.equals(compare)) {
+                  return true;
+               }
+            }
+         }
+
+         return false;
+      }
+   }
+
+   public static OS.Arch getArch() {
+      return OS.Arch.getCurrent();
+   }
+
+   public static String getJavaPath(boolean appendBinFolder) {
+      char separator = File.separatorChar;
+      String path = System.getProperty("java.home") + separator;
+      if (appendBinFolder) {
+         path = path + "bin" + separator + "java";
+         if (CURRENT == WINDOWS) {
+            path = path + "w.exe";
+         }
+      }
+
+      return path;
+   }
+
+   public static String getJavaPath() {
+      return getJavaPath(true);
+   }
+
+   public static String getSummary() {
+      return System.getProperty("os.name") + " " + System.getProperty("os.version") + ", " + "Java " + System.getProperty("java.version");
+   }
+
+   private static void rawOpenLink(URI uri) throws Throwable {
+      Desktop.getDesktop().browse(uri);
+   }
+
+   public static boolean openLink(URI uri, boolean alertError) {
+      log("Trying to open link with default browser:", uri);
+
+      try {
+         Desktop.getDesktop().browse(uri);
+         return true;
+      } catch (Throwable var3) {
+         log("Failed to open link with default browser:", uri, var3);
+         if (alertError) {
+            Alert.showLocError("ui.error.openlink", uri);
+         }
+
+         return false;
+      }
+   }
+
+   public static boolean openLink(URI uri) {
+      return openLink(uri, true);
+   }
+
+   public static boolean openLink(URL url, boolean alertError) {
+      log("Trying to open URL with default browser:", url);
+      URI uri = null;
+
+      try {
+         uri = url.toURI();
+      } catch (Exception var4) {
+      }
+
+      return openLink(uri, alertError);
+   }
+
+   public static boolean openLink(URL url) {
+      return openLink(url, true);
+   }
+
+   private static void openPath(File path, boolean appendSeparator) throws Throwable {
+      String absPath = path.getAbsolutePath() + File.separatorChar;
+      Runtime r = Runtime.getRuntime();
+      Throwable t = null;
+      switch($SWITCH_TABLE$ru$turikhay$util$OS()[CURRENT.ordinal()]) {
+      case 2:
+         String cmd = String.format("cmd.exe /C start \"Open path\" \"%s\"", absPath);
+
+         try {
+            r.exec(cmd);
+            return;
+         } catch (Throwable var9) {
+            t = var9;
+            log("Cannot open folder using CMD.exe:\n", cmd, var9);
+            break;
+         }
+      case 3:
+         String[] cmdArr = new String[]{"/usr/bin/open", absPath};
+
+         try {
+            r.exec(cmdArr);
+            return;
+         } catch (Throwable var10) {
+            t = var10;
+            log("Cannot open folder using:\n", cmdArr, var10);
+            break;
+         }
+      default:
+         log("... will use desktop");
+      }
+
+      try {
+         rawOpenLink(path.toURI());
+      } catch (Throwable var8) {
+         t = var8;
+      }
+
+      if (t != null) {
+         throw t;
+      }
+   }
+
+   public static boolean openFolder(File folder, boolean alertError) {
+      log("Trying to open folder:", folder);
+      if (!folder.isDirectory()) {
+         log("This path is not a directory, sorry.");
+         return false;
+      } else {
+         try {
+            openPath(folder, true);
+            return true;
+         } catch (Throwable var3) {
+            log("Failed to open folder:", var3);
+            if (alertError) {
+               Alert.showLocError("ui.error.openfolder", folder);
+            }
+
+            return false;
+         }
+      }
+   }
+
+   public static boolean openFolder(File folder) {
+      return openFolder(folder, true);
+   }
+
+   public static boolean openFile(File file, boolean alertError) {
+      log("Trying to open file:", file);
+      if (!file.isFile()) {
+         log("This path is not a file, sorry.");
+         return false;
+      } else {
+         try {
+            openPath(file, false);
+            return true;
+         } catch (Throwable var3) {
+            log("Failed to open file:", var3);
+            if (alertError) {
+               Alert.showLocError("ui.error.openfolder", file);
+            }
+
+            return false;
+         }
+      }
+   }
+
+   public static boolean openFile(File file) {
+      return openFile(file, true);
+   }
+
+   protected static void log(Object... o) {
+      U.log("[OS]", o);
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$util$OS() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[values().length];
+
+         try {
+            var0[LINUX.ordinal()] = 1;
+         } catch (NoSuchFieldError var5) {
+         }
+
+         try {
+            var0[OSX.ordinal()] = 3;
+         } catch (NoSuchFieldError var4) {
+         }
+
+         try {
+            var0[SOLARIS.ordinal()] = 4;
+         } catch (NoSuchFieldError var3) {
+         }
+
+         try {
+            var0[UNKNOWN.ordinal()] = 5;
+         } catch (NoSuchFieldError var2) {
+         }
+
+         try {
+            var0[WINDOWS.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$ru$turikhay$util$OS = var0;
+         return var0;
+      }
+   }
+
+   public static enum Arch {
+      x32,
+      x64,
+      UNKNOWN;
+
+      private static final int DEFAULT_MEMORY = 512;
+      public static final OS.Arch CURRENT = getCurrent();
+      public static final int RECOMMENDED_MEMORY = getRecommendedMemory();
+      private final String asString = this.toString().substring(1);
+      private final int asInt;
+      // $FF: synthetic field
+      private static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
+
+      private Arch() {
+         int asInt_temp = 0;
+
+         try {
+            asInt_temp = Integer.parseInt(this.asString);
+         } catch (RuntimeException var5) {
+         }
+
+         this.asInt = asInt_temp;
+      }
+
+      public String asString() {
+         return this.asString;
+      }
+
+      public int asInteger() {
+         return this.asInt;
+      }
+
+      public boolean isCurrent() {
+         return this == CURRENT;
+      }
+
+      private static OS.Arch getCurrent() {
+         String curArch = System.getProperty("sun.arch.data.model");
+         OS.Arch[] var4;
+         int var3 = (var4 = values()).length;
+
+         for(int var2 = 0; var2 < var3; ++var2) {
+            OS.Arch arch = var4[var2];
+            if (arch.asString.equals(curArch)) {
+               return arch;
+            }
+         }
+
+         return UNKNOWN;
+      }
+
+      private static int getRecommendedMemory() {
+         if (CURRENT == UNKNOWN) {
+            return 512;
+         } else {
+            long totalRam = U.getTotalRam() / 1024L / 1024L;
+            switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
+            case 1:
+               if (totalRam > 1000L) {
+                  return 1024;
+               }
+            default:
+               return 512;
+            case 2:
+               if (totalRam > 6000L) {
+                  return 2048;
+               } else {
+                  return totalRam > 3000L ? 1536 : 1024;
+               }
+            }
+         }
+      }
+
+      // $FF: synthetic method
+      static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch() {
+         int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
+         if (var10000 != null) {
+            return var10000;
+         } else {
+            int[] var0 = new int[values().length];
+
+            try {
+               var0[UNKNOWN.ordinal()] = 3;
+            } catch (NoSuchFieldError var3) {
+            }
+
+            try {
+               var0[x32.ordinal()] = 1;
+            } catch (NoSuchFieldError var2) {
+            }
+
+            try {
+               var0[x64.ordinal()] = 2;
+            } catch (NoSuchFieldError var1) {
+            }
+
+            $SWITCH_TABLE$ru$turikhay$util$OS$Arch = var0;
+            return var0;
+         }
+      }
+   }
 }

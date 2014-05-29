@@ -1,11 +1,11 @@
 package ru.turikhay.tlauncher.ui.converter;
 
-public interface StringConverter<T> {
-	public T fromString(String from);
+public interface StringConverter {
+   Object fromString(String var1);
 
-	public String toString(T from);
+   String toString(Object var1);
 
-	public String toValue(T from);
-	
-	public Class<T> getObjectClass();
+   String toValue(Object var1);
+
+   Class getObjectClass();
 }

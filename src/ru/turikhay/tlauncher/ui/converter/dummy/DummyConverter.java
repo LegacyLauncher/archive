@@ -2,37 +2,30 @@ package ru.turikhay.tlauncher.ui.converter.dummy;
 
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 
-public abstract class DummyConverter<T> implements StringConverter<T> {
-	private static DummyConverter<Object>[] converters;
-	
-	@SuppressWarnings("unchecked")
-	public static DummyConverter<Object>[] getConverters() {
-		if(converters == null)		
-			converters = new DummyConverter[]{
-				new DummyStringConverter(),
-				new DummyIntegerConverter(),
-				new DummyDoubleConverter(),
-				new DummyLongConverter(),
-				new DummyDateConverter()
-			};
-		return converters;
-	}
+public abstract class DummyConverter implements StringConverter {
+   private static DummyConverter[] converters;
 
-	@Override
-	public T fromString(String from) {
-		return fromDummyString(from);
-	}
+   public static DummyConverter[] getConverters() {
+      if (converters == null) {
+         converters = new DummyConverter[]{new DummyStringConverter(), new DummyIntegerConverter(), new DummyDoubleConverter(), new DummyLongConverter(), new DummyDateConverter()};
+      }
 
-	@Override
-	public String toString(T from) {
-		return toValue(from);
-	}
+      return converters;
+   }
 
-	@Override
-	public String toValue(T from) {
-		return toDummyValue(from);
-	}
-	
-	public abstract T fromDummyString(String from) throws RuntimeException;
-	public abstract String toDummyValue(T value) throws RuntimeException;
+   public Object fromString(String from) {
+      return this.fromDummyString(from);
+   }
+
+   public String toString(Object from) {
+      return this.toValue(from);
+   }
+
+   public String toValue(Object from) {
+      return this.toDummyValue(from);
+   }
+
+   public abstract Object fromDummyString(String var1) throws RuntimeException;
+
+   public abstract String toDummyValue(Object var1) throws RuntimeException;
 }

@@ -5,47 +5,39 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
 
-public class AccountConverter extends LocalizableStringConverter<Account> {
-	private final ProfileManager pm;
+public class AccountConverter extends LocalizableStringConverter {
+   private final ProfileManager pm;
 
-	public AccountConverter(ProfileManager pm) {
-		super(null);
+   public AccountConverter(ProfileManager pm) {
+      super((String)null);
+      if (pm == null) {
+         throw new NullPointerException();
+      } else {
+         this.pm = pm;
+      }
+   }
 
-		if (pm == null)
-			throw new NullPointerException();
+   public String toString(Account from) {
+      if (from == null) {
+         return Localizable.get("account.empty");
+      } else {
+         return from.getUsername() == null ? null : from.getUsername();
+      }
+   }
 
-		this.pm = pm;
-	}
+   public Account fromString(String from) {
+      return this.pm.getAuthDatabase().getByUsername(from);
+   }
 
-	@Override
-	public String toString(Account from) {
-		if (from == null)
-			return Localizable.get("account.empty");
-		if (from.getUsername() == null)
-			return null;
+   public String toValue(Account from) {
+      return from != null && from.getUsername() != null ? from.getUsername() : null;
+   }
 
-		return from.getUsername();
-	}
+   public String toPath(Account from) {
+      return null;
+   }
 
-	@Override
-	public Account fromString(String from) {
-		return pm.getAuthDatabase().getByUsername(from);
-	}
-
-	@Override
-	public String toValue(Account from) {
-		if (from == null || from.getUsername() == null)
-			return null;
-		return from.getUsername();
-	}
-
-	@Override
-	public String toPath(Account from) {
-		return null;
-	}
-
-	@Override
-	public Class<Account> getObjectClass() {
-		return Account.class;
-	}
+   public Class getObjectClass() {
+      return Account.class;
+   }
 }

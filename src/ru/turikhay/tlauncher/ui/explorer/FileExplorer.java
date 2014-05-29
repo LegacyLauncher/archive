@@ -2,75 +2,66 @@ package ru.turikhay.tlauncher.ui.explorer;
 
 import java.awt.Component;
 import java.io.File;
-
 import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileSystemView;
 
 public class FileExplorer extends JFileChooser {
-	private static final long serialVersionUID = 3826379908958645663L;
+   private static final long serialVersionUID = 3826379908958645663L;
 
-	public FileExplorer() {
-		super();
-	}
+   public FileExplorer() {
+   }
 
-	public FileExplorer(String currentDirectoryPath) {
-		super(currentDirectoryPath);
-	}
+   public FileExplorer(String currentDirectoryPath) {
+      super(currentDirectoryPath);
+   }
 
-	public FileExplorer(int selectionMode, boolean showHidden) {
-		this();
+   public FileExplorer(int selectionMode, boolean showHidden) {
+      this();
+      this.setFileSelectionMode(selectionMode);
+      this.setFileHidingEnabled(!showHidden);
+   }
 
-		setFileSelectionMode(selectionMode);
-		setFileHidingEnabled(!showHidden);
-	}
+   public FileExplorer(File currentDirectory) {
+      super(currentDirectory);
+   }
 
-	public FileExplorer(File currentDirectory) {
-		super(currentDirectory);
-	}
+   public FileExplorer(FileSystemView fsv) {
+      super(fsv);
+   }
 
-	public FileExplorer(FileSystemView fsv) {
-		super(fsv);
-	}
+   public FileExplorer(File currentDirectory, FileSystemView fsv) {
+      super(currentDirectory);
+   }
 
-	public FileExplorer(File currentDirectory, FileSystemView fsv) {
-		super(currentDirectory);
-	}
+   public FileExplorer(String currentDirectoryPath, FileSystemView fsv) {
+      super(currentDirectoryPath, fsv);
+   }
 
-	public FileExplorer(String currentDirectoryPath, FileSystemView fsv) {
-		super(currentDirectoryPath, fsv);
-	}
+   public void setCurrentDirectory(File dir) {
+      if (dir == null) {
+         dir = this.getFileSystemView().getDefaultDirectory();
+      }
 
-	@Override
-	public void setCurrentDirectory(File dir) {
-		if (dir == null)
-			dir = getFileSystemView().getDefaultDirectory();
+      super.setCurrentDirectory(dir);
+   }
 
-		super.setCurrentDirectory(dir);
-	}
+   public void setCurrentDirectory(String sDir) {
+      File dir = sDir == null ? null : new File(sDir);
+      this.setCurrentDirectory(dir);
+   }
 
-	public void setCurrentDirectory(String sDir) {
-		File dir = (sDir == null) ? null : new File(sDir);
-		setCurrentDirectory(dir);
-	}
+   public int showDialog(Component parent) {
+      return this.showDialog(parent, UIManager.getString("FileChooser.directoryOpenButtonText"));
+   }
 
-	public int showDialog(Component parent) {
-		return showDialog(parent,
-				UIManager.getString("FileChooser.directoryOpenButtonText"));
-	}
-
-	@Override
-	public File[] getSelectedFiles() {
-		File[] selectedFiles = super.getSelectedFiles();
-
-		if (selectedFiles.length > 0)
-			return selectedFiles;
-
-		File selectedFile = super.getSelectedFile();
-
-		if (selectedFile == null)
-			return null;
-
-		return new File[] { selectedFile };
-	}
+   public File[] getSelectedFiles() {
+      File[] selectedFiles = super.getSelectedFiles();
+      if (selectedFiles.length > 0) {
+         return selectedFiles;
+      } else {
+         File selectedFile = super.getSelectedFile();
+         return selectedFile == null ? null : new File[]{selectedFile};
+      }
+   }
 }

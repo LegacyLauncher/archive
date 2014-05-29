@@ -1,15 +1,15 @@
 package ru.turikhay.tlauncher.updater;
 
 public interface UpdateListener {
-	public void onUpdateError(Update u, Throwable e);
+   void onUpdateError(Update var1, Throwable var2);
 
-	public void onUpdateDownloading(Update u);
+   void onUpdateDownloading(Update var1);
 
-	public void onUpdateDownloadError(Update u, Throwable e);
+   void onUpdateDownloadError(Update var1, Throwable var2);
 
-	public void onUpdateReady(Update u);
+   void onUpdateReady(Update var1);
 
-	public void onUpdateApplying(Update u);
+   void onUpdateApplying(Update var1);
 
-	public void onUpdateApplyError(Update u, Throwable e);
+   void onUpdateApplyError(Update var1, Throwable var2);
 }
