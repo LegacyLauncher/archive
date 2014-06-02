@@ -1,7 +1,9 @@
 package ru.turikhay.util;
 
+import com.sun.management.OperatingSystemMXBean;
 import java.awt.Desktop;
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -13,6 +15,9 @@ public enum OS {
    SOLARIS(new String[]{"solaris", "sunos"}),
    UNKNOWN(new String[]{"unknown"});
 
+   public static final String NAME = System.getProperty("os.name");
+   public static final String VERSION = System.getProperty("os.version");
+   public static final double JAVA_VERSION = getJavaVersion();
    public static final OS CURRENT = getCurrent();
    private final String name;
    private final String[] aliases;
@@ -41,7 +46,7 @@ public enum OS {
    }
 
    private static OS getCurrent() {
-      String osName = System.getProperty("os.name").toLowerCase();
+      String osName = NAME.toLowerCase();
       OS[] var4;
       int var3 = (var4 = values()).length;
 
@@ -59,6 +64,22 @@ public enum OS {
       }
 
       return UNKNOWN;
+   }
+
+   private static double getJavaVersion() {
+      String version = System.getProperty("java.version");
+      int count = 0;
+
+      int pos;
+      for(pos = 0; pos < version.length() && count < 2; ++pos) {
+         if (version.charAt(pos) == '.') {
+            ++count;
+         }
+      }
+
+      --pos;
+      String doubleVersion = version.substring(0, pos);
+      return Double.parseDouble(doubleVersion);
    }
 
    public static boolean is(OS... any) {
@@ -109,7 +130,7 @@ public enum OS {
    }
 
    public static String getSummary() {
-      return System.getProperty("os.name") + " " + System.getProperty("os.version") + ", " + "Java " + System.getProperty("java.version");
+      return NAME + " " + VERSION + " " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + ", " + OS.Arch.TOTAL_RAM_MB + " MB RAM";
    }
 
    private static void rawOpenLink(URI uri) throws Throwable {
@@ -291,6 +312,8 @@ public enum OS {
 
       private static final int DEFAULT_MEMORY = 512;
       public static final OS.Arch CURRENT = getCurrent();
+      public static final long TOTAL_RAM = getTotalRam();
+      public static final long TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
       public static final int RECOMMENDED_MEMORY = getRecommendedMemory();
       private final String asString = this.toString().substring(1);
       private final int asInt;
@@ -335,24 +358,28 @@ public enum OS {
          return UNKNOWN;
       }
 
+      private static long getTotalRam() {
+         try {
+            return ((OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean()).getTotalPhysicalMemorySize();
+         } catch (Throwable var1) {
+            U.log("[ERROR] Cannot allocate total physical memory size!", var1);
+            return 0L;
+         }
+      }
+
       private static int getRecommendedMemory() {
-         if (CURRENT == UNKNOWN) {
+         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
+         case 1:
+            if (TOTAL_RAM_MB > 1000L) {
+               return 1024;
+            }
+         default:
             return 512;
-         } else {
-            long totalRam = U.getTotalRam() / 1024L / 1024L;
-            switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
-            case 1:
-               if (totalRam > 1000L) {
-                  return 1024;
-               }
-            default:
-               return 512;
-            case 2:
-               if (totalRam > 6000L) {
-                  return 2048;
-               } else {
-                  return totalRam > 3000L ? 1536 : 1024;
-               }
+         case 2:
+            if (TOTAL_RAM_MB > 6000L) {
+               return 2048;
+            } else {
+               return TOTAL_RAM_MB > 3000L ? 1536 : 1024;
             }
          }
       }

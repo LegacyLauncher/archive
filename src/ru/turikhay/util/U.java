@@ -1,9 +1,7 @@
 package ru.turikhay.util;
 
-import com.sun.management.OperatingSystemMXBean;
 import java.awt.Color;
 import java.io.File;
-import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -563,10 +561,6 @@ public class U {
 
    public static long getTotalSpace() {
       return Runtime.getRuntime().totalMemory() / 1048576L;
-   }
-
-   public static long getTotalRam() {
-      return ((OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean()).getTotalPhysicalMemorySize();
    }
 
    public static void gc() {

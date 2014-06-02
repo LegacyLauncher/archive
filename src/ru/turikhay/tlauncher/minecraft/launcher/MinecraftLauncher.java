@@ -523,8 +523,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       try {
          this.localAssetsDir = this.reconstructAssets();
-      } catch (IOException var7) {
-         throw new MinecraftException("Cannot recounstruct assets!", "reconstruct-assets", var7);
+      } catch (IOException var6) {
+         throw new MinecraftException("Cannot recounstruct assets!", "reconstruct-assets", var6);
       }
 
       var2 = this.extListeners.iterator();
@@ -536,8 +536,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       try {
          this.unpackNatives(this.forceUpdate);
-      } catch (IOException var6) {
-         throw new MinecraftException("Cannot unpack natives!", "unpack-natives", var6);
+      } catch (IOException var5) {
+         throw new MinecraftException("Cannot unpack natives!", "unpack-natives", var5);
       }
 
       var2 = this.extListeners.iterator();
@@ -549,8 +549,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       try {
          this.deleteEntries();
-      } catch (IOException var5) {
-         throw new MinecraftException("Cannot delete entries!", "delete-entries", var5);
+      } catch (IOException var4) {
+         throw new MinecraftException("Cannot delete entries!", "delete-entries", var4);
       }
 
       this.log("Constructing process...");
@@ -568,8 +568,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
          try {
             icon = this.getAssetObject("icons/minecraft.icns");
-         } catch (IOException var4) {
-            this.log("Cannot get icon file from assets.", var4);
+         } catch (IOException var3) {
+            this.log("Cannot get icon file from assets.", var3);
          }
 
          if (icon != null) {
@@ -578,9 +578,6 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
 
       this.launcher.addCommand("-Xmx" + OS.Arch.RECOMMENDED_MEMORY + "M");
-      String permSize = (OS.Arch.x64.isCurrent() ? 128 : 64) + "M";
-      this.launcher.addCommand("-XX:PermSize=" + permSize);
-      this.launcher.addCommand("-XX:MaxPermSize=" + permSize);
       this.launcher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
       this.launcher.addCommand("-cp", this.constructClassPath(this.version));
       if (this.javaArgs != null) {
@@ -588,11 +585,11 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
 
       this.launcher.addCommands(this.getJVMArguments());
-      Iterator var3 = this.assistants.iterator();
+      var2 = this.assistants.iterator();
 
       MinecraftLauncherAssistant assistant;
-      while(var3.hasNext()) {
-         assistant = (MinecraftLauncherAssistant)var3.next();
+      while(var2.hasNext()) {
+         assistant = (MinecraftLauncherAssistant)var2.next();
          assistant.constructJavaArguments();
       }
 
@@ -610,10 +607,10 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.launcher.addSplitCommands(this.programArgs);
       }
 
-      var3 = this.assistants.iterator();
+      var2 = this.assistants.iterator();
 
-      while(var3.hasNext()) {
-         assistant = (MinecraftLauncherAssistant)var3.next();
+      while(var2.hasNext()) {
+         assistant = (MinecraftLauncherAssistant)var2.next();
          assistant.constructProgramArguments();
       }
 
@@ -676,7 +673,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       Iterator var7 = libraries.iterator();
 
-      label68:
+      label79:
       while(true) {
          Library library;
          Map nativesPerOs;
@@ -692,7 +689,17 @@ public class MinecraftLauncher implements JavaProcessListener {
          } while(nativesPerOs.get(os) == null);
 
          File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String)nativesPerOs.get(os)));
-         ZipFile zip = new ZipFile(file);
+         if (!file.isFile()) {
+            throw new IOException("Required archive doesn't exist: " + file.getAbsolutePath());
+         }
+
+         ZipFile zip;
+         try {
+            zip = new ZipFile(file);
+         } catch (IOException var18) {
+            throw new IOException("Error opening ZIP archive: " + file.getAbsolutePath(), var18);
+         }
+
          ExtractRules extractRules = library.getExtractRules();
          Enumeration entries = zip.entries();
 
@@ -704,14 +711,14 @@ public class MinecraftLauncher implements JavaProcessListener {
                   do {
                      if (!entries.hasMoreElements()) {
                         zip.close();
-                        continue label68;
+                        continue label79;
                      }
 
                      entry = (ZipEntry)entries.nextElement();
                   } while(extractRules != null && !extractRules.shouldExtract(entry.getName()));
 
                   targetFile = new File(this.nativeDir, entry.getName());
-               } while(!force && targetFile.exists());
+               } while(!force && targetFile.isFile());
 
                if (targetFile.getParentFile() != null) {
                   targetFile.getParentFile().mkdirs();
