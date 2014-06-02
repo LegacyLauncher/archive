@@ -34,7 +34,7 @@ import ru.turikhay.util.logger.MirroredLinkedStringStream;
 import ru.turikhay.util.logger.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.02D;
+   private static final double VERSION = 1.03D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -259,7 +259,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 1.02D, "by", "turikhay");
+      U.log("Starting TLauncher", "Original", 1.03D, "by", "turikhay");
       U.log("Have question? Find my e-mail in lang files.");
       U.log("Machine info:", OS.getSummary());
       U.log("---");
@@ -306,7 +306,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.02D;
+      return 1.03D;
    }
 
    public static String getBrand() {

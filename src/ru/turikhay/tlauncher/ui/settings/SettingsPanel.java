@@ -135,20 +135,26 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
          private static final long serialVersionUID = -2220392073262107659L;
 
          public boolean isValueValid() {
+            if (this.checkPath()) {
+               return true;
+            } else {
+               Alert.showLocAsyncError("settings.java.path.doesnotexist");
+               return false;
+            }
+         }
+
+         private boolean checkPath() {
             if (!isWindows) {
                return true;
             } else {
                String path = this.getSettingsValue();
                if (path == null) {
                   return true;
+               } else if (!path.endsWith(".exe")) {
+                  return false;
                } else {
                   File javaDir = new File(path);
-                  if (javaDir.isFile()) {
-                     return true;
-                  } else {
-                     Alert.showLocAsyncError("settings.java.path.doesnotexist");
-                     return false;
-                  }
+                  return javaDir.isFile();
                }
             }
          }
