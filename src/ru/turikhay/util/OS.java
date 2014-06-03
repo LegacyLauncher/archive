@@ -368,20 +368,27 @@ public enum OS {
       }
 
       private static int getRecommendedMemory() {
-         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
-         case 1:
-            if (TOTAL_RAM_MB > 1000L) {
+         if (TOTAL_RAM_MB > 0L) {
+            switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
+            case 1:
+               if (TOTAL_RAM_MB > 2000L) {
+                  return 1024;
+               }
+               break;
+            case 2:
+               if (TOTAL_RAM_MB > 6000L) {
+                  return 2048;
+               }
+
+               if (TOTAL_RAM_MB > 3000L) {
+                  return 1536;
+               }
+
                return 1024;
             }
-         default:
-            return 512;
-         case 2:
-            if (TOTAL_RAM_MB > 6000L) {
-               return 2048;
-            } else {
-               return TOTAL_RAM_MB > 3000L ? 1536 : 1024;
-            }
          }
+
+         return 512;
       }
 
       // $FF: synthetic method
