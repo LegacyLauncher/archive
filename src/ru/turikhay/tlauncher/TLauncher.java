@@ -34,7 +34,7 @@ import ru.turikhay.util.logger.MirroredLinkedStringStream;
 import ru.turikhay.util.logger.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.03D;
+   private static final double VERSION = 1.04D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -62,7 +62,7 @@ public class TLauncher {
    private static final String DEVELOPER = "turikhay";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-original-update-mirror-3/D9wMBg", "http://s1.mmods.ru/launcher/original.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
    private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
-   private static final String[] EXTRA_REPO = new String[]{"http://5.9.120.11/update/versions/", "http://s1.mmods.ru/launcher/"};
+   private static final String[] EXTRA_REPO = new String[]{"http://s1.mmods.ru/launcher/", "http://5.9.120.11/update/versions/"};
    private static final String[] FORGE_REPO = new String[0];
    private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/", "http://5.9.120.11/update/versions/libraries/", "http://s1.mmods.ru/launcher/libraries/"};
    private static final String[] ASSETS_REPO = new String[]{"http://resources.download.minecraft.net/"};
@@ -259,7 +259,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 1.03D, "by", "turikhay");
+      U.log("Starting TLauncher", "Original", 1.04D, "by", "turikhay");
       U.log("Have question? Find my e-mail in lang files.");
       U.log("Machine info:", OS.getSummary());
       U.log("---");
@@ -306,7 +306,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.03D;
+      return 1.04D;
    }
 
    public static String getBrand() {
