@@ -1,4 +1,4 @@
-package ru.turikhay.util.logger;
+package ru.turikhay.util.stream;
 
 import java.io.PrintStream;
 import java.util.Formatter;

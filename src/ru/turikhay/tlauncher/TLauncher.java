@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Calendar;
 import java.util.Locale;
 import javax.net.ssl.HttpsURLConnection;
 import joptsimple.OptionSet;
@@ -28,13 +29,14 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
-import ru.turikhay.util.logger.MirroredLinkedStringStream;
-import ru.turikhay.util.logger.PrintLogger;
+import ru.turikhay.util.stream.MirroredLinkedStringStream;
+import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.04D;
+   private static final double VERSION = 1.1D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -47,7 +49,7 @@ public class TLauncher {
    private Downloader downloader;
    private Updater updater;
    private TLauncherFrame frame;
-   private TLauncherLite loader;
+   private TLauncherLite lite;
    private ComponentManager manager;
    private VersionManager versionManager;
    private ProfileManager profileManager;
@@ -119,7 +121,7 @@ public class TLauncher {
          this.profileManager.refresh();
          break;
       case 2:
-         this.loader = new TLauncherLite(this);
+         this.lite = new TLauncherLite(this);
       }
 
    }
@@ -149,7 +151,7 @@ public class TLauncher {
    }
 
    public TLauncherLite getLoader() {
-      return this.loader;
+      return this.lite;
    }
 
    public static Console getConsole() {
@@ -245,7 +247,7 @@ public class TLauncher {
       print = new PrintLogger(stream);
       stream.setLogger(print);
       System.setOut(print);
-      TLauncherFrame.initLookAndFeel();
+      SwingUtil.initLookAndFeel();
 
       try {
          launch(args);
@@ -259,9 +261,10 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 1.04D, "by", "turikhay");
+      U.log("Starting TLauncher", "Original", 1.1D, "by", "turikhay");
       U.log("Have question? Find my e-mail in lang files.");
       U.log("Machine info:", OS.getSummary());
+      U.log("Startup time:", Calendar.getInstance().getTime());
       U.log("---");
       sargs = args;
       OptionSet set = ArgumentParser.parseArgs(args);
@@ -306,7 +309,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.04D;
+      return 1.1D;
    }
 
    public static String getBrand() {

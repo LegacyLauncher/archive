@@ -29,20 +29,20 @@ public class AssetsManager extends LauncherComponent {
       super(manager);
    }
 
-   public DownloadableContainer downloadResources(CompleteVersion version, List list, boolean force) throws IOException {
+   public DownloadableContainer downloadResources(CompleteVersion version, List list, boolean force) {
       File baseDirectory = this.manager.getLauncher().getVersionManager().getLocalList().getBaseDirectory();
       DownloadableContainer container = new DownloadableContainer();
-      container.addAll((Collection)this.getResourceFiles(version, baseDirectory, list));
+      container.addAll((Collection)getResourceFiles(version, baseDirectory, list));
       return container;
    }
 
-   private Set getResourceFiles(CompleteVersion version, File baseDirectory, List list) {
+   private static Set getResourceFiles(CompleteVersion version, File baseDirectory, List list) {
       Set result = new HashSet();
       File objectsFolder = new File(baseDirectory, "assets/objects");
-      Iterator var7 = list.iterator();
+      Iterator var6 = list.iterator();
 
-      while(var7.hasNext()) {
-         AssetIndex.AssetObject object = (AssetIndex.AssetObject)var7.next();
+      while(var6.hasNext()) {
+         AssetIndex.AssetObject object = (AssetIndex.AssetObject)var6.next();
          String filename = object.getFilename();
          Downloadable d = new Downloadable(Repository.ASSETS_REPO, filename, new File(objectsFolder, filename), false, true);
          result.add(d);
@@ -162,7 +162,7 @@ public class AssetsManager extends LauncherComponent {
 
          while(var8.hasNext()) {
             AssetIndex.AssetObject resource = (AssetIndex.AssetObject)var8.next();
-            if (!this.checkResource(baseDirectory, resource, fast)) {
+            if (!checkResource(baseDirectory, resource, fast)) {
                r.add(resource);
             }
          }
@@ -175,7 +175,7 @@ public class AssetsManager extends LauncherComponent {
       return this.checkResources(version, ((VersionLists)this.manager.getComponent(VersionLists.class)).getLocal().getBaseDirectory(), false, fast);
    }
 
-   private boolean checkResource(File baseDirectory, AssetIndex.AssetObject local, boolean fast) {
+   private static boolean checkResource(File baseDirectory, AssetIndex.AssetObject local, boolean fast) {
       String path = local.getFilename();
       File file = new File(baseDirectory, "assets/objects/" + path);
       long size = file.length();

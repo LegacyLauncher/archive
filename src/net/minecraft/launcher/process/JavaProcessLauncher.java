@@ -30,7 +30,7 @@ public class JavaProcessLauncher {
       return new JavaProcess(full, this.createProcess().start());
    }
 
-   public ProcessBuilder createProcess() throws IOException {
+   public ProcessBuilder createProcess() {
       if (this.process == null) {
          this.process = (new ProcessBuilder(this.getFullCommands())).directory(this.directory).redirectErrorStream(true);
       }

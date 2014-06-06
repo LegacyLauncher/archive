@@ -19,7 +19,7 @@ public class ProgressBar extends JProgressBar {
    private static int BOUNDS_SIZE = 3;
    private static int BORDER_SIZE = 10;
    private static int EDGE_CHARS = 50;
-   private static int CENTER_CHARS = 20;
+   private static int CENTER_CHARS = 30;
    private static float DEFAULT_FONT_SIZE = 12.0F;
    private static final long serialVersionUID = -8095192709934629794L;
    private final Object sync;
@@ -193,13 +193,13 @@ public class ProgressBar extends JProgressBar {
          g.setColor(Color.black);
          g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
          g.setFont(font);
-         this.drawString(g, this.wS, this.wS_bounds);
-         this.drawString(g, this.cS, this.cS_bounds);
-         this.drawString(g, this.eS, this.eS_bounds);
+         drawString(g, this.wS, this.wS_bounds);
+         drawString(g, this.cS, this.cS_bounds);
+         drawString(g, this.eS, this.eS_bounds);
       }
    }
 
-   private void drawString(Graphics g, String s, int[] bounds) {
+   private static void drawString(Graphics g, String s, int[] bounds) {
       if (s != null) {
          g.setColor(Color.white);
 

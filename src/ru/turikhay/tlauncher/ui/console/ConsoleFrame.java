@@ -23,10 +23,10 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
 import ru.turikhay.tlauncher.configuration.Configuration;
-import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
@@ -60,7 +60,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          this.panel.setAlignmentX(0.5F);
          this.panel.setAlignmentY(0.5F);
          Font font = new Font("DialogInput", 0, 14);
-         this.textpopup = new TextPopup();
+         this.textpopup = new ConsoleTextPopup(c);
          this.textArea = new JTextArea();
          this.textArea.setLineWrap(true);
          this.textArea.setEditable(false);
@@ -120,7 +120,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          this.setSize(sizes);
          this.setMinimumSize(sizes);
          this.setLocation(0, 0);
-         this.setIconImages(TLauncherFrame.getFavicons());
+         SwingUtil.setFavicons(this);
          this.panel.add("Center", scrollPane);
          this.panel.add("South", this.sp);
          this.add(this.panel);
@@ -242,6 +242,5 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
 
    public void updateLocale() {
       Localizable.updateContainer(this);
-      this.textpopup.updateLocale();
    }
 }

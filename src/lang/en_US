@@ -204,6 +204,8 @@ settings.versions.old=Show old versions (before 1.5.2)
 settings.java.path.label=Java path:
 settings.java.path.invalid=Invalid path!
 settings.java.path.prompt=A path to "bin" folder (in Windows: to "javaw.exe" file)
+settings.java.path.doesnotexist.title=Cannot find executable file!
+settings.java.path.doesnotexist=Java path you specified is incorrect.\nIf you don't know the location of "javaw.exe" file then empty paramater "Java path".
 settings.java.args.label=Arguments:
 settings.java.args.jvm=JVM arguments (e.g. -Xmx1G)
 settings.java.args.minecraft=Minecraft arguments (e.g. --server 127.0.0.1)
@@ -265,9 +267,10 @@ alert.error.title=Error occurred
 alert.error.message=Unexpected error occurred
 # Text popup
 popup.cut=Cut
-popup.selectall=Select All
+popup.selectall=Select all
 popup.copy=Copy
 popup.paste=Paste
+popup.copyall=Copy all
 # Console
 console.close.text=This window will be closed in %0 s...
 console.close.cancel=Cancel
@@ -276,6 +279,8 @@ console.search.prefs.case=Match case
 console.search.prefs.whole=Whole words
 console.search.prefs.cycle=Wrap around
 console.search.prefs.regexp=Regexp
+console.save.popup=Save all in file...
+console.save.error=Cannot save file!
 # Ad
 ad.error.title=An error occurred
 ad.error.message=An error occurred while trying to open advertisement link. Please, visit it yourself:
@@ -308,6 +313,7 @@ explorer.extension.jpeg=JPEG image
 explorer.extension.jpg=JPEG image
 explorer.extension.png=PNG image
 explorer.extension.all=All files
+explorer.extension.format=%0 files
 explorer.lookin=Path:
 explorer.input.filename=File name:
 explorer.input.foldername=Folder name:
@@ -350,3 +356,5 @@ explorer.error.newfolder-nopath=Cannot create folder here.
 explorer.error.rename.title=Error while renaming
 explorer.error.rename=Cannot rename this object.
 explorer.error.rename-exists=Cannot rename this file because it dublicates another one.
+# Boot
+boot.loading=Loading TLauncher %0...

@@ -30,7 +30,7 @@ public class ImagePanel extends ExtendedPanel {
    private boolean animating;
 
    public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-      this(ImageCache.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
+      this((Image)ImageCache.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
    }
 
    protected ImagePanel(Image image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {

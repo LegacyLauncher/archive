@@ -21,6 +21,7 @@ public class MainPane extends ExtendedLayeredPane {
    public final DefaultScene defaultScene;
    public final AccountEditorScene accountEditor;
    public final VersionManagerScene versionManager;
+   final ServicePanel service;
    public final LeftSideNotifier warning;
 
    MainPane(TLauncherFrame frame) {
@@ -29,6 +30,7 @@ public class MainPane extends ExtendedLayeredPane {
       this.background = new BackgroundHolder(this);
       this.background.setBackground(this.background.SLIDE_BACKGROUND, false);
       this.add(this.background);
+      this.service = new ServicePanel(this);
       this.defaultScene = new DefaultScene(this);
       this.add(this.defaultScene);
       this.accountEditor = new AccountEditorScene(this);
@@ -51,21 +53,21 @@ public class MainPane extends ExtendedLayeredPane {
       this.setScene(scene, true);
    }
 
-   public void setScene(PseudoScene scene, boolean animate) {
-      if (scene == null) {
+   public void setScene(PseudoScene newscene, boolean animate) {
+      if (newscene == null) {
          throw new NullPointerException();
-      } else if (!scene.equals(this.scene)) {
+      } else if (!newscene.equals(this.scene)) {
          Component[] var6;
          int var5 = (var6 = this.getComponents()).length;
 
          for(int var4 = 0; var4 < var5; ++var4) {
             Component comp = var6[var4];
-            if (!comp.equals(scene) && comp instanceof PseudoScene) {
+            if (!comp.equals(newscene) && comp instanceof PseudoScene) {
                ((PseudoScene)comp).setShown(false, animate);
             }
          }
 
-         this.scene = scene;
+         this.scene = newscene;
          this.scene.setShown(true);
       }
    }
@@ -91,7 +93,6 @@ public class MainPane extends ExtendedLayeredPane {
    }
 
    public void onResize() {
-      super.onResize();
       this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
    }
 

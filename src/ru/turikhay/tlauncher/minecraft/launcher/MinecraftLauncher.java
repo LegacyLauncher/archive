@@ -58,8 +58,8 @@ import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
-import ru.turikhay.util.logger.LinkedStringStream;
-import ru.turikhay.util.logger.PrintLogger;
+import ru.turikhay.util.stream.LinkedStringStream;
+import ru.turikhay.util.stream.PrintLogger;
 
 public class MinecraftLauncher implements JavaProcessListener {
    private static final int OFFICIAL_VERSION = 14;
@@ -266,7 +266,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       return this.exitCode;
    }
 
-   private void collectInfo() throws MinecraftException, AbortedDownloadException {
+   private void collectInfo() throws MinecraftException {
       this.checkStep(MinecraftLauncher.MinecraftLauncherStep.NONE, MinecraftLauncher.MinecraftLauncherStep.COLLECTING);
       this.log("Collecting info...");
       Iterator var2 = this.listeners.iterator();
@@ -402,7 +402,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
    }
 
-   private void downloadResources() throws MinecraftException, AbortedDownloadException {
+   private void downloadResources() throws MinecraftException {
       this.checkStep(MinecraftLauncher.MinecraftLauncherStep.COLLECTING, MinecraftLauncher.MinecraftLauncherStep.DOWNLOADING);
       Iterator var2 = this.extListeners.iterator();
 
@@ -412,29 +412,23 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
 
       final List assets = this.compareAssets();
-      Iterator var3 = this.extListeners.iterator();
+      Iterator assetsContainer = this.extListeners.iterator();
 
-      while(var3.hasNext()) {
-         MinecraftExtendedListener listener = (MinecraftExtendedListener)var3.next();
+      while(assetsContainer.hasNext()) {
+         MinecraftExtendedListener listener = (MinecraftExtendedListener)assetsContainer.next();
          listener.onMinecraftDownloading();
       }
 
       VersionSyncInfoContainer execContainer;
       try {
          execContainer = this.vm.downloadVersion(this.versionSync, this.forceUpdate);
-      } catch (IOException var8) {
+      } catch (IOException var7) {
          throw new MinecraftException("Cannot download version!", "download-jar", new Object[0]);
       }
 
       execContainer.setConsole(this.console);
-      DownloadableContainer assetsContainer = null;
-
-      try {
-         assetsContainer = this.am.downloadResources(this.version, assets, this.forceUpdate);
-      } catch (IOException var7) {
-         this.log("Cannot get assets container!", var7);
-      }
-
+      assetsContainer = null;
+      DownloadableContainer assetsContainer = this.am.downloadResources(this.version, assets, this.forceUpdate);
       if (assetsContainer != null) {
          assetsContainer.addHandler(new DownloadableContainerHandler() {
             public void onStart(DownloadableContainer c) {
@@ -667,6 +661,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.log("Unpacking natives...");
       Collection libraries = this.version.getRelevantLibraries();
       OS os = OS.CURRENT;
+      ZipFile zip = null;
       if (force) {
          this.nativeDir.delete();
       }
@@ -693,7 +688,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new IOException("Required archive doesn't exist: " + file.getAbsolutePath());
          }
 
-         ZipFile zip;
          try {
             zip = new ZipFile(file);
          } catch (IOException var18) {

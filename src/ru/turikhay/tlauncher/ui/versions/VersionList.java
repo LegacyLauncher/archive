@@ -63,6 +63,7 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
       panel.setSouth(buttons);
       this.add(panel);
       this.handler.addListener(this);
+      this.setSize(300, 350);
    }
 
    void select(List list) {

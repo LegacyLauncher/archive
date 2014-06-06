@@ -1,6 +1,7 @@
 package ru.turikhay.util;
 
 import java.awt.Color;
+import java.io.Closeable;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -698,6 +699,17 @@ public class U {
       }
    }
 
+   public static Color shiftAlpha(Color color, int bits) {
+      if (color == null) {
+         return null;
+      } else if (bits == 0) {
+         return color;
+      } else {
+         int newAlpha = fitInterval(color.getAlpha() + bits, 0, 255);
+         return new Color(color.getRed(), color.getGreen(), color.getBlue(), newAlpha);
+      }
+   }
+
    public static Object getAs(Object o, Class classOfT) {
       if (classOfT == null) {
          throw new NullPointerException();
@@ -712,5 +724,21 @@ public class U {
       } else {
          return a != null ? a.equals(b) : false;
       }
+   }
+
+   public static String[] extend(String[] a0, String[] a1) {
+      String[] newArray = new String[a0.length + a1.length];
+      System.arraycopy(a0, 0, newArray, 0, a0.length);
+      System.arraycopy(a1, 0, newArray, a0.length, a1.length);
+      return newArray;
+   }
+
+   public static void close(Closeable c) {
+      try {
+         c.close();
+      } catch (Throwable var2) {
+         var2.printStackTrace();
+      }
+
    }
 }

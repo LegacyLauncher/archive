@@ -29,6 +29,6 @@ public class HTMLLabel extends ExtendedLabel {
    }
 
    public void setText(String text) {
-      super.setText("<html>" + text.replace("\n", "<br/>") + "</html>");
+      super.setText("<html>" + (text == null ? null : text.replace("\n", "<br/>")) + "</html>");
    }
 }
