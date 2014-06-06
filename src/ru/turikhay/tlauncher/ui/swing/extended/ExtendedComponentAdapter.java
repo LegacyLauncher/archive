@@ -4,6 +4,10 @@ import java.awt.Component;
 import java.awt.event.ComponentEvent;
 
 public class ExtendedComponentAdapter extends ExtendedComponentListener {
+   public ExtendedComponentAdapter(Component component, int tick) {
+      super(component, tick);
+   }
+
    public ExtendedComponentAdapter(Component component) {
       super(component);
    }

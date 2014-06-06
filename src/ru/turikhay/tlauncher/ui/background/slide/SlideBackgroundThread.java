@@ -65,6 +65,7 @@ public class SlideBackgroundThread extends LoopedThread {
          } else {
             this.background.holder.cover.makeCover(animate);
             this.background.setImage(image);
+            U.sleepFor(500L);
             this.background.holder.cover.removeCover(animate);
          }
       }

@@ -1,6 +1,6 @@
 package ru.turikhay.tlauncher.ui.images;
 
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,12 +12,12 @@ public class ImageCache {
    private static final boolean THROW_IF_ERROR = true;
    private static final Map imageCache = Collections.synchronizedMap(new HashMap());
 
-   public static Image loadImage(URL url, boolean throwIfError) {
+   public static BufferedImage loadImage(URL url, boolean throwIfError) {
       if (url == null) {
          throw new NullPointerException("URL is NULL");
       } else {
          try {
-            Image image = ImageIO.read(url);
+            BufferedImage image = ImageIO.read(url);
             imageCache.put(url, image);
             return image;
          } catch (Exception var3) {
@@ -31,15 +31,15 @@ public class ImageCache {
       }
    }
 
-   public static Image loadImage(URL url) {
+   public static BufferedImage loadImage(URL url) {
       return loadImage(url, true);
    }
 
-   public static Image getImage(String uri, boolean throwIfError) {
+   public static BufferedImage getImage(String uri, boolean throwIfError) {
       return loadImage(getRes(uri), throwIfError);
    }
 
-   public static Image getImage(String uri) {
+   public static BufferedImage getImage(String uri) {
       return getImage(uri, true);
    }
 
@@ -53,6 +53,10 @@ public class ImageCache {
 
    public static ImageIcon getIcon(String uri, int widthNheight) {
       return getIcon(uri, widthNheight, widthNheight, true);
+   }
+
+   public static ImageIcon getIcon(String uri, boolean throwIfError) {
+      return new ImageIcon(getImage(uri, throwIfError));
    }
 
    public static ImageIcon getIcon(String uri) {

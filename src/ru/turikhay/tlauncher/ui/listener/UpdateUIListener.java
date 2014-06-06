@@ -29,14 +29,14 @@ public class UpdateUIListener implements UpdateListener {
          this.block();
          this.u.download(true);
       } else {
-         this.openUpdateLink(this.u.getDownloadLink());
+         openUpdateLink(this.u.getDownloadLink());
       }
 
    }
 
    public void onUpdateError(Update u, Throwable e) {
       if (Alert.showLocQuestion("updater.error.title", "updater.download-error", e)) {
-         this.openUpdateLink(u.getDownloadLink());
+         openUpdateLink(u.getDownloadLink());
       }
 
       this.unblock();
@@ -50,10 +50,10 @@ public class UpdateUIListener implements UpdateListener {
    }
 
    public void onUpdateReady(Update u) {
-      this.onUpdateReady(u, false, false);
+      onUpdateReady(u, false, false);
    }
 
-   private void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
+   private static void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
       Alert.showLocWarning("updater.downloaded", (Object)(showChangeLog ? u.getDescription() : null));
       u.apply();
    }
@@ -63,13 +63,13 @@ public class UpdateUIListener implements UpdateListener {
 
    public void onUpdateApplyError(Update u, Throwable e) {
       if (Alert.showLocQuestion("updater.save-error", (Object)e)) {
-         this.openUpdateLink(u.getDownloadLink());
+         openUpdateLink(u.getDownloadLink());
       }
 
       this.unblock();
    }
 
-   private boolean openUpdateLink(URI uri) {
+   private static boolean openUpdateLink(URI uri) {
       if (OS.openLink(uri, false)) {
          return true;
       } else {

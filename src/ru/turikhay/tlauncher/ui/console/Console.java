@@ -12,19 +12,19 @@ import java.util.Iterator;
 import java.util.List;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
-import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
-import ru.turikhay.util.logger.LinkedStringStream;
-import ru.turikhay.util.logger.Logger;
-import ru.turikhay.util.logger.PrintLogger;
+import ru.turikhay.util.stream.LinkedStringStream;
+import ru.turikhay.util.stream.Logger;
+import ru.turikhay.util.stream.PrintLogger;
+import ru.turikhay.util.stream.StringStream;
 
 public class Console implements Logger {
    private static List frames = Collections.synchronizedList(new ArrayList());
+   protected final ConsoleFrame frame;
    private final Configuration global;
-   private final ConsoleFrame frame;
    private final String name;
    private LinkedStringStream stream;
    private PrintLogger logger;
@@ -36,7 +36,6 @@ public class Console implements Logger {
    public Console(Configuration global, PrintLogger logger, String name, boolean show) {
       this.global = global;
       this.name = name;
-      TLauncherFrame.initLookAndFeel();
       this.frame = new ConsoleFrame(this, global, name);
       frames.add(this.frame);
       this.update();
@@ -161,6 +160,10 @@ public class Console implements Logger {
 
    public String getOutput() {
       return this.stream.getOutput();
+   }
+
+   StringStream getStream() {
+      return this.stream;
    }
 
    void update() {

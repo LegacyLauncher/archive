@@ -70,7 +70,7 @@ public class DownloaderThread extends ExtendedThread {
          this.currentProgress = this.doneProgress = 0.0D;
          Iterator var2 = this.list.iterator();
 
-         label57:
+         label54:
          while(var2.hasNext()) {
             Downloadable d = (Downloadable)var2.next();
             this.current = d;
@@ -91,26 +91,22 @@ public class DownloaderThread extends ExtendedThread {
                } catch (GaveUpDownloadException var9) {
                   this.dlog("File is not reachable at all.");
                   error = var9;
-               } catch (RetryDownloadException var10) {
-                  this.dlog("Will attempt to re-download this file:", var10.getMessage());
-                  error = var10;
-               } catch (AbortedDownloadException var11) {
-                  this.dlog("This download process has been aborted.");
-                  error = var11;
-                  break;
-               }
+                  if (attempt >= max) {
+                     FileUtil.deleteFile(d.getDestination());
+                     var8 = d.getAdditionalDestinations().iterator();
 
-               if (attempt >= max) {
-                  FileUtil.deleteFile(d.getDestination());
-                  var8 = d.getAdditionalDestinations().iterator();
+                     while(var8.hasNext()) {
+                        File file = (File)var8.next();
+                        FileUtil.deleteFile(file);
+                     }
 
-                  while(var8.hasNext()) {
-                     File file = (File)var8.next();
-                     FileUtil.deleteFile(file);
+                     this.dlog("Gave up trying to download this file.", var9);
+                     this.onError(var9);
                   }
-
-                  this.dlog("Gave up trying to download this file.", error);
-                  this.onError((Throwable)error);
+               } catch (AbortedDownloadException var10) {
+                  this.dlog("This download process has been aborted.");
+                  error = var10;
+                  break;
                }
             }
 
@@ -120,7 +116,7 @@ public class DownloaderThread extends ExtendedThread {
 
                while(true) {
                   if (!var8.hasNext()) {
-                     break label57;
+                     break label54;
                   }
 
                   Downloadable downloadable = (Downloadable)var8.next();
@@ -136,7 +132,7 @@ public class DownloaderThread extends ExtendedThread {
       }
    }
 
-   private void download(int timeout) throws GaveUpDownloadException, RetryDownloadException, AbortedDownloadException {
+   private void download(int timeout) throws GaveUpDownloadException, AbortedDownloadException {
       boolean hasRepo = this.current.hasRepository();
       int attempt = 0;
       int max = hasRepo ? this.current.getRepository().getCount() : 1;

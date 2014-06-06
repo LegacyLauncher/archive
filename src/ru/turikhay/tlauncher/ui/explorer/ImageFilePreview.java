@@ -64,12 +64,10 @@ public class ImageFilePreview extends JComponent {
       } else {
          ImageIcon tmpIcon = new ImageIcon(this.file.getPath());
          this.setCursor(HAND);
-         if (tmpIcon != null) {
-            if (tmpIcon.getIconWidth() > 190) {
-               this.thumbnail = new ImageIcon(tmpIcon.getImage().getScaledInstance(190, -1, 1));
-            } else {
-               this.thumbnail = tmpIcon;
-            }
+         if (tmpIcon.getIconWidth() > 190) {
+            this.thumbnail = new ImageIcon(tmpIcon.getImage().getScaledInstance(190, -1, 1));
+         } else {
+            this.thumbnail = tmpIcon;
          }
 
       }

@@ -15,6 +15,7 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.scenes.VersionManagerScene;
 
 public class VersionHandler implements Blockable, VersionHandlerListener {
+   static final int ELEM_WIDTH = 300;
    public static final String REFRESH_BLOCK = "refresh";
    public static final String SINGLE_SELECTION_BLOCK = "single-select";
    public static final String START_DOWNLOAD = "start-download";
@@ -40,7 +41,6 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
       this.vm = launcher.getVersionManager();
       this.downloader = launcher.getDownloader();
       this.list = new VersionList(this);
-      this.list.setSize(300, 350);
       this.thread = new VersionHandlerThread(this);
       this.vm.addListener(new VersionManagerListener() {
          public void onVersionsRefreshing(VersionManager manager) {

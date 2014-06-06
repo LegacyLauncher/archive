@@ -43,7 +43,7 @@ public class Configuration extends SimpleConfiguration {
       this.init(set);
    }
 
-   public static Configuration createConfiguration(OptionSet set) throws IOException {
+   public static Configuration createConfiguration(OptionSet set) {
       Object path = set != null ? set.valueOf("settings") : null;
       String defaultName = TLauncher.getSettingsFile();
       File file;
@@ -65,7 +65,7 @@ public class Configuration extends SimpleConfiguration {
       return config;
    }
 
-   public static Configuration createConfiguration() throws IOException {
+   public static Configuration createConfiguration() {
       return createConfiguration((OptionSet)null);
    }
 
@@ -102,7 +102,7 @@ public class Configuration extends SimpleConfiguration {
          }
       }
 
-      this.defaultLocales = this.getDefaultLocales();
+      this.defaultLocales = getDefaultLocales();
       this.supportedLocales = this.getSupportedLocales();
       Locale selected = getLocaleOf(this.get("locale"));
       if (selected == null) {
@@ -283,7 +283,7 @@ public class Configuration extends SimpleConfiguration {
       }
    }
 
-   private List getDefaultLocales() {
+   private static List getDefaultLocales() {
       List l = new ArrayList();
       l.add(getLocaleOf("en_US"));
       l.add(getLocaleOf("ru_RU"));

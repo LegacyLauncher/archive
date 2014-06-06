@@ -212,8 +212,8 @@ settings.versions.old=Отображать старые версии (до 1.5.2
 settings.java.path.label=Путь к Java:
 settings.java.path.invalid=Введите путь к Java!
 settings.java.path.prompt=Путь к папке "bin" (для Windows: к "javaw.exe")
-settings.java.path.doesnotexist.title=Файл Java не найден!
-settings.java.path.doesnotexist=Введенный Вами путь до исполняемого файла Java не существует.\nЕсли Вы не знаете, где хранится Java, просто очистите строчку «Путь Java».
+settings.java.path.doesnotexist.title=Исполняемый файл не найден!
+settings.java.path.doesnotexist=Введенный Вами путь до исполняемого файла Java некорректен.\nЕсли Вы не знаете, где находится файл "javaw.exe", то просто очистите строчку «Путь Java».
 settings.java.args.label=Аргументы:
 settings.java.args.jvm=JVM-аргументы (напр. -Xmx1G)
 settings.java.args.minecraft=Minecraft-аргументы (напр. --server 127.0.0.1)
@@ -275,9 +275,10 @@ alert.error.title=Произошла ошибка
 alert.error.message=Произошла непредвиденная ошибка
 # Text popup
 popup.cut=Вырезать
-popup.selectall=Выделить все
+popup.selectall=Выделить всё
 popup.copy=Копировать
 popup.paste=Вставить
+popup.copyall=Скопировать всё
 # Console
 console.close.text=Окно будет закрыто через %0 с...
 console.close.cancel=Отменить
@@ -286,6 +287,9 @@ console.search.prefs.case=Учитывать регистр
 console.search.prefs.whole=Искать целые слова
 console.search.prefs.cycle=Зацикливать поиск
 console.search.prefs.regexp=Regexp
+console.save.popup=Сохранить всё в файл...
+console.save.exists=Файл уже существует, выберите другое имя!
+console.save.error=Невозможно сохранить содержимое консоли в файл!
 # Link
 link.error.title=Ошибка при переходе
 link.error=Произошла ошибка при попытке перейти по ссылке. Пожалуйста, перейдите по ней самостоятельно:
@@ -318,6 +322,7 @@ explorer.extension.jpeg=Изображение JPEG
 explorer.extension.jpg=Изображение JPEG
 explorer.extension.png=Изображение PNG
 explorer.extension.all=Все файлы
+explorer.extension.format=%0-файлы
 explorer.lookin=Каталог:
 explorer.input.filename=Имя файла:
 explorer.input.foldername=Имя папки:
@@ -364,3 +369,5 @@ explorer.error.rename-exists=Невозможно переименовать ф�
 repo.local_version_repo=Локальный компьютер
 repo.official_version_repo=Официальный источник
 repo.extra_version_repo=Источник TLauncher
+# Boot
+boot.loading=Загрузка TLauncher %0...

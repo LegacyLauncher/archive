@@ -2,36 +2,28 @@ package ru.turikhay.tlauncher.ui;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Image;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
 import javax.swing.JFrame;
-import javax.swing.UIDefaults;
 import javax.swing.UIManager;
-import javax.swing.plaf.FontUIResource;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.console.Console;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class TLauncherFrame extends JFrame {
    private static final long serialVersionUID = 5077131443679431434L;
    public static final int[] maxSize = new int[]{1920, 1080};
    public static final float fontSize = 12.0F;
-   private static final List favicons = new ArrayList();
    private final TLauncherFrame instance = this;
    private final TLauncher tlauncher;
    private final Configuration settings;
@@ -44,12 +36,11 @@ public class TLauncherFrame extends JFrame {
       this.settings = t.getSettings();
       this.lang = t.getLang();
       this.windowSize = this.settings.getWindowSize();
-      initLookAndFeel();
-      initFontSize();
+      SwingUtil.initFontSize(12);
+      SwingUtil.setFavicons(this);
       this.setUILocale();
       this.setWindowSize();
       this.setWindowTitle();
-      this.setIconImages(getFavicons());
       this.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
             TLauncherFrame.this.instance.setVisible(false);
@@ -75,6 +66,14 @@ public class TLauncherFrame extends JFrame {
             TLauncherFrame.this.mp.background.suspendBackground();
          }
       });
+      this.addWindowStateListener(new WindowStateListener() {
+         public void windowStateChanged(WindowEvent e) {
+            int newState = TLauncherFrame.getExtendedStateFor(e.getNewState());
+            if (newState != -1) {
+               TLauncherFrame.this.settings.set("gui.window", newState);
+            }
+         }
+      });
       log("Preparing main pane...");
       this.mp = new MainPane(this);
       this.add(this.mp);
@@ -83,6 +82,11 @@ public class TLauncherFrame extends JFrame {
       log("Resizing main pane...");
       this.mp.onResize();
       this.mp.background.startBackground();
+      int windowState = getExtendedStateFor(this.settings.getInteger("gui.window"));
+      if (windowState != -1) {
+         this.setExtendedState(windowState);
+      }
+
       this.setVisible(true);
       if (this.settings.isFirstRun()) {
          Alert.showLocAsyncWarning("firstrun");
@@ -186,73 +190,18 @@ public class TLauncherFrame extends JFrame {
       UIManager.put("FileChooser.readOnly", Boolean.FALSE);
    }
 
-   private static void initFontSize() {
-      try {
-         UIDefaults defaults = UIManager.getDefaults();
-         int minSize = 12;
-         int maxSize = 12;
-         Enumeration e = defaults.keys();
-
-         while(e.hasMoreElements()) {
-            Object key = e.nextElement();
-            Object value = defaults.get(key);
-            if (value instanceof Font) {
-               Font font = (Font)value;
-               int size = font.getSize();
-               if (size < minSize) {
-                  size = minSize;
-               } else if (size > maxSize) {
-                  size = maxSize;
-               }
-
-               if (value instanceof FontUIResource) {
-                  defaults.put(key, new FontUIResource(font.getName(), font.getStyle(), size));
-               } else {
-                  defaults.put(key, new Font(font.getName(), font.getStyle(), size));
-               }
-            }
-         }
-      } catch (Exception var8) {
-         log("Cannot change font sizes!", var8);
-      }
-
-   }
-
-   public static void initLookAndFeel() {
-      try {
-         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-      } catch (Exception var1) {
-         log("Can't set system look and feel.");
-         var1.printStackTrace();
-      }
-
-   }
-
-   public static List getFavicons() {
-      if (!favicons.isEmpty()) {
-         return Collections.unmodifiableList(favicons);
-      } else {
-         int[] sizes = new int[]{256, 128, 96, 64, 48, 32, 24, 16};
-         String loaded = "";
-         int[] var5 = sizes;
-         int var4 = sizes.length;
-
-         for(int var3 = 0; var3 < var4; ++var3) {
-            int i = var5[var3];
-            Image image = ImageCache.getImage("fav" + i + ".png", false);
-            if (image != null) {
-               loaded = loaded + ", " + i + "px";
-               favicons.add(image);
-            }
-         }
-
-         if (loaded.isEmpty()) {
-            log("No favicon is loaded.");
-         } else {
-            log("Favicons loaded:", loaded.substring(2));
-         }
-
-         return favicons;
+   private static int getExtendedStateFor(int state) {
+      switch(state) {
+      case 0:
+      case 2:
+      case 4:
+      case 6:
+         return state;
+      case 1:
+      case 3:
+      case 5:
+      default:
+         return -1;
       }
    }
 

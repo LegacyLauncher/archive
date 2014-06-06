@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher;
 
+import java.io.File;
 import java.io.IOException;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -12,13 +13,19 @@ public class Bootstrapper {
    }
 
    public static void main(String[] args) {
-      System.out.println("TLauncher Bootstrapper is enabled.");
+      U.setPrefix((String)null);
+      U.log("TLauncher Bootstrapper is enabled.");
+      String[] extraArgs = loadExtraArgs();
+      if (extraArgs.length > 0) {
+         args = U.extend(extraArgs, args);
+      }
+
       JavaProcessLauncher launcher = createLauncher(args);
 
       try {
          launcher.start();
-      } catch (Throwable var3) {
-         Alert.showError("Cannot start TLauncher!", "Bootstrapper encountered an error. Please, contact developer: seventype@ya.ru", var3);
+      } catch (Throwable var4) {
+         Alert.showError("Cannot start TLauncher!", "Bootstrapper encountered an error. Please, contact developer: seventype@ya.ru", var4);
          TLauncher.main(args);
          return;
       }
@@ -37,7 +44,28 @@ public class Bootstrapper {
       return launcher;
    }
 
-   public static ProcessBuilder buildProcess(String[] args) throws IOException {
+   private static String[] loadExtraArgs() {
+      String[] extraArgs = new String[0];
+      File argsFile = FileUtil.getNeighborFile("tlauncher.args");
+      if (!argsFile.isFile()) {
+         return extraArgs;
+      } else {
+         U.log("TLauncher Bootstrapper is enabled.");
+
+         String argsContent;
+         try {
+            argsContent = FileUtil.readFile(argsFile);
+         } catch (IOException var4) {
+            U.log("Cannot read file:", argsFile, var4);
+            return extraArgs;
+         }
+
+         extraArgs = argsContent.split(" ");
+         return extraArgs;
+      }
+   }
+
+   public static ProcessBuilder buildProcess(String[] args) {
       return createLauncher(args).createProcess();
    }
 }

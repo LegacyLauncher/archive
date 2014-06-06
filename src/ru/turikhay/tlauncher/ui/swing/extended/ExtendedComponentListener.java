@@ -5,22 +5,20 @@ import java.awt.Point;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import ru.turikhay.tlauncher.ui.swing.util.IntegerArrayGetter;
-import ru.turikhay.util.U;
-import ru.turikhay.util.async.LoopedThread;
 
 public abstract class ExtendedComponentListener implements ComponentListener {
    private final Component comp;
-   private final ExtendedComponentListener.QuickParameterListenerThread resizeListener;
-   private final ExtendedComponentListener.QuickParameterListenerThread moveListener;
+   private final QuickParameterListenerThread resizeListener;
+   private final QuickParameterListenerThread moveListener;
    private ComponentEvent lastResizeEvent;
    private ComponentEvent lastMoveEvent;
 
-   public ExtendedComponentListener(Component component) {
+   public ExtendedComponentListener(Component component, int tick) {
       if (component == null) {
          throw new NullPointerException();
       } else {
          this.comp = component;
-         this.resizeListener = new ExtendedComponentListener.QuickParameterListenerThread(new IntegerArrayGetter() {
+         this.resizeListener = new QuickParameterListenerThread(new IntegerArrayGetter() {
             public int[] getIntegerArray() {
                return new int[]{ExtendedComponentListener.this.comp.getWidth(), ExtendedComponentListener.this.comp.getHeight()};
             }
@@ -28,8 +26,8 @@ public abstract class ExtendedComponentListener implements ComponentListener {
             public void run() {
                ExtendedComponentListener.this.onComponentResized(ExtendedComponentListener.this.lastResizeEvent);
             }
-         });
-         this.moveListener = new ExtendedComponentListener.QuickParameterListenerThread(new IntegerArrayGetter() {
+         }, tick);
+         this.moveListener = new QuickParameterListenerThread(new IntegerArrayGetter() {
             public int[] getIntegerArray() {
                Point location = ExtendedComponentListener.this.comp.getLocation();
                return new int[]{location.x, location.y};
@@ -38,8 +36,12 @@ public abstract class ExtendedComponentListener implements ComponentListener {
             public void run() {
                ExtendedComponentListener.this.onComponentMoved(ExtendedComponentListener.this.lastMoveEvent);
             }
-         });
+         }, tick);
       }
+   }
+
+   public ExtendedComponentListener(Component component) {
+      this(component, 500);
    }
 
    public final void componentResized(ComponentEvent e) {
@@ -52,6 +54,10 @@ public abstract class ExtendedComponentListener implements ComponentListener {
       this.moveListener.startListening();
    }
 
+   public boolean isListening() {
+      return this.resizeListener.isIterating() || this.moveListener.isIterating();
+   }
+
    public abstract void onComponentResizing(ComponentEvent var1);
 
    public abstract void onComponentResized(ComponentEvent var1);
@@ -59,47 +65,4 @@ public abstract class ExtendedComponentListener implements ComponentListener {
    public abstract void onComponentMoving(ComponentEvent var1);
 
    public abstract void onComponentMoved(ComponentEvent var1);
-
-   private class QuickParameterListenerThread extends LoopedThread {
-      private static final int TICK = 500;
-      private final IntegerArrayGetter paramGetter;
-      private final Runnable runnable;
-
-      QuickParameterListenerThread(IntegerArrayGetter getter, Runnable run) {
-         super("QuickParameterListenerThread");
-         this.paramGetter = getter;
-         this.runnable = run;
-         this.startAndWait();
-      }
-
-      void startListening() {
-         this.iterate();
-      }
-
-      protected void iterateOnce() {
-         int[] initial = this.paramGetter.getIntegerArray();
-         boolean var3 = false;
-
-         boolean equal;
-         do {
-            this.sleep();
-            int[] newvalue = this.paramGetter.getIntegerArray();
-            equal = true;
-
-            for(int i = 0; i < initial.length; ++i) {
-               if (initial[i] != newvalue[i]) {
-                  equal = false;
-               }
-            }
-
-            initial = newvalue;
-         } while(!equal);
-
-         this.runnable.run();
-      }
-
-      private void sleep() {
-         U.sleepFor(500L);
-      }
-   }
 }

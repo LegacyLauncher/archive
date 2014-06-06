@@ -17,17 +17,17 @@ public class AsyncThread extends ExtendedThread {
 
    public void run() {
       if (this.wait > 0L) {
-         this.sleepFor(this.wait);
+         sleepFor(this.wait);
       }
 
       this.runnable.run();
       this.interrupt();
    }
 
-   private void sleepFor(long millis) {
+   private static void sleepFor(long millis) {
       try {
          Thread.sleep(millis);
-      } catch (Exception var4) {
+      } catch (Exception var3) {
       }
 
    }

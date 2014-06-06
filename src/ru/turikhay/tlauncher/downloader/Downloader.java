@@ -177,7 +177,7 @@ public class Downloader extends ExtendedThread {
       if (configuration == null) {
          throw new NullPointerException();
       } else {
-         this.log("Loaded configuration:", configuration);
+         log("Loaded configuration:", configuration);
          this.configuration = configuration;
       }
    }
@@ -187,7 +187,7 @@ public class Downloader extends ExtendedThread {
 
       while(true) {
          this.blockThread("iteration");
-         this.log("Files in queue", this.list.size());
+         log("Files in queue", this.list.size());
          synchronized(this.list) {
             this.sortOut();
          }
@@ -219,7 +219,7 @@ public class Downloader extends ExtendedThread {
          int downloadablesAtThread = U.getMaxMultiply(size, 6);
          int x = 0;
          int y = true;
-         this.log("Starting download " + size + " files...");
+         log("Starting download " + size + " files...");
          this.onStart(size);
          int max = this.configuration.getMaxThreads();
 
@@ -324,7 +324,7 @@ public class Downloader extends ExtendedThread {
    }
 
    private void waitForThreads() {
-      this.log("Waiting for", this.workingThreads, "threads...");
+      log("Waiting for", this.workingThreads, "threads...");
 
       boolean blocked;
       do {
@@ -337,10 +337,10 @@ public class Downloader extends ExtendedThread {
          }
       } while(!blocked);
 
-      this.log("All threads are blocked by now");
+      log("All threads are blocked by now");
    }
 
-   private void log(Object... o) {
+   private static void log(Object... o) {
       U.log("[Downloader2]", o);
    }
 }

@@ -1,4 +1,4 @@
-package ru.turikhay.util.logger;
+package ru.turikhay.util.stream;
 
 public interface Logger {
    void log(String var1);

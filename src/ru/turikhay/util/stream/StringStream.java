@@ -1,6 +1,4 @@
-package ru.turikhay.util.logger;
-
-import ru.turikhay.util.stream.SafeOutputStream;
+package ru.turikhay.util.stream;
 
 public class StringStream extends SafeOutputStream {
    protected final StringBuffer buffer = new StringBuffer();
@@ -24,6 +22,10 @@ public class StringStream extends SafeOutputStream {
          }
 
       }
+   }
+
+   public char getCharAt(int i) {
+      return this.buffer.charAt(i);
    }
 
    public String getOutput() {

@@ -24,7 +24,7 @@ public class LowerCaseEnumTypeAdapterFactory implements TypeAdapterFactory {
 
          for(int var6 = 0; var6 < var7; ++var6) {
             Object constant = var8[var6];
-            lowercaseToConstant.put(this.toLowercase(constant), constant);
+            lowercaseToConstant.put(toLowercase(constant), constant);
          }
 
          return new TypeAdapter() {
@@ -32,7 +32,7 @@ public class LowerCaseEnumTypeAdapterFactory implements TypeAdapterFactory {
                if (value == null) {
                   out.nullValue();
                } else {
-                  out.value(LowerCaseEnumTypeAdapterFactory.this.toLowercase(value));
+                  out.value(LowerCaseEnumTypeAdapterFactory.toLowercase(value));
                }
 
             }
@@ -49,7 +49,7 @@ public class LowerCaseEnumTypeAdapterFactory implements TypeAdapterFactory {
       }
    }
 
-   private String toLowercase(Object o) {
+   private static String toLowercase(Object o) {
       return o.toString().toLowerCase(Locale.US);
    }
 }

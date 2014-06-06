@@ -41,7 +41,7 @@ public class JavaProcess {
       }
    }
 
-   void setExitRunnable(JavaProcessListener runnable) {
+   public void setExitRunnable(JavaProcessListener runnable) {
       this.onExit = runnable;
    }
 

@@ -34,7 +34,7 @@ public class Authenticator {
       return TLauncher.getInstance().getProfileManager().getClientToken();
    }
 
-   private void setClientToken(String uuid) {
+   private static void setClientToken(String uuid) {
       TLauncher.getInstance().getProfileManager().setClientToken(uuid);
    }
 
@@ -103,7 +103,7 @@ public class Authenticator {
       this.account.setProfiles(response.getAvailableProfiles());
       this.account.setProfile(response.getSelectedProfile());
       this.account.setUser(response.getUser());
-      this.setClientToken(response.getClientToken());
+      setClientToken(response.getClientToken());
       if (response.getSelectedProfile() != null) {
          this.account.setUUID(response.getSelectedProfile().getId());
          this.account.setDisplayName(response.getSelectedProfile().getName());
@@ -115,7 +115,7 @@ public class Authenticator {
       this.log("Loggining in with token");
       RefreshRequest request = new RefreshRequest(this);
       RefreshResponse response = (RefreshResponse)this.makeRequest(ROUTE_REFRESH, request, RefreshResponse.class);
-      this.setClientToken(response.getClientToken());
+      setClientToken(response.getClientToken());
       this.account.setAccessToken(response.getAccessToken());
       this.account.setProfile(response.getSelectedProfile());
       this.account.setUser(response.getUser());

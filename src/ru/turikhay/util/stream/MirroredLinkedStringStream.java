@@ -1,4 +1,4 @@
-package ru.turikhay.util.logger;
+package ru.turikhay.util.stream;
 
 import java.io.IOException;
 import java.io.OutputStream;

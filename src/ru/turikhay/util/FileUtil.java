@@ -26,7 +26,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
-   private static final String DEFAULT_CHARSET = "UTF-8";
+   public static final String DEFAULT_CHARSET = "UTF-8";
 
    public static Charset getCharset() {
       try {
@@ -337,20 +337,20 @@ public class FileUtil {
       }
    }
 
-   public static boolean createFile(File file) throws IOException {
-      if (file.isFile()) {
-         return false;
-      } else {
+   public static void createFile(File file) throws IOException {
+      if (!file.isFile()) {
          if (file.getParentFile() != null) {
             file.getParentFile().mkdirs();
          }
 
-         return file.createNewFile();
+         if (!file.createNewFile()) {
+            throw new IOException("Cannot create file, or it was created during runtime: " + file.getAbsolutePath());
+         }
       }
    }
 
-   public static boolean createFile(String file) throws IOException {
-      return createFile(new File(file));
+   public static void createFile(String file) throws IOException {
+      createFile(new File(file));
    }
 
    public static void unZip(File zip, File folder, boolean replace) throws IOException {

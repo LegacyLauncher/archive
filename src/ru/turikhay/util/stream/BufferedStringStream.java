@@ -1,4 +1,4 @@
-package ru.turikhay.util.logger;
+package ru.turikhay.util.stream;
 
 public class BufferedStringStream extends StringStream {
    protected int caretFlush;

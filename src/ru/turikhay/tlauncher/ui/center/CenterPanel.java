@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.center;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -22,12 +23,13 @@ import ru.turikhay.util.U;
 public class CenterPanel extends BlockablePanel {
    private static final long serialVersionUID = -1975869198322761508L;
    public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
-   protected static final CenterPanelTheme tipTheme = new TipPanelTheme();
-   protected static final Insets defaultInsets = new Insets(5, 24, 18, 24);
-   protected static final Insets squareInsets = new Insets(15, 15, 15, 15);
-   protected static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
-   protected static final Insets smallSquareNoTopInsets = new Insets(5, 15, 5, 15);
-   protected static final Insets noInsets = new Insets(0, 0, 0, 0);
+   public static final CenterPanelTheme tipTheme = new TipPanelTheme();
+   public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
+   public static final Insets defaultInsets = new Insets(5, 24, 18, 24);
+   public static final Insets squareInsets = new Insets(15, 15, 15, 15);
+   public static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
+   public static final Insets smallSquareNoTopInsets = new Insets(5, 15, 5, 15);
+   public static final Insets noInsets = new Insets(0, 0, 0, 0);
    protected static final int ARC_SIZE = 32;
    private final Insets insets;
    private final CenterPanelTheme theme;
@@ -41,11 +43,15 @@ public class CenterPanel extends BlockablePanel {
       this((CenterPanelTheme)null, (Insets)null);
    }
 
-   protected CenterPanel(Insets insets) {
+   public CenterPanel(Insets insets) {
       this((CenterPanelTheme)null, insets);
    }
 
-   protected CenterPanel(CenterPanelTheme theme, Insets insets) {
+   public CenterPanel(CenterPanelTheme theme) {
+      this(theme, (Insets)null);
+   }
+
+   public CenterPanel(CenterPanelTheme theme, Insets insets) {
       this.tlauncher = TLauncher.getInstance();
       this.global = this.tlauncher.getSettings();
       this.lang = this.tlauncher.getLang();
@@ -67,17 +73,32 @@ public class CenterPanel extends BlockablePanel {
 
    public void paintComponent(Graphics g0) {
       Graphics2D g = (Graphics2D)g0;
+      int x = 0;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g.setColor(this.getBackground());
-      g.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), 32, 32);
+      g.fillRoundRect(x, x, this.getWidth(), this.getHeight(), 32, 32);
       g.setColor(this.theme.getBorder());
 
-      for(int x = 1; x < 2; ++x) {
+      int x;
+      for(x = 1; x < 2; ++x) {
          g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 32, 32);
       }
 
-      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-      super.paintComponent(g);
+      Color shadow = U.shiftAlpha(Color.gray, -155);
+      x = 2;
+
+      while(true) {
+         shadow = U.shiftAlpha(shadow, -10);
+         if (shadow.getAlpha() == 0) {
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            super.paintComponent(g);
+            return;
+         }
+
+         g.setColor(shadow);
+         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 32 - 2 * x + 1, 32 - 2 * x + 1);
+         ++x;
+      }
    }
 
    public CenterPanelTheme getTheme() {
