@@ -12,6 +12,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.font.LineMetrics;
 import javax.swing.JProgressBar;
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.util.U;
 
 public class ProgressBar extends JProgressBar {
@@ -20,7 +21,7 @@ public class ProgressBar extends JProgressBar {
    private static int BORDER_SIZE = 10;
    private static int EDGE_CHARS = 50;
    private static int CENTER_CHARS = 30;
-   private static float DEFAULT_FONT_SIZE = 12.0F;
+   private static float DEFAULT_FONT_SIZE;
    private static final long serialVersionUID = -8095192709934629794L;
    private final Object sync;
    private final Component parent;
@@ -34,6 +35,10 @@ public class ProgressBar extends JProgressBar {
    private final int[] cS_bounds;
    private final int[] eS_bounds;
    private int oldWidth;
+
+   static {
+      DEFAULT_FONT_SIZE = TLauncherFrame.fontSize;
+   }
 
    public ProgressBar(Component parentComp) {
       this.sync = new Object();

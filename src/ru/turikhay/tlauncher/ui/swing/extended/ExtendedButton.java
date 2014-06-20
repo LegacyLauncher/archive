@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 
 public class ExtendedButton extends JButton {
    private static final long serialVersionUID = -2009736184875993130L;
@@ -35,7 +36,7 @@ public class ExtendedButton extends JButton {
    }
 
    private void init() {
-      this.setFont(this.getFont().deriveFont(12.0F));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
       this.setOpaque(false);
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {

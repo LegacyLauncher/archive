@@ -45,6 +45,10 @@ public class MinecraftUIListener implements MinecraftListener {
    }
 
    public void onMinecraftCrash(Crash crash) {
+      if (!this.t.getLauncher().isLaunchAssist()) {
+         this.t.show();
+      }
+
       String p = "crash.";
       String title = Localizable.get(p + "title");
       String report = crash.getFile();

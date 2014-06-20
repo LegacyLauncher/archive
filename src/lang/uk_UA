@@ -1,5 +1,6 @@
 # TLauncher language file UTF-8
-# Have questions? Ask: turikhay@gmail.com
+# Have questions? Ask: tlauncher@turikhay.ru
+#
 # Loginform
 loginform.checkbox.autologin=Автоматичний вхід
 loginform.checkbox.forceupdate=Оновити клієнт

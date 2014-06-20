@@ -11,10 +11,12 @@ import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.scenes.PseudoScene;
 import ru.turikhay.tlauncher.ui.scenes.VersionManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
+import ru.turikhay.util.OS;
 
 public class MainPane extends ExtendedLayeredPane {
    private static final long serialVersionUID = -8854598755786867602L;
    private final TLauncherFrame rootFrame;
+   private final boolean repaintEveryTime;
    private PseudoScene scene;
    public final BackgroundHolder background;
    public final LaunchProgress progress;
@@ -27,6 +29,7 @@ public class MainPane extends ExtendedLayeredPane {
    MainPane(TLauncherFrame frame) {
       super((JComponent)null);
       this.rootFrame = frame;
+      this.repaintEveryTime = OS.LINUX.isCurrent();
       this.background = new BackgroundHolder(this);
       this.background.setBackground(this.background.SLIDE_BACKGROUND, false);
       this.add(this.background);
@@ -69,6 +72,10 @@ public class MainPane extends ExtendedLayeredPane {
 
          this.scene = newscene;
          this.scene.setShown(true);
+         if (this.repaintEveryTime) {
+            this.repaint();
+         }
+
       }
    }
 

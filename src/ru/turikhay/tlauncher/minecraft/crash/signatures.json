@@ -47,6 +47,12 @@
         	path: "old-videocard",
         	exit: 1,
         	pattern: '^# C \\[ig4dev32\\.dll\\+0x3e88\\]$'
+        },
+        {
+        	name: "Invalid system user name",
+        	path: "invalid-sys-username",
+        	exit: 1,
+        	pattern: "^[\\s]*at org.apache.logging.log4j.util.PropertiesUtil.<init>\\(PropertiesUtil.java:71\\)$"
         }
     ]
 }

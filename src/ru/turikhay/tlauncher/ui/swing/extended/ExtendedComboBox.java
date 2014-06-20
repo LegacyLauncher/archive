@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.ListCellRenderer;
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.swing.DefaultConverterCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
@@ -16,7 +17,7 @@ public class ExtendedComboBox extends JComboBox {
       this.setModel(new SimpleComboBoxModel());
       this.setRenderer(renderer);
       this.setOpaque(false);
-      this.setFont(this.getFont().deriveFont(12.0F));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
       ((JComponent)U.getAs(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
    }
 

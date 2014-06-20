@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.loc;
 
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.text.ExtendedTextField;
 
@@ -11,7 +12,7 @@ public class LocalizableTextField extends ExtendedTextField implements Localizab
       super(panel, (String)null, value);
       this.setValue(value);
       this.setPlaceholder(placeholderPath);
-      this.setFont(this.getFont().deriveFont(12.0F));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
    }
 
    public LocalizableTextField(CenterPanel panel, String placeholderPath) {

@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.loc;
 
 import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 
 public class LocalizableCheckbox extends JCheckBox implements LocalizableComponent {
    private static final long serialVersionUID = 1L;
@@ -54,7 +55,7 @@ public class LocalizableCheckbox extends JCheckBox implements LocalizableCompone
    }
 
    private void init() {
-      this.setFont(this.getFont().deriveFont(12.0F));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
       this.setOpaque(false);
    }
 }

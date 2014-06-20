@@ -102,6 +102,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    private String javaArgs;
    private String programArgs;
    private boolean minecraftWorking;
+   private long startupTime;
    private int exitCode;
 
    public Downloader getDownloader() {
@@ -873,6 +874,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       U.gc();
       this.log("Starting Minecraft " + this.versionName + "...");
       this.log("Launching in:", this.gameDir.getAbsolutePath());
+      this.startupTime = System.currentTimeMillis();
 
       try {
          JavaProcess process = this.launcher.start();
@@ -960,7 +962,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             this.console.killIn(5000L);
          }
       } else {
-         U.sleepFor(1000L);
          if (this.console != null) {
             this.console.show();
          }
@@ -999,6 +1000,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
    private synchronized void notifyClose() {
       this.minecraftWorking = false;
+      if (System.currentTimeMillis() - this.startupTime < 5000L) {
+         U.sleepFor(1000L);
+      }
+
       this.notifyAll();
       Iterator var2 = this.listeners.iterator();
 
