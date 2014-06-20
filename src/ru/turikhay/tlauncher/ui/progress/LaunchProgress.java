@@ -81,6 +81,5 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
    }
 
    public void onMinecraftCrash(Crash crash) {
-      this.stopProgress();
    }
 }

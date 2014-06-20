@@ -2,13 +2,14 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import javax.swing.Icon;
 import javax.swing.JLabel;
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 
 public class ExtendedLabel extends JLabel {
    private static final long serialVersionUID = -758117308854118352L;
 
    public ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
       super(text, icon, horizontalAlignment);
-      this.setFont(this.getFont().deriveFont(12.0F));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
       this.setOpaque(false);
    }
 

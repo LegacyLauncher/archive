@@ -17,13 +17,14 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.console.Console;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class TLauncherFrame extends JFrame {
    private static final long serialVersionUID = 5077131443679431434L;
    public static final int[] maxSize = new int[]{1920, 1080};
-   public static final float fontSize = 12.0F;
+   public static final float fontSize;
    private final TLauncherFrame instance = this;
    private final TLauncher tlauncher;
    private final Configuration settings;
@@ -31,12 +32,16 @@ public class TLauncherFrame extends JFrame {
    private final int[] windowSize;
    public final MainPane mp;
 
+   static {
+      fontSize = OS.WINDOWS.isCurrent() ? 12.0F : 14.0F;
+   }
+
    public TLauncherFrame(TLauncher t) {
       this.tlauncher = t;
       this.settings = t.getSettings();
       this.lang = t.getLang();
       this.windowSize = this.settings.getWindowSize();
-      SwingUtil.initFontSize(12);
+      SwingUtil.initFontSize((int)fontSize);
       SwingUtil.setFavicons(this);
       this.setUILocale();
       this.setWindowSize();

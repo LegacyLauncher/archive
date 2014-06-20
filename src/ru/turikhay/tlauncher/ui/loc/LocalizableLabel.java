@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.loc;
 
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 
 public class LocalizableLabel extends ExtendedLabel implements LocalizableComponent {
@@ -9,7 +10,7 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
 
    public LocalizableLabel(String path, Object... vars) {
       this.setText(path, vars);
-      this.setFont(this.getFont().deriveFont(12.0F));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
    }
 
    public LocalizableLabel(String path) {

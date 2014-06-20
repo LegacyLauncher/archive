@@ -371,7 +371,7 @@ public enum OS {
          if (TOTAL_RAM_MB > 0L) {
             switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
             case 1:
-               if (TOTAL_RAM_MB > 2000L) {
+               if (TOTAL_RAM_MB > 4000L) {
                   return 1024;
                }
                break;
