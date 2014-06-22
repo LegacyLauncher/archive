@@ -5,6 +5,10 @@ public abstract class AsyncObject extends ExtendedThread {
    private Object value;
    private AsyncObjectGotErrorException error;
 
+   protected AsyncObject() {
+      super("AsyncObject");
+   }
+
    public void run() {
       try {
          this.value = this.execute();

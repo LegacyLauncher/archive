@@ -69,7 +69,7 @@ public class LeftSideNotifier extends ImagePanel implements UpdaterListener {
             String prefix = "notifier.left." + this.status.toString() + ".";
             String title = prefix + "title";
             String question = prefix + "question";
-            boolean ask = Alert.showQuestion(Localizable.get(title), Localizable.get(question, this.update.getVersion()), this.update.getDescription());
+            boolean ask = Alert.showQuestion(Localizable.get(title), Localizable.get(question, this.update.getVersion() + " (" + this.update.getCode() + ")"), this.update.getDescription());
             if (!ask) {
                return false;
             }
