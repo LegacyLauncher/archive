@@ -73,6 +73,7 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
       private static final float OPACITY_STEP = 0.05F;
 
       ServicePanelThread() {
+         super("ServicePanel");
          this.startAndWait();
       }
 

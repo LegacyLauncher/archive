@@ -186,15 +186,15 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
 
    public void onAdFound(Updater u, Ad ad) {
       int[] size = ad.getSize();
-      String content = "<table width=\"" + size[0] + "\" height=\"" + size[1] + "\"" + "align=\"center\"><tr><td>";
+      StringBuilder content = new StringBuilder();
+      content.append("<table width=\"").append(size[0]).append("\" height=\"").append(size[1]).append("\"><tr><td align=\"center\">");
       if (ad.getImage() != null) {
-         content = content + "<img src=\"" + ad.getImage().toExternalForm() + "\" /></td><td>";
+         content.append("<img src=\"").append(ad.getImage().toExternalForm()).append("\" /></td><td align=\"left\">");
       }
 
-      content = content + ad.getContent();
-      content = content + "</td></tr></table>";
-      this.content = content;
-      this.setContent(content, size[0], size[1]);
+      content.append(ad.getContent()).append("</td></tr></table>");
+      this.content = content.toString();
+      this.setContent(this.content, size[0], size[1]);
       if (!this.parent.isSettingsShown()) {
          this.show();
       }

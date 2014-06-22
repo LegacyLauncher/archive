@@ -23,7 +23,7 @@ public class RequiredUpdateListener implements UpdaterListener {
          String prefix = "updater.required.found.";
          String title = prefix + "title";
          String message = prefix + "message";
-         Alert.showWarning(Localizable.get(title), Localizable.get(message, upd.getVersion()), upd.getDescription());
+         Alert.showWarning(Localizable.get(title), Localizable.get(message, upd.getVersion() + " (" + upd.getCode() + ")"), upd.getDescription());
          UpdateUIListener listener = new UpdateUIListener(upd);
          listener.push();
       }

@@ -26,6 +26,7 @@ public class Update {
    public static final int UPDATING = 3;
    private int step;
    private double version;
+   private String code;
    private String description;
    private boolean required;
    private Map links = new HashMap();
@@ -52,6 +53,7 @@ public class Update {
          this.upd = upd;
          this.d = d;
          this.setVersion(settings.getDouble("latest"));
+         this.setCode(settings.get("code"));
          this.setDescription(settings.get("description"));
          this.setRequired(settings.getBoolean("required"));
          Iterator var5 = settings.getKeys().iterator();
@@ -82,6 +84,10 @@ public class Update {
 
    public double getVersion() {
       return this.version;
+   }
+
+   public String getCode() {
+      return this.code;
    }
 
    public String getDescription() {
@@ -209,6 +215,10 @@ public class Update {
       } else {
          this.version = v;
       }
+   }
+
+   void setCode(String cd) {
+      this.code = cd;
    }
 
    void setDescription(String desc) {

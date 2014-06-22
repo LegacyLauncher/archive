@@ -92,7 +92,12 @@ public class Updater {
                connection.disconnect();
                Update update = new Update(this, this.d, this.parsed);
                double version = update.getVersion();
-               log("Success!");
+               log("Success! Found:", version);
+               Ad ad = Ad.parseFrom(this.parsed);
+               if (ad != null) {
+                  this.onAdFound(ad);
+               }
+
                if (TLauncher.getVersion() > version) {
                   log("Found version is older than running:", version, "(" + TLauncher.getVersion() + ")");
                }
@@ -104,11 +109,6 @@ public class Updater {
                   this.found = update;
                   this.onUpdateFound(update);
                   return Updater.UpdaterState.FOUND;
-               }
-
-               Ad ad = Ad.parseFrom(this.parsed);
-               if (ad != null) {
-                  this.onAdFound(ad);
                }
 
                this.noUpdateFound();
