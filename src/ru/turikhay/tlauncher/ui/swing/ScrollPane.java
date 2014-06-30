@@ -5,21 +5,36 @@ import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 
 public class ScrollPane extends JScrollPane {
-   private static final long serialVersionUID = -8296804097817210847L;
+   private static final boolean DEFAULT_BORDER = false;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy;
 
-   public ScrollPane(Component view, ScrollPane.ScrollBarPolicy vertical, ScrollPane.ScrollBarPolicy horizontal) {
+   public ScrollPane(Component view, ScrollPane.ScrollBarPolicy vertical, ScrollPane.ScrollBarPolicy horizontal, boolean border) {
       super(view);
       this.setOpaque(false);
       this.getViewport().setOpaque(false);
-      this.setBorder((Border)null);
+      if (!border) {
+         this.setBorder((Border)null);
+      }
+
       this.setVBPolicy(vertical);
       this.setHBPolicy(horizontal);
    }
 
+   public ScrollPane(Component view, ScrollPane.ScrollBarPolicy vertical, ScrollPane.ScrollBarPolicy horizontal) {
+      this(view, vertical, horizontal, false);
+   }
+
+   public ScrollPane(Component view, ScrollPane.ScrollBarPolicy generalPolicy, boolean border) {
+      this(view, generalPolicy, generalPolicy, border);
+   }
+
    public ScrollPane(Component view, ScrollPane.ScrollBarPolicy generalPolicy) {
       this(view, generalPolicy, generalPolicy);
+   }
+
+   public ScrollPane(Component view, boolean border) {
+      this(view, ScrollPane.ScrollBarPolicy.AS_NEEDED, border);
    }
 
    public ScrollPane(Component view) {

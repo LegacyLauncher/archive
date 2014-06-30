@@ -8,19 +8,21 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 
 public class EditorFieldHandler extends EditorHandler {
    private final EditorField field;
-   private final JComponent component;
+   private final JComponent comp;
 
-   public EditorFieldHandler(String path, JComponent comp, FocusListener focus) {
+   public EditorFieldHandler(String path, JComponent component, FocusListener focus) {
       super(path);
-      if (!(comp instanceof EditorField)) {
+      if (component == null) {
+         throw new NullPointerException("comp");
+      } else if (!(component instanceof EditorField)) {
          throw new IllegalArgumentException();
       } else {
          if (focus != null) {
-            this.addFocus(comp, focus);
+            this.addFocus(component, focus);
          }
 
-         this.component = comp;
-         this.field = (EditorField)comp;
+         this.comp = component;
+         this.field = (EditorField)component;
       }
    }
 
@@ -29,7 +31,7 @@ public class EditorFieldHandler extends EditorHandler {
    }
 
    public JComponent getComponent() {
-      return this.component;
+      return this.comp;
    }
 
    public String getValue() {

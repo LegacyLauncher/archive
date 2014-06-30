@@ -11,7 +11,7 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
-import ru.turikhay.tlauncher.updater.Ad;
+import ru.turikhay.tlauncher.updater.AdParser;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
@@ -99,7 +99,7 @@ public class RefreshButton extends ImageButton implements Blockable, ComponentMa
       this.updaterFlag = null;
    }
 
-   public void onAdFound(Updater u, Ad ad) {
+   public void onAdFound(Updater u, AdParser ad) {
    }
 
    public void onComponentsRefreshing(ComponentManager manager) {

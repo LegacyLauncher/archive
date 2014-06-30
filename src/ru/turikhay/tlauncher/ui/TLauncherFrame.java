@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
@@ -52,6 +53,7 @@ public class TLauncherFrame extends JFrame {
             TLauncher.kill();
          }
       });
+      this.setDefaultCloseOperation(3);
       this.addComponentListener(new ComponentListener() {
          public void componentResized(ComponentEvent e) {
             TLauncherFrame.this.mp.onResize();
@@ -193,6 +195,9 @@ public class TLauncherFrame extends JFrame {
       UIManager.put("FileChooser.renameErrorText", this.lang.nget("explorer.error.rename") + "\n{0}");
       UIManager.put("FileChooser.renameErrorFileExistsText", this.lang.nget("explorer.error.rename-exists"));
       UIManager.put("FileChooser.readOnly", Boolean.FALSE);
+      UIManager.put("TabbedPane.contentOpaque", false);
+      UIManager.put("TabbedPane.contentBorderInsets", new Insets(0, 0, 0, 0));
+      UIManager.put("TabbedPane.tabInsets", new Insets(0, 8, 6, 8));
    }
 
    private static int getExtendedStateFor(int state) {

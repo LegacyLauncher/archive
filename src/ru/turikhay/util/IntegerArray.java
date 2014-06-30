@@ -35,6 +35,10 @@ public class IntegerArray {
       }
    }
 
+   public int size() {
+      return this.length;
+   }
+
    public int[] toArray() {
       int[] r = new int[this.length];
       System.arraycopy(this.integers, 0, r, 0, this.length);
@@ -61,13 +65,19 @@ public class IntegerArray {
       return sb.toString();
    }
 
-   private static IntegerArray parseIntegerArray(String val, char del) throws ParseException {
+   public static IntegerArray parseIntegerArray(String val, char del) throws ParseException {
       if (val == null) {
          throw new ParseException("String cannot be NULL!");
       } else if (val.length() <= 1) {
          throw new ParseException("String mustn't equal or be less than delimiter!");
       } else {
-         String[] ints = val.split("(?<!\\\\)\\" + del);
+         String regexp = "(?<!\\\\)";
+         if (del != 'x') {
+            regexp = regexp + "\\";
+         }
+
+         regexp = regexp + del;
+         String[] ints = val.split(regexp);
          int l = ints.length;
          int[] arr = new int[l];
 
@@ -75,9 +85,9 @@ public class IntegerArray {
             int cur;
             try {
                cur = Integer.parseInt(ints[i]);
-            } catch (NumberFormatException var8) {
-               U.log("Cannot parse integer (iteration: " + i + ")", var8);
-               throw new ParseException("Cannot parse integer (iteration: " + i + ")", var8);
+            } catch (NumberFormatException var9) {
+               U.log("Cannot parse integer (iteration: " + i + ")", var9);
+               throw new ParseException("Cannot parse integer (iteration: " + i + ")", var9);
             }
 
             arr[i] = cur;

@@ -30,7 +30,7 @@ public class FileExplorer extends JFileChooser {
       super(fsv);
    }
 
-   public FileExplorer(File currentDirectory, FileSystemView fsv) {
+   protected FileExplorer(File currentDirectory, FileSystemView fsv) {
       super(currentDirectory);
    }
 

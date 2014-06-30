@@ -9,5 +9,5 @@ public interface UpdaterListener {
 
    void onUpdaterNotFoundUpdate(Updater var1);
 
-   void onAdFound(Updater var1, Ad var2);
+   void onAdFound(Updater var1, AdParser var2);
 }

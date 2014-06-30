@@ -2,7 +2,7 @@ package ru.turikhay.tlauncher.ui.listener;
 
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.tlauncher.updater.Ad;
+import ru.turikhay.tlauncher.updater.AdParser;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
@@ -32,6 +32,6 @@ public class RequiredUpdateListener implements UpdaterListener {
    public void onUpdaterNotFoundUpdate(Updater u) {
    }
 
-   public void onAdFound(Updater u, Ad ad) {
+   public void onAdFound(Updater u, AdParser ad) {
    }
 }

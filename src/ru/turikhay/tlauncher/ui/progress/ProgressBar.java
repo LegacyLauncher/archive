@@ -13,6 +13,7 @@ import java.awt.event.ComponentListener;
 import java.awt.font.LineMetrics;
 import javax.swing.JProgressBar;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
+import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 public class ProgressBar extends JProgressBar {
@@ -101,7 +102,7 @@ public class ProgressBar extends JProgressBar {
    }
 
    public void setWestString(String string, boolean update) {
-      string = U.r(string, EDGE_CHARS);
+      string = StringUtil.cut(string, EDGE_CHARS);
       this.wS_changed = this.wS != string;
       this.wS = string;
       if (this.wS_changed && update) {
@@ -115,7 +116,7 @@ public class ProgressBar extends JProgressBar {
    }
 
    public void setCenterString(String string, boolean update) {
-      string = U.r(string, CENTER_CHARS);
+      string = StringUtil.cut(string, CENTER_CHARS);
       this.cS_changed = this.cS != string;
       this.cS = string;
       if (this.cS_changed && update) {
@@ -129,7 +130,7 @@ public class ProgressBar extends JProgressBar {
    }
 
    public void setEastString(String string, boolean update) {
-      string = U.r(string, EDGE_CHARS);
+      string = StringUtil.cut(string, EDGE_CHARS);
       this.eS_changed = this.eS != string;
       this.eS = string;
       if (this.eS_changed && update) {

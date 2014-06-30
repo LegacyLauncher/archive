@@ -22,7 +22,7 @@ public class Updater {
    private static final String[] links = TLauncher.getUpdateRepos();
    private static final URI[] URIs = makeURIs();
    private final Downloader d;
-   private final List listeners;
+   private final List listeners = Collections.synchronizedList(new ArrayList());
    private Update found;
    private SimpleConfiguration parsed;
    private Updater.UpdaterState state;
@@ -37,9 +37,8 @@ public class Updater {
       this.listeners.remove(l);
    }
 
-   private Updater(Downloader d) {
-      this.listeners = Collections.synchronizedList(new ArrayList());
-      this.d = d;
+   public Updater(TLauncher t) {
+      this.d = t.getDownloader();
       if (!PackageType.isCurrent(PackageType.JAR)) {
          File oldfile = getTempFile();
          if (oldfile.delete()) {
@@ -49,10 +48,6 @@ public class Updater {
 
       log("Initialized.");
       log("Package type:", PackageType.getCurrent());
-   }
-
-   public Updater(TLauncher t) {
-      this(t.getDownloader());
    }
 
    public Updater.UpdaterState getState() {
@@ -93,7 +88,7 @@ public class Updater {
                Update update = new Update(this, this.d, this.parsed);
                double version = update.getVersion();
                log("Success! Found:", version);
-               Ad ad = Ad.parseFrom(this.parsed);
+               AdParser ad = AdParser.parseFrom(this.parsed);
                if (ad != null) {
                   this.onAdFound(ad);
                }
@@ -197,7 +192,7 @@ public class Updater {
       }
    }
 
-   private void onAdFound(Ad ad) {
+   private void onAdFound(AdParser ad) {
       synchronized(this.listeners) {
          Iterator var4 = this.listeners.iterator();
 

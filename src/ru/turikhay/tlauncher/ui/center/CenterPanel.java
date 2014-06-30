@@ -16,6 +16,7 @@ import ru.turikhay.tlauncher.ui.block.BlockablePanel;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.Del;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.U;
@@ -25,6 +26,7 @@ public class CenterPanel extends BlockablePanel {
    public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
    public static final CenterPanelTheme tipTheme = new TipPanelTheme();
    public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
+   public static final CenterPanelTheme settingsTheme = new SettingsPanelTheme();
    public static final Insets defaultInsets = new Insets(5, 24, 18, 24);
    public static final Insets squareInsets = new Insets(15, 15, 15, 15);
    public static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
@@ -33,7 +35,7 @@ public class CenterPanel extends BlockablePanel {
    protected static final int ARC_SIZE = 32;
    private final Insets insets;
    private final CenterPanelTheme theme;
-   protected final VPanel messagePanel;
+   protected final ExtendedPanel messagePanel;
    protected final LocalizableLabel messageLabel;
    public final TLauncher tlauncher;
    public final Configuration global;
@@ -65,10 +67,11 @@ public class CenterPanel extends BlockablePanel {
       this.messageLabel.setFont(this.getFont().deriveFont(1));
       this.messageLabel.setVerticalAlignment(0);
       this.messageLabel.setHorizontalTextPosition(0);
+      this.messageLabel.setAlignmentX(0.5F);
       this.messagePanel = new VPanel();
       this.messagePanel.setAlignmentX(0.5F);
       this.messagePanel.setInsets(new Insets(3, 0, 3, 0));
-      this.messagePanel.add(this.messageLabel);
+      this.messagePanel.add((Component)this.messageLabel);
    }
 
    public void paintComponent(Graphics g0) {
@@ -113,7 +116,7 @@ public class CenterPanel extends BlockablePanel {
       return new Del(1, aligment, this.theme.getBorder());
    }
 
-   public Del del(int aligment, int width, int height) {
+   protected Del del(int aligment, int width, int height) {
       return new Del(1, aligment, width, height, this.theme.getBorder());
    }
 

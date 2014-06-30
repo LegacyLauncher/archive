@@ -7,7 +7,7 @@ import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.listener.UpdateUIListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.ImagePanel;
-import ru.turikhay.tlauncher.updater.Ad;
+import ru.turikhay.tlauncher.updater.AdParser;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
@@ -104,7 +104,7 @@ public class LeftSideNotifier extends ImagePanel implements UpdaterListener {
       this.setFoundUpdate((Update)null);
    }
 
-   public void onAdFound(Updater u, Ad ad) {
+   public void onAdFound(Updater u, AdParser ad) {
       this.setFoundUpdate((Update)null);
    }
 

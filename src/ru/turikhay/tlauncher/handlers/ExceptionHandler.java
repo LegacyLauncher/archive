@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.handlers;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class ExceptionHandler implements UncaughtExceptionHandler {
@@ -20,7 +21,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
    }
 
    public void uncaughtException(Thread t, Throwable e) {
-      OutOfMemoryError asOOM = (OutOfMemoryError)U.getAs(e, OutOfMemoryError.class);
+      OutOfMemoryError asOOM = (OutOfMemoryError)Reflect.cast(e, OutOfMemoryError.class);
       if (asOOM == null || !reduceMemory(asOOM)) {
          if (scanTrace(e)) {
             try {

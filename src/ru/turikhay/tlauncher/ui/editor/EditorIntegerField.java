@@ -10,6 +10,14 @@ public class EditorIntegerField extends EditorTextField {
       super(prompt);
    }
 
+   public int getIntegerValue() {
+      try {
+         return Integer.parseInt(this.getSettingsValue());
+      } catch (Exception var2) {
+         return -1;
+      }
+   }
+
    public boolean isValueValid() {
       try {
          Integer.parseInt(this.getSettingsValue());

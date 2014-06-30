@@ -421,6 +421,8 @@ public class U {
       }
    }
 
+   /** @deprecated */
+   @Deprecated
    public static String r(String string, int max) {
       if (string == null) {
          return null;
@@ -450,51 +452,6 @@ public class U {
             return ret.length() == 0 ? "" : ret.substring(1) + "...";
          }
       }
-   }
-
-   public static String t(String string, int max) {
-      if (string == null) {
-         return null;
-      } else {
-         int len = string.length();
-         return len <= max ? string : string.substring(0, max) + "...";
-      }
-   }
-
-   private static String w(String string, int normal, char newline, boolean rude) {
-      char[] c = string.toCharArray();
-      int len = c.length;
-      int remaining = normal;
-      String ret = "";
-
-      for(int x = 0; x < len; ++x) {
-         --remaining;
-         char cur = c[x];
-         if (c[x] == newline) {
-            remaining = normal;
-         }
-
-         if (remaining < 1 && cur == ' ') {
-            remaining = normal;
-            ret = ret + newline;
-         } else {
-            ret = ret + cur;
-            if (remaining <= 0 && rude) {
-               remaining = normal;
-               ret = ret + newline;
-            }
-         }
-      }
-
-      return ret;
-   }
-
-   public static String w(String string, int max) {
-      return w(string, max, '\n', false);
-   }
-
-   public static String w(String string, int max, boolean rude) {
-      return w(string, max, '\n', rude);
    }
 
    public static String setFractional(double d, int fractional) {
@@ -710,12 +667,10 @@ public class U {
       }
    }
 
+   /** @deprecated */
+   @Deprecated
    public static Object getAs(Object o, Class classOfT) {
-      if (classOfT == null) {
-         throw new NullPointerException();
-      } else {
-         return classOfT.isInstance(o) ? classOfT.cast(o) : null;
-      }
+      return Reflect.cast(o, classOfT);
    }
 
    public static boolean equal(Object a, Object b) {

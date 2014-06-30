@@ -53,6 +53,12 @@
         	path: "invalid-sys-username",
         	exit: 1,
         	pattern: "^[\\s]*at org.apache.logging.log4j.util.PropertiesUtil.<init>\\(PropertiesUtil.java:71\\)$"
+        },
+        {
+        	name: "Old ATI/AMD videocard drivers",
+        	path: "old-ati-vdrivers",
+        	exit: 1,
+        	pattern: '^# C \\[atioglxx\\.dll\\+0x[0-9a-z]+\\]$'
         }
     ]
 }

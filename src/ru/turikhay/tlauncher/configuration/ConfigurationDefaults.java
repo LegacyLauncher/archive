@@ -6,6 +6,7 @@ import java.util.Map;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
+import ru.turikhay.util.OS;
 
 class ConfigurationDefaults {
    private static final int version = 3;
@@ -26,6 +27,7 @@ class ConfigurationDefaults {
          this.d.put("minecraft.versions." + type, true);
       }
 
+      this.d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
       this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
       this.d.put("gui.console", Configuration.ConsoleType.getDefault());
       this.d.put("gui.console.width", 720);
