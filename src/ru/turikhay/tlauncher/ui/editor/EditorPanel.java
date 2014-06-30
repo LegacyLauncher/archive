@@ -1,20 +1,17 @@
 package ru.turikhay.tlauncher.ui.editor;
 
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import javax.swing.BoxLayout;
-import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 
-public class EditorPanel extends CenterPanel {
+public class EditorPanel extends AbstractEditorPanel {
    private static final long serialVersionUID = 3428243378644563729L;
    protected final ExtendedPanel container;
    protected final ScrollPane scroll;
@@ -75,26 +72,5 @@ public class EditorPanel extends CenterPanel {
    protected void nextPane() {
       this.rowNum = 0;
       ++this.paneNum;
-   }
-
-   protected boolean checkValues() {
-      boolean allValid = true;
-      Iterator var3 = this.handlers.iterator();
-
-      while(var3.hasNext()) {
-         EditorHandler handler = (EditorHandler)var3.next();
-         boolean valid = handler.isValid();
-         this.setValid(handler, valid);
-         if (!valid) {
-            allValid = false;
-         }
-      }
-
-      return allValid;
-   }
-
-   protected void setValid(EditorHandler handler, boolean valid) {
-      Color color = valid ? this.getTheme().getBackground() : this.getTheme().getFailure();
-      handler.getComponent().setBackground(color);
    }
 }

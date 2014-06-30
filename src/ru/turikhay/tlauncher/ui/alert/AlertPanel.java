@@ -1,46 +1,46 @@
 package ru.turikhay.tlauncher.ui.alert;
 
 import java.awt.Dimension;
-import java.awt.LayoutManager;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
-import ru.turikhay.tlauncher.ui.swing.extended.EditorPane;
+import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 class AlertPanel extends JPanel {
-   private static final long serialVersionUID = -8032765825488193573L;
-   private static final int MAX_CHARS_ON_LINE = 70;
-   private static final int MAX_WIDTH = 500;
+   private static final int MAX_CHARS = 80;
+   private static final int MAX_WIDTH = 1;
    private static final int MAX_HEIGHT = 300;
+   private static final Dimension MAX_SIZE = new Dimension(1, 300);
 
-   AlertPanel(String message, Object textarea) {
-      LayoutManager lm = new BoxLayout(this, 1);
-      this.setLayout(lm);
-      String textareaContent = textarea == null ? null : U.w(U.toLog(textarea), 70, true);
-      String messageContent = message == null ? null : "<html>" + U.w(message, 70).replace("\n", "<br/>") + "<br/></html>";
-      Dimension maxSize = new Dimension(500, 300);
-      EditorPane label = new EditorPane("text/html", messageContent);
-      label.setFocusable(false);
+   AlertPanel(String rawMessage, Object rawTextarea) {
+      this.setLayout(new BoxLayout(this, 1));
+      String message;
+      if (rawMessage == null) {
+         message = null;
+      } else {
+         message = StringUtil.wrap((String)("<html>" + rawMessage + "</html>"), 80);
+      }
+
+      EditorPane label = new EditorPane("text/html", message);
       label.setAlignmentX(0.0F);
+      label.setFocusable(false);
       this.add(label);
-      if (textareaContent != null) {
-         JTextArea area = new JTextArea(textareaContent);
-         area.setAlignmentX(0.0F);
-         area.setMaximumSize(maxSize);
+      if (rawTextarea != null) {
+         String textarea = U.toLog(rawTextarea);
+         JTextArea area = new JTextArea(textarea);
          area.addMouseListener(new TextPopup());
          area.setFont(this.getFont());
          area.setEditable(false);
-         JScrollPane scroll = new JScrollPane(area);
+         ScrollPane scroll = new ScrollPane(area, true);
          scroll.setAlignmentX(0.0F);
-         scroll.setMaximumSize(maxSize);
-         scroll.setVerticalScrollBarPolicy(20);
-         int textAreaHeight = StringUtil.countLines(textareaContent) * this.getFontMetrics(this.getFont()).getHeight();
+         scroll.setVBPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+         int textAreaHeight = StringUtil.countLines(textarea) * this.getFontMetrics(this.getFont()).getHeight();
          if (textAreaHeight > 300) {
-            scroll.setPreferredSize(maxSize);
+            scroll.setPreferredSize(MAX_SIZE);
          }
 
          this.add(scroll);

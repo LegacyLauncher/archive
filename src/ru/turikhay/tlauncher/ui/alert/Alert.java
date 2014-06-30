@@ -63,7 +63,7 @@ public class Alert {
       });
    }
 
-   private static void showMessage(String title, String message, Object textarea) {
+   public static void showMessage(String title, String message, Object textarea) {
       showMonolog(1, title, message, textarea);
    }
 

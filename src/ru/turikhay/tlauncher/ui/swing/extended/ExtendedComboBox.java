@@ -7,7 +7,7 @@ import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.swing.DefaultConverterCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
-import ru.turikhay.util.U;
+import ru.turikhay.util.Reflect;
 
 public class ExtendedComboBox extends JComboBox {
    private static final long serialVersionUID = -4509947341182373649L;
@@ -18,7 +18,7 @@ public class ExtendedComboBox extends JComboBox {
       this.setRenderer(renderer);
       this.setOpaque(false);
       this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
-      ((JComponent)U.getAs(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
+      ((JComponent)Reflect.cast(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
    }
 
    public ExtendedComboBox(StringConverter converter) {

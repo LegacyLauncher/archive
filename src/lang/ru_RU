@@ -190,9 +190,13 @@ crash.permgen-error=Minecraft был закрыт по причине ошибк
 crash.outofmemory=Minecraft был закрыт из-за того, что он израсходовал всю выделенную ему память.\nПопробуйте увеличить объем выделяемой памяти при помощи JVM-аргумента "-Xmx".
 crash.old-videocard=Ваша видеокарта не поддерживает версию OpenGL, которая используется в данной версии Minecraft. Последняя версия, которая поддерживается Вашей видеокартой — это 1.7.2.
 crash.invalid-sys-username=Ошибка вызвана тем, что имя текущей учётной записи имеет недопустимые символы, такие как «!», «?» и т.д. В настройках лаунчера в поле «Директория» введите путь к папке, в пути которой нет недопустимых символов.
+crash.old-ati-vdrivers=Ваша система использует устаревшие видеодрайвера, либо сама видеокарта устарела.\nВ любом случае, попробуйте обновить драйвера с официального сайта <a href="http://amd.com/">AMD</a>.\nЕсли не получится, попробуйте установить <a href="http://u.to/pnQsCA">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Изменяйте только если знаете, что делаете.
 settings.restart=Будет применено при следующем запуске.
+settings.tab.minecraft=Настройки Minecraft
+settings.tab.tlauncher=Настройки TLauncher
+settings.tab.about=О программе
 settings.client.gamedir.label=Директория:
 settings.client.gamedir.invalid=Введите директорию Minecraft!
 settings.client.gamedir.noaccess.title=Ошибка при смене директории
@@ -216,8 +220,13 @@ settings.java.path.prompt=Путь к папке "bin" (для Windows: к "java
 settings.java.path.doesnotexist.title=Исполняемый файл не найден!
 settings.java.path.doesnotexist=Введенный Вами путь до исполняемого файла Java некорректен.\nЕсли Вы не знаете, где находится файл "javaw.exe", то просто очистите строчку «Путь Java».
 settings.java.args.label=Аргументы:
-settings.java.args.jvm=JVM-аргументы (напр. -Xmx1G)
+settings.java.args.jvm=JVM-аргументы (напр. -XX:MaxPermSize=256M)
 settings.java.args.minecraft=Minecraft-аргументы (напр. --server 127.0.0.1)
+settings.java.memory.label=Выделение памяти:
+settings.java.memory.mb=Мб
+settings.java.memory.hint.ok=Рекомендуемое значение
+settings.java.memory.hint.warning=Нерекомендуемое значение
+settings.java.memory.hint.danger=Опасное значение!
 settings.slide.list.label=Фоновый рисунок:
 settings.slide.list.prompt=Путь к файлу изображения (JPG, PNG)
 settings.console.label=Консоль разработчика:
@@ -372,3 +381,6 @@ repo.official_version_repo=Официальный источник
 repo.extra_version_repo=Источник TLauncher
 # Boot
 boot.loading=Загрузка TLauncher %0...
+# About page
+about.text=<b>TLauncher</b> — один из лучших альтернативных свободных лаунчеров для Minecraft.<br/><b>Наша миссия</b> — познакомить как можно больше людей с данной игрой. Если Вы с нами, то помогите распространить эту программу для всех желающих!
+about.bottom=Не забудьте подписаться на нас <a href="http://vk.com/tlauncher"><b style="color: #55779b">ВКонтакте</b></a> :)

@@ -1,21 +1,21 @@
 package ru.turikhay.tlauncher.ui.loc;
 
 public class LocalizableHTMLLabel extends LocalizableLabel {
-   private static final long serialVersionUID = 4451490831936280751L;
-
    public LocalizableHTMLLabel(String path, Object... vars) {
       super(path, vars);
    }
 
    public LocalizableHTMLLabel(String path) {
-      super(path);
+      this(path, Localizable.EMPTY_VARS);
    }
 
    public LocalizableHTMLLabel() {
+      this((String)null);
    }
 
    public LocalizableHTMLLabel(int horizontalAlignment) {
-      super(horizontalAlignment);
+      this((String)null);
+      this.setHorizontalAlignment(horizontalAlignment);
    }
 
    public void setText(String path, Object... vars) {

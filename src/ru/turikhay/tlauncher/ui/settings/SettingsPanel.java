@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.settings;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -33,9 +34,9 @@ import ru.turikhay.tlauncher.ui.editor.EditorFileField;
 import ru.turikhay.tlauncher.ui.editor.EditorGroupHandler;
 import ru.turikhay.tlauncher.ui.editor.EditorHandler;
 import ru.turikhay.tlauncher.ui.editor.EditorPair;
-import ru.turikhay.tlauncher.ui.editor.EditorPanel;
 import ru.turikhay.tlauncher.ui.editor.EditorResolutionField;
 import ru.turikhay.tlauncher.ui.editor.EditorTextField;
+import ru.turikhay.tlauncher.ui.editor.TabbedEditorPanel;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
@@ -47,21 +48,24 @@ import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.OS;
 
-public class SettingsPanel extends EditorPanel implements LoginListener {
-   private static final long serialVersionUID = 3896900830909661270L;
+public class SettingsPanel extends TabbedEditorPanel implements LoginListener {
    private final DefaultScene scene;
-   private final EditorFieldHandler directory;
-   private final EditorFieldHandler resolution;
-   private final EditorFieldHandler fullScreen;
-   private final EditorFieldHandler javaPath;
-   private final EditorFieldHandler javaArgs;
-   private final EditorFieldHandler args;
-   private final EditorFieldHandler slide;
-   private final EditorFieldHandler console;
-   private final EditorFieldHandler connection;
-   private final EditorFieldHandler action;
-   private final EditorFieldHandler lang;
-   private final EditorGroupHandler versionHandler;
+   private final TabbedEditorPanel.EditorPanelTab minecraftTab;
+   public final EditorFieldHandler directory;
+   public final EditorFieldHandler resolution;
+   public final EditorFieldHandler fullscreen;
+   public final EditorFieldHandler javaArgs;
+   public final EditorFieldHandler mcArgs;
+   public final EditorFieldHandler javaPath;
+   public final EditorFieldHandler memory;
+   public final EditorGroupHandler versionHandler;
+   private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
+   public final EditorFieldHandler background;
+   public final EditorFieldHandler console;
+   public final EditorFieldHandler connQuality;
+   public final EditorFieldHandler launchAction;
+   public final EditorFieldHandler locale;
+   public final AboutPage about;
    private final LocalizableButton saveButton;
    private final LocalizableButton defaultButton;
    private final ImageButton homeButton;
@@ -71,6 +75,11 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
    private EditorHandler selectedHandler;
 
    public SettingsPanel(DefaultScene sc) {
+      super(tipTheme, new Insets(5, 10, 10, 10));
+      if (this.tabPane.getExtendedUI() != null) {
+         this.tabPane.getExtendedUI().setTheme(settingsTheme);
+      }
+
       this.scene = sc;
       FocusListener warning = new FocusListener() {
          public void focusGained(FocusEvent e) {
@@ -90,6 +99,7 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
             SettingsPanel.this.setMessage((String)null);
          }
       };
+      this.minecraftTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.minecraft");
       this.directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", new FileExplorer(1, true)), warning);
       this.directory.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
@@ -106,11 +116,11 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
             }
          }
       });
-      this.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{this.directory}));
+      this.minecraftTab.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{this.directory}));
       this.resolution = new EditorFieldHandler("minecraft.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global), restart);
-      this.fullScreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
-      this.add(new EditorPair("settings.client.resolution.label", new EditorHandler[]{this.resolution, this.fullScreen}));
-      this.nextPane();
+      this.fullscreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
+      this.minecraftTab.add(new EditorPair("settings.client.resolution.label", new EditorHandler[]{this.resolution, this.fullscreen}));
+      this.minecraftTab.nextPane();
       ReleaseType[] releaseTypes = ReleaseType.getDefinable();
       EditorFieldHandler[] versions = new EditorFieldHandler[releaseTypes.length];
 
@@ -125,15 +135,13 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
             TLauncher.getInstance().getVersionManager().updateVersionList();
          }
       });
-      this.add(new EditorPair("settings.versions.label", versions));
-      this.nextPane();
+      this.minecraftTab.add(new EditorPair("settings.versions.label", versions));
+      this.minecraftTab.nextPane();
       this.javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
-      this.args = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
-      this.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.args}));
+      this.mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
+      this.minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.mcArgs}));
       final boolean isWindows = OS.WINDOWS.isCurrent();
       this.javaPath = new EditorFieldHandler("minecraft.javadir", new EditorFileField("settings.java.path.prompt", true, new FileExplorer(isWindows ? 0 : 1, true)) {
-         private static final long serialVersionUID = -2220392073262107659L;
-
          public boolean isValueValid() {
             if (this.checkPath()) {
                return true;
@@ -159,18 +167,22 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
             }
          }
       }, warning);
-      this.add(new EditorPair("settings.java.path.label", new EditorHandler[]{this.javaPath}));
-      this.nextPane();
-      this.slide = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, new ImageFileExplorer()));
-      this.slide.addListener(new EditorFieldChangeListener() {
+      this.minecraftTab.add(new EditorPair("settings.java.path.label", new EditorHandler[]{this.javaPath}));
+      this.minecraftTab.nextPane();
+      this.memory = new EditorFieldHandler("minecraft.memory", new SettingsMemorySlider(), warning);
+      this.minecraftTab.add(new EditorPair("settings.java.memory.label", new EditorHandler[]{this.memory}));
+      this.add(this.minecraftTab);
+      this.tlauncherTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.tlauncher");
+      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, new ImageFileExplorer()));
+      this.background.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
                SettingsPanel.this.tlauncher.getFrame().mp.background.SLIDE_BACKGROUND.getThread().asyncRefreshSlide();
             }
          }
       });
-      this.add(new EditorPair("settings.slide.list.label", new EditorHandler[]{this.slide}));
-      this.nextPane();
+      this.tlauncherTab.add(new EditorPair("settings.slide.list.label", new EditorHandler[]{this.background}));
+      this.tlauncherTab.nextPane();
       this.console = new EditorFieldHandler("gui.console", new EditorComboBox(new ConsoleTypeConverter(), Configuration.ConsoleType.values()));
       this.console.addListener(new EditorFieldChangeListener() {
          // $FF: synthetic field
@@ -221,18 +233,18 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
             }
          }
       });
-      this.add(new EditorPair("settings.console.label", new EditorHandler[]{this.console}));
-      this.connection = new EditorFieldHandler("connection", new EditorComboBox(new ConnectionQualityConverter(), Configuration.ConnectionQuality.values()));
-      this.connection.addListener(new EditorFieldChangeListener() {
+      this.tlauncherTab.add(new EditorPair("settings.console.label", new EditorHandler[]{this.console}));
+      this.connQuality = new EditorFieldHandler("connection", new EditorComboBox(new ConnectionQualityConverter(), Configuration.ConnectionQuality.values()));
+      this.connQuality.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             SettingsPanel.this.tlauncher.getDownloader().setConfiguration(SettingsPanel.this.global.getConnectionQuality());
          }
       });
-      this.add(new EditorPair("settings.connection.label", new EditorHandler[]{this.connection}));
-      this.action = new EditorFieldHandler("minecraft.onlaunch", new EditorComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
-      this.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{this.action}));
-      this.lang = new EditorFieldHandler("locale", new EditorComboBox(new LocaleConverter(), this.global.getLocales()));
-      this.lang.addListener(new EditorFieldChangeListener() {
+      this.tlauncherTab.add(new EditorPair("settings.connection.label", new EditorHandler[]{this.connQuality}));
+      this.launchAction = new EditorFieldHandler("minecraft.onlaunch", new EditorComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
+      this.tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{this.launchAction}));
+      this.locale = new EditorFieldHandler("locale", new EditorComboBox(new LocaleConverter(), this.global.getLocales()));
+      this.locale.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldvalue, String newvalue) {
             if (SettingsPanel.this.tlauncher.getFrame() != null) {
                SettingsPanel.this.tlauncher.getFrame().updateLocales();
@@ -240,7 +252,10 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
 
          }
       });
-      this.add(new EditorPair("settings.lang.label", new EditorHandler[]{this.lang}));
+      this.tlauncherTab.add(new EditorPair("settings.lang.label", new EditorHandler[]{this.locale}));
+      this.about = new AboutPage();
+      this.tlauncherTab.add(this.about);
+      this.add(this.tlauncherTab);
       this.saveButton = new LocalizableButton("settings.save");
       this.saveButton.setFont(this.saveButton.getFont().deriveFont(1));
       this.saveButton.addActionListener(new ActionListener() {
@@ -272,7 +287,7 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
       BorderPanel controlPanel = new BorderPanel();
       controlPanel.setCenter(sepPan(new Component[]{this.saveButton, this.defaultButton}));
       controlPanel.setEast(uSepPan(new Component[]{this.homeButton}));
-      this.container.add((Component)controlPanel);
+      this.container.setSouth(controlPanel);
       this.popup = new JPopupMenu();
       this.infoItem = new LocalizableMenuItem("settings.popup.info");
       this.infoItem.setEnabled(false);
@@ -319,6 +334,7 @@ public class SettingsPanel extends EditorPanel implements LoginListener {
             path = handler.getPath();
             String value = this.global.get(path);
             handler.updateValue(value);
+            this.setValid(handler, true);
          } while(!globalUnSaveable && this.global.isSaveable(path));
 
          Blocker.block((Blockable)handler, (Object)"unsaveable");

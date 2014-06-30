@@ -11,6 +11,7 @@ import javax.net.ssl.HttpsURLConnection;
 import ru.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Downloadable {
@@ -275,7 +276,7 @@ public class Downloadable {
          connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
          connection.setRequestProperty("Expires", "0");
          connection.setRequestProperty("Pragma", "no-cache");
-         HttpsURLConnection securedConnection = (HttpsURLConnection)U.getAs(connection, HttpsURLConnection.class);
+         HttpsURLConnection securedConnection = (HttpsURLConnection)Reflect.cast(connection, HttpsURLConnection.class);
          if (securedConnection != null) {
             securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
          }

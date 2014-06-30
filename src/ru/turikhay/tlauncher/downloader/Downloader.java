@@ -306,7 +306,7 @@ public class Downloader extends ExtendedThread {
          listener.onDownloaderFileComplete(this, file);
       }
 
-      if (remaining == 0) {
+      if (remaining < 1) {
          this.onComplete();
       }
 

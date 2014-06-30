@@ -11,27 +11,32 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
+import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
-import ru.turikhay.tlauncher.ui.swing.extended.EditorPane;
-import ru.turikhay.tlauncher.updater.Ad;
+import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
+import ru.turikhay.tlauncher.updater.AdParser;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.U;
 
-public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener {
-   private static final long serialVersionUID = 3310876991994323902L;
+public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
    private static final int MARGIN = 20;
+   private static final float FONT_SIZE = 12.0F;
    private final EditorPane browser;
    private final DefaultScene parent;
    private final Object animationLock = new Object();
    private final int timeFrame = 5;
    private float opacity;
    private boolean shown;
+   private boolean canshow;
+   private AdParser lastAd;
    private String content;
    private int width;
    private int height;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType;
 
    public InfoPanel(DefaultScene parent) {
       super(CenterPanel.tipTheme, new Insets(5, 10, 5, 10));
@@ -56,7 +61,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
          }
       });
       this.parent = parent;
-      this.browser = new EditorPane();
+      this.browser = new EditorPane(this.getFont().deriveFont(12.0F));
       this.add(this.browser);
       this.shown = false;
       this.setVisible(false);
@@ -97,7 +102,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    }
 
    public void show(boolean animate) {
-      if (this.content != null) {
+      if (this.canshow) {
          this.onResize();
          if (!this.shown) {
             synchronized(this.animationLock) {
@@ -184,20 +189,69 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    public void onUpdaterNotFoundUpdate(Updater u) {
    }
 
-   public void onAdFound(Updater u, Ad ad) {
-      int[] size = ad.getSize();
-      StringBuilder content = new StringBuilder();
-      content.append("<table width=\"").append(size[0]).append("\" height=\"").append(size[1]).append("\"><tr><td align=\"center\">");
-      if (ad.getImage() != null) {
-         content.append("<img src=\"").append(ad.getImage().toExternalForm()).append("\" /></td><td align=\"left\">");
-      }
+   public void onAdFound(Updater u, AdParser ad) {
+      this.lastAd = ad;
+      this.updateAd();
+   }
 
-      content.append(ad.getContent()).append("</td></tr></table>");
-      this.content = content.toString();
-      this.setContent(this.content, size[0], size[1]);
+   public void updateLocale() {
+      this.updateAd();
+   }
+
+   private void updateAd() {
+      this.hide();
+      this.canshow = this.prepareAd();
       if (!this.parent.isSettingsShown()) {
          this.show();
       }
 
+   }
+
+   private boolean prepareAd() {
+      if (this.lastAd == null) {
+         return false;
+      } else {
+         String locale = this.parent.getMainPane().getRootFrame().getLauncher().getSettings().getLocale().toString();
+         AdParser.Ad ad = this.lastAd.get(locale);
+         if (ad == null) {
+            return false;
+         } else {
+            StringBuilder builder = new StringBuilder();
+            builder.append("<table width=\"").append(ad.getWidth()).append("\" height=\"").append(ad.getHeight()).append("\"><tr><td align=\"center\" valign=\"center\">");
+            switch($SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType()[ad.getType().ordinal()]) {
+            case 1:
+               if (ad.getImage() != null) {
+                  builder.append("<img src=\"").append(ad.getImage()).append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
+               }
+
+               builder.append(ad.getContent());
+               builder.append("</td></tr></table>");
+               this.content = builder.toString();
+               this.setContent(this.content, ad.getWidth(), ad.getHeight());
+               return true;
+            default:
+               U.log("Unknown ad type:", ad.getType());
+               return false;
+            }
+         }
+      }
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[AdParser.AdType.values().length];
+
+         try {
+            var0[AdParser.AdType.DEFAULT.ordinal()] = 1;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType = var0;
+         return var0;
+      }
    }
 }

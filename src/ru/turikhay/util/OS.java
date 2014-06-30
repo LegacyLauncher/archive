@@ -310,13 +310,16 @@ public enum OS {
       x64,
       UNKNOWN;
 
-      private static final int DEFAULT_MEMORY = 512;
       public static final OS.Arch CURRENT = getCurrent();
       public static final long TOTAL_RAM = getTotalRam();
       public static final long TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
-      public static final int RECOMMENDED_MEMORY = getRecommendedMemory();
+      public static final int MIN_MEMORY = 512;
+      public static final int PREFERRED_MEMORY = getPreferredMemory();
+      public static final int MAX_MEMORY = getMaximumMemory();
       private final String asString = this.toString().substring(1);
       private final int asInt;
+      // $FF: synthetic field
+      private static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
 
       private Arch() {
          int asInt_temp = 0;
@@ -365,8 +368,70 @@ public enum OS {
          }
       }
 
-      private static int getRecommendedMemory() {
-         return 512;
+      private static int getPreferredMemory() {
+         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
+         case 1:
+            if (TOTAL_RAM_MB > 4000L) {
+               return 1024;
+            }
+
+            return 512;
+         case 2:
+            return 1024;
+         default:
+            return 512;
+         }
+      }
+
+      private static int getMaximumMemory() {
+         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
+         case 1:
+            if (TOTAL_RAM_MB > 4000L) {
+               return 1536;
+            }
+
+            return 1024;
+         case 2:
+            if (TOTAL_RAM_MB > 6000L) {
+               return 2048;
+            } else {
+               if (TOTAL_RAM_MB > 3000L) {
+                  return 1536;
+               }
+
+               return 1024;
+            }
+         default:
+            return 512;
+         }
+      }
+
+      // $FF: synthetic method
+      static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch() {
+         int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
+         if (var10000 != null) {
+            return var10000;
+         } else {
+            int[] var0 = new int[values().length];
+
+            try {
+               var0[UNKNOWN.ordinal()] = 3;
+            } catch (NoSuchFieldError var3) {
+            }
+
+            try {
+               var0[x32.ordinal()] = 1;
+            } catch (NoSuchFieldError var2) {
+            }
+
+            try {
+               var0[x64.ordinal()] = 2;
+            } catch (NoSuchFieldError var1) {
+            }
+
+            $SWITCH_TABLE$ru$turikhay$util$OS$Arch = var0;
+            return var0;
+         }
       }
    }
 }

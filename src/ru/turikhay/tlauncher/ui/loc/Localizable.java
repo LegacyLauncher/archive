@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.loc;
 import java.awt.Component;
 import java.awt.Container;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
+import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Localizable {
@@ -62,7 +63,7 @@ public class Localizable {
 
       for(int var3 = 0; var3 < var4; ++var3) {
          Component c = var5[var3];
-         LocalizableComponent asLocalizable = (LocalizableComponent)U.getAs(c, LocalizableComponent.class);
+         LocalizableComponent asLocalizable = (LocalizableComponent)Reflect.cast(c, LocalizableComponent.class);
          if (asLocalizable != null && filter.localize(c)) {
             asLocalizable.updateLocale();
          }

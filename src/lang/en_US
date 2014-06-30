@@ -167,7 +167,7 @@ launcher.warning.incompatible=Selected version is incompatible with your environ
 launcher.warning.incompatible.launcher=Selected version is incompatible with TLauncher but launcher will try to run it.
 # Crashes
 crash.title=Unexpected error occurred!
-crash.unknown=Minecraft has close due to unexpected error. Developer console has been called to help you to solve the problem.\nYou can e-mail me if you really can't solve this.
+crash.unknown=Minecraft has closed due to unexpected error. Developer console has been called to help you to solve the problem.
 crash.store.title=Crash report storage
 crash.store=Do you want to remove the crash report file?
 crash.store.success.title=File has been removed!
@@ -181,9 +181,12 @@ crash.missing-main=Java couldn't run Minecraft because the main class is missing
 crash.permgen-error=Minecraft has closed due to PermGen error. You can do next:\n— Tick «Force update» and then press «Reinstall» to re-download invalid files.\n- Don't use mods and resource packs\n- Turn off the sounds in Minecraft.
 crash.outofmemory=Minecraft has closed due to lack of RAM.\nTry to allocate more memory using JVM argument "-Xmx".
 crash.old-videocard=Your card doesn't support OpenGL version, which is used in this version of Minecraft. The latest version supported by your video card is 1.7.2.
+crash.old-ati-vdrivers=Your system uses an outdated video card driver or the video card itself is old.\nAnyway, try to update the driver from the official <a href="http://amd.com/">AMD</a> website.\nIf this won't work, try to install <a href="http://u.to/pnQsCA">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Change if you know what you do.
 settings.restart=Will be applied after restart.
+settings.tab.minecraft=Minecraft settings
+settings.tab.tlauncher=TLauncher settings
 settings.client.gamedir.label=Directory:
 settings.client.gamedir.invalid=Invalid directory!
 settings.client.gamedir.noaccess.title=Error changing Minecraft directory
@@ -195,7 +198,7 @@ settings.client.resolution.width.invalid=Invalid width!
 settings.client.resolution.height=Height (pix.)
 settings.client.resolution.height.invalid=Invalid height!
 settings.client.resolution.fullscreen=Fullscreen
-settings.versions.label=Versions
+settings.versions.label=Versions:
 settings.versions.snapshot=Show Snapshots
 settings.versions.old_beta=Show Beta
 settings.versions.old_alpha=Show Alpha
@@ -207,8 +210,13 @@ settings.java.path.prompt=A path to "bin" folder (in Windows: to "javaw.exe" fil
 settings.java.path.doesnotexist.title=Cannot find executable file!
 settings.java.path.doesnotexist=Java path you specified is incorrect.\nIf you don't know the location of "javaw.exe" file then empty paramater "Java path".
 settings.java.args.label=Arguments:
-settings.java.args.jvm=JVM arguments (e.g. -Xmx1G)
+settings.java.args.jvm=JVM arguments (e.g. -XX:MaxPermSize=256M)
 settings.java.args.minecraft=Minecraft arguments (e.g. --server 127.0.0.1)
+settings.java.memory.label=Memory allocation:
+settings.java.memory.mb=MB
+settings.java.memory.hint.ok=Recommended value
+settings.java.memory.hint.warning=Deprecated value
+settings.java.memory.hint.danger=Dangerous value!
 settings.slide.list.label=Background image:
 settings.slide.list.prompt=A path to the image (JPG, PNG)
 settings.console.label=Developer console
@@ -358,3 +366,6 @@ explorer.error.rename=Cannot rename this object.
 explorer.error.rename-exists=Cannot rename this file because it dublicates another one.
 # Boot
 boot.loading=Loading TLauncher %0...
+# About page
+about.text=<b>TLauncher</b> — one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
+about.bottom=Stay connected with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)

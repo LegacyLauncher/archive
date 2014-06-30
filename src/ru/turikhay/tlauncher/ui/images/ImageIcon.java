@@ -1,15 +1,20 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import java.awt.AlphaComposite;
 import java.awt.Component;
+import java.awt.Composite;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.ImageObserver;
 import javax.swing.Icon;
+import javax.swing.JLabel;
 
 public class ImageIcon implements Icon {
    private transient Image image;
    private int width;
    private int height;
+   private ImageIcon.DisabledImageIcon disabledInstance;
 
    public ImageIcon(Image image, int width, int height) {
       this.setImage(image, width, height);
@@ -44,5 +49,67 @@ public class ImageIcon implements Icon {
 
    public int getIconHeight() {
       return this.height;
+   }
+
+   public ImageIcon.DisabledImageIcon getDisabledInstance() {
+      if (this.disabledInstance == null) {
+         this.disabledInstance = new ImageIcon.DisabledImageIcon((ImageIcon.DisabledImageIcon)null);
+      }
+
+      return this.disabledInstance;
+   }
+
+   public static ImageIcon setup(JLabel label, ImageIcon icon) {
+      if (label == null) {
+         return null;
+      } else {
+         label.setIcon(icon);
+         if (icon != null) {
+            label.setDisabledIcon(icon.getDisabledInstance());
+         }
+
+         return icon;
+      }
+   }
+
+   public class DisabledImageIcon implements Icon {
+      private float disabledOpacity;
+      private AlphaComposite opacityComposite;
+
+      private DisabledImageIcon() {
+         this.setDisabledOpacity(0.5F);
+      }
+
+      public float getDisabledOpacity() {
+         return this.disabledOpacity;
+      }
+
+      public void setDisabledOpacity(float f) {
+         this.disabledOpacity = f;
+         this.opacityComposite = AlphaComposite.getInstance(3, this.disabledOpacity);
+      }
+
+      public void paintIcon(Component c, Graphics g0, int x, int y) {
+         if (ImageIcon.this.image != null) {
+            Graphics2D g = (Graphics2D)g0;
+            Composite oldComposite = g.getComposite();
+            g.setComposite(this.opacityComposite);
+            g.drawImage(ImageIcon.this.image, x, y, ImageIcon.this.width, ImageIcon.this.height, (ImageObserver)null);
+            g.setComposite(oldComposite);
+         }
+      }
+
+      public int getIconWidth() {
+         return ImageIcon.this.getIconWidth();
+      }
+
+      public int getIconHeight() {
+         return ImageIcon.this.getIconHeight();
+      }
+
+      // $FF: synthetic method
+      DisabledImageIcon(ImageIcon.DisabledImageIcon var2) {
+         this();
+      }
    }
 }

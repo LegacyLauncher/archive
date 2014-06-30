@@ -98,6 +98,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    private File assetsObjectsDir;
    private int[] windowSize;
    private boolean fullScreen;
+   private int ramSize;
    private JavaProcessLauncher launcher;
    private String javaArgs;
    private String programArgs;
@@ -365,32 +366,37 @@ public class MinecraftLauncher implements JavaProcessListener {
                   }
 
                   this.windowSize = this.settings.getWindowSize();
-                  this.fullScreen = this.settings.getBoolean("minecraft.fullscreen");
                   if (this.windowSize[0] < 1) {
                      throw new IllegalArgumentException("Invalid window width!");
                   } else if (this.windowSize[1] < 1) {
                      throw new IllegalArgumentException("Invalid window height!");
                   } else {
-                     Iterator var3 = this.assistants.iterator();
-
-                     while(var3.hasNext()) {
-                        MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant)var3.next();
-                        assistant.collectInfo();
-                     }
-
-                     this.log("Checking conditions...");
-                     if (this.version.getMinimumCustomLauncherVersion() > 6) {
-                        throw new MinecraftException("Alternative launcher is incompatible with launching version!", "incompatible", new Object[0]);
+                     this.fullScreen = this.settings.getBoolean("minecraft.fullscreen");
+                     this.ramSize = this.settings.getInteger("minecraft.memory");
+                     if (this.ramSize < 512) {
+                        throw new IllegalArgumentException("Invalid RAM size!");
                      } else {
-                        if (this.version.getMinimumCustomLauncherVersion() == 0 && this.version.getMinimumLauncherVersion() > 14) {
-                           Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.launcher");
+                        Iterator var3 = this.assistants.iterator();
+
+                        while(var3.hasNext()) {
+                           MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant)var3.next();
+                           assistant.collectInfo();
                         }
 
-                        if (!this.version.appliesToCurrentEnvironment()) {
-                           Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.environment");
-                        }
+                        this.log("Checking conditions...");
+                        if (this.version.getMinimumCustomLauncherVersion() > 6) {
+                           throw new MinecraftException("Alternative launcher is incompatible with launching version!", "incompatible", new Object[0]);
+                        } else {
+                           if (this.version.getMinimumCustomLauncherVersion() == 0 && this.version.getMinimumLauncherVersion() > 14) {
+                              Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.launcher");
+                           }
 
-                        this.downloadResources();
+                           if (!this.version.appliesToCurrentEnvironment()) {
+                              Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.environment");
+                           }
+
+                           this.downloadResources();
+                        }
                      }
                   }
                }
@@ -572,7 +578,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          }
       }
 
-      this.launcher.addCommand("-Xmx" + OS.Arch.RECOMMENDED_MEMORY + "M");
+      this.launcher.addCommand("-Xmx" + this.ramSize + "M");
       this.launcher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
       this.launcher.addCommand("-cp", this.constructClassPath(this.version));
       if (this.javaArgs != null) {

@@ -182,9 +182,12 @@ crash.missing-main=Java не змогла запустити Minecraft, оскі
 crash.permgen-error=Minecraft був закритий унаслідок помилки виділення пам'яті в Java. Можливі рішення:\n- Натисніть галочку "Оновити клієнт» і натисніть «Переустановити». Таким чином Ви даєте Лаунчер шанс виявити пошкоджені файли і завантажити їх заново.\n- Видаліть моди і ресурс-паки.\n- Можете відключити звук в настройках самого Minecraft. Ви будете грати без звуку, зате без вильотів.
 crash.outofmemory=Minecraft був закритий через те, що він витратив всю виділену йому пам'ять.\nПопробуйте збільшити обсяг виділеної пам'яті за допомогою JVM-аргументу "-Xmx".
 crash.old-videocard=Ваша відеокарта не підтримує версію OpenGL, яка використовується в даній версії Minecraft. Остання версія, яка підтримується Вашої відкритий - це 1.7.2.
+crash.old-ati-vdrivers=Ваша система використовує застарілі відеодрайвера, або сама відеокарта застаріла.\пВ будь-якому випадку, спробуйте оновити драйвера з офіційного сайту <a href="http://amd.com/">AMD</a>.\nЕсли не вийде, спробуйте встановити <a href="http://u.to/pnQsCA">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Змінюйте тільки якщо знаєте, що робите.
 settings.restart=Буде застосовано під час наступного запуску.
+settings.tab.minecraft=Налаштування Minecraft
+settings.tab.tlauncher=Налаштування TLauncher
 settings.client.gamedir.label=Директорія:
 settings.client.gamedir.invalid=Введіть директорію Minecraft!
 settings.client.gamedir.noaccess=Немає доступу до введеної директорії Minecraft!
@@ -207,8 +210,13 @@ settings.java.path.prompt=Шлях до папки "bin" (для Windows: до "
 settings.java.path.doesnotexist.title=Виконуваний файл не знайдено! 
 settings.java.path.doesnotexist=Введена Вами шлях до виконуваного файлу Java некоректний.\nЯкщо ви не знаєте, де знаходиться файл "javaw.exe", то просто очистіть рядок «Шлях Java».
 settings.java.args.label=Аргументи:
-settings.java.args.jvm=JVM-аргументи (напр. -Xmx1G)
+settings.java.args.jvm=JVM-аргументи (напр. -XX:MaxPermSize=256M)
 settings.java.args.minecraft=Minecraft-аргументи (напр. --server 127.0.0.1)
+settings.java.memory.label=Виділення пам'яті:
+settings.java.memory.mb=Мб
+settings.java.memory.hint.ok=Рекомендоване значення
+settings.java.memory.hint.warning=Нерекомендуемое значення
+settings.java.memory.hint.danger=Небезпечне значення!
 settings.slide.list.label=Задній план:
 settings.slide.list.prompt=Шлях до файлу зображення (JPG, PNG)
 settings.console.label=Консоль розробника:
@@ -356,3 +364,7 @@ explorer.error.rename=Неможливо перейменувати файл.
 explorer.error.rename-exists=Неможливо перейменувати файл, так як файл з таким ім'ям вже існує.
 # Boot
 boot.loading=Завантаження TLauncher %0...
+ 	
+# About page
+about.text=<b>TLauncher</b> - один з кращих альтернативних вільних лаунчер для Minecraft.<br/><b>Наша місія</b> - ознайомити якомога більше людей з даною грою. Якщо Ви з нами, то допоможіть поширити цю програму для всіх бажаючих!
+about.bottom=Не забудьте підписатися на нас <a href="http://vk.com/tlauncher"><b style="color: #55779b">ВКонтакті</b></a> :)

@@ -2,9 +2,9 @@ package ru.turikhay.tlauncher.ui.background.slide;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URL;
 import javax.imageio.ImageIO;
+import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Slide {
@@ -27,7 +27,7 @@ public class Slide {
       if (o == null) {
          return false;
       } else {
-         Slide slide = (Slide)U.getAs(o, Slide.class);
+         Slide slide = (Slide)Reflect.cast(o, Slide.class);
          return slide == null ? false : this.url.equals(slide.url);
       }
    }
@@ -54,7 +54,7 @@ public class Slide {
 
       try {
          tempImage = ImageIO.read(this.url);
-      } catch (IOException var3) {
+      } catch (Throwable var3) {
          this.log("Cannot load slide!", var3);
          return;
       }
