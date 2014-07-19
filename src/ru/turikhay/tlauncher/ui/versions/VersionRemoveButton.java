@@ -3,9 +3,10 @@ package ru.turikhay.tlauncher.ui.versions;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
 import javax.swing.JPopupMenu;
+
 import net.minecraft.launcher.updater.LocalVersionList;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.managers.VersionManager;
@@ -17,113 +18,130 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class VersionRemoveButton extends ImageButton implements VersionHandlerListener, Blockable {
-   private static final long serialVersionUID = 427368162418879141L;
-   private static final String ILLEGAL_SELECTION_BLOCK = "illegal-selection";
-   private static final String PREFIX = "version.manager.delete.";
-   private static final String ERROR = "version.manager.delete.error.";
-   private static final String ERROR_TITLE = "version.manager.delete.error.title";
-   private static final String MENU = "version.manager.delete.menu.";
-   private final VersionHandler handler;
-   private final JPopupMenu menu;
-   private final LocalizableMenuItem onlyJar;
-   private final LocalizableMenuItem withLibraries;
-   private boolean libraries;
+	private static final long serialVersionUID = 427368162418879141L;
 
-   VersionRemoveButton(VersionList list) {
-      super("remove.png");
-      this.handler = list.handler;
-      this.handler.addListener(this);
-      this.menu = new JPopupMenu();
-      this.onlyJar = new LocalizableMenuItem("version.manager.delete.menu.jar");
-      this.onlyJar.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionRemoveButton.this.onChosen(false);
-         }
-      });
-      this.menu.add(this.onlyJar);
-      this.withLibraries = new LocalizableMenuItem("version.manager.delete.menu.libraries");
-      this.withLibraries.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionRemoveButton.this.onChosen(true);
-         }
-      });
-      this.menu.add(this.withLibraries);
-      this.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionRemoveButton.this.onPressed();
-         }
-      });
-   }
+	private static final String
+	ILLEGAL_SELECTION_BLOCK = "illegal-selection",
 
-   void onPressed() {
-      this.menu.show(this, 0, this.getHeight());
-   }
+	PREFIX = "version.manager.delete.",
 
-   void onChosen(boolean removeLibraries) {
-      this.libraries = removeLibraries;
-      this.handler.thread.deleteThread.iterate();
-   }
+	ERROR = PREFIX + "error.",
+	ERROR_TITLE = ERROR + "title",
 
-   void delete() {
-      if (this.handler.selected != null) {
-         LocalVersionList localList = this.handler.vm.getLocalList();
-         List errors = new ArrayList();
-         Iterator var4 = this.handler.selected.iterator();
+	MENU = PREFIX + "menu.";
 
-         while(var4.hasNext()) {
-            VersionSyncInfo version = (VersionSyncInfo)var4.next();
-            if (version.isInstalled()) {
-               try {
-                  localList.deleteVersion(version.getID(), this.libraries);
-               } catch (Throwable var6) {
-                  errors.add(var6);
-               }
-            }
-         }
+	private final VersionHandler handler;
 
-         if (!errors.isEmpty()) {
-            String title = Localizable.get("version.manager.delete.error.title");
-            String message = Localizable.get("version.manager.delete.error." + (errors.size() == 1 ? "single" : "multiply"), errors);
-            Alert.showError(title, message);
-         }
-      }
+	private final JPopupMenu menu;
+	private final LocalizableMenuItem onlyJar, withLibraries;
 
-      this.handler.refresh();
-   }
+	private boolean libraries;
 
-   public void onVersionRefreshing(VersionManager vm) {
-   }
+	VersionRemoveButton(VersionList list) {
+		super("remove.png");
 
-   public void onVersionRefreshed(VersionManager vm) {
-   }
+		this.handler = list.handler;
+		handler.addListener(this);
 
-   public void onVersionSelected(List versions) {
-      boolean onlyRemote = true;
-      Iterator var4 = versions.iterator();
+		this.menu = new JPopupMenu();
 
-      while(var4.hasNext()) {
-         VersionSyncInfo version = (VersionSyncInfo)var4.next();
-         if (version.isInstalled()) {
-            onlyRemote = false;
-            break;
-         }
-      }
+		this.onlyJar = new LocalizableMenuItem(MENU + "jar");
+		onlyJar.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onChosen(false);
+			}
+		});
+		menu.add(onlyJar);
 
-      Blocker.setBlocked(this, "illegal-selection", onlyRemote);
-   }
+		this.withLibraries = new LocalizableMenuItem(MENU + "libraries");
+		withLibraries.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onChosen(true);
+			}
+		});
+		menu.add(withLibraries);
 
-   public void onVersionDeselected() {
-      Blocker.block((Blockable)this, (Object)"illegal-selection");
-   }
+		this.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onPressed();
+			}
+		});
+	}
 
-   public void onVersionDownload(List list) {
-   }
+	void onPressed() {
+		menu.show(this, 0, getHeight());
+	}
 
-   public void block(Object reason) {
-      this.setEnabled(false);
-   }
+	void onChosen(boolean removeLibraries) {
+		this.libraries = removeLibraries;
+		handler.thread.deleteThread.iterate();
+	}
 
-   public void unblock(Object reason) {
-      this.setEnabled(true);
-   }
+	void delete() {
+		if(handler.selected != null) {
+			LocalVersionList localList = handler.vm.getLocalList();
+			List<Throwable> errors = new ArrayList<Throwable>();
+
+			for(VersionSyncInfo version : handler.selected)
+				if(version.isInstalled())
+					try {
+						localList.deleteVersion(version.getID(), libraries);
+					} catch (Throwable e) {
+						errors.add(e);
+					}
+
+			if(!errors.isEmpty()) {
+				String title = Localizable.get(ERROR_TITLE);
+				String message = Localizable.get(ERROR + (errors.size() == 1? "single" : "multiply"), errors);
+
+				Alert.showError(title, message);
+			}
+		}
+
+		handler.refresh();
+	}
+
+	@Override
+	public void onVersionRefreshing(VersionManager vm) {
+	}
+
+	@Override
+	public void onVersionRefreshed(VersionManager vm) {
+	}
+
+	@Override
+	public void onVersionSelected(List<VersionSyncInfo> versions) {
+		boolean onlyRemote = true;
+
+		for(VersionSyncInfo version : versions)
+			if(version.isInstalled()) {
+				onlyRemote = false;
+				break;
+			}
+
+		Blocker.setBlocked(this, ILLEGAL_SELECTION_BLOCK, onlyRemote);
+	}
+
+	@Override
+	public void onVersionDeselected() {
+		Blocker.block(this, ILLEGAL_SELECTION_BLOCK);
+	}
+
+	@Override
+	public void onVersionDownload(List<VersionSyncInfo> list) {
+	}
+
+	@Override
+	public void block(Object reason) {
+		this.setEnabled(false);
+	}
+
+	@Override
+	public void unblock(Object reason) {
+		this.setEnabled(true);
+	}
+
 }

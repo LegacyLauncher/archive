@@ -2,8 +2,8 @@ package ru.turikhay.tlauncher.updater;
 
 import java.net.URL;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
+
 import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.ui.images.ImageCache;
@@ -12,278 +12,298 @@ import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class AdParser {
-   public static final int SIZE_ARR_LENGTH = 2;
-   private static final char KEY_DELIMITER = '.';
-   private static final char VALUE_DELIMITER = '|';
-   private static final char ESCAPE = '\\';
-   private static final char SIZE_DELIMITER = 'x';
-   private static final String AD_PREFIX = "ad.";
-   private static final String BASE64_IND = "data:image";
-   private static final String COPY_IND = "copy:";
-   private final Map ads;
+	public static final int SIZE_ARR_LENGTH = 2;
 
-   private AdParser() {
-      this.ads = new Hashtable();
-   }
+	private static final char
+	KEY_DELIMITER = '.', VALUE_DELIMITER = '|', ESCAPE = '\\', SIZE_DELIMITER = 'x';
+	private static final String
+	AD_PREFIX = "ad" + KEY_DELIMITER, BASE64_IND = "data:image", COPY_IND = "copy:";
 
-   private AdParser(SimpleConfiguration c) throws RuntimeException {
-      this();
-      if (c == null) {
-         throw new NullPointerException("configuration");
-      } else {
-         Iterator var3 = c.getKeys().iterator();
+	private final Map<String, Ad> ads;
 
-         while(true) {
-            String key;
-            do {
-               if (!var3.hasNext()) {
-                  var3 = this.ads.values().iterator();
+	private AdParser() {
+		this.ads = new Hashtable<String, Ad>();
+	}
 
-                  while(var3.hasNext()) {
-                     AdParser.Ad ad = (AdParser.Ad)var3.next();
+	private AdParser(SimpleConfiguration c) throws RuntimeException {
+		this();
 
-                     String imageCopy;
-                     try {
-                        imageCopy = needCopy(ad.getImage());
-                     } catch (RuntimeException var6) {
-                        continue;
-                     }
+		if(c == null)
+			throw new NullPointerException("configuration");
 
-                     if (imageCopy != null) {
-                        AdParser.Ad copyAd = (AdParser.Ad)this.ads.get(imageCopy);
-                        if (copyAd == null) {
-                           log("Cannot find copy ad indicated by image in", ad);
-                        } else {
-                           ad.setImage(copyAd.getImage());
-                        }
-                     }
-                  }
+		for(String key : c.getKeys()) {
+			if(!key.startsWith(AD_PREFIX)) continue;
 
-                  return;
-               }
+			Ad ad;
 
-               key = (String)var3.next();
-            } while(!key.startsWith("ad."));
+			try {
+				ad = parsePair(key, c.get(key));
+			}catch(RuntimeException re) {
+				log("Error parsing key:", key, re);
+				continue;
+			}
 
-            AdParser.Ad ad;
-            try {
-               ad = this.parsePair(key, c.get(key));
-            } catch (RuntimeException var7) {
-               log("Error parsing key:", key, var7);
-               continue;
-            }
+			if(ad == null)
+				throw new RuntimeException("Well... what the...? ("+ key +")");
 
-            if (ad == null) {
-               throw new RuntimeException("Well... what the...? (" + key + ")");
-            }
+			ads.put(ad.getLocale(), ad);
+		}
 
-            this.ads.put(ad.getLocale(), ad);
-         }
-      }
-   }
+		for(Ad ad : ads.values()) {
+			String imageCopy;
 
-   public AdParser.Ad get(String locale) {
-      return (AdParser.Ad)this.ads.get(locale);
-   }
+			try { imageCopy = needCopy(ad.getImage()); }
+			catch(RuntimeException re) {
+				// log("Error parsing image copy indicator for", ad, re);
+				continue;
+			}
 
-   private AdParser.Ad parsePair(String key, String value) throws RuntimeException {
-      String parsing = key.substring("ad.".length());
-      if (parsing.isEmpty()) {
-         throw new IllegalArgumentException("cannot determine locale");
-      } else {
-         String locale = seek(parsing, 0, '.');
-         String tempType = seek(value, 0);
+			if(imageCopy != null) {
+				Ad copyAd = ads.get(imageCopy);
 
-         AdParser.AdType type;
-         try {
-            type = (AdParser.AdType)Reflect.parseEnum0(AdParser.AdType.class, tempType);
-         } catch (ParseException var15) {
-            type = null;
-         }
+				if(copyAd == null)
+					log("Cannot find copy ad indicated by image in", ad);				
+				else
+					ad.setImage(copyAd.getImage());
+			}
+		}
+	}
 
-         int caret = tempType.length();
-         String content;
-         if (type == null) {
-            content = tempType;
-            type = AdParser.AdType.DEFAULT;
-         } else {
-            content = seek(value, caret);
-            caret += content.length();
-         }
+	public Ad get(String locale) {
+		return ads.get(locale);
+	}
 
-         ++caret;
-         String tempSize = seek(value, caret);
+	private Ad parsePair(String key, String value) throws RuntimeException {
+		String parsing = key.substring(AD_PREFIX.length());
 
-         IntegerArray sizeArray;
-         try {
-            sizeArray = IntegerArray.parseIntegerArray(tempSize, 'x');
-         } catch (RuntimeException var14) {
-            throw new ParseException("Cannot parse size: \"" + tempSize + "\"", var14);
-         }
+		if(parsing.isEmpty())
+			throw new IllegalArgumentException("cannot determine locale");
 
-         if (sizeArray.size() != 2) {
-            throw new IllegalArgumentException("illegal size array length");
-         } else {
-            int[] size = sizeArray.toArray();
-            caret += tempSize.length();
-            ++caret;
-            String tempImage = seek(value, caret);
-            String image = tempImage.isEmpty() ? null : parseImage(tempImage);
-            return new AdParser.Ad(locale, type, content, size, image, (AdParser.Ad)null);
-         }
-      }
-   }
+		// Parsing locale
+		String locale = seek(parsing, 0, KEY_DELIMITER);
 
-   public String toString() {
-      StringBuilder builder = new StringBuilder();
-      builder.append(this.getClass().getSimpleName()).append("{ads=").append(U.toLog(this.ads)).append('}');
-      return builder.toString();
-   }
+		// Parsing type
+		String tempType = seek(value, 0);
+		AdType type;
 
-   private static String seek(String parsing, int caret, char delimiter) {
-      StringBuilder builder = new StringBuilder();
+		try {
+			type = Reflect.parseEnum0(AdType.class, tempType);
+		}catch(ParseException pe) {
+			type = null;
+		}
 
-      char c;
-      for(char lastchar = 0; caret < parsing.length(); lastchar = c) {
-         c = parsing.charAt(caret);
-         ++caret;
-         if (c == delimiter && lastchar != '\\') {
-            break;
-         }
+		int caret = tempType.length();
 
-         builder.append(c);
-      }
+		// Preparing content string
+		String content;
 
-      return builder.toString();
-   }
+		if(type == null) {// cannot parse type: count it as content
+			content = tempType;
+			type = AdType.DEFAULT;
+		} else {
+			// Parsing content
+			content = seek(value, caret);
+			caret += content.length();
+		}
 
-   private static String seek(String parsing, int caret) {
-      return seek(parsing, caret, '|');
-   }
+		// Parsing size
+		String tempSize = seek(value, ++caret);
+		IntegerArray sizeArray;
 
-   private static String needCopy(String value) {
-      if (value.startsWith("copy:")) {
-         String valueKey = value.substring("copy:".length());
-         if (valueKey.isEmpty()) {
-            throw new IllegalArgumentException("copy key is null");
-         } else {
-            return valueKey;
-         }
-      } else {
-         return null;
-      }
-   }
+		try { sizeArray = IntegerArray.parseIntegerArray(tempSize, SIZE_DELIMITER); }
+		catch(RuntimeException e) {
+			throw new ParseException("Cannot parse size: \""+ tempSize +"\"", e);
+		}
 
-   static AdParser parseFrom(SimpleConfiguration configuration) {
-      try {
-         return new AdParser(configuration);
-      } catch (RuntimeException var2) {
-         U.log(var2);
-         return null;
-      }
-   }
+		if(sizeArray.size() != SIZE_ARR_LENGTH)
+			throw new IllegalArgumentException("illegal size array length");
 
-   static String parseImage(String image) {
-      if (image == null) {
-         return null;
-      } else if (!image.startsWith("data:image") && !image.startsWith("copy:")) {
-         URL url = ImageCache.getRes(image);
-         return url == null ? null : url.toString();
-      } else {
-         return image;
-      }
-   }
+		int[] size = sizeArray.toArray();
 
-   private static void log(Object... o) {
-      U.log("[AdParser]", o);
-   }
+		caret += tempSize.length();
 
-   public class Ad {
-      private final String locale;
-      private final AdParser.AdType type;
-      private final String content;
-      private final int[] size;
-      private String image;
+		// Parsing image
+		String tempImage = seek(value, ++caret);
+		String image = tempImage.isEmpty()? null : parseImage(tempImage);
 
-      private Ad(String locale, AdParser.AdType type, String content, int[] size, String image) {
-         if (locale == null) {
-            throw new NullPointerException("locale");
-         } else if (locale.isEmpty()) {
-            throw new IllegalArgumentException("locale is empty");
-         } else if (type == null) {
-            throw new NullPointerException("type");
-         } else if (content == null) {
-            throw new NullPointerException("content");
-         } else if (content.isEmpty()) {
-            throw new IllegalArgumentException("content is empty");
-         } else if (size == null) {
-            throw new NullPointerException("size");
-         } else if (size.length != 2) {
-            throw new IllegalArgumentException("size array has illegal length:" + size.length + " (instead of " + 2 + ")");
-         } else {
-            this.locale = locale;
-            this.type = type;
-            this.content = content;
-            this.size = size;
-            this.image = image;
-         }
-      }
+		return new Ad(locale, type, content, size, image);
+	}
 
-      public String getLocale() {
-         return this.locale;
-      }
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
 
-      public AdParser.AdType getType() {
-         return this.type;
-      }
+		builder
+		.append(getClass().getSimpleName())
+		.append("{ads=")
+		.append(U.toLog(ads))
+		.append('}');
 
-      public String getContent() {
-         return this.content;
-      }
+		return builder.toString();
+	}
 
-      public String getImage() {
-         return this.image;
-      }
+	private static String seek(String parsing, int caret, char delimiter) {
+		StringBuilder builder = new StringBuilder();
 
-      void setImage(String image) {
-         this.image = image;
-      }
+		char lastchar = '\0';
+		char c;
 
-      public int getWidth() {
-         return this.size[0];
-      }
+		while(caret < parsing.length()) {
+			c = parsing.charAt(caret);
+			++caret;
 
-      public int getHeight() {
-         return this.size[1];
-      }
+			if(c == delimiter && lastchar != ESCAPE)
+				break;
 
-      public String toString() {
-         StringBuilder builder = new StringBuilder();
-         builder.append(this.getClass().getSimpleName()).append("{").append("locale=").append(this.locale).append(';').append("type=").append(this.type).append(';').append("size=").append(this.size[0]).append('x').append(this.size[1]).append(';').append("content=\"");
-         if (this.content.length() < 50) {
-            builder.append(this.content);
-         } else {
-            builder.append(this.content.substring(0, 46)).append("...");
-         }
+			builder.append(c);
+			lastchar = c;
+		}
 
-         builder.append("\";").append("image=");
-         if (this.image != null && this.image.length() > 24) {
-            builder.append(this.image.substring(0, 22)).append("...");
-         } else {
-            builder.append(this.image);
-         }
+		return builder.toString();
+	}
 
-         builder.append('}');
-         return builder.toString();
-      }
+	private static String seek(String parsing, int caret) {
+		return seek(parsing, caret, VALUE_DELIMITER);
+	}
 
-      // $FF: synthetic method
-      Ad(String var2, AdParser.AdType var3, String var4, int[] var5, String var6, AdParser.Ad var7) {
-         this(var2, var3, var4, var5, var6);
-      }
-   }
+	private static String needCopy(String value) {
+		if(value.startsWith(COPY_IND)) {
+			String valueKey = value.substring(COPY_IND.length());
 
-   public static enum AdType {
-      DEFAULT;
-   }
+			if(valueKey.isEmpty())
+				throw new IllegalArgumentException("copy key is null");
+
+			return valueKey;
+		}
+		return null;
+	}
+
+	public class Ad {
+		private final String locale;
+
+		private final AdType type;
+		private final String content;
+		private final int[] size;
+
+		private String image;
+
+		private Ad(String locale, AdType type, String content, int[] size, String image) {
+			if(locale == null)
+				throw new NullPointerException("locale");
+
+			if(locale.isEmpty())
+				throw new IllegalArgumentException("locale is empty");
+
+			if(type == null)
+				throw new NullPointerException("type");
+
+			if(content == null)
+				throw new NullPointerException("content");
+
+			if(content.isEmpty())
+				throw new IllegalArgumentException("content is empty");
+
+			if(size == null)
+				throw new NullPointerException("size");
+
+			if(size.length != SIZE_ARR_LENGTH)
+				throw new IllegalArgumentException("size array has illegal length:"+ size.length +" (instead of "+ SIZE_ARR_LENGTH +")");
+
+			this.locale = locale;
+			this.type = type;
+			this.content = content;
+			this.size = size;
+
+			this.image = image;
+		}
+
+		public String getLocale() {
+			return locale;
+		}
+
+		public AdType getType() {
+			return type;
+		}
+
+		public String getContent() {
+			return content;
+		}
+
+		public String getImage() {
+			return image;
+		}
+
+		void setImage(String image) {
+			this.image = image;
+		}
+
+		public int getWidth() {
+			return size[0];
+		}
+
+		public int getHeight() {
+			return size[1];
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+
+			builder
+			.append(getClass().getSimpleName())
+			.append("{")
+			.append("locale=").append(locale).append(';')
+			.append("type=").append(type).append(';')
+			.append("size=").append(size[0]).append(SIZE_DELIMITER).append(size[1]).append(';')
+			.append("content=\"");
+
+			if(content.length() < 50)
+				builder.append(content);
+			else
+				builder
+				.append(content.substring(0, 46))
+				.append("...");
+
+			builder
+			.append("\";")
+			.append("image=");
+
+			if(image != null && image.length() > 24)
+				builder
+				.append(image.substring(0, 22))
+				.append("...");
+			else
+				builder.append(image);
+
+			builder.append('}');
+
+			return builder.toString();
+		}
+	}
+
+	public enum AdType {
+		DEFAULT;
+	}
+
+	static AdParser parseFrom(SimpleConfiguration configuration) {
+		try {
+			return new AdParser(configuration);
+		} catch (RuntimeException e) {
+			U.log(e);
+			return null;
+		}
+	}
+
+	static String parseImage(String image) {
+		if(image == null)
+			return null;
+
+		if(image.startsWith(BASE64_IND) || image.startsWith(COPY_IND))
+			return image;
+
+		URL url = ImageCache.getRes(image);
+		return url == null? null : url.toString();
+	}
+
+	private static void log(Object... o) { U.log("[AdParser]", o); }
 }

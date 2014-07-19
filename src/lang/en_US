@@ -19,7 +19,7 @@ loginform.button.settings=Settings
 loginform.button.visit=Visit our site
 loginform.button.settings.account=Account manager
 loginform.button.settings.version=Version manager
-loginform.button.settings.launcher=Launcher settings
+loginform.button.settings.launcher=Settings
 # Account
 account.username=User name
 account.email=E-mail
@@ -368,4 +368,4 @@ explorer.error.rename-exists=Cannot rename this file because it dublicates anoth
 boot.loading=Loading TLauncher %0...
 # About page
 about.text=<b>TLauncher</b> — one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
-about.bottom=Stay connected with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)
+about.bottom=Stay in touch with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)

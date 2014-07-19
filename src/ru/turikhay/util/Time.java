@@ -4,32 +4,33 @@ import java.util.Hashtable;
 import java.util.Map;
 
 public class Time {
-   private static Map timers = new Hashtable();
+	private static Map<Object, Long> timers = new Hashtable<Object, Long>();
 
-   public static void start(Object holder) {
-      if (timers.containsKey(holder)) {
-         throw new IllegalArgumentException("This holder (" + holder.toString() + ") is already in use!");
-      } else {
-         timers.put(holder, System.currentTimeMillis());
-      }
-   }
+	public static void start(Object holder) {
+		if (timers.containsKey(holder))
+			throw new IllegalArgumentException("This holder ("
+					+ holder.toString() + ") is already in use!");
 
-   public static long stop(Object holder) {
-      long current = System.currentTimeMillis();
-      Long l = (Long)timers.get(holder);
-      if (l == null) {
-         return 0L;
-      } else {
-         timers.remove(holder);
-         return current - l;
-      }
-   }
+		timers.put(holder, System.currentTimeMillis());
+	}
 
-   public static void start() {
-      start(Thread.currentThread());
-   }
+	public static long stop(Object holder) {
+		long current = System.currentTimeMillis();
 
-   public static long stop() {
-      return stop(Thread.currentThread());
-   }
+		Long l = timers.get(holder);
+
+		if (l == null)
+			return 0;
+
+		timers.remove(holder);
+		return current - l;
+	}
+
+	public static void start() {
+		start(Thread.currentThread());
+	}
+
+	public static long stop() {
+		return stop(Thread.currentThread());
+	}
 }

@@ -1,49 +1,55 @@
 package ru.turikhay.tlauncher.ui.loc;
 
 import java.awt.event.ItemListener;
+
 import javax.swing.JRadioButton;
 
-public class LocalizableRadioButton extends JRadioButton implements LocalizableComponent {
-   private static final long serialVersionUID = 1L;
-   private String path;
+public class LocalizableRadioButton extends JRadioButton implements
+		LocalizableComponent {
+	private static final long serialVersionUID = 1L;
 
-   public LocalizableRadioButton() {
-      this.init();
-   }
+	private String path;
 
-   public LocalizableRadioButton(String path) {
-      this.init();
-      this.setLabel(path);
-   }
+	public LocalizableRadioButton() {
+		init();
+	}
 
-   /** @deprecated */
-   @Deprecated
-   public void setLabel(String path) {
-      this.setText(path);
-   }
+	public LocalizableRadioButton(String path) {
+		init();
+		this.setLabel(path);
+	}
 
-   public void setText(String path) {
-      this.path = path;
-      super.setText(Localizable.get() == null ? path : Localizable.get().get(path));
-   }
+	@Override
+	@Deprecated
+	public void setLabel(String path) {
+		this.setText(path);
+	}
 
-   public String getLangPath() {
-      return this.path;
-   }
+	@Override
+	public void setText(String path) {
+		this.path = path;
+		super.setText((Localizable.get() == null) ? path : Localizable.get()
+				.get(path));
+	}
 
-   public void addListener(ItemListener l) {
-      super.getModel().addItemListener(l);
-   }
+	public String getLangPath() {
+		return path;
+	}
 
-   public void removeListener(ItemListener l) {
-      super.getModel().removeItemListener(l);
-   }
+	public void addListener(ItemListener l) {
+		super.getModel().addItemListener(l);
+	}
 
-   public void updateLocale() {
-      this.setLabel(this.path);
-   }
+	public void removeListener(ItemListener l) {
+		super.getModel().removeItemListener(l);
+	}
 
-   private void init() {
-      this.setOpaque(false);
-   }
+	@Override
+	public void updateLocale() {
+		this.setLabel(path);
+	}
+
+	private void init() {
+		this.setOpaque(false);
+	}
 }

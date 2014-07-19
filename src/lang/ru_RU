@@ -20,7 +20,7 @@ loginform.button.settings=Настройки
 loginform.button.visit=Посетить наш сайт
 loginform.button.settings.account=Менеджер аккаунтов
 loginform.button.settings.version=Управление версиями
-loginform.button.settings.launcher=Настройки лаунчера
+loginform.button.settings.launcher=Настройки
 # Account
 account.username=Имя пользователя
 account.email=Электронная почта

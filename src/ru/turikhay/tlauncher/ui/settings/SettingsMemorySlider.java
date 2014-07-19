@@ -5,9 +5,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.JSlider;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.editor.EditorField;
 import ru.turikhay.tlauncher.ui.editor.EditorIntegerField;
@@ -20,182 +22,174 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
 
 public class SettingsMemorySlider extends BorderPanel implements EditorField {
-   private final JSlider slider = new JSlider();
-   private final EditorIntegerField inputField;
-   private final LocalizableLabel mb;
-   private final LocalizableLabel hint;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
 
-   SettingsMemorySlider() {
-      this.slider.setOpaque(false);
-      this.slider.setMinimum(512);
-      this.slider.setMaximum(OS.Arch.MAX_MEMORY);
-      this.slider.setMinorTickSpacing(OS.Arch.x64.isCurrent() ? 256 : 128);
-      this.slider.setMajorTickSpacing(512);
-      this.slider.setSnapToTicks(true);
-      this.slider.setPaintLabels(true);
-      this.slider.setPaintTicks(true);
-      this.slider.addMouseListener(new MouseAdapter() {
-         public void mouseReleased(MouseEvent e) {
-            SettingsMemorySlider.this.requestFocusInWindow();
-         }
-      });
-      this.setCenter(this.slider);
-      this.inputField = new EditorIntegerField();
-      this.inputField.setColumns(5);
-      this.mb = new LocalizableLabel("settings.java.memory.mb");
-      ExtendedPanel panel = new ExtendedPanel();
-      panel.add(this.inputField, this.mb);
-      this.setEast(panel);
-      this.hint = new LocalizableHTMLLabel("");
-      this.setSouth(this.hint);
-      this.slider.addMouseListener(new MouseAdapter() {
-         public void mouseReleased(MouseEvent e) {
-            SettingsMemorySlider.this.onSliderUpdate();
-         }
-      });
-      this.slider.addKeyListener(new KeyAdapter() {
-         public void keyReleased(KeyEvent e) {
-            SettingsMemorySlider.this.onSliderUpdate();
-         }
-      });
-      this.inputField.getDocument().addDocumentListener(new DocumentListener() {
-         public void insertUpdate(DocumentEvent e) {
-            SettingsMemorySlider.this.updateInfo();
-         }
+	private final JSlider slider;
+	private final EditorIntegerField inputField;
+	private final LocalizableLabel mb, hint;
 
-         public void removeUpdate(DocumentEvent e) {
-         }
+	SettingsMemorySlider() {
+		this.slider = new JSlider();
+		slider.setOpaque(false);
 
-         public void changedUpdate(DocumentEvent e) {
-         }
-      });
-   }
+		slider.setMinimum(OS.Arch.MIN_MEMORY);
+		slider.setMaximum(OS.Arch.MAX_MEMORY);
+		slider.setMinorTickSpacing(OS.Arch.x64.isCurrent()? 256 : 128);
+		slider.setMajorTickSpacing(512);
+		slider.setSnapToTicks(true);
+		slider.setPaintLabels(true);
+		slider.setPaintTicks(true);
 
-   public void setBackground(Color color) {
-      if (this.inputField != null) {
-         this.inputField.setBackground(color);
-      }
+		slider.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				requestFocusInWindow();
+			}
+		});
 
-   }
+		setCenter(slider);
 
-   public void block(Object reason) {
-      Blocker.blockComponents(reason, this.slider, this.inputField, this.hint);
-   }
+		this.inputField = new EditorIntegerField();
+		inputField.setColumns(5);
 
-   public void unblock(Object reason) {
-      Blocker.unblockComponents(reason, this.slider, this.inputField, this.hint);
-   }
+		this.mb = new LocalizableLabel("settings.java.memory.mb");
 
-   public String getSettingsValue() {
-      return this.inputField.getValue();
-   }
+		ExtendedPanel panel = new ExtendedPanel();
+		panel.add(inputField, mb);
 
-   public void setSettingsValue(String value) {
-      this.inputField.setValue(value);
-      this.updateInfo();
-   }
+		setEast(panel);
 
-   public boolean isValueValid() {
-      return this.inputField.getIntegerValue() >= 512;
-   }
+		this.hint = new LocalizableHTMLLabel("");
+		setSouth(hint);
 
-   private void onSliderUpdate() {
-      this.inputField.setValue(this.slider.getValue());
-      this.updateTip();
-   }
+		slider.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				onSliderUpdate();
+			}
+		});
 
-   private void updateSlider() {
-      int intVal = this.inputField.getIntegerValue();
-      if (intVal > 1) {
-         this.slider.setValue(intVal);
-      }
+		slider.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				onSliderUpdate();
+			}
+		});
 
-   }
+		inputField.getDocument().addDocumentListener(new DocumentListener() {
 
-   private void updateTip() {
-      int intVal = this.inputField.getIntegerValue();
-      SettingsMemorySlider.ValueType value = null;
-      if (intVal < 512) {
-         value = SettingsMemorySlider.ValueType.DANGER;
-      } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
-         value = SettingsMemorySlider.ValueType.OK;
-      } else {
-         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[OS.Arch.CURRENT.ordinal()]) {
-         case 2:
-            if (OS.Arch.TOTAL_RAM_MB > 0L && (long)intVal > OS.Arch.TOTAL_RAM_MB) {
-               value = SettingsMemorySlider.ValueType.DANGER;
-            } else if (intVal > OS.Arch.MAX_MEMORY) {
-               value = SettingsMemorySlider.ValueType.WARNING;
-            }
-            break;
-         default:
-            if (intVal > OS.Arch.MAX_MEMORY) {
-               value = SettingsMemorySlider.ValueType.DANGER;
-            } else if (intVal > OS.Arch.PREFERRED_MEMORY) {
-               value = SettingsMemorySlider.ValueType.WARNING;
-            }
-         }
-      }
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				updateInfo();
+			}
 
-      String path;
-      ImageIcon icon;
-      if (value == null) {
-         path = "";
-         icon = null;
-      } else {
-         path = value.path;
-         icon = value.icon;
-      }
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+			}
 
-      this.hint.setText(path);
-      ImageIcon.setup(this.hint, icon);
-   }
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+	}
 
-   private void updateInfo() {
-      this.updateSlider();
-      this.updateTip();
-   }
+	@Override
+	public void setBackground(Color color) {
+		if(inputField != null)
+			inputField.setBackground(color);
+	}
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[OS.Arch.values().length];
+	@Override
+	public void block(Object reason) {
+		Blocker.blockComponents(reason, slider, inputField, hint);
+	}
 
-         try {
-            var0[OS.Arch.UNKNOWN.ordinal()] = 3;
-         } catch (NoSuchFieldError var3) {
-         }
+	@Override
+	public void unblock(Object reason) {
+		Blocker.unblockComponents(reason, slider, inputField, hint);
+	}
 
-         try {
-            var0[OS.Arch.x32.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
+	@Override
+	public String getSettingsValue() {
+		return inputField.getValue();
+	}
 
-         try {
-            var0[OS.Arch.x64.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
+	@Override
+	public void setSettingsValue(String value) {
+		inputField.setValue(value);
+		updateInfo();
+	}
 
-         $SWITCH_TABLE$ru$turikhay$util$OS$Arch = var0;
-         return var0;
-      }
-   }
+	@Override
+	public boolean isValueValid() {
+		return inputField.getIntegerValue() >= OS.Arch.MIN_MEMORY;
+	}
 
-   private static enum ValueType {
-      OK("info.png"),
-      WARNING("warning.png"),
-      DANGER("danger.png");
+	private void onSliderUpdate() {
+		inputField.setValue(slider.getValue());
+		updateTip();
+	}
 
-      private final String path = "settings.java.memory.hint." + this.toString().toLowerCase();
-      private final ImageIcon icon;
+	private void updateSlider() {
+		int intVal = inputField.getIntegerValue();
 
-      private ValueType(String image) {
-         this.icon = ImageCache.getIcon(image, 16, 16);
-      }
-   }
+		if(intVal > 1)
+			slider.setValue(intVal);
+	}
+
+	private void updateTip() {
+		int intVal = inputField.getIntegerValue();
+		ValueType value = null;
+
+		if(intVal < OS.Arch.MIN_MEMORY)
+			value = ValueType.DANGER;
+		else if(intVal == OS.Arch.PREFERRED_MEMORY)
+			value = ValueType.OK;
+		else
+			switch(OS.Arch.CURRENT) {
+			case x64:
+
+				if(OS.Arch.TOTAL_RAM_MB > 0 && intVal > OS.Arch.TOTAL_RAM_MB)
+					value = ValueType.DANGER;
+				else if(intVal > OS.Arch.MAX_MEMORY)
+					value = ValueType.WARNING;
+
+				break;
+			default:
+				if(intVal > OS.Arch.MAX_MEMORY)
+					value = ValueType.DANGER;
+				else if(intVal > OS.Arch.PREFERRED_MEMORY)
+					value = ValueType.WARNING;
+			}
+
+		String path; ImageIcon icon;
+
+		if(value == null) {
+			path = "";
+			icon = null;
+		} else {
+			path = value.path;
+			icon = value.icon;
+		}
+
+		hint.setText(path);
+		ImageIcon.setup(hint, icon);
+	}
+
+	private void updateInfo() {
+		updateSlider();
+		updateTip();
+	}
+
+	private enum ValueType {
+		OK("info.png"), WARNING("warning.png"), DANGER("danger.png");
+
+		private final String path;
+		private final ImageIcon icon;
+
+		ValueType(String image) {
+			this.path = "settings.java.memory.hint."+ toString().toLowerCase();
+			this.icon = ImageCache.getIcon(image, 16, 16);
+		}
+	}
+
 }

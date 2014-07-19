@@ -1,15 +1,17 @@
 package ru.turikhay.util.async;
 
 public class AsyncObjectGotErrorException extends AsyncObjectException {
-   private static final long serialVersionUID = -1016561584766422788L;
-   private final AsyncObject object;
+	private static final long serialVersionUID = -1016561584766422788L;
 
-   AsyncObjectGotErrorException(AsyncObject object, Throwable error) {
-      super(error);
-      this.object = object;
-   }
+	private final AsyncObject<?> object;
 
-   public AsyncObject getObject() {
-      return this.object;
-   }
+	AsyncObjectGotErrorException(AsyncObject<?> object, Throwable error) {
+		super(error);
+
+		this.object = object;
+	}
+
+	public AsyncObject<?> getObject() {
+		return object;
+	}
 }

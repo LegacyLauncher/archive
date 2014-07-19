@@ -1,13 +1,13 @@
 package ru.turikhay.tlauncher.downloader;
 
 public interface DownloaderListener {
-   void onDownloaderStart(Downloader var1, int var2);
+	public void onDownloaderStart(Downloader d, int files);
 
-   void onDownloaderAbort(Downloader var1);
+	public void onDownloaderAbort(Downloader d);
 
-   void onDownloaderProgress(Downloader var1, double var2, double var4);
+	public void onDownloaderProgress(Downloader d, double progress, double speed);
 
-   void onDownloaderFileComplete(Downloader var1, Downloadable var2);
+	public void onDownloaderFileComplete(Downloader d, Downloadable file);
 
-   void onDownloaderComplete(Downloader var1);
+	public void onDownloaderComplete(Downloader d);
 }

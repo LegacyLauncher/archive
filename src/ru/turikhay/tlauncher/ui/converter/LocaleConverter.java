@@ -1,22 +1,32 @@
 package ru.turikhay.tlauncher.ui.converter;
 
 import java.util.Locale;
+
 import ru.turikhay.tlauncher.configuration.Configuration;
 
-public class LocaleConverter implements StringConverter {
-   public String toString(Locale from) {
-      return from == null ? null : from.getDisplayCountry(Locale.US) + " (" + from.toString() + ")";
-   }
+public class LocaleConverter implements StringConverter<Locale> {
+	@Override
+	public String toString(Locale from) {
+		if(from == null)
+			return null;
+		return from.getDisplayCountry(Locale.US) + " (" + from.toString() + ")";
+	}
 
-   public Locale fromString(String from) {
-      return Configuration.getLocaleOf(from);
-   }
+	@Override
+	public Locale fromString(String from) {
+		return Configuration.getLocaleOf(from);
+	}
 
-   public String toValue(Locale from) {
-      return from == null ? null : from.toString();
-   }
+	@Override
+	public String toValue(Locale from) {
+		if (from == null)
+			return null;
+		return from.toString();
+	}
 
-   public Class getObjectClass() {
-      return Locale.class;
-   }
+	@Override
+	public Class<Locale> getObjectClass() {
+		return Locale.class;
+	}
+
 }

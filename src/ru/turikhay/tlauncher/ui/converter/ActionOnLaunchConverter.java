@@ -1,26 +1,32 @@
 package ru.turikhay.tlauncher.ui.converter;
 
-import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.configuration.Configuration.ActionOnLaunch;
 import ru.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
 
-public class ActionOnLaunchConverter extends LocalizableStringConverter {
-   public ActionOnLaunchConverter() {
-      super("settings.launch-action");
-   }
+public class ActionOnLaunchConverter extends
+		LocalizableStringConverter<ActionOnLaunch> {
 
-   public Configuration.ActionOnLaunch fromString(String from) {
-      return Configuration.ActionOnLaunch.get(from);
-   }
+	public ActionOnLaunchConverter() {
+		super("settings.launch-action");
+	}
 
-   public String toValue(Configuration.ActionOnLaunch from) {
-      return from.toString();
-   }
+	@Override
+	public ActionOnLaunch fromString(String from) {
+		return ActionOnLaunch.get(from);
+	}
 
-   public String toPath(Configuration.ActionOnLaunch from) {
-      return from.toString();
-   }
+	@Override
+	public String toValue(ActionOnLaunch from) {
+		return from.toString();
+	}
 
-   public Class getObjectClass() {
-      return Configuration.ActionOnLaunch.class;
-   }
+	@Override
+	public String toPath(ActionOnLaunch from) {
+		return from.toString();
+	}
+
+	@Override
+	public Class<ActionOnLaunch> getObjectClass() {
+		return ActionOnLaunch.class;
+	}
 }

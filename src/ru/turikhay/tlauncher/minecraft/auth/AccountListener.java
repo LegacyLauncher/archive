@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
 public interface AccountListener {
-   void onAccountsRefreshed(AuthenticatorDatabase var1);
+	public void onAccountsRefreshed(AuthenticatorDatabase db);
+
 }

@@ -9,6 +9,7 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -16,242 +17,274 @@ import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.updater.AdParser;
+import ru.turikhay.tlauncher.updater.AdParser.Ad;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.U;
 
 public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
-   private static final int MARGIN = 20;
-   private static final float FONT_SIZE = 12.0F;
-   private final EditorPane browser;
-   private final DefaultScene parent;
-   private final Object animationLock = new Object();
-   private final int timeFrame = 5;
-   private float opacity;
-   private boolean shown;
-   private boolean canshow;
-   private AdParser lastAd;
-   private String content;
-   private int width;
-   private int height;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType;
+	private static final int MARGIN = 20;
+	private static final float FONT_SIZE = 12f;
 
-   public InfoPanel(DefaultScene parent) {
-      super(CenterPanel.tipTheme, new Insets(5, 10, 5, 10));
-      this.addMouseListener(new MouseListener() {
-         public void mouseClicked(MouseEvent e) {
-            if (!InfoPanel.this.onClick()) {
-               e.consume();
-            }
+	private final EditorPane browser;
 
-         }
+	private final DefaultScene parent;
 
-         public void mousePressed(MouseEvent e) {
-         }
+	private final Object animationLock;
 
-         public void mouseReleased(MouseEvent e) {
-         }
+	private final int timeFrame;
+	private float opacity;
+	private boolean shown, canshow;
 
-         public void mouseEntered(MouseEvent e) {
-         }
+	private AdParser lastAd;
+	private String content;
+	private int width, height;
 
-         public void mouseExited(MouseEvent e) {
-         }
-      });
-      this.parent = parent;
-      this.browser = new EditorPane(this.getFont().deriveFont(12.0F));
-      this.add(this.browser);
-      this.shown = false;
-      this.setVisible(false);
-      TLauncher.getInstance().getUpdater().addListener(this);
-   }
+	public InfoPanel(DefaultScene parent) {
+		super(CenterPanel.tipTheme, new Insets(5, 10, 5, 10));
 
-   void setContent(String text, int width, int height) {
-      if (width >= 1 && height >= 1) {
-         this.width = width;
-         this.height = height;
-         this.browser.setText(text);
-         this.onResize();
-      } else {
-         throw new IllegalArgumentException();
-      }
-   }
+		this.animationLock = new Object();
+		this.timeFrame = 5;
 
-   public void onResize() {
-      Graphics g = this.getGraphics();
-      if (g != null) {
-         Insets insets = this.getInsets();
-         int compWidth = this.width + insets.left + insets.right;
-         int compHeight = this.height + insets.top + insets.bottom;
-         Point loginFormLocation = this.parent.loginForm.getLocation();
-         Dimension loginFormSize = this.parent.loginForm.getSize();
-         int x = loginFormLocation.x + loginFormSize.width / 2 - compWidth / 2;
-         int y = loginFormLocation.y + loginFormSize.height + 20;
-         this.setBounds(x, y, compWidth, compHeight);
-      }
-   }
+		this.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (!onClick())
+					e.consume();
+			}
 
-   public void paint(Graphics g0) {
-      Graphics2D g = (Graphics2D)g0;
-      Composite oldComp = g.getComposite();
-      g.setComposite(AlphaComposite.getInstance(3, this.opacity));
-      super.paint(g0);
-      g.setComposite(oldComp);
-   }
+			@Override
+			public void mousePressed(MouseEvent e) {
+			}
 
-   public void show(boolean animate) {
-      if (this.canshow) {
-         this.onResize();
-         if (!this.shown) {
-            synchronized(this.animationLock) {
-               this.setVisible(true);
-               this.opacity = 0.0F;
-               float selectedOpacity = 1.0F;
-               if (animate) {
-                  while(this.opacity < selectedOpacity) {
-                     this.opacity += 0.01F;
-                     if (this.opacity > selectedOpacity) {
-                        this.opacity = selectedOpacity;
-                     }
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
 
-                     this.repaint();
-                     U.sleepFor((long)this.timeFrame);
-                  }
-               } else {
-                  this.opacity = selectedOpacity;
-                  this.repaint();
-               }
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
 
-               this.shown = true;
-            }
-         }
-      }
-   }
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+		});
 
-   public void show() {
-      this.show(true);
-   }
+		this.parent = parent;
+		this.browser = new EditorPane(getFont().deriveFont(FONT_SIZE));
 
-   void hide(boolean animate) {
-      if (this.shown) {
-         synchronized(this.animationLock) {
-            if (animate) {
-               while(this.opacity > 0.0F) {
-                  this.opacity -= 0.01F;
-                  if (this.opacity < 0.0F) {
-                     this.opacity = 0.0F;
-                  }
+		add(browser);
 
-                  this.repaint();
-                  U.sleepFor((long)this.timeFrame);
-               }
-            }
+		this.shown = false;
+		this.setVisible(false);
 
-            this.setVisible(false);
-            if (!animate) {
-               this.opacity = 0.0F;
-            }
+		TLauncher.getInstance().getUpdater().addListener(this);
+	}
 
-            this.shown = false;
-         }
-      }
-   }
+	void setContent(String text, int width, int height) {
+		if (width < 1 || height < 1)
+			throw new IllegalArgumentException();
 
-   public void hide() {
-      this.hide(true);
-   }
+		this.width = width;
+		this.height = height;
 
-   public void setShown(boolean shown, boolean animate) {
-      if (shown) {
-         this.show(animate);
-      } else {
-         this.hide(animate);
-      }
+		browser.setText(text);
 
-   }
+		onResize();
+	}
 
-   boolean onClick() {
-      return this.shown;
-   }
+	@Override
+	public void onResize() {
+		Graphics g = getGraphics();
+		if (g == null)
+			return;
 
-   public void onUpdaterRequesting(Updater u) {
-      this.hide();
-   }
+		Insets insets = getInsets();
 
-   public void onUpdaterRequestError(Updater u) {
-   }
+		int compWidth = width + insets.left + insets.right, compHeight = height
+				+ insets.top + insets.bottom;
 
-   public void onUpdateFound(Update upd) {
-   }
+		Point loginFormLocation = parent.loginForm.getLocation();
+		Dimension loginFormSize = parent.loginForm.getSize();
 
-   public void onUpdaterNotFoundUpdate(Updater u) {
-   }
+		int x = loginFormLocation.x + loginFormSize.width / 2 - compWidth / 2, y = loginFormLocation.y
+				+ loginFormSize.height + MARGIN;
 
-   public void onAdFound(Updater u, AdParser ad) {
-      this.lastAd = ad;
-      this.updateAd();
-   }
+		setBounds(x, y, compWidth, compHeight);
+	}
 
-   public void updateLocale() {
-      this.updateAd();
-   }
+	@Override
+	public void paint(Graphics g0) {
+		Graphics2D g = (Graphics2D) g0;
+		Composite oldComp = g.getComposite();
 
-   private void updateAd() {
-      this.hide();
-      this.canshow = this.prepareAd();
-      if (!this.parent.isSettingsShown()) {
-         this.show();
-      }
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				opacity));
 
-   }
+		super.paint(g0);
 
-   private boolean prepareAd() {
-      if (this.lastAd == null) {
-         return false;
-      } else {
-         String locale = this.parent.getMainPane().getRootFrame().getLauncher().getSettings().getLocale().toString();
-         AdParser.Ad ad = this.lastAd.get(locale);
-         if (ad == null) {
-            return false;
-         } else {
-            StringBuilder builder = new StringBuilder();
-            builder.append("<table width=\"").append(ad.getWidth()).append("\" height=\"").append(ad.getHeight()).append("\"><tr><td align=\"center\" valign=\"center\">");
-            switch($SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType()[ad.getType().ordinal()]) {
-            case 1:
-               if (ad.getImage() != null) {
-                  builder.append("<img src=\"").append(ad.getImage()).append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
-               }
+		g.setComposite(oldComp);
+	}
 
-               builder.append(ad.getContent());
-               builder.append("</td></tr></table>");
-               this.content = builder.toString();
-               this.setContent(this.content, ad.getWidth(), ad.getHeight());
-               return true;
-            default:
-               U.log("Unknown ad type:", ad.getType());
-               return false;
-            }
-         }
-      }
-   }
+	@Override
+	public void show(boolean animate) {
+		if (!canshow)
+			return;
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[AdParser.AdType.values().length];
+		onResize();
 
-         try {
-            var0[AdParser.AdType.DEFAULT.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
+		if (shown)
+			return;
 
-         $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType = var0;
-         return var0;
-      }
-   }
+		synchronized (animationLock) {
+			this.setVisible(true);
+			opacity = 0.0F;
+
+			float selectedOpacity = 1.0F;
+
+			if (animate)
+				while (opacity < selectedOpacity) {
+					opacity += 0.01F;
+					if (opacity > selectedOpacity)
+						opacity = selectedOpacity;
+
+					this.repaint();
+					U.sleepFor(timeFrame);
+				}
+			else {
+				opacity = selectedOpacity;
+				this.repaint();
+			}
+
+			shown = true;
+		}
+	}
+
+	@Override
+	public void show() {
+		show(true);
+	}
+
+	void hide(boolean animate) {
+		if (!shown)
+			return;
+
+		synchronized (animationLock) {
+			if (animate)
+				while (opacity > 0.0F) {
+					opacity -= 0.01F;
+					if (opacity < 0.0F)
+						opacity = 0.0F;
+
+					this.repaint();
+					U.sleepFor(timeFrame);
+				}
+
+			this.setVisible(false);
+			if (!animate)
+				opacity = 0.0F;
+			shown = false;
+		}
+	}
+
+	@Override
+	public void hide() {
+		hide(true);
+	}
+
+	public void setShown(boolean shown, boolean animate) {
+		if (shown)
+			show(animate);
+		else
+			hide(animate);
+	}
+
+	boolean onClick() {
+		return shown;
+	}
+
+	@Override
+	public void onUpdaterRequesting(Updater u) {
+		hide();
+	}
+
+	@Override
+	public void onUpdaterRequestError(Updater u) {
+	}
+
+	@Override
+	public void onUpdateFound(Update upd) {
+	}
+
+	@Override
+	public void onUpdaterNotFoundUpdate(Updater u) {
+	}
+
+	@Override
+	public void onAdFound(Updater u, AdParser ad) {
+		this.lastAd = ad;
+		updateAd();
+	}
+
+	@Override
+	public void updateLocale() {
+		updateAd();
+	}
+
+	private void updateAd() {
+		hide();
+
+		canshow = prepareAd();
+
+		if (!parent.isSettingsShown())
+			show();
+	}
+
+	private boolean prepareAd() {		
+		if(lastAd == null)
+			return false;
+
+		String locale = parent.getMainPane().getRootFrame().getLauncher()
+				.getSettings().getLocale().toString();
+		Ad ad = lastAd.get(locale);
+
+		if(ad == null)
+			return false;
+
+		StringBuilder builder = new StringBuilder();
+
+		builder
+		.append("<table width=\"")
+		.append(ad.getWidth())
+		.append("\" height=\"")
+		.append(ad.getHeight())
+		.append("\"><tr><td align=\"center\" valign=\"center\">");
+
+		switch(ad.getType()) {
+		case DEFAULT:
+
+			if (ad.getImage() != null)
+				builder
+				.append("<img src=\"")
+				.append(ad.getImage())
+				.append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
+
+			builder
+			.append(ad.getContent());
+
+			break;
+		default:
+			U.log("Unknown ad type:", ad.getType());
+			return false;
+		}
+
+		builder
+		.append("</td></tr></table>");
+
+		this.content = builder.toString();
+		setContent(this.content, ad.getWidth(), ad.getHeight());
+
+		return true;
+	}
 }

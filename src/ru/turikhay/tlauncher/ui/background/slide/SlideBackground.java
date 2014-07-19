@@ -4,99 +4,112 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ComponentEvent;
-import java.awt.image.ImageObserver;
+
 import ru.turikhay.tlauncher.ui.background.Background;
 import ru.turikhay.tlauncher.ui.background.BackgroundHolder;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 
 public class SlideBackground extends Background {
-   private static final long serialVersionUID = -4479685866688951989L;
-   private final SlideBackgroundThread thread;
-   final BackgroundHolder holder;
-   final ExtendedComponentAdapter listener;
-   private Image oImage;
-   private int oImageWidth;
-   private int oImageHeight;
-   private Image vImage;
-   private int vImageWidth;
-   private int vImageHeight;
 
-   public SlideBackground(BackgroundHolder holder) {
-      super(holder, Color.black);
-      this.holder = holder;
-      this.thread = new SlideBackgroundThread(this);
-      this.thread.setSlide(this.thread.defaultSlide, false);
-      this.thread.refreshSlide(false);
-      this.listener = new ExtendedComponentAdapter(this, 1000) {
-         public void onComponentResized(ComponentEvent e) {
-            SlideBackground.this.updateImage();
-            SlideBackground.this.repaint();
-         }
-      };
-      this.addComponentListener(this.listener);
-   }
+	private static final long serialVersionUID = -4479685866688951989L;
 
-   public SlideBackgroundThread getThread() {
-      return this.thread;
-   }
+	private final SlideBackgroundThread thread;
 
-   public Image getImage() {
-      return this.oImage;
-   }
+	final BackgroundHolder holder;
+	final ExtendedComponentAdapter listener;
 
-   public void setImage(Image image) {
-      if (image == null) {
-         throw new NullPointerException();
-      } else {
-         this.oImage = image;
-         this.oImageWidth = image.getWidth((ImageObserver)null);
-         this.oImageHeight = image.getHeight((ImageObserver)null);
-         this.updateImage();
-      }
-   }
+	private Image oImage;
+	private int oImageWidth, oImageHeight;
 
-   private void updateImage() {
-      double windowWidth = (double)this.getWidth();
-      double windowHeight = (double)this.getHeight();
-      double ratio = Math.min((double)this.oImageWidth / windowWidth, (double)this.oImageHeight / windowHeight);
-      double width;
-      double height;
-      if (ratio < 1.0D) {
-         width = (double)this.oImageWidth;
-         height = (double)this.oImageHeight;
-      } else {
-         width = (double)this.oImageWidth / ratio;
-         height = (double)this.oImageHeight / ratio;
-      }
+	private Image vImage;
+	private int vImageWidth, vImageHeight;
 
-      this.vImageWidth = (int)width;
-      this.vImageHeight = (int)height;
-      if (this.vImageWidth != 0 && this.vImageHeight != 0) {
-         if (this.oImageWidth == this.vImageWidth && this.oImageHeight == this.vImageHeight) {
-            this.vImage = this.oImage;
-         } else {
-            this.vImage = this.oImage.getScaledInstance(this.vImageWidth, this.vImageHeight, 4);
-         }
-      } else {
-         this.vImage = null;
-      }
+	public SlideBackground(BackgroundHolder holder) {
+		super(holder, Color.black);
 
-   }
+		this.holder = holder;
+		this.thread = new SlideBackgroundThread(this);
 
-   public void paintBackground(Graphics g) {
-      if (this.vImage == null) {
-         this.updateImage();
-      }
+		this.thread.setSlide(thread.defaultSlide, false); // Set up as fallback.
+		this.thread.refreshSlide(false); // Refresh slide from configuration file.
 
-      if (this.vImage != null) {
-         double windowWidth = (double)this.getWidth();
-         double windowHeight = (double)this.getHeight();
-         double ratio = Math.min((double)this.vImageWidth / windowWidth, (double)this.vImageHeight / windowHeight);
-         double width = (double)this.vImageWidth / ratio;
-         double height = (double)this.vImageHeight / ratio;
-         double x = (windowWidth - width) / 2.0D;
-         double y = (windowHeight - height) / 2.0D;
-         g.drawImage(this.vImage, (int)x, (int)y, (int)width, (int)height, (ImageObserver)null);
-      }
-   }
+		this.listener = new ExtendedComponentAdapter(this, 1000) {			
+			@Override
+			public void onComponentResized(ComponentEvent e) {
+				updateImage();
+				repaint();
+			}			
+		};
+		this.addComponentListener(listener);
+	}
+
+	public SlideBackgroundThread getThread() {
+		return thread;
+	}
+
+	public Image getImage() {
+		return oImage;
+	}
+
+	public void setImage(Image image) {
+		if (image == null)
+			throw new NullPointerException();
+
+		this.oImage = image;
+		this.oImageWidth = image.getWidth(null);
+		this.oImageHeight = image.getHeight(null);
+
+		this.updateImage();
+	}
+
+	private void updateImage() {
+		double windowWidth = getWidth(), windowHeight = getHeight();
+
+		double ratio = Math.min(oImageWidth / windowWidth, oImageHeight / windowHeight);
+		double width, height;
+
+		if (ratio < 1) {
+			// Oh shi~, this guy has really huge screen. Or the image is too
+			// small.
+			width = oImageWidth;
+			height = oImageHeight;
+		} else {
+			width = oImageWidth / ratio;
+			height = oImageHeight / ratio;
+		}
+
+		vImageWidth = (int) width;
+		vImageHeight = (int) height;
+
+		if(vImageWidth == 0 || vImageHeight == 0)
+			vImage = null;
+
+		else if(oImageWidth == vImageWidth && oImageHeight == vImageHeight)
+			vImage = oImage;
+
+		else vImage = oImage.getScaledInstance(vImageWidth, vImageHeight, Image.SCALE_SMOOTH);
+	}
+
+	@Override
+	public void paintBackground(Graphics g) {
+		if(vImage == null) 
+			updateImage();
+
+		if(vImage == null)
+			return;
+
+		double
+		windowWidth = getWidth(),
+		windowHeight = getHeight(),
+
+		ratio = Math.min(vImageWidth / windowWidth, vImageHeight / windowHeight),
+		width = vImageWidth / ratio, height = vImageHeight / ratio;
+
+		double			
+		x = (windowWidth - width) / 2,
+		y = (windowHeight - height) / 2;
+
+		g.drawImage(vImage, (int) x, (int) y, (int) width, (int) height, null);
+	}
+
 }
