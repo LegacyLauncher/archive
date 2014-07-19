@@ -1,15 +1,20 @@
 package ru.turikhay.tlauncher.ui.converter.dummy;
 
-public class DummyStringConverter extends DummyConverter {
-   public String fromDummyString(String from) throws RuntimeException {
-      return from;
-   }
+public class DummyStringConverter extends DummyConverter<String> {
 
-   public String toDummyValue(String value) throws RuntimeException {
-      return value;
-   }
+	@Override
+	public String fromDummyString(String from) throws RuntimeException {
+		return from;
+	}
 
-   public Class getObjectClass() {
-      return String.class;
-   }
+	@Override
+	public String toDummyValue(String value) throws RuntimeException {
+		return value;
+	}
+
+	@Override
+	public Class<String> getObjectClass() {
+		return String.class;
+	}
+
 }

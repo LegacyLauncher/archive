@@ -1,38 +1,40 @@
 package ru.turikhay.util.async;
 
-public abstract class AsyncObject extends ExtendedThread {
-   private boolean gotValue;
-   private Object value;
-   private AsyncObjectGotErrorException error;
+public abstract class AsyncObject<E> extends ExtendedThread {
 
-   protected AsyncObject() {
-      super("AsyncObject");
-   }
+	private boolean gotValue;
+	private E value;
+	private AsyncObjectGotErrorException error;
 
-   public void run() {
-      try {
-         this.value = this.execute();
-      } catch (Throwable var2) {
-         this.error = new AsyncObjectGotErrorException(this, var2);
-         return;
-      }
+	protected AsyncObject() {
+		super("AsyncObject");
+	}
 
-      this.gotValue = true;
-   }
+	@Override
+	public void run() {
+		try {
+			this.value = this.execute();
+		} catch (Throwable e) {
+			this.error = new AsyncObjectGotErrorException(this, e);
+			return;
+		}
 
-   public Object getValue() throws AsyncObjectNotReadyException, AsyncObjectGotErrorException {
-      if (this.error != null) {
-         throw this.error;
-      } else if (!this.gotValue) {
-         throw new AsyncObjectNotReadyException();
-      } else {
-         return this.value;
-      }
-   }
+		this.gotValue = true;
+	}
 
-   public AsyncObjectGotErrorException getError() {
-      return this.error;
-   }
+	public E getValue() throws AsyncObjectNotReadyException,
+	AsyncObjectGotErrorException {
+		if (error != null)
+			throw error;
+		if (!gotValue)
+			throw new AsyncObjectNotReadyException();
 
-   protected abstract Object execute();
+		return value;
+	}
+
+	public AsyncObjectGotErrorException getError() {
+		return error;
+	}
+
+	protected abstract E execute();
 }

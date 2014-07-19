@@ -8,7 +8,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.ImageObserver;
+
 import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
@@ -16,148 +16,140 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
 public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
-   private static final long serialVersionUID = -3973551999471811629L;
-   private final MainPane pane;
-   private final Image helper;
-   private int width;
-   private int height;
-   private int y;
-   private float opacity;
-   private ServicePanel.ServicePanelThread thread;
-   private boolean mouseIn;
+	private static final long serialVersionUID = -3973551999471811629L;
 
-   ServicePanel(MainPane pane) {
-      this.pane = pane;
-      this.helper = ImageCache.getImage("helper.png", false);
-      if (this.helper != null) {
-         this.width = this.helper.getWidth((ImageObserver)null);
-         this.height = this.helper.getHeight((ImageObserver)null);
-         pane.add(this);
-         this.setSize(this.width, this.height);
-         this.opacity = 0.1F;
-         this.y = 0;
-         this.thread = new ServicePanel.ServicePanelThread();
-         pane.addComponentListener(new ComponentAdapter() {
-            public void componentResized(ComponentEvent e) {
-               ServicePanel.this.onResize();
-            }
-         });
-         this.addMouseListenerOriginally(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-               ServicePanel.this.mouseIn = true;
-               ServicePanel.this.thread.iterate();
-            }
+	private final MainPane pane;
 
-            public void mouseExited(MouseEvent e) {
-               ServicePanel.this.mouseIn = false;
-            }
-         });
-      }
-   }
+	private final Image helper;
+	private int width, height, y;
+	private float opacity;
 
-   public void paint(Graphics g0) {
-      if (this.thread.isIterating()) {
-         Graphics2D g = (Graphics2D)g0;
-         g.setComposite(AlphaComposite.getInstance(3, this.opacity));
-         g.drawImage(this.helper, this.getWidth() / 2 - this.width / 2, this.getHeight() - this.y, (ImageObserver)null);
-      }
-   }
+	private ServicePanelThread thread;
+	private boolean mouseIn;
 
-   public void onResize() {
-      this.setLocation(this.pane.getWidth() - this.getWidth(), this.pane.getHeight() - this.getHeight());
-   }
+	ServicePanel(MainPane pane) {
+		this.pane = pane;
+		this.helper = ImageCache.getImage("helper.png", false);
 
-   class ServicePanelThread extends LoopedThread {
-      private static final int PIXEL_STEP = 5;
-      private static final int TIMEFRAME = 25;
-      private static final float OPACITY_STEP = 0.05F;
+		if(helper == null)
+			return;
 
-      ServicePanelThread() {
-         super("ServicePanel");
-         this.startAndWait();
-      }
+		this.width = helper.getWidth(null);
+		this.height = helper.getHeight(null);
 
-      protected void iterateOnce() {
-         int timeout = 10;
+		pane.add(this);
+		setSize(width, height);
 
-         while(true) {
-            --timeout;
-            if (timeout <= 0) {
-               ServicePanel.this.y = 1;
+		opacity = 0.1F;
+		y = 0;
+		this.thread = new ServicePanelThread();
 
-               while(ServicePanel.this.y > 0) {
-                  while(ServicePanel.this.mouseIn) {
-                     this.onIn();
-                  }
+		pane.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				onResize();
+			}
+		});
 
-                  while(!ServicePanel.this.mouseIn) {
-                     this.onOut();
-                     if (ServicePanel.this.y == 0) {
-                        return;
-                     }
-                  }
-               }
+		this.addMouseListenerOriginally(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				mouseIn = true;
+				thread.iterate();
+			}
 
-               return;
-            }
+			@Override
+			public void mouseExited(MouseEvent e) {
+				mouseIn = false;
+			}
+		});
+	}
 
-            if (!ServicePanel.this.mouseIn) {
-               return;
-            }
+	@Override
+	public void paint(Graphics g0) {
+		if(!thread.isIterating()) return;
 
-            U.sleepFor(1000L);
-         }
-      }
+		Graphics2D g = (Graphics2D) g0;
 
-      private void onIn() {
-         ServicePanel var10000;
-         if (ServicePanel.this.y < ServicePanel.this.getHeight()) {
-            var10000 = ServicePanel.this;
-            var10000.y = var10000.y + 5;
-         }
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));		
+		g.drawImage(helper, getWidth() / 2 - width / 2, getHeight() - y, null);
+	}
 
-         if (ServicePanel.this.y > ServicePanel.this.getHeight()) {
-            ServicePanel.this.y = ServicePanel.this.getHeight();
-         }
+	@Override
+	public void onResize() {
+		setLocation(pane.getWidth() - getWidth(), pane.getHeight() - getHeight());
+	}
 
-         if ((double)ServicePanel.this.opacity < 0.9D) {
-            var10000 = ServicePanel.this;
-            var10000.opacity = var10000.opacity + 0.05F;
-         }
+	class ServicePanelThread extends LoopedThread {
+		private static final int PIXEL_STEP = 5, TIMEFRAME = 25;
+		private static final float OPACITY_STEP = .05f;
 
-         if (ServicePanel.this.opacity > 1.0F) {
-            ServicePanel.this.opacity = 1.0F;
-         }
+		ServicePanelThread() {
+			super("ServicePanel");
+			this.startAndWait();
+		}
 
-         this.repaintSleep();
-      }
+		@Override
+		protected void iterateOnce() {
+			int timeout = 10;
 
-      private void onOut() {
-         ServicePanel var10000;
-         if (ServicePanel.this.y > 0) {
-            var10000 = ServicePanel.this;
-            var10000.y = var10000.y - 5;
-         }
+			while(--timeout > 0) {
+				if(!mouseIn) return;
+				U.sleepFor(1000);
+			}
 
-         if (ServicePanel.this.y < 0) {
-            ServicePanel.this.y = 0;
-         }
+			y = 1;
 
-         if ((double)ServicePanel.this.opacity > 0.0D) {
-            var10000 = ServicePanel.this;
-            var10000.opacity = var10000.opacity - 0.05F;
-         }
+			while(y > 0) {
+				while(mouseIn) {
+					onIn();
+				}
 
-         if (ServicePanel.this.opacity < 0.0F) {
-            ServicePanel.this.opacity = 0.0F;
-         }
+				while(!mouseIn) {
+					onOut();
 
-         this.repaintSleep();
-      }
+					if(y == 0)
+						return;
+				}
+			}
+		}
 
-      private void repaintSleep() {
-         ServicePanel.this.repaint();
-         U.sleepFor(25L);
-      }
-   }
+		private void onIn() {
+			if(y < getHeight())
+				y += PIXEL_STEP;
+
+			if(y > getHeight())
+				y = getHeight();
+
+			if(opacity < .9)
+				opacity += OPACITY_STEP;
+
+			if(opacity > 1)
+				opacity = 1;
+
+			repaintSleep();
+		}
+
+		private void onOut() {
+			if(y > 0)
+				y -= PIXEL_STEP;
+
+			if(y < 0)
+				y = 0;
+
+			if(opacity > .0)
+				opacity -= OPACITY_STEP;
+
+			if(opacity < 0)
+				opacity = 0;
+
+			repaintSleep();
+		}
+
+		private void repaintSleep() {
+			repaint();
+			U.sleepFor(TIMEFRAME);
+		}
+	}
+
 }

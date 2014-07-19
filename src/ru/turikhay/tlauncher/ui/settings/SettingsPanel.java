@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.ui.settings;
 
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,15 +12,18 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.Locale;
+
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
+
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.configuration.Configuration.ActionOnLaunch;
+import ru.turikhay.tlauncher.configuration.Configuration.ConnectionQuality;
+import ru.turikhay.tlauncher.configuration.Configuration.ConsoleType;
 import ru.turikhay.tlauncher.managers.VersionLists;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
 import ru.turikhay.tlauncher.ui.converter.ConnectionQualityConverter;
@@ -49,383 +52,427 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.OS;
 
 public class SettingsPanel extends TabbedEditorPanel implements LoginListener {
-   private final DefaultScene scene;
-   private final TabbedEditorPanel.EditorPanelTab minecraftTab;
-   public final EditorFieldHandler directory;
-   public final EditorFieldHandler resolution;
-   public final EditorFieldHandler fullscreen;
-   public final EditorFieldHandler javaArgs;
-   public final EditorFieldHandler mcArgs;
-   public final EditorFieldHandler javaPath;
-   public final EditorFieldHandler memory;
-   public final EditorGroupHandler versionHandler;
-   private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
-   public final EditorFieldHandler background;
-   public final EditorFieldHandler console;
-   public final EditorFieldHandler connQuality;
-   public final EditorFieldHandler launchAction;
-   public final EditorFieldHandler locale;
-   public final AboutPage about;
-   private final LocalizableButton saveButton;
-   private final LocalizableButton defaultButton;
-   private final ImageButton homeButton;
-   private final JPopupMenu popup;
-   private final LocalizableMenuItem infoItem;
-   private final LocalizableMenuItem defaultItem;
-   private EditorHandler selectedHandler;
 
-   public SettingsPanel(DefaultScene sc) {
-      super(tipTheme, new Insets(5, 10, 10, 10));
-      if (this.tabPane.getExtendedUI() != null) {
-         this.tabPane.getExtendedUI().setTheme(settingsTheme);
-      }
+	private final DefaultScene scene;
 
-      this.scene = sc;
-      FocusListener warning = new FocusListener() {
-         public void focusGained(FocusEvent e) {
-            SettingsPanel.this.setMessage("settings.warning");
-         }
+	// First tab: Minecraft settings
+	private final EditorPanelTab minecraftTab;
+	public final EditorFieldHandler
+	directory, resolution, fullscreen, javaArgs, mcArgs, javaPath, memory;
+	public final EditorGroupHandler versionHandler;
 
-         public void focusLost(FocusEvent e) {
-            SettingsPanel.this.setMessage((String)null);
-         }
-      };
-      FocusListener restart = new FocusListener() {
-         public void focusGained(FocusEvent e) {
-            SettingsPanel.this.setMessage("settings.restart");
-         }
+	// Second tab: TLauncher settings
+	private final EditorPanelTab tlauncherTab;
+	public final EditorFieldHandler
+	background, console, connQuality, launchAction, locale;
 
-         public void focusLost(FocusEvent e) {
-            SettingsPanel.this.setMessage((String)null);
-         }
-      };
-      this.minecraftTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.minecraft");
-      this.directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", new FileExplorer(1, true)), warning);
-      this.directory.addListener(new EditorFieldChangeListener() {
-         protected void onChange(String oldValue, String newValue) {
-            if (SettingsPanel.this.tlauncher.isReady()) {
-               try {
-                  ((VersionLists)SettingsPanel.this.tlauncher.getManager().getComponent(VersionLists.class)).updateLocal();
-               } catch (IOException var4) {
-                  Alert.showLocError("settings.client.gamedir.noaccess", var4);
-                  return;
-               }
+	// SecondTab extension
+	public final AboutPage about;
 
-               SettingsPanel.this.tlauncher.getVersionManager().asyncRefresh();
-               SettingsPanel.this.tlauncher.getProfileManager().recreate();
-            }
-         }
-      });
-      this.minecraftTab.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{this.directory}));
-      this.resolution = new EditorFieldHandler("minecraft.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global), restart);
-      this.fullscreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
-      this.minecraftTab.add(new EditorPair("settings.client.resolution.label", new EditorHandler[]{this.resolution, this.fullscreen}));
-      this.minecraftTab.nextPane();
-      ReleaseType[] releaseTypes = ReleaseType.getDefinable();
-      EditorFieldHandler[] versions = new EditorFieldHandler[releaseTypes.length];
+	// General buttons
+	private final LocalizableButton saveButton, defaultButton;
+	private final ImageButton homeButton;
 
-      for(int i = 0; i < releaseTypes.length; ++i) {
-         ReleaseType releaseType = releaseTypes[i];
-         versions[i] = new EditorFieldHandler("minecraft.versions." + releaseType, new EditorCheckBox("settings.versions." + releaseType));
-      }
+	// Popup menu
+	private final JPopupMenu popup;
+	private final LocalizableMenuItem infoItem, defaultItem;
+	private EditorHandler selectedHandler;
 
-      this.versionHandler = new EditorGroupHandler(versions);
-      this.versionHandler.addListener(new EditorFieldChangeListener() {
-         protected void onChange(String oldvalue, String newvalue) {
-            TLauncher.getInstance().getVersionManager().updateVersionList();
-         }
-      });
-      this.minecraftTab.add(new EditorPair("settings.versions.label", versions));
-      this.minecraftTab.nextPane();
-      this.javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
-      this.mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
-      this.minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.mcArgs}));
-      final boolean isWindows = OS.WINDOWS.isCurrent();
-      this.javaPath = new EditorFieldHandler("minecraft.javadir", new EditorFileField("settings.java.path.prompt", true, new FileExplorer(isWindows ? 0 : 1, true)) {
-         public boolean isValueValid() {
-            if (this.checkPath()) {
-               return true;
-            } else {
-               Alert.showLocAsyncError("settings.java.path.doesnotexist");
-               return false;
-            }
-         }
+	public SettingsPanel(DefaultScene sc) {
+		super(tipTheme, new Insets(5, 10, 10, 10));
 
-         private boolean checkPath() {
-            if (!isWindows) {
-               return true;
-            } else {
-               String path = this.getSettingsValue();
-               if (path == null) {
-                  return true;
-               } else if (!path.endsWith(".exe")) {
-                  return false;
-               } else {
-                  File javaDir = new File(path);
-                  return javaDir.isFile();
-               }
-            }
-         }
-      }, warning);
-      this.minecraftTab.add(new EditorPair("settings.java.path.label", new EditorHandler[]{this.javaPath}));
-      this.minecraftTab.nextPane();
-      this.memory = new EditorFieldHandler("minecraft.memory", new SettingsMemorySlider(), warning);
-      this.minecraftTab.add(new EditorPair("settings.java.memory.label", new EditorHandler[]{this.memory}));
-      this.add(this.minecraftTab);
-      this.tlauncherTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.tlauncher");
-      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, new ImageFileExplorer()));
-      this.background.addListener(new EditorFieldChangeListener() {
-         protected void onChange(String oldValue, String newValue) {
-            if (SettingsPanel.this.tlauncher.isReady()) {
-               SettingsPanel.this.tlauncher.getFrame().mp.background.SLIDE_BACKGROUND.getThread().asyncRefreshSlide();
-            }
-         }
-      });
-      this.tlauncherTab.add(new EditorPair("settings.slide.list.label", new EditorHandler[]{this.background}));
-      this.tlauncherTab.nextPane();
-      this.console = new EditorFieldHandler("gui.console", new EditorComboBox(new ConsoleTypeConverter(), Configuration.ConsoleType.values()));
-      this.console.addListener(new EditorFieldChangeListener() {
-         // $FF: synthetic field
-         private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType;
+		if(tabPane.getExtendedUI() != null)
+			tabPane.getExtendedUI().setTheme(settingsTheme);
 
-         protected void onChange(String oldvalue, String newvalue) {
-            if (newvalue != null) {
-               switch($SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType()[Configuration.ConsoleType.get(newvalue).ordinal()]) {
-               case 1:
-                  TLauncher.getConsole().show(false);
-                  break;
-               case 2:
-               case 3:
-                  TLauncher.getConsole().hide();
-                  break;
-               default:
-                  throw new IllegalArgumentException("Unknown console type!");
-               }
 
-            }
-         }
+		this.scene = sc;
 
-         // $FF: synthetic method
-         static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType() {
-            int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType;
-            if (var10000 != null) {
-               return var10000;
-            } else {
-               int[] var0 = new int[Configuration.ConsoleType.values().length];
+		FocusListener warning = new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				setMessage("settings.warning");
+			}
 
-               try {
-                  var0[Configuration.ConsoleType.GLOBAL.ordinal()] = 1;
-               } catch (NoSuchFieldError var3) {
-               }
+			@Override
+			public void focusLost(FocusEvent e) {
+				setMessage(null);
+			}
+		}, restart = new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				setMessage("settings.restart");
+			}
 
-               try {
-                  var0[Configuration.ConsoleType.MINECRAFT.ordinal()] = 2;
-               } catch (NoSuchFieldError var2) {
-               }
+			@Override
+			public void focusLost(FocusEvent e) {
+				setMessage(null);
+			}
+		};
 
-               try {
-                  var0[Configuration.ConsoleType.NONE.ordinal()] = 3;
-               } catch (NoSuchFieldError var1) {
-               }
+		// Minecraft Tab
 
-               $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType = var0;
-               return var0;
-            }
-         }
-      });
-      this.tlauncherTab.add(new EditorPair("settings.console.label", new EditorHandler[]{this.console}));
-      this.connQuality = new EditorFieldHandler("connection", new EditorComboBox(new ConnectionQualityConverter(), Configuration.ConnectionQuality.values()));
-      this.connQuality.addListener(new EditorFieldChangeListener() {
-         protected void onChange(String oldValue, String newValue) {
-            SettingsPanel.this.tlauncher.getDownloader().setConfiguration(SettingsPanel.this.global.getConnectionQuality());
-         }
-      });
-      this.tlauncherTab.add(new EditorPair("settings.connection.label", new EditorHandler[]{this.connQuality}));
-      this.launchAction = new EditorFieldHandler("minecraft.onlaunch", new EditorComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
-      this.tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{this.launchAction}));
-      this.locale = new EditorFieldHandler("locale", new EditorComboBox(new LocaleConverter(), this.global.getLocales()));
-      this.locale.addListener(new EditorFieldChangeListener() {
-         protected void onChange(String oldvalue, String newvalue) {
-            if (SettingsPanel.this.tlauncher.getFrame() != null) {
-               SettingsPanel.this.tlauncher.getFrame().updateLocales();
-            }
+		this.minecraftTab = new EditorPanelTab("settings.tab.minecraft");
 
-         }
-      });
-      this.tlauncherTab.add(new EditorPair("settings.lang.label", new EditorHandler[]{this.locale}));
-      this.about = new AboutPage();
-      this.tlauncherTab.add(this.about);
-      this.add(this.tlauncherTab);
-      this.saveButton = new LocalizableButton("settings.save");
-      this.saveButton.setFont(this.saveButton.getFont().deriveFont(1));
-      this.saveButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            SettingsPanel.this.saveValues();
-         }
-      });
-      this.defaultButton = new LocalizableButton("settings.default");
-      this.defaultButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            if (Alert.showLocQuestion("settings.default.warning")) {
-               SettingsPanel.this.resetValues();
-            }
+		this.directory = new EditorFieldHandler("minecraft.gamedir",
+				new EditorFileField("settings.client.gamedir.prompt", new FileExplorer(FileExplorer.DIRECTORIES_ONLY, true)),
+				warning);
+		directory.addListener(new EditorFieldChangeListener() {
 
-         }
-      });
-      this.homeButton = new ImageButton("home.png");
-      this.homeButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            SettingsPanel.this.updateValues();
-            SettingsPanel.this.scene.setSettings(false);
-         }
-      });
-      Dimension size = this.homeButton.getPreferredSize();
-      if (size != null) {
-         this.homeButton.setPreferredSize(new Dimension(size.width * 2, size.height));
-      }
+			@Override
+			protected void onChange(String oldValue, String newValue) {
+				if (!tlauncher.isReady())
+					return;
 
-      BorderPanel controlPanel = new BorderPanel();
-      controlPanel.setCenter(sepPan(new Component[]{this.saveButton, this.defaultButton}));
-      controlPanel.setEast(uSepPan(new Component[]{this.homeButton}));
-      this.container.setSouth(controlPanel);
-      this.popup = new JPopupMenu();
-      this.infoItem = new LocalizableMenuItem("settings.popup.info");
-      this.infoItem.setEnabled(false);
-      this.popup.add(this.infoItem);
-      this.defaultItem = new LocalizableMenuItem("settings.popup.default");
-      this.defaultItem.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            if (SettingsPanel.this.selectedHandler != null) {
-               SettingsPanel.this.resetValue(SettingsPanel.this.selectedHandler);
-            }
-         }
-      });
-      this.popup.add(this.defaultItem);
-      Iterator var10 = this.handlers.iterator();
+				try {
+					tlauncher.getManager().getComponent(VersionLists.class)
+					.updateLocal();
+				} catch (IOException e) {
+					Alert.showLocError("settings.client.gamedir.noaccess", e);
+					return;
+				}
 
-      while(var10.hasNext()) {
-         final EditorHandler handler = (EditorHandler)var10.next();
-         Component handlerComponent = handler.getComponent();
-         handlerComponent.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-               if (e.getButton() == 3) {
-                  SettingsPanel.this.callPopup(e, handler);
-               }
-            }
-         });
-      }
+				tlauncher.getVersionManager().asyncRefresh();
+				tlauncher.getProfileManager().recreate();
+			}
+		});
+		minecraftTab.add(new EditorPair("settings.client.gamedir.label", directory));
 
-      this.updateValues();
-   }
+		this.resolution = new EditorFieldHandler("minecraft.size", 
+				new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", global),
+				restart);
+		this.fullscreen = new EditorFieldHandler("minecraft.fullscreen",
+				new EditorCheckBox("settings.client.resolution.fullscreen"));
+		minecraftTab.add(new EditorPair("settings.client.resolution.label",
+				resolution, fullscreen));
+		minecraftTab.nextPane();
 
-   void updateValues() {
-      boolean globalUnSaveable = !this.global.isSaveable();
-      Iterator var3 = this.handlers.iterator();
+		ReleaseType[] releaseTypes = ReleaseType.getDefinable();
+		EditorFieldHandler[] versions = new EditorFieldHandler[releaseTypes.length];
 
-      while(true) {
-         EditorHandler handler;
-         String path;
-         do {
-            if (!var3.hasNext()) {
-               return;
-            }
+		for (int i = 0; i < releaseTypes.length; i++) {
+			ReleaseType releaseType = releaseTypes[i];
 
-            handler = (EditorHandler)var3.next();
-            path = handler.getPath();
-            String value = this.global.get(path);
-            handler.updateValue(value);
-            this.setValid(handler, true);
-         } while(!globalUnSaveable && this.global.isSaveable(path));
+			versions[i] =
+					new EditorFieldHandler("minecraft.versions."+ releaseType,
+							new EditorCheckBox("settings.versions."+ releaseType));
+		}
 
-         Blocker.block((Blockable)handler, (Object)"unsaveable");
-      }
-   }
+		this.versionHandler = new EditorGroupHandler(versions);
+		versionHandler.addListener(new EditorFieldChangeListener() {
+			@Override
+			protected void onChange(String oldvalue, String newvalue) {
+				TLauncher.getInstance().getVersionManager().updateVersionList();
+			}
+		});
+		minecraftTab.add(new EditorPair("settings.versions.label", versions));
+		minecraftTab.nextPane();
 
-   boolean saveValues() {
-      if (!this.checkValues()) {
-         return false;
-      } else {
-         Iterator var2 = this.handlers.iterator();
+		this.javaArgs = new EditorFieldHandler("minecraft.javaargs",
+				new EditorTextField("settings.java.args.jvm", true), warning);
+		this.mcArgs = new EditorFieldHandler("minecraft.args",
+				new EditorTextField("settings.java.args.minecraft", true),
+				warning);
 
-         while(var2.hasNext()) {
-            EditorHandler handler = (EditorHandler)var2.next();
-            String path = handler.getPath();
-            String value = handler.getValue();
-            this.global.set(path, value, false);
-            handler.onChange(value);
-         }
+		minecraftTab.add(new EditorPair("settings.java.args.label", javaArgs, mcArgs));
 
-         this.global.store();
-         return true;
-      }
-   }
+		final boolean isWindows = OS.WINDOWS.isCurrent();
 
-   void resetValues() {
-      Iterator var2 = this.handlers.iterator();
+		this.javaPath =
+				new EditorFieldHandler("minecraft.javadir", new EditorFileField("settings.java.path.prompt", true,
+						new FileExplorer(isWindows ? FileExplorer.FILES_ONLY : FileExplorer.DIRECTORIES_ONLY, true)) {
 
-      while(var2.hasNext()) {
-         EditorHandler handler = (EditorHandler)var2.next();
-         this.resetValue(handler);
-      }
+					@Override
+					public boolean isValueValid() {
+						if (checkPath())
+							return true;
 
-   }
+						Alert.showLocAsyncError("settings.java.path.doesnotexist");
+						return false;
+					}
 
-   void resetValue(EditorHandler handler) {
-      String path = handler.getPath();
-      if (this.global.isSaveable(path)) {
-         String value = this.global.getDefault(path);
-         this.log(new Object[]{"Resetting:", handler.getClass().getSimpleName(), path, value});
-         handler.setValue(value);
-         this.log(new Object[]{"Reset!"});
-      }
-   }
+					private boolean checkPath() {
+						if (!isWindows)
+							return true;
 
-   boolean canReset(EditorHandler handler) {
-      String key = handler.getPath();
-      return this.global.isSaveable(key) && this.global.getDefault(handler.getPath()) != null;
-   }
+						String path = getSettingsValue();
+						if (path == null)
+							return true;
 
-   void callPopup(MouseEvent e, EditorHandler handler) {
-      if (this.popup.isShowing()) {
-         this.popup.setVisible(false);
-      }
+						if(!path.endsWith(".exe"))
+							return false;
 
-      this.defocus();
-      int x = e.getX();
-      int y = e.getY();
-      this.selectedHandler = handler;
-      this.updateResetMenu();
-      this.infoItem.setVariables(handler.getPath());
-      this.popup.show((JComponent)e.getSource(), x, y);
-   }
+						File javaDir = new File(path);
+						if (javaDir.isFile())
+							return true;
 
-   public void block(Object reason) {
-      Blocker.blockComponents((Container)this.container, (Object)reason);
-      this.updateResetMenu();
-   }
+						return false;
+					}
 
-   public void unblock(Object reason) {
-      Blocker.unblockComponents((Container)this.container, (Object)reason);
-      this.updateResetMenu();
-   }
+				}, warning);
+		minecraftTab.add(new EditorPair("settings.java.path.label", javaPath));
 
-   private void updateResetMenu() {
-      if (this.selectedHandler != null) {
-         this.defaultItem.setEnabled(!Blocker.isBlocked(this));
-      }
+		minecraftTab.nextPane();
 
-   }
+		this.memory = new EditorFieldHandler("minecraft.memory", new SettingsMemorySlider(), warning);
+		minecraftTab.add(new EditorPair("settings.java.memory.label", memory));
 
-   public void onLogin() throws LoginException {
-      if (!this.checkValues()) {
-         this.scene.setSettings(true);
-         throw new LoginException("Invalid settings!");
-      }
-   }
+		add(minecraftTab);
 
-   public void onLoginFailed() {
-   }
+		// TLauncher Tab
 
-   public void onLoginSuccess() {
-   }
+		tlauncherTab = new EditorPanelTab("settings.tab.tlauncher");
+
+		this.background = new EditorFieldHandler("gui.background",
+				new EditorFileField("settings.slide.list.prompt", true,
+						new ImageFileExplorer()));
+		background.addListener(new EditorFieldChangeListener() {
+			@Override
+			protected void onChange(String oldValue, String newValue) {
+				if (!tlauncher.isReady())
+					return;
+				tlauncher.getFrame().mp.background.SLIDE_BACKGROUND.getThread()
+				.asyncRefreshSlide();
+			}
+		});
+
+		tlauncherTab.add(new EditorPair("settings.slide.list.label", background));
+		tlauncherTab.nextPane();
+
+		this.console = new EditorFieldHandler("gui.console",
+				new EditorComboBox<ConsoleType>(new ConsoleTypeConverter(),
+						ConsoleType.values()));
+		console.addListener(new EditorFieldChangeListener() {
+			@Override
+			protected void onChange(String oldvalue, String newvalue) {
+				if (newvalue == null)
+					return;
+				switch (ConsoleType.get(newvalue)) {
+				case GLOBAL:
+					TLauncher.getConsole().show(false);
+					break;
+				case MINECRAFT:
+				case NONE:
+					TLauncher.getConsole().hide();
+					break;
+				default:
+					throw new IllegalArgumentException("Unknown console type!");
+				}
+			}
+		});
+		tlauncherTab.add(new EditorPair("settings.console.label", console));
+
+		this.connQuality = new EditorFieldHandler("connection",
+				new EditorComboBox<ConnectionQuality>(
+						new ConnectionQualityConverter(),
+						ConnectionQuality.values()));
+		connQuality.addListener(new EditorFieldChangeListener() {
+			@Override
+			protected void onChange(String oldValue, String newValue) {
+				tlauncher.getDownloader().setConfiguration(
+						global.getConnectionQuality());
+			}
+		});
+		tlauncherTab.add(new EditorPair("settings.connection.label", connQuality));
+
+		this.launchAction = new EditorFieldHandler("minecraft.onlaunch",
+				new EditorComboBox<ActionOnLaunch>(
+						new ActionOnLaunchConverter(), ActionOnLaunch.values()));
+		tlauncherTab.add(new EditorPair("settings.launch-action.label", launchAction));
+
+		this.locale = new EditorFieldHandler("locale",
+				new EditorComboBox<Locale>(new LocaleConverter(),
+						global.getLocales()));
+		locale.addListener(new EditorFieldChangeListener() {
+			@Override
+			protected void onChange(String oldvalue, String newvalue) {
+				if (tlauncher.getFrame() != null)
+					tlauncher.getFrame().updateLocales();
+			}
+		});
+		tlauncherTab.add(new EditorPair("settings.lang.label", locale));
+
+		this.about = new AboutPage();
+
+		tlauncherTab.add(about);
+
+		add(tlauncherTab);
+
+		// General buttons
+		this.saveButton = new LocalizableButton("settings.save");
+		saveButton.setFont(saveButton.getFont().deriveFont(Font.BOLD));
+		saveButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveValues();
+			}
+
+		});
+
+		this.defaultButton = new LocalizableButton("settings.default");
+		defaultButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(Alert.showLocQuestion("settings.default.warning"))
+					resetValues();
+			}
+		});
+
+		this.homeButton = new ImageButton("home.png");
+		homeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				updateValues();
+				scene.setSettings(false);
+			}
+		});
+
+		Dimension size = homeButton.getPreferredSize();
+		if(size != null)
+			homeButton.setPreferredSize(new Dimension(size.width*2, size.height));
+
+		BorderPanel controlPanel = new BorderPanel();
+		controlPanel.setCenter(sepPan(saveButton, defaultButton));
+		controlPanel.setEast(uSepPan(homeButton));
+
+		container.setSouth(controlPanel);
+
+		// Popup
+		this.popup = new JPopupMenu();
+
+		this.infoItem = new LocalizableMenuItem("settings.popup.info");
+		infoItem.setEnabled(false);
+		popup.add(infoItem);
+
+		this.defaultItem = new LocalizableMenuItem("settings.popup.default");
+		defaultItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (selectedHandler == null)
+					return;
+
+				resetValue(selectedHandler);
+			}
+		});
+		popup.add(defaultItem);
+
+		for (final EditorHandler handler : this.handlers) {
+			Component handlerComponent = handler.getComponent();
+
+			handlerComponent.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if (e.getButton() != MouseEvent.BUTTON3)
+						return;
+					callPopup(e, handler);
+				}
+			});
+		}
+
+		updateValues();
+	}
+
+	void updateValues() {
+		boolean globalUnSaveable = !global.isSaveable();
+		for (EditorHandler handler : handlers) {
+			String path = handler.getPath(), value = global.get(path);
+
+			handler.updateValue(value);
+			setValid(handler, true);
+
+			if (globalUnSaveable || !global.isSaveable(path))
+				Blocker.block(handler, "unsaveable");
+		}
+	}
+
+	boolean saveValues() {
+		if (!checkValues())
+			return false;
+
+		for (EditorHandler handler : handlers) {
+			String path = handler.getPath(), value = handler.getValue();
+
+			global.set(path, value, false);
+
+			handler.onChange(value);
+		}
+
+		global.store();
+
+		return true;
+	}
+
+	void resetValues() {
+		for (EditorHandler handler : handlers)
+			resetValue(handler);
+	}
+
+	void resetValue(EditorHandler handler) {
+		String path = handler.getPath();
+
+		if (!global.isSaveable(path))
+			return;
+
+		String value = global.getDefault(path);
+
+		log("Resetting:", handler.getClass().getSimpleName(), path, value);
+
+		handler.setValue(value);
+
+		log("Reset!");
+	}
+
+	boolean canReset(EditorHandler handler) {
+		String key = handler.getPath();
+
+		return global.isSaveable(key)
+				&& global.getDefault(handler.getPath()) != null;
+	}
+
+	void callPopup(MouseEvent e, EditorHandler handler) {
+		if (popup.isShowing())
+			popup.setVisible(false);
+
+		defocus();
+
+		int x = e.getX(), y = e.getY();
+		this.selectedHandler = handler;
+
+		this.updateResetMenu();
+		this.infoItem.setVariables(handler.getPath());
+		this.popup.show((JComponent) e.getSource(), x, y);
+	}
+
+	@Override
+	public void block(Object reason) {
+		Blocker.blockComponents(container, reason);
+		this.updateResetMenu();
+	}
+
+	@Override
+	public void unblock(Object reason) {
+		Blocker.unblockComponents(container, reason);
+		this.updateResetMenu();
+	}
+
+	private void updateResetMenu() {
+		if(selectedHandler != null)
+			defaultItem.setEnabled( !(Blocker.isBlocked(this) ));
+	}
+
+	@Override
+	public void onLogin() throws LoginException {
+		if (checkValues())
+			return;
+
+		scene.setSettings(true);
+		throw new LoginException("Invalid settings!");
+	}
+
+	@Override
+	public void onLoginFailed() {
+	}
+
+	@Override
+	public void onLoginSuccess() {
+	}
 }

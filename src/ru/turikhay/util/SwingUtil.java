@@ -6,90 +6,88 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+
 import javax.swing.JFrame;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
+
 import ru.turikhay.tlauncher.ui.images.ImageCache;
 
 public class SwingUtil {
-   private static final List favicons = new ArrayList();
+	private final static List<Image> favicons = new ArrayList<Image>();
 
-   public static List getFavicons() {
-      if (!favicons.isEmpty()) {
-         return Collections.unmodifiableList(favicons);
-      } else {
-         int[] sizes = new int[]{256, 128, 96, 64, 48, 32, 24, 16};
-         String loaded = "";
-         int[] var5 = sizes;
-         int var4 = sizes.length;
+	public static List<Image> getFavicons() {
+		if (!favicons.isEmpty())
+			return Collections.unmodifiableList(favicons);
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            int i = var5[var3];
-            Image image = ImageCache.getImage("fav" + i + ".png", false);
-            if (image != null) {
-               loaded = loaded + ", " + i + "px";
-               favicons.add(image);
-            }
-         }
+		int[] sizes = new int[] { 256, 128, 96, 64, 48, 32, 24, 16 };
+		String loaded = "";
 
-         if (loaded.isEmpty()) {
-            log("No favicon is loaded.");
-         } else {
-            log("Favicons loaded:", loaded.substring(2));
-         }
+		for (int i : sizes) {
+			Image image = ImageCache.getImage("fav" + i + ".png", false);
+			if (image == null)
+				continue;
 
-         return favicons;
-      }
-   }
+			loaded += ", " + i + "px";
+			favicons.add(image);
+		}
 
-   public static void setFavicons(JFrame frame) {
-      frame.setIconImages(getFavicons());
-   }
+		if (loaded.isEmpty())
+			log("No favicon is loaded.");
+		else
+			log("Favicons loaded:", loaded.substring(2));
 
-   public static void initLookAndFeel() {
-      try {
-         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-      } catch (Exception var1) {
-         log("Can't set system look and feel.");
-         var1.printStackTrace();
-      }
+		return favicons;
+	}
 
-   }
+	public static void setFavicons(JFrame frame) {
+		frame.setIconImages(getFavicons());
+	}
 
-   public static void initFontSize(int defSize) {
-      try {
-         UIDefaults defaults = UIManager.getDefaults();
-         int minSize = defSize;
-         int maxSize = defSize;
-         Enumeration e = defaults.keys();
+	public static void initLookAndFeel() {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			log("Can't set system look and feel.");
+			e.printStackTrace();
+		}
+	}
 
-         while(e.hasMoreElements()) {
-            Object key = e.nextElement();
-            Object value = defaults.get(key);
-            if (value instanceof Font) {
-               Font font = (Font)value;
-               int size = font.getSize();
-               if (size < minSize) {
-                  size = minSize;
-               } else if (size > maxSize) {
-                  size = maxSize;
-               }
+	public static void initFontSize(int defSize) {
+		try {
+			UIDefaults defaults = UIManager.getDefaults();
 
-               if (value instanceof FontUIResource) {
-                  defaults.put(key, new FontUIResource(font.getName(), font.getStyle(), size));
-               } else {
-                  defaults.put(key, new Font(font.getName(), font.getStyle(), size));
-               }
-            }
-         }
-      } catch (Exception var9) {
-         log("Cannot change font sizes!", var9);
-      }
+			int minSize = defSize, maxSize = defSize;
 
-   }
+			for (Enumeration<?> e = defaults.keys(); e.hasMoreElements();) {
+				Object key = e.nextElement();
+				Object value = defaults.get(key);
 
-   private static void log(Object... o) {
-      U.log("[Swing]", o);
-   }
+				if (value instanceof Font) {
+					Font font = (Font) value;
+					int size = font.getSize();
+
+					if (size < minSize)
+						size = minSize;
+					else if (size > maxSize)
+						size = maxSize;
+
+					if (value instanceof FontUIResource) {
+						defaults.put(key, new FontUIResource(font.getName(),
+								font.getStyle(), size));
+					} else {
+						defaults.put(key,
+								new Font(font.getName(), font.getStyle(), size));
+					}
+				}
+			}
+		} catch (Exception e) {
+			log("Cannot change font sizes!", e);
+		}
+	}
+
+	private static void log(Object... o) {
+		U.log("[Swing]", o);
+	}
 }

@@ -1,9 +1,9 @@
 package ru.turikhay.tlauncher.managers;
 
 public interface VersionManagerListener {
-   void onVersionsRefreshing(VersionManager var1);
+	public void onVersionsRefreshing(VersionManager manager);
 
-   void onVersionsRefreshingFailed(VersionManager var1);
+	public void onVersionsRefreshingFailed(VersionManager manager);
 
-   void onVersionsRefreshed(VersionManager var1);
+	public void onVersionsRefreshed(VersionManager manager);
 }

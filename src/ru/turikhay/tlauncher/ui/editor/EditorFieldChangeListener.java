@@ -1,13 +1,16 @@
 package ru.turikhay.tlauncher.ui.editor;
 
 public abstract class EditorFieldChangeListener extends EditorFieldListener {
-   protected void onChange(EditorHandler handler, String oldValue, String newValue) {
-      if (newValue != null || oldValue != null) {
-         if (newValue == null || !newValue.equals(oldValue)) {
-            this.onChange(oldValue, newValue);
-         }
-      }
-   }
+	@Override
+	protected void onChange(EditorHandler handler, String oldValue,
+			String newValue) {
+		if (newValue == null && oldValue == null)
+			return;
+		if (newValue != null && newValue.equals(oldValue))
+			return;
 
-   protected abstract void onChange(String var1, String var2);
+		this.onChange(oldValue, newValue);
+	}
+
+	protected abstract void onChange(String oldValue, String newValue);
 }

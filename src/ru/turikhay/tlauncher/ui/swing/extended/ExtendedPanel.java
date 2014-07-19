@@ -6,148 +6,130 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
 import javax.swing.JPanel;
 
 public class ExtendedPanel extends JPanel {
-   private static final long serialVersionUID = 873670863629293560L;
-   private final List mouseListeners;
-   private Insets insets;
+	private static final long serialVersionUID = 873670863629293560L;
 
-   public ExtendedPanel(LayoutManager layout, boolean isDoubleBuffered) {
-      super(layout, isDoubleBuffered);
-      this.mouseListeners = new ArrayList();
-      this.setOpaque(false);
-   }
+	private final List<MouseListener> mouseListeners;
+	private Insets insets;
 
-   public ExtendedPanel(LayoutManager layout) {
-      this(layout, true);
-   }
+	public ExtendedPanel(LayoutManager layout, boolean isDoubleBuffered) {
+		super(layout, isDoubleBuffered);
 
-   public ExtendedPanel(boolean isDoubleBuffered) {
-      this(new FlowLayout(), isDoubleBuffered);
-   }
+		this.mouseListeners = new ArrayList<MouseListener>();
 
-   public ExtendedPanel() {
-      this(true);
-   }
+		setOpaque(false);
+	}
 
-   public Insets getInsets() {
-      return this.insets == null ? super.getInsets() : this.insets;
-   }
+	public ExtendedPanel(LayoutManager layout) {
+		this(layout, true);
+	}
 
-   public void setInsets(Insets insets) {
-      this.insets = insets;
-   }
+	public ExtendedPanel(boolean isDoubleBuffered) {
+		this(new FlowLayout(), isDoubleBuffered);
+	}
 
-   public Component add(Component comp) {
-      super.add(comp);
-      if (comp == null) {
-         return null;
-      } else {
-         MouseListener[] compareListeners = comp.getMouseListeners();
-         Iterator var4 = this.mouseListeners.iterator();
+	public ExtendedPanel() {
+		this(true);
+	}
 
-         while(var4.hasNext()) {
-            MouseListener listener = (MouseListener)var4.next();
-            MouseListener add = listener;
-            MouseListener[] var9 = compareListeners;
-            int var8 = compareListeners.length;
+	@Override
+	public Insets getInsets() {
+		return insets == null? super.getInsets() : insets;
+	}
 
-            for(int var7 = 0; var7 < var8; ++var7) {
-               MouseListener compareListener = var9[var7];
-               if (listener.equals(compareListener)) {
-                  add = null;
-                  break;
-               }
-            }
+	public void setInsets(Insets insets) {
+		this.insets = insets;
+	}
 
-            if (add != null) {
-               comp.addMouseListener(add);
-            }
-         }
+	@Override
+	public Component add(Component comp) {
+		super.add(comp);
 
-         return comp;
-      }
-   }
+		if (comp == null)
+			return null;
 
-   public void add(Component... components) {
-      if (components == null) {
-         throw new NullPointerException();
-      } else {
-         Component[] var5 = components;
-         int var4 = components.length;
+		MouseListener[] compareListeners = comp.getMouseListeners();
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component comp = var5[var3];
-            this.add(comp);
-         }
+		for (MouseListener listener : mouseListeners) {
+			MouseListener add = listener;
 
-      }
-   }
+			for (MouseListener compareListener : compareListeners)
+				if (listener.equals(compareListener)) {
+					add = null;
+					break;
+				}
 
-   public void add(Component component0, Component component1) {
-      this.add(component0, component1);
-   }
+			if (add == null)
+				continue;
+			comp.addMouseListener(add);
+		}
 
-   public synchronized void addMouseListener(MouseListener listener) {
-      if (listener != null) {
-         this.mouseListeners.add(listener);
-         Component[] var5;
-         int var4 = (var5 = this.getComponents()).length;
+		return comp;
+	}
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component comp = var5[var3];
-            comp.addMouseListener(listener);
-         }
+	public void add(Component... components) {
+		if (components == null)
+			throw new NullPointerException();
 
-      }
-   }
+		for (Component comp : components)
+			add(comp);
+	}
 
-   protected synchronized void addMouseListenerOriginally(MouseListener listener) {
-      super.addMouseListener(listener);
-   }
+	public void add(Component component0, Component component1) {
+		add(new Component[] { component0, component1 });
+	}
 
-   public synchronized void removeMouseListener(MouseListener listener) {
-      if (listener != null) {
-         this.mouseListeners.remove(listener);
-         Component[] var5;
-         int var4 = (var5 = this.getComponents()).length;
+	@Override
+	public synchronized void addMouseListener(MouseListener listener) {
+		if (listener == null)
+			return;
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component comp = var5[var3];
-            comp.removeMouseListener(listener);
-         }
+		this.mouseListeners.add(listener);
 
-      }
-   }
+		for (Component comp : getComponents())
+			comp.addMouseListener(listener);
+	}
 
-   protected synchronized void removeMouseListenerOriginally(MouseListener listener) {
-      super.removeMouseListener(listener);
-   }
+	protected synchronized void addMouseListenerOriginally(
+			MouseListener listener) {
+		super.addMouseListener(listener);
+	}
 
-   public boolean contains(Component comp) {
-      if (comp == null) {
-         return false;
-      } else {
-         Component[] var5;
-         int var4 = (var5 = this.getComponents()).length;
+	@Override
+	public synchronized void removeMouseListener(MouseListener listener) {
+		if (listener == null)
+			return;
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component c = var5[var3];
-            if (comp.equals(c)) {
-               return true;
-            }
-         }
+		this.mouseListeners.remove(listener);
 
-         return false;
-      }
-   }
+		for (Component comp : getComponents())
+			comp.removeMouseListener(listener);
+	}
 
-   public Insets setInsets(int top, int left, int bottom, int right) {
-      Insets insets = new Insets(top, left, bottom, right);
-      this.setInsets(insets);
-      return insets;
-   }
+	protected synchronized void removeMouseListenerOriginally(MouseListener listener) {
+		super.removeMouseListener(listener);
+	}
+
+	public boolean contains(Component comp) {
+		if(comp == null)
+			return false;
+
+		for(Component c : getComponents())
+			if(comp.equals(c))
+				return true;
+
+		return false;
+	}
+
+	public Insets setInsets(int top, int left, int bottom, int right) {
+		Insets insets = new Insets(top, left, bottom, right);
+		setInsets(insets);
+
+		return insets;
+	}
+
 }

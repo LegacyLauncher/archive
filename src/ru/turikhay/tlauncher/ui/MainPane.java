@@ -2,7 +2,7 @@ package ru.turikhay.tlauncher.ui;
 
 import java.awt.Component;
 import java.awt.Point;
-import javax.swing.JComponent;
+
 import ru.turikhay.tlauncher.ui.background.BackgroundHolder;
 import ru.turikhay.tlauncher.ui.progress.LaunchProgress;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
@@ -14,98 +14,119 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import ru.turikhay.util.OS;
 
 public class MainPane extends ExtendedLayeredPane {
-   private static final long serialVersionUID = -8854598755786867602L;
-   private final TLauncherFrame rootFrame;
-   private final boolean repaintEveryTime;
-   private PseudoScene scene;
-   public final BackgroundHolder background;
-   public final LaunchProgress progress;
-   public final DefaultScene defaultScene;
-   public final AccountEditorScene accountEditor;
-   public final VersionManagerScene versionManager;
-   final ServicePanel service;
-   public final LeftSideNotifier warning;
+	private static final long serialVersionUID = -8854598755786867602L;
 
-   MainPane(TLauncherFrame frame) {
-      super((JComponent)null);
-      this.rootFrame = frame;
-      this.repaintEveryTime = OS.LINUX.isCurrent();
-      this.background = new BackgroundHolder(this);
-      this.background.setBackground(this.background.SLIDE_BACKGROUND, false);
-      this.add(this.background);
-      this.service = new ServicePanel(this);
-      this.defaultScene = new DefaultScene(this);
-      this.add(this.defaultScene);
-      this.accountEditor = new AccountEditorScene(this);
-      this.add(this.accountEditor);
-      this.versionManager = new VersionManagerScene(this);
-      this.add(this.versionManager);
-      this.progress = new LaunchProgress(frame);
-      this.add(this.progress);
-      this.warning = new LeftSideNotifier();
-      this.warning.setLocation(10, 10);
-      this.add(this.warning);
-      this.setScene(this.defaultScene, false);
-   }
+	private final TLauncherFrame rootFrame;
+	private final boolean repaintEveryTime;
 
-   public PseudoScene getScene() {
-      return this.scene;
-   }
+	private PseudoScene scene;
 
-   public void setScene(PseudoScene scene) {
-      this.setScene(scene, true);
-   }
+	public final BackgroundHolder background;
+	public final LaunchProgress progress;
 
-   public void setScene(PseudoScene newscene, boolean animate) {
-      if (newscene == null) {
-         throw new NullPointerException();
-      } else if (!newscene.equals(this.scene)) {
-         Component[] var6;
-         int var5 = (var6 = this.getComponents()).length;
+	public final DefaultScene defaultScene;
+	public final AccountEditorScene accountEditor;
+	public final VersionManagerScene versionManager;
 
-         for(int var4 = 0; var4 < var5; ++var4) {
-            Component comp = var6[var4];
-            if (!comp.equals(newscene) && comp instanceof PseudoScene) {
-               ((PseudoScene)comp).setShown(false, animate);
-            }
-         }
+	final ServicePanel service;
 
-         this.scene = newscene;
-         this.scene.setShown(true);
-         if (this.repaintEveryTime) {
-            this.repaint();
-         }
+	public final LeftSideNotifier warning;
 
-      }
-   }
+	MainPane(TLauncherFrame frame) {
+		super(null); // TLauncherFrame will determine MainPane size with layout
+		// manager
 
-   public void openDefaultScene() {
-      this.setScene(this.defaultScene);
-   }
+		this.rootFrame = frame;
+		this.repaintEveryTime = OS.LINUX.isCurrent(); // Yup, Swing under Linux doesn't work well.
 
-   public void openAccountEditor() {
-      this.setScene(this.accountEditor);
-   }
+		this.background = new BackgroundHolder(this);
+		background.setBackground(background.SLIDE_BACKGROUND, false);
+		this.add(background);
 
-   public void openVersionManager() {
-      this.setScene(this.versionManager);
-   }
+		this.service = new ServicePanel(this);
 
-   public TLauncherFrame getRootFrame() {
-      return this.rootFrame;
-   }
+		this.defaultScene = new DefaultScene(this);
+		this.add(defaultScene);
 
-   public LaunchProgress getProgress() {
-      return this.progress;
-   }
+		this.accountEditor = new AccountEditorScene(this);
+		this.add(accountEditor);
 
-   public void onResize() {
-      this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
-   }
+		this.versionManager = new VersionManagerScene(this);
+		this.add(versionManager);
 
-   public Point getLocationOf(Component comp) {
-      Point compLocation = comp.getLocationOnScreen();
-      Point paneLocation = this.getLocationOnScreen();
-      return new Point(compLocation.x - paneLocation.x, compLocation.y - paneLocation.y);
-   }
+		this.progress = new LaunchProgress(frame);
+		this.add(progress);
+
+		this.warning = new LeftSideNotifier();
+		warning.setLocation(10, 10);
+		this.add(warning);
+
+		this.setScene(defaultScene, false);
+	}
+
+	public PseudoScene getScene() {
+		return scene;
+	}
+
+	public void setScene(PseudoScene scene) {
+		this.setScene(scene, true);
+	}
+
+	public void setScene(PseudoScene newscene, boolean animate) {
+		if (newscene == null)
+			throw new NullPointerException();
+
+		if (newscene.equals(this.scene))
+			return;
+
+		for (Component comp : getComponents())
+			if (!comp.equals(newscene) && comp instanceof PseudoScene)
+				((PseudoScene) comp).setShown(false, animate);
+
+		this.scene = newscene;
+		this.scene.setShown(true);
+
+		if(repaintEveryTime)
+			repaint();
+	}
+
+	public void openDefaultScene() {
+		setScene(defaultScene);
+	}
+
+	public void openAccountEditor() {
+		setScene(accountEditor);
+	}
+
+	public void openVersionManager() {
+		setScene(versionManager);
+	}
+
+	public TLauncherFrame getRootFrame() {
+		return rootFrame;
+	}
+
+	public LaunchProgress getProgress() {
+		return progress;
+	}
+
+	@Override
+	public void onResize() {
+		progress.setBounds(0, getHeight() - ProgressBar.DEFAULT_HEIGHT + 1,
+				getWidth(), ProgressBar.DEFAULT_HEIGHT);
+	}
+
+	/**
+	 * Location of some components can be determined only with
+	 * <code>getLocationOnScreen()</code> method. This method should help to
+	 * find out the location of a <code>Component</code> on the
+	 * <code>MainPane</code>.
+	 * 
+	 */
+	public Point getLocationOf(Component comp) {
+		Point compLocation = comp.getLocationOnScreen(), paneLocation = getLocationOnScreen();
+
+		return new Point(compLocation.x - paneLocation.x, compLocation.y
+				- paneLocation.y);
+	}
 }
