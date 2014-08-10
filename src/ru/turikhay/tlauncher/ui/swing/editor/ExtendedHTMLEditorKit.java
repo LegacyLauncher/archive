@@ -5,24 +5,19 @@ import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.ImageView;
+import javax.swing.text.html.HTMLEditorKit.HTMLFactory;
 
 public class ExtendedHTMLEditorKit extends HTMLEditorKit {
-	protected final static ExtendedHTMLFactory extendedFactory = new ExtendedHTMLFactory();
+   protected static final ExtendedHTMLEditorKit.ExtendedHTMLFactory extendedFactory = new ExtendedHTMLEditorKit.ExtendedHTMLFactory();
 
-	@Override
-	public ViewFactory getViewFactory() {
-		return extendedFactory;
-	}
+   public ViewFactory getViewFactory() {
+      return extendedFactory;
+   }
 
-	public static class ExtendedHTMLFactory extends HTMLFactory {
-		@Override
-		public View create(Element elem) {
-			View view = super.create(elem);
-
-			if(!(view instanceof ImageView))
-				return view;
-
-			return new ExtendedImageView(elem);
-		}
-	}
+   public static class ExtendedHTMLFactory extends HTMLFactory {
+      public View create(Element elem) {
+         View view = super.create(elem);
+         return (View)(!(view instanceof ImageView) ? view : new ExtendedImageView(elem));
+      }
+   }
 }

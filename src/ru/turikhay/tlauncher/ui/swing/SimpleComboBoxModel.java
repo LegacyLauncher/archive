@@ -3,156 +3,133 @@ package ru.turikhay.tlauncher.ui.swing;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
-
 import javax.swing.DefaultComboBoxModel;
 
-public class SimpleComboBoxModel<E> extends DefaultComboBoxModel<E> {
-	private static final long serialVersionUID = 5950434966721171811L;
+public class SimpleComboBoxModel extends DefaultComboBoxModel {
+   private static final long serialVersionUID = 5950434966721171811L;
+   protected Vector objects;
+   protected Object selectedObject;
 
-	protected Vector<E> objects;
-	protected Object selectedObject;
+   public SimpleComboBoxModel() {
+      this.objects = new Vector();
+   }
 
-	public SimpleComboBoxModel() {
-		objects = new Vector<E>();
-	}
+   public SimpleComboBoxModel(Object[] items) {
+      this.objects = new Vector(items.length);
+      int i = 0;
 
-	public SimpleComboBoxModel(E items[]) {
-		objects = new Vector<E>(items.length);
+      for(int c = items.length; i < c; ++i) {
+         this.objects.addElement(items[i]);
+      }
 
-		int i,c;
-		for(i=0,c=items.length;i<c;i++)
-			objects.addElement(items[i]);
+      if (this.getSize() > 0) {
+         this.selectedObject = this.getElementAt(0);
+      }
 
-		if(getSize() > 0)
-			selectedObject = getElementAt( 0 );
-	}
+   }
 
-	public SimpleComboBoxModel(Vector<E> v) {
-		objects = v;
+   public SimpleComboBoxModel(Vector v) {
+      this.objects = v;
+      if (this.getSize() > 0) {
+         this.selectedObject = this.getElementAt(0);
+      }
 
-		if (getSize() > 0)
-			selectedObject = getElementAt(0);
-	}
+   }
 
-	@Override
-	public void setSelectedItem(Object anObject) {
-		if(
-				(selectedObject != null && !selectedObject.equals( anObject )) // anObject is not selected already
-				|| // or
-				selectedObject == null // Selected object is NULL
-				&& // and
-				anObject != null // anObject is not NULL
-				){
-			selectedObject = anObject;
-			fireContentsChanged(this, -1, -1);
-		}
-	}
+   public void setSelectedItem(Object anObject) {
+      if (this.selectedObject != null && !this.selectedObject.equals(anObject) || this.selectedObject == null && anObject != null) {
+         this.selectedObject = anObject;
+         this.fireContentsChanged(this, -1, -1);
+      }
 
-	@Override
-	public Object getSelectedItem() {
-		return selectedObject;
-	}
+   }
 
-	@Override
-	public int getSize() {
-		return objects.size();
-	}
+   public Object getSelectedItem() {
+      return this.selectedObject;
+   }
 
-	@Override
-	public E getElementAt(int index) {
-		if ( index >= 0 && index < objects.size() )
-			return objects.elementAt(index);
-		return null;
-	}
+   public int getSize() {
+      return this.objects.size();
+   }
 
-	@Override
-	public int getIndexOf(Object anObject) {
-		return objects.indexOf(anObject);
-	}
+   public Object getElementAt(int index) {
+      return index >= 0 && index < this.objects.size() ? this.objects.elementAt(index) : null;
+   }
 
-	@Override
-	public void addElement(E anObject) {
-		objects.addElement(anObject);
+   public int getIndexOf(Object anObject) {
+      return this.objects.indexOf(anObject);
+   }
 
-		int size = objects.size(), index = objects.size() - 1;
-		fireIntervalAdded(this, index, index);
+   public void addElement(Object anObject) {
+      this.objects.addElement(anObject);
+      int size = this.objects.size();
+      int index = this.objects.size() - 1;
+      this.fireIntervalAdded(this, index, index);
+      if (size == 1 && this.selectedObject == null && anObject != null) {
+         this.setSelectedItem(anObject);
+      }
 
-		if(size == 1 && selectedObject == null && anObject != null)
-			setSelectedItem(anObject);
-	}
+   }
 
-	public void addElements(Collection<E> list) {
-		if(list.size() == 0)
-			return;
+   public void addElements(Collection list) {
+      if (list.size() != 0) {
+         int size = list.size();
+         int index0 = this.objects.size();
+         int index1 = index0 + size - 1;
+         this.objects.addAll(list);
+         this.fireIntervalAdded(this, index0, index1);
+         if (this.selectedObject == null) {
+            Iterator iterator = list.iterator();
 
-		int
-		size = list.size(),
-		index0 = objects.size(),
-		index1 = index0 + size - 1;
+            while(iterator.hasNext()) {
+               Object elem = iterator.next();
+               if (elem != null) {
+                  this.setSelectedItem(elem);
+                  break;
+               }
+            }
+         }
 
-		objects.addAll(list);
-		fireIntervalAdded(this, index0, index1);
+      }
+   }
 
-		if(selectedObject == null) {
-			// Take care of selection
-			Iterator<E> iterator = list.iterator();
-			E elem;
+   public void insertElementAt(Object anObject, int index) {
+      this.objects.insertElementAt(anObject, index);
+      this.fireIntervalAdded(this, index, index);
+   }
 
-			while(iterator.hasNext()) {
-				elem = iterator.next();
+   public void removeElementAt(int index) {
+      if (this.getElementAt(index) == this.selectedObject) {
+         if (index == 0) {
+            this.setSelectedItem(this.getSize() == 1 ? null : this.getElementAt(index + 1));
+         } else {
+            this.setSelectedItem(this.getElementAt(index - 1));
+         }
+      }
 
-				if(elem == null)
-					continue;
+      this.objects.removeElementAt(index);
+      this.fireIntervalRemoved(this, index, index);
+   }
 
-				setSelectedItem(elem);
-				break;
-			}
-		}
-	}
+   public void removeElement(Object anObject) {
+      int index = this.objects.indexOf(anObject);
+      if (index != -1) {
+         this.removeElementAt(index);
+      }
 
-	@Override
-	public void insertElementAt(E anObject,int index) {
-		objects.insertElementAt(anObject,index);
-		fireIntervalAdded(this, index, index);
-	}
+   }
 
-	@Override
-	public void removeElementAt(int index) {
-		if (getElementAt(index) == selectedObject) {
-			// Take care if this object is selected
-			if (index == 0) {
-				setSelectedItem(getSize() == 1? null : getElementAt(index + 1));
-			} else {
-				setSelectedItem(getElementAt(index - 1));
-			}
-		}
+   public void removeAllElements() {
+      int size = this.objects.size();
+      if (size > 0) {
+         int firstIndex = 0;
+         int lastIndex = size - 1;
+         this.objects.removeAllElements();
+         this.selectedObject = null;
+         this.fireIntervalRemoved(this, firstIndex, lastIndex);
+      } else {
+         this.selectedObject = null;
+      }
 
-		objects.removeElementAt(index);
-		fireIntervalRemoved(this, index, index);
-	}
-
-	@Override
-	public void removeElement(Object anObject) {
-		int index = objects.indexOf(anObject);
-
-		if(index != -1)
-			removeElementAt(index);
-	}
-
-	@Override
-	public void removeAllElements() {
-		int size = objects.size();
-
-		if (size > 0) {
-			int firstIndex = 0;
-			int lastIndex = size - 1;
-
-			objects.removeAllElements();
-
-			selectedObject = null;
-			fireIntervalRemoved(this, firstIndex, lastIndex);
-		} else {
-			selectedObject = null;
-		}
-	}
+   }
 }

@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.settings;
 
 import java.io.IOException;
 import java.io.StringReader;
-
 import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -14,81 +13,86 @@ import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 public class AboutPage extends BorderPanel implements LocalizableComponent {
-	private final AboutPageTokenResolver resolver;
+   private final AboutPage.AboutPageTokenResolver resolver;
+   private final String source;
+   private final EditorPane editor;
 
-	private final String source;
-	private final EditorPane editor;
+   AboutPage() {
+      String tempSource;
+      try {
+         tempSource = FileUtil.getResource(this.getClass().getResource("about.html"));
+      } catch (Exception var3) {
+         U.log(var3);
+         tempSource = null;
+      }
 
-	AboutPage() {
-		String tempSource;
+      this.source = tempSource;
+      this.resolver = new AboutPage.AboutPageTokenResolver((AboutPage.AboutPageTokenResolver)null);
+      this.editor = new EditorPane();
+      this.updateLocale();
+      this.setCenter(this.editor);
+   }
 
-		try {
-			tempSource = FileUtil.getResource(getClass().getResource("about.html"));
-		} catch(Exception e) {
-			U.log(e);
-			tempSource = null;
-		}
+   public EditorPane getEditor() {
+      return this.editor;
+   }
 
-		this.source = tempSource;
-		this.resolver = new AboutPageTokenResolver();
-		this.editor = new EditorPane();
+   public String getSource() {
+      return this.source;
+   }
 
-		updateLocale();
-		setCenter(editor);
-	}
+   public void updateLocale() {
+      if (this.source != null) {
+         StringBuilder string = new StringBuilder();
+         TokenReplacingReader replacer = new TokenReplacingReader(new StringReader(this.source), this.resolver);
 
-	public EditorPane getEditor() {
-		return editor;
-	}
+         label54: {
+            try {
+               while(true) {
+                  int read;
+                  if ((read = replacer.read()) <= 0) {
+                     break label54;
+                  }
 
-	public String getSource() {
-		return source;
-	}
+                  string.append((char)read);
+               }
+            } catch (IOException var8) {
+               var8.printStackTrace();
+            } finally {
+               U.close(replacer);
+            }
 
-	@Override
-	public void updateLocale() {
-		if(source == null) return;
+            return;
+         }
 
-		StringBuilder string = new StringBuilder();
-		TokenReplacingReader replacer = new TokenReplacingReader(new StringReader(source), resolver);
-		int read;
+         this.editor.setText(string.toString());
+      }
+   }
 
-		try {
+   private class AboutPageTokenResolver implements ITokenResolver {
+      private static final String image = "image:";
+      private static final String loc = "loc:";
+      private static final String width = "width";
+      private static final String color = "color";
 
-			while((read = replacer.read()) > 0)
-				string.append((char) read);
+      private AboutPageTokenResolver() {
+      }
 
-		} catch(IOException ioE) {
-			ioE.printStackTrace();
-			return;
-		} finally {
-			U.close(replacer);
-		}
+      public String resolveToken(String token) {
+         if (token.startsWith("image:")) {
+            return ImageCache.getRes(token.substring("image:".length())).toExternalForm();
+         } else if (token.startsWith("loc:")) {
+            return Localizable.get(token.substring("loc:".length()));
+         } else if (token.equals("width")) {
+            return "445";
+         } else {
+            return token.equals("color") ? "black" : token;
+         }
+      }
 
-		editor.setText(string.toString());
-	}
-
-	private class AboutPageTokenResolver implements ITokenResolver {
-		private static final String
-		image = "image:", loc = "loc:", width = "width",
-		color = "color";
-
-		@Override
-		public String resolveToken(String token) {
-			if(token.startsWith(image))
-				return ImageCache.getRes(token.substring(image.length())).toExternalForm();
-
-			if(token.startsWith(loc))
-				return Localizable.get(token.substring(loc.length()));
-
-			if(token.equals(width))
-				return "445";
-
-			if(token.equals(color))
-				return "black";
-
-			return token;
-		}
-	}
-
+      // $FF: synthetic method
+      AboutPageTokenResolver(AboutPage.AboutPageTokenResolver var2) {
+         this();
+      }
+   }
 }

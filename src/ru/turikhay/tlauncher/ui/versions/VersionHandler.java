@@ -2,167 +2,162 @@ package ru.turikhay.tlauncher.ui.versions;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-
+import net.minecraft.launcher.updater.VersionFilter;
+import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.adapter.AdaptedValue;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
-import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.VersionManagerScene;
 
-import net.minecraft.launcher.updater.VersionFilter;
-import net.minecraft.launcher.updater.VersionSyncInfo;
-import net.minecraft.launcher.versions.Version;
-
 public class VersionHandler implements Blockable, VersionHandlerListener {
-	static final int ELEM_WIDTH = 300;
+   static final int ELEM_WIDTH = 300;
+   public static final String REFRESH_BLOCK = "refresh";
+   public static final String SINGLE_SELECTION_BLOCK = "single-select";
+   public static final String START_DOWNLOAD = "start-download";
+   public static final String STOP_DOWNLOAD = "stop-download";
+   public static final String DELETE_BLOCK = "deleting";
+   private final List listeners;
+   private final VersionHandler instance = this;
+   public final VersionManagerScene scene;
+   final VersionHandlerThread thread;
+   public final VersionList list;
+   final VersionManager vm;
+   final Downloader downloader;
+   List selected;
+   List downloading;
+   List adapted;
+   VersionFilter filter;
 
-	public static final String
-	REFRESH_BLOCK = LoginForm.REFRESH_BLOCK,
-	SINGLE_SELECTION_BLOCK = "single-select",
-	START_DOWNLOAD = "start-download",
-	STOP_DOWNLOAD = "stop-download",
-	DELETE_BLOCK = "deleting";
+   public VersionHandler(VersionManagerScene scene) {
+      this.scene = scene;
+      this.listeners = Collections.synchronizedList(new ArrayList());
+      this.downloading = Collections.synchronizedList(new ArrayList());
+      TLauncher launcher = TLauncher.getInstance();
+      this.vm = launcher.getVersionManager();
+      this.downloader = launcher.getDownloader();
+      this.list = new VersionList(this);
+      this.thread = new VersionHandlerThread(this);
+      this.vm.addListener(new VersionManagerListener() {
+         public void onVersionsRefreshing(VersionManager manager) {
+            VersionHandler.this.instance.onVersionRefreshing(manager);
+         }
 
-	private final List<VersionHandlerListener> listeners;
-	private final VersionHandler instance;
+         public void onVersionsRefreshed(VersionManager manager) {
+            VersionHandler.this.instance.onVersionRefreshed(manager);
+         }
 
-	public final VersionManagerScene scene;
+         public void onVersionsRefreshingFailed(VersionManager manager) {
+            this.onVersionsRefreshed(manager);
+         }
+      });
+      this.onVersionDeselected();
+   }
 
-	final VersionHandlerThread thread;
+   void addListener(VersionHandlerListener listener) {
+      this.listeners.add(listener);
+   }
 
-	public final VersionList list;
+   void update() {
+      if (this.selected != null) {
+         this.onVersionSelected(this.selected);
+      }
 
-	final VersionManager vm;
-	final Downloader downloader;
+   }
 
-	List<VersionSyncInfo> selected, downloading;
-	List<AdaptedValue<Version>> adapted;
-	VersionFilter filter;
+   void refresh() {
+      this.vm.startRefresh(true);
+   }
 
-	public VersionHandler(VersionManagerScene scene) {
-		this.instance = this;
-		this.scene = scene;
+   void asyncRefresh() {
+      this.vm.asyncRefresh();
+   }
 
-		this.listeners = Collections.synchronizedList(new ArrayList<VersionHandlerListener>());
-		this.downloading = Collections.synchronizedList(new ArrayList<VersionSyncInfo>());
+   public void stopRefresh() {
+      this.vm.stopRefresh();
+   }
 
-		TLauncher launcher = TLauncher.getInstance();
-		this.vm = launcher.getVersionManager();
-		this.downloader = launcher.getDownloader();
+   void exitEditor() {
+      this.list.deselect();
+      this.scene.getMainPane().openDefaultScene();
+   }
 
-		this.list = new VersionList(this);
+   VersionSyncInfo getSelected() {
+      return this.selected != null && this.selected.size() == 1 ? (VersionSyncInfo)this.selected.get(0) : null;
+   }
 
-		this.thread = new VersionHandlerThread(this);
+   List getSelectedList() {
+      return this.selected;
+   }
 
-		vm.addListener(new VersionManagerListener() {
-			@Override
-			public void onVersionsRefreshing(VersionManager manager) {
-				instance.onVersionRefreshing(manager);
-			}
+   public void block(Object reason) {
+      Blocker.block(reason, this.list);
+   }
 
-			@Override
-			public void onVersionsRefreshed(VersionManager manager) {
-				instance.onVersionRefreshed(manager);
-			}
+   public void unblock(Object reason) {
+      Blocker.unblock(reason, this.list);
+   }
 
-			@Override
-			public void onVersionsRefreshingFailed(VersionManager manager) {
-				onVersionsRefreshed(manager);
-			}
-		});
+   public void onVersionRefreshing(VersionManager vm) {
+      Blocker.block((Blockable)this.instance, (Object)"refresh");
+      Iterator var3 = this.listeners.iterator();
 
-		this.onVersionDeselected();
-	}
+      while(var3.hasNext()) {
+         VersionHandlerListener listener = (VersionHandlerListener)var3.next();
+         listener.onVersionRefreshing(vm);
+      }
 
-	void addListener(VersionHandlerListener listener) {
-		this.listeners.add(listener);
-	}
+   }
 
-	void update() {
-		if(selected != null)
-			onVersionSelected(selected);
-	}
+   public void onVersionRefreshed(VersionManager vm) {
+      Blocker.unblock((Blockable)this.instance, (Object)"refresh");
+      Iterator var3 = this.listeners.iterator();
 
-	void refresh() {
-		vm.startRefresh(true);
-	}
+      while(var3.hasNext()) {
+         VersionHandlerListener listener = (VersionHandlerListener)var3.next();
+         listener.onVersionRefreshed(vm);
+      }
 
-	void asyncRefresh() {
-		vm.asyncRefresh();
-	}
+   }
 
-	public void stopRefresh() {
-		vm.stopRefresh();
-	}
+   public void onVersionSelected(List version) {
+      this.selected = version;
+      if (version != null && !version.isEmpty() && ((VersionSyncInfo)version.get(0)).getID() != null) {
+         Iterator var3 = this.listeners.iterator();
 
-	void exitEditor() {
-		list.deselect();
-		scene.getMainPane().openDefaultScene();
-	}
+         while(var3.hasNext()) {
+            VersionHandlerListener listener = (VersionHandlerListener)var3.next();
+            listener.onVersionSelected(version);
+         }
+      } else {
+         this.onVersionDeselected();
+      }
 
-	VersionSyncInfo getSelected() {
-		return selected == null || selected.size() != 1? null : selected.get(0);
-	}
+   }
 
-	List<VersionSyncInfo> getSelectedList() {
-		return selected;
-	}
+   public void onVersionDeselected() {
+      this.selected = null;
+      Iterator var2 = this.listeners.iterator();
 
-	@Override
-	public void block(Object reason) {
-		Blocker.block(reason, list);
-	}
+      while(var2.hasNext()) {
+         VersionHandlerListener listener = (VersionHandlerListener)var2.next();
+         listener.onVersionDeselected();
+      }
 
-	@Override
-	public void unblock(Object reason) {
-		Blocker.unblock(reason, list);
-	}
+   }
 
-	@Override
-	public void onVersionRefreshing(VersionManager vm) {		
-		Blocker.block(instance, REFRESH_BLOCK);
+   public void onVersionDownload(List list) {
+      this.downloading = list;
+      Iterator var3 = this.listeners.iterator();
 
-		for(VersionHandlerListener listener : listeners)
-			listener.onVersionRefreshing(vm);
-	}
+      while(var3.hasNext()) {
+         VersionHandlerListener listener = (VersionHandlerListener)var3.next();
+         listener.onVersionDownload(list);
+      }
 
-	@Override
-	public void onVersionRefreshed(VersionManager vm) {		
-		Blocker.unblock(instance, REFRESH_BLOCK);
-
-		for(VersionHandlerListener listener : listeners)
-			listener.onVersionRefreshed(vm);
-	}
-
-	@Override
-	public void onVersionSelected(List<VersionSyncInfo> version) {
-		this.selected = version;
-
-		if(version == null || version.isEmpty() || version.get(0).getID() == null)
-			onVersionDeselected();
-		else			
-			for(VersionHandlerListener listener : listeners)
-				listener.onVersionSelected(version);
-	}
-
-	@Override
-	public void onVersionDeselected() {
-		this.selected = null;
-
-		for(VersionHandlerListener listener : listeners)
-			listener.onVersionDeselected();
-	}
-
-	@Override
-	public void onVersionDownload(List<VersionSyncInfo> list) {
-		this.downloading = list;
-
-		for(VersionHandlerListener listener : listeners)
-			listener.onVersionDownload(list);
-	}
+   }
 }

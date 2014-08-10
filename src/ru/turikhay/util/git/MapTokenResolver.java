@@ -4,16 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MapTokenResolver implements ITokenResolver {
+   protected Map tokenMap = new HashMap();
 
-	protected Map<String, String> tokenMap = new HashMap<String, String>();
+   public MapTokenResolver(Map tokenMap) {
+      this.tokenMap = tokenMap;
+   }
 
-	public MapTokenResolver(Map<String, String> tokenMap) {
-		this.tokenMap = tokenMap;
-	}
-
-	@Override
-	public String resolveToken(String tokenName) {
-		return this.tokenMap.get(tokenName);
-	}
-
+   public String resolveToken(String tokenName) {
+      return (String)this.tokenMap.get(tokenName);
+   }
 }
