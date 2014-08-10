@@ -3,10 +3,9 @@ package ru.turikhay.tlauncher.ui.editor;
 import java.awt.Color;
 import java.awt.Insets;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-
 import javax.swing.JComponent;
-
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
 import ru.turikhay.tlauncher.ui.images.ImageCache;
@@ -14,48 +13,48 @@ import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 
 public abstract class AbstractEditorPanel extends CenterPanel {
-	protected final List<EditorHandler> handlers;
+   protected final List handlers;
 
-	public AbstractEditorPanel(CenterPanelTheme theme, Insets insets) {
-		super(theme, insets);
+   public AbstractEditorPanel(CenterPanelTheme theme, Insets insets) {
+      super(theme, insets);
+      this.handlers = new ArrayList();
+   }
 
-		this.handlers = new ArrayList<EditorHandler>();
-	}
+   public AbstractEditorPanel(Insets insets) {
+      this((CenterPanelTheme)null, insets);
+   }
 
-	public AbstractEditorPanel(Insets insets) {
-		this(null, insets);
-	}
+   public AbstractEditorPanel() {
+      this((CenterPanelTheme)null, (Insets)null);
+   }
 
-	public AbstractEditorPanel() {
-		this(null, null);
-	}
+   protected boolean checkValues() {
+      boolean allValid = true;
+      Iterator var3 = this.handlers.iterator();
 
-	protected boolean checkValues() {
-		boolean allValid = true;
+      while(var3.hasNext()) {
+         EditorHandler handler = (EditorHandler)var3.next();
+         boolean valid = handler.isValid();
+         this.setValid(handler, valid);
+         if (!valid) {
+            allValid = false;
+         }
+      }
 
-		for (EditorHandler handler : handlers) {
-			boolean valid = handler.isValid();
+      return allValid;
+   }
 
-			setValid(handler, valid);
+   protected void setValid(EditorHandler handler, boolean valid) {
+      Color color = valid ? this.getTheme().getBackground() : this.getTheme().getFailure();
+      handler.getComponent().setBackground(color);
+   }
 
-			if (!valid)
-				allValid = false;
-		}
+   protected JComponent createTip(String label, boolean warning) {
+      LocalizableLabel tip = new LocalizableLabel(label);
+      if (warning) {
+         ImageIcon.setup(tip, ImageCache.getIcon("warning.png", 16, 16));
+      }
 
-		return allValid;
-	}
-
-	protected void setValid(EditorHandler handler, boolean valid) {
-		Color color = valid? getTheme().getBackground() : getTheme().getFailure();
-		handler.getComponent().setBackground(color);
-	}
-
-	protected JComponent createTip(String label, boolean warning) {
-		LocalizableLabel tip = new LocalizableLabel(label);
-
-		if(warning)
-			ImageIcon.setup(tip, ImageCache.getIcon("warning.png", 16, 16));
-
-		return tip;
-	}
+      return tip;
+   }
 }

@@ -186,6 +186,7 @@ crash.old-ati-vdrivers=Ваша система використовує заст
 # Settings
 settings.warning=Змінюйте тільки якщо знаєте, що робите.
 settings.restart=Буде застосовано під час наступного запуску.
+settings.res.def=Розмір за замовчуванням: %0x%1
 settings.tab.minecraft=Налаштування Minecraft
 settings.tab.tlauncher=Налаштування TLauncher
 settings.client.gamedir.label=Директорія:
@@ -217,6 +218,7 @@ settings.java.memory.mb=Мб
 settings.java.memory.hint.ok=Рекомендоване значення
 settings.java.memory.hint.warning=Нерекомендуемое значення
 settings.java.memory.hint.danger=Небезпечне значення!
+settings.clientres.label=Розмір лаунчера:
 settings.slide.list.label=Задній план:
 settings.slide.list.prompt=Шлях до файлу зображення (JPG, PNG)
 settings.console.label=Консоль розробника:
@@ -231,7 +233,16 @@ settings.connection.normal=Нормальна
 settings.connection.bad=Погана
 settings.tlauncher.autologin.label=Автологін (у сек.):
 settings.tlauncher.autologin.parse=Нерозпізнане число!
-settings.tlauncher.autologin.incorrect=Невірно заданий тайм-аут. Макс.: %0 сек.
+settings.direction.label=Форма входу:
+settings.direction.top_left=Зверху зліва
+settings.direction.top=Зверху
+settings.direction.top_right=Зверху праворуч
+settings.direction.center_left=Зліва
+settings.direction.center=Посередині
+settings.direction.center_right=Праворуч
+settings.direction.bottom_left=Знизу ліворуч
+settings.direction.bottom=Знизу
+settings.direction.bottom_right=Знизу праворуч
 settings.launch-action.label=При запуску Minecraft:
 settings.launch-action.hide=Приховувати TLauncher
 settings.launch-action.exit=Закрити TLauncher
@@ -368,3 +379,4 @@ boot.loading=Завантаження TLauncher %0...
 # About page
 about.text=<b>TLauncher</b> - один з кращих альтернативних вільних лаунчер для Minecraft.<br/><b>Наша місія</b> - ознайомити якомога більше людей з даною грою. Якщо Ви з нами, то допоможіть поширити цю програму для всіх бажаючих!
 about.bottom=Не забудьте підписатися на нас <a href="http://vk.com/tlauncher"><b style="color: #55779b">ВКонтакті</b></a> :)
+about.partners=&#9679; <b><a href="http://vk.com/mcoffline">MCoffline</a></b> — програма для налаштування і керування сервером Minecraft.

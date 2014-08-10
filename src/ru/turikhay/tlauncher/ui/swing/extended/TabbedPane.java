@@ -1,87 +1,89 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
+import com.sun.java.swing.plaf.windows.WindowsTabbedPaneUI;
 import javax.swing.JTabbedPane;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.TabbedPaneUI;
-
-import com.sun.java.swing.plaf.windows.WindowsTabbedPaneUI;
-
 import ru.turikhay.tlauncher.ui.swing.util.Orientation;
 
 public class TabbedPane extends JTabbedPane {
+   public TabbedPane(Orientation tabLocation, TabbedPane.TabLayout layout) {
+      this.setTabLocation(tabLocation == null ? Orientation.TOP : tabLocation);
+      this.setTabLayout(layout == null ? TabbedPane.TabLayout.SCROLL : layout);
+      TabbedPaneUI ui = this.getUI();
+      if (ui instanceof WindowsTabbedPaneUI) {
+         this.setUI(new WindowsTabbedPaneExtendedUI());
+      }
 
-	public TabbedPane(Orientation tabLocation, TabLayout layout) {
-		setTabLocation(tabLocation == null? Orientation.TOP : tabLocation);
-		setTabLayout(layout == null? TabLayout.SCROLL : layout);
+   }
 
-		TabbedPaneUI ui = getUI();
+   public TabbedPane(Orientation tabLocation) {
+      this(tabLocation, (TabbedPane.TabLayout)null);
+   }
 
-		if(ui instanceof WindowsTabbedPaneUI)
-			setUI(new WindowsTabbedPaneExtendedUI()); // Replace with mine *not shitty bordered* UI.
-	}
+   public TabbedPane(TabbedPane.TabLayout layout) {
+      this((Orientation)null, layout);
+   }
 
-	public TabbedPane(Orientation tabLocation) {
-		this(tabLocation, null);
-	}
+   public TabbedPane() {
+      this((Orientation)null, (TabbedPane.TabLayout)null);
+   }
 
-	public TabbedPane(TabLayout layout) {
-		this(null, layout);
-	}
+   public ExtendedUI getExtendedUI() {
+      ComponentUI ui = this.getUI();
+      return ui instanceof ExtendedUI ? (ExtendedUI)ui : null;
+   }
 
-	public TabbedPane() {
-		this(null, null);
-	}
+   public Orientation getTabLocation() {
+      return Orientation.fromSwingConstant(this.getTabPlacement());
+   }
 
-	public ExtendedUI getExtendedUI() {
-		ComponentUI ui = getUI();
+   public void setTabLocation(Orientation direction) {
+      if (direction == null) {
+         throw new NullPointerException();
+      } else {
+         this.setTabPlacement(direction.getSwingAlias());
+      }
+   }
 
-		if(ui instanceof ExtendedUI)
-			return (ExtendedUI) ui;
+   public TabbedPane.TabLayout getTabLayout() {
+      return TabbedPane.TabLayout.fromSwingConstant(this.getTabLayoutPolicy());
+   }
 
-		return null;
-	}
+   public void setTabLayout(TabbedPane.TabLayout layout) {
+      if (layout == null) {
+         throw new NullPointerException();
+      } else {
+         this.setTabLayoutPolicy(layout.getSwingAlias());
+      }
+   }
 
-	public Orientation getTabLocation() {
-		return Orientation.fromSwingConstant(getTabPlacement());
-	}
+   public static enum TabLayout {
+      WRAP(0),
+      SCROLL(1);
 
-	public void setTabLocation(Orientation direction) {
-		if(direction == null)
-			throw new NullPointerException();
+      private final int swingAlias;
 
-		setTabPlacement(direction.getSwingAlias());
-	}
+      private TabLayout(int swingAlias) {
+         this.swingAlias = swingAlias;
+      }
 
-	public TabLayout getTabLayout() {
-		return TabLayout.fromSwingConstant(getTabLayoutPolicy());
-	}
+      public int getSwingAlias() {
+         return this.swingAlias;
+      }
 
-	public void setTabLayout(TabLayout layout) {
-		if(layout == null)
-			throw new NullPointerException();
+      public static TabbedPane.TabLayout fromSwingConstant(int orientation) {
+         TabbedPane.TabLayout[] var4;
+         int var3 = (var4 = values()).length;
 
-		setTabLayoutPolicy(layout.getSwingAlias());
-	}
+         for(int var2 = 0; var2 < var3; ++var2) {
+            TabbedPane.TabLayout current = var4[var2];
+            if (orientation == current.getSwingAlias()) {
+               return current;
+            }
+         }
 
-	public enum TabLayout {
-		WRAP(JTabbedPane.WRAP_TAB_LAYOUT), SCROLL(JTabbedPane.SCROLL_TAB_LAYOUT);
-
-		private final int swingAlias;
-
-		TabLayout(int swingAlias) {
-			this.swingAlias = swingAlias;
-		}
-
-		public int getSwingAlias() {
-			return swingAlias;
-		}
-
-		public static TabLayout fromSwingConstant(int orientation) {
-			for(TabLayout current : values())
-				if(orientation == current.getSwingAlias())
-					return current;
-			return null;
-		}
-	}
-
+         return null;
+      }
+   }
 }

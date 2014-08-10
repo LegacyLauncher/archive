@@ -182,7 +182,7 @@ crash.store.success.title=Файл удален!
 crash.store.success=Файл краш-репорта успешно удалён.
 crash.store.failed.title=Файл не был удален!
 crash.store.failed=Файл краш-репорта не был удалён по причине ошибки.
-crash.opengl=Minecraft был закрыт по причине несовместимости драйверов видеокарты. Возможно, они не поддерживают версию OpenGL, используемой в запускаемой версии Minecraft. В любом случае, попробуйте найти и установить бета-версии драйверов для своей видеокарты и повторите попытку.
+crash.opengl=Minecraft был закрыт по причине несовместимости драйверов видеокарты. Возможно, они не поддерживают версию OpenGL, используемой в запускаемой версии Minecraft. В любом случае, попробуйте найти и установить <u>бета-версии</u> драйверов для своей видеокарты и повторите попытку.
 crash.invalid-modify=Minecraft был закрыт по причине ошибки, которая обычно возникает из-за некорректной установки модов. Переустановите их и попробуйте еще раз.
 crash.meta-inf=Java не смогла загрузить классы Minecraft, так как обнаружила несоответствие в записях манифеста. Удалите папку META-INF/ в JAR-файле загружаемой версии Minecraft и повторите попытку.
 crash.missing-main=Java не смогла запустить Minecraft, так как не нашла главный класс. Обычно это связано с некорректной установкой модов. Если Вы не можете восстановить JAR-файл версии Minecraft самостоятельно, нажмите «Обновить клиент».
@@ -194,8 +194,10 @@ crash.old-ati-vdrivers=Ваша система использует устаре
 # Settings
 settings.warning=Изменяйте только если знаете, что делаете.
 settings.restart=Будет применено при следующем запуске.
-settings.tab.minecraft=Настройки Minecraft
-settings.tab.tlauncher=Настройки TLauncher
+settings.res.def=Размер по умолчанию: %0x%1
+settings.range=Число от %0 до %1
+settings.tab.minecraft=Запуск Minecraft
+settings.tab.tlauncher=Дополнительно
 settings.tab.about=О программе
 settings.client.gamedir.label=Директория:
 settings.client.gamedir.invalid=Введите директорию Minecraft!
@@ -227,6 +229,7 @@ settings.java.memory.mb=Мб
 settings.java.memory.hint.ok=Рекомендуемое значение
 settings.java.memory.hint.warning=Нерекомендуемое значение
 settings.java.memory.hint.danger=Опасное значение!
+settings.clientres.label=Размер лаунчера:
 settings.slide.list.label=Фоновый рисунок:
 settings.slide.list.prompt=Путь к файлу изображения (JPG, PNG)
 settings.console.label=Консоль разработчика:
@@ -239,9 +242,18 @@ settings.connection.label=Качество соединения:
 settings.connection.good=Хорошее
 settings.connection.normal=Нормальное
 settings.connection.bad=Плохое
-settings.tlauncher.autologin.label=Автологин (в сек.):
+settings.tlauncher.autologin.label=Автомат. вход (в сек.):
 settings.tlauncher.autologin.parse=Нераспознанное число!
-settings.tlauncher.autologin.incorrect=Неверно задан тайм-аут. Макс.: %0 сек.
+settings.direction.label=Форма входа:
+settings.direction.top_left=Сверху слева
+settings.direction.top=Сверху
+settings.direction.top_right=Сверху справа
+settings.direction.center_left=Слева
+settings.direction.center=Посередине
+settings.direction.center_right=Справа
+settings.direction.bottom_left=Снизу слева
+settings.direction.bottom=Снизу
+settings.direction.bottom_right=Снизу справа
 settings.launch-action.label=При запуске Minecraft:
 settings.launch-action.hide=Скрывать TLauncher
 settings.launch-action.exit=Закрывать TLauncher
@@ -381,6 +393,9 @@ repo.official_version_repo=Официальный источник
 repo.extra_version_repo=Источник TLauncher
 # Boot
 boot.loading=Загрузка TLauncher %0...
+# Dragger
+dragger.label=Трогни, чтобы начать переезд (хи-хи)
 # About page
 about.text=<b>TLauncher</b> — один из лучших альтернативных свободных лаунчеров для Minecraft.<br/><b>Наша миссия</b> — познакомить как можно больше людей с данной игрой. Если Вы с нами, то помогите распространить эту программу для всех желающих!
 about.bottom=Не забудьте подписаться на нас <a href="http://vk.com/tlauncher"><b style="color: #55779b">ВКонтакте</b></a> :)
+about.partners=&#9679; <b><a href="http://vk.com/mcoffline">MCoffline</a></b> — программа для настройки и управления сервером Minecraft.

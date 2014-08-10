@@ -2,83 +2,94 @@ package ru.turikhay.tlauncher.ui.login.buttons;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-
 import javax.swing.JPanel;
-
 import ru.turikhay.tlauncher.ui.block.BlockablePanel;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 
 public class ButtonPanel extends BlockablePanel {
-	private static final long serialVersionUID = -2155145867054136409L;
+   private static final long serialVersionUID = -2155145867054136409L;
+   public final PlayButton play;
+   private final JPanel manageButtonsPanel;
+   public final SupportButton support;
+   public final FolderButton folder;
+   public final RefreshButton refresh;
+   public final SettingsButton settings;
+   public final CancelAutoLoginButton cancel;
+   private ButtonPanel.ButtonPanelState state;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$login$buttons$ButtonPanel$ButtonPanelState;
 
-	public final PlayButton play;
+   public ButtonPanel(LoginForm lf) {
+      BorderLayout lm = new BorderLayout(1, 2);
+      this.setLayout(lm);
+      this.setOpaque(false);
+      this.play = new PlayButton(lf);
+      this.add("Center", this.play);
+      this.cancel = new CancelAutoLoginButton(lf);
+      this.manageButtonsPanel = new JPanel(new GridLayout(0, 4));
+      this.manageButtonsPanel.setOpaque(false);
+      this.support = new SupportButton(lf);
+      this.manageButtonsPanel.add(this.support);
+      this.folder = new FolderButton(lf);
+      this.manageButtonsPanel.add(this.folder);
+      this.refresh = new RefreshButton(lf);
+      this.manageButtonsPanel.add(this.refresh);
+      this.settings = new SettingsButton(lf);
+      this.manageButtonsPanel.add(this.settings);
+      this.setState(lf.autologin.isEnabled() ? ButtonPanel.ButtonPanelState.AUTOLOGIN_CANCEL : ButtonPanel.ButtonPanelState.MANAGE_BUTTONS);
+   }
 
-	private final JPanel manageButtonsPanel;
-	public final SupportButton support;
-	public final FolderButton folder;
-	public final RefreshButton refresh;
-	public final SettingsButton settings;
+   public ButtonPanel.ButtonPanelState getState() {
+      return this.state;
+   }
 
-	public final CancelAutoLoginButton cancel;
+   public void setState(ButtonPanel.ButtonPanelState state) {
+      if (state == null) {
+         throw new NullPointerException();
+      } else {
+         this.state = state;
+         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$login$buttons$ButtonPanel$ButtonPanelState()[state.ordinal()]) {
+         case 1:
+            this.remove(this.manageButtonsPanel);
+            this.add("South", this.cancel);
+            break;
+         case 2:
+            this.remove(this.cancel);
+            this.add("South", this.manageButtonsPanel);
+            break;
+         default:
+            throw new IllegalArgumentException("Unknown state: " + state);
+         }
 
-	private ButtonPanelState state;
+         this.validate();
+      }
+   }
 
-	public ButtonPanel(LoginForm lf) {
-		BorderLayout lm = new BorderLayout(1, 2);
-		this.setLayout(lm);
-		this.setOpaque(false);
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$login$buttons$ButtonPanel$ButtonPanelState() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$login$buttons$ButtonPanel$ButtonPanelState;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[ButtonPanel.ButtonPanelState.values().length];
 
-		play = new PlayButton(lf);
-		this.add("Center", play);
+         try {
+            var0[ButtonPanel.ButtonPanelState.AUTOLOGIN_CANCEL.ordinal()] = 1;
+         } catch (NoSuchFieldError var2) {
+         }
 
-		cancel = new CancelAutoLoginButton(lf);
+         try {
+            var0[ButtonPanel.ButtonPanelState.MANAGE_BUTTONS.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
 
-		this.manageButtonsPanel = new JPanel(new GridLayout(0, 4));
-		manageButtonsPanel.setOpaque(false);
+         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$login$buttons$ButtonPanel$ButtonPanelState = var0;
+         return var0;
+      }
+   }
 
-		support = new SupportButton(lf);
-		manageButtonsPanel.add(support);
-
-		folder = new FolderButton(lf);
-		manageButtonsPanel.add(folder);
-
-		refresh = new RefreshButton(lf);
-		manageButtonsPanel.add(refresh);
-
-		settings = new SettingsButton(lf);
-		manageButtonsPanel.add(settings);
-
-		setState(lf.autologin.isEnabled() ? ButtonPanelState.AUTOLOGIN_CANCEL
-				: ButtonPanelState.MANAGE_BUTTONS);
-	}
-
-	public ButtonPanelState getState() {
-		return state;
-	}
-
-	public void setState(ButtonPanelState state) {
-		if (state == null)
-			throw new NullPointerException();
-
-		this.state = state;
-
-		switch (state) {
-		case AUTOLOGIN_CANCEL:
-			remove(manageButtonsPanel);
-			add("South", cancel);
-			break;
-		case MANAGE_BUTTONS:
-			remove(cancel);
-			add("South", manageButtonsPanel);
-			break;
-		default:
-			throw new IllegalArgumentException("Unknown state: " + state);
-		}
-
-		validate();
-	}
-
-	public enum ButtonPanelState {
-		AUTOLOGIN_CANCEL, MANAGE_BUTTONS
-	}
+   public static enum ButtonPanelState {
+      AUTOLOGIN_CANCEL,
+      MANAGE_BUTTONS;
+   }
 }

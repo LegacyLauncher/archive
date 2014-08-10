@@ -3,57 +3,52 @@ package ru.turikhay.tlauncher.configuration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import ru.turikhay.tlauncher.configuration.Configuration.ActionOnLaunch;
-import ru.turikhay.tlauncher.configuration.Configuration.ConnectionQuality;
-import ru.turikhay.tlauncher.configuration.Configuration.ConsoleType;
+import net.minecraft.launcher.versions.ReleaseType;
+import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
-import net.minecraft.launcher.versions.ReleaseType;
 
 class ConfigurationDefaults {
-	private static final int version = 3;
-	private final Map<String, Object> d; // defaults
+   private static final int version = 3;
+   private final Map d = new HashMap();
 
-	ConfigurationDefaults() {
-		d = new HashMap<String, Object>();
+   ConfigurationDefaults() {
+      this.d.put("settings.version", 3);
+      this.d.put("login.auto", false);
+      this.d.put("login.auto.timeout", 3);
+      this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
+      this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
+      this.d.put("minecraft.fullscreen", false);
+      ReleaseType[] var4;
+      int var3 = (var4 = ReleaseType.getDefinable()).length;
 
-		d.put("settings.version", version);
+      for(int var2 = 0; var2 < var3; ++var2) {
+         ReleaseType type = var4[var2];
+         this.d.put("minecraft.versions." + type, true);
+      }
 
-		d.put("login.auto", false);
-		d.put("login.auto.timeout", 3);
+      this.d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
+      this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
+      this.d.put("gui.size", new IntegerArray(new int[]{925, 530}));
+      this.d.put("gui.console", Configuration.ConsoleType.getDefault());
+      this.d.put("gui.console.width", 720);
+      this.d.put("gui.console.height", 500);
+      this.d.put("gui.console.x", 30);
+      this.d.put("gui.console.y", 30);
+      this.d.put("gui.direction.lf", Direction.CENTER);
+      this.d.put("connection", Configuration.ConnectionQuality.getDefault());
+   }
 
-		d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory()
-				.getAbsolutePath());
-		d.put("minecraft.size", new IntegerArray(925, 530));
-		d.put("minecraft.fullscreen", false);
+   public static int getVersion() {
+      return 3;
+   }
 
-		for (ReleaseType type : ReleaseType.getDefinable())
-			d.put("minecraft.versions." + type, true);
+   public Map getMap() {
+      return Collections.unmodifiableMap(this.d);
+   }
 
-		d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
-
-		d.put("minecraft.onlaunch", ActionOnLaunch.getDefault());
-
-		d.put("gui.console", ConsoleType.getDefault());
-		d.put("gui.console.width", 720);
-		d.put("gui.console.height", 500);
-		d.put("gui.console.x", 30);
-		d.put("gui.console.y", 30);
-
-		d.put("connection", ConnectionQuality.getDefault());
-	}
-
-	public static int getVersion() {
-		return version;
-	}
-
-	public Map<String, Object> getMap() {
-		return Collections.unmodifiableMap(d);
-	}
-
-	public Object get(String key) {
-		return d.get(key);
-	}
+   public Object get(String key) {
+      return this.d.get(key);
+   }
 }

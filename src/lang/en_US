@@ -185,6 +185,7 @@ crash.old-ati-vdrivers=Your system uses an outdated video card driver or the vid
 # Settings
 settings.warning=Change if you know what you do.
 settings.restart=Will be applied after restart.
+settings.res.def=Default size: %0x%1
 settings.tab.minecraft=Minecraft settings
 settings.tab.tlauncher=TLauncher settings
 settings.client.gamedir.label=Directory:
@@ -217,6 +218,7 @@ settings.java.memory.mb=MB
 settings.java.memory.hint.ok=Recommended value
 settings.java.memory.hint.warning=Deprecated value
 settings.java.memory.hint.danger=Dangerous value!
+settings.clientres.label=Window size:
 settings.slide.list.label=Background image:
 settings.slide.list.prompt=A path to the image (JPG, PNG)
 settings.console.label=Developer console
@@ -231,7 +233,16 @@ settings.connection.normal=Normal
 settings.connection.bad=Bad
 settings.tlauncher.autologin.label=Autologin (sec.):
 settings.tlauncher.autologin.parse=Incorrect number!
-settings.tlauncher.autologin.incorrect=Incorrect timeout! Max: %0 sec.
+settings.direction.label=Login form:
+settings.direction.top_left=Top left
+settings.direction.top=Top
+settings.direction.top_right=Top right
+settings.direction.center_left=Left
+settings.direction.center=Center
+settings.direction.center_right=Right
+settings.direction.bottom_left=Bottom left
+settings.direction.bottom=Bottom
+settings.direction.bottom_right=Bottom right
 settings.launch-action.label=Action on launch:
 settings.launch-action.hide=Hide TLauncher
 settings.launch-action.exit=Close TLauncher
@@ -369,3 +380,4 @@ boot.loading=Loading TLauncher %0...
 # About page
 about.text=<b>TLauncher</b> — one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
 about.bottom=Stay in touch with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)
+about.partners=&#9679; <b><a href="http://vk.com/mcoffline">MCoffline</a></b> — a simple app for configurating and running Minecraft server.

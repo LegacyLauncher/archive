@@ -1,14 +1,5 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -17,172 +8,158 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class AuthenticatorDatabase {
+   private final Map accounts;
+   private AccountListener listener;
 
-	private final Map<String, Account> accounts;
+   public AuthenticatorDatabase(Map map) {
+      if (map == null) {
+         throw new NullPointerException();
+      } else {
+         this.accounts = map;
+      }
+   }
 
-	private AccountListener listener;
+   public AuthenticatorDatabase() {
+      this(new LinkedHashMap());
+   }
 
-	public AuthenticatorDatabase(Map<String, Account> map) {
-		if (map == null)
-			throw new NullPointerException();
+   public Collection getAccounts() {
+      return Collections.unmodifiableCollection(this.accounts.values());
+   }
 
-		this.accounts = map;
-	}
+   public Account getByUsername(String username) {
+      if (username == null) {
+         throw new NullPointerException();
+      } else {
+         Iterator var3 = this.accounts.values().iterator();
 
-	public AuthenticatorDatabase() {
-		this(new LinkedHashMap<String, Account>());
-	}
+         while(var3.hasNext()) {
+            Account acc = (Account)var3.next();
+            if (username.equals(acc.getUsername())) {
+               return acc;
+            }
+         }
 
-	public Collection<Account> getAccounts() {
-		return Collections.unmodifiableCollection(accounts.values());
-	}
+         return null;
+      }
+   }
 
-	public Account getByUsername(String username) {
-		if (username == null)
-			throw new NullPointerException();
+   public void registerAccount(Account acc) {
+      if (acc == null) {
+         throw new NullPointerException();
+      } else if (this.accounts.containsValue(acc)) {
+         throw new IllegalArgumentException("This account already exists!");
+      } else {
+         String uuid = acc.getUUID() == null ? acc.getUsername() : acc.getUUID();
+         this.accounts.put(uuid, acc);
+         this.fireRefresh();
+      }
+   }
 
-		for (Account acc : accounts.values())
-			if (username.equals(acc.getUsername()))
-				return acc;
+   public void unregisterAccount(Account acc) {
+      if (acc == null) {
+         throw new NullPointerException();
+      } else if (!this.accounts.containsValue(acc)) {
+         throw new IllegalArgumentException("This account doesn't exist!");
+      } else {
+         this.accounts.values().remove(acc);
+         this.fireRefresh();
+      }
+   }
 
-		return null;
-	}
+   private void fireRefresh() {
+      if (this.listener != null) {
+         this.listener.onAccountsRefreshed(this);
+      }
+   }
 
-	public void registerAccount(Account acc) {
-		if (acc == null)
-			throw new NullPointerException();
+   public void setListener(AccountListener listener) {
+      this.listener = listener;
+   }
 
-		if (accounts.containsValue(acc))
-			throw new IllegalArgumentException("This account already exists!");
+   public static class Serializer implements JsonDeserializer, JsonSerializer {
+      public AuthenticatorDatabase deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+         Map services = new LinkedHashMap();
+         Map credentials = this.deserializeCredentials((JsonObject)json, context);
+         Iterator var7 = credentials.entrySet().iterator();
 
-		String uuid = (acc.getUUID() == null) ? acc.getUsername() : acc
-				.getUUID();
+         while(var7.hasNext()) {
+            Entry en = (Entry)var7.next();
+            services.put((String)en.getKey(), new Account((Map)en.getValue()));
+         }
 
-		accounts.put(uuid, acc);
-		fireRefresh();
-	}
+         return new AuthenticatorDatabase(services);
+      }
 
-	public void unregisterAccount(Account acc) {
-		if (acc == null)
-			throw new NullPointerException();
+      Map deserializeCredentials(JsonObject json, JsonDeserializationContext context) {
+         Map result = new LinkedHashMap();
+         Iterator var5 = json.entrySet().iterator();
 
-		if (!accounts.containsValue(acc))
-			throw new IllegalArgumentException("This account doesn't exist!");
+         while(var5.hasNext()) {
+            Entry authEntry = (Entry)var5.next();
+            Map credentials = new LinkedHashMap();
+            Iterator var8 = ((JsonObject)authEntry.getValue()).entrySet().iterator();
 
-		accounts.values().remove(acc);
-		fireRefresh();
-	}
+            while(var8.hasNext()) {
+               Entry credentialsEntry = (Entry)var8.next();
+               credentials.put((String)credentialsEntry.getKey(), this.deserializeCredential((JsonElement)credentialsEntry.getValue()));
+            }
 
-	private void fireRefresh() {
-		if (listener == null)
-			return;
-		listener.onAccountsRefreshed(this);
-	}
+            result.put((String)authEntry.getKey(), credentials);
+         }
 
-	public void setListener(AccountListener listener) {
-		this.listener = listener;
-	}
+         return result;
+      }
 
-	/*
-	 * public static class Serializer implements
-	 * JsonDeserializer<AuthenticatorDatabase>,
-	 * JsonSerializer<AuthenticatorDatabase> {
-	 *
-	 * @Override public JsonElement serialize(AuthenticatorDatabase src, Type
-	 * typeOfSrc, JsonSerializationContext context) {
-	 *
-	 * Map<String, Account> services = src.accounts; Map<String, Map<String,
-	 * String>> credentials = new LinkedHashMap<String, Map<String, String>>();
-	 *
-	 * for(Entry<String, Account> en : services.entrySet())
-	 * credentials.put(en.getKey(), en.getValue().createMap());
-	 *
-	 * return context.serialize(credentials); }
-	 *
-	 * @Override public AuthenticatorDatabase deserialize(JsonElement json, Type
-	 * typeOfT, JsonDeserializationContext context) throws JsonParseException {
-	 * TypeToken<LinkedHashMap<String, Map<String, String>>> token = new
-	 * TypeToken<LinkedHashMap<String, Map<String, String>>>(){};
-	 *
-	 * Map<String, Account> services = new LinkedHashMap<String, Account>();
-	 * Map<String, Map<String, String>> credentials = context.deserialize(json,
-	 * token.getType());
-	 *
-	 * for(Entry<String, Map<String, String>> en : credentials.entrySet())
-	 * services.put(en.getKey(), new Account(en.getValue()));
-	 *
-	 * return new AuthenticatorDatabase(services); }
-	 *
-	 * }
-	 */
+      private Object deserializeCredential(JsonElement element) {
+         Iterator var4;
+         if (element instanceof JsonObject) {
+            Map result = new LinkedHashMap();
+            var4 = ((JsonObject)element).entrySet().iterator();
 
-	// OH SHI~
-	public static class Serializer implements
-	JsonDeserializer<AuthenticatorDatabase>,
-	JsonSerializer<AuthenticatorDatabase> {
-		@Override
-		public AuthenticatorDatabase deserialize(JsonElement json,
-				Type typeOfT, JsonDeserializationContext context)
-						throws JsonParseException {
-			Map<String, Account> services = new LinkedHashMap<String, Account>();
-			Map<String, Map<String, Object>> credentials = deserializeCredentials(
-					(JsonObject) json, context);
+            while(var4.hasNext()) {
+               Entry entry = (Entry)var4.next();
+               result.put((String)entry.getKey(), this.deserializeCredential((JsonElement)entry.getValue()));
+            }
 
-			for (Entry<String, Map<String, Object>> en : credentials.entrySet())
-				services.put(en.getKey(), new Account(en.getValue()));
+            return result;
+         } else if (!(element instanceof JsonArray)) {
+            return element.getAsString();
+         } else {
+            List result = new ArrayList();
+            var4 = ((JsonArray)element).iterator();
 
-			return new AuthenticatorDatabase(services);
-		}
+            while(var4.hasNext()) {
+               JsonElement entry = (JsonElement)var4.next();
+               result.add(this.deserializeCredential(entry));
+            }
 
-		Map<String, Map<String, Object>> deserializeCredentials(
-				JsonObject json, JsonDeserializationContext context) {
-			Map<String, Map<String, Object>> result = new LinkedHashMap<String, Map<String, Object>>();
+            return result;
+         }
+      }
 
-			for (Map.Entry<String, JsonElement> authEntry : json.entrySet()) {
-				Map<String, Object> credentials = new LinkedHashMap<String, Object>();
-				for (Map.Entry<String, JsonElement> credentialsEntry : ((JsonObject) authEntry
-						.getValue()).entrySet())
-					credentials.put(credentialsEntry.getKey(),
-							deserializeCredential(credentialsEntry.getValue()));
-				result.put(authEntry.getKey(), credentials);
-			}
+      public JsonElement serialize(AuthenticatorDatabase src, Type typeOfSrc, JsonSerializationContext context) {
+         Map services = src.accounts;
+         Map credentials = new LinkedHashMap();
+         Iterator var7 = services.entrySet().iterator();
 
-			return result;
-		}
+         while(var7.hasNext()) {
+            Entry en = (Entry)var7.next();
+            credentials.put((String)en.getKey(), ((Account)en.getValue()).createMap());
+         }
 
-		private Object deserializeCredential(JsonElement element) {
-			if (element instanceof JsonObject) {
-				Map<String, Object> result = new LinkedHashMap<String, Object>();
-				for (Map.Entry<String, JsonElement> entry : ((JsonObject) element)
-						.entrySet())
-					result.put(entry.getKey(),
-							deserializeCredential(entry.getValue()));
-				return result;
-			}
-
-			if (element instanceof JsonArray) {
-				List<Object> result = new ArrayList<Object>();
-				for (JsonElement entry : (JsonArray) element)
-					result.add(deserializeCredential(entry));
-				return result;
-			}
-
-			return element.getAsString();
-		}
-
-		@Override
-		public JsonElement serialize(AuthenticatorDatabase src, Type typeOfSrc,
-				JsonSerializationContext context) {
-
-			Map<String, Account> services = src.accounts;
-			Map<String, Map<String, Object>> credentials = new LinkedHashMap<String, Map<String, Object>>();
-
-			for (Entry<String, Account> en : services.entrySet())
-				credentials.put(en.getKey(), en.getValue().createMap());
-
-			return context.serialize(credentials);
-		}
-	}
+         return context.serialize(credentials);
+      }
+   }
 }

@@ -4,152 +4,152 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-
 import net.minecraft.common.CompressedStreamTools;
 import net.minecraft.common.NBTTagCompound;
 import net.minecraft.common.NBTTagList;
 
 public class ServerList {
-	private List<Server> list;
+   private List list = new ArrayList();
 
-	public ServerList() {
-		this.list = new ArrayList<Server>();
-	}
+   public void add(ServerList.Server server) {
+      if (server == null) {
+         throw new NullPointerException();
+      } else {
+         this.list.add(server);
+      }
+   }
 
-	public void add(Server server) {
-		if (server == null)
-			throw new NullPointerException();
+   public boolean remove(ServerList.Server server) {
+      if (server == null) {
+         throw new NullPointerException();
+      } else {
+         return this.list.remove(server);
+      }
+   }
 
-		list.add(server);
-	}
+   public boolean contains(ServerList.Server server) {
+      return this.list.contains(server);
+   }
 
-	public boolean remove(Server server) {
-		if (server == null)
-			throw new NullPointerException();
+   public boolean isEmpty() {
+      return this.list.isEmpty();
+   }
 
-		return list.remove(server);
-	}
+   public List getList() {
+      return Collections.unmodifiableList(this.list);
+   }
 
-	public boolean contains(Server server) {
-		return list.contains(server);
-	}
+   public void save(File file) throws IOException {
+      NBTTagList servers = new NBTTagList();
+      Iterator var4 = this.list.iterator();
 
-	public boolean isEmpty() {
-		return list.isEmpty();
-	}
+      while(var4.hasNext()) {
+         ServerList.Server server = (ServerList.Server)var4.next();
+         servers.appendTag(server.getNBT());
+      }
 
-	public List<Server> getList() {
-		return Collections.unmodifiableList(list);
-	}
+      NBTTagCompound compound = new NBTTagCompound();
+      compound.setTag("servers", servers);
+      CompressedStreamTools.safeWrite(compound, file);
+   }
 
-	public void save(File file) throws IOException {
-		NBTTagList servers = new NBTTagList();
+   public String toString() {
+      return "ServerList{" + this.list.toString() + "}";
+   }
 
-		for (Server server : list)
-			servers.appendTag(server.getNBT());
+   public static ServerList loadFromFile(File file) throws IOException {
+      ServerList serverList = new ServerList();
+      List list = serverList.list;
+      NBTTagCompound compound = CompressedStreamTools.read(file);
+      if (compound == null) {
+         return serverList;
+      } else {
+         NBTTagList servers = compound.getTagList("servers");
 
-		NBTTagCompound compound = new NBTTagCompound();
-		compound.setTag("servers", servers);
+         for(int i = 0; i < servers.tagCount(); ++i) {
+            list.add(ServerList.Server.loadFromNBT((NBTTagCompound)servers.tagAt(i)));
+         }
 
-		CompressedStreamTools.safeWrite(compound, file);
-	}
+         return serverList;
+      }
+   }
 
-	@Override
-	public String toString() {
-		return "ServerList{" + list.toString() + "}";
-	}
+   public static ServerList sortLists(ServerList pref, ServerList add) {
+      ServerList serverList = new ServerList();
+      List list = serverList.list;
+      List prefList = pref.list;
+      List addList = add.list;
+      serverList.list.addAll(prefList);
+      Iterator var7 = addList.iterator();
 
-	public static ServerList loadFromFile(File file) throws IOException {
-		ServerList serverList = new ServerList();
-		List<Server> list = serverList.list;
+      while(var7.hasNext()) {
+         ServerList.Server server = (ServerList.Server)var7.next();
+         if (!list.contains(server)) {
+            list.add(server);
+         }
+      }
 
-		NBTTagCompound compound = CompressedStreamTools.read(file);
-		if (compound == null)
-			return serverList;
+      return serverList;
+   }
 
-		NBTTagList servers = compound.getTagList("servers");
+   public static class Server {
+      private String name;
+      private String version;
+      private String address;
+      private boolean hideAddress;
+      private int acceptTextures;
 
-		for (int i = 0; i < servers.tagCount(); i++) {
-			list.add(Server.loadFromNBT((NBTTagCompound) servers.tagAt(i)));
-		}
+      public String getName() {
+         return this.name;
+      }
 
-		return serverList;
-	}
+      public String getVersion() {
+         return this.version;
+      }
 
-	public static class Server {
-		private String name;
-		private String version;
-		private String address;
+      public String getAddress() {
+         return this.address;
+      }
 
-		private boolean hideAddress;
-		private int acceptTextures;
+      public boolean equals(Object obj) {
+         if (obj == null) {
+            return false;
+         } else if (!(obj instanceof ServerList.Server)) {
+            return false;
+         } else {
+            ServerList.Server server = (ServerList.Server)obj;
+            return server.address.equals(this.address);
+         }
+      }
 
-		public String getName() {
-			return name;
-		}
+      public String toString() {
+         return "{'" + this.name + "', '" + this.address + "', '" + this.version + "'}";
+      }
 
-		public String getVersion() {
-			return version;
-		}
+      public static ServerList.Server loadFromNBT(NBTTagCompound nbt) {
+         ServerList.Server server = new ServerList.Server();
+         server.name = nbt.getString("name");
+         server.address = nbt.getString("ip");
+         server.hideAddress = nbt.getBoolean("hideAddress");
+         if (nbt.hasKey("acceptTextures")) {
+            server.acceptTextures = nbt.getBoolean("acceptTextures") ? 1 : -1;
+         }
 
-		public String getAddress() {
-			return address;
-		}
+         return server;
+      }
 
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == null)
-				return false;
-			if (!(obj instanceof Server))
-				return false;
+      public NBTTagCompound getNBT() {
+         NBTTagCompound compound = new NBTTagCompound();
+         compound.setString("name", this.name);
+         compound.setString("ip", this.address);
+         compound.setBoolean("hideAddress", this.hideAddress);
+         if (this.acceptTextures != 0) {
+            compound.setBoolean("acceptTextures", this.acceptTextures == 1);
+         }
 
-			Server server = (Server) obj;
-
-			return server.address.equals(address);
-		}
-
-		@Override
-		public String toString() {
-			return "{'" + name + "', '" + address + "', '" + version + "'}";
-		}
-
-		public static Server loadFromNBT(NBTTagCompound nbt) {
-			Server server = new Server();
-
-			server.name = nbt.getString("name");
-			server.address = nbt.getString("ip");
-			server.hideAddress = nbt.getBoolean("hideAddress");
-			if (nbt.hasKey("acceptTextures"))
-				server.acceptTextures = nbt.getBoolean("acceptTextures") ? 1
-						: -1;
-
-			return server;
-		}
-
-		public NBTTagCompound getNBT() {
-			NBTTagCompound compound = new NBTTagCompound();
-
-			compound.setString("name", name);
-			compound.setString("ip", address);
-			compound.setBoolean("hideAddress", hideAddress);
-			if (acceptTextures != 0)
-				compound.setBoolean("acceptTextures", acceptTextures == 1);
-
-			return compound;
-		}
-	}
-
-	public static ServerList sortLists(ServerList pref, ServerList add) {
-		ServerList serverList = new ServerList();
-
-		List<Server> list = serverList.list, prefList = pref.list, addList = add.list;
-		serverList.list.addAll(prefList);
-
-		for (Server server : addList)
-			if (!list.contains(server))
-				list.add(server);
-
-		return serverList;
-	}
+         return compound;
+      }
+   }
 }
