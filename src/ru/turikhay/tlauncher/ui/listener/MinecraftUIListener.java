@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashSignatureContainer;
@@ -30,7 +31,10 @@ public class MinecraftUIListener implements MinecraftListener {
    }
 
    public void onMinecraftLaunch() {
-      this.t.hide();
+      if (!this.t.getSettings().getActionOnLaunch().equals(Configuration.ActionOnLaunch.NOTHING)) {
+         this.t.hide();
+      }
+
       this.t.getVersionManager().asyncRefresh();
       if (this.t.getUpdater() != null) {
          this.t.getUpdater().asyncFindUpdate();

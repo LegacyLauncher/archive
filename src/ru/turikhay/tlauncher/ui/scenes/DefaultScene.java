@@ -1,182 +1,226 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
-import java.awt.Component;
+import java.awt.Dimension;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.InfoPanel;
 import ru.turikhay.tlauncher.ui.MainPane;
-import ru.turikhay.tlauncher.ui.animate.Animator;
-import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
-import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.Direction;
 
 public class DefaultScene extends PseudoScene {
-   private static final long serialVersionUID = -1460877989848190921L;
-   private final int LOGINFORM_WIDTH = 250;
-   private final int LOGINFORM_HEIGHT = 240;
-   private final int SETTINGSFORM_WIDTH = 500;
-   private final int SETTINGSFORM_HEIGHT = 475;
-   private final int MARGIN = 25;
+   public static final Dimension LOGIN_SIZE = new Dimension(250, 240);
+   public static final Dimension SETTINGS_SIZE = new Dimension(500, 475);
+   public static final int EDGE_INSETS = 10;
+   public static final int INSETS = 15;
    public final LoginForm loginForm;
    public final SettingsPanel settingsForm = new SettingsPanel(this);
-   private final InfoPanel infoPanel;
-   private Direction direction;
-   private boolean settings;
+   private DefaultScene.SidePanel sidePanel;
+   private ExtendedPanel sidePanelComp;
+   private Direction lfDirection;
+   public final InfoPanel infoPanel;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel;
 
    public DefaultScene(MainPane main) {
       super(main);
-      this.settingsForm.setSize(this.SETTINGSFORM_WIDTH, this.SETTINGSFORM_HEIGHT);
+      this.settingsForm.setSize(SETTINGS_SIZE);
+      this.settingsForm.setVisible(false);
       this.add(this.settingsForm);
       this.loginForm = new LoginForm(this);
-      this.loginForm.setSize(this.LOGINFORM_WIDTH, this.LOGINFORM_HEIGHT);
+      this.loginForm.setSize(LOGIN_SIZE);
       this.add(this.loginForm);
       this.infoPanel = new InfoPanel(this);
-      this.infoPanel.setSize(200, 35);
       this.add(this.infoPanel);
-      this.loadDirection();
-   }
-
-   public Direction getDirection() {
-      return this.direction;
+      this.updateDirection();
    }
 
    public void onResize() {
       if (this.parent != null) {
          this.setBounds(0, 0, this.parent.getWidth(), this.parent.getHeight());
-         this.setSettings(this.settings, false);
+         this.updateCoords();
       }
    }
 
-   void setSettings(boolean shown, boolean update) {
-      if (this.settings != shown || !update) {
-         if (shown) {
-            this.settingsForm.unblock("");
-         } else {
-            this.settingsForm.block("");
+   private void updateCoords() {
+      int w = this.getWidth();
+      int h = this.getHeight();
+      int hw = w / 2;
+      int hh = h / 2;
+      int lf_w = this.loginForm.getWidth();
+      int lf_h = this.loginForm.getHeight();
+      int lf_x;
+      int lf_y;
+      if (this.sidePanel == null) {
+         switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.lfDirection.ordinal()]) {
+         case 1:
+         case 4:
+         case 7:
+            lf_x = 10;
+            break;
+         case 2:
+         case 5:
+         case 8:
+            lf_x = hw - lf_h / 2;
+            break;
+         case 3:
+         case 6:
+         case 9:
+            lf_x = w - lf_w - 10;
+            break;
+         default:
+            throw new RuntimeException("unknown direction:" + this.lfDirection);
          }
 
-         int w = this.getWidth();
-         int h = this.getHeight();
-         int hw = w / 2;
-         int hh = h / 2;
-         int lf_x;
-         int lf_y;
-         int sf_x;
-         int sf_y;
-         int hbw;
-         if (shown) {
-            int bw = this.LOGINFORM_WIDTH + this.SETTINGSFORM_WIDTH + this.MARGIN;
-            hbw = bw / 2;
-            lf_y = hh - this.LOGINFORM_HEIGHT / 2;
-            sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
-            if (bw > w) {
-               lf_x = -this.LOGINFORM_WIDTH;
-               sf_x = hw - this.SETTINGSFORM_WIDTH / 2;
-            } else {
-               lf_x = hw - hbw;
-               sf_x = hw - hbw + this.SETTINGSFORM_WIDTH / 2 + this.MARGIN;
-               sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
-            }
-         } else {
-            switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.direction.ordinal()]) {
+         switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.lfDirection.ordinal()]) {
+         case 1:
+         case 2:
+         case 3:
+            lf_y = 10;
+            break;
+         case 4:
+         case 5:
+         case 6:
+            lf_y = hh - lf_h / 2;
+            break;
+         case 7:
+         case 8:
+         case 9:
+            lf_y = h - 10 - lf_h;
+            break;
+         default:
+            throw new RuntimeException("unknown direction:" + this.lfDirection);
+         }
+      } else {
+         int sp_w = this.sidePanelComp.getWidth();
+         int sp_h = this.sidePanelComp.getHeight();
+         int bw = lf_w + sp_w + 15;
+         int hbw = bw / 2;
+         int sp_x;
+         int sp_y;
+         if (w > bw) {
+            switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.lfDirection.ordinal()]) {
             case 1:
-               lf_x = this.MARGIN;
-               lf_y = this.MARGIN;
+            case 4:
+            case 7:
+               lf_x = 10;
+               sp_x = lf_x + lf_w + 15;
                break;
             case 2:
-               lf_x = hw - this.LOGINFORM_WIDTH / 2;
-               lf_y = this.MARGIN;
+            case 5:
+            case 8:
+               lf_x = hw - hbw;
+               sp_x = lf_x + 15 + sp_w / 2;
                break;
             case 3:
-               lf_x = w - this.LOGINFORM_WIDTH - this.MARGIN;
-               lf_y = this.MARGIN;
-               break;
-            case 4:
-               lf_x = this.MARGIN;
-               lf_y = hh - this.LOGINFORM_HEIGHT / 2;
-               break;
-            case 5:
-               lf_x = hw - this.LOGINFORM_WIDTH / 2;
-               lf_y = hh - this.LOGINFORM_HEIGHT / 2;
-               break;
             case 6:
-               lf_x = w - this.LOGINFORM_WIDTH - this.MARGIN;
-               lf_y = hh - this.LOGINFORM_HEIGHT / 2;
-               break;
-            case 7:
-               lf_x = this.MARGIN;
-               lf_y = h - this.LOGINFORM_HEIGHT - this.MARGIN;
-               break;
-            case 8:
-               lf_x = hw - this.LOGINFORM_WIDTH / 2;
-               lf_y = h - this.LOGINFORM_HEIGHT - this.MARGIN;
-               break;
             case 9:
-               lf_x = w - this.LOGINFORM_WIDTH - this.MARGIN;
-               lf_y = h - this.LOGINFORM_HEIGHT - this.MARGIN;
+               lf_x = w - 10 - lf_w;
+               sp_x = lf_x - 15 - sp_w;
                break;
             default:
-               throw new IllegalArgumentException();
+               throw new RuntimeException("unknown direction:" + this.lfDirection);
             }
 
-            sf_x = w * 2;
-            sf_y = hh - this.SETTINGSFORM_HEIGHT / 2;
-         }
-
-         Animator.move(this.loginForm, lf_x, lf_y);
-         Animator.move(this.settingsForm, sf_x, sf_y);
-         this.infoPanel.setShown(!shown, false);
-         Component[] var14;
-         int var13 = (var14 = this.getComponents()).length;
-
-         for(hbw = 0; hbw < var13; ++hbw) {
-            Component comp = var14[hbw];
-            if (comp instanceof ResizeableComponent) {
-               ((ResizeableComponent)comp).onResize();
+            switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.lfDirection.ordinal()]) {
+            case 1:
+            case 2:
+            case 3:
+               sp_y = 10;
+               lf_y = 10;
+               break;
+            case 4:
+            case 5:
+            case 6:
+               lf_y = hh - lf_h / 2;
+               sp_y = hh - sp_h / 2;
+               break;
+            case 7:
+            case 8:
+            case 9:
+               lf_y = h - 10 - lf_h;
+               sp_y = h - 10 - sp_h;
+               break;
+            default:
+               throw new RuntimeException("unknown direction:" + this.lfDirection);
             }
+         } else {
+            lf_x = w * 2;
+            lf_y = 0;
+            sp_x = hw - sp_w / 2;
+            sp_y = hh - sp_h / 2;
          }
 
-         this.settings = shown;
+         this.sidePanelComp.setLocation(sp_x, sp_y);
+      }
+
+      this.loginForm.setLocation(lf_x, lf_y);
+      this.infoPanel.onResize();
+   }
+
+   public DefaultScene.SidePanel getSidePanel() {
+      return this.sidePanel;
+   }
+
+   public void setSidePanel(DefaultScene.SidePanel side) {
+      if (this.sidePanel != side) {
+         boolean noSidePanel = side == null;
+         if (this.sidePanelComp != null) {
+            this.sidePanelComp.setVisible(false);
+         }
+
+         this.sidePanel = side;
+         this.sidePanelComp = noSidePanel ? null : this.getSidePanelComp(side);
+         if (!noSidePanel) {
+            this.sidePanelComp.setVisible(true);
+         }
+
+         this.infoPanel.setShown(noSidePanel, noSidePanel);
+         this.updateCoords();
       }
    }
 
-   public void setSettings(boolean shown) {
-      this.setSettings(shown, true);
-   }
-
-   public void toggleSettings() {
-      this.setSettings(!this.settings);
-   }
-
-   public boolean isSettingsShown() {
-      return this.settings;
-   }
-
-   private void loadDirection() {
-      Direction dir = this.getMainPane().getRootFrame().getConfiguration().getDirection("gui.direction.lf");
-      if (dir == null) {
-         dir = Direction.CENTER;
+   public void toggleSidePanel(DefaultScene.SidePanel side) {
+      if (this.sidePanel == side) {
+         side = null;
       }
 
-      this.direction = dir;
+      this.setSidePanel(side);
+   }
+
+   public ExtendedPanel getSidePanelComp(DefaultScene.SidePanel side) {
+      if (side == null) {
+         throw new NullPointerException("side");
+      } else {
+         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel()[side.ordinal()]) {
+         case 1:
+            return this.settingsForm;
+         default:
+            throw new RuntimeException("unknown side:" + side);
+         }
+      }
+   }
+
+   public Direction getLoginFormDirection() {
+      return this.lfDirection;
    }
 
    public void updateDirection() {
       this.loadDirection();
-      if (!this.settings) {
-         this.setSettings(true, false);
+      this.updateCoords();
+   }
+
+   private void loadDirection() {
+      Configuration config = this.getMainPane().getRootFrame().getConfiguration();
+      Direction loginFormDirection = config.getDirection("gui.direction.loginform");
+      if (loginFormDirection == null) {
+         loginFormDirection = Direction.CENTER;
       }
 
-   }
-
-   public void block(Object reason) {
-      Blocker.block(reason, this.loginForm, this.settingsForm);
-   }
-
-   public void unblock(Object reason) {
-      Blocker.unblock(reason, this.loginForm, this.settingsForm);
+      this.lfDirection = loginFormDirection;
    }
 
    // $FF: synthetic method
@@ -234,6 +278,38 @@ public class DefaultScene extends PseudoScene {
 
          $SWITCH_TABLE$ru$turikhay$util$Direction = var0;
          return var0;
+      }
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[DefaultScene.SidePanel.values().length];
+
+         try {
+            var0[DefaultScene.SidePanel.SETTINGS.ordinal()] = 1;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel = var0;
+         return var0;
+      }
+   }
+
+   public static enum SidePanel {
+      SETTINGS;
+
+      public final boolean requiresShow;
+
+      private SidePanel(boolean requiresShow) {
+         this.requiresShow = requiresShow;
+      }
+
+      private SidePanel() {
+         this(false);
       }
    }
 }

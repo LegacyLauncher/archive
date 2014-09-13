@@ -38,7 +38,7 @@ import ru.turikhay.util.stream.MirroredLinkedStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.33D;
+   private static final double VERSION = 1.39D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -60,8 +60,8 @@ public class TLauncher {
    private RequiredUpdateListener updateListener;
    private MinecraftUIListener minecraftListener;
    private boolean ready;
-   private static final String SETTINGS = "tlauncher/tlauncher.properties";
-   private static final String BRAND = "Original";
+   private static final String SETTINGS = "tlauncher/legacy.properties";
+   private static final String BRAND = "Legacy";
    private static final String FOLDER = "minecraft";
    private static final String DEVELOPER = "turikhay";
    private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-legacy-update-mirror-3/vFqOCA", "http://s1.mmods.ru/launcher/legacy.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
@@ -84,8 +84,12 @@ public class TLauncher {
          this.args = set;
          gson = new Gson();
          File oldConfig = MinecraftUtil.getSystemRelatedFile("tlauncher.cfg");
-         if (oldConfig.isFile()) {
-            File newConfig = MinecraftUtil.getSystemRelatedDirectory("tlauncher/tlauncher.properties");
+         File newConfig = MinecraftUtil.getSystemRelatedDirectory("tlauncher/legacy.properties");
+         if (!oldConfig.isFile()) {
+            oldConfig = MinecraftUtil.getSystemRelatedFile(".tlauncher/tlauncher.properties");
+         }
+
+         if (oldConfig.isFile() && !newConfig.isFile()) {
             boolean copied = true;
 
             try {
@@ -93,7 +97,7 @@ public class TLauncher {
                FileUtil.copyFile(oldConfig, newConfig, true);
             } catch (IOException var7) {
                U.log("Cannot copy old configuration to the new place", oldConfig, newConfig, var7);
-               copied = true;
+               copied = false;
             }
 
             if (copied) {
@@ -280,7 +284,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Original", 1.33D, "by", "turikhay");
+      U.log("Starting TLauncher", "Legacy", 1.39D, "by", "turikhay");
       U.log("Have question? Find my e-mail in lang files.");
       U.log("Machine info:", OS.getSummary());
       U.log("Startup time:", Calendar.getInstance().getTime());
@@ -328,11 +332,11 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.33D;
+      return 1.39D;
    }
 
    public static String getBrand() {
-      return "Original";
+      return "Legacy";
    }
 
    public static String getDeveloper() {
@@ -348,7 +352,7 @@ public class TLauncher {
    }
 
    public static String getSettingsFile() {
-      return "tlauncher/tlauncher.properties";
+      return "tlauncher/legacy.properties";
    }
 
    public static String[] getOfficialRepo() {

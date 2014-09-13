@@ -27,7 +27,7 @@ public abstract class LoopedThread extends ExtendedThread {
 
    public final void iterate() {
       if (!this.isIterating()) {
-         this.unblockThread("iteration");
+         this.unblockThread(new String[]{"iteration"});
       }
 
    }

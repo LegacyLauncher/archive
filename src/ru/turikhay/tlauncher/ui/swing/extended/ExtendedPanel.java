@@ -1,7 +1,10 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
+import java.awt.AlphaComposite;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.MouseListener;
@@ -11,12 +14,14 @@ import java.util.List;
 import javax.swing.JPanel;
 
 public class ExtendedPanel extends JPanel {
-   private static final long serialVersionUID = 873670863629293560L;
    private final List mouseListeners;
    private Insets insets;
+   private float opacity;
+   private AlphaComposite aComp;
 
    public ExtendedPanel(LayoutManager layout, boolean isDoubleBuffered) {
       super(layout, isDoubleBuffered);
+      this.opacity = 1.0F;
       this.mouseListeners = new ArrayList();
       this.setOpaque(false);
    }
@@ -31,6 +36,20 @@ public class ExtendedPanel extends JPanel {
 
    public ExtendedPanel() {
       this(true);
+   }
+
+   public float getOpacity() {
+      return this.opacity;
+   }
+
+   public void setOpacity(float f) {
+      if (!(f < 0.0F) && !(f > 1.0F)) {
+         this.opacity = f;
+         this.aComp = AlphaComposite.getInstance(3, f);
+         this.repaint();
+      } else {
+         throw new IllegalArgumentException("opacity must be in [0;1]");
+      }
    }
 
    public Insets getInsets() {
@@ -149,5 +168,15 @@ public class ExtendedPanel extends JPanel {
       Insets insets = new Insets(top, left, bottom, right);
       this.setInsets(insets);
       return insets;
+   }
+
+   protected void paintComponent(Graphics g0) {
+      if (this.opacity == 1.0F) {
+         super.paintComponent(g0);
+      } else {
+         Graphics2D g = (Graphics2D)g0;
+         g.setComposite(this.aComp);
+         super.paintComponent(g0);
+      }
    }
 }

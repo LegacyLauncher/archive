@@ -54,7 +54,7 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
          MainPane pane = this.parent.tlauncher.getFrame().mp;
          Point parentPoint = pane.getLocationOf(this.parent);
          Point targetPoint = pane.getLocationOf(this.targetComponent);
-         int safeZone = 32;
+         int safeZone = 24;
          int targetX = targetPoint.x + this.targetComponent.getWidth() / 2;
          int targetY = targetPoint.y + this.targetComponent.getHeight() / 2;
          int parentMinX = parentPoint.x;

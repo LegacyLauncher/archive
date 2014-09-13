@@ -51,14 +51,23 @@ public abstract class ExtendedThread extends Thread {
       }
    }
 
-   public synchronized void unblockThread(String reason) {
-      if (reason == null) {
+   public synchronized void unblockThread(String... reasons) {
+      if (reasons == null) {
          throw new NullPointerException();
-      } else if (!reason.equals(this.blockReason)) {
-         throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
       } else {
-         this.blockReason = null;
-         this.notifyAll();
+         String[] var5 = reasons;
+         int var4 = reasons.length;
+
+         for(int var3 = 0; var3 < var4; ++var3) {
+            String reason = var5[var3];
+            if (reason.equals(this.blockReason)) {
+               this.blockReason = null;
+               this.notifyAll();
+               return;
+            }
+         }
+
+         throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + U.toLog(reasons));
       }
    }
 

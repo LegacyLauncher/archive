@@ -27,6 +27,7 @@ import ru.turikhay.tlauncher.component.ComponentDependence;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncObject;
@@ -222,6 +223,14 @@ public class VersionManager extends InterruptibleComponent {
          }
 
          Version localVersion = this.localList.getVersion(name);
+         if (localVersion instanceof CompleteVersion && ((CompleteVersion)localVersion).getInheritsFrom() != null) {
+            try {
+               localVersion = ((CompleteVersion)localVersion).resolve(this, false);
+            } catch (IOException var9) {
+               throw new RuntimeException("Can't resolve version " + localVersion, var9);
+            }
+         }
+
          Version remoteVersion = null;
          RemoteVersionList[] var7;
          int var6 = (var7 = this.remoteLists).length;
@@ -235,7 +244,7 @@ public class VersionManager extends InterruptibleComponent {
             }
          }
 
-         return new VersionSyncInfo(localVersion, remoteVersion);
+         return new VersionSyncInfo((Version)localVersion, remoteVersion);
       }
    }
 
@@ -345,39 +354,53 @@ public class VersionManager extends InterruptibleComponent {
 
    public VersionSyncInfoContainer downloadVersion(VersionSyncInfo syncInfo, boolean force) throws IOException {
       VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
-      CompleteVersion version = syncInfo.getCompleteVersion(force);
+      CompleteVersion completeVersion = syncInfo.getCompleteVersion(force);
       File baseDirectory = this.localList.getBaseDirectory();
       Set required = syncInfo.getRequiredDownloadables(baseDirectory, force);
-      this.log(new Object[]{"Required for " + syncInfo.getID() + ":", required});
-      container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force));
-      if (!syncInfo.hasRemote()) {
+      container.addAll(required);
+      this.log(new Object[]{"Required for version " + syncInfo.getID() + ':', required});
+      String originalId = completeVersion.getJar();
+      if (!syncInfo.hasRemote() && originalId == null) {
          return container;
       } else {
-         String id = version.getID();
-         String o_id = version.getOriginal();
+         String id = completeVersion.getID();
          String jarFile = "versions/";
-         String saveFile = jarFile;
+         String saveFile = "versions/";
          Repository repo;
-         if (o_id != null) {
-            repo = Repository.OFFICIAL_VERSION_REPO;
-            jarFile = jarFile + o_id + "/" + o_id + ".jar";
-            saveFile = saveFile + id + "/" + id + ".jar";
-         } else {
+         if (originalId == null) {
             repo = syncInfo.getRemote().getSource();
             jarFile = jarFile + id + "/" + id + ".jar";
             saveFile = jarFile;
+         } else {
+            repo = Repository.OFFICIAL_VERSION_REPO;
+            jarFile = jarFile + originalId + "/" + originalId + ".jar";
+            saveFile = saveFile + id + "/" + id + ".jar";
          }
 
          File file = new File(baseDirectory, saveFile);
-         if (!force && file.isFile() && file.length() > 0L) {
+         if (!badFile(file)) {
             return container;
          } else {
+            if (!force && originalId != null) {
+               File originalFile = new File(baseDirectory, jarFile);
+               File originalFileBak = new File(baseDirectory, jarFile + ".bak");
+               if (originalFile.isFile() && originalFileBak.isFile() && originalFile.length() == originalFileBak.length()) {
+                  FileUtil.copyFile(originalFile, file, true);
+                  return container;
+               }
+            }
+
             Downloadable d = new Downloadable(repo, jarFile, new File(baseDirectory, saveFile), force);
             d.addAdditionalDestination(new File(d.getDestination() + ".bak"));
+            this.log(new Object[]{"Jar for " + syncInfo.getID() + ':', d});
             container.add(d);
             return container;
          }
       }
+   }
+
+   private static boolean badFile(File file) {
+      return !file.isFile() || file.length() == 0L;
    }
 
    class AsyncRawVersionListObject extends AsyncObject {

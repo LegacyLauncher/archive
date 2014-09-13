@@ -246,6 +246,7 @@ settings.direction.bottom_right=Знизу праворуч
 settings.launch-action.label=При запуску Minecraft:
 settings.launch-action.hide=Приховувати TLauncher
 settings.launch-action.exit=Закрити TLauncher
+settings.launch-action.nothing=Нічого не робити
 settings.lang.label=Мова (Language):
 settings.default=По умолчанию
 settings.default.warning.title=Попередження про втрату даних
@@ -275,7 +276,7 @@ notifier.left.failed=TLauncher не зміг підключитися до Ін�
 notifier.left.found.title=Знайдено оновлення
 notifier.left.found.question=Знайдена більш нова версія лаунчера: %0. Ви хочете її завантажити?
 # Support button
-support.url=http://u.to/tlauncher-vk/FW09BA
+support.url=http://vk.com/tlauncher
 support.error.title=Помилка при відкритті посилання
 support.error=Неможливо відкрити посилання на нашу сторінку ВКонтакте.\nБудь ласка, перейдіть на нього самостійно.
 # Folder button

@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class SettingsButton extends ImageButton implements Blockable {
@@ -26,7 +27,7 @@ public class SettingsButton extends ImageButton implements Blockable {
       this.settings = new LocalizableMenuItem("loginform.button.settings.launcher");
       this.settings.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            SettingsButton.this.lf.scene.toggleSettings();
+            SettingsButton.this.lf.scene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
          }
       });
       this.popup.add(this.settings);

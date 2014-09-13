@@ -19,7 +19,7 @@ import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 
-public class AccountComboBox extends ExtendedComboBox implements Blockable, LoginListener, ProfileManagerListener, LocalizableComponent {
+public class AccountComboBox extends ExtendedComboBox implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
    private static final long serialVersionUID = 6618039863712810645L;
    private static final Account EMPTY;
    private static final Account MANAGE;
@@ -77,7 +77,7 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
 
    }
 
-   public void onLogin() throws LoginException {
+   public void logginingIn() throws LoginException {
       final Account account = this.getAccount();
       if (account == null) {
          this.loginForm.pane.openAccountEditor();
@@ -92,10 +92,10 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
       }
    }
 
-   public void onLoginFailed() {
+   public void loginFailed() {
    }
 
-   public void onLoginSuccess() {
+   public void loginSucceed() {
    }
 
    public void refreshAccounts(AuthenticatorDatabase db, String select) {

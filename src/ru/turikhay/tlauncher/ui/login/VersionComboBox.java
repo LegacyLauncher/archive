@@ -18,7 +18,7 @@ import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 
-public class VersionComboBox extends ExtendedComboBox implements Blockable, VersionManagerListener, LocalizableComponent, LoginListener {
+public class VersionComboBox extends ExtendedComboBox implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
    private static final long serialVersionUID = -9122074452728842733L;
    private static final VersionSyncInfo LOADING;
    private static final VersionSyncInfo EMPTY;
@@ -56,7 +56,7 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
       return selected != null && !selected.equals(LOADING) && !selected.equals(EMPTY) ? selected : null;
    }
 
-   public void onLogin() throws LoginException {
+   public void logginingIn() throws LoginException {
       VersionSyncInfo selected = this.getVersion();
       if (selected == null) {
          throw new LoginWaitException("Version list is empty, refreshing", new LoginWaitException.LoginWaitTask() {
@@ -85,10 +85,10 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
       }
    }
 
-   public void onLoginFailed() {
+   public void loginFailed() {
    }
 
-   public void onLoginSuccess() {
+   public void loginSucceed() {
    }
 
    public void updateLocale() {

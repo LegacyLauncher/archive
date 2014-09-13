@@ -10,4 +10,10 @@ public enum Direction {
    BOTTOM_LEFT,
    BOTTOM,
    BOTTOM_RIGHT;
+
+   private final String lower = this.name().toLowerCase();
+
+   public String toString() {
+      return this.lower;
+   }
 }

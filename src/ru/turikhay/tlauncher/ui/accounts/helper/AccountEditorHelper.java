@@ -17,16 +17,16 @@ public class AccountEditorHelper extends ExtendedLayeredPane {
    static final byte UP = 1;
    static final byte RIGHT = 2;
    static final byte DOWN = 3;
-   private static final long serialVersionUID = -8240523754377261945L;
    private final MainPane pane;
+   private final AccountHandler handler;
    private final HelperTip[] tips;
    private HelperState state;
 
    public AccountEditorHelper(AccountEditorScene scene) {
       super(scene);
-      AccountHandler handler = scene.handler;
+      this.handler = scene.handler;
       this.pane = scene.getMainPane();
-      this.tips = new HelperTip[]{new HelperTip("add", handler.list.add, handler.list, (byte)3, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("username", handler.editor.username, handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("checkbox", handler.editor.premiumBox, handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("password", handler.editor.password, handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM}), new HelperTip("button", handler.editor.save, handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("exit", handler.list.back, handler.list, (byte)2, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("help", handler.list.help, handler.list, (byte)3, new HelperState[]{HelperState.HELP})};
+      this.tips = new HelperTip[]{new HelperTip("add", this.handler.list.add, this.handler.list, (byte)3, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("username", this.handler.editor.username, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("checkbox", this.handler.editor.premiumBox, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("password", this.handler.editor.password, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM}), new HelperTip("button", this.handler.editor.save, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("exit", this.handler.list.back, this.handler.list, (byte)2, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("help", this.handler.list.help, this.handler.list, (byte)3, new HelperState[]{HelperState.HELP})};
       this.add(this.tips);
       this.setState(HelperState.NONE);
    }
@@ -66,6 +66,10 @@ public class AccountEditorHelper extends ExtendedLayeredPane {
             }
 
          } else {
+            if (this.handler.editor.premiumBox.isEnabled()) {
+               this.handler.editor.premiumBox.isSelected();
+            }
+
             var4 = (var22 = this.tips).length;
 
             for(var3 = 0; var3 < var4; ++var3) {

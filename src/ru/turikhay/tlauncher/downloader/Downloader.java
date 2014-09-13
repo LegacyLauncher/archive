@@ -126,7 +126,7 @@ public class Downloader extends ExtendedThread {
    public boolean startDownload() {
       boolean haveWork = !this.list.isEmpty();
       if (haveWork) {
-         this.unblockThread("iteration");
+         this.unblockThread(new String[]{"download", "iteration"});
       }
 
       return haveWork;
@@ -164,7 +164,7 @@ public class Downloader extends ExtendedThread {
          }
 
          this.aborted = true;
-         this.unblockThread("download");
+         this.unblockThread(new String[]{"download", "iteration"});
       }
    }
 
@@ -320,7 +320,7 @@ public class Downloader extends ExtendedThread {
          listener.onDownloaderComplete(this);
       }
 
-      this.unblockThread("download");
+      this.unblockThread(new String[]{"download"});
    }
 
    private void waitForThreads() {

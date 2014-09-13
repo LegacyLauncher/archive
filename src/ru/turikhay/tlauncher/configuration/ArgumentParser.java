@@ -67,7 +67,7 @@ public class ArgumentParser {
       r.put("directory", "minecraft.gamedir");
       r.put("java-directory", "minecraft.javadir");
       r.put("version", "login.version");
-      r.put("username", "login.username");
+      r.put("username", "login.account");
       r.put("javaargs", "minecraft.javaargs");
       r.put("margs", "minecraft.args");
       r.put("window", "minecraft.size");

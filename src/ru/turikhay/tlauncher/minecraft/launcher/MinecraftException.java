@@ -7,7 +7,7 @@ public class MinecraftException extends Exception {
    private final String langPath;
    private final String[] langVars;
 
-   private MinecraftException(String message, String langPath, Throwable cause, Object... langVars) {
+   MinecraftException(String message, String langPath, Throwable cause, Object... langVars) {
       super(message, cause);
       if (langPath == null) {
          throw new NullPointerException("Lang path required!");

@@ -2,10 +2,9 @@ package net.minecraft.launcher.versions;
 
 import java.util.Date;
 import net.minecraft.launcher.updater.VersionList;
-import ru.turikhay.tlauncher.adapter.PublicCloneable;
 import ru.turikhay.tlauncher.repository.Repository;
 
-public interface Version extends PublicCloneable {
+public interface Version {
    String getID();
 
    void setID(String var1);

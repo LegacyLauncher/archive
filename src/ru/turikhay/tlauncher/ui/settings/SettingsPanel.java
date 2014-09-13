@@ -45,7 +45,7 @@ import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginException;
-import ru.turikhay.tlauncher.ui.login.LoginListener;
+import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
@@ -54,7 +54,7 @@ import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Range;
 
-public class SettingsPanel extends TabbedEditorPanel implements LoginListener {
+public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener {
    private final DefaultScene scene;
    private final TabbedEditorPanel.EditorPanelTab minecraftTab;
    public final EditorFieldHandler directory;
@@ -193,7 +193,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginListener {
       });
       this.tlauncherTab.add(new EditorPair("settings.clientres.label", new EditorHandler[]{this.launcherResolution}));
       this.tlauncherTab.nextPane();
-      this.loginFormDirection = new EditorFieldHandler("gui.direction.lf", new EditorComboBox(new DirectionConverter(), Direction.values()));
+      this.loginFormDirection = new EditorFieldHandler("gui.direction.loginform", new EditorComboBox(new DirectionConverter(), Direction.values()));
       this.loginFormDirection.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
@@ -308,7 +308,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginListener {
       this.homeButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             SettingsPanel.this.updateValues();
-            SettingsPanel.this.scene.setSettings(false);
+            SettingsPanel.this.scene.setSidePanel((DefaultScene.SidePanel)null);
          }
       });
       Dimension size = this.homeButton.getPreferredSize();
@@ -448,16 +448,16 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginListener {
 
    }
 
-   public void onLogin() throws LoginException {
+   public void logginingIn() throws LoginException {
       if (!this.checkValues()) {
-         this.scene.setSettings(true);
+         this.scene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
          throw new LoginException("Invalid settings!");
       }
    }
 
-   public void onLoginFailed() {
+   public void loginFailed() {
    }
 
-   public void onLoginSuccess() {
+   public void loginSucceed() {
    }
 }

@@ -4,7 +4,7 @@ import java.awt.Color;
 
 public class DefaultCenterPanelTheme extends CenterPanelTheme {
    protected final Color backgroundColor = new Color(255, 255, 255, 255);
-   protected final Color panelBackgroundColor = new Color(255, 255, 255, 148);
+   protected final Color panelBackgroundColor = new Color(255, 255, 255, 128);
    protected final Color focusColor = new Color(0, 0, 0, 255);
    protected final Color focusLostColor = new Color(128, 128, 128, 255);
    protected final Color successColor = new Color(78, 196, 78, 255);

@@ -4,7 +4,7 @@ import java.util.Date;
 import net.minecraft.launcher.updater.VersionList;
 import ru.turikhay.tlauncher.repository.Repository;
 
-public class PartialVersion implements Version, Cloneable {
+public class PartialVersion implements Version {
    private String id;
    private Date time;
    private Date releaseTime;
@@ -73,13 +73,5 @@ public class PartialVersion implements Version, Cloneable {
 
    public String toString() {
       return this.getClass().getSimpleName() + "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", source=" + this.source + ", list=" + this.list + "}";
-   }
-
-   public Object cloneSafely() {
-      try {
-         return super.clone();
-      } catch (CloneNotSupportedException var2) {
-         return null;
-      }
    }
 }

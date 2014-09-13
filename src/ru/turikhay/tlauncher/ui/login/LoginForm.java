@@ -2,9 +2,9 @@ package ru.turikhay.tlauncher.ui.login;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
@@ -27,39 +27,44 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
 public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener {
+   private final List stateListeners = Collections.synchronizedList(new ArrayList());
+   private final List processListeners = Collections.synchronizedList(new ArrayList());
+   public final DefaultScene scene;
+   public final MainPane pane;
+   private final SettingsPanel settings;
+   public final AccountComboBox accounts;
+   public final VersionComboBox versions;
+   public final CheckBoxPanel checkbox;
+   public final ButtonPanel buttons;
+   public final AutoLogin autologin;
+   private final LoginForm.StartThread startThread;
+   private final LoginForm.StopThread stopThread;
+   private LoginForm.LoginState state;
    public static final String LOGIN_BLOCK = "login";
    public static final String REFRESH_BLOCK = "refresh";
    public static final String LAUNCH_BLOCK = "launch";
    public static final String AUTH_BLOCK = "auth";
    public static final String UPDATER_BLOCK = "update";
    public static final String DOWNLOADER_BLOCK = "download";
-   private final List listeners = new ArrayList();
-   private final LoginForm.LoginThread thread;
-   public final DefaultScene scene;
-   private final LoginForm instance = this;
-   private final SettingsPanel settings;
-   public final MainPane pane;
-   public final AccountComboBox accounts;
-   public final VersionComboBox versions;
-   public final CheckBoxPanel checkbox;
-   public final ButtonPanel buttons;
-   public final AutoLogin autologin;
 
    public LoginForm(DefaultScene scene) {
+      this.state = LoginForm.LoginState.STOPPED;
       this.scene = scene;
-      this.settings = scene.settingsForm;
       this.pane = scene.getMainPane();
-      this.thread = new LoginForm.LoginThread(this);
+      this.settings = scene.settingsForm;
+      this.startThread = new LoginForm.StartThread();
+      this.stopThread = new LoginForm.StopThread();
       this.autologin = new AutoLogin(this);
       this.accounts = new AccountComboBox(this);
       this.versions = new VersionComboBox(this);
       this.checkbox = new CheckBoxPanel(this);
       this.buttons = new ButtonPanel(this);
-      this.listeners.add(this.autologin);
-      this.listeners.add(this.settings);
-      this.listeners.add(this.checkbox);
-      this.listeners.add(this.versions);
-      this.listeners.add(this.accounts);
+      this.processListeners.add(this.autologin);
+      this.processListeners.add(this.settings);
+      this.processListeners.add(this.checkbox);
+      this.processListeners.add(this.versions);
+      this.processListeners.add(this.accounts);
+      this.stateListeners.add(this.buttons.play);
       this.add(this.messagePanel);
       this.add(this.del(0));
       this.add(this.accounts);
@@ -68,42 +73,22 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       this.add(this.checkbox);
       this.add(this.del(0));
       this.add(this.buttons);
-      TLauncher launcher = TLauncher.getInstance();
-      launcher.getVersionManager().addListener(this);
-      launcher.getDownloader().addListener(this);
+      this.tlauncher.getVersionManager().addListener(this);
+      this.tlauncher.getDownloader().addListener(this);
    }
 
-   private void saveValues() {
-      this.log(new Object[]{"Saving values..."});
-      this.global.setForcefully("login.account", this.accounts.getAccount().getUsername(), false);
-      this.global.setForcefully("login.version", this.versions.getVersion().getID(), false);
-      this.global.store();
-      this.log(new Object[]{"Values has been saved!"});
-   }
-
-   public void callLogin() {
-      if (Blocker.isBlocked(this)) {
-         this.log(new Object[]{"Cannot call login, UI is blocked by:", Blocker.getBlockList(this)});
-      } else {
-         this.autologin.setActive(false);
-         this.thread.start();
-      }
-   }
-
-   private void runLogin() {
-      this.log(new Object[]{"Running login process from a thread"});
+   private void runProcess() {
       LoginException error = null;
       boolean success = true;
-      synchronized(this.listeners) {
-         Iterator var5 = this.listeners.iterator();
+      synchronized(this.processListeners) {
+         Iterator var5 = this.processListeners.iterator();
 
-         LoginListener listener;
+         LoginForm.LoginProcessListener listener;
          while(var5.hasNext()) {
-            listener = (LoginListener)var5.next();
-            this.log(new Object[]{"Running on a listener", listener.getClass().getSimpleName()});
+            listener = (LoginForm.LoginProcessListener)var5.next();
 
             try {
-               listener.onLogin();
+               listener.logginingIn();
             } catch (LoginWaitException var9) {
                LoginWaitException wait = var9;
                this.log(new Object[]{"Catched a wait task from this listener, waiting..."});
@@ -126,31 +111,75 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             }
          }
 
-         var5 = this.listeners.iterator();
+         if (success) {
+            var5 = this.processListeners.iterator();
 
-         while(var5.hasNext()) {
-            listener = (LoginListener)var5.next();
-            if (success) {
-               listener.onLoginSuccess();
-            } else {
-               listener.onLoginFailed();
+            while(var5.hasNext()) {
+               listener = (LoginForm.LoginProcessListener)var5.next();
+               listener.loginSucceed();
+            }
+         } else {
+            var5 = this.processListeners.iterator();
+
+            while(var5.hasNext()) {
+               listener = (LoginForm.LoginProcessListener)var5.next();
+               listener.loginFailed();
             }
          }
       }
 
-      if (error == null) {
-         this.log(new Object[]{"Login process is OK :)"});
-         this.saveValues();
-         boolean force = this.checkbox.forceupdate.isSelected();
-         this.tlauncher.launch(this.instance, force);
-         this.checkbox.forceupdate.setSelected(false);
-      } else {
+      if (error != null) {
          this.log(new Object[]{"Login process has ended with an error."});
+      } else {
+         this.global.setForcefully("login.account", this.accounts.getAccount().getUsername(), false);
+         this.global.setForcefully("login.version", this.versions.getVersion().getID(), false);
+         this.global.store();
+         this.log(new Object[]{"Login was OK. Trying to launch now."});
+         boolean force = this.checkbox.forceupdate.isSelected();
+         this.changeState(LoginForm.LoginState.LAUNCHING);
+         this.tlauncher.launch(this, force);
+         this.checkbox.forceupdate.setSelected(false);
+      }
+   }
+
+   private void stopProcess() {
+      while(!this.tlauncher.isLauncherWorking()) {
+         this.log(new Object[]{"waiting for launcher"});
+         U.sleepFor(500L);
+      }
+
+      this.changeState(LoginForm.LoginState.STOPPING);
+      this.tlauncher.getLauncher().stop();
+   }
+
+   public void startLauncher() {
+      if (!Blocker.isBlocked(this)) {
+         this.autologin.setActive(false);
+         this.startThread.iterate();
+      }
+   }
+
+   public void stopLauncher() {
+      this.stopThread.iterate();
+   }
+
+   private void changeState(LoginForm.LoginState state) {
+      if (state == null) {
+         throw new NullPointerException();
+      } else if (this.state != state) {
+         this.state = state;
+         Iterator var3 = this.stateListeners.iterator();
+
+         while(var3.hasNext()) {
+            LoginForm.LoginStateListener listener = (LoginForm.LoginStateListener)var3.next();
+            listener.loginStateChanged(state);
+         }
+
       }
    }
 
    public void block(Object reason) {
-      if (!reason.equals("refresh")) {
+      if (!Blocker.getBlockList(this).contains("refresh")) {
          Blocker.block((Blockable)this.accounts, (Object)reason);
       }
 
@@ -159,62 +188,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
    public void unblock(Object reason) {
       Blocker.unblock(reason, this.settings, this.accounts, this.versions, this.checkbox, this.buttons);
-   }
-
-   public void onAuthPassing(Authenticator auth) {
-      Blocker.block((Blockable)this, (Object)"auth");
-   }
-
-   public void onAuthPassingError(Authenticator auth, Throwable e) {
-      Blocker.unblock((Blockable)this, (Object)"auth");
-      Throwable cause = e.getCause();
-      if (cause == null || !(e.getCause() instanceof IOException)) {
-         throw new LoginException("Cannot auth!");
-      }
-   }
-
-   public void onAuthPassed(Authenticator auth) {
-      Blocker.unblock((Blockable)this, (Object)"auth");
-   }
-
-   public void onVersionsRefreshing(VersionManager vm) {
-      Blocker.block((Blockable)this, (Object)"refresh");
-   }
-
-   public void onVersionsRefreshingFailed(VersionManager vm) {
-      Blocker.unblock((Blockable)this, (Object)"refresh");
-   }
-
-   public void onVersionsRefreshed(VersionManager vm) {
-      Blocker.unblock((Blockable)this, (Object)"refresh");
-   }
-
-   public void onMinecraftPrepare() {
-      Blocker.block((Blockable)this, (Object)"launch");
-   }
-
-   public void onMinecraftAbort() {
-      Blocker.unblock((Blockable)this, (Object)"launch");
-   }
-
-   public void onMinecraftLaunch() {
-   }
-
-   public void onMinecraftClose() {
-      Blocker.unblock((Blockable)this, (Object)"launch");
-      U.log("onClose:", Blocker.getBlockList(this));
-   }
-
-   public void onMinecraftKnownError(MinecraftException knownError) {
-      Blocker.unblock((Blockable)this, (Object)"launch");
-   }
-
-   public void onMinecraftError(Throwable unknownError) {
-      Blocker.unblock((Blockable)this, (Object)"launch");
-   }
-
-   public void onMinecraftCrash(Crash crash) {
-      Blocker.unblock((Blockable)this, (Object)"launch");
    }
 
    public void onDownloaderStart(Downloader d, int files) {
@@ -235,22 +208,117 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       Blocker.unblock((Blockable)this, (Object)"download");
    }
 
-   class LoginThread extends LoopedThread {
-      private final LoginForm loginForm;
+   public void onVersionsRefreshing(VersionManager manager) {
+      Blocker.block((Blockable)this, (Object)"refresh");
+   }
 
-      LoginThread(LoginForm loginForm) {
-         super("LoginThread");
-         this.loginForm = loginForm;
-         super.startAndWait();
+   public void onVersionsRefreshingFailed(VersionManager manager) {
+      Blocker.unblock((Blockable)this, (Object)"refresh");
+   }
+
+   public void onVersionsRefreshed(VersionManager manager) {
+      Blocker.unblock((Blockable)this, (Object)"refresh");
+   }
+
+   public void onAuthPassing(Authenticator auth) {
+      Blocker.block((Blockable)this, (Object)"auth");
+   }
+
+   public void onAuthPassingError(Authenticator auth, Throwable e) {
+      Blocker.unblock((Blockable)this, (Object)"auth");
+      Throwable cause = e.getCause();
+      if (cause == null || !(e.getCause() instanceof IOException)) {
+         throw new LoginException("Cannot auth!");
+      }
+   }
+
+   public void onAuthPassed(Authenticator auth) {
+      Blocker.unblock((Blockable)this, (Object)"auth");
+   }
+
+   public void onMinecraftPrepare() {
+      Blocker.block((Blockable)this, (Object)"launch");
+   }
+
+   public void onMinecraftAbort() {
+      Blocker.unblock((Blockable)this, (Object)"launch");
+   }
+
+   public void onMinecraftLaunch() {
+      this.changeState(LoginForm.LoginState.LAUNCHED);
+   }
+
+   public void onMinecraftClose() {
+      Blocker.unblock((Blockable)this, (Object)"launch");
+   }
+
+   public void onMinecraftError(Throwable e) {
+      Blocker.unblock((Blockable)this, (Object)"launch");
+   }
+
+   public void onMinecraftKnownError(MinecraftException e) {
+      Blocker.unblock((Blockable)this, (Object)"launch");
+   }
+
+   public void onMinecraftCrash(Crash crash) {
+      Blocker.unblock((Blockable)this, (Object)"launch");
+   }
+
+   class LoginAbortedException extends Exception {
+   }
+
+   public abstract static class LoginListener implements LoginForm.LoginProcessListener {
+      public abstract void logginingIn() throws LoginException;
+
+      public void loginFailed() {
       }
 
-      public void start() {
-         this.unblockThread("iteration");
+      public void loginSucceed() {
+      }
+   }
+
+   public interface LoginProcessListener {
+      void logginingIn() throws LoginException;
+
+      void loginFailed();
+
+      void loginSucceed();
+   }
+
+   public static enum LoginState {
+      LAUNCHING,
+      STOPPING,
+      STOPPED,
+      LAUNCHED;
+   }
+
+   public interface LoginStateListener {
+      void loginStateChanged(LoginForm.LoginState var1);
+   }
+
+   class StartThread extends LoopedThread {
+      StartThread() {
+         this.startAndWait();
       }
 
       protected void iterateOnce() {
          try {
-            this.loginForm.runLogin();
+            LoginForm.this.runProcess();
+         } catch (Throwable var2) {
+            Alert.showError(var2);
+         }
+
+      }
+   }
+
+   class StopThread extends LoopedThread {
+      StopThread() {
+         this.startAndWait();
+      }
+
+      protected void iterateOnce() {
+         try {
+            LoginForm.this.stopProcess();
          } catch (Throwable var2) {
             Alert.showError(var2);
          }

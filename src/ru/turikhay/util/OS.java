@@ -383,7 +383,7 @@ public enum OS {
             return 1024;
          case 2:
             if (TOTAL_RAM_MB > 6000L) {
-               return 2048;
+               return 3072;
             } else {
                if (TOTAL_RAM_MB > 3000L) {
                   return 1536;

@@ -36,7 +36,7 @@ class ConfigurationDefaults {
       this.d.put("gui.console.height", 500);
       this.d.put("gui.console.x", 30);
       this.d.put("gui.console.y", 30);
-      this.d.put("gui.direction.lf", Direction.CENTER);
+      this.d.put("gui.direction.loginform", Direction.CENTER);
       this.d.put("connection", Configuration.ConnectionQuality.getDefault());
    }
 
