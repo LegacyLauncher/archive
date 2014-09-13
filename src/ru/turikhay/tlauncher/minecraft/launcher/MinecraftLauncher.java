@@ -62,7 +62,7 @@ import ru.turikhay.util.stream.LinkedStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class MinecraftLauncher implements JavaProcessListener {
-   private static final int OFFICIAL_VERSION = 14;
+   private static final int OFFICIAL_VERSION = 16;
    private static final int ALTERNATIVE_VERSION = 7;
    private boolean working;
    private final Thread parentThread;
@@ -179,7 +179,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.listeners = Collections.synchronizedList(new ArrayList());
          this.extListeners = Collections.synchronizedList(new ArrayList());
          this.step = MinecraftLauncher.MinecraftLauncherStep.NONE;
-         this.log("Minecraft Launcher [14;7] has initialized");
+         this.log("Minecraft Launcher [16;7] has initialized");
          this.log("Running under TLauncher " + TLauncher.getVersion() + " " + TLauncher.getBrand());
          this.log("Current machine:", OS.getSummary());
       }
@@ -190,7 +190,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    public MinecraftLauncher(TLauncherLite tl, OptionSet options) {
-      this(tl.getLauncher().getManager(), tl.getLauncher().getDownloader(), tl.getLauncher().getSettings(), options.has("force"), tl.getLauncher().getSettings().getConsoleType() == Configuration.ConsoleType.GLOBAL ? MinecraftLauncher.ConsoleVisibility.NONE : MinecraftLauncher.ConsoleVisibility.ALWAYS, false);
+      this(tl.getLauncher().getManager(), tl.getLauncher().getDownloader(), tl.getLauncher().getSettings(), options.has("force"), MinecraftLauncher.ConsoleVisibility.NONE, false);
    }
 
    public void addListener(MinecraftListener listener) {
@@ -255,7 +255,10 @@ public class MinecraftLauncher implements JavaProcessListener {
       if (this.step == MinecraftLauncher.MinecraftLauncherStep.NONE) {
          throw new IllegalStateException();
       } else {
-         this.downloader.stopDownload();
+         if (this.step == MinecraftLauncher.MinecraftLauncherStep.DOWNLOADING) {
+            this.downloader.stopDownload();
+         }
+
          this.working = false;
       }
    }
@@ -387,7 +390,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                         if (this.version.getMinimumCustomLauncherVersion() > 7) {
                            throw new MinecraftException("Alternative launcher is incompatible with launching version!", "incompatible", new Object[0]);
                         } else {
-                           if (this.version.getMinimumCustomLauncherVersion() == 0 && this.version.getMinimumLauncherVersion() > 14) {
+                           if (this.version.getMinimumCustomLauncherVersion() == 0 && this.version.getMinimumLauncherVersion() > 16) {
                               Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.launcher");
                            }
 
@@ -430,7 +433,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       try {
          execContainer = this.vm.downloadVersion(this.versionSync, this.forceUpdate);
       } catch (IOException var7) {
-         throw new MinecraftException("Cannot download version!", "download-jar", new Object[0]);
+         throw new MinecraftException("Cannot download version!", "download-jar", var7);
       }
 
       execContainer.setConsole(this.console);
@@ -541,6 +544,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          throw new MinecraftException("Cannot unpack natives!", "unpack-natives", var5);
       }
 
+      this.checkAborted();
       var2 = this.extListeners.iterator();
 
       while(var2.hasNext()) {
@@ -554,6 +558,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          throw new MinecraftException("Cannot delete entries!", "delete-entries", var4);
       }
 
+      this.checkAborted();
       this.log("Constructing process...");
       var2 = this.extListeners.iterator();
 
@@ -629,23 +634,22 @@ public class MinecraftLauncher implements JavaProcessListener {
          AssetIndex index = (AssetIndex)this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
          if (index.isVirtual()) {
             this.log("Reconstructing virtual assets folder at " + virtualRoot);
-            Iterator var6 = index.getFileMap().entrySet().iterator();
 
-            while(true) {
-               while(var6.hasNext()) {
-                  Entry entry = (Entry)var6.next();
-                  File target = new File(virtualRoot, (String)entry.getKey());
-                  File original = new File(new File(this.assetsObjectsDir, ((AssetIndex.AssetObject)entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject)entry.getValue()).getHash());
-                  if (!original.isFile()) {
-                     this.log("Skipped reconstructing:", original);
-                  } else if (this.forceUpdate || !target.isFile()) {
-                     FileUtils.copyFile(original, target, false);
-                  }
+            File target;
+            File original;
+            for(Iterator var6 = index.getFileMap().entrySet().iterator(); var6.hasNext(); this.log(original, "->", target)) {
+               Entry entry = (Entry)var6.next();
+               this.checkAborted();
+               target = new File(virtualRoot, (String)entry.getKey());
+               original = new File(new File(this.assetsObjectsDir, ((AssetIndex.AssetObject)entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject)entry.getValue()).getHash());
+               if (!original.isFile()) {
+                  this.log("Skipped reconstructing:", original);
+               } else if (this.forceUpdate || !target.isFile()) {
+                  FileUtils.copyFile(original, target, false);
                }
-
-               FileUtil.writeFile(new File(virtualRoot, ".lastused"), this.dateAdapter.toString(new Date()));
-               break;
             }
+
+            FileUtil.writeFile(new File(virtualRoot, ".lastused"), this.dateAdapter.toString(new Date()));
          }
 
          return virtualRoot;
@@ -927,9 +931,8 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    private void checkStep(MinecraftLauncher.MinecraftLauncherStep prevStep, MinecraftLauncher.MinecraftLauncherStep currentStep) {
-      if (!this.working) {
-         throw new MinecraftLauncher.MinecraftLauncherAborted("Aborted at step: " + prevStep);
-      } else if (prevStep != null && currentStep != null) {
+      this.checkAborted();
+      if (prevStep != null && currentStep != null) {
          if (!this.step.equals(prevStep)) {
             throw new IllegalStateException("Called from illegal step: " + this.step);
          } else {
@@ -938,6 +941,12 @@ public class MinecraftLauncher implements JavaProcessListener {
          }
       } else {
          throw new NullPointerException("NULL: " + prevStep + " " + currentStep);
+      }
+   }
+
+   private void checkAborted() {
+      if (!this.working) {
+         throw new MinecraftLauncher.MinecraftLauncherAborted("Aborted at step: " + this.step);
       }
    }
 

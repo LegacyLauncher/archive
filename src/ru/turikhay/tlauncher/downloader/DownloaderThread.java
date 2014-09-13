@@ -56,7 +56,7 @@ public class DownloaderThread extends ExtendedThread {
 
    void startDownload() {
       this.launched = true;
-      this.unblockThread("iteration");
+      this.unblockThread(new String[]{"iteration"});
    }
 
    void stopDownload() {

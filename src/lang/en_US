@@ -246,6 +246,7 @@ settings.direction.bottom_right=Bottom right
 settings.launch-action.label=Action on launch:
 settings.launch-action.hide=Hide TLauncher
 settings.launch-action.exit=Close TLauncher
+settings.launch-action.nothing=Do nothing
 settings.lang.label=Language:
 settings.default=Reset to defaults
 settings.default.warning.title=Warning!
@@ -275,7 +276,7 @@ notifier.left.failed=TLauncher couldn't connect to the Internet to check for upd
 notifier.left.found.title=An update is available!
 notifier.left.found.question=TLauncher %0 has been released. Do you want to update?
 # Support button
-support.url=http://u.to/turikhay/u3_hBA
+support.url=http://turikhay.ru/
 support.error.title=Error occurred while opening the link.
 support.error=Error occurred while opening the link. Please open it yourself.
 # Folder button

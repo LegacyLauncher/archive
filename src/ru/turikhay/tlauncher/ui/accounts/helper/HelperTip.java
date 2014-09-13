@@ -5,7 +5,6 @@ import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 
 class HelperTip extends CenterPanel {
-   private static final long serialVersionUID = -2410428259993661598L;
    public final String name;
    public final LocalizableLabel label;
    public final Component component;

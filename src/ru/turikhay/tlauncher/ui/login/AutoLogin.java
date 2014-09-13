@@ -4,7 +4,7 @@ import ru.turikhay.tlauncher.ui.login.buttons.ButtonPanel;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
-public class AutoLogin implements LoginListener {
+public class AutoLogin implements LoginForm.LoginProcessListener {
    public static final int DEFAULT_TIMEOUT = 3;
    public static final int MIN_TIMEOUT = 2;
    public static final int MAX_TIMEOUT = 10;
@@ -29,7 +29,7 @@ public class AutoLogin implements LoginListener {
             while(AutoLogin.this.sec > 0) {
                U.sleepFor(1000L);
                if (AutoLogin.this.updateLogin()) {
-                  AutoLogin.this.loginForm.callLogin();
+                  AutoLogin.this.loginForm.startLauncher();
                }
             }
 
@@ -94,13 +94,13 @@ public class AutoLogin implements LoginListener {
       return this.timeout;
    }
 
-   public void onLogin() throws LoginException {
+   public void logginingIn() throws LoginException {
       this.setActive(false);
    }
 
-   public void onLoginFailed() {
+   public void loginFailed() {
    }
 
-   public void onLoginSuccess() {
+   public void loginSucceed() {
    }
 }

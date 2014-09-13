@@ -10,7 +10,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
 import ru.turikhay.tlauncher.ui.swing.CheckBoxListener;
 import ru.turikhay.util.U;
 
-public class CheckBoxPanel extends BlockablePanel implements LoginListener {
+public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProcessListener {
    private static final long serialVersionUID = 768489049585749260L;
    private static final String[] phrases = new String[]{"OH, SHI~, STOP IT!", "PLS NOOO!", "Y R U DOIN THIS?", "NOOOOOO!!!!"};
    public final LocalizableCheckbox autologin;
@@ -53,7 +53,7 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
       this.add(this.forceupdate);
    }
 
-   public void onLogin() throws LoginException {
+   public void logginingIn() throws LoginException {
       VersionSyncInfo syncInfo = this.loginForm.versions.getVersion();
       if (syncInfo != null) {
          boolean supporting = syncInfo.hasRemote();
@@ -72,9 +72,9 @@ public class CheckBoxPanel extends BlockablePanel implements LoginListener {
       }
    }
 
-   public void onLoginFailed() {
+   public void loginFailed() {
    }
 
-   public void onLoginSuccess() {
+   public void loginSucceed() {
    }
 }

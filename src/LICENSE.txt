@@ -3,16 +3,13 @@ International License. Summary of the license can be found
 at: http://creativecommons.org/licenses/by/4.0/
 
 This software includes projects licensed under a Apache License 2.0:
-- Apache Commons IO (© 2002-2012 The Apache Software Foundation)
-- Apache Commons Lang (© 2001-2014 The Apache Software Foundation)
+- Apache Commons IO (Â© 2002-2012 The Apache Software Foundation)
+- Apache Commons Lang (Â© 2001-2014 The Apache Software Foundation)
 - Google Gson
 Legal code can be found at: http://www.apache.org/licenses/LICENSE-2.0
 
 This software includes JOpt Simple which is licensed under The MIT License,
 which legal code can be found at: http://opensource.org/licenses/mit-license.php
-
-This software includes LZMA SDK which is placed in the public domain
-by Igor Pavlov.
 
 This software includes content made by Mojang and licensed under Minecraft
 EULA, which can be found at: https://account.mojang.com/documents/minecraft_eula

@@ -696,4 +696,38 @@ public class U {
       }
 
    }
+
+   public static boolean is(Object obj, Object... equal) {
+      if (equal == null) {
+         throw new NullPointerException("comparsion array");
+      } else {
+         Object compare;
+         int var3;
+         int var4;
+         Object[] var5;
+         if (obj == null) {
+            var5 = equal;
+            var4 = equal.length;
+
+            for(var3 = 0; var3 < var4; ++var3) {
+               compare = var5[var3];
+               if (compare == null) {
+                  return true;
+               }
+            }
+         } else {
+            var5 = equal;
+            var4 = equal.length;
+
+            for(var3 = 0; var3 < var4; ++var3) {
+               compare = var5[var3];
+               if (obj.equals(compare)) {
+                  return true;
+               }
+            }
+         }
+
+         return false;
+      }
+   }
 }

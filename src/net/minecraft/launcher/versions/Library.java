@@ -27,6 +27,15 @@ public class Library {
       SUBSTITUTOR = new StrSubstitutor(map);
    }
 
+   public boolean equals(Object o) {
+      if (o != null && o instanceof Library) {
+         Library lib = (Library)o;
+         return this.name == null ? lib.name == null : this.name.equalsIgnoreCase(lib.name);
+      } else {
+         return false;
+      }
+   }
+
    public String getName() {
       return this.name;
    }

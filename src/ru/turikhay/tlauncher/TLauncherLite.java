@@ -28,6 +28,7 @@ public class TLauncherLite implements MinecraftListener {
          }
 
          launcher.start();
+         TLauncher.kill();
       }
    }
 

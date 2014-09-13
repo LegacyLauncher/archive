@@ -10,6 +10,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,15 +22,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.launcher.updater.VersionList;
+import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class CompleteVersion implements Version, Cloneable {
    String id;
-   String original_id;
+   String jar;
+   String inheritsFrom;
    Date time;
    Date releaseTime;
    ReleaseType type;
@@ -101,8 +105,12 @@ public class CompleteVersion implements Version, Cloneable {
       }
    }
 
-   public String getOriginal() {
-      return this.original_id;
+   public String getJar() {
+      return this.jar;
+   }
+
+   public String getInheritsFrom() {
+      return this.inheritsFrom;
    }
 
    public String getJVMArguments() {
@@ -118,7 +126,7 @@ public class CompleteVersion implements Version, Cloneable {
    }
 
    public List getLibraries() {
-      return Collections.unmodifiableList(this.libraries);
+      return this.libraries;
    }
 
    public List getRules() {
@@ -255,14 +263,6 @@ public class CompleteVersion implements Version, Cloneable {
       return neededFiles;
    }
 
-   public Object cloneSafely() {
-      try {
-         return super.clone();
-      } catch (CloneNotSupportedException var2) {
-         return null;
-      }
-   }
-
    public Collection getExtractFiles(OS os) {
       Collection libraries = this.getRelevantLibraries();
       Collection result = new ArrayList();
@@ -279,6 +279,112 @@ public class CompleteVersion implements Version, Cloneable {
       return result;
    }
 
+   public CompleteVersion resolve(VersionManager vm) throws IOException {
+      return this.resolve(vm, false);
+   }
+
+   public CompleteVersion resolve(VersionManager vm, boolean useLatest) throws IOException {
+      return this.resolve(vm, useLatest, new ArrayList());
+   }
+
+   protected CompleteVersion resolve(VersionManager vm, boolean useLatest, List inheristance) throws IOException {
+      if (vm == null) {
+         throw new NullPointerException("version manager");
+      } else if (this.inheritsFrom == null) {
+         return this;
+      } else if (inheristance.contains(this.id)) {
+         throw new IllegalArgumentException(this.id + " should be already resolved.");
+      } else {
+         inheristance.add(this.id);
+         U.log("Version", this.id, "iherits from", this.inheritsFrom);
+         VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(this.inheritsFrom);
+
+         CompleteVersion result;
+         try {
+            result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
+         } catch (CloneNotSupportedException var7) {
+            throw new RuntimeException(var7);
+         }
+
+         result.id = this.id;
+         if (this.jar != null) {
+            result.jar = this.jar;
+         }
+
+         result.inheritsFrom = null;
+         if (this.time.getTime() != 0L) {
+            result.time = this.time;
+         }
+
+         if (this.type != ReleaseType.UNKNOWN) {
+            result.type = this.type;
+         }
+
+         if (this.jvmArguments != null) {
+            result.jvmArguments = this.jvmArguments;
+         }
+
+         if (this.minecraftArguments != null) {
+            result.minecraftArguments = this.minecraftArguments;
+         }
+
+         if (this.mainClass != null) {
+            result.mainClass = this.mainClass;
+         }
+
+         ArrayList entriesCopy;
+         if (this.libraries != null) {
+            U.log("result libraries", result.libraries);
+            U.log("own libraries:", this.libraries);
+            entriesCopy = new ArrayList();
+            entriesCopy.addAll(this.libraries);
+            if (result.libraries != null) {
+               entriesCopy.addAll(result.libraries);
+            }
+
+            result.libraries = entriesCopy;
+         }
+
+         if (this.rules != null) {
+            if (result.rules != null) {
+               result.rules.addAll(this.rules);
+            } else {
+               entriesCopy = new ArrayList(this.rules.size());
+               Collections.copy(entriesCopy, this.rules);
+               result.rules = this.rules;
+            }
+         }
+
+         if (this.unnecessaryEntries != null) {
+            if (result.unnecessaryEntries != null) {
+               result.unnecessaryEntries.addAll(this.unnecessaryEntries);
+            } else {
+               entriesCopy = new ArrayList(this.unnecessaryEntries.size());
+               Collections.copy(entriesCopy, this.unnecessaryEntries);
+            }
+         }
+
+         if (this.minimumLauncherVersion != 0) {
+            result.minimumLauncherVersion = this.minimumLauncherVersion;
+         }
+
+         if (this.tlauncherVersion != 0) {
+            result.tlauncherVersion = this.tlauncherVersion;
+         }
+
+         if (this.assets != null && !this.assets.equals("legacy")) {
+            result.assets = this.assets;
+         }
+
+         if (this.source != null) {
+            result.source = this.source;
+         }
+
+         result.list = this.list;
+         return result;
+      }
+   }
+
    public static class CompleteVersionSerializer implements JsonSerializer, JsonDeserializer {
       private final Gson defaultContext;
 
@@ -293,9 +399,11 @@ public class CompleteVersion implements Version, Cloneable {
 
       public CompleteVersion deserialize(JsonElement elem, Type type, JsonDeserializationContext context) throws JsonParseException {
          JsonObject object = elem.getAsJsonObject();
-         JsonElement sourceElement = object.get("source");
-         if (sourceElement != null && !sourceElement.isJsonPrimitive()) {
-            object.remove("source");
+         JsonElement originalId = object.get("original_id");
+         if (originalId != null && originalId.isJsonPrimitive()) {
+            String jar = originalId.getAsString();
+            object.remove("original_id");
+            object.addProperty("jar", jar);
          }
 
          CompleteVersion version = (CompleteVersion)this.defaultContext.fromJson(elem, CompleteVersion.class);
@@ -326,13 +434,19 @@ public class CompleteVersion implements Version, Cloneable {
          CompleteVersion version;
          try {
             version = (CompleteVersion)version0.clone();
-         } catch (CloneNotSupportedException var6) {
-            U.log("Cloning of CompleteVersion is not supported O_o", var6);
+         } catch (CloneNotSupportedException var7) {
+            U.log("Cloning of CompleteVersion is not supported O_o", var7);
             return this.defaultContext.toJsonTree(version0, type);
          }
 
          version.list = null;
-         return this.defaultContext.toJsonTree(version, type);
+         JsonObject object = (JsonObject)this.defaultContext.toJsonTree(version, type);
+         JsonElement jar = object.get("jar");
+         if (jar == null) {
+            object.remove("downloadJarLibraries");
+         }
+
+         return object;
       }
    }
 }

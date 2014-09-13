@@ -22,7 +22,7 @@ public class BackgroundCover extends ExtendedPanel implements ResizeableComponen
       } else {
          this.parent = parent;
          this.setColor(opacityColor, false);
-         this.setOpacity(opacity, false);
+         this.setBgOpacity(opacity, false);
          this.animationLock = new Object();
       }
    }
@@ -35,12 +35,12 @@ public class BackgroundCover extends ExtendedPanel implements ResizeableComponen
       synchronized(this.animationLock) {
          if (animate) {
             while(this.opacity < 1.0D) {
-               this.setOpacity(this.opacity + 0.01D, true);
+               this.setBgOpacity(this.opacity + 0.01D, true);
                U.sleepFor(5L);
             }
          }
 
-         this.setOpacity(1.0D, true);
+         this.setBgOpacity(1.0D, true);
       }
    }
 
@@ -52,12 +52,12 @@ public class BackgroundCover extends ExtendedPanel implements ResizeableComponen
       synchronized(this.animationLock) {
          if (animate) {
             while(this.opacity > 0.0D) {
-               this.setOpacity(this.opacity - 0.01D, true);
+               this.setBgOpacity(this.opacity - 0.01D, true);
                U.sleepFor(5L);
             }
          }
 
-         this.setOpacity(0.0D, true);
+         this.setBgOpacity(0.0D, true);
       }
    }
 
@@ -83,11 +83,11 @@ public class BackgroundCover extends ExtendedPanel implements ResizeableComponen
       g.fillRect(0, 0, this.getWidth(), this.getHeight());
    }
 
-   public double getOpacity() {
+   public double getBgOpacity() {
       return this.opacity;
    }
 
-   public void setOpacity(double opacity, boolean repaint) {
+   public void setBgOpacity(double opacity, boolean repaint) {
       if (opacity < 0.0D) {
          opacity = 0.0D;
       } else if (opacity > 1.0D) {

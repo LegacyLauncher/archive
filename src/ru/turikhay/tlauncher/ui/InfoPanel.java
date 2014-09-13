@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
+import ru.turikhay.tlauncher.ui.swing.AnimatorAction;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.updater.AdParser;
@@ -21,10 +22,12 @@ import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.ExtendedThread;
 
 public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
-   private static final int MARGIN = 25;
+   private static final int MARGIN = 10;
    private static final float FONT_SIZE = 12.0F;
+   private final InfoPanel.InfoPanelAnimator animator = new InfoPanel.InfoPanelAnimator();
    private final EditorPane browser;
    private final DefaultScene parent;
    private final Object animationLock = new Object();
@@ -52,15 +55,31 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
          }
 
          public void mousePressed(MouseEvent e) {
+            if (!InfoPanel.this.isVisible()) {
+               e.consume();
+            }
+
          }
 
          public void mouseReleased(MouseEvent e) {
+            if (!InfoPanel.this.isVisible()) {
+               e.consume();
+            }
+
          }
 
          public void mouseEntered(MouseEvent e) {
+            if (!InfoPanel.this.isVisible()) {
+               e.consume();
+            }
+
          }
 
          public void mouseExited(MouseEvent e) {
+            if (!InfoPanel.this.isVisible()) {
+               e.consume();
+            }
+
          }
       });
       this.parent = parent;
@@ -91,39 +110,39 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
          Point loginFormLocation = this.parent.loginForm.getLocation();
          Dimension loginFormSize = this.parent.loginForm.getSize();
          int x = loginFormLocation.x + loginFormSize.width / 2 - compWidth / 2;
-         if (x + compWidth > this.parent.getWidth() - 25) {
-            x = this.parent.getWidth() - compWidth - 25;
+         if (x + compWidth > this.parent.getWidth() - 10) {
+            x = this.parent.getWidth() - compWidth - 10;
          }
 
-         if (x < 25) {
-            x = 25;
+         if (x < 10) {
+            x = 10;
          }
 
          int y;
-         switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.parent.getDirection().ordinal()]) {
+         switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.parent.getLoginFormDirection().ordinal()]) {
          case 1:
          case 2:
          case 3:
          case 4:
          case 5:
          case 6:
-            y = loginFormLocation.y + loginFormSize.height + 25;
+            y = loginFormLocation.y + loginFormSize.height + 10;
             break;
          case 7:
          case 8:
          case 9:
-            y = loginFormLocation.y - compHeight - 25;
+            y = loginFormLocation.y - compHeight - 10;
             break;
          default:
             throw new IllegalArgumentException();
          }
 
-         if (y + compHeight > this.parent.getHeight() - 25) {
-            y = this.parent.getHeight() - compHeight - 25;
+         if (y + compHeight > this.parent.getHeight() - 10) {
+            y = this.parent.getHeight() - compHeight - 10;
          }
 
-         if (y < 25) {
-            y = 25;
+         if (y < 10) {
+            y = 10;
          }
 
          this.setBounds(x, y, compWidth, compHeight);
@@ -168,7 +187,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    }
 
    public void show() {
-      this.show(true);
+      this.animator.act(AnimatorAction.SHOW);
    }
 
    void hide(boolean animate) {
@@ -197,14 +216,20 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    }
 
    public void hide() {
-      this.hide(true);
+      this.animator.act(AnimatorAction.HIDE);
    }
 
    public void setShown(boolean shown, boolean animate) {
-      if (shown) {
-         this.show(animate);
+      if (animate) {
+         if (shown) {
+            this.show();
+         } else {
+            this.hide();
+         }
+      } else if (shown) {
+         this.show(false);
       } else {
-         this.hide(animate);
+         this.hide(false);
       }
 
    }
@@ -214,7 +239,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    }
 
    public void onUpdaterRequesting(Updater u) {
-      this.hide();
+      this.hide(true);
    }
 
    public void onUpdaterRequestError(Updater u) {
@@ -238,7 +263,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    private void updateAd() {
       this.hide();
       this.canshow = this.prepareAd();
-      if (!this.parent.isSettingsShown()) {
+      if (this.parent.getSidePanel() != DefaultScene.SidePanel.SETTINGS) {
          this.show();
       }
 
@@ -347,6 +372,77 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
 
          $SWITCH_TABLE$ru$turikhay$tlauncher$updater$AdParser$AdType = var0;
          return var0;
+      }
+   }
+
+   private class InfoPanelAnimator extends ExtendedThread {
+      private AnimatorAction currentAction;
+      // $FF: synthetic field
+      private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction;
+
+      InfoPanelAnimator() {
+         this.startAndWait();
+      }
+
+      void act(AnimatorAction action) {
+         if (action == null) {
+            throw new NullPointerException("action");
+         } else {
+            this.currentAction = action;
+            if (this.isThreadBlocked()) {
+               this.unblockThread(new String[]{"start"});
+            }
+
+         }
+      }
+
+      public void run() {
+         this.blockThread("start");
+
+         while(true) {
+            while(this.currentAction == null) {
+               U.sleepFor(100L);
+            }
+
+            AnimatorAction action = this.currentAction;
+            switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction()[action.ordinal()]) {
+            case 1:
+               InfoPanel.this.show(true);
+               break;
+            case 2:
+               InfoPanel.this.hide(true);
+               break;
+            default:
+               throw new RuntimeException("unknown action: " + this.currentAction);
+            }
+
+            if (this.currentAction == action) {
+               this.currentAction = null;
+            }
+         }
+      }
+
+      // $FF: synthetic method
+      static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction() {
+         int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction;
+         if (var10000 != null) {
+            return var10000;
+         } else {
+            int[] var0 = new int[AnimatorAction.values().length];
+
+            try {
+               var0[AnimatorAction.HIDE.ordinal()] = 2;
+            } catch (NoSuchFieldError var2) {
+            }
+
+            try {
+               var0[AnimatorAction.SHOW.ordinal()] = 1;
+            } catch (NoSuchFieldError var1) {
+            }
+
+            $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction = var0;
+            return var0;
+         }
       }
    }
 }

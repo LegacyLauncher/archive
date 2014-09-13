@@ -344,7 +344,8 @@ public class Configuration extends SimpleConfiguration {
 
    public static enum ActionOnLaunch {
       HIDE,
-      EXIT;
+      EXIT,
+      NOTHING;
 
       public static boolean parse(String val) {
          if (val == null) {
