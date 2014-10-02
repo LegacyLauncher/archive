@@ -98,16 +98,11 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
    }
 
    public void block(Object reason) {
-      if (reason.equals("refresh")) {
-         this.list.setEnabled(false);
-      }
-
-      Blocker.blockComponents(reason, this.download, this.refresh, this.remove);
+      Blocker.blockComponents(reason, this.list, this.refresh, this.remove);
    }
 
    public void unblock(Object reason) {
-      this.list.setEnabled(true);
-      Blocker.unblockComponents(reason, this.download, this.refresh, this.remove);
+      Blocker.unblockComponents(reason, this.list, this.refresh, this.remove);
    }
 
    public void onVersionRefreshing(VersionManager vm) {

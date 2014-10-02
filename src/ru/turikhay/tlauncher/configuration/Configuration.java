@@ -47,14 +47,15 @@ public class Configuration extends SimpleConfiguration {
 
    public static Configuration createConfiguration(OptionSet set) throws IOException {
       Object path = set != null ? set.valueOf("settings") : null;
-      String defaultName = TLauncher.getSettingsFile();
       File file;
       if (path == null) {
-         File neighbor = FileUtil.getNeighborFile(defaultName);
-         if (neighbor.isFile()) {
-            file = neighbor;
-         } else {
-            file = MinecraftUtil.getSystemRelatedDirectory(defaultName);
+         file = FileUtil.getNeighborFile("tlauncher.cfg");
+         if (!file.isFile()) {
+            file = FileUtil.getNeighborFile("tlauncher.properties");
+         }
+
+         if (!file.isFile()) {
+            file = MinecraftUtil.getSystemRelatedDirectory(TLauncher.getSettingsFile());
          }
       } else {
          file = new File(path.toString());

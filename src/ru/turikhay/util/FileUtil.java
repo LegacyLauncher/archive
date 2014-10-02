@@ -197,7 +197,7 @@ public class FileUtil {
             return;
          }
       } else {
-         dest.createNewFile();
+         createFile(dest);
       }
 
       InputStream is = null;

@@ -11,6 +11,7 @@ import javax.net.ssl.HttpsURLConnection;
 import ru.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
@@ -23,10 +24,13 @@ public class Downloadable {
    private final List additionalDestinations;
    private boolean forceDownload;
    private boolean fastDownload;
+   private boolean insertUseragent;
    private boolean locked;
    private DownloadableContainer container;
    private final List handlers;
    private Throwable error;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS;
 
    private Downloadable() {
       this.additionalDestinations = Collections.synchronizedList(new ArrayList());
@@ -72,6 +76,15 @@ public class Downloadable {
          Downloadable c = (Downloadable)o;
          return U.equal(this.path, c.path) && U.equal(this.repo, c.repo) && U.equal(this.destination, c.destination) && U.equal(this.additionalDestinations, c.additionalDestinations);
       }
+   }
+
+   public boolean getInsertUA() {
+      return this.insertUseragent;
+   }
+
+   public void setInsertUA(boolean ua) {
+      this.checkLocked();
+      this.insertUseragent = ua;
    }
 
    public boolean isForce() {
@@ -284,11 +297,19 @@ public class Downloadable {
          if (!fake) {
             return connection;
          } else {
-            connection.setRequestProperty("Accept", "text/html, application/xml;q=0.9, application/xhtml xml, image/png, image/jpeg, image/gif, image/x-xbitmap, */*;q=0.1");
-            connection.setRequestProperty("Accept-Language", "en");
-            connection.setRequestProperty("Accept-Charset", "iso-8859-1, utf-8, utf-16, *;q=0.1");
-            connection.setRequestProperty("Accept-Encoding", "deflate, gzip, x-gzip, identity, *;q=0");
-            connection.setRequestProperty("User-Agent", "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.16");
+            String userAgent;
+            switch($SWITCH_TABLE$ru$turikhay$util$OS()[OS.CURRENT.ordinal()]) {
+            case 2:
+               userAgent = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0; .NET4.0C)";
+               break;
+            case 3:
+               userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8) AppleWebKit/535.18.5 (KHTML, like Gecko) Version/5.2 Safari/535.18.5";
+               break;
+            default:
+               userAgent = "Mozilla/5.0 (Linux; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0";
+            }
+
+            connection.setRequestProperty("User-Agent", userAgent);
             return connection;
          }
       }
@@ -298,8 +319,12 @@ public class Downloadable {
       return setUp(connection, timeout, false);
    }
 
+   public static HttpURLConnection setUp(URLConnection connection, boolean fake) {
+      return setUp(connection, U.getConnectionTimeout(), fake);
+   }
+
    public static HttpURLConnection setUp(URLConnection connection) {
-      return setUp(connection, U.getConnectionTimeout());
+      return setUp(connection, false);
    }
 
    public static String getEtag(String etag) {
@@ -307,6 +332,44 @@ public class Downloadable {
          return "-";
       } else {
          return etag.startsWith("\"") && etag.endsWith("\"") ? etag.substring(1, etag.length() - 1) : etag;
+      }
+   }
+
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$util$OS() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[OS.values().length];
+
+         try {
+            var0[OS.LINUX.ordinal()] = 1;
+         } catch (NoSuchFieldError var5) {
+         }
+
+         try {
+            var0[OS.OSX.ordinal()] = 3;
+         } catch (NoSuchFieldError var4) {
+         }
+
+         try {
+            var0[OS.SOLARIS.ordinal()] = 4;
+         } catch (NoSuchFieldError var3) {
+         }
+
+         try {
+            var0[OS.UNKNOWN.ordinal()] = 5;
+         } catch (NoSuchFieldError var2) {
+         }
+
+         try {
+            var0[OS.WINDOWS.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$ru$turikhay$util$OS = var0;
+         return var0;
       }
    }
 }

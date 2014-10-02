@@ -20,6 +20,9 @@ loginform.button.visit=Visit our site
 loginform.button.settings.account=Account manager
 loginform.button.settings.version=Version manager
 loginform.button.settings.launcher=Settings
+loginform.button.support.follow=Follow TLauncher on VK
+loginform.button.support.report=Report the problem
+loginform.button.support.email=Contact developer
 # Account
 account.username=User name
 account.email=E-mail
@@ -181,7 +184,7 @@ crash.missing-main=Java couldn't run Minecraft because the main class is missing
 crash.permgen-error=Minecraft has closed due to PermGen error. You can do next:\n— Tick «Force update» and then press «Reinstall» to re-download invalid files.\n- Don't use mods and resource packs\n- Turn off the sounds in Minecraft.
 crash.outofmemory=Minecraft has closed due to lack of RAM.\nTry to allocate more memory using JVM argument "-Xmx".
 crash.old-videocard=Your card doesn't support OpenGL version, which is used in this version of Minecraft. The latest version supported by your video card is 1.7.2.
-crash.old-ati-vdrivers=Your system uses an outdated video card driver or the video card itself is old.\nAnyway, try to update the driver from the official <a href="http://amd.com/">AMD</a> website.\nIf this won't work, try to install <a href="http://u.to/pnQsCA">ATI Omega Drivers</a>.
+crash.old-ati-vdrivers=Your system uses an outdated video card driver or the video card itself is old.\nAnyway, try to update the driver from the official <a href="http://amd.com/">AMD</a> website.\nIf this won't work, try to install <a href="http://www.omegadrivers.net/index.php?option=com_phocadownload&view=section&id=1&Itemid=54">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Change if you know what you do.
 settings.restart=Will be applied after restart.

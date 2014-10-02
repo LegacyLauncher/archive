@@ -21,6 +21,9 @@ loginform.button.visit=Посетить наш сайт
 loginform.button.settings.account=Менеджер аккаунтов
 loginform.button.settings.version=Управление версиями
 loginform.button.settings.launcher=Настройки
+loginform.button.support.follow=Подписаться на TLauncher
+loginform.button.support.report=Решение проблем
+loginform.button.support.email=Сайт разработчика
 # Account
 account.username=Имя пользователя
 account.email=Электронная почта
@@ -191,7 +194,7 @@ crash.permgen-error=Minecraft был закрыт по причине ошибк
 crash.outofmemory=Minecraft был закрыт из-за того, что он израсходовал всю выделенную ему память.\nПопробуйте увеличить объем выделяемой памяти при помощи JVM-аргумента "-Xmx".
 crash.old-videocard=Ваша видеокарта не поддерживает версию OpenGL, которая используется в данной версии Minecraft. Последняя версия, которая поддерживается Вашей видеокартой — это 1.7.2.
 crash.invalid-sys-username=Ошибка вызвана тем, что имя текущей учётной записи имеет недопустимые символы, такие как «!», «?» и т.д. В настройках лаунчера в поле «Директория» введите путь к папке, в пути которой нет недопустимых символов.
-crash.old-ati-vdrivers=Ваша система использует устаревшие видеодрайвера, либо сама видеокарта устарела.\nВ любом случае, попробуйте обновить драйвера с официального сайта <a href="http://amd.com/">AMD</a>.\nЕсли не получится, попробуйте установить <a href="http://u.to/pnQsCA">ATI Omega Drivers</a>.
+crash.old-ati-vdrivers=Ваша система использует устаревшие видеодрайвера, либо сама видеокарта устарела.\nВ любом случае, попробуйте обновить драйвера с официального сайта <a href="http://amd.com/">AMD</a>.\nЕсли не получится, попробуйте установить <a href="http://www.omegadrivers.net/index.php?option=com_phocadownload&view=section&id=1&Itemid=54">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Изменяйте только если знаете, что делаете.
 settings.restart=Будет применено при следующем запуске.

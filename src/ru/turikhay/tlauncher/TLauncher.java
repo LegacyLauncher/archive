@@ -38,7 +38,7 @@ import ru.turikhay.util.stream.MirroredLinkedStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.39D;
+   private static final double VERSION = 1.42D;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -64,7 +64,7 @@ public class TLauncher {
    private static final String BRAND = "Legacy";
    private static final String FOLDER = "minecraft";
    private static final String DEVELOPER = "turikhay";
-   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://u.to/tlauncher-legacy-update-mirror-3/vFqOCA", "http://s1.mmods.ru/launcher/legacy.ini", "http://u.to/tlauncher-original/BlPcBA", "http://ru-minecraft.org/update/original.ini", "http://u.to/tlauncher-original-update/T4ASBQ", "http://5.9.120.11/update/original.ini", "http://u.to/tlauncher-original-update-mirror2/BIQSBQ", "http://dl.dropboxusercontent.com/u/6204017/update/original.ini"};
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://goo.gl/RkWE4U", "http://goo.gl/lwUFQu", "http://goo.gl/Nf4MX7", "http://s1.mmods.ru/launcher/legacy.ini", "http://turikhay.ru/tlauncher/legacy.ini", "http://ru-m.org/update/original.ini"};
    private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
    private static final String[] EXTRA_REPO = new String[]{"http://s1.mmods.ru/launcher/", "http://5.9.120.11/update/versions/"};
    private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/", "http://5.9.120.11/update/versions/libraries/", "http://s1.mmods.ru/launcher/libraries/"};
@@ -284,7 +284,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Legacy", 1.39D, "by", "turikhay");
+      U.log("Starting TLauncher", "Legacy", 1.42D, "by", "turikhay");
       U.log("Have question? Find my e-mail in lang files.");
       U.log("Machine info:", OS.getSummary());
       U.log("Startup time:", Calendar.getInstance().getTime());
@@ -332,7 +332,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.39D;
+      return 1.42D;
    }
 
    public static String getBrand() {

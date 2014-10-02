@@ -23,7 +23,6 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class VersionDownloadButton extends ImageButton implements VersionHandlerListener, Unblockable {
-   private static final long serialVersionUID = -7565491746279365934L;
    private static final String SELECTION_BLOCK = "selection";
    private static final String PREFIX = "version.manager.downloader.";
    private static final String WARNING = "version.manager.downloader.warning.";
@@ -165,68 +164,81 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
 
          List containers = new ArrayList();
          VersionManager manager = TLauncher.getInstance().getVersionManager();
-         Iterator var7 = list.iterator();
 
-         while(var7.hasNext()) {
-            VersionSyncInfo version = (VersionSyncInfo)var7.next();
-
+         Iterator var7;
+         label257: {
             try {
-               VersionSyncInfoContainer container = manager.downloadVersion(version, this.forceDownload);
-               if (this.aborted) {
-                  return;
-               }
-
-               if (!container.getList().isEmpty()) {
-                  containers.add(container);
-               }
-            } catch (Exception var12) {
-               Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", version.getID()), var12);
-               return;
-            }
-         }
-
-         if (containers.isEmpty()) {
-            Alert.showMessage(Localizable.get("version.manager.downloader.info.title"), Localizable.get("version.manager.downloader.info.no-needed"));
-         } else {
-            if (containers.size() > 1) {
-               DownloadableContainer.removeDublicates(containers);
-            }
-
-            if (!this.aborted) {
-               var7 = containers.iterator();
-
-               while(var7.hasNext()) {
-                  DownloadableContainer c = (DownloadableContainer)var7.next();
-                  this.handler.downloader.add(c);
-               }
-
-               this.handler.downloading = list;
-               this.handler.onVersionDownload(list);
                this.downloading = true;
-               this.handler.downloader.startDownloadAndWait();
-               this.downloading = false;
-               this.handler.downloading.clear();
-               var7 = containers.iterator();
+               var7 = list.iterator();
 
                while(var7.hasNext()) {
-                  VersionSyncInfoContainer container = (VersionSyncInfoContainer)var7.next();
-                  List errors = container.getErrors();
-                  VersionSyncInfo version = container.getVersion();
-                  if (errors.isEmpty()) {
-                     try {
-                        manager.getLocalList().saveVersion(version.getCompleteVersion(this.forceDownload));
-                     } catch (IOException var11) {
-                        Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.saving", version.getID()), var11);
+                  VersionSyncInfo version = (VersionSyncInfo)var7.next();
+
+                  try {
+                     VersionSyncInfoContainer container = manager.downloadVersion(version, this.forceDownload);
+                     if (this.aborted) {
                         return;
                      }
-                  } else if (!(errors.get(0) instanceof AbortedDownloadException)) {
-                     Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.downloading", version.getID()), errors);
+
+                     if (!container.getList().isEmpty()) {
+                        containers.add(container);
+                     }
+                  } catch (Exception var15) {
+                     Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", version.getID()), var15);
+                     return;
                   }
                }
 
-               this.handler.refresh();
+               if (!containers.isEmpty()) {
+                  if (containers.size() > 1) {
+                     DownloadableContainer.removeDublicates(containers);
+                  }
+
+                  if (this.aborted) {
+                     return;
+                  }
+
+                  var7 = containers.iterator();
+
+                  while(var7.hasNext()) {
+                     DownloadableContainer c = (DownloadableContainer)var7.next();
+                     this.handler.downloader.add(c);
+                  }
+
+                  this.handler.downloading = list;
+                  this.handler.onVersionDownload(list);
+                  this.handler.downloader.startDownloadAndWait();
+                  break label257;
+               }
+
+               Alert.showMessage(Localizable.get("version.manager.downloader.info.title"), Localizable.get("version.manager.downloader.info.no-needed"));
+            } finally {
+               this.downloading = false;
+            }
+
+            return;
+         }
+
+         this.handler.downloading.clear();
+         var7 = containers.iterator();
+
+         while(var7.hasNext()) {
+            VersionSyncInfoContainer container = (VersionSyncInfoContainer)var7.next();
+            List errors = container.getErrors();
+            VersionSyncInfo version = container.getVersion();
+            if (errors.isEmpty()) {
+               try {
+                  manager.getLocalList().saveVersion(version.getCompleteVersion(this.forceDownload));
+               } catch (IOException var14) {
+                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.saving", version.getID()), var14);
+                  return;
+               }
+            } else if (!(errors.get(0) instanceof AbortedDownloadException)) {
+               Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.downloading", version.getID()), errors);
             }
          }
+
+         this.handler.refresh();
       }
    }
 
