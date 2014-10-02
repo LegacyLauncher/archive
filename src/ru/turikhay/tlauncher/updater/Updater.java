@@ -78,7 +78,8 @@ public class Updater {
 
          try {
             URL url = uri.toURL();
-            HttpURLConnection connection = Downloadable.setUp(url.openConnection());
+            HttpURLConnection connection = Downloadable.setUp(url.openConnection(), true);
+            connection.setInstanceFollowRedirects(true);
             int code = connection.getResponseCode();
             switch(code) {
             case 200:

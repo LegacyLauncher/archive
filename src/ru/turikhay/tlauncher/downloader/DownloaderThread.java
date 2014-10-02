@@ -165,7 +165,7 @@ public class DownloaderThread extends ExtendedThread {
          throw new IOException("Invalid protocol: " + url.getProtocol());
       } else {
          HttpURLConnection connection = (HttpURLConnection)urlConnection;
-         Downloadable.setUp(connection, timeout);
+         Downloadable.setUp(connection, timeout, this.current.getInsertUA());
          if (!this.launched) {
             throw new AbortedDownloadException();
          } else {

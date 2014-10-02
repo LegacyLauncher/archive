@@ -134,6 +134,7 @@ public class Update {
             File destination = Updater.getUpdateFileFor(pt);
             destination.deleteOnExit();
             Downloadable downloadable = new Downloadable(download_link.toString(), destination);
+            downloadable.setInsertUA(true);
             downloadable.addHandler(new DownloadableHandler() {
                public void onStart(Downloadable d) {
                   Update.this.onUpdateDownloading();

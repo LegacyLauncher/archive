@@ -3,69 +3,112 @@ package ru.turikhay.tlauncher.ui.login.buttons;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URI;
-import java.net.URL;
+import javax.swing.JPopupMenu;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
-import ru.turikhay.util.async.AsyncThread;
 
 public class SupportButton extends ImageButton implements Blockable, LocalizableComponent {
-   private static final long serialVersionUID = 7903730373496194592L;
-   private final SupportButton instance = this;
-   private final LoginForm lf;
-   private final LangConfiguration l;
-   private URI uri;
-   private final Image vk = loadImage("vk.png");
-   private final Image mail = loadImage("mail.png");
+   private SupportButton.SupportType type;
 
-   SupportButton(LoginForm loginform) {
-      this.lf = loginform;
-      this.l = this.lf.lang;
-      this.image = this.selectImage();
+   SupportButton(LoginForm loginForm) {
       this.rotation = ImageButton.ImageRotation.CENTER;
-      this.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            SupportButton.this.instance.openURL();
-            SupportButton.this.lf.defocus();
+      this.addMouseListener(new MouseAdapter() {
+         public void mouseClicked(MouseEvent e) {
+            SupportButton.this.type.popupMenu.show(SupportButton.this, 0, SupportButton.this.getHeight());
          }
       });
-      this.updateURL();
-      this.initImage();
+      this.updateLocale();
    }
 
-   void openURL() {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            OS.openLink(SupportButton.this.uri);
-         }
-      });
+   public SupportButton.SupportType getType() {
+      return this.type;
    }
 
-   private Image selectImage() {
-      String locale = TLauncher.getInstance().getSettings().getLocale().toString();
-      return !locale.equals("ru_RU") && !locale.equals("uk_UA") ? this.mail : this.vk;
-   }
-
-   private void updateURL() {
-      String path = this.l.nget("support.url");
-      URL url = U.makeURL(path);
-      this.uri = U.makeURI(url);
+   public void setType(SupportButton.SupportType type) {
+      if (type == null) {
+         throw new NullPointerException("type");
+      } else {
+         this.type = type;
+         this.setImage(type.image);
+         this.repaint();
+      }
    }
 
    public void updateLocale() {
-      this.image = this.selectImage();
-      this.updateURL();
+      String locale = TLauncher.getInstance().getSettings().getLocale().toString();
+      this.setType(!locale.equals("ru_RU") && !locale.equals("uk_UA") ? SupportButton.SupportType.GMAIL : SupportButton.SupportType.VK);
    }
 
    public void block(Object reason) {
    }
 
    public void unblock(Object reason) {
+   }
+
+   public static enum SupportType {
+      VK("vk.png") {
+         public void setupMenu() {
+            this.popupMenu.add(SupportButton.SupportType.newItem("loginform.button.support.follow", new ActionListener() {
+               final URI followURI = U.makeURI("http://goo.gl/zOBYu6");
+
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.followURI);
+               }
+            }));
+            this.popupMenu.add(SupportButton.SupportType.newItem("loginform.button.support.report", new ActionListener() {
+               final URI reportURI = U.makeURI("http://goo.gl/NBlzdI");
+
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.reportURI);
+               }
+            }));
+         }
+      },
+      GMAIL("mail.png") {
+         public void setupMenu() {
+            this.popupMenu.add(SupportButton.SupportType.newItem("loginform.button.support.email", new ActionListener() {
+               final URI devURI = U.makeURI("http://turikhay.ru/");
+
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.devURI);
+               }
+            }));
+         }
+      };
+
+      protected final JPopupMenu popupMenu;
+      private final Image image;
+
+      private SupportType(String imagePath) {
+         this.popupMenu = new JPopupMenu();
+         this.image = SupportButton.loadImage(imagePath);
+         this.setupMenu();
+      }
+
+      public Image getImage() {
+         return this.image;
+      }
+
+      public abstract void setupMenu();
+
+      private static final LocalizableMenuItem newItem(String key, ActionListener action) {
+         LocalizableMenuItem item = new LocalizableMenuItem(key);
+         item.addActionListener(action);
+         return item;
+      }
+
+      // $FF: synthetic method
+      SupportType(String var3, SupportButton.SupportType var4) {
+         this(var3);
+      }
    }
 }

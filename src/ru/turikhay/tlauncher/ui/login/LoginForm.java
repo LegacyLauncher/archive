@@ -88,6 +88,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             listener = (LoginForm.LoginProcessListener)var5.next();
 
             try {
+               this.log(new Object[]{"Listener:", listener});
                listener.logginingIn();
             } catch (LoginWaitException var9) {
                LoginWaitException wait = var9;

@@ -64,7 +64,7 @@ public class DefaultScene extends PseudoScene {
          case 2:
          case 5:
          case 8:
-            lf_x = hw - lf_h / 2;
+            lf_x = hw - lf_w / 2;
             break;
          case 3:
          case 6:

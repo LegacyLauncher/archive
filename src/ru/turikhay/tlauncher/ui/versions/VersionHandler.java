@@ -95,11 +95,11 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
    }
 
    public void block(Object reason) {
-      Blocker.block(reason, this.list);
+      Blocker.block(reason, this.list, this.scene.getMainPane().defaultScene);
    }
 
    public void unblock(Object reason) {
-      Blocker.unblock(reason, this.list);
+      Blocker.unblock(reason, this.list, this.scene.getMainPane().defaultScene);
    }
 
    public void onVersionRefreshing(VersionManager vm) {

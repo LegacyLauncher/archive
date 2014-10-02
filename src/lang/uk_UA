@@ -20,6 +20,9 @@ loginform.button.visit=Відвідати наш сайт
 loginform.button.settings.account=Менеджер акаунтів
 loginform.button.settings.version=Управління версіями
 loginform.button.settings.launcher=Настройки
+loginform.button.support.follow=Підписатися на TLauncher
+loginform.button.support.report=Рішення проблем
+loginform.button.support.email=Сайт розробника
 # Account
 account.username=Iм'я користувача
 account.email=Електронна пошта
@@ -182,7 +185,7 @@ crash.missing-main=Java не змогла запустити Minecraft, оскі
 crash.permgen-error=Minecraft був закритий унаслідок помилки виділення пам'яті в Java. Можливі рішення:\n- Натисніть галочку "Оновити клієнт» і натисніть «Переустановити». Таким чином Ви даєте Лаунчер шанс виявити пошкоджені файли і завантажити їх заново.\n- Видаліть моди і ресурс-паки.\n- Можете відключити звук в настройках самого Minecraft. Ви будете грати без звуку, зате без вильотів.
 crash.outofmemory=Minecraft був закритий через те, що він витратив всю виділену йому пам'ять.\nПопробуйте збільшити обсяг виділеної пам'яті за допомогою JVM-аргументу "-Xmx".
 crash.old-videocard=Ваша відеокарта не підтримує версію OpenGL, яка використовується в даній версії Minecraft. Остання версія, яка підтримується Вашої відкритий - це 1.7.2.
-crash.old-ati-vdrivers=Ваша система використовує застарілі відеодрайвера, або сама відеокарта застаріла.\пВ будь-якому випадку, спробуйте оновити драйвера з офіційного сайту <a href="http://amd.com/">AMD</a>.\nЕсли не вийде, спробуйте встановити <a href="http://u.to/pnQsCA">ATI Omega Drivers</a>.
+crash.old-ati-vdrivers=Ваша система використовує застарілі відеодрайвера, або сама відеокарта застаріла.\пВ будь-якому випадку, спробуйте оновити драйвера з офіційного сайту <a href="http://amd.com/">AMD</a>.\nЕсли не вийде, спробуйте встановити <a href="http://www.omegadrivers.net/index.php?option=com_phocadownload&view=section&id=1&Itemid=54">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Змінюйте тільки якщо знаєте, що робите.
 settings.restart=Буде застосовано під час наступного запуску.
