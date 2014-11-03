@@ -30,11 +30,12 @@ public class Downloader extends ExtendedThread {
    private double averageSpeed;
    private boolean aborted;
    private final Object workLock;
+   private boolean haveWork;
 
    private Downloader(Configuration.ConnectionQuality configuration) {
       super("MD");
-      this.setConfiguration(configuration);
       this.remainingObjects = new AtomicInteger();
+      this.setConfiguration(configuration);
       this.threads = new DownloaderThread[6];
       this.list = Collections.synchronizedList(new ArrayList());
       this.listeners = Collections.synchronizedList(new ArrayList());
@@ -126,7 +127,7 @@ public class Downloader extends ExtendedThread {
    public boolean startDownload() {
       boolean haveWork = !this.list.isEmpty();
       if (haveWork) {
-         this.unblockThread(new String[]{"download", "iteration"});
+         this.unlockThread("iteration");
       }
 
       return haveWork;
@@ -140,31 +141,40 @@ public class Downloader extends ExtendedThread {
    }
 
    private void waitWork() {
-      synchronized(this.workLock) {
-         try {
-            this.workLock.wait();
-         } catch (InterruptedException var3) {
-         }
+      this.haveWork = true;
 
+      while(this.haveWork) {
+         synchronized(this.workLock) {
+            try {
+               this.workLock.wait();
+            } catch (InterruptedException var3) {
+               var3.printStackTrace();
+            }
+         }
       }
+
    }
 
    private void notifyWork() {
+      this.haveWork = false;
       synchronized(this.workLock) {
          this.workLock.notifyAll();
       }
    }
 
    public void stopDownload() {
-      if (!this.isThreadBlocked()) {
-         throw new IllegalStateException();
+      if (!this.isThreadLocked()) {
+         throw new IllegalArgumentException();
       } else {
          for(int i = 0; i < this.runningThreads; ++i) {
             this.threads[i].stopDownload();
          }
 
          this.aborted = true;
-         this.unblockThread(new String[]{"download", "iteration"});
+         if (this.isThreadLocked()) {
+            this.tryUnlock("download");
+         }
+
       }
    }
 
@@ -186,7 +196,7 @@ public class Downloader extends ExtendedThread {
       this.checkCurrent();
 
       while(true) {
-         this.blockThread("iteration");
+         this.lockThread("iteration");
          log("Files in queue", this.list.size());
          synchronized(this.list) {
             this.sortOut();
@@ -196,7 +206,7 @@ public class Downloader extends ExtendedThread {
             this.threads[i].startDownload();
          }
 
-         this.blockThread("download");
+         this.lockThread("download");
          if (this.aborted) {
             this.waitForThreads();
             this.onAbort();
@@ -299,6 +309,7 @@ public class Downloader extends ExtendedThread {
 
    void onFileComplete(DownloaderThread thread, Downloadable file) {
       int remaining = this.remainingObjects.decrementAndGet();
+      log("Objects remaining:", remaining);
       Iterator var5 = this.listeners.iterator();
 
       while(var5.hasNext()) {
@@ -320,7 +331,7 @@ public class Downloader extends ExtendedThread {
          listener.onDownloaderComplete(this);
       }
 
-      this.unblockThread(new String[]{"download"});
+      this.unlockThread("download");
    }
 
    private void waitForThreads() {
@@ -331,7 +342,7 @@ public class Downloader extends ExtendedThread {
          blocked = true;
 
          for(int i = 0; i < this.workingThreads; ++i) {
-            if (!this.threads[i].isThreadBlocked()) {
+            if (!this.threads[i].isThreadLocked()) {
                blocked = false;
             }
          }

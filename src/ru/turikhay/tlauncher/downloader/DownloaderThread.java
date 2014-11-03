@@ -56,7 +56,7 @@ public class DownloaderThread extends ExtendedThread {
 
    void startDownload() {
       this.launched = true;
-      this.unblockThread(new String[]{"iteration"});
+      this.unlockThread("iteration");
    }
 
    void stopDownload() {
@@ -127,7 +127,7 @@ public class DownloaderThread extends ExtendedThread {
 
          Arrays.fill(this.averageSpeedContainer, 0.0D);
          this.list.clear();
-         this.blockThread("iteration");
+         this.lockThread("iteration");
          this.launched = false;
       }
    }
@@ -271,9 +271,9 @@ public class DownloaderThread extends ExtendedThread {
 
    private void onComplete() throws RetryDownloadException {
       this.doneProgress += this.eachProgress;
+      this.current.onComplete();
       this.downloader.onProgress(this, this.doneProgress, this.speed);
       this.downloader.onFileComplete(this, this.current);
-      this.current.onComplete();
    }
 
    private void tlog(Object... o) {

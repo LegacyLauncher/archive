@@ -11,30 +11,30 @@ public abstract class LoopedThread extends ExtendedThread {
       this("LoopedThread");
    }
 
-   protected final synchronized void blockThread(String reason) {
+   protected final void lockThread(String reason) {
       if (reason == null) {
          throw new NullPointerException();
       } else if (!reason.equals("iteration")) {
          throw new IllegalArgumentException("Illegal block reason. Expected: iteration, got: " + reason);
       } else {
-         super.blockThread(reason);
+         super.lockThread(reason);
       }
    }
 
    public final boolean isIterating() {
-      return !this.isThreadBlocked();
+      return !this.isThreadLocked();
    }
 
    public final void iterate() {
       if (!this.isIterating()) {
-         this.unblockThread(new String[]{"iteration"});
+         this.unlockThread("iteration");
       }
 
    }
 
    public final void run() {
       while(true) {
-         this.blockThread("iteration");
+         this.lockThread("iteration");
          this.iterateOnce();
       }
    }

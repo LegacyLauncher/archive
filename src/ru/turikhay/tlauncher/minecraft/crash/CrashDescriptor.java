@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.util.FileUtil;
@@ -43,61 +44,59 @@ public class CrashDescriptor {
          return null;
       } else {
          Crash crash = new Crash();
-         Pattern startPattern = container.getPattern("start_crash");
          Pattern filePattern = container.getPattern("crash");
          String version = this.launcher.getVersion();
          Scanner scanner = new Scanner(this.launcher.getStream().getOutput());
 
-         label67:
-         while(scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            if (startPattern.matcher(line).matches()) {
-               this.log("Found start of crash report, will not scan further.");
-               break;
-            }
+         while(true) {
+            label67:
+            while(scanner.hasNextLine()) {
+               String line = scanner.nextLine();
+               if (filePattern.matcher(line).matches()) {
+                  Matcher fileMatcher = filePattern.matcher(line);
+                  if (fileMatcher.matches() && fileMatcher.groupCount() == 1) {
+                     crash.setFile(fileMatcher.group(1));
+                     this.log("Found crash report file:", crash.getFile());
+                  }
+               } else {
+                  Iterator var8 = container.getSignatures().iterator();
 
-            if (filePattern.matcher(line).matches()) {
-               String file = filePattern.matcher(line).group(1);
-               crash.setFile(file);
-               this.log("Found crash report file:", file);
-            } else {
-               Iterator var9 = container.getSignatures().iterator();
-
-               while(true) {
-                  CrashSignatureContainer.CrashSignature signature;
-                  do {
+                  while(true) {
+                     CrashSignatureContainer.CrashSignature signature;
                      do {
                         do {
-                           if (!var9.hasNext()) {
-                              continue label67;
-                           }
+                           do {
+                              if (!var8.hasNext()) {
+                                 continue label67;
+                              }
 
-                           signature = (CrashSignatureContainer.CrashSignature)var9.next();
-                        } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
-                     } while(signature.getExitCode() != 0 && signature.getExitCode() != exitCode);
-                  } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
+                              signature = (CrashSignatureContainer.CrashSignature)var8.next();
+                           } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
+                        } while(signature.getExitCode() != 0 && signature.getExitCode() != exitCode);
+                     } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
 
-                  if (signature.isFake()) {
-                     this.log("Minecraft closed with an illegal exit code not due to error. Scanning has been cancelled");
-                     this.log("Fake signature:", signature.getName());
-                     scanner.close();
-                     return null;
-                  }
+                     if (signature.isFake()) {
+                        this.log("Minecraft closed with an illegal exit code not due to error. Scanning has been cancelled");
+                        this.log("Fake signature:", signature.getName());
+                        scanner.close();
+                        return null;
+                     }
 
-                  if (!crash.hasSignature(signature)) {
-                     this.log("Signature \"" + signature.getName() + "\" matches!");
-                     crash.addSignature(signature);
+                     if (!crash.hasSignature(signature)) {
+                        this.log("Signature \"" + signature.getName() + "\" matches!");
+                        crash.addSignature(signature);
+                     }
                   }
                }
             }
-         }
 
-         scanner.close();
-         if (crash.isRecognized()) {
-            this.log("Crash has been recognized!");
-         }
+            scanner.close();
+            if (crash.isRecognized()) {
+               this.log("Crash has been recognized!");
+            }
 
-         return crash;
+            return crash;
+         }
       }
    }
 

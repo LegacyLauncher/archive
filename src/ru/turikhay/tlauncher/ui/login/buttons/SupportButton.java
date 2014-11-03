@@ -17,13 +17,19 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class SupportButton extends ImageButton implements Blockable, LocalizableComponent {
+   private final JPopupMenu[] popups = new JPopupMenu[SupportButton.SupportType.values().length];
    private SupportButton.SupportType type;
+   private int i;
 
    SupportButton(LoginForm loginForm) {
+      for(int i = 0; i < this.popups.length; ++i) {
+         SupportButton.SupportType.values()[i].setupMenu(this.popups[i] = new JPopupMenu());
+      }
+
       this.rotation = ImageButton.ImageRotation.CENTER;
       this.addMouseListener(new MouseAdapter() {
          public void mouseClicked(MouseEvent e) {
-            SupportButton.this.type.popupMenu.show(SupportButton.this, 0, SupportButton.this.getHeight());
+            SupportButton.this.popups[SupportButton.this.i].show(SupportButton.this, 0, SupportButton.this.getHeight());
          }
       });
       this.updateLocale();
@@ -38,6 +44,7 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
          throw new NullPointerException("type");
       } else {
          this.type = type;
+         this.i = U.find(type, SupportButton.SupportType.values());
          this.setImage(type.image);
          this.repaint();
       }
@@ -56,15 +63,15 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
 
    public static enum SupportType {
       VK("vk.png") {
-         public void setupMenu() {
-            this.popupMenu.add(SupportButton.SupportType.newItem("loginform.button.support.follow", new ActionListener() {
+         public void setupMenu(JPopupMenu menu) {
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.follow", new ActionListener() {
                final URI followURI = U.makeURI("http://goo.gl/zOBYu6");
 
                public void actionPerformed(ActionEvent e) {
                   OS.openLink(this.followURI);
                }
             }));
-            this.popupMenu.add(SupportButton.SupportType.newItem("loginform.button.support.report", new ActionListener() {
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.report", new ActionListener() {
                final URI reportURI = U.makeURI("http://goo.gl/NBlzdI");
 
                public void actionPerformed(ActionEvent e) {
@@ -74,8 +81,8 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
          }
       },
       GMAIL("mail.png") {
-         public void setupMenu() {
-            this.popupMenu.add(SupportButton.SupportType.newItem("loginform.button.support.email", new ActionListener() {
+         public void setupMenu(JPopupMenu menu) {
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.email", new ActionListener() {
                final URI devURI = U.makeURI("http://turikhay.ru/");
 
                public void actionPerformed(ActionEvent e) {
@@ -85,20 +92,17 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
          }
       };
 
-      protected final JPopupMenu popupMenu;
       private final Image image;
 
       private SupportType(String imagePath) {
-         this.popupMenu = new JPopupMenu();
          this.image = SupportButton.loadImage(imagePath);
-         this.setupMenu();
       }
 
       public Image getImage() {
          return this.image;
       }
 
-      public abstract void setupMenu();
+      public abstract void setupMenu(JPopupMenu var1);
 
       private static final LocalizableMenuItem newItem(String key, ActionListener action) {
          LocalizableMenuItem item = new LocalizableMenuItem(key);

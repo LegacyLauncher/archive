@@ -111,6 +111,14 @@ public class Alert {
       showWarning(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
    }
 
+   public static void showLocAsyncWarning(final String titlePath, final String messagePath, final Object textarea) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Alert.showLocWarning(titlePath, messagePath, textarea);
+         }
+      });
+   }
+
    private static void showLocWarning(String titlePath, String messagePath) {
       showLocWarning(titlePath, messagePath, (Object)null);
    }

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -64,6 +65,7 @@ import ru.turikhay.util.stream.PrintLogger;
 public class MinecraftLauncher implements JavaProcessListener {
    private static final int OFFICIAL_VERSION = 16;
    private static final int ALTERNATIVE_VERSION = 7;
+   private static final boolean[] ASSETS_PROBLEM = new boolean[2];
    private boolean working;
    private final Thread parentThread;
    private final Gson gson;
@@ -432,13 +434,14 @@ public class MinecraftLauncher implements JavaProcessListener {
       VersionSyncInfoContainer execContainer;
       try {
          execContainer = this.vm.downloadVersion(this.versionSync, this.forceUpdate);
-      } catch (IOException var7) {
-         throw new MinecraftException("Cannot download version!", "download-jar", var7);
+      } catch (IOException var8) {
+         throw new MinecraftException("Cannot download version!", "download-jar", var8);
       }
 
       execContainer.setConsole(this.console);
       assetsContainer = null;
       DownloadableContainer assetsContainer = this.am.downloadResources(this.version, assets, this.forceUpdate);
+      final boolean[] kasperkyBlocking = new boolean[1];
       if (assetsContainer != null) {
          assetsContainer.addHandler(new DownloadableContainerHandler() {
             public void onStart(DownloadableContainer c) {
@@ -474,7 +477,11 @@ public class MinecraftLauncher implements JavaProcessListener {
                      if (assetHash == null) {
                         MinecraftLauncher.this.log("Hash of", object.getHash(), "is NULL");
                      } else if (!hash.equals(assetHash)) {
-                        throw new RetryDownloadException("Hashes are not equal: " + hash + ";" + assetHash);
+                        if (hash.equals("2daeaa8b5f19f0bc209d976c02bd6acb51b00b0a")) {
+                           kasperkyBlocking[0] = true;
+                        }
+
+                        throw new RetryDownloadException("Hashes are not equal. Got: " + hash + "; expected: " + assetHash);
                      }
                   }
                }
@@ -492,10 +499,10 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
 
       this.downloader.add((DownloadableContainer)execContainer);
-      Iterator var5 = this.assistants.iterator();
+      Iterator var6 = this.assistants.iterator();
 
-      while(var5.hasNext()) {
-         MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant)var5.next();
+      while(var6.hasNext()) {
+         MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant)var6.next();
          assistant.collectResources(this.downloader);
       }
 
@@ -505,10 +512,22 @@ public class MinecraftLauncher implements JavaProcessListener {
       } else if (!execContainer.getErrors().isEmpty()) {
          throw new MinecraftException(execContainer.getErrors().size() + " error(s) occurred while trying to download executable files.\n" + "First error: " + U.toLog(execContainer.getErrors().get(0)) + "\nRest of stack trace:", "download", new Object[0]);
       } else {
+         if (assetsContainer != null && !assetsContainer.getErrors().isEmpty() && !(assetsContainer.getErrors().get(0) instanceof AbortedDownloadException)) {
+            if (kasperkyBlocking[0] && !ASSETS_PROBLEM[1]) {
+               Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.assets.kaspersky", "http://resources.download.minecraft.net/ad/ad*");
+               ASSETS_PROBLEM[1] = true;
+            } else if (!ASSETS_PROBLEM[0]) {
+               Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.assets");
+               ASSETS_PROBLEM[0] = true;
+            }
+         } else {
+            Arrays.fill(ASSETS_PROBLEM, false);
+         }
+
          try {
             this.vm.getLocalList().saveVersion(this.version);
-         } catch (IOException var6) {
-            this.log("Cannot save version!", var6);
+         } catch (IOException var7) {
+            this.log("Cannot save version!", var7);
          }
 
          this.constructProcess();
@@ -634,22 +653,25 @@ public class MinecraftLauncher implements JavaProcessListener {
          AssetIndex index = (AssetIndex)this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
          if (index.isVirtual()) {
             this.log("Reconstructing virtual assets folder at " + virtualRoot);
+            Iterator var6 = index.getFileMap().entrySet().iterator();
 
-            File target;
-            File original;
-            for(Iterator var6 = index.getFileMap().entrySet().iterator(); var6.hasNext(); this.log(original, "->", target)) {
-               Entry entry = (Entry)var6.next();
-               this.checkAborted();
-               target = new File(virtualRoot, (String)entry.getKey());
-               original = new File(new File(this.assetsObjectsDir, ((AssetIndex.AssetObject)entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject)entry.getValue()).getHash());
-               if (!original.isFile()) {
-                  this.log("Skipped reconstructing:", original);
-               } else if (this.forceUpdate || !target.isFile()) {
-                  FileUtils.copyFile(original, target, false);
+            while(true) {
+               while(var6.hasNext()) {
+                  Entry entry = (Entry)var6.next();
+                  this.checkAborted();
+                  File target = new File(virtualRoot, (String)entry.getKey());
+                  File original = new File(new File(this.assetsObjectsDir, ((AssetIndex.AssetObject)entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject)entry.getValue()).getHash());
+                  if (!original.isFile()) {
+                     this.log("Skipped reconstructing:", original);
+                  } else if (this.forceUpdate || !target.isFile()) {
+                     FileUtils.copyFile(original, target, false);
+                     this.log(original, "->", target);
+                  }
                }
-            }
 
-            FileUtil.writeFile(new File(virtualRoot, ".lastused"), this.dateAdapter.toString(new Date()));
+               FileUtil.writeFile(new File(virtualRoot, ".lastused"), this.dateAdapter.toString(new Date()));
+               break;
+            }
          }
 
          return virtualRoot;

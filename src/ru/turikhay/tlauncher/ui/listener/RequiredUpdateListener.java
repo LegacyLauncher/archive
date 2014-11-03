@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.listener;
 
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.updater.AdParser;
@@ -19,7 +20,7 @@ public class RequiredUpdateListener implements UpdaterListener {
    }
 
    public void onUpdateFound(Update upd) {
-      if (upd.isRequired()) {
+      if (upd.isRequired() || TLauncher.isBeta()) {
          String prefix = "updater.required.found.";
          String title = prefix + "title";
          String message = prefix + "message";
