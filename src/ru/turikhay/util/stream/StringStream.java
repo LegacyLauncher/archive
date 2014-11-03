@@ -8,7 +8,7 @@ public class StringStream extends SafeOutputStream {
       this.write((char)b);
    }
 
-   void write(char c) {
+   protected void write(char c) {
       this.buffer.append(c);
       ++this.caret;
    }

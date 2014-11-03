@@ -38,7 +38,8 @@ import ru.turikhay.util.stream.MirroredLinkedStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.42D;
+   private static final double VERSION = 1.466D;
+   private static final boolean BETA = false;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -64,10 +65,10 @@ public class TLauncher {
    private static final String BRAND = "Legacy";
    private static final String FOLDER = "minecraft";
    private static final String DEVELOPER = "turikhay";
-   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://goo.gl/RkWE4U", "http://goo.gl/lwUFQu", "http://goo.gl/Nf4MX7", "http://s1.mmods.ru/launcher/legacy.ini", "http://turikhay.ru/tlauncher/legacy.ini", "http://ru-m.org/update/original.ini"};
+   private static final String[] DEFAULT_UPDATE_REPO = new String[]{"http://goo.gl/lwUFQu", "http://goo.gl/Nf4MX7", "http://turikhay.ru/tlauncher/legacy.ini", "http://ru-m.org/update/original.ini"};
    private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
-   private static final String[] EXTRA_REPO = new String[]{"http://s1.mmods.ru/launcher/", "http://5.9.120.11/update/versions/"};
-   private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/", "http://5.9.120.11/update/versions/libraries/", "http://s1.mmods.ru/launcher/libraries/"};
+   private static final String[] EXTRA_REPO = new String[]{"http://ru-m.org/update/tlauncher/repo/", "http://5.9.120.11/update/versions/"};
+   private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/", "http://ru-m.org/update/tlauncher/repo/libraries/", "http://5.9.120.11/update/versions/libraries/"};
    private static final String[] ASSETS_REPO = new String[]{"http://resources.download.minecraft.net/"};
    private static final String[] SERVER_LIST = new String[0];
    // $FF: synthetic field
@@ -106,14 +107,17 @@ public class TLauncher {
             }
          }
 
+         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONFIGURATION);
          this.settings = Configuration.createConfiguration(set);
          this.reloadLocale();
+         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONSOLE);
          console = new Console(this.settings, print, "TLauncher Dev Console", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
          if (state.equals(TLauncher.TLauncherState.MINIMAL)) {
             console.setCloseAction(Console.CloseAction.KILL);
          }
 
          Console.updateLocale();
+         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
          this.manager = new ComponentManager(this);
          this.versionManager = (VersionManager)this.manager.loadComponent(VersionManager.class);
          this.profileManager = (ProfileManager)this.manager.loadComponent(ProfileManager.class);
@@ -121,6 +125,7 @@ public class TLauncher {
          this.init();
          U.log("Started! (" + Time.stop(this) + " ms.)");
          this.ready = true;
+         U.setLoadingStep(Bootstrapper.LoadingStep.SUCCESS);
       }
    }
 
@@ -131,8 +136,10 @@ public class TLauncher {
       case 1:
          this.updater = new Updater(this);
          this.updateListener = new RequiredUpdateListener(this.updater);
+         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_WINDOW);
          this.frame = new TLauncherFrame(this);
          LoginForm lf = this.frame.mp.defaultScene.loginForm;
+         U.setLoadingStep(Bootstrapper.LoadingStep.REFRESHING_INFO);
          if (lf.autologin.isEnabled()) {
             this.versionManager.startRefresh(true);
             lf.autologin.setActive(true);
@@ -270,6 +277,7 @@ public class TLauncher {
       print = new PrintLogger(stream);
       stream.setLogger(print);
       System.setOut(print);
+      U.setLoadingStep(Bootstrapper.LoadingStep.INITALIZING);
       SwingUtil.initLookAndFeel();
 
       try {
@@ -284,7 +292,7 @@ public class TLauncher {
 
    private static void launch(String[] args) throws Exception {
       U.log("Hello!");
-      U.log("Starting TLauncher", "Legacy", 1.42D, "by", "turikhay");
+      U.log("Starting TLauncher", "Legacy", 1.466D, "by", "turikhay");
       U.log("Have question? Find my e-mail in lang files.");
       U.log("Machine info:", OS.getSummary());
       U.log("Startup time:", Calendar.getInstance().getTime());
@@ -332,7 +340,11 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.42D;
+      return 1.466D;
+   }
+
+   public static boolean isBeta() {
+      return false;
    }
 
    public static String getBrand() {

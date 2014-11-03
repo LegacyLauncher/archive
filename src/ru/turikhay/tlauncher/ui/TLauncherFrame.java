@@ -11,6 +11,7 @@ import java.awt.event.WindowStateListener;
 import java.net.URL;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
+import ru.turikhay.tlauncher.Bootstrapper;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
@@ -92,9 +93,10 @@ public class TLauncherFrame extends JFrame {
             }
          }
       });
-      log("Preparing main pane...");
+      U.setLoadingStep(Bootstrapper.LoadingStep.PREPARING_MAINPANE);
       this.mp = new MainPane(this);
       this.add(this.mp);
+      U.setLoadingStep(Bootstrapper.LoadingStep.POSTINIT_GUI);
       log("Packing main frame...");
       this.pack();
       log("Resizing main pane...");
@@ -146,7 +148,7 @@ public class TLauncherFrame extends JFrame {
    public void setWindowTitle() {
       String translator = this.lang.nget("translator");
       String copyright = "(by " + TLauncher.getDeveloper() + (translator != null ? ", translated by " + translator : "") + ")";
-      String brand = TLauncher.getBrand() + " " + TLauncher.getVersion();
+      String brand = TLauncher.getBrand() + " " + TLauncher.getVersion() + (TLauncher.isBeta() ? " BETA" : "");
       this.setTitle("TLauncher " + brand + " " + copyright);
    }
 

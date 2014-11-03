@@ -188,7 +188,7 @@ public class Update {
          File replacer = Updater.getUpdateFileFor(pt);
          replacer.deleteOnExit();
          String[] args = TLauncher.getInstance() != null ? TLauncher.getArgs() : new String[0];
-         ProcessBuilder builder = Bootstrapper.buildProcess(args);
+         ProcessBuilder builder = Bootstrapper.createLauncher(args).createProcess();
          FileInputStream in = new FileInputStream(replacer);
          FileOutputStream out = new FileOutputStream(replace);
          this.onUpdateApplying();

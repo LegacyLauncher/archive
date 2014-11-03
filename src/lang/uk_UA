@@ -7,6 +7,7 @@ loginform.checkbox.forceupdate=Оновити клієнт
 loginform.enter=Увійти до гри
 loginform.enter.install=Встановити
 loginform.enter.reinstall=Перевстановити
+loginform.enter.cancel=Скасувати
 loginform.cancel=Відмінити автологін (%0)...
 loginform.cancel-download=Скасувати завантаження
 loginform.site=Відвідати наш сайт
@@ -168,7 +169,9 @@ launcher.step.constructing=Створення процесу гри...
 # Launcher warning
 launcher.warning.title=Попередження
 launcher.warning.incompatible=Вибрана версія Minecraft несумісна з вашим комп'ютером, але буде зроблена спроба її запуску.
-launcher.warning.incompatible.launcher=TLauncher не сумісний з обраною версією Minecraft, але буде зроблена спроба її запуску.
+launcher.warning.incompatible.launcher=TLauncher не сумісний з обраною версією Minecraft, але буде зроблена спроба її запуску.    
+launcher.warning.assets=При завантаженні ресурсів сталася помилка. Це повідомлення знову буде показано після перезапуску лаунчер. Пам'ятайте, що не всі файли були завантажені.
+launcher.warning.assets.kaspersky=При завантаженні ресурсів сталася помилка. Вона пов'язана з тим, що антивірусне ПЗ від Лабораторії Касперського, встановлене на комп'ютері, блокує файли з серверів Mojang.\nЦе повідомлення знову буде показано після перезапуску лаунчер. Пам'ятайте, що не всі файли були завантажені.\nЩоб вирішити цю проблему, додайте до виключення Анти-Банера наступний шлях:
 # Crashes
 crash.title=Сталася неочікувана помилка
 crash.unknown=Minecraft був аварійно закритий унаслідок невідомої помилки. Консоль розробника викликана для допомоги в усуненні помилки.\nВи можете звернутися за допомогою в нашу групу ВКонтакті.

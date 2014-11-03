@@ -10,7 +10,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.font.LineMetrics;
 import javax.swing.JProgressBar;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.util.StringUtil;
@@ -18,7 +17,6 @@ import ru.turikhay.util.U;
 
 public class ProgressBar extends JProgressBar {
    public static int DEFAULT_HEIGHT = 20;
-   private static int BOUNDS_SIZE = 3;
    private static int BORDER_SIZE = 10;
    private static int EDGE_CHARS = 50;
    private static int CENTER_CHARS = 30;
@@ -32,9 +30,9 @@ public class ProgressBar extends JProgressBar {
    private boolean wS_changed;
    private boolean cS_changed;
    private boolean eS_changed;
-   private final int[] wS_bounds;
-   private final int[] cS_bounds;
-   private final int[] eS_bounds;
+   private int wS_x;
+   private int cS_x;
+   private int eS_x;
    private int oldWidth;
 
    static {
@@ -43,9 +41,6 @@ public class ProgressBar extends JProgressBar {
 
    public ProgressBar(Component parentComp) {
       this.sync = new Object();
-      this.wS_bounds = new int[BOUNDS_SIZE];
-      this.cS_bounds = new int[BOUNDS_SIZE];
-      this.eS_bounds = new int[BOUNDS_SIZE];
       this.parent = parentComp;
       if (this.parent != null) {
          this.parent.addComponentListener(new ComponentListener() {
@@ -170,28 +165,18 @@ public class ProgressBar extends JProgressBar {
          int width = this.getWidth();
          boolean force = width != this.oldWidth;
          this.oldWidth = width;
-         LineMetrics lm;
          if (drawCenter && (force || this.cS_changed)) {
-            lm = fm.getLineMetrics(this.cS, g);
-            this.cS_bounds[1] = fm.stringWidth(this.cS);
-            this.cS_bounds[2] = (int)lm.getHeight();
-            this.cS_bounds[0] = width / 2 - this.cS_bounds[1] / 2;
+            this.cS_x = width / 2 - fm.stringWidth(this.cS) / 2;
             this.cS_changed = false;
          }
 
          if (drawWest && (force || this.wS_changed)) {
-            lm = fm.getLineMetrics(this.wS, g);
-            this.wS_bounds[1] = fm.stringWidth(this.wS);
-            this.wS_bounds[2] = (int)lm.getHeight();
-            this.wS_bounds[0] = BORDER_SIZE;
+            this.wS_x = BORDER_SIZE;
             this.wS_changed = false;
          }
 
          if (drawEast && (force || this.eS_changed)) {
-            lm = fm.getLineMetrics(this.eS, g);
-            this.eS_bounds[1] = fm.stringWidth(this.eS);
-            this.eS_bounds[2] = (int)lm.getHeight();
-            this.eS_bounds[0] = width - this.eS_bounds[1] - BORDER_SIZE;
+            this.eS_x = width - fm.stringWidth(this.eS) - BORDER_SIZE;
             this.eS_changed = false;
          }
 
@@ -199,24 +184,25 @@ public class ProgressBar extends JProgressBar {
          g.setColor(Color.black);
          g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
          g.setFont(font);
-         drawString(g, this.wS, this.wS_bounds);
-         drawString(g, this.cS, this.cS_bounds);
-         drawString(g, this.eS, this.eS_bounds);
+         this.drawString(g, this.wS, this.wS_x);
+         this.drawString(g, this.cS, this.cS_x);
+         this.drawString(g, this.eS, this.eS_x);
       }
    }
 
-   private static void drawString(Graphics g, String s, int[] bounds) {
+   private void drawString(Graphics g, String s, int x) {
       if (s != null) {
+         int y = (this.getHeight() - g.getFontMetrics().getDescent() + g.getFontMetrics().getAscent()) / 2;
          g.setColor(Color.white);
 
-         for(int x = -1; x < 2; ++x) {
-            for(int y = -1; y < 2; ++y) {
-               g.drawString(s, bounds[0] + x, bounds[2] + y);
+         for(int borderX = -1; borderX < 2; ++borderX) {
+            for(int borderY = -1; borderY < 2; ++borderY) {
+               g.drawString(s, x + borderX, y + borderY);
             }
          }
 
          g.setColor(Color.black);
-         g.drawString(s, bounds[0], bounds[2]);
+         g.drawString(s, x, y);
       }
    }
 

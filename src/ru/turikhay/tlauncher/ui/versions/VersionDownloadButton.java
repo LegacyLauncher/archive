@@ -166,57 +166,53 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
          VersionManager manager = TLauncher.getInstance().getVersionManager();
 
          Iterator var7;
-         label257: {
-            try {
-               this.downloading = true;
-               var7 = list.iterator();
+         try {
+            this.downloading = true;
+            var7 = list.iterator();
 
-               while(var7.hasNext()) {
-                  VersionSyncInfo version = (VersionSyncInfo)var7.next();
+            while(var7.hasNext()) {
+               VersionSyncInfo version = (VersionSyncInfo)var7.next();
 
-                  try {
-                     VersionSyncInfoContainer container = manager.downloadVersion(version, this.forceDownload);
-                     if (this.aborted) {
-                        return;
-                     }
-
-                     if (!container.getList().isEmpty()) {
-                        containers.add(container);
-                     }
-                  } catch (Exception var15) {
-                     Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", version.getID()), var15);
-                     return;
-                  }
-               }
-
-               if (!containers.isEmpty()) {
-                  if (containers.size() > 1) {
-                     DownloadableContainer.removeDublicates(containers);
-                  }
-
+               try {
+                  VersionSyncInfoContainer container = manager.downloadVersion(version, this.forceDownload);
                   if (this.aborted) {
                      return;
                   }
 
-                  var7 = containers.iterator();
-
-                  while(var7.hasNext()) {
-                     DownloadableContainer c = (DownloadableContainer)var7.next();
-                     this.handler.downloader.add(c);
+                  if (!container.getList().isEmpty()) {
+                     containers.add(container);
                   }
-
-                  this.handler.downloading = list;
-                  this.handler.onVersionDownload(list);
-                  this.handler.downloader.startDownloadAndWait();
-                  break label257;
+               } catch (Exception var15) {
+                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", version.getID()), var15);
+                  return;
                }
-
-               Alert.showMessage(Localizable.get("version.manager.downloader.info.title"), Localizable.get("version.manager.downloader.info.no-needed"));
-            } finally {
-               this.downloading = false;
             }
 
-            return;
+            if (containers.isEmpty()) {
+               Alert.showMessage(Localizable.get("version.manager.downloader.info.title"), Localizable.get("version.manager.downloader.info.no-needed"));
+               return;
+            }
+
+            if (containers.size() > 1) {
+               DownloadableContainer.removeDublicates(containers);
+            }
+
+            if (this.aborted) {
+               return;
+            }
+
+            var7 = containers.iterator();
+
+            while(var7.hasNext()) {
+               DownloadableContainer c = (DownloadableContainer)var7.next();
+               this.handler.downloader.add(c);
+            }
+
+            this.handler.downloading = list;
+            this.handler.onVersionDownload(list);
+            this.handler.downloader.startDownloadAndWait();
+         } finally {
+            this.downloading = false;
          }
 
          this.handler.downloading.clear();

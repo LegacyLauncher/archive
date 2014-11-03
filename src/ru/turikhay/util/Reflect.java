@@ -76,7 +76,7 @@ public class Reflect {
             }
          }
 
-         throw new ParseException("Cannot parse value:" + string + "; enum: " + enumClass.getSimpleName());
+         throw new ParseException("Cannot parse value:\"" + string + "\"; enum: " + enumClass.getSimpleName());
       }
    }
 

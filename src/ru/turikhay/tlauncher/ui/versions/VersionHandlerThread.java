@@ -55,7 +55,7 @@ public class VersionHandlerThread {
       protected void iterateOnce() {
          Blocker.block((Blockable)this.button.blockable, (Object)"stop-download");
 
-         while(!this.handler.downloader.isThreadBlocked()) {
+         while(!this.handler.downloader.isThreadLocked()) {
             U.sleepFor(1000L);
          }
 

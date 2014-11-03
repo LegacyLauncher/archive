@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
+import ru.turikhay.tlauncher.Bootstrapper;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.async.ExtendedThread;
@@ -284,6 +285,14 @@ public class U {
          } else {
             return b.toString();
          }
+      }
+   }
+
+   public static void setLoadingStep(Bootstrapper.LoadingStep step) {
+      if (step == null) {
+         throw new NullPointerException();
+      } else {
+         plog("[Loading]", step.toString());
       }
    }
 
@@ -729,5 +738,24 @@ public class U {
 
          return false;
       }
+   }
+
+   public static int find(Object obj, Object[] array) {
+      int i;
+      if (obj == null) {
+         for(i = 0; i < array.length; ++i) {
+            if (array[i] == null) {
+               return i;
+            }
+         }
+      } else {
+         for(i = 0; i < array.length; ++i) {
+            if (obj.equals(array[i])) {
+               return i;
+            }
+         }
+      }
+
+      return -1;
    }
 }

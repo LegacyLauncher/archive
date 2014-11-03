@@ -1,14 +1,17 @@
 package ru.turikhay.util.async;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import ru.turikhay.util.U;
 
 public abstract class ExtendedThread extends Thread {
-   private static int threadNum;
+   private static AtomicInteger threadNum = new AtomicInteger();
    private final ExtendedThread.ExtendedThreadCaller caller;
    private String blockReason;
+   private final Object monitor;
 
    public ExtendedThread(String name) {
-      super(name + "#" + threadNum++);
+      super(name + "#" + threadNum.incrementAndGet());
+      this.monitor = new Object();
       this.caller = new ExtendedThread.ExtendedThreadCaller((ExtendedThread.ExtendedThreadCaller)null);
    }
 
@@ -23,7 +26,7 @@ public abstract class ExtendedThread extends Thread {
    public void startAndWait() {
       super.start();
 
-      while(!this.isThreadBlocked()) {
+      while(!this.isThreadLocked()) {
          U.sleepFor(100L);
       }
 
@@ -31,19 +34,20 @@ public abstract class ExtendedThread extends Thread {
 
    public abstract void run();
 
-   protected synchronized void blockThread(String reason) {
+   protected void lockThread(String reason) {
       if (reason == null) {
          throw new NullPointerException();
       } else {
          this.checkCurrent();
          this.blockReason = reason;
          this.threadLog("Thread locked by:", this.blockReason);
-
-         while(this.blockReason != null) {
-            try {
-               this.wait();
-            } catch (InterruptedException var3) {
-               return;
+         synchronized(this.monitor) {
+            while(this.blockReason != null) {
+               try {
+                  this.monitor.wait();
+               } catch (InterruptedException var4) {
+                  var4.printStackTrace();
+               }
             }
          }
 
@@ -51,27 +55,36 @@ public abstract class ExtendedThread extends Thread {
       }
    }
 
-   public synchronized void unblockThread(String... reasons) {
-      if (reasons == null) {
+   public void unlockThread(String reason) {
+      if (reason == null) {
          throw new NullPointerException();
       } else {
-         String[] var5 = reasons;
-         int var4 = reasons.length;
-
-         for(int var3 = 0; var3 < var4; ++var3) {
-            String reason = var5[var3];
-            if (reason.equals(this.blockReason)) {
-               this.blockReason = null;
-               this.notifyAll();
-               return;
+         this.threadLog("Trying to unlock thread:", reason, "from", Thread.currentThread());
+         if (!reason.equals(this.blockReason)) {
+            throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
+         } else {
+            this.blockReason = null;
+            synchronized(this.monitor) {
+               this.monitor.notifyAll();
             }
-         }
 
-         throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + U.toLog(reasons));
+            this.threadLog("Unlocked from", Thread.currentThread());
+         }
       }
    }
 
-   public boolean isThreadBlocked() {
+   public void tryUnlock(String reason) {
+      if (reason == null) {
+         throw new NullPointerException();
+      } else {
+         if (reason.equals(this.blockReason)) {
+            this.unlockThread(reason);
+         }
+
+      }
+   }
+
+   public boolean isThreadLocked() {
       return this.blockReason != null;
    }
 
@@ -90,8 +103,6 @@ public abstract class ExtendedThread extends Thread {
    }
 
    public class ExtendedThreadCaller extends RuntimeException {
-      private static final long serialVersionUID = -9184403765829112550L;
-
       private ExtendedThreadCaller() {
       }
 

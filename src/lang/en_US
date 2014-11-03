@@ -7,6 +7,7 @@ loginform.checkbox.forceupdate=Force update
 loginform.enter=Enter the game
 loginform.enter.install=Install
 loginform.enter.reinstall=Reinstall
+loginform.enter.cancel=Cancel
 loginform.cancel=Cancel autologin (%0)...
 loginform.cancel-download=Stop download
 loginform.site=Visit our site
@@ -168,6 +169,8 @@ launcher.step.constructing=Creating process...
 launcher.warning.title=Warning!
 launcher.warning.incompatible=Selected version is incompatible with your environment but TLauncher will try to run it.
 launcher.warning.incompatible.launcher=Selected version is incompatible with TLauncher but launcher will try to run it.
+launcher.warning.assets=An error occurred while trying to download assets. This message won't be shown during this session. Remember that some files are missing.
+launcher.warning.assets.kaspersky=The error occurred while trying to download assets. Kaspersky Antivirus installed on this PC substitutes files from Mojang server.\nThis message won't be shown during this session. Remember that some files are missing.\nIf you'd like to solve this problem add the exception to White-list of Anti-Banner:
 # Crashes
 crash.title=Unexpected error occurred!
 crash.unknown=Minecraft has closed due to unexpected error. Developer console has been called to help you to solve the problem.

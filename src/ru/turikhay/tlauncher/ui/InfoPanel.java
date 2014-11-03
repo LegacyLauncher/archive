@@ -46,7 +46,9 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
 
    public InfoPanel(DefaultScene parent) {
       super(CenterPanel.tipTheme, new Insets(5, 10, 5, 10));
-      this.addMouseListener(new MouseListener() {
+      this.parent = parent;
+      this.browser = new EditorPane(this.getFont().deriveFont(12.0F));
+      this.browser.addMouseListener(new MouseListener() {
          public void mouseClicked(MouseEvent e) {
             if (!InfoPanel.this.onClick()) {
                e.consume();
@@ -82,8 +84,6 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
 
          }
       });
-      this.parent = parent;
-      this.browser = new EditorPane(this.getFont().deriveFont(12.0F));
       this.add(this.browser);
       this.shown = false;
       this.setVisible(false);
@@ -163,6 +163,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
          if (!this.shown) {
             synchronized(this.animationLock) {
                this.setVisible(true);
+               this.browser.setVisible(true);
                this.opacity = 0.0F;
                float selectedOpacity = 1.0F;
                if (animate) {
@@ -206,6 +207,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
             }
 
             this.setVisible(false);
+            this.browser.setVisible(false);
             if (!animate) {
                this.opacity = 0.0F;
             }
@@ -389,15 +391,15 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
             throw new NullPointerException("action");
          } else {
             this.currentAction = action;
-            if (this.isThreadBlocked()) {
-               this.unblockThread(new String[]{"start"});
+            if (this.isThreadLocked()) {
+               this.unlockThread("start");
             }
 
          }
       }
 
       public void run() {
-         this.blockThread("start");
+         this.lockThread("start");
 
          while(true) {
             while(this.currentAction == null) {
