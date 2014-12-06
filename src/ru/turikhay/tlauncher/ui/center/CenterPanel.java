@@ -2,13 +2,17 @@ package ru.turikhay.tlauncher.ui.center;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.RenderingHints;
+
 import javax.swing.BoxLayout;
+import javax.swing.SwingConstants;
+
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
@@ -21,158 +25,191 @@ import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.util.U;
 
 public class CenterPanel extends BlockablePanel {
-   private static final long serialVersionUID = -1975869198322761508L;
-   public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
-   public static final CenterPanelTheme tipTheme = new TipPanelTheme();
-   public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
-   public static final CenterPanelTheme settingsTheme = new SettingsPanelTheme();
-   public static final Insets defaultInsets = new Insets(5, 24, 18, 24);
-   public static final Insets squareInsets = new Insets(15, 15, 15, 15);
-   public static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
-   public static final Insets smallSquareNoTopInsets = new Insets(5, 15, 5, 15);
-   public static final Insets noInsets = new Insets(0, 0, 0, 0);
-   protected static final int ARC_SIZE = 24;
-   private final Insets insets;
-   private final CenterPanelTheme theme;
-   protected final ExtendedPanel messagePanel;
-   protected final LocalizableLabel messageLabel;
-   public final TLauncher tlauncher;
-   public final Configuration global;
-   public final LangConfiguration lang;
+	private static final long serialVersionUID = -1975869198322761508L;
 
-   public CenterPanel() {
-      this((CenterPanelTheme)null, (Insets)null);
-   }
+	public static final CenterPanelTheme
+	defaultTheme = new DefaultCenterPanelTheme(),
+	tipTheme = new TipPanelTheme(),
+	loadingTheme = new LoadingPanelTheme(),
+	settingsTheme = new SettingsPanelTheme();
 
-   public CenterPanel(Insets insets) {
-      this((CenterPanelTheme)null, insets);
-   }
+	public static final Insets
+	defaultInsets = new Insets(5, 24, 18, 24),
+	squareInsets = new Insets(15, 15, 15, 15),
+	smallSquareInsets = new Insets(7, 7, 7, 7),
+	smallSquareNoTopInsets = new Insets(5, 15, 5, 15),
+	noInsets = new Insets(0, 0, 0, 0);
 
-   public CenterPanel(CenterPanelTheme theme) {
-      this(theme, (Insets)null);
-   }
+	protected final static int ARC_SIZE = 24;
 
-   public CenterPanel(CenterPanelTheme theme, Insets insets) {
-      this.tlauncher = TLauncher.getInstance();
-      this.global = this.tlauncher.getSettings();
-      this.lang = this.tlauncher.getLang();
-      CenterPanelTheme var10001 = theme == null ? defaultTheme : theme;
-      theme = var10001;
-      this.theme = var10001;
-      this.insets = insets == null ? defaultInsets : insets;
-      this.setLayout(new BoxLayout(this, 3));
-      this.setBackground(theme.getPanelBackground());
-      this.messageLabel = new LocalizableLabel("  ");
-      this.messageLabel.setFont(this.getFont().deriveFont(1));
-      this.messageLabel.setVerticalAlignment(0);
-      this.messageLabel.setHorizontalTextPosition(0);
-      this.messageLabel.setAlignmentX(0.5F);
-      this.messagePanel = new ExtendedPanel();
-      this.messagePanel.setLayout(new BoxLayout(this.messagePanel, 1));
-      this.messagePanel.setAlignmentX(0.5F);
-      this.messagePanel.setInsets(new Insets(3, 0, 3, 0));
-      this.messagePanel.add((Component)this.messageLabel);
-   }
+	private final Insets insets;
+	private final CenterPanelTheme theme;
 
-   public void paintComponent(Graphics g0) {
-      Graphics2D g = (Graphics2D)g0;
-      int x = 0;
-      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      g.setColor(this.getBackground());
-      g.fillRoundRect(x, x, this.getWidth(), this.getHeight(), 24, 24);
-      g.setColor(this.theme.getBorder());
+	protected final ExtendedPanel messagePanel;
+	protected final LocalizableLabel messageLabel;
 
-      int x;
-      for(x = 1; x < 3; ++x) {
-         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 24 - 2 * x + 1, 24 - 2 * x + 1);
-      }
+	public final TLauncher tlauncher;
+	public final Configuration global;
+	public final LangConfiguration lang;
 
-      Color shadow = U.shiftAlpha(Color.gray, -155);
-      x = 3;
+	public CenterPanel() {
+		this(null, null);
+	}
 
-      while(true) {
-         shadow = U.shiftAlpha(shadow, -10);
-         if (shadow.getAlpha() == 0) {
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-            super.paintComponent(g);
-            return;
-         }
+	public CenterPanel(Insets insets) {
+		this(null, insets);
+	}
 
-         g.setColor(shadow);
-         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 24 - 2 * x + 1, 24 - 2 * x + 1);
-         ++x;
-      }
-   }
+	public CenterPanel(CenterPanelTheme theme) {
+		this(theme, null);
+	}
 
-   public CenterPanelTheme getTheme() {
-      return this.theme;
-   }
+	public CenterPanel(CenterPanelTheme theme, Insets insets) {
+		this.tlauncher = TLauncher.getInstance();
+		global = tlauncher.getSettings();
+		lang = tlauncher.getLang();
 
-   public Insets getInsets() {
-      return this.insets;
-   }
+		this.theme = theme = (theme == null) ? defaultTheme : theme;
+		this.insets = insets = (insets == null) ? defaultInsets : insets;
 
-   protected Del del(int aligment) {
-      return new Del(1, aligment, this.theme.getBorder());
-   }
+		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+		setBackground(theme.getPanelBackground());
 
-   protected Del del(int aligment, int width, int height) {
-      return new Del(1, aligment, width, height, this.theme.getBorder());
-   }
+		this.messageLabel = new LocalizableLabel("  ");
+		messageLabel.setFont(getFont().deriveFont(Font.BOLD));
+		messageLabel.setVerticalAlignment(SwingConstants.CENTER);
+		messageLabel.setHorizontalTextPosition(SwingConstants.CENTER);
+		messageLabel.setAlignmentX(CENTER_ALIGNMENT);
 
-   public void defocus() {
-      this.requestFocusInWindow();
-   }
+		this.messagePanel = new ExtendedPanel();
+		messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
+		messagePanel.setAlignmentX(CENTER_ALIGNMENT);
+		messagePanel.setInsets(new Insets(3, 0, 3, 0));
+		messagePanel.add(messageLabel);
+	}
 
-   public boolean setError(String message) {
-      this.messageLabel.setForeground(this.theme.getFailure());
-      this.messageLabel.setText(message != null && message.length() != 0 ? message : " ");
-      return false;
-   }
+	@Override
+	public void paintComponent(Graphics g0) {
+		Graphics2D g = (Graphics2D) g0;
 
-   protected boolean setMessage(String message, Object... vars) {
-      this.messageLabel.setForeground(this.theme.getFocus());
-      this.messageLabel.setText(message != null && message.length() != 0 ? message : " ", vars);
-      return true;
-   }
+		int x = 0;
 
-   protected boolean setMessage(String message) {
-      return this.setMessage(message, Localizable.EMPTY_VARS);
-   }
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
 
-   public static BlockablePanel sepPan(LayoutManager manager, Component... components) {
-      BlockablePanel panel = new BlockablePanel(manager) {
-         private static final long serialVersionUID = 1L;
+		g.setColor(getBackground());
+		g.fillRoundRect(x, x, getWidth(), getHeight(), ARC_SIZE, ARC_SIZE);
 
-         public Insets getInsets() {
-            return CenterPanel.noInsets;
-         }
-      };
-      panel.add(components);
-      return panel;
-   }
+		g.setColor(theme.getBorder());
+		for(x = 1; x < 3; x++)
+			g.drawRoundRect(x - 1, x - 1,
+					getWidth() - 2*x + 1,
+					getHeight() - 2*x + 1,
+					ARC_SIZE - 2*x + 1, ARC_SIZE - 2*x + 1);
 
-   public static BlockablePanel sepPan(Component... components) {
-      return sepPan(new GridLayout(0, 1), components);
-   }
+		Color shadow = U.shiftAlpha(Color.gray, -155);
 
-   public static UnblockablePanel uSepPan(LayoutManager manager, Component... components) {
-      UnblockablePanel panel = new UnblockablePanel(manager) {
-         private static final long serialVersionUID = 1L;
+		for(x = 3; ;x++) {
+			shadow = U.shiftAlpha(shadow, -10);
 
-         public Insets getInsets() {
-            return CenterPanel.noInsets;
-         }
-      };
-      panel.add(components);
-      return panel;
-   }
+			if(shadow.getAlpha() == 0)
+				break;
 
-   public static UnblockablePanel uSepPan(Component... components) {
-      return uSepPan(new GridLayout(0, 1), components);
-   }
+			g.setColor(shadow);
+			g.drawRoundRect(x - 1, x - 1,
+					getWidth() - 2*x + 1,
+					getHeight() - 2*x + 1,
+					ARC_SIZE - 2*x + 1, ARC_SIZE - 2*x + 1);
+		}
 
-   protected void log(Object... o) {
-      U.log("[" + this.getClass().getSimpleName() + "]", o);
-   }
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_OFF);
+
+		super.paintComponent(g);
+	}
+
+	public CenterPanelTheme getTheme() {
+		return theme;
+	}
+
+	@Override
+	public Insets getInsets() {
+		return insets;
+	}
+
+	protected Del del(int aligment) {
+		return new Del(1, aligment, theme.getBorder());
+	}
+
+	protected Del del(int aligment, int width, int height) {
+		return new Del(1, aligment, width, height, theme.getBorder());
+	}
+
+	public void defocus() {
+		this.requestFocusInWindow();
+	}
+
+	public boolean setError(String message) {
+		this.messageLabel.setForeground(theme.getFailure());
+		this.messageLabel
+		.setText(message == null || message.length() == 0 ? " "
+				: message);
+		return false;
+	}
+
+	protected boolean setMessage(String message, Object...vars) {
+		this.messageLabel.setForeground(theme.getFocus());
+		this.messageLabel
+		.setText(message == null || message.length() == 0 ? " "
+				: message, vars);
+		return true;
+	}
+
+	protected boolean setMessage(String message) {
+		return setMessage(message, Localizable.EMPTY_VARS);
+	}
+
+	public static BlockablePanel sepPan(LayoutManager manager, Component... components) {
+		BlockablePanel panel = new BlockablePanel(manager) {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Insets getInsets() {
+				return noInsets;
+			}
+
+		};
+		panel.add(components);
+
+		return panel;
+	}
+
+	public static BlockablePanel sepPan(Component... components) {
+		return sepPan(new GridLayout(0, 1), components);
+	}
+
+	public static UnblockablePanel uSepPan(LayoutManager manager, Component... components) {
+		UnblockablePanel panel = new UnblockablePanel(manager) {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Insets getInsets() {
+				return noInsets;
+			}
+
+		};
+		panel.add(components);
+
+		return panel;
+	}
+
+	public static UnblockablePanel uSepPan(Component... components) {
+		return uSepPan(new GridLayout(0, 1), components);
+	}
+
+	protected void log(Object... o) {
+		U.log("[" + getClass().getSimpleName() + "]", o);
+	}
 }

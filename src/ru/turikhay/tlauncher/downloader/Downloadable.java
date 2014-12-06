@@ -5,9 +5,10 @@ import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+
 import javax.net.ssl.HttpsURLConnection;
+
 import ru.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
@@ -16,360 +17,333 @@ import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Downloadable {
-   private static final boolean DEFAULT_FORCE = false;
-   private static final boolean DEFAULT_FAST = false;
-   private String path;
-   private Repository repo;
-   private File destination;
-   private final List additionalDestinations;
-   private boolean forceDownload;
-   private boolean fastDownload;
-   private boolean insertUseragent;
-   private boolean locked;
-   private DownloadableContainer container;
-   private final List handlers;
-   private Throwable error;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS;
+	private final static boolean DEFAULT_FORCE = false;
+	private final static boolean DEFAULT_FAST = false;
 
-   private Downloadable() {
-      this.additionalDestinations = Collections.synchronizedList(new ArrayList());
-      this.handlers = Collections.synchronizedList(new ArrayList());
-   }
+	private String path;
+	private Repository repo;
 
-   public Downloadable(Repository repo, String path, File destination, boolean forceDownload, boolean fastDownload) {
-      this();
-      this.setURL(repo, path);
-      this.setDestination(destination);
-      this.forceDownload = forceDownload;
-      this.fastDownload = fastDownload;
-   }
+	private File destination;
+	private final List<File> additionalDestinations;
 
-   public Downloadable(Repository repo, String path, File destination, boolean forceDownload) {
-      this(repo, path, destination, forceDownload, false);
-   }
+	private boolean forceDownload, fastDownload, insertUseragent, locked;
 
-   public Downloadable(Repository repo, String path, File destination) {
-      this(repo, path, destination, false, false);
-   }
+	private DownloadableContainer container;
+	private final List<DownloadableHandler> handlers;
 
-   private Downloadable(String url, File destination, boolean forceDownload, boolean fastDownload) {
-      this();
-      this.setURL(url);
-      this.setDestination(destination);
-      this.forceDownload = forceDownload;
-      this.fastDownload = fastDownload;
-   }
+	private Throwable error;
 
-   public Downloadable(String url, File destination) {
-      this(url, destination, false, false);
-   }
+	private Downloadable() {
+		this.additionalDestinations = Collections
+				.synchronizedList(new ArrayList<File>());
+		this.handlers = Collections
+				.synchronizedList(new ArrayList<DownloadableHandler>());
+	}
 
-   public boolean equals(Object o) {
-      if (o == null) {
-         return false;
-      } else if (this == o) {
-         return true;
-      } else if (!(o instanceof Downloadable)) {
-         return false;
-      } else {
-         Downloadable c = (Downloadable)o;
-         return U.equal(this.path, c.path) && U.equal(this.repo, c.repo) && U.equal(this.destination, c.destination) && U.equal(this.additionalDestinations, c.additionalDestinations);
-      }
-   }
+	public Downloadable(Repository repo, String path, File destination,
+			boolean forceDownload, boolean fastDownload) {
+		this();
 
-   public boolean getInsertUA() {
-      return this.insertUseragent;
-   }
+		this.setURL(repo, path);
+		this.setDestination(destination);
 
-   public void setInsertUA(boolean ua) {
-      this.checkLocked();
-      this.insertUseragent = ua;
-   }
+		this.forceDownload = forceDownload;
+		this.fastDownload = fastDownload;
+	}
 
-   public boolean isForce() {
-      return this.forceDownload;
-   }
+	public Downloadable(Repository repo, String path, File destination,
+			boolean forceDownload) {
+		this(repo, path, destination, forceDownload, DEFAULT_FAST);
+	}
 
-   public void setForce(boolean force) {
-      this.checkLocked();
-      this.forceDownload = force;
-   }
+	public Downloadable(Repository repo, String path, File destination) {
+		this(repo, path, destination, DEFAULT_FORCE, DEFAULT_FAST);
+	}
 
-   public boolean isFast() {
-      return this.fastDownload;
-   }
+	private Downloadable(String url, File destination, boolean forceDownload,
+			boolean fastDownload) {
+		this();
 
-   public void setFast(boolean fast) {
-      this.checkLocked();
-      this.fastDownload = fast;
-   }
+		this.setURL(url);
+		this.setDestination(destination);
 
-   public String getURL() {
-      return this.path;
-   }
+		this.forceDownload = forceDownload;
+		this.fastDownload = fastDownload;
+	}
 
-   public Repository getRepository() {
-      return this.repo;
-   }
+	public Downloadable(String url, File destination) {
+		this(url, destination, DEFAULT_FORCE, DEFAULT_FAST);
+	}
 
-   public boolean hasRepository() {
-      return this.repo != null;
-   }
+	@Override
+	public boolean equals(Object o) {
+		if(o == null) return false;
+		if(this == o) return true;
 
-   void setURL(Repository repo, String path) {
-      if (repo == null) {
-         throw new NullPointerException("Repository is NULL!");
-      } else if (path == null) {
-         throw new NullPointerException("Path is NULL!");
-      } else {
-         this.checkLocked();
-         this.repo = repo;
-         this.path = path;
-      }
-   }
+		if(!(o instanceof Downloadable))
+			return false;
 
-   void setURL(String url) {
-      if (url == null) {
-         throw new NullPointerException();
-      } else if (url.isEmpty()) {
-         throw new IllegalArgumentException("URL cannot be empty!");
-      } else {
-         this.checkLocked();
-         this.repo = null;
-         this.path = url;
-      }
-   }
+		Downloadable c = (Downloadable) o;
+		return
+				U.equal(path, c.path)
+				&& U.equal(repo, c.repo)
+				&& U.equal(destination, c.destination)
+				&& U.equal(additionalDestinations, c.additionalDestinations);
+	}
 
-   public File getDestination() {
-      return this.destination;
-   }
+	public boolean getInsertUA() {
+		return insertUseragent;
+	}
 
-   public String getFilename() {
-      return FileUtil.getFilename(this.path);
-   }
+	public void setInsertUA(boolean ua) {
+		checkLocked();
+		this.insertUseragent = ua;
+	}
 
-   void setDestination(File file) {
-      if (file == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkLocked();
-         this.destination = file;
-      }
-   }
+	public boolean isForce() {
+		return forceDownload;
+	}
 
-   public List getAdditionalDestinations() {
-      return Collections.unmodifiableList(this.additionalDestinations);
-   }
+	public void setForce(boolean force) {
+		checkLocked();
+		this.forceDownload = force;
+	}
 
-   public void addAdditionalDestination(File file) {
-      if (file == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkLocked();
-         this.additionalDestinations.add(file);
-      }
-   }
+	public boolean isFast() {
+		return fastDownload;
+	}
 
-   public DownloadableContainer getContainer() {
-      return this.container;
-   }
+	public void setFast(boolean fast) {
+		checkLocked();
+		this.fastDownload = fast;
+	}
 
-   public boolean hasContainer() {
-      return this.container != null;
-   }
+	public String getURL() {
+		return path;
+	}
 
-   public boolean hasConsole() {
-      return this.container != null && this.container.hasConsole();
-   }
+	public Repository getRepository() {
+		return repo;
+	}
 
-   public void addHandler(DownloadableHandler handler) {
-      if (handler == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkLocked();
-         this.handlers.add(handler);
-      }
-   }
+	public boolean hasRepository() {
+		return repo != null;
+	}
 
-   void setContainer(DownloadableContainer container) {
-      this.checkLocked();
-      this.container = container;
-   }
+	void setURL(Repository repo, String path) {
+		if (repo == null)
+			throw new NullPointerException("Repository is NULL!");
 
-   public Throwable getError() {
-      return this.error;
-   }
+		if (path == null)
+			throw new NullPointerException("Path is NULL!");
 
-   private void setLocked(boolean locked) {
-      this.locked = locked;
-   }
+		checkLocked();
 
-   void checkLocked() {
-      if (this.locked) {
-         throw new IllegalStateException("Downloadable is locked!");
-      }
-   }
+		this.repo = repo;
+		this.path = path;
+	}
 
-   void onStart() {
-      this.setLocked(true);
-      Iterator var2 = this.handlers.iterator();
+	void setURL(String url) {
+		if (url == null)
+			throw new NullPointerException();
 
-      while(var2.hasNext()) {
-         DownloadableHandler handler = (DownloadableHandler)var2.next();
-         handler.onStart(this);
-      }
+		if (url.isEmpty())
+			throw new IllegalArgumentException("URL cannot be empty!");
 
-   }
+		checkLocked();
 
-   void onAbort(AbortedDownloadException ae) {
-      this.setLocked(false);
-      this.error = ae;
-      Iterator var3 = this.handlers.iterator();
+		this.repo = null;
+		this.path = url;
+	}
 
-      while(var3.hasNext()) {
-         DownloadableHandler handler = (DownloadableHandler)var3.next();
-         handler.onAbort(this);
-      }
+	public File getDestination() {
+		return destination;
+	}
 
-      if (this.container != null) {
-         this.container.onAbort(this);
-      }
+	public String getFilename() {
+		return FileUtil.getFilename(path);
+	}
 
-   }
+	void setDestination(File file) {
+		if (file == null)
+			throw new NullPointerException();
 
-   void onComplete() throws RetryDownloadException {
-      this.setLocked(false);
-      Iterator var2 = this.handlers.iterator();
+		checkLocked();
+		this.destination = file;
+	}
 
-      while(var2.hasNext()) {
-         DownloadableHandler handler = (DownloadableHandler)var2.next();
-         handler.onComplete(this);
-      }
+	public List<File> getAdditionalDestinations() {
+		return Collections.unmodifiableList(additionalDestinations);
+	}
 
-      if (this.container != null) {
-         this.container.onComplete(this);
-      }
+	public void addAdditionalDestination(File file) {
+		if (file == null)
+			throw new NullPointerException();
 
-   }
+		checkLocked();
+		this.additionalDestinations.add(file);
+	}
 
-   void onError(Throwable e) {
-      this.error = e;
-      if (e != null) {
-         this.setLocked(false);
-         Iterator var3 = this.handlers.iterator();
+	public DownloadableContainer getContainer() {
+		return container;
+	}
 
-         while(var3.hasNext()) {
-            DownloadableHandler handler = (DownloadableHandler)var3.next();
-            handler.onError(this, e);
-         }
+	public boolean hasContainer() {
+		return container != null;
+	}
 
-         if (this.container != null) {
-            this.container.onError(this, e);
-         }
+	public boolean hasConsole() {
+		return container != null && container.hasConsole();
+	}
 
-      }
-   }
+	public void addHandler(DownloadableHandler handler) {
+		if (handler == null)
+			throw new NullPointerException();
 
-   public String toString() {
-      return this.getClass().getSimpleName() + "{path='" + this.path + "'; " + "repo=" + this.repo + "; " + "destinations=" + this.destination + "," + this.additionalDestinations + "; " + "force=" + this.forceDownload + "; " + "fast=" + this.fastDownload + "; " + "locked=" + this.locked + "; " + "container=" + this.container + "; " + "handlers=" + this.handlers + "; " + "error=" + this.error + ";" + "}";
-   }
+		checkLocked();
+		handlers.add(handler);
+	}
 
-   public static HttpURLConnection setUp(URLConnection connection0, int timeout, boolean fake) {
-      if (connection0 == null) {
-         throw new NullPointerException();
-      } else if (!(connection0 instanceof HttpURLConnection)) {
-         throw new IllegalArgumentException("Unknown connection protocol: " + connection0);
-      } else {
-         HttpURLConnection connection = (HttpURLConnection)connection0;
-         connection.setConnectTimeout(timeout);
-         connection.setReadTimeout(timeout);
-         connection.setUseCaches(false);
-         connection.setDefaultUseCaches(false);
-         connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
-         connection.setRequestProperty("Expires", "0");
-         connection.setRequestProperty("Pragma", "no-cache");
-         HttpsURLConnection securedConnection = (HttpsURLConnection)Reflect.cast(connection, HttpsURLConnection.class);
-         if (securedConnection != null) {
-            securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
-         }
+	void setContainer(DownloadableContainer container) {
+		checkLocked();
+		this.container = container;
+	}
 
-         if (!fake) {
-            return connection;
-         } else {
-            String userAgent;
-            switch($SWITCH_TABLE$ru$turikhay$util$OS()[OS.CURRENT.ordinal()]) {
-            case 2:
-               userAgent = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0; .NET4.0C)";
-               break;
-            case 3:
-               userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8) AppleWebKit/535.18.5 (KHTML, like Gecko) Version/5.2 Safari/535.18.5";
-               break;
-            default:
-               userAgent = "Mozilla/5.0 (Linux; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0";
-            }
+	public Throwable getError() {
+		return error;
+	}
 
-            connection.setRequestProperty("User-Agent", userAgent);
-            return connection;
-         }
-      }
-   }
+	private void setLocked(boolean locked) {
+		this.locked = locked;
+	}
 
-   public static HttpURLConnection setUp(URLConnection connection, int timeout) {
-      return setUp(connection, timeout, false);
-   }
+	void checkLocked() {
+		if (locked)
+			throw new IllegalStateException("Downloadable is locked!");
+	}
 
-   public static HttpURLConnection setUp(URLConnection connection, boolean fake) {
-      return setUp(connection, U.getConnectionTimeout(), fake);
-   }
+	void onStart() {
+		setLocked(true);
 
-   public static HttpURLConnection setUp(URLConnection connection) {
-      return setUp(connection, false);
-   }
+		for (DownloadableHandler handler : handlers)
+			handler.onStart(this);
+	}
 
-   public static String getEtag(String etag) {
-      if (etag == null) {
-         return "-";
-      } else {
-         return etag.startsWith("\"") && etag.endsWith("\"") ? etag.substring(1, etag.length() - 1) : etag;
-      }
-   }
+	void onAbort(AbortedDownloadException ae) {
+		setLocked(false);
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$OS() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[OS.values().length];
+		this.error = ae;
 
-         try {
-            var0[OS.LINUX.ordinal()] = 1;
-         } catch (NoSuchFieldError var5) {
-         }
+		for (DownloadableHandler handler : handlers)
+			handler.onAbort(this);
 
-         try {
-            var0[OS.OSX.ordinal()] = 3;
-         } catch (NoSuchFieldError var4) {
-         }
+		if (container != null)
+			container.onAbort(this);
+	}
 
-         try {
-            var0[OS.SOLARIS.ordinal()] = 4;
-         } catch (NoSuchFieldError var3) {
-         }
+	void onComplete() throws RetryDownloadException {
+		setLocked(false);
 
-         try {
-            var0[OS.UNKNOWN.ordinal()] = 5;
-         } catch (NoSuchFieldError var2) {
-         }
+		for (DownloadableHandler handler : handlers)
+			handler.onComplete(this);
 
-         try {
-            var0[OS.WINDOWS.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
+		if (container != null)
+			container.onComplete(this);
+	}
 
-         $SWITCH_TABLE$ru$turikhay$util$OS = var0;
-         return var0;
-      }
-   }
+	void onError(Throwable e) {
+		this.error = e;
+
+		if (e == null)
+			return;
+
+		setLocked(false);
+
+		for (DownloadableHandler handler : handlers)
+			handler.onError(this, e);
+
+		if(container != null)
+			container.onError(this, e);
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "{path='" + path + "'; " + "repo="
+				+ repo + "; " + "destinations=" + destination + ","
+				+ additionalDestinations + "; " + "force=" + forceDownload
+				+ "; " + "fast=" + fastDownload + "; " + "locked=" + locked
+				+ "; " + "container=" + container + "; " + "handlers="
+				+ handlers + "; " + "error=" + error + ";" + "}";
+	}
+
+	public static HttpURLConnection setUp(URLConnection connection0,
+			int timeout, boolean fake) {
+		if (connection0 == null)
+			throw new NullPointerException();
+
+		if (!(connection0 instanceof HttpURLConnection))
+			throw new IllegalArgumentException("Unknown connection protocol: "
+					+ connection0);
+
+		HttpURLConnection connection = (HttpURLConnection) connection0;
+
+		connection.setConnectTimeout(timeout);
+		connection.setReadTimeout(timeout);
+
+		connection.setUseCaches(false);
+		connection.setDefaultUseCaches(false);
+		connection.setRequestProperty("Cache-Control",
+				"no-store,max-age=0,no-cache");
+		connection.setRequestProperty("Expires", "0");
+		connection.setRequestProperty("Pragma", "no-cache");
+
+		HttpsURLConnection securedConnection = Reflect.cast(connection, HttpsURLConnection.class);
+
+		if(securedConnection != null)
+			securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
+
+		if (!fake)
+			return connection;
+
+		String userAgent;
+
+		switch(OS.CURRENT) {
+		case OSX:
+			userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8) AppleWebKit/535.18.5 (KHTML, like Gecko) Version/5.2 Safari/535.18.5";
+			break;
+		case WINDOWS:
+			userAgent = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0; .NET4.0C)";
+			break;
+		default:
+			userAgent = "Mozilla/5.0 (Linux; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0";
+			break;
+		}
+
+		connection.setRequestProperty("User-Agent", userAgent);
+
+		return connection;
+	}
+
+	public static HttpURLConnection setUp(URLConnection connection, int timeout) {
+		return setUp(connection, timeout, false);
+	}
+
+	public static HttpURLConnection setUp(URLConnection connection, boolean fake) {
+		return setUp(connection, U.getConnectionTimeout(), fake);
+	}
+
+	public static HttpURLConnection setUp(URLConnection connection) {
+		return setUp(connection, false);
+	}
+
+	public static String getEtag(String etag) {
+		if (etag == null)
+			return "-";
+
+		if ((etag.startsWith("\"")) && (etag.endsWith("\"")))
+			return etag.substring(1, etag.length() - 1);
+
+		return etag;
+	}
+
 }

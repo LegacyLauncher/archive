@@ -1,106 +1,111 @@
 package ru.turikhay.tlauncher.ui.login;
 
-import ru.turikhay.tlauncher.ui.login.buttons.ButtonPanel;
+import ru.turikhay.tlauncher.ui.login.LoginForm.LoginProcessListener;
+import ru.turikhay.tlauncher.ui.login.buttons.ButtonPanel.ButtonPanelState;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
-public class AutoLogin implements LoginForm.LoginProcessListener {
-   public static final int DEFAULT_TIMEOUT = 3;
-   public static final int MIN_TIMEOUT = 2;
-   public static final int MAX_TIMEOUT = 10;
-   private boolean enabled;
-   private boolean active;
-   private int timeout;
-   private int sec;
-   private Runnable task;
-   private final LoginForm loginForm;
+public class AutoLogin implements LoginProcessListener {
+	public final static int DEFAULT_TIMEOUT = 3, MIN_TIMEOUT = 2, MAX_TIMEOUT = 10;
 
-   AutoLogin(LoginForm lf) {
-      this.loginForm = lf;
-      this.enabled = lf.global.getBoolean("login.auto");
-      int timeout = lf.global.getInteger("login.auto.timeout");
-      if (timeout < 2 || timeout > 10) {
-         timeout = 3;
-      }
+	private boolean enabled, active;
+	private int timeout, sec;
+	private Runnable task;
 
-      this.timeout = timeout;
-      this.task = new Runnable() {
-         public void run() {
-            while(AutoLogin.this.sec > 0) {
-               U.sleepFor(1000L);
-               if (AutoLogin.this.updateLogin()) {
-                  AutoLogin.this.loginForm.startLauncher();
-               }
-            }
+	private final LoginForm loginForm;
 
-         }
-      };
-   }
+	AutoLogin(LoginForm lf) {
+		this.loginForm = lf;
+		this.enabled = lf.global.getBoolean("login.auto");
 
-   private boolean updateLogin() {
-      --this.sec;
-      this.loginForm.buttons.cancel.setText("loginform.cancel", new Object[]{this.sec});
-      if (this.sec != 0) {
-         return false;
-      } else {
-         this.stopActive();
-         return true;
-      }
-   }
+		int timeout = lf.global.getInteger("login.auto.timeout");
+		if (timeout < MIN_TIMEOUT || timeout > MAX_TIMEOUT)
+			timeout = DEFAULT_TIMEOUT;
 
-   public void setActive(boolean active) {
-      if (this.active != active) {
-         this.active = active;
-         if (active) {
-            this.startActive();
-         } else {
-            this.stopActive();
-         }
+		this.timeout = timeout;
 
-      }
-   }
+		this.task = new Runnable() {
+			@Override
+			public void run() {
+				while (sec > 0) {
+					U.sleepFor(1000);
 
-   public boolean isActive() {
-      return this.active;
-   }
+					if (updateLogin())
+						loginForm.startLauncher();
+				}
+			}
+		};
+	}
 
-   private void startActive() {
-      this.sec = this.timeout;
-      AsyncThread.execute(this.task);
-   }
+	private boolean updateLogin() {
+		--sec;
 
-   private void stopActive() {
-      this.sec = -1;
-      this.loginForm.buttons.setState(ButtonPanel.ButtonPanelState.MANAGE_BUTTONS);
-   }
+		loginForm.buttons.cancel.setText("loginform.cancel", sec);
 
-   public void setEnabled(boolean enabled) {
-      if (this.enabled != enabled) {
-         this.enabled = enabled;
-         if (this.active) {
-            this.setActive(enabled);
-         }
+		if (sec != 0)
+			return false;
 
-         this.loginForm.checkbox.autologin.setSelected(enabled);
-         this.loginForm.global.set("login.auto", enabled);
-      }
-   }
+		stopActive();
+		return true;
+	}
 
-   public boolean isEnabled() {
-      return this.enabled;
-   }
+	public void setActive(boolean active) {
+		if (this.active == active)
+			return;
 
-   public int getTimeout() {
-      return this.timeout;
-   }
+		this.active = active;
 
-   public void logginingIn() throws LoginException {
-      this.setActive(false);
-   }
+		if (active)
+			startActive();
+		else
+			stopActive();
+	}
 
-   public void loginFailed() {
-   }
+	public boolean isActive() {
+		return active;
+	}
 
-   public void loginSucceed() {
-   }
+	private void startActive() {
+		this.sec = timeout;
+		AsyncThread.execute(task);
+	}
+
+	private void stopActive() {
+		sec = -1;
+		loginForm.buttons.setState(ButtonPanelState.MANAGE_BUTTONS);
+	}
+
+	public void setEnabled(boolean enabled) {
+		if (this.enabled == enabled)
+			return;
+
+		this.enabled = enabled;
+		if (active)
+			setActive(enabled);
+
+		loginForm.checkbox.autologin.setSelected(enabled);
+		loginForm.global.set("login.auto", enabled);
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public int getTimeout() {
+		return timeout;
+	}
+
+	@Override
+	public void logginingIn() throws LoginException {
+		setActive(false);
+	}
+
+	@Override
+	public void loginFailed() {
+	}
+
+	@Override
+	public void loginSucceed() {
+	}
+
 }

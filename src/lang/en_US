@@ -23,6 +23,7 @@ loginform.button.settings.version=Version manager
 loginform.button.settings.launcher=Settings
 loginform.button.support.follow=Follow TLauncher on VK
 loginform.button.support.report=Report the problem
+loginform.button.support.author=Help financially
 loginform.button.support.email=Contact developer
 # Account
 account.username=User name
@@ -106,19 +107,19 @@ auth.error.nopass.title=Password required!
 auth.error.nopass=Please enter the account password!
 auth.error.nousername.title=Username required!
 auth.error.nousername=Please enter username (or e-mail)!
-auth.helper.license=Help with premium account
-auth.helper.license.add=1. Add a new account
-auth.helper.license.username=2. Enter your e-mail
-auth.helper.license.checkbox=3. Check this
-auth.helper.license.password=4. Enter your password
-auth.helper.license.button=5. Authenticate
-auth.helper.license.exit=6. Ready :)
-auth.helper.pirate=Help with a free account
-auth.helper.pirate.add=1. Add a new account
-auth.helper.pirate.username=2. Enter ANY username
-auth.helper.pirate.checkbox=3. DO NOT check this
-auth.helper.pirate.button=4. Save account
-auth.helper.pirate.exit=5. Ready :)
+auth.helper.premium=Help with premium account
+auth.helper.premium.add=1. Add a new account
+auth.helper.premium.username=2. Enter your e-mail
+auth.helper.premium.checkbox=3. Check this
+auth.helper.premium.password=4. Enter your password
+auth.helper.premium.button=5. Authenticate
+auth.helper.premium.exit=6. Ready :)
+auth.helper.free=Help with a free account
+auth.helper.free.add=1. Add a new account
+auth.helper.free.username=2. Enter ANY username
+auth.helper.free.checkbox=3. DO NOT check this
+auth.helper.free.button=4. Save account
+auth.helper.free.exit=5. Ready :)
 auth.helper.help.help=Need help? Click on "i"
 auth.helper.none=Hide any help
 forceupdate.local.title=Updating is not possible
@@ -194,6 +195,7 @@ settings.restart=Will be applied after restart.
 settings.res.def=Default size: %0x%1
 settings.tab.minecraft=Minecraft settings
 settings.tab.tlauncher=TLauncher settings
+settings.tab.about=About
 settings.client.gamedir.label=Directory:
 settings.client.gamedir.invalid=Invalid directory!
 settings.client.gamedir.noaccess.title=Error changing Minecraft directory
@@ -276,11 +278,11 @@ updater.save-error=Error occurred while saving an update. Do you want to downloa
 # Firstrun
 firstrun.title=Welcome!
 firstrun=Welcome to TLauncher for Minecraft!\n\nDeveloper reminds you that Minecraft is not a freeware application. If you're not a Premium user or you want to have profit using launcher features, please do not use TLauncher.\n\nPlease visit <a href="http://minecraft.net">official Minecraft site</a> to purchase Premium account.
-# Left-side notifier
-notifier.left.failed.title=Connection may be blocked!
-notifier.left.failed=TLauncher couldn't connect to the Internet to check for updates.\nIf this machine is not connected at all, you can ignore this message.\nOtherwise, check your Internet connection and firewall settings.
-notifier.left.found.title=An update is available!
-notifier.left.found.question=TLauncher %0 has been released. Do you want to update?
+# Notifier
+notifier.failed.title=Connection may be blocked!
+notifier.failed=TLauncher couldn't connect to the Internet to check for updates.\nIf this machine is not connected at all, you can ignore this message.\nOtherwise, check your Internet connection and firewall settings.
+notifier.found.title=An update is available!
+notifier.found.question=TLauncher %0 has been released. Do you want to update?
 # Support button
 support.url=http://turikhay.ru/
 support.error.title=Error occurred while opening the link.
@@ -385,6 +387,16 @@ explorer.error.rename-exists=Cannot rename this file because it dublicates anoth
 # Boot
 boot.loading=Loading TLauncher %0...
 # About page
-about.text=<b>TLauncher</b> — one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
+about.text=one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
 about.bottom=Stay in touch with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)
-about.partners=&#9679; <b><a href="http://vk.com/mcoffline">MCoffline</a></b> — a simple app for configurating and running Minecraft server.
+about.partners.mcoffline=set up and run MC server easily!
+# Ad
+ad.server.error=Error launching the game to connect the server:
+# Browser
+browser.hyperlink.popup.open=Open link
+browser.hyperlink.popup.copy=Copy link
+browser.hyperlink.popup.show=Show link
+browser.hyperlink.popup.show.alert.title=Link
+browser.hyperlink.popup.show.alert=
+browser.hyperlink.create.error.title=Error parsing link
+browser.hyperlink.create.error=Cannot parse the link. Try to open it yourself:

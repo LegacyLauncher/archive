@@ -1,19 +1,18 @@
 package ru.turikhay.util;
 
 public enum Direction {
-   TOP_LEFT,
-   TOP,
-   TOP_RIGHT,
-   CENTER_LEFT,
-   CENTER,
-   CENTER_RIGHT,
-   BOTTOM_LEFT,
-   BOTTOM,
-   BOTTOM_RIGHT;
+	TOP_LEFT, TOP, TOP_RIGHT,
+	CENTER_LEFT, CENTER, CENTER_RIGHT,
+	BOTTOM_LEFT, BOTTOM, BOTTOM_RIGHT;
 
-   private final String lower = this.name().toLowerCase();
+	private final String lower;
 
-   public String toString() {
-      return this.lower;
-   }
+	Direction() {
+		this.lower = name().toLowerCase();
+	}
+
+	@Override
+	public String toString() {
+		return lower;
+	}
 }

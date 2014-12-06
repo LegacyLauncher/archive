@@ -1,43 +1,44 @@
 package ru.turikhay.util.async;
 
 public abstract class LoopedThread extends ExtendedThread {
-   protected static final String LOOPED_BLOCK = "iteration";
+	protected static final String LOOPED_BLOCK = "iteration";
 
-   public LoopedThread(String name) {
-      super(name);
-   }
+	public LoopedThread(String name) {
+		super(name);
+	}
 
-   public LoopedThread() {
-      this("LoopedThread");
-   }
+	public LoopedThread() {
+		this("LoopedThread");
+	}
 
-   protected final void lockThread(String reason) {
-      if (reason == null) {
-         throw new NullPointerException();
-      } else if (!reason.equals("iteration")) {
-         throw new IllegalArgumentException("Illegal block reason. Expected: iteration, got: " + reason);
-      } else {
-         super.lockThread(reason);
-      }
-   }
+	@Override
+	protected final void lockThread(String reason) {
+		if (reason == null)
+			throw new NullPointerException();
 
-   public final boolean isIterating() {
-      return !this.isThreadLocked();
-   }
+		if(!reason.equals(LOOPED_BLOCK))
+			throw new IllegalArgumentException("Illegal block reason. Expected: "+ LOOPED_BLOCK +", got: "+ reason);
 
-   public final void iterate() {
-      if (!this.isIterating()) {
-         this.unlockThread("iteration");
-      }
+		super.lockThread(reason);
+	}
 
-   }
+	public final boolean isIterating() {
+		return !isThreadLocked();
+	}
 
-   public final void run() {
-      while(true) {
-         this.lockThread("iteration");
-         this.iterateOnce();
-      }
-   }
+	public final void iterate() {
+		if(!isIterating())
+			unlockThread(LOOPED_BLOCK);
+	}
 
-   protected abstract void iterateOnce();
+	@Override
+	public final void run() {
+		while(true) {
+			lockThread(LOOPED_BLOCK);
+			iterateOnce();
+		}
+	}
+
+	protected abstract void iterateOnce();
+
 }

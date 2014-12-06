@@ -1,29 +1,41 @@
 package ru.turikhay.tlauncher.ui.swing;
 
 import java.beans.PropertyChangeListener;
+
 import javax.swing.Action;
 
 public abstract class EmptyAction implements Action {
-   protected boolean enabled = true;
+	protected boolean enabled;
+	
+	public EmptyAction() {
+		this.enabled = true;
+	}
 
-   public Object getValue(String key) {
-      return null;
-   }
+	@Override
+	public Object getValue(String key) {
+		return null;
+	}
 
-   public void putValue(String key, Object value) {
-   }
+	@Override
+	public void putValue(String key, Object value) {
+	}
 
-   public void setEnabled(boolean b) {
-      this.enabled = b;
-   }
+	@Override
+	public void setEnabled(boolean b) {
+		this.enabled = b;
+	}
 
-   public boolean isEnabled() {
-      return this.enabled;
-   }
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
 
-   public void addPropertyChangeListener(PropertyChangeListener listener) {
-   }
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+	}
 
-   public void removePropertyChangeListener(PropertyChangeListener listener) {
-   }
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+	}
+
 }

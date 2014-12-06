@@ -1,114 +1,111 @@
 package ru.turikhay.util.async;
 
 import java.util.concurrent.atomic.AtomicInteger;
+
 import ru.turikhay.util.U;
 
 public abstract class ExtendedThread extends Thread {
-   private static AtomicInteger threadNum = new AtomicInteger();
-   private final ExtendedThread.ExtendedThreadCaller caller;
-   private String blockReason;
-   private final Object monitor;
+	private static AtomicInteger threadNum = new AtomicInteger();
 
-   public ExtendedThread(String name) {
-      super(name + "#" + threadNum.incrementAndGet());
-      this.monitor = new Object();
-      this.caller = new ExtendedThread.ExtendedThreadCaller((ExtendedThread.ExtendedThreadCaller)null);
-   }
+	private final ExtendedThreadCaller caller;
+	private String blockReason;
 
-   public ExtendedThread() {
-      this("ExtendedThread");
-   }
+	public ExtendedThread(String name) {
+		super(name + "#" + (threadNum.incrementAndGet()));
 
-   public ExtendedThread.ExtendedThreadCaller getCaller() {
-      return this.caller;
-   }
+		this.caller = new ExtendedThreadCaller();
+	}
 
-   public void startAndWait() {
-      super.start();
+	public ExtendedThread() {
+		this("ExtendedThread");
+	}
 
-      while(!this.isThreadLocked()) {
-         U.sleepFor(100L);
-      }
+	public ExtendedThreadCaller getCaller() {
+		return caller;
+	}
 
-   }
+	/**
+	 * Starts new thread with <code>start()</code> method and waits until it is
+	 * blocked.
+	 */
+	public void startAndWait() {
+		super.start();
 
-   public abstract void run();
+		while (!isThreadLocked())
+			U.sleepFor(100);
+	}
 
-   protected void lockThread(String reason) {
-      if (reason == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkCurrent();
-         this.blockReason = reason;
-         this.threadLog("Thread locked by:", this.blockReason);
-         synchronized(this.monitor) {
-            while(this.blockReason != null) {
-               try {
-                  this.monitor.wait();
-               } catch (InterruptedException var4) {
-                  var4.printStackTrace();
-               }
-            }
-         }
+	@Override
+	public abstract void run();
 
-         this.threadLog("Thread has been unlocked");
-      }
-   }
+	private final Object monitor = new Object();
 
-   public void unlockThread(String reason) {
-      if (reason == null) {
-         throw new NullPointerException();
-      } else {
-         this.threadLog("Trying to unlock thread:", reason, "from", Thread.currentThread());
-         if (!reason.equals(this.blockReason)) {
-            throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
-         } else {
-            this.blockReason = null;
-            synchronized(this.monitor) {
-               this.monitor.notifyAll();
-            }
+	protected void lockThread(String reason) {
+		if (reason == null)
+			throw new NullPointerException();
 
-            this.threadLog("Unlocked from", Thread.currentThread());
-         }
-      }
-   }
+		checkCurrent();
 
-   public void tryUnlock(String reason) {
-      if (reason == null) {
-         throw new NullPointerException();
-      } else {
-         if (reason.equals(this.blockReason)) {
-            this.unlockThread(reason);
-         }
+		this.blockReason = reason;
 
-      }
-   }
+		//threadLog("Thread locked by:", blockReason);
 
-   public boolean isThreadLocked() {
-      return this.blockReason != null;
-   }
+		synchronized(monitor) {
+			while (blockReason != null)
+				try {
+					monitor.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+		}
 
-   public boolean isCurrent() {
-      return Thread.currentThread().equals(this);
-   }
+		//threadLog("Thread has been unlocked");
+	}
 
-   protected void checkCurrent() {
-      if (!this.isCurrent()) {
-         throw new IllegalStateException("Illegal thread!");
-      }
-   }
+	public void unlockThread(String reason) {
+		if (reason == null)
+			throw new NullPointerException();
 
-   protected void threadLog(Object... o) {
-      U.log("[" + this.getName() + "]", o);
-   }
+		//threadLog("Trying to unlock thread:", reason, "from", Thread.currentThread());
 
-   public class ExtendedThreadCaller extends RuntimeException {
-      private ExtendedThreadCaller() {
-      }
+		if(!reason.equals(blockReason))
+			throw new IllegalStateException("Unlocking denied! Locked with: "+ blockReason + ", tried to unlock with: "+ reason);
 
-      // $FF: synthetic method
-      ExtendedThreadCaller(ExtendedThread.ExtendedThreadCaller var2) {
-         this();
-      }
-   }
+		this.blockReason = null;
+
+		synchronized(monitor) {
+			monitor.notifyAll();
+		}
+
+		//threadLog("Unlocked from", Thread.currentThread());
+	}
+
+	public void tryUnlock(String reason) {
+		if(reason == null)
+			throw new NullPointerException();
+
+		if(reason.equals(blockReason))
+			unlockThread(reason);
+	}
+
+	public boolean isThreadLocked() {
+		return blockReason != null;
+	}
+
+	public boolean isCurrent() {
+		return Thread.currentThread().equals(this);
+	}
+
+	protected void checkCurrent() {
+		if (!isCurrent())
+			throw new IllegalStateException("Illegal thread!");
+	}
+
+	protected void threadLog(Object... o) {
+		U.log("[" + getName() + "]", o);
+	}
+
+	public class ExtendedThreadCaller extends RuntimeException {
+		private ExtendedThreadCaller(){}
+	}
 }

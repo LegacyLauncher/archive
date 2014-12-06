@@ -9,174 +9,202 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.ImageObserver;
+
 import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.U;
 
 public class ImagePanel extends ExtendedPanel {
-   private static final long serialVersionUID = 1L;
-   public static final float DEFAULT_ACTIVE_OPACITY = 1.0F;
-   public static final float DEFAULT_NON_ACTIVE_OPACITY = 0.75F;
-   protected final Object animationLock;
-   private Image originalImage;
-   private Image image;
-   private float activeOpacity;
-   private float nonActiveOpacity;
-   private boolean antiAlias;
-   private int timeFrame;
-   private float opacity;
-   private boolean hover;
-   private boolean shown;
-   private boolean animating;
+	private static final long serialVersionUID = 1L;
+	public static final float DEFAULT_ACTIVE_OPACITY = 1.0F,
+			DEFAULT_NON_ACTIVE_OPACITY = 0.75F;
 
-   public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-      this((Image)ImageCache.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
-   }
+	protected final Object animationLock = new Object();
 
-   public ImagePanel(String image) {
-      this(image, 1.0F, 0.75F, true, true);
-   }
+	private Image originalImage, image;
 
-   protected ImagePanel(Image image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-      this.animationLock = new Object();
-      this.setImage(image);
-      this.setActiveOpacity(activeOpacity);
-      this.setNonActiveOpacity(nonActiveOpacity);
-      this.setAntiAlias(antiAlias);
-      this.shown = shown;
-      this.opacity = shown ? nonActiveOpacity : 0.0F;
-      this.timeFrame = 10;
-      this.setBackground(new Color(0, 0, 0, 0));
-      this.addMouseListenerOriginally(new MouseAdapter() {
-         public void mouseClicked(MouseEvent e) {
-            ImagePanel.this.onClick();
-         }
+	private float activeOpacity;
+	private float nonActiveOpacity;
+	private boolean antiAlias;
 
-         public void mouseEntered(MouseEvent e) {
-            ImagePanel.this.onMouseEntered();
-         }
+	private int timeFrame;
+	private float opacity;
+	private boolean hover;
+	private boolean shown;
+	private boolean animating;
 
-         public void mouseExited(MouseEvent e) {
-            ImagePanel.this.onMouseExited();
-         }
-      });
-   }
+	public ImagePanel(String image, float activeOpacity,
+			float nonActiveOpacity, boolean shown, boolean antiAlias) {
+		this(ImageCache.getImage(image), activeOpacity, nonActiveOpacity,
+				shown, antiAlias);
+	}
 
-   protected void setImage(Image image, boolean resetSize) {
-      synchronized(this.animationLock) {
-         this.originalImage = image;
-         this.image = image;
-         if (resetSize && image != null) {
-            this.setSize(image.getWidth((ImageObserver)null), image.getHeight((ImageObserver)null));
-         }
+	public ImagePanel(String image) {
+		this(image, 1f, .75f, true, true);
+	}
 
-      }
-   }
+	protected ImagePanel(Image image, float activeOpacity,
+			float nonActiveOpacity, boolean shown, boolean antiAlias) {
+		this.setImage(image);
 
-   protected void setImage(Image image) {
-      this.setImage(image, true);
-   }
+		this.setActiveOpacity(activeOpacity);
+		this.setNonActiveOpacity(nonActiveOpacity);
 
-   protected void setActiveOpacity(float opacity) {
-      if (!(opacity > 1.0F) && !(opacity < 0.0F)) {
-         this.activeOpacity = opacity;
-      } else {
-         throw new IllegalArgumentException("Invalid opacity! Condition: 0.0F <= opacity (got: " + opacity + ") <= 1.0F");
-      }
-   }
+		this.setAntiAlias(antiAlias);
 
-   protected void setNonActiveOpacity(float opacity) {
-      if (!(opacity > 1.0F) && !(opacity < 0.0F)) {
-         this.nonActiveOpacity = opacity;
-      } else {
-         throw new IllegalArgumentException("Invalid opacity! Condition: 0.0F <= opacity (got: " + opacity + ") <= 1.0F");
-      }
-   }
+		this.shown = shown;
+		this.opacity = (shown) ? nonActiveOpacity : 0.0F;
+		this.timeFrame = 10;
 
-   protected void setAntiAlias(boolean set) {
-      this.antiAlias = set;
-   }
+		this.setBackground(new Color(0, 0, 0, 0));
 
-   public void paintComponent(Graphics g0) {
-      if (this.image != null) {
-         Graphics2D g = (Graphics2D)g0;
-         Composite oldComp = g.getComposite();
-         g.setComposite(AlphaComposite.getInstance(3, this.opacity));
-         g.drawImage(this.image, 0, 0, this.getWidth(), this.getHeight(), (ImageObserver)null);
-         g.setComposite(oldComp);
-      }
-   }
+		this.addMouseListenerOriginally(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				onClick();
+			}
 
-   public void show() {
-      if (!this.shown) {
-         this.shown = true;
-         synchronized(this.animationLock) {
-            this.animating = true;
-            this.setVisible(true);
-            this.opacity = 0.0F;
-            float selectedOpacity = this.hover ? this.activeOpacity : this.nonActiveOpacity;
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				onMouseEntered();
+			}
 
-            while(this.opacity < selectedOpacity) {
-               this.opacity += 0.01F;
-               if (this.opacity > selectedOpacity) {
-                  this.opacity = selectedOpacity;
-               }
+			@Override
+			public void mouseExited(MouseEvent e) {
+				onMouseExited();
+			}
+		});
+	}
 
-               this.repaint();
-               U.sleepFor((long)this.timeFrame);
-            }
+	protected void setImage(Image image, boolean resetSize) {
+		synchronized (animationLock) {
+			this.originalImage = image;
+			this.image = image;
 
-            this.animating = false;
-         }
-      }
-   }
+			if(resetSize && image != null)
+				setSize(image.getWidth(null), image.getHeight(null));
+		}
+	}
 
-   public void hide() {
-      if (this.shown) {
-         this.shown = false;
-         synchronized(this.animationLock) {
-            this.animating = true;
+	protected void setImage(Image image) {
+		setImage(image, true);
+	}
 
-            while(this.opacity > 0.0F) {
-               this.opacity -= 0.01F;
-               if (this.opacity < 0.0F) {
-                  this.opacity = 0.0F;
-               }
+	protected void setActiveOpacity(float opacity) {
+		if (opacity > 1.0F || opacity < 0.0F)
+			throw new IllegalArgumentException(
+					"Invalid opacity! Condition: 0.0F <= opacity (got: "
+							+ opacity + ") <= 1.0F");
 
-               this.repaint();
-               U.sleepFor((long)this.timeFrame);
-            }
+		this.activeOpacity = opacity;
+	}
 
-            this.setVisible(false);
-            this.animating = false;
-         }
-      }
-   }
+	protected void setNonActiveOpacity(float opacity) {
+		if (opacity > 1.0F || opacity < 0.0F)
+			throw new IllegalArgumentException(
+					"Invalid opacity! Condition: 0.0F <= opacity (got: "
+							+ opacity + ") <= 1.0F");
 
-   public void setPreferredSize() {
-      if (this.image != null) {
-         this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null)));
-      }
-   }
+		this.nonActiveOpacity = opacity;
+	}
 
-   protected boolean onClick() {
-      return this.shown;
-   }
+	protected void setAntiAlias(boolean set) {
+		this.antiAlias = set;
+	}
 
-   protected void onMouseEntered() {
-      this.hover = true;
-      if (!this.animating && this.shown) {
-         this.opacity = this.activeOpacity;
-         this.repaint();
-      }
-   }
+	@Override
+	public void paintComponent(Graphics g0) {
+		if(image == null)
+			return;
 
-   protected void onMouseExited() {
-      this.hover = false;
-      if (!this.animating && this.shown) {
-         this.opacity = this.nonActiveOpacity;
-         this.repaint();
-      }
-   }
+		Graphics2D g = (Graphics2D) g0;
+		Composite oldComp = g.getComposite();
+
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+				opacity));
+		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
+
+		g.setComposite(oldComp);
+	}
+
+	@Override
+	public void show() {
+		if (shown)
+			return;
+		shown = true;
+
+		synchronized (animationLock) {
+			animating = true;
+			this.setVisible(true);
+			opacity = 0.0F;
+
+			float selectedOpacity = (hover) ? activeOpacity : nonActiveOpacity;
+
+			while (opacity < selectedOpacity) {
+				opacity += 0.01F;
+				if (opacity > selectedOpacity)
+					opacity = selectedOpacity;
+
+				this.repaint();
+				U.sleepFor(timeFrame);
+			}
+
+			animating = false;
+		}
+	}
+
+	@Override
+	public void hide() {
+		if (!shown)
+			return;
+
+		shown = false;
+
+		synchronized (animationLock) {
+			animating = true;
+
+			while (opacity > 0.0F) {
+				opacity -= 0.01F;
+
+				if (opacity < 0.0F)
+					opacity = 0.0F;
+
+				this.repaint();
+				U.sleepFor(timeFrame);
+			}
+
+			this.setVisible(false);
+			animating = false;
+		}
+	}
+
+	public void setPreferredSize() {
+		if(image == null)
+			return;
+
+		setPreferredSize(new Dimension(image.getWidth(null), image.getHeight(null)));
+	}
+
+	protected boolean onClick() {
+		return shown;
+	}
+
+	protected void onMouseEntered() {
+		this.hover = true;
+
+		if (animating || !shown)
+			return;
+
+		this.opacity = this.activeOpacity;
+		this.repaint();
+	}
+
+	protected void onMouseExited() {
+		this.hover = false;
+
+		if (animating || !shown)
+			return;
+		this.opacity = this.nonActiveOpacity;
+		this.repaint();
+	}
 }

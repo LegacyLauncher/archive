@@ -1,9 +1,9 @@
 package ru.turikhay.tlauncher.ui.listener;
 
 import java.net.URI;
+
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.UpdateListener;
@@ -11,78 +11,81 @@ import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.util.OS;
 
 public class UpdateUIListener implements UpdateListener {
-   private final TLauncher t;
-   private final Update u;
 
-   public UpdateUIListener(Update u) {
-      if (u == null) {
-         throw new NullPointerException();
-      } else {
-         this.t = TLauncher.getInstance();
-         this.u = u;
-         u.addListener(this);
-      }
-   }
+	private final TLauncher t;
+	private final Update u;
 
-   public void push() {
-      if (Updater.isAutomode()) {
-         this.block();
-         this.u.download(true);
-      } else {
-         openUpdateLink(this.u.getDownloadLink());
-      }
+	public UpdateUIListener(Update u) {
+		if(u == null)
+			throw new NullPointerException();
 
-   }
+		this.t = TLauncher.getInstance();
+		this.u = u;
 
-   public void onUpdateError(Update u, Throwable e) {
-      if (Alert.showLocQuestion("updater.error.title", "updater.download-error", e)) {
-         openUpdateLink(u.getDownloadLink());
-      }
+		u.addListener(this);
+	}
 
-      this.unblock();
-   }
+	public void push() {
+		if (Updater.isAutomode()) {
+			block();
+			u.download(true);
+		}
+		else
+			openUpdateLink( u.getDownloadLink() );
+	}
 
-   public void onUpdateDownloading(Update u) {
-   }
+	@Override
+	public void onUpdateError(Update u, Throwable e) {
+		if (Alert.showLocQuestion("updater.error.title", "updater.download-error", e))
+			openUpdateLink(u.getDownloadLink());
 
-   public void onUpdateDownloadError(Update u, Throwable e) {
-      this.onUpdateError(u, e);
-   }
+		unblock();
+	}
 
-   public void onUpdateReady(Update u) {
-      onUpdateReady(u, false, false);
-   }
+	@Override
+	public void onUpdateDownloading(Update u) {
+	}
 
-   private static void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
-      Alert.showLocWarning("updater.downloaded", (Object)(showChangeLog ? u.getDescription() : null));
-      u.apply();
-   }
+	@Override
+	public void onUpdateDownloadError(Update u, Throwable e) {
+		this.onUpdateError(u, e);
+	}
 
-   public void onUpdateApplying(Update u) {
-   }
+	@Override
+	public void onUpdateReady(Update u) {
+		onUpdateReady(u, false, false);
+	}
 
-   public void onUpdateApplyError(Update u, Throwable e) {
-      if (Alert.showLocQuestion("updater.save-error", (Object)e)) {
-         openUpdateLink(u.getDownloadLink());
-      }
+	private static void onUpdateReady(Update u, boolean force, boolean showChangeLog) {
+		Alert.showLocWarning("updater.downloaded", showChangeLog? u.getDescription() : null);
+		u.apply();
+	}
 
-      this.unblock();
-   }
+	@Override
+	public void onUpdateApplying(Update u) {
+	}
 
-   private static boolean openUpdateLink(URI uri) {
-      if (OS.openLink(uri, false)) {
-         return true;
-      } else {
-         Alert.showLocError("updater.found.cannotopen", uri);
-         return false;
-      }
-   }
+	@Override
+	public void onUpdateApplyError(Update u, Throwable e) {
+		if (Alert.showLocQuestion("updater.save-error", e))
+			openUpdateLink(u.getDownloadLink());
 
-   private void block() {
-      Blocker.block((Blockable)this.t.getFrame().mp, (Object)"updater");
-   }
+		unblock();
+	}
 
-   private void unblock() {
-      Blocker.unblock((Blockable)this.t.getFrame().mp, (Object)"updater");
-   }
+	private static boolean openUpdateLink(URI uri) {
+		if(OS.openLink(uri, false))
+			return true;
+
+		Alert.showLocError("updater.found.cannotopen", uri);
+		return false;
+	}
+
+	private void block() {
+		Blocker.block(t.getFrame().mp, "updater");
+	}
+
+	private void unblock() {
+		Blocker.unblock(t.getFrame().mp, "updater");
+	}
 }

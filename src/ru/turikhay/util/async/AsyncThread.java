@@ -1,42 +1,20 @@
 package ru.turikhay.util.async;
 
-public class AsyncThread extends ExtendedThread {
-   private static long threadNum;
-   private long wait;
-   private Runnable runnable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
-   private AsyncThread(Runnable r) {
-      super("AsyncThread#" + ++threadNum);
-      this.runnable = r;
-   }
+public class AsyncThread {
 
-   private AsyncThread(Runnable r, long wait) {
-      this(r);
-      this.wait = wait;
-   }
+	private static ExecutorService service = Executors.newCachedThreadPool(new ThreadFactory() {
+		@Override
+		public Thread newThread(Runnable r) {
+			return new RunnableThread(r);
+		}
+	});
 
-   public void run() {
-      if (this.wait > 0L) {
-         sleepFor(this.wait);
-      }
+	public static void execute(Runnable r) {
+		service.execute(r);
+	}
 
-      this.runnable.run();
-      this.interrupt();
-   }
-
-   private static void sleepFor(long millis) {
-      try {
-         Thread.sleep(millis);
-      } catch (Exception var3) {
-      }
-
-   }
-
-   public static void execute(Runnable r) {
-      (new AsyncThread(r)).start();
-   }
-
-   public static void execute(Runnable r, long sleep) {
-      (new AsyncThread(r, sleep)).start();
-   }
 }

@@ -1,203 +1,303 @@
 package ru.turikhay.tlauncher.ui;
 
-import java.awt.AlphaComposite;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.ImageObserver;
-import java.net.URL;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.util.U;
-import ru.turikhay.util.async.LoopedThread;
 
 public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
-   private static final long serialVersionUID = -3973551999471811629L;
-   private final MainPane pane;
-   private final Image helper;
-   private int width;
-   private int height;
-   private int y;
-   private float opacity;
-   private ServicePanel.ServicePanelThread thread;
-   private boolean mouseIn;
-   private Clip clip;
-   private long lastCall;
 
-   ServicePanel(MainPane pane) {
-      this.pane = pane;
-      this.helper = ImageCache.getImage("helper.png", false);
-      if (this.helper != null) {
-         this.width = this.helper.getWidth((ImageObserver)null);
-         this.height = this.helper.getHeight((ImageObserver)null);
-         pane.add(this);
-         this.setSize(this.width, this.height);
-         this.opacity = 0.1F;
-         this.y = 0;
-         this.thread = new ServicePanel.ServicePanelThread();
-         pane.addComponentListener(new ComponentAdapter() {
-            public void componentResized(ComponentEvent e) {
-               ServicePanel.this.onResize();
-            }
-         });
-         this.addMouseListenerOriginally(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-               ServicePanel.this.playSound();
-            }
+	ServicePanel(MainPane pane) {
 
-            public void mouseEntered(MouseEvent e) {
-               ServicePanel.this.mouseIn = true;
-               ServicePanel.this.thread.iterate();
-            }
+	}
 
-            public void mouseExited(MouseEvent e) {
-               ServicePanel.this.mouseIn = false;
-            }
-         });
-         if (AudioSystem.getAudioFileTypes().length == 0) {
-            U.log("No audio file type supported.");
-         } else {
-            this.loadSound();
-         }
-      }
-   }
+	@Override
+	public void onResize() {
+		// TODO Auto-generated method stub
 
-   private boolean loadSound() {
-      URL sound = this.getClass().getResource("surprise.wav");
+	}
 
-      try {
-         AudioInputStream audio = AudioSystem.getAudioInputStream(sound);
-         this.clip = AudioSystem.getClip();
-         this.clip.open(audio);
-         return true;
-      } catch (Exception var3) {
-         U.log("Cannot open audio file", var3);
-         return false;
-      }
-   }
+	/*private static final int TIMER = 5;
 
-   private void playSound() {
-      if (!((double)this.opacity < 0.5D)) {
-         if (this.loadSound()) {
-            if (this.lastCall - System.currentTimeMillis() <= -1000L) {
-               this.clip.start();
-               this.lastCall = System.currentTimeMillis();
-            }
-         }
-      }
-   }
+	private final MainPane pane;
 
-   public void paint(Graphics g0) {
-      if (this.thread.isIterating()) {
-         Graphics2D g = (Graphics2D)g0;
-         g.setComposite(AlphaComposite.getInstance(3, this.opacity));
-         g.drawImage(this.helper, this.getWidth() / 2 - this.width / 2, this.getHeight() - this.y, (ImageObserver)null);
-      }
-   }
+	private boolean mouseIn;
 
-   public void onResize() {
-      this.setLocation(0, this.pane.getHeight() - this.getHeight());
-   }
+	private URL url;
+	private Slide slide;
 
-   class ServicePanelThread extends LoopedThread {
-      private static final int PIXEL_STEP = 5;
-      private static final int TIMEFRAME = 15;
-      private static final float OPACITY_STEP = 0.05F;
+	ServicePanel(MainPane pane) {
+		this.pane = pane;
 
-      ServicePanelThread() {
-         super("ServicePanel");
-         this.startAndWait();
-      }
+		this.url = SlideBackground.class.getResource("clown.jpg");
 
-      protected void iterateOnce() {
-         int timeout = 15;
+		U.log(url);
 
-         while(true) {
-            --timeout;
-            if (timeout <= 0) {
-               ServicePanel.this.y = 1;
+		if(url == null) {
+			U.log("Cannot find clown image :C");
+			return;
+		}
 
-               while(ServicePanel.this.y > 0) {
-                  while(ServicePanel.this.mouseIn) {
-                     this.onIn();
-                  }
+		final ServicePanelThread thread = new ServicePanelThread();
 
-                  while(!ServicePanel.this.mouseIn) {
-                     this.onOut();
-                     if (ServicePanel.this.y == 0) {
-                        return;
-                     }
-                  }
-               }
+		addMouseListenerOriginally(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+			}
 
-               return;
-            }
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				mouseIn = true;
 
-            if (!ServicePanel.this.mouseIn) {
-               return;
-            }
+				if(thread.isThreadLocked())
+					thread.unlockThread("locked");
+			}
 
-            U.sleepFor(1000L);
-         }
-      }
+			@Override
+			public void mouseExited(MouseEvent e) {
+				mouseIn = false;
+			}
+		});
 
-      private void onIn() {
-         ServicePanel var10000;
-         if (ServicePanel.this.y < ServicePanel.this.getHeight()) {
-            var10000 = ServicePanel.this;
-            var10000.y = var10000.y + 5;
-         }
+		pane.add(this);
+	}
 
-         if (ServicePanel.this.y > ServicePanel.this.getHeight()) {
-            ServicePanel.this.y = ServicePanel.this.getHeight();
-         }
+	@Override
+	public void paint(Graphics g0) {
+		g0.drawRect(0, 0, getWidth()-1, getHeight()-1);
+	}
 
-         if ((double)ServicePanel.this.opacity < 0.9D) {
-            var10000 = ServicePanel.this;
-            var10000.opacity = var10000.opacity + 0.05F;
-         }
+	@Override
+	public void onResize() {
+		setSize(pane.getWidth(), pane.getHeight());
+	}
 
-         if (ServicePanel.this.opacity > 1.0F) {
-            ServicePanel.this.opacity = 1.0F;
-         }
+	private class ServicePanelThread extends ExtendedThread {
 
-         this.repaintSleep();
-      }
+		ServicePanelThread() {
+			super("ServicePanel");
+			this.startAndWait();
+		}
 
-      private void onOut() {
-         ServicePanel var10000;
-         if (ServicePanel.this.y > 0) {
-            var10000 = ServicePanel.this;
-            var10000.y = var10000.y - 5;
-         }
+		@Override
+		public void run() {
+			lockThread("locked");
+			threadLog("unlocked");
 
-         if (ServicePanel.this.y < 0) {
-            ServicePanel.this.y = 0;
-         }
+			while(true) {
 
-         if ((double)ServicePanel.this.opacity > 0.0D) {
-            var10000 = ServicePanel.this;
-            var10000.opacity = var10000.opacity - 0.05F;
-         }
+				while(!mouseIn) {
+					U.sleepFor(1000);
+					threadLog("!mouseIn");
+				}
 
-         if (ServicePanel.this.opacity < 0.0F) {
-            ServicePanel.this.opacity = 0.0F;
-         }
+				int timer = 0;
 
-         this.repaintSleep();
-      }
+				while(mouseIn && timer < TIMER) {
+					timer++;
+					threadLog("timer:", timer);
+					U.sleepFor(1000);
+				}
 
-      private void repaintSleep() {
-         ServicePanel.this.repaint();
-         U.sleepFor(15L);
-      }
-   }
+				if(timer < TIMER) {
+					threadLog("timer <",TIMER);
+					continue;
+				}
+
+				if(slide == null)
+					slide = new Slide(url);
+
+				SlideBackgroundThread thread = pane.background.SLIDE_BACKGROUND.getThread();
+
+				Slide oldSlide = thread.getSlide();
+				thread.setSlide(slide, true);
+
+				while(mouseIn) {
+					U.sleepFor(100);
+					threadLog("mouseIn");
+				}
+
+				thread.setSlide(oldSlide, true);
+			}
+		}
+
+	}*/
+
+	/*	private final Image helper;
+	private int width, height, y;
+	private float opacity;
+
+	private ServicePanelThread thread;
+	private boolean mouseIn;
+
+	private Clip clip;
+	private long lastCall;
+
+	ServicePanel(MainPane pane) {
+		this.pane = pane;
+		this.helper = ImageCache.getImage("helper.png", false);
+
+		if(helper == null)
+			return;
+
+		this.width = helper.getWidth(null);
+		this.height = helper.getHeight(null);
+
+		pane.add(this);
+		setSize(width, height);
+
+		opacity = 0.1F;
+		y = 0;
+		this.thread = new ServicePanelThread();
+
+		pane.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				onResize();
+			}
+		});
+
+		this.addMouseListenerOriginally(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				playSound();
+			}
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				mouseIn = true;
+				thread.iterate();
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				mouseIn = false;
+			}
+		});
+
+		if(AudioSystem.getAudioFileTypes().length == 0) {
+			U.log("No audio file type supported.");
+			return;
+		}
+
+		loadSound();
+	}
+
+	private boolean loadSound() {
+		URL sound = getClass().getResource("surprise.wav");
+
+		try {
+			AudioInputStream audio = AudioSystem.getAudioInputStream(sound);
+
+			clip = AudioSystem.getClip();
+			clip.open(audio);
+
+		} catch (Exception e) {
+			U.log("Cannot open audio file", e);
+			return false;
+		}
+
+		return true;
+	}
+
+	private void playSound() {
+		if(opacity < .5)
+			return;
+
+		if(!loadSound())
+			return;
+
+		if(lastCall - System.currentTimeMillis() > -1000)
+			return;
+
+		clip.start();
+		lastCall = System.currentTimeMillis();
+	}
+
+	@Override
+	public void paint(Graphics g0) {
+		g0.drawRect(0, 0, getWidth()-1, getHeight()-1);
+
+		if(!thread.isIterating()) return;
+
+		Graphics2D g = (Graphics2D) g0;
+
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+		g.drawImage(helper, getWidth() / 2 - width / 2, getHeight() - y, null);
+	}
+
+	@Override
+	public void onResize() {
+		setLocation(0, pane.getHeight() - getHeight());
+	}
+
+	class ServicePanelThread extends LoopedThread {
+		private static final int PIXEL_STEP = 5, TIMEFRAME = 15;
+		private static final float OPACITY_STEP = .05f;
+
+		ServicePanelThread() {
+			super("ServicePanel");
+			this.startAndWait();
+		}
+
+		@Override
+		protected void iterateOnce() {
+			int timeout = 15;
+
+			while(--timeout > 0) {
+				if(!mouseIn) return;
+				U.sleepFor(1000);
+			}
+
+			y = 1;
+
+			while(y > 0) {
+				while(mouseIn) {
+					onIn();
+				}
+
+				while(!mouseIn) {
+					onOut();
+
+					if(y == 0)
+						return;
+				}
+			}
+		}
+
+		private void onIn() {
+			if(y < getHeight())
+				y += PIXEL_STEP;
+
+			if(y > getHeight())
+				y = getHeight();
+
+			if(opacity < .9)
+				opacity += OPACITY_STEP;
+
+			if(opacity > 1)
+				opacity = 1;
+
+			repaintSleep();
+		}
+
+		private void onOut() {
+			if(y > 0)
+				y -= PIXEL_STEP;
+
+			if(y < 0)
+				y = 0;
+
+			if(opacity > .0)
+				opacity -= OPACITY_STEP;
+
+			if(opacity < 0)
+				opacity = 0;
+
+			repaintSleep();
+		}
+
+		private void repaintSleep() {
+			repaint();
+			U.sleepFor(TIMEFRAME);
+		}
+	}*/
+
 }

@@ -1,13 +1,15 @@
 package ru.turikhay.tlauncher.ui.versions;
 
-import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+
 import javax.swing.JList;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -15,111 +17,136 @@ import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane.ScrollBarPolicy;
 import ru.turikhay.tlauncher.ui.swing.SimpleListModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 
 public class VersionList extends CenterPanel implements VersionHandlerListener {
-   private static final long serialVersionUID = -7192156096621636270L;
-   final VersionHandler handler;
-   public final SimpleListModel model;
-   public final JList list;
-   VersionDownloadButton download;
-   VersionRemoveButton remove;
-   public final ImageButton refresh;
-   public final ImageButton back;
+	private static final long serialVersionUID = -7192156096621636270L;
 
-   VersionList(VersionHandler h) {
-      super(squareInsets);
-      this.handler = h;
-      BorderPanel panel = new BorderPanel(0, 5);
-      LocalizableLabel label = new LocalizableLabel("version.manager.list");
-      panel.setNorth(label);
-      this.model = new SimpleListModel();
-      this.list = new JList(this.model);
-      this.list.setCellRenderer(new VersionListCellRenderer(this));
-      this.list.setSelectionMode(2);
-      this.list.addListSelectionListener(new ListSelectionListener() {
-         public void valueChanged(ListSelectionEvent e) {
-            VersionList.this.handler.onVersionSelected(VersionList.this.list.getSelectedValuesList());
-         }
-      });
-      panel.setCenter(new ScrollPane(this.list, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER));
-      ExtendedPanel buttons = new ExtendedPanel(new GridLayout(0, 4));
-      this.refresh = new VersionRefreshButton(this);
-      buttons.add((Component)this.refresh);
-      this.download = new VersionDownloadButton(this);
-      buttons.add((Component)this.download);
-      this.remove = new VersionRemoveButton(this);
-      buttons.add((Component)this.remove);
-      this.back = new ImageButton("home.png");
-      this.back.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionList.this.handler.exitEditor();
-         }
-      });
-      buttons.add((Component)this.back);
-      panel.setSouth(buttons);
-      this.add(panel);
-      this.handler.addListener(this);
-      this.setSize(300, 350);
-   }
+	final VersionHandler handler;
 
-   void select(List list) {
-      if (list != null) {
-         int size = list.size();
-         int[] indexes = new int[list.size()];
+	public final SimpleListModel<VersionSyncInfo> model;
+	public final JList<VersionSyncInfo> list;
 
-         for(int i = 0; i < size; ++i) {
-            indexes[i] = this.model.indexOf((VersionSyncInfo)list.get(i));
-         }
+	VersionDownloadButton download;
+	VersionRemoveButton remove;
 
-         this.list.setSelectedIndices(indexes);
-      }
-   }
+	public final ImageButton refresh, back;
 
-   void deselect() {
-      this.list.clearSelection();
-   }
+	VersionList(VersionHandler h) {
+		super(squareInsets);
 
-   void refreshFrom(VersionManager manager) {
-      this.setRefresh(false);
-      List list = manager.getVersions(this.handler.filter, false);
-      this.model.addAll(list);
-   }
+		this.handler = h;
 
-   void setRefresh(boolean refresh) {
-      this.model.clear();
-      if (refresh) {
-         this.model.add(VersionCellRenderer.LOADING);
-      }
+		BorderPanel panel = new BorderPanel(0, 5);
 
-   }
+		LocalizableLabel label = new LocalizableLabel("version.manager.list");
+		panel.setNorth(label);
 
-   public void block(Object reason) {
-      Blocker.blockComponents(reason, this.list, this.refresh, this.remove);
-   }
+		this.model = new SimpleListModel<VersionSyncInfo>();
+		this.list = new JList<VersionSyncInfo>(model);
+		list.setCellRenderer(new VersionListCellRenderer(this));
+		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		list.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				handler.onVersionSelected(list.getSelectedValuesList());
+			}
+		});
+		panel.setCenter(new ScrollPane(list, ScrollBarPolicy.AS_NEEDED, ScrollBarPolicy.NEVER));
 
-   public void unblock(Object reason) {
-      Blocker.unblockComponents(reason, this.list, this.refresh, this.remove);
-   }
+		ExtendedPanel buttons = new ExtendedPanel(new GridLayout(0, 4));
 
-   public void onVersionRefreshing(VersionManager vm) {
-      this.setRefresh(true);
-   }
+		this.refresh = new VersionRefreshButton(this);
+		buttons.add(refresh);
 
-   public void onVersionRefreshed(VersionManager vm) {
-      this.refreshFrom(vm);
-   }
+		this.download = new VersionDownloadButton(this);
+		buttons.add(download);
 
-   public void onVersionSelected(List version) {
-   }
+		this.remove = new VersionRemoveButton(this);
+		buttons.add(remove);
 
-   public void onVersionDeselected() {
-   }
+		this.back = new ImageButton("home.png");
+		back.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				handler.exitEditor();
+			}
+		});
+		buttons.add(back);
 
-   public void onVersionDownload(List list) {
-      this.select(list);
-   }
+		panel.setSouth(buttons);
+		add(panel);
+
+		handler.addListener(this);
+
+		setSize(VersionHandler.ELEM_WIDTH, 350);
+	}
+
+	void select(List<VersionSyncInfo> list) {
+		if(list == null) return;
+
+		int size = list.size();
+		int[] indexes = new int[list.size()];
+
+		for(int i=0;i<size;i++)
+			indexes[i] = model.indexOf( list.get(i) );
+
+		this.list.setSelectedIndices(indexes);
+	}
+
+	void deselect() {
+		list.clearSelection();
+	}
+
+	void refreshFrom(VersionManager manager) {
+		setRefresh(false);
+
+		List<VersionSyncInfo> list = manager.getVersions(handler.filter, false);
+		model.addAll(list);
+	}
+
+	void setRefresh(boolean refresh) {
+		model.clear();
+
+		if(refresh)
+			model.add(VersionCellRenderer.LOADING);
+	}
+
+	@Override
+	public void block(Object reason) {
+		Blocker.blockComponents(reason, list, refresh, remove);
+	}
+
+	@Override
+	public void unblock(Object reason) {
+		Blocker.unblockComponents(reason, list, refresh, remove);
+	}
+
+	@Override
+	public void onVersionRefreshing(VersionManager vm) {
+		setRefresh(true);
+	}
+
+	@Override
+	public void onVersionRefreshed(VersionManager vm) {
+		refreshFrom(vm);
+	}
+
+	@Override
+	public void onVersionSelected(List<VersionSyncInfo> version) {
+	}
+
+	@Override
+	public void onVersionDeselected() {
+	}
+
+	@Override
+	public void onVersionDownload(List<VersionSyncInfo> list) {
+		select(list);
+	}
+
 }

@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui;
 
 import java.awt.Image;
+
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.ImageCache;
@@ -13,155 +14,133 @@ import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
 
 public class LeftSideNotifier extends ImagePanel implements UpdaterListener {
-   private static final long serialVersionUID = 8089346864504410975L;
-   private static final String LANG_PREFIX = "notifier.left.";
-   private LeftSideNotifier.NotifierStatus status;
-   private Update update;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$LeftSideNotifier$NotifierStatus;
+	private static final long serialVersionUID = 8089346864504410975L;
+	private static final String LANG_PREFIX = "notifier.left.";
 
-   protected LeftSideNotifier() {
-      super((Image)null, 1.0F, 0.75F, false, true);
-      TLauncher.getInstance().getUpdater().addListener(this);
-   }
+	private NotifierStatus status;
+	private Update update;
 
-   public LeftSideNotifier.NotifierStatus getStatus() {
-      return this.status;
-   }
+	protected LeftSideNotifier() {
+		super((Image) null, 1.0F, 0.75F, false, true);
 
-   public void setStatus(LeftSideNotifier.NotifierStatus status) {
-      if (status == null) {
-         throw new NullPointerException();
-      } else {
-         this.status = status;
-         this.setImage(status.getImage());
-         if (status == LeftSideNotifier.NotifierStatus.NONE) {
-            this.hide();
-         } else {
-            this.show();
-         }
+		TLauncher.getInstance().getUpdater().addListener(this);
+	}
 
-      }
-   }
+	public NotifierStatus getStatus() {
+		return status;
+	}
 
-   protected boolean onClick() {
-      boolean result = this.processClick();
-      if (result) {
-         this.hide();
-      }
+	public void setStatus(NotifierStatus status) {
+		if(status == null)
+			throw new NullPointerException();
 
-      return result;
-   }
+		this.status = status;
 
-   private boolean processClick() {
-      if (!super.onClick()) {
-         return false;
-      } else {
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$LeftSideNotifier$NotifierStatus()[this.status.ordinal()]) {
-         case 1:
-            Alert.showLocAsyncWarning("notifier.left." + this.status.toString());
-            break;
-         case 2:
-            if (this.update == null) {
-               throw new IllegalStateException("Update is NULL!");
-            }
+		this.setImage(status.getImage());
+		if(status == NotifierStatus.NONE) hide(); else show();
+	}
 
-            String prefix = "notifier.left." + this.status.toString() + ".";
-            String title = prefix + "title";
-            String question = prefix + "question";
-            boolean ask = Alert.showQuestion(Localizable.get(title), Localizable.get(question, this.update.getVersion() + " (" + this.update.getCode() + ")"), this.update.getDescription());
-            if (!ask) {
-               return false;
-            }
+	@Override
+	protected boolean onClick() {
+		boolean result = processClick();
 
-            UpdateUIListener listener = new UpdateUIListener(this.update);
-            listener.push();
-         case 3:
-            break;
-         default:
-            throw new IllegalStateException("Unknown status: " + this.status);
-         }
+		if(result)
+			hide();
 
-         return true;
-      }
-   }
+		return result;
+	}
 
-   public void onUpdaterRequesting(Updater u) {
-      this.setFoundUpdate((Update)null);
-   }
+	private boolean processClick() {
+		if(!super.onClick())
+			return false;
 
-   public void onUpdaterRequestError(Updater u) {
-      this.setStatus(LeftSideNotifier.NotifierStatus.FAILED);
-   }
+		switch(status) {
+		case FAILED:
+			Alert.showLocAsyncWarning(LANG_PREFIX + status.toString());
 
-   public void onUpdateFound(Update upd) {
-      if (!upd.isRequired()) {
-         this.setFoundUpdate(upd);
-      }
-   }
+			break;
+		case FOUND:
+			if(update == null)
+				throw new IllegalStateException("Update is NULL!");
 
-   public void onUpdaterNotFoundUpdate(Updater u) {
-      this.setFoundUpdate((Update)null);
-   }
+			String
+			prefix = LANG_PREFIX + status.toString() +".",
+			title = prefix + "title",
+			question = prefix + "question";
 
-   public void onAdFound(Updater u, AdParser ad) {
-      this.setFoundUpdate((Update)null);
-   }
+			boolean ask = Alert.showQuestion(
+					Localizable.get(title),
+					Localizable.get( question, update.getVersion() +" ("+ update.getCode() +")" ), update.getDescription()
+					);
 
-   private void setFoundUpdate(Update upd) {
-      this.update = upd;
-      this.setStatus(upd == null ? LeftSideNotifier.NotifierStatus.NONE : LeftSideNotifier.NotifierStatus.FOUND);
-   }
+			if(!ask)
+				return false;
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$LeftSideNotifier$NotifierStatus() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$LeftSideNotifier$NotifierStatus;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[LeftSideNotifier.NotifierStatus.values().length];
+			UpdateUIListener listener = new UpdateUIListener(update);
+			listener.push();
 
-         try {
-            var0[LeftSideNotifier.NotifierStatus.FAILED.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
+			break;
+		case NONE:
+			break;
+		default:
+			throw new IllegalStateException("Unknown status: "+ status);
+		}
 
-         try {
-            var0[LeftSideNotifier.NotifierStatus.FOUND.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
+		return true;
+	}
 
-         try {
-            var0[LeftSideNotifier.NotifierStatus.NONE.ordinal()] = 3;
-         } catch (NoSuchFieldError var1) {
-         }
+	@Override
+	public void onUpdaterRequesting(Updater u) {
+		setFoundUpdate(null);
+	}
 
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$LeftSideNotifier$NotifierStatus = var0;
-         return var0;
-      }
-   }
+	@Override
+	public void onUpdaterRequestError(Updater u) {
+		setStatus(NotifierStatus.FAILED);
+	}
 
-   public static enum NotifierStatus {
-      FAILED("warning.png"),
-      FOUND("down32.png"),
-      NONE;
+	@Override
+	public void onUpdateFound(Update upd) {
+		if(upd.isRequired()) return; // Ingore required update, let it be processed by RequiredUpdateListener
+		setFoundUpdate(upd);
+	}
 
-      private final Image image;
+	@Override
+	public void onUpdaterNotFoundUpdate(Updater u) {
+		setFoundUpdate(null);
+	}
 
-      private NotifierStatus(String imagePath) {
-         this.image = imagePath == null ? null : ImageCache.getImage(imagePath);
-      }
+	@Override
+	public void onAdFound(Updater u, AdParser ad) {
+		setFoundUpdate(null);
+	}
 
-      private NotifierStatus() {
-         this((String)null);
-      }
+	private void setFoundUpdate(Update upd) {
+		this.update = upd;
 
-      public Image getImage() {
-         return this.image;
-      }
+		setStatus(upd == null? NotifierStatus.NONE : NotifierStatus.FOUND);
+	}
 
-      public String toString() {
-         return super.toString().toLowerCase();
-      }
-   }
+	public enum NotifierStatus {
+		FAILED("warning.png"), FOUND("down32.png"), NONE;
+
+		private final Image image;
+
+		NotifierStatus(String imagePath) {
+			this.image = imagePath == null? null : ImageCache.getImage(imagePath);
+		}
+
+		NotifierStatus() {
+			this(null);
+		}
+
+		public Image getImage() {
+			return image;
+		}
+
+		@Override
+		public String toString() {
+			return super.toString().toLowerCase();
+		}
+	}
 }

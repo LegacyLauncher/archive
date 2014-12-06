@@ -5,9 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
 import javax.swing.JPopupMenu;
+
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
@@ -23,283 +24,265 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class VersionDownloadButton extends ImageButton implements VersionHandlerListener, Unblockable {
-   private static final String SELECTION_BLOCK = "selection";
-   private static final String PREFIX = "version.manager.downloader.";
-   private static final String WARNING = "version.manager.downloader.warning.";
-   private static final String WARNING_TITLE = "version.manager.downloader.warning.title";
-   private static final String WARNING_FORCE = "version.manager.downloader.warning.force.";
-   private static final String ERROR = "version.manager.downloader.error.";
-   private static final String ERROR_TITLE = "version.manager.downloader.error.title";
-   private static final String INFO = "version.manager.downloader.info.";
-   private static final String INFO_TITLE = "version.manager.downloader.info.title";
-   private static final String MENU = "version.manager.downloader.menu.";
-   final VersionHandler handler;
-   final Blockable blockable;
-   private final JPopupMenu menu;
-   private final LocalizableMenuItem ordinary;
-   private final LocalizableMenuItem force;
-   private VersionDownloadButton.ButtonState state;
-   private boolean downloading;
-   private boolean aborted;
-   boolean forceDownload;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState;
+	private static final String
+	SELECTION_BLOCK = "selection",
 
-   VersionDownloadButton(VersionList list) {
-      this.handler = list.handler;
-      this.blockable = new Blockable() {
-         public void block(Object reason) {
-            VersionDownloadButton.this.setEnabled(false);
-         }
+	PREFIX = "version.manager.downloader.",
 
-         public void unblock(Object reason) {
-            VersionDownloadButton.this.setEnabled(true);
-         }
-      };
-      this.menu = new JPopupMenu();
-      this.ordinary = new LocalizableMenuItem("version.manager.downloader.menu.ordinary");
-      this.ordinary.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionDownloadButton.this.forceDownload = false;
-            VersionDownloadButton.this.onDownloadCalled();
-         }
-      });
-      this.menu.add(this.ordinary);
-      this.force = new LocalizableMenuItem("version.manager.downloader.menu.force");
-      this.force.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionDownloadButton.this.forceDownload = true;
-            VersionDownloadButton.this.onDownloadCalled();
-         }
-      });
-      this.menu.add(this.force);
-      this.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            VersionDownloadButton.this.onPressed();
-         }
-      });
-      this.setState(VersionDownloadButton.ButtonState.DOWNLOAD);
-      this.handler.addListener(this);
-   }
+	WARNING = PREFIX + "warning.",
+	WARNING_TITLE = WARNING + "title",
+	WARNING_FORCE = WARNING + "force.",
 
-   void setState(VersionDownloadButton.ButtonState state) {
-      if (state == null) {
-         throw new NullPointerException();
-      } else {
-         this.state = state;
-         this.setImage(state.image);
-      }
-   }
+	ERROR = PREFIX + "error.",
+	ERROR_TITLE = ERROR + "title",
 
-   void onPressed() {
-      switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState()[this.state.ordinal()]) {
-      case 1:
-         this.onDownloadPressed();
-         break;
-      case 2:
-         this.onStopCalled();
-      }
+	INFO = PREFIX + "info.",
+	INFO_TITLE = INFO + "title",
 
-   }
+	MENU = PREFIX + "menu.";
 
-   void onDownloadPressed() {
-      this.menu.show(this, 0, this.getHeight());
-   }
+	final VersionHandler handler;
+	final Blockable blockable;
 
-   void onDownloadCalled() {
-      if (this.state != VersionDownloadButton.ButtonState.DOWNLOAD) {
-         throw new IllegalStateException();
-      } else {
-         this.handler.thread.startThread.iterate();
-      }
-   }
+	private final JPopupMenu menu;
+	private final LocalizableMenuItem ordinary, force;
 
-   void onStopCalled() {
-      if (this.state != VersionDownloadButton.ButtonState.STOP) {
-         throw new IllegalStateException();
-      } else {
-         this.handler.thread.stopThread.iterate();
-      }
-   }
+	private ButtonState state;
+	private boolean downloading, aborted;
 
-   void startDownload() {
-      this.aborted = false;
-      List list = this.handler.getSelectedList();
-      if (list != null && !list.isEmpty()) {
-         int countLocal = 0;
-         VersionSyncInfo local = null;
-         Iterator var5 = list.iterator();
+	boolean forceDownload;
 
-         while(var5.hasNext()) {
-            VersionSyncInfo version = (VersionSyncInfo)var5.next();
-            if (this.forceDownload) {
-               if (!version.hasRemote()) {
-                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.local", version.getID()));
-                  return;
-               }
+	VersionDownloadButton(VersionList list) {
+		this.handler = list.handler;
 
-               if (version.isUpToDate() && version.isInstalled()) {
-                  ++countLocal;
-                  local = version;
-               }
-            }
-         }
+		this.blockable = new Blockable() {
+			@Override
+			public void block(Object reason) {
+				setEnabled(false);
+			}
 
-         if (countLocal > 0) {
-            String title = Localizable.get("version.manager.downloader.warning.title");
-            Object var;
-            String suffix;
-            if (countLocal == 1) {
-               suffix = "single";
-               var = local.getID();
-            } else {
-               suffix = "multiply";
-               var = countLocal;
-            }
+			@Override
+			public void unblock(Object reason) {
+				setEnabled(true);
+			}
+		};
 
-            if (!Alert.showQuestion(title, Localizable.get("version.manager.downloader.warning.force." + suffix, var))) {
-               return;
-            }
-         }
+		this.menu = new JPopupMenu();
 
-         List containers = new ArrayList();
-         VersionManager manager = TLauncher.getInstance().getVersionManager();
+		this.ordinary = new LocalizableMenuItem(MENU + "ordinary");
+		ordinary.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				forceDownload = false;
+				onDownloadCalled();
+			}
+		});
+		menu.add(ordinary);
 
-         Iterator var7;
-         try {
-            this.downloading = true;
-            var7 = list.iterator();
+		this.force = new LocalizableMenuItem(MENU + "force");
+		force.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				forceDownload = true;
+				onDownloadCalled();
+			}
+		});
+		menu.add(force);
 
-            while(var7.hasNext()) {
-               VersionSyncInfo version = (VersionSyncInfo)var7.next();
+		this.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onPressed();
+			}
+		});
 
-               try {
-                  VersionSyncInfoContainer container = manager.downloadVersion(version, this.forceDownload);
-                  if (this.aborted) {
-                     return;
-                  }
+		this.setState(ButtonState.DOWNLOAD);
+		handler.addListener(this);
+	}
 
-                  if (!container.getList().isEmpty()) {
-                     containers.add(container);
-                  }
-               } catch (Exception var15) {
-                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", version.getID()), var15);
-                  return;
-               }
-            }
+	void setState(ButtonState state) {
+		if(state == null)
+			throw new NullPointerException();
 
-            if (containers.isEmpty()) {
-               Alert.showMessage(Localizable.get("version.manager.downloader.info.title"), Localizable.get("version.manager.downloader.info.no-needed"));
-               return;
-            }
+		this.state = state;
+		this.setImage(state.image);
+	}
 
-            if (containers.size() > 1) {
-               DownloadableContainer.removeDublicates(containers);
-            }
+	void onPressed() {
+		switch(state) {
+		case DOWNLOAD:
+			onDownloadPressed();
+			break;
+		case STOP:
+			onStopCalled();
+			break;
+		}
+	}
 
-            if (this.aborted) {
-               return;
-            }
+	void onDownloadPressed() {
+		menu.show(this, 0, getHeight());
+	}
 
-            var7 = containers.iterator();
+	void onDownloadCalled() {
+		if(state != ButtonState.DOWNLOAD)
+			throw new IllegalStateException();
 
-            while(var7.hasNext()) {
-               DownloadableContainer c = (DownloadableContainer)var7.next();
-               this.handler.downloader.add(c);
-            }
+		handler.thread.startThread.iterate();
+	}
 
-            this.handler.downloading = list;
-            this.handler.onVersionDownload(list);
-            this.handler.downloader.startDownloadAndWait();
-         } finally {
-            this.downloading = false;
-         }
+	void onStopCalled() {
+		if(state != ButtonState.STOP)
+			throw new IllegalStateException();
 
-         this.handler.downloading.clear();
-         var7 = containers.iterator();
+		handler.thread.stopThread.iterate();
+	}
 
-         while(var7.hasNext()) {
-            VersionSyncInfoContainer container = (VersionSyncInfoContainer)var7.next();
-            List errors = container.getErrors();
-            VersionSyncInfo version = container.getVersion();
-            if (errors.isEmpty()) {
-               try {
-                  manager.getLocalList().saveVersion(version.getCompleteVersion(this.forceDownload));
-               } catch (IOException var14) {
-                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.saving", version.getID()), var14);
-                  return;
-               }
-            } else if (!(errors.get(0) instanceof AbortedDownloadException)) {
-               Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.downloading", version.getID()), errors);
-            }
-         }
+	@SuppressWarnings("null")
+	void startDownload() {
+		this.aborted = false;
+		List<VersionSyncInfo> list = handler.getSelectedList();
 
-         this.handler.refresh();
-      }
-   }
+		if(list == null || list.isEmpty())
+			return;
 
-   void stopDownload() {
-      this.aborted = true;
-      if (this.downloading) {
-         this.handler.downloader.stopDownloadAndWait();
-      }
+		int countLocal = 0;
+		VersionSyncInfo local = null;
 
-   }
+		for(VersionSyncInfo version : list) {
 
-   public void onVersionRefreshing(VersionManager vm) {
-   }
+			if(forceDownload)
+				if(!version.hasRemote()) {
+					Alert.showError(Localizable.get(ERROR_TITLE), Localizable.get(ERROR + "local", version.getID()));
+					return;
+				}
+				else if(version.isUpToDate() && version.isInstalled()) {
+					countLocal++;
+					local = version;
+				}
+		}
 
-   public void onVersionRefreshed(VersionManager vm) {
-   }
+		if(countLocal > 0) {
+			String title = Localizable.get(WARNING_TITLE);
+			String suffix; Object var;
 
-   public void onVersionSelected(List versions) {
-      if (!this.downloading) {
-         this.blockable.unblock("selection");
-      }
+			if(countLocal == 1) {
+				suffix = "single";
+				var = local.getID();
+			} else {
+				suffix = "multiply";
+				var = countLocal;
+			}
 
-   }
+			if(!Alert.showQuestion(title, Localizable.get(WARNING_FORCE + suffix, var)))
+				return;
+		}
 
-   public void onVersionDeselected() {
-      if (!this.downloading) {
-         this.blockable.block("selection");
-      }
+		List<VersionSyncInfoContainer> containers = new ArrayList<VersionSyncInfoContainer>();
+		final VersionManager manager = TLauncher.getInstance().getVersionManager();
 
-   }
+		try {
+			downloading = true;
 
-   public void onVersionDownload(List list) {
-   }
+			for(VersionSyncInfo version : list) {
+				try {
+					version.resolveCompleteVersion(manager, forceDownload);
+					VersionSyncInfoContainer container = manager.downloadVersion(version, forceDownload);
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[VersionDownloadButton.ButtonState.values().length];
+					if(aborted)
+						return;
 
-         try {
-            var0[VersionDownloadButton.ButtonState.DOWNLOAD.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
+					if(!container.getList().isEmpty())
+						containers.add(container);
 
-         try {
-            var0[VersionDownloadButton.ButtonState.STOP.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
+				} catch (Exception e) {
+					Alert.showError(Localizable.get(ERROR_TITLE), Localizable.get(ERROR + "getting", version.getID()), e);
+					return;
+				}
+			}
 
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState = var0;
-         return var0;
-      }
-   }
+			if(containers.isEmpty()) {
+				Alert.showMessage(Localizable.get(INFO_TITLE), Localizable.get(INFO + "no-needed"));
+				return;
+			}
 
-   public static enum ButtonState {
-      DOWNLOAD("down.png"),
-      STOP("cancel.png");
+			if(containers.size() > 1)
+				DownloadableContainer.removeDublicates(containers);
 
-      final Image image;
+			if(aborted)
+				return;
 
-      private ButtonState(String image) {
-         this.image = ImageCache.getImage(image);
-      }
-   }
+			for(DownloadableContainer c : containers)
+				handler.downloader.add(c);
+
+			handler.downloading = list;
+			handler.onVersionDownload(list);
+
+			handler.downloader.startDownloadAndWait();
+
+		} finally {
+			downloading = false;
+		}
+
+		handler.downloading.clear();
+
+		for(VersionSyncInfoContainer container : containers) {
+			List<Throwable> errors = container.getErrors();
+			VersionSyncInfo version = container.getVersion();
+
+
+			if(errors.isEmpty())
+				try {
+					manager.getLocalList().saveVersion(version.getCompleteVersion(forceDownload));
+				} catch (IOException e) {
+					Alert.showError(Localizable.get(ERROR_TITLE), Localizable.get(ERROR + "saving", version.getID()), e);
+					return;
+				}
+			else
+				if(!(errors.get(0) instanceof AbortedDownloadException))
+					Alert.showError(Localizable.get(ERROR_TITLE), Localizable.get(ERROR + "downloading", version.getID()), errors);
+		}
+
+		handler.refresh();
+	}
+
+	void stopDownload() {
+		aborted = true;
+
+		if(downloading)
+			handler.downloader.stopDownloadAndWait();
+	}
+
+	public enum ButtonState {
+		DOWNLOAD("down.png"), STOP("cancel.png");
+
+		final Image image;
+
+		ButtonState(String image) {
+			this.image = ImageCache.getImage(image);
+		}
+	}
+
+	@Override
+	public void onVersionRefreshing(VersionManager vm) {
+	}
+
+	@Override
+	public void onVersionRefreshed(VersionManager vm) {
+	}
+
+	@Override
+	public void onVersionSelected(List<VersionSyncInfo> versions) {
+		if(!downloading)
+			blockable.unblock(SELECTION_BLOCK);
+	}
+
+	@Override
+	public void onVersionDeselected() {
+		if(!downloading)
+			blockable.block(SELECTION_BLOCK);
+	}
+
+	@Override
+	public void onVersionDownload(List<VersionSyncInfo> list) {
+	}
 }
