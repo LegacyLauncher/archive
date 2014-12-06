@@ -5,138 +5,157 @@ import java.awt.FontMetrics;
 import java.awt.Insets;
 import java.awt.Point;
 import java.util.Arrays;
+
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.accounts.AccountHandler;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
-public class AccountEditorHelper extends ExtendedLayeredPane {
-   static final int MARGIN = 5;
-   static final byte LEFT = 0;
-   static final byte UP = 1;
-   static final byte RIGHT = 2;
-   static final byte DOWN = 3;
-   private final MainPane pane;
-   private final AccountHandler handler;
-   private final HelperTip[] tips;
-   private HelperState state;
+public class AccountEditorHelper extends ExtendedLayeredPane //implements LocalizableComponent {
+{
+	static final int MARGIN = 5;
+	static final byte LEFT = 0;
+	static final byte UP = 1;
+	static final byte RIGHT = 2;
+	static final byte DOWN = 3;
 
-   public AccountEditorHelper(AccountEditorScene scene) {
-      super(scene);
-      this.handler = scene.handler;
-      this.pane = scene.getMainPane();
-      this.tips = new HelperTip[]{new HelperTip("add", this.handler.list.add, this.handler.list, (byte)3, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("username", this.handler.editor.username, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("checkbox", this.handler.editor.premiumBox, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("password", this.handler.editor.password, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM}), new HelperTip("button", this.handler.editor.save, this.handler.editor, (byte)0, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("exit", this.handler.list.back, this.handler.list, (byte)2, new HelperState[]{HelperState.PREMIUM, HelperState.FREE}), new HelperTip("help", this.handler.list.help, this.handler.list, (byte)3, new HelperState[]{HelperState.HELP})};
-      this.add(this.tips);
-      this.setState(HelperState.NONE);
-   }
+	private final MainPane pane;
+	private final AccountHandler handler;
 
-   public HelperState getState() {
-      return this.state;
-   }
+	private final HelperTip[] tips;
 
-   void updateState() {
-      this.setState(this.state);
-   }
+	//private final HelperTip remind;
+	//private final EditorPane remindPane;
 
-   public void setState(HelperState state) {
-      if (state == null) {
-         throw new NullPointerException();
-      } else {
-         this.state = state;
-         HelperState[] var5;
-         int var4 = (var5 = HelperState.values()).length;
+	private HelperState state;
 
-         int var3;
-         for(var3 = 0; var3 < var4; ++var3) {
-            HelperState st = var5[var3];
-            st.item.setEnabled(!st.equals(state));
-         }
+	public AccountEditorHelper(AccountEditorScene scene) {
+		super(scene);
 
-         HelperTip step;
-         HelperTip[] var22;
-         if (state == HelperState.NONE) {
-            var4 = (var22 = this.tips).length;
+		this.handler = scene.handler;
+		this.pane = scene.getMainPane();
 
-            for(var3 = 0; var3 < var4; ++var3) {
-               step = var22[var3];
-               if (step.isShowing()) {
-                  step.setVisible(false);
-               }
-            }
+		this.tips = new HelperTip[] {
+				new HelperTip("add", handler.list.add, handler.list, DOWN, HelperState.PREMIUM, HelperState.FREE),
+				new HelperTip("username", handler.editor.username, handler.editor, LEFT, HelperState.PREMIUM, HelperState.FREE),
+				new HelperTip("checkbox", handler.editor.premiumBox, handler.editor, LEFT, HelperState.PREMIUM, HelperState.FREE),
+				new HelperTip("password", handler.editor.password, handler.editor, LEFT, HelperState.PREMIUM),
+				new HelperTip("button", handler.editor.save, handler.editor, LEFT, HelperState.PREMIUM, HelperState.FREE),
+				new HelperTip("exit", handler.list.back, handler.list, RIGHT, HelperState.PREMIUM, HelperState.FREE),
+				new HelperTip("help", handler.list.help, handler.list, DOWN, HelperState.HELP)
+		};
 
-         } else {
-            if (this.handler.editor.premiumBox.isEnabled()) {
-               this.handler.editor.premiumBox.isSelected();
-            }
+		//this.remind = new HelperTip("remind", handler.editor.password, handler.editor, DOWN);
+		//remind.remove(remind.label);
 
-            var4 = (var22 = this.tips).length;
+		//this.remindPane = new EditorPane();
+		//remindPane.setText("");
+		//remind.add()
 
-            for(var3 = 0; var3 < var4; ++var3) {
-               step = var22[var3];
-               if (Arrays.binarySearch(step.states, 0, step.states.length, state) < 0) {
-                  step.setVisible(false);
-               } else {
-                  LocalizableLabel l = step.label;
-                  l.setText("auth.helper." + state.toString() + "." + step.name);
-                  Component c = step.component;
-                  int cWidth = c.getWidth();
-                  int cHeight = c.getHeight();
-                  Point cp = this.pane.getLocationOf(c);
-                  Component p = step.parent;
-                  int pWidth = p.getWidth();
-                  int pHeight = p.getHeight();
-                  Point pp = this.pane.getLocationOf(p);
-                  FontMetrics fm = l.getFontMetrics(l.getFont());
-                  Insets i = step.getInsets();
-                  int height = i.top + i.bottom + fm.getHeight();
-                  int width = i.left + i.right + fm.stringWidth(l.getText());
-                  int x;
-                  int y;
-                  switch(step.alignment) {
-                  case 0:
-                     x = pp.x - 5 - width;
-                     y = cp.y + cHeight / 2 - height / 2;
-                     break;
-                  case 1:
-                     x = cp.x + cWidth / 2 - width / 2;
-                     y = pp.y - 5 - height;
-                     break;
-                  case 2:
-                     x = pp.x + pWidth + 5;
-                     y = cp.y + cHeight / 2 - height / 2;
-                     break;
-                  case 3:
-                     x = cp.x + cWidth / 2 - width / 2;
-                     y = pp.y + pHeight + 5;
-                     break;
-                  default:
-                     throw new IllegalArgumentException("Unknown alignment");
-                  }
+		add(tips);
+		setState(HelperState.NONE);
+	}
 
-                  if (x < 0) {
-                     x = 0;
-                  } else if (x + width > this.getWidth()) {
-                     x = this.getWidth() - width;
-                  }
+	public HelperState getState() {
+		return state;
+	}
 
-                  if (y < 0) {
-                     y = 0;
-                  } else if (y + height > this.getHeight()) {
-                     y = this.getHeight() - height;
-                  }
+	void updateState() {
+		setState(state);
+	}
 
-                  step.setVisible(true);
-                  step.setBounds(x, y, width, height);
-               }
-            }
+	public void setState(HelperState state) {
+		if (state == null)
+			throw new NullPointerException();
 
-         }
-      }
-   }
+		this.state = state;
 
-   public void onResize() {
-      super.onResize();
-      this.updateState();
-   }
+		for (HelperState st : HelperState.values())
+			st.item.setEnabled(!st.equals(state));
+
+		if (state == HelperState.NONE) {
+			for (HelperTip step : tips)
+				if (step.isShowing())
+					step.setVisible(false);
+			return;
+		}
+
+		if(handler.editor.premiumBox.isEnabled() && handler.editor.premiumBox.isSelected()) {
+
+		}
+
+		for (HelperTip step : tips) {
+			if (Arrays.binarySearch(step.states, 0, step.states.length, state) < 0) {
+				step.setVisible(false);
+				continue;
+			}
+
+			LocalizableLabel l = step.label;
+			l.setText("auth.helper." + state.toString() + "." + step.name);
+
+			Component c = step.component;
+			int cWidth = c.getWidth(), cHeight = c.getHeight();
+			Point cp = pane.getLocationOf(c);
+
+			Component p = step.parent;
+			int pWidth = p.getWidth(), pHeight = p.getHeight();
+			Point pp = pane.getLocationOf(p);
+
+			FontMetrics fm = l.getFontMetrics(l.getFont());
+			Insets i = step.getInsets();
+
+			int height = i.top + i.bottom + fm.getHeight();
+			int width = i.left + i.right + fm.stringWidth(l.getText());
+
+			int x, y;
+
+			switch (step.alignment) {
+			case LEFT:
+				x = pp.x - MARGIN - width;
+				y = cp.y + cHeight / 2 - height / 2;
+				break;
+			case UP:
+				x = cp.x + cWidth / 2 - width / 2;
+				y = pp.y - MARGIN - height;
+				break;
+			case RIGHT:
+				x = pp.x + pWidth + MARGIN;
+				y = cp.y + cHeight / 2 - height / 2;
+				break;
+			case DOWN:
+				x = cp.x + cWidth / 2 - width / 2;
+				y = pp.y + pHeight + MARGIN;
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown alignment");
+			}
+
+			if(x < 0)
+				x = 0;
+			else if(x + width > getWidth())
+				x = getWidth() - width;
+
+			if(y < 0)
+				y = 0;
+			else if(y + height > getHeight())
+				y = getHeight() - height;
+
+			step.setVisible(true);
+			step.setBounds(x, y, width, height);
+		}
+
+		//this.setVisible(true);
+	}
+
+	@Override
+	public void onResize() {
+		super.onResize();
+		updateState();
+	}
+
+	/*@Override
+	public void updateLocale() {
+		remindPane.setText("");
+	}*/
 }

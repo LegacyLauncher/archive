@@ -2,34 +2,40 @@ package ru.turikhay.tlauncher.configuration;
 
 import java.io.IOException;
 
+/**
+ * Abstract Configuration interface
+ * 
+ * @author Artur Khusainov
+ * 
+ */
 public interface AbstractConfiguration {
-   String get(String var1);
+	public String get(String key);
 
-   int getInteger(String var1);
+	public int getInteger(String key);
 
-   double getDouble(String var1);
+	public double getDouble(String key);
 
-   float getFloat(String var1);
+	public float getFloat(String key);
 
-   long getLong(String var1);
+	public long getLong(String key);
 
-   boolean getBoolean(String var1);
+	public boolean getBoolean(String key);
 
-   String getDefault(String var1);
+	public String getDefault(String key);
 
-   int getDefaultInteger(String var1);
+	public int getDefaultInteger(String key);
 
-   double getDefaultDouble(String var1);
+	public double getDefaultDouble(String key);
 
-   float getDefaultFloat(String var1);
+	public float getDefaultFloat(String key);
 
-   long getDefaultLong(String var1);
+	public long getDefaultLong(String key);
 
-   boolean getDefaultBoolean(String var1);
+	public boolean getDefaultBoolean(String key);
 
-   void set(String var1, Object var2);
+	public void set(String key, Object value);
 
-   void clear();
+	public void clear();
 
-   void save() throws IOException;
+	public void save() throws IOException;
 }

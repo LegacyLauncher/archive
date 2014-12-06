@@ -3,38 +3,42 @@ package ru.turikhay.tlauncher.ui.converter;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
 
-public class ReleaseTypeConverter extends LocalizableStringConverter {
-   public ReleaseTypeConverter() {
-      super("version.description");
-   }
+public class ReleaseTypeConverter extends LocalizableStringConverter<ReleaseType> {
 
-   public ReleaseType fromString(String from) {
-      if (from == null) {
-         return ReleaseType.UNKNOWN;
-      } else {
-         ReleaseType[] var5;
-         int var4 = (var5 = ReleaseType.values()).length;
+	public ReleaseTypeConverter() {
+		super("version.description");
+	}
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            ReleaseType type = var5[var3];
-            if (type.toString().equals(from)) {
-               return type;
-            }
-         }
+	@Override
+	public ReleaseType fromString(String from) {
+		if(from == null)
+			return ReleaseType.UNKNOWN;
+		
+		for(ReleaseType type : ReleaseType.values())
+			if(type.toString().equals(from))
+				return type;
+		return null;
+	}
 
-         return null;
-      }
-   }
+	@Override
+	public String toValue(ReleaseType from) {
+		if(from == null)
+			return ReleaseType.UNKNOWN.toString();
+		
+		return from.toString();
+	}
 
-   public String toValue(ReleaseType from) {
-      return from == null ? ReleaseType.UNKNOWN.toString() : from.toString();
-   }
+	@Override
+	protected String toPath(ReleaseType from) {
+		if(from == null)
+			return ReleaseType.UNKNOWN.toString();
+		
+		return toValue(from);
+	}
 
-   protected String toPath(ReleaseType from) {
-      return from == null ? ReleaseType.UNKNOWN.toString() : this.toValue(from);
-   }
+	@Override
+	public Class<ReleaseType> getObjectClass() {
+		return ReleaseType.class;
+	}
 
-   public Class getObjectClass() {
-      return ReleaseType.class;
-   }
 }

@@ -10,225 +10,226 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+
 import javax.swing.JProgressBar;
+
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 public class ProgressBar extends JProgressBar {
-   public static int DEFAULT_HEIGHT = 20;
-   private static int BORDER_SIZE = 10;
-   private static int EDGE_CHARS = 50;
-   private static int CENTER_CHARS = 30;
-   private static float DEFAULT_FONT_SIZE;
-   private static final long serialVersionUID = -8095192709934629794L;
-   private final Object sync;
-   private final Component parent;
-   private String wS;
-   private String cS;
-   private String eS;
-   private boolean wS_changed;
-   private boolean cS_changed;
-   private boolean eS_changed;
-   private int wS_x;
-   private int cS_x;
-   private int eS_x;
-   private int oldWidth;
+	public static int DEFAULT_HEIGHT = 20;
+	private static int BORDER_SIZE = 10;
+	private static int EDGE_CHARS = 50;
+	private static int CENTER_CHARS = 30;
+	private static float DEFAULT_FONT_SIZE = TLauncherFrame.fontSize;
+	private static final long serialVersionUID = -8095192709934629794L;
 
-   static {
-      DEFAULT_FONT_SIZE = TLauncherFrame.fontSize;
-   }
+	private final Object sync;
+	private final Component parent;
 
-   public ProgressBar(Component parentComp) {
-      this.sync = new Object();
-      this.parent = parentComp;
-      if (this.parent != null) {
-         this.parent.addComponentListener(new ComponentListener() {
-            public void componentResized(ComponentEvent e) {
-               ProgressBar.this.updateSize();
-            }
+	private String wS, cS, eS; // West string, center string, east string
+	private boolean wS_changed, cS_changed, eS_changed;
 
-            public void componentMoved(ComponentEvent e) {
-            }
+	// Arrays containing bounds of strings: x, width, height
+	private int wS_x, cS_x, eS_x;
+	private int oldWidth;
 
-            public void componentShown(ComponentEvent e) {
-            }
+	public ProgressBar(Component parentComp) {
+		this.sync = new Object();
 
-            public void componentHidden(ComponentEvent e) {
-            }
-         });
-      }
+		this.parent = parentComp;
+		if (parent != null)
+			parent.addComponentListener(new ComponentListener() {
+				@Override
+				public void componentResized(ComponentEvent e) {
+					updateSize();
+				}
 
-      this.setFont(this.getFont().deriveFont(DEFAULT_FONT_SIZE));
-      this.setOpaque(false);
-   }
+				@Override
+				public void componentMoved(ComponentEvent e) {
+				}
 
-   public ProgressBar() {
-      this((Component)null);
-   }
+				@Override
+				public void componentShown(ComponentEvent e) {
+				}
 
-   private void updateSize() {
-      if (this.parent != null) {
-         this.setPreferredSize(new Dimension(this.parent.getWidth(), DEFAULT_HEIGHT));
-      }
-   }
+				@Override
+				public void componentHidden(ComponentEvent e) {
+				}
+			});
 
-   public void setStrings(String west, String center, String east, boolean acceptNull, boolean repaint) {
-      if (acceptNull || west != null) {
-         this.setWestString(west, false);
-      }
+		setFont(getFont().deriveFont(DEFAULT_FONT_SIZE));
+		setOpaque(false);
+	}
 
-      if (acceptNull || center != null) {
-         this.setCenterString(center, false);
-      }
+	public ProgressBar() {
+		this(null);
+	}
 
-      if (acceptNull || east != null) {
-         this.setEastString(east, false);
-      }
+	private void updateSize() {
+		if (parent == null)
+			return;
+		setPreferredSize(new Dimension(parent.getWidth(), DEFAULT_HEIGHT));
+	}
 
-      if (repaint) {
-         this.repaint();
-      }
+	public void setStrings(String west, String center, String east,
+			boolean acceptNull, boolean repaint) {
+		if (acceptNull || west != null)
+			this.setWestString(west, false);
+		if (acceptNull || center != null)
+			this.setCenterString(center, false);
+		if (acceptNull || east != null)
+			this.setEastString(east, false);
 
-   }
+		if (repaint)
+			this.repaint();
+	}
 
-   public void setStrings(String west, String center, String east) {
-      this.setStrings(west, center, east, true, true);
-   }
+	public void setStrings(String west, String center, String east) {
+		this.setStrings(west, center, east, true, true);
+	}
 
-   public void setWestString(String string, boolean update) {
-      string = StringUtil.cut(string, EDGE_CHARS);
-      this.wS_changed = this.wS != string;
-      this.wS = string;
-      if (this.wS_changed && update) {
-         this.repaint();
-      }
+	public void setWestString(String string, boolean update) {
+		string = StringUtil.cut(string, EDGE_CHARS);
 
-   }
+		this.wS_changed = wS != string;
+		this.wS = string;
 
-   public void setWestString(String string) {
-      this.setWestString(string, true);
-   }
+		if (wS_changed && update)
+			this.repaint();
+	}
 
-   public void setCenterString(String string, boolean update) {
-      string = StringUtil.cut(string, CENTER_CHARS);
-      this.cS_changed = this.cS != string;
-      this.cS = string;
-      if (this.cS_changed && update) {
-         this.repaint();
-      }
+	public void setWestString(String string) {
+		this.setWestString(string, true);
+	}
 
-   }
+	public void setCenterString(String string, boolean update) {
+		string = StringUtil.cut(string, CENTER_CHARS);
 
-   public void setCenterString(String string) {
-      this.setCenterString(string, true);
-   }
+		this.cS_changed = cS != string;
+		this.cS = string;
 
-   public void setEastString(String string, boolean update) {
-      string = StringUtil.cut(string, EDGE_CHARS);
-      this.eS_changed = this.eS != string;
-      this.eS = string;
-      if (this.eS_changed && update) {
-         this.repaint();
-      }
+		if (cS_changed && update)
+			this.repaint();
+	}
 
-   }
+	public void setCenterString(String string) {
+		this.setCenterString(string, true);
+	}
 
-   public void setEastString(String string) {
-      this.setEastString(string, true);
-   }
+	public void setEastString(String string, boolean update) {
+		string = StringUtil.cut(string, EDGE_CHARS);
 
-   public void clearProgress() {
-      this.setIndeterminate(false);
-      this.setValue(0);
-      this.setStrings((String)null, (String)null, (String)null, true, false);
-   }
+		this.eS_changed = eS != string;
+		this.eS = string;
 
-   public void startProgress() {
-      this.clearProgress();
-      this.updateSize();
-      this.setVisible(true);
-   }
+		if (eS_changed && update)
+			this.repaint();
+	}
 
-   public void stopProgress() {
-      this.setVisible(false);
-      this.clearProgress();
-   }
+	public void setEastString(String string) {
+		this.setEastString(string, true);
+	}
 
-   private void draw(Graphics g) {
-      boolean drawWest = this.wS != null;
-      boolean drawCenter = this.cS != null;
-      boolean drawEast = this.eS != null;
-      if (drawWest || drawCenter || drawEast) {
-         Font font = g.getFont();
-         FontMetrics fm = g.getFontMetrics(font);
-         int width = this.getWidth();
-         boolean force = width != this.oldWidth;
-         this.oldWidth = width;
-         if (drawCenter && (force || this.cS_changed)) {
-            this.cS_x = width / 2 - fm.stringWidth(this.cS) / 2;
-            this.cS_changed = false;
-         }
+	public void clearProgress() {
+		this.setIndeterminate(false);
+		this.setValue(0);
+		this.setStrings(null, null, null, true, false);
+	}
 
-         if (drawWest && (force || this.wS_changed)) {
-            this.wS_x = BORDER_SIZE;
-            this.wS_changed = false;
-         }
+	public void startProgress() {
+		this.clearProgress();
 
-         if (drawEast && (force || this.eS_changed)) {
-            this.eS_x = width - fm.stringWidth(this.eS) - BORDER_SIZE;
-            this.eS_changed = false;
-         }
+		this.updateSize();
+		this.setVisible(true);
+	}
 
-         Graphics2D g2D = (Graphics2D)g;
-         g.setColor(Color.black);
-         g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-         g.setFont(font);
-         this.drawString(g, this.wS, this.wS_x);
-         this.drawString(g, this.cS, this.cS_x);
-         this.drawString(g, this.eS, this.eS_x);
-      }
-   }
+	public void stopProgress() {
+		this.setVisible(false);
+		this.clearProgress();
+	}
 
-   private void drawString(Graphics g, String s, int x) {
-      if (s != null) {
-         int y = (this.getHeight() - g.getFontMetrics().getDescent() + g.getFontMetrics().getAscent()) / 2;
-         g.setColor(Color.white);
+	private void draw(Graphics g) {
+		boolean drawWest = wS != null, drawCenter = cS != null, drawEast = eS != null;
 
-         for(int borderX = -1; borderX < 2; ++borderX) {
-            for(int borderY = -1; borderY < 2; ++borderY) {
-               g.drawString(s, x + borderX, y + borderY);
-            }
-         }
+		if (!(drawWest || drawCenter || drawEast))
+			return; // Nothing to draw.
 
-         g.setColor(Color.black);
-         g.drawString(s, x, y);
-      }
-   }
+		Font font = g.getFont();
+		FontMetrics fm = g.getFontMetrics(font);
+		int width = getWidth();
 
-   public void update(Graphics g) {
-      try {
-         super.update(g);
-      } catch (Exception var4) {
-         U.log("Error updating progress bar:", var4.toString());
-         return;
-      }
+		boolean force = (width != oldWidth);
+		this.oldWidth = width;
 
-      synchronized(this.sync) {
-         this.draw(g);
-      }
-   }
+		if (drawCenter && (force || cS_changed)) {
+			cS_x = (width / 2) - (fm.stringWidth(cS) / 2);
+			cS_changed = false;
+		}
 
-   public void paint(Graphics g) {
-      try {
-         super.paint(g);
-      } catch (Exception var4) {
-         U.log("Error paining progress bar:", var4.toString());
-         return;
-      }
+		if (drawWest && (force || wS_changed)) {
+			wS_x = BORDER_SIZE;
+			wS_changed = false;
+		}
 
-      synchronized(this.sync) {
-         this.draw(g);
-      }
-   }
+		if (drawEast && (force || eS_changed)) {
+			eS_x = width - fm.stringWidth(eS) - BORDER_SIZE;
+			eS_changed = false;
+		}
+
+		Graphics2D g2D = (Graphics2D) g;
+
+		g.setColor(Color.black);
+		g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g.setFont(font);
+
+		drawString(g, wS, wS_x);
+		drawString(g, cS, cS_x);
+		drawString(g, eS, eS_x);
+	}
+
+	private void drawString(Graphics g, String s, int x) {
+		if (s == null)
+			return;
+
+		int y = (getHeight() - g.getFontMetrics().getDescent() + g.getFontMetrics().getAscent()) / 2;
+
+		g.setColor(Color.white);
+		for (int borderX = -1; borderX < 2; borderX++)
+			for (int borderY = -1; borderY< 2; borderY++)
+				g.drawString(s, x + borderX, y + borderY);
+
+		g.setColor(Color.black);
+		g.drawString(s, x, y);
+	}
+
+	@Override
+	public void update(Graphics g) {
+		try {
+			super.update(g);
+		} catch (Exception e) {
+			U.log("Error updating progress bar:", e.toString());
+			return;
+		}
+
+		synchronized (sync) {
+			draw(g);
+		}
+	}
+
+	@Override
+	public void paint(Graphics g) {
+		try {
+			super.paint(g);
+		} catch (Exception e) {
+			U.log("Error paining progress bar:", e.toString());
+			return;
+		}
+
+		synchronized (sync) {
+			this.draw(g);
+		}
+	}
 }

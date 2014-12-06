@@ -3,9 +3,8 @@ package ru.turikhay.tlauncher.ui.login;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-import javax.swing.ListCellRenderer;
+
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.TLauncher;
@@ -14,130 +13,153 @@ import ru.turikhay.tlauncher.managers.VersionManagerListener;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.login.LoginForm.LoginProcessListener;
+import ru.turikhay.tlauncher.ui.login.LoginWaitException.LoginWaitTask;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 
-public class VersionComboBox extends ExtendedComboBox implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
-   private static final long serialVersionUID = -9122074452728842733L;
-   private static final VersionSyncInfo LOADING;
-   private static final VersionSyncInfo EMPTY;
-   private final VersionManager manager;
-   private final LoginForm loginForm;
-   private final SimpleComboBoxModel model;
-   private String selectedVersion;
+public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo>
+implements Blockable, VersionManagerListener, LocalizableComponent,
+LoginProcessListener {
+	private static final long serialVersionUID = -9122074452728842733L;
 
-   static {
-      LOADING = VersionCellRenderer.LOADING;
-      EMPTY = VersionCellRenderer.EMPTY;
-   }
+	private static final VersionSyncInfo LOADING = VersionCellRenderer.LOADING;
+	private static final VersionSyncInfo EMPTY = VersionCellRenderer.EMPTY;
 
-   VersionComboBox(LoginForm lf) {
-      super((ListCellRenderer)(new VersionCellRenderer()));
-      this.loginForm = lf;
-      this.model = this.getSimpleModel();
-      this.manager = TLauncher.getInstance().getVersionManager();
-      this.manager.addListener(this);
-      this.addItemListener(new ItemListener() {
-         public void itemStateChanged(ItemEvent e) {
-            VersionComboBox.this.loginForm.buttons.play.updateState();
-            VersionSyncInfo selected = VersionComboBox.this.getVersion();
-            if (selected != null) {
-               VersionComboBox.this.selectedVersion = selected.getID();
-            }
+	private final VersionManager manager;
+	private final LoginForm loginForm;
 
-         }
-      });
-      this.selectedVersion = lf.global.get("login.version");
-   }
+	private final SimpleComboBoxModel<VersionSyncInfo> model;
 
-   public VersionSyncInfo getVersion() {
-      VersionSyncInfo selected = (VersionSyncInfo)this.getSelectedItem();
-      return selected != null && !selected.equals(LOADING) && !selected.equals(EMPTY) ? selected : null;
-   }
+	private String selectedVersion;
 
-   public void logginingIn() throws LoginException {
-      VersionSyncInfo selected = this.getVersion();
-      if (selected == null) {
-         throw new LoginWaitException("Version list is empty, refreshing", new LoginWaitException.LoginWaitTask() {
-            public void runTask() throws LoginException {
-               VersionComboBox.this.manager.startRefresh();
-               if (VersionComboBox.this.getVersion() == null) {
-                  Alert.showLocError("versions.notfound");
-               }
+	VersionComboBox(LoginForm lf) {
+		super(new VersionCellRenderer());
 
-               throw new LoginException("Giving user a second chance to choose correct version...");
-            }
-         });
-      } else if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate()) {
-         if (!Alert.showLocQuestion("versions.found-update")) {
-            try {
-               CompleteVersion complete = this.manager.getLocalList().getCompleteVersion(selected.getLocal());
-               complete.setUpdatedTime(selected.getLatestVersion().getUpdatedTime());
-               this.manager.getLocalList().saveVersion(complete);
-            } catch (IOException var3) {
-               Alert.showLocError("versions.found-update.error");
-            }
+		this.loginForm = lf;
+		this.model = getSimpleModel();
 
-         } else {
-            this.loginForm.checkbox.forceupdate.setSelected(true);
-         }
-      }
-   }
+		this.manager = TLauncher.getInstance().getVersionManager();
+		manager.addListener(this);
 
-   public void loginFailed() {
-   }
+		this.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				loginForm.buttons.play.updateState();
 
-   public void loginSucceed() {
-   }
+				VersionSyncInfo selected = getVersion();
+				if (selected != null)
+					selectedVersion = selected.getID();
+			}
+		});
+		this.selectedVersion = lf.global.get("login.version");
+	}
 
-   public void updateLocale() {
-      this.updateList(this.manager.getVersions(), (String)null);
-   }
+	public VersionSyncInfo getVersion() {
+		VersionSyncInfo selected = (VersionSyncInfo) getSelectedItem();
+		return (selected == null || selected.equals(LOADING) || selected
+				.equals(EMPTY)) ? null : selected;
+	}
 
-   public void onVersionsRefreshing(VersionManager vm) {
-      this.updateList((List)null, (String)null);
-   }
+	@Override
+	public void logginingIn() throws LoginException {
+		VersionSyncInfo selected = getVersion();
 
-   public void onVersionsRefreshingFailed(VersionManager vm) {
-      this.updateList(this.manager.getVersions(), (String)null);
-   }
+		if (selected == null)
+			throw new LoginWaitException("Version list is empty, refreshing",
+					new LoginWaitTask() {
+				@Override
+				public void runTask() throws LoginException {
+					manager.startRefresh();
 
-   public void onVersionsRefreshed(VersionManager vm) {
-      this.updateList(this.manager.getVersions(), (String)null);
-   }
+					if (getVersion() == null)
+						Alert.showLocError("versions.notfound");
 
-   void updateList(List list, String select) {
-      if (select == null && this.selectedVersion != null) {
-         select = this.selectedVersion;
-      }
+					throw new LoginException(
+							"Giving user a second chance to choose correct version...");
+				}
+			});
 
-      this.removeAllItems();
-      if (list == null) {
-         this.addItem(LOADING);
-      } else {
-         if (list.isEmpty()) {
-            this.addItem(EMPTY);
-         } else {
-            this.model.addElements(list);
-            Iterator var4 = list.iterator();
+		if (!selected.hasRemote() || !selected.isInstalled()
+				|| selected.isUpToDate())
+			return;
 
-            while(var4.hasNext()) {
-               VersionSyncInfo version = (VersionSyncInfo)var4.next();
-               if (select != null && version.getID().equals(select)) {
-                  this.setSelectedItem(version);
-               }
-            }
-         }
+		if (!Alert.showLocQuestion("versions.found-update")) {
+			try {
+				CompleteVersion complete = manager.getLocalList()
+						.getCompleteVersion(selected.getLocal());
+				complete.setUpdatedTime(selected.getLatestVersion()
+						.getUpdatedTime());
 
-      }
-   }
+				manager.getLocalList().saveVersion(complete);
+			} catch (IOException e) {
+				Alert.showLocError("versions.found-update.error");
+			}
+			return;
+		}
 
-   public void block(Object reason) {
-      this.setEnabled(false);
-   }
+		loginForm.checkbox.forceupdate.setSelected(true);
+	}
 
-   public void unblock(Object reason) {
-      this.setEnabled(true);
-   }
+	@Override
+	public void loginFailed() {
+	}
+
+	@Override
+	public void loginSucceed() {
+	}
+
+	@Override
+	public void updateLocale() {
+		updateList(manager.getVersions(), null);
+	}
+
+	@Override
+	public void onVersionsRefreshing(VersionManager vm) {
+		updateList(null, null);
+	}
+
+	@Override
+	public void onVersionsRefreshingFailed(VersionManager vm) {
+		updateList(manager.getVersions(), null);
+	}
+
+	@Override
+	public void onVersionsRefreshed(VersionManager vm) {
+		updateList(manager.getVersions(), null);
+	}
+
+	void updateList(List<VersionSyncInfo> list, String select) {
+		if (select == null && selectedVersion != null)
+			select = selectedVersion;
+
+		removeAllItems();
+
+		if (list == null) {
+			addItem(LOADING);
+			return;
+		}
+
+		if (list.isEmpty())
+			addItem(EMPTY);
+		else {
+			model.addElements(list);
+
+			for (VersionSyncInfo version : list)
+				if(select != null && version.getID().equals(select))
+					setSelectedItem(version);
+		}
+	}
+
+	@Override
+	public void block(Object reason) {
+		this.setEnabled(false);
+	}
+
+	@Override
+	public void unblock(Object reason) {
+		this.setEnabled(true);
+	}
+
 }

@@ -2,137 +2,154 @@ package ru.turikhay.tlauncher.ui.text;
 
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+
 import javax.swing.JPasswordField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
 
 public class ExtendedPasswordField extends JPasswordField {
-   private static final long serialVersionUID = 3175896797135831502L;
-   private static final String DEFAULT_PLACEHOLDER = "пассворд, лол";
-   private CenterPanelTheme theme;
-   private String placeholder;
+	private static final long serialVersionUID = 3175896797135831502L;
+	private static final String DEFAULT_PLACEHOLDER = "пассворд, лол";
 
-   private ExtendedPasswordField(CenterPanel panel, String placeholder) {
-      this.theme = panel == null ? CenterPanel.defaultTheme : panel.getTheme();
-      this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
-      this.addFocusListener(new FocusListener() {
-         public void focusGained(FocusEvent e) {
-            ExtendedPasswordField.this.onFocusGained();
-         }
+	private CenterPanelTheme theme;
+	private String placeholder;
 
-         public void focusLost(FocusEvent e) {
-            ExtendedPasswordField.this.onFocusLost();
-         }
-      });
-      this.getDocument().addDocumentListener(new DocumentListener() {
-         public void insertUpdate(DocumentEvent e) {
-            ExtendedPasswordField.this.onChange();
-         }
+	private ExtendedPasswordField(CenterPanel panel, String placeholder) {
+		this.theme = (panel == null) ? CenterPanel.defaultTheme : panel
+				.getTheme();
+		this.placeholder = (placeholder == null) ? DEFAULT_PLACEHOLDER
+				: placeholder;
 
-         public void removeUpdate(DocumentEvent e) {
-            ExtendedPasswordField.this.onChange();
-         }
+		this.addFocusListener(new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				onFocusGained();
+			}
 
-         public void changedUpdate(DocumentEvent e) {
-            ExtendedPasswordField.this.onChange();
-         }
-      });
-      this.setText((String)null);
-   }
+			@Override
+			public void focusLost(FocusEvent e) {
+				onFocusLost();
+			}
+		});
 
-   public ExtendedPasswordField() {
-      this((CenterPanel)null, (String)null);
-   }
+		this.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				onChange();
+			}
 
-   private String getValueOf(String value) {
-      return value != null && !value.isEmpty() && !value.equals(this.placeholder) ? value : null;
-   }
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				onChange();
+			}
 
-   /** @deprecated */
-   @Deprecated
-   public String getText() {
-      return super.getText();
-   }
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				onChange();
+			}
+		});
 
-   public char[] getPassword() {
-      String value = this.getValue();
-      return value == null ? new char[0] : value.toCharArray();
-   }
+		this.setText(null);
+	}
 
-   public boolean hasPassword() {
-      return this.getValue() != null;
-   }
+	public ExtendedPasswordField() {
+		this(null, null);
+	}
 
-   private String getValue() {
-      return this.getValueOf(this.getText());
-   }
+	private String getValueOf(String value) {
+		if (value == null || value.isEmpty() || value.equals(placeholder))
+			return null;
 
-   public void setText(String text) {
-      String value = this.getValueOf(text);
-      if (value == null) {
-         this.setPlaceholder();
-      } else {
-         this.setForeground(this.theme.getFocus());
-         super.setText(value);
-      }
+		return value;
+	}
 
-   }
+	@Override
+	@Deprecated
+	public String getText() {
+		return super.getText();
+	}
 
-   private void setPlaceholder() {
-      this.setForeground(this.theme.getFocusLost());
-      super.setText(this.placeholder);
-   }
+	@Override
+	public char[] getPassword() {
+		String value = getValue();
 
-   private void setEmpty() {
-      this.setForeground(this.theme.getFocus());
-      super.setText("");
-   }
+		if (value == null)
+			return new char[0];
 
-   void updateStyle() {
-      this.setForeground(this.getValue() == null ? this.theme.getFocusLost() : this.theme.getFocus());
-   }
+		return value.toCharArray();
+	}
 
-   public String getPlaceholder() {
-      return this.placeholder;
-   }
+	public boolean hasPassword() {
+		return getValue() != null;
+	}
 
-   public void setPlaceholder(String placeholder) {
-      this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
-      if (this.getValue() == null) {
-         this.setPlaceholder();
-      }
+	private String getValue() {
+		return getValueOf(getText());
+	}
 
-   }
+	@Override
+	public void setText(String text) {
+		String value = getValueOf(text);
 
-   public CenterPanelTheme getTheme() {
-      return this.theme;
-   }
+		if (value == null)
+			setPlaceholder();
+		else {
+			setForeground(theme.getFocus());
+			super.setText(value);
+		}
+	}
 
-   public void setTheme(CenterPanelTheme theme) {
-      if (theme == null) {
-         theme = CenterPanel.defaultTheme;
-      }
+	private void setPlaceholder() {
+		setForeground(theme.getFocusLost());
+		super.setText(placeholder);
+	}
 
-      this.theme = theme;
-      this.updateStyle();
-   }
+	private void setEmpty() {
+		setForeground(theme.getFocus());
+		super.setText("");
+	}
 
-   protected void onFocusGained() {
-      if (this.getValue() == null) {
-         this.setEmpty();
-      }
+	void updateStyle() {
+		setForeground(getValue() == null ? theme.getFocusLost() : theme
+				.getFocus());
+	}
 
-   }
+	public String getPlaceholder() {
+		return placeholder;
+	}
 
-   protected void onFocusLost() {
-      if (this.getValue() == null) {
-         this.setPlaceholder();
-      }
+	public void setPlaceholder(String placeholder) {
+		this.placeholder = placeholder == null ? DEFAULT_PLACEHOLDER
+				: placeholder;
+		if (getValue() == null)
+			setPlaceholder();
+	}
 
-   }
+	public CenterPanelTheme getTheme() {
+		return theme;
+	}
 
-   protected void onChange() {
-   }
+	public void setTheme(CenterPanelTheme theme) {
+		if (theme == null)
+			theme = CenterPanel.defaultTheme;
+
+		this.theme = theme;
+		updateStyle();
+	}
+
+	protected void onFocusGained() {
+		if (getValue() == null)
+			setEmpty();
+	}
+
+	protected void onFocusLost() {
+		if (getValue() == null)
+			setPlaceholder();
+	}
+
+	protected void onChange() {
+	}
 }

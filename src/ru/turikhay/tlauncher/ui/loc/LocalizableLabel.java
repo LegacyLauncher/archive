@@ -3,54 +3,59 @@ package ru.turikhay.tlauncher.ui.loc;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 
-public class LocalizableLabel extends ExtendedLabel implements LocalizableComponent {
-   private static final long serialVersionUID = 7628068160047735335L;
-   protected String path;
-   protected String[] variables;
+public class LocalizableLabel extends ExtendedLabel implements
+LocalizableComponent {
+	private static final long serialVersionUID = 7628068160047735335L;
 
-   public LocalizableLabel(String path, Object... vars) {
-      this.init();
-      this.setText(path, vars);
-      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
-   }
+	protected String path;
+	protected String[] variables;
 
-   public LocalizableLabel(String path) {
-      this(path, Localizable.EMPTY_VARS);
-   }
+	public LocalizableLabel(String path, Object... vars) {
+		init();
 
-   public LocalizableLabel() {
-      this((String)null);
-   }
+		setText(path, vars);
+		setFont(getFont().deriveFont(TLauncherFrame.fontSize));
+	}
 
-   public LocalizableLabel(int horizontalAlignment) {
-      this((String)null);
-      this.setHorizontalAlignment(horizontalAlignment);
-   }
+	public LocalizableLabel(String path) {
+		this(path, Localizable.EMPTY_VARS);
+	}
 
-   public void setText(String path, Object... vars) {
-      this.path = path;
-      this.variables = Localizable.checkVariables(vars);
-      String value = Localizable.get(path);
+	public LocalizableLabel() {
+		this(null);
+	}
 
-      for(int i = 0; i < this.variables.length; ++i) {
-         value = value.replace("%" + i, this.variables[i]);
-      }
+	public LocalizableLabel(int horizontalAlignment) {
+		this(null);
+		this.setHorizontalAlignment(horizontalAlignment);
+	}
 
-      this.setRawText(value);
-   }
+	public void setText(String path, Object... vars) {
+		this.path = path;
+		this.variables = Localizable.checkVariables(vars);
 
-   protected void setRawText(String value) {
-      super.setText(value);
-   }
+		String value = Localizable.get(path);
+		for (int i = 0; i < variables.length; i++)
+			value = value.replace("%" + i, variables[i]);
 
-   public void setText(String path) {
-      this.setText(path, Localizable.EMPTY_VARS);
-   }
+		setRawText(value);
+	}
 
-   public void updateLocale() {
-      this.setText(this.path, this.variables);
-   }
+	protected void setRawText(String value) {
+		super.setText(value);
+	}
 
-   protected void init() {
-   }
+	@Override
+	public void setText(String path) {
+		setText(path, Localizable.EMPTY_VARS);
+	}
+
+	@Override
+	public void updateLocale() {
+		setText(path, (Object[]) variables);
+	}
+
+	protected void init() {
+
+	}
 }

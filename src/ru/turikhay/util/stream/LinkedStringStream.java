@@ -1,28 +1,46 @@
 package ru.turikhay.util.stream;
 
+/**
+ * <code>LinkedStringStream</code> is the
+ * <code>{@link BufferedStringStream}</code> that is capable with
+ * <code>{@link Logger}</code> <br/>
+ * <code>LinkedStringStream</code> applies changes into <code>Logger</code>
+ * using <code>Logger.rawlog()</code> method
+ * 
+ * @author Artur Khusainov
+ * 
+ */
 public class LinkedStringStream extends BufferedStringStream {
-   private Logger logger;
+	private Logger logger;
 
-   public LinkedStringStream() {
-   }
+	public LinkedStringStream() {
+	}
 
-   LinkedStringStream(Logger logger) {
-      this.logger = logger;
-   }
+	LinkedStringStream(Logger logger) {
+		this.logger = logger;
+	}
 
-   public Logger getLogger() {
-      return this.logger;
-   }
+	public Logger getLogger() {
+		return logger;
+	}
 
-   public void setLogger(Logger logger) {
-      this.logger = logger;
-   }
+	public void setLogger(Logger logger) {
+		this.logger = logger;
+	}
 
-   public void flush() {
-      if (this.logger != null) {
-         char[] chars = new char[this.caret - this.caretFlush];
-         this.buffer.getChars(this.caretFlush, this.caret, chars, 0);
-         this.logger.rawlog(chars);
-      }
-   }
+	/**
+	 * This method applies changes into <code>{@link Logger}</code> using
+	 * <code>Logger.rawlog()</code> method
+	 */
+	@Override
+	public void flush() {
+		if (logger == null)
+			return;
+
+		char[] chars = new char[caret - caretFlush];
+		buffer.getChars(caretFlush, caret, chars, 0);
+
+		logger.rawlog(chars);
+	}
+
 }

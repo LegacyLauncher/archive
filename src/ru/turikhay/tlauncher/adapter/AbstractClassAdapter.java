@@ -2,184 +2,171 @@ package ru.turikhay.tlauncher.adapter;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.converter.dummy.DummyConverter;
 import ru.turikhay.util.U;
 
-public abstract class AbstractClassAdapter {
-   protected final List values = new ArrayList();
-   protected final List converters = new ArrayList();
-   protected PublicCloneable initial;
+@SuppressWarnings("unchecked")
+public abstract class AbstractClassAdapter<T extends PublicCloneable> {
 
-   protected AbstractClassAdapter() {
-   }
+	protected final List<AdaptedValue<T>> values;
+	protected final List<StringConverter<Object>> converters;
 
-   public PublicCloneable getInitial() {
-      return this.initial;
-   }
+	protected T initial;
 
-   public void setInitial(PublicCloneable instance) {
-      this.initial = instance;
-   }
+	protected AbstractClassAdapter() {
+		this.values = new ArrayList<AdaptedValue<T>>();
+		this.converters = new ArrayList<StringConverter<Object>>();
+	}
 
-   protected void addConverter(StringConverter converter) {
-      if (converter == null) {
-         throw new NullPointerException();
-      } else {
-         this.converters.add(converter);
-      }
-   }
+	public T getInitial() {
+		return initial;
+	}
 
-   protected void addConverters(StringConverter[] converters) {
-      for(int i = 0; i < converters.length; ++i) {
-         StringConverter converter = converters[i];
-         if (converter == null) {
-            throw new NullPointerException("StringConverter at " + i + " is NULL!");
-         }
+	public void setInitial(T instance) {
+		this.initial = instance;
+	}
 
-         this.converters.add(converter);
-      }
+	protected void addConverter(StringConverter<?> converter) {
+		if(converter == null)
+			throw new NullPointerException();
 
-   }
+		this.converters.add((StringConverter<Object>) converter);
+	}
 
-   protected void removeConverter(StringConverter converter) {
-      if (converter == null) {
-         throw new NullPointerException();
-      } else {
-         this.converters.remove(converter);
-      }
-   }
+	protected void addConverters(StringConverter<?>[] converters) {
+		for(int i=0;i<converters.length;i++) {
+			StringConverter<Object> converter = (StringConverter<Object>) converters[i];
 
-   protected List getConverters() {
-      return this.converters;
-   }
+			if(converter == null)
+				throw new NullPointerException("StringConverter at "+i+" is NULL!");
 
-   public synchronized void refreshValues() throws ClassAdapterException {
-      if (this.initial == null) {
-         throw new NullPointerException("Initial instance is not defined!");
-      } else {
-         ArrayList list = new ArrayList();
-         Field[] fields = this.initial.getClass().getDeclaredFields();
-         Field[] var6 = fields;
-         int var5 = fields.length;
+			this.converters.add(converter);
+		}
+	}
 
-         for(int var4 = 0; var4 < var5; ++var4) {
-            Field field = var6[var4];
-            Class fieldClass = field.getType();
-            StringConverter converter = null;
-            Iterator var10 = this.converters.iterator();
+	protected void removeConverter(StringConverter<?> converter) {
+		if(converter == null)
+			throw new NullPointerException();
 
-            while(var10.hasNext()) {
-               StringConverter checkConverter = (StringConverter)var10.next();
-               if (checkConverter.getObjectClass().equals(fieldClass)) {
-                  this.log("Found converter for field:", field);
-                  converter = checkConverter;
-                  break;
-               }
-            }
+		this.converters.remove(converter);
+	}
 
-            if (converter == null) {
-               this.log("Cannot find coverter for field:", field, fieldClass);
-            } else {
-               try {
-                  field.setAccessible(true);
-               } catch (RuntimeException var14) {
-                  throw new ClassAdapterException("Field cannot be set accessible: " + field, var14);
-               }
+	protected List<StringConverter<Object>> getConverters() {
+		return converters;
+	}
 
-               String fieldName = field.getName();
+	public synchronized void refreshValues() throws ClassAdapterException {
+		if(initial == null)
+			throw new NullPointerException("Initial instance is not defined!");
 
-               Object fieldValue;
-               try {
-                  fieldValue = field.get(this.initial);
-               } catch (Exception var13) {
-                  throw new ClassAdapterException("Cannot get field value: " + field, var13);
-               }
+		ArrayList<AdaptedValue<T>> list = new ArrayList<AdaptedValue<T>>();
+		Field[] fields = initial.getClass().getDeclaredFields();
 
-               list.add(new AdaptedValue(this.initial, fieldName, fieldValue, converter));
+		for(Field field : fields) {
+			Class<?> fieldClass = field.getType();
+			StringConverter<Object> converter = null;
 
-               try {
-                  field.setAccessible(false);
-               } catch (RuntimeException var12) {
-                  this.log("Cannot set default accessibility for field:", field);
-               }
-            }
-         }
+			for(StringConverter<Object> checkConverter : converters) {
+				if(checkConverter.getObjectClass().equals( fieldClass )) {
+					log("Found converter for field:", field);
+					converter = checkConverter;
+					break;
+				}
+			}
 
-         this.values.clear();
-         this.values.addAll(list);
-      }
-   }
+			if(converter == null) {
+				log("Cannot find coverter for field:", field, fieldClass);
+				continue;
+			}
 
-   public synchronized PublicCloneable createInstance() throws ClassAdapterException {
-      if (this.initial == null) {
-         throw new NullPointerException("Initial instance is not defined!");
-      } else {
-         PublicCloneable instance;
-         try {
-            instance = (PublicCloneable)this.initial.cloneSafely();
-            if (instance == null) {
-               throw new NullPointerException("New instance is NULL!");
-            }
-         } catch (Exception var14) {
-            throw new ClassAdapterException("Cannot create clone instance!", var14);
-         }
+			try { field.setAccessible(true); }
+			catch(RuntimeException e) {
+				throw new ClassAdapterException("Field cannot be set accessible: "+ field, e);
+			}
 
-         Field[] fields = instance.getClass().getDeclaredFields();
-         Iterator var4 = this.values.iterator();
+			String fieldName = field.getName();
+			Object fieldValue;
 
-         while(var4.hasNext()) {
-            AdaptedValue adapted = (AdaptedValue)var4.next();
-            String fieldName = adapted.getKey();
-            Field field = null;
-            Field[] var10 = fields;
-            int var9 = fields.length;
+			try { fieldValue = field.get(initial); }
+			catch(Exception e) {
+				throw new ClassAdapterException("Cannot get field value: "+field, e);
+			}
 
-            for(int var8 = 0; var8 < var9; ++var8) {
-               Field checkField = var10[var8];
-               if (fieldName.equals(checkField.getName())) {
-                  field = checkField;
-                  break;
-               }
-            }
+			list.add(new AdaptedValue<T>(initial, fieldName, fieldValue, converter));
 
-            if (field == null) {
-               this.log("No value for field:", fieldName);
-            } else {
-               try {
-                  field.setAccessible(true);
-               } catch (RuntimeException var13) {
-                  throw new ClassAdapterException("Field cannot be set accessible: " + field, var13);
-               }
+			try { field.setAccessible(false); }
+			catch(RuntimeException e) {
+				log("Cannot set default accessibility for field:", field);
+			}
+		}
 
-               Object fieldValue = adapted.getValue();
-               this.log("Setting:", fieldName, fieldValue);
+		values.clear();
+		values.addAll(list);
+	}
 
-               try {
-                  field.set(instance, fieldValue);
-               } catch (Exception var12) {
-                  throw new ClassAdapterException("Field cannot be set: " + field + " = " + fieldValue, var12);
-               }
+	public synchronized T createInstance() throws ClassAdapterException {
+		if(initial == null)
+			throw new NullPointerException("Initial instance is not defined!");
 
-               try {
-                  field.setAccessible(false);
-               } catch (RuntimeException var11) {
-                  this.log("Cannot set default accessibility for field:", field);
-               }
-            }
-         }
+		T instance;
+		try {
+			instance = (T) initial.cloneSafely();
 
-         return instance;
-      }
-   }
+			if(instance == null)
+				throw new NullPointerException("New instance is NULL!");
 
-   protected void addDummyConverters() {
-      this.addConverters(DummyConverter.getConverters());
-   }
+		} catch(Exception e) {
+			throw new ClassAdapterException("Cannot create clone instance!", e);
+		}
 
-   protected void log(Object... o) {
-      U.log("[" + this.getClass().getSimpleName() + "]", o);
-   }
+		Field[] fields = instance.getClass().getDeclaredFields();
+
+		for(AdaptedValue<T> adapted : values) {
+			String fieldName = adapted.getKey();
+			Field field = null;
+
+			for(Field checkField : fields)
+				if(fieldName.equals( checkField.getName() )) {
+					field = checkField;
+					break;
+				}
+
+			if(field == null) {
+				log("No value for field:", fieldName);
+				continue;
+			}
+
+			try { field.setAccessible(true); }
+			catch(RuntimeException e) {
+				throw new ClassAdapterException("Field cannot be set accessible: "+ field, e);
+			}
+
+			Object fieldValue = adapted.getValue();
+
+			log("Setting:", fieldName, fieldValue);
+
+			try { field.set(instance, fieldValue); }
+			catch(Exception e) {
+				throw new ClassAdapterException("Field cannot be set: "+field+" = "+ fieldValue, e);
+			}
+
+			try { field.setAccessible(false); }
+			catch(RuntimeException e) {
+				log("Cannot set default accessibility for field:", field);
+			}
+		}
+
+		return instance;
+	}
+
+	protected void addDummyConverters() {
+		this.addConverters(DummyConverter.getConverters());
+	}
+
+	protected void log(Object...o) {
+		U.log("["+ getClass().getSimpleName() +"]", o);
+	}
 }

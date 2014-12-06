@@ -1,74 +1,79 @@
 package ru.turikhay.util;
 
-public class Range {
-   private final Number minValue;
-   private final Number maxValue;
-   private final boolean including;
-   private final double doubleMin;
-   private final double doubleMax;
+import static ru.turikhay.util.Range.RangeDifference.FITS;
+import static ru.turikhay.util.Range.RangeDifference.GREATER;
+import static ru.turikhay.util.Range.RangeDifference.LESS;
 
-   public Range(Number minValue, Number maxValue, boolean including) {
-      if (minValue == null) {
-         throw new NullPointerException("min");
-      } else if (maxValue == null) {
-         throw new NullPointerException("max");
-      } else {
-         this.minValue = minValue;
-         this.maxValue = maxValue;
-         this.doubleMin = minValue.doubleValue();
-         this.doubleMax = maxValue.doubleValue();
-         if (this.doubleMin >= this.doubleMax) {
-            throw new IllegalArgumentException("min >= max");
-         } else {
-            this.including = including;
-         }
-      }
-   }
+public class Range<T extends Number> {
+	private final T minValue, maxValue;
+	private final boolean including;
 
-   public Range(Number minValue, Number maxValue) {
-      this(minValue, maxValue, true);
-   }
+	private final double doubleMin, doubleMax;
 
-   public Number getMinValue() {
-      return this.minValue;
-   }
+	public Range(T minValue, T maxValue, boolean including) {
+		if(minValue == null)
+			throw new NullPointerException("min");
 
-   public Number getMaxValue() {
-      return this.maxValue;
-   }
+		if(maxValue == null)
+			throw new NullPointerException("max");
 
-   public boolean getIncluding() {
-      return this.including;
-   }
+		this.minValue = minValue;
+		this.maxValue = maxValue;
 
-   public Range.RangeDifference getDifference(Number value) {
-      if (value == null) {
-         throw new NullPointerException("value");
-      } else {
-         double doubleValue = value.doubleValue();
-         double min = doubleValue - this.doubleMin;
-         if (min == 0.0D) {
-            return this.including ? Range.RangeDifference.FITS : Range.RangeDifference.LESS;
-         } else if (min < 0.0D) {
-            return Range.RangeDifference.LESS;
-         } else {
-            double max = doubleValue - this.doubleMax;
-            if (max == 0.0D) {
-               return this.including ? Range.RangeDifference.FITS : Range.RangeDifference.GREATER;
-            } else {
-               return max > 0.0D ? Range.RangeDifference.GREATER : Range.RangeDifference.FITS;
-            }
-         }
-      }
-   }
+		this.doubleMin = minValue.doubleValue();
+		this.doubleMax = maxValue.doubleValue();
 
-   public boolean fits(Number value) {
-      return this.getDifference(value) == Range.RangeDifference.FITS;
-   }
+		if(doubleMin >= doubleMax)
+			throw new IllegalArgumentException("min >= max");
 
-   public static enum RangeDifference {
-      LESS,
-      FITS,
-      GREATER;
-   }
+		this.including = including;
+	}
+
+	public Range(T minValue, T maxValue) {
+		this(minValue, maxValue, true);
+	}
+
+	public T getMinValue() {
+		return minValue;
+	}
+
+	public T getMaxValue() {
+		return maxValue;
+	}
+
+	public boolean getIncluding() {
+		return including;
+	}
+
+	public RangeDifference getDifference(T value) {
+		if(value == null)
+			throw new NullPointerException("value");
+
+		double doubleValue = value.doubleValue();
+		double min = doubleValue - doubleMin;
+
+		if(min == 0d) // value = minValue
+			return including? FITS : LESS;
+
+		if(min < 0d) // value < minValue
+			return LESS;
+
+		double max = doubleValue - doubleMax;
+
+		if(max == 0d) // value = maxValue
+			return including? FITS : GREATER;
+
+		if(max > 0d) // value > maxValue
+			return GREATER;
+
+		return FITS;
+	}
+
+	public boolean fits(T value) {
+		return getDifference(value) == FITS;
+	}
+
+	public enum RangeDifference {
+		LESS, FITS, GREATER;
+	}
 }

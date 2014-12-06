@@ -4,24 +4,32 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.Reflect;
 
-public class DirectionConverter extends LocalizableStringConverter {
-   public DirectionConverter() {
-      super("settings.direction");
-   }
+public class DirectionConverter extends LocalizableStringConverter<Direction> {
 
-   public Direction fromString(String from) {
-      return (Direction)Reflect.parseEnum(Direction.class, from);
-   }
+	public DirectionConverter() {
+		super("settings.direction");
+	}
 
-   public String toValue(Direction from) {
-      return from == null ? null : from.toString().toLowerCase();
-   }
+	@Override
+	public Direction fromString(String from) {
+		return Reflect.parseEnum(Direction.class, from);
+	}
 
-   public Class getObjectClass() {
-      return Direction.class;
-   }
+	@Override
+	public String toValue(Direction from) {
+		if(from == null)
+			return null;
+		return from.toString().toLowerCase();
+	}
 
-   protected String toPath(Direction from) {
-      return this.toValue(from);
-   }
+	@Override
+	public Class<Direction> getObjectClass() {
+		return Direction.class;
+	}
+
+	@Override
+	protected String toPath(Direction from) {
+		return toValue(from);
+	}
+
 }

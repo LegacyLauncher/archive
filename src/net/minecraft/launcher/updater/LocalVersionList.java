@@ -4,121 +4,119 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Set;
+
 import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 
 public class LocalVersionList extends StreamVersionList {
-   private File baseDirectory;
-   private File baseVersionsDir;
 
-   public LocalVersionList(File baseDirectory) throws IOException {
-      this.setBaseDirectory(baseDirectory);
-   }
+	private File baseDirectory;
+	private File baseVersionsDir;
 
-   public File getBaseDirectory() {
-      return this.baseDirectory;
-   }
+	public LocalVersionList(File baseDirectory) throws IOException {
+		this.setBaseDirectory(baseDirectory);
+	}
 
-   public void setBaseDirectory(File directory) throws IOException {
-      if (directory == null) {
-         throw new IllegalArgumentException("Base directory is NULL!");
-      } else {
-         FileUtil.createFolder(directory);
-         this.log(new Object[]{"Base directory:", directory.getAbsolutePath()});
-         this.baseDirectory = directory;
-         this.baseVersionsDir = new File(this.baseDirectory, "versions");
-      }
-   }
+	public File getBaseDirectory() {
+		return this.baseDirectory;
+	}
 
-   public void refreshVersions() throws IOException {
-      this.clearCache();
-      File[] files = this.baseVersionsDir.listFiles();
-      if (files != null) {
-         File[] var5 = files;
-         int var4 = files.length;
+	public void setBaseDirectory(File directory) throws IOException {
+		if (directory == null)
+			throw new IllegalArgumentException("Base directory is NULL!");
 
-         for(int var3 = 0; var3 < var4; ++var3) {
-            File directory = var5[var3];
-            String id = directory.getName();
-            File jsonFile = new File(directory, id + ".json");
-            if (directory.isDirectory() && jsonFile.isFile()) {
-               try {
-                  CompleteVersion version = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
-                  if (version == null) {
-                     this.log(new Object[]{"JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local."});
-                  } else {
-                     version.setID(id);
-                     version.setSource(Repository.LOCAL_VERSION_REPO);
-                     version.setVersionList(this);
-                     this.addVersion(version);
-                  }
-               } catch (Exception var9) {
-                  this.log(new Object[]{"Error occurred while parsing local version", id, var9});
-               }
-            }
-         }
+		FileUtil.createFolder(directory);
+		log("Base directory:", directory.getAbsolutePath());
 
-      }
-   }
+		this.baseDirectory = directory;
+		this.baseVersionsDir = new File(this.baseDirectory, "versions");
+	}
 
-   public void saveVersion(CompleteVersion version) throws IOException {
-      String text = this.serializeVersion(version);
-      File target = new File(this.baseVersionsDir, version.getID() + "/" + version.getID() + ".json");
-      FileUtil.writeFile(target, text);
-   }
+	@Override
+	public void refreshVersions() throws IOException {
+		clearCache();
 
-   public void deleteVersion(String id, boolean deleteLibraries) throws IOException {
-      CompleteVersion version = this.getCompleteVersion(id);
-      if (version == null) {
-         throw new IllegalArgumentException("Version is not installed!");
-      } else {
-         File dir = new File(this.baseVersionsDir, id + '/');
-         if (!dir.isDirectory()) {
-            throw new IOException("Cannot find directory: " + dir.getAbsolutePath());
-         } else {
-            FileUtil.deleteDirectory(dir);
-            if (deleteLibraries) {
-               Iterator var6 = version.getClassPath(this.baseDirectory).iterator();
+		File[] files = this.baseVersionsDir.listFiles();
+		if (files == null)
+			return;
 
-               while(var6.hasNext()) {
-                  File library = (File)var6.next();
-                  FileUtil.deleteFile(library);
-               }
+		for (File directory : files) {
+			String id = directory.getName();
+			File jsonFile = new File(directory, id + ".json");
 
-               var6 = version.getNatives().iterator();
+			if (!directory.isDirectory() || !jsonFile.isFile())
+				continue;
 
-               while(var6.hasNext()) {
-                  String nativeLib = (String)var6.next();
-                  FileUtil.deleteFile(new File(this.baseDirectory, nativeLib));
-               }
+			try {
+				CompleteVersion version = this.gson.fromJson(getUrl("versions/"
+						+ id + "/" + id + ".json"), CompleteVersion.class);
 
-            }
-         }
-      }
-   }
+				if (version == null) {
+					log("JSON descriptor of version \"" + id
+							+ "\" in NULL, it won't be added in list as local.");
+					continue;
+				}
 
-   protected InputStream getInputStream(String uri) throws IOException {
-      return new FileInputStream(new File(this.baseDirectory, uri));
-   }
+				version.setID(id);
+				version.setSource(Repository.LOCAL_VERSION_REPO);
+				version.setVersionList(this);
 
-   public boolean hasAllFiles(CompleteVersion version, OS os) {
-      Set files = version.getRequiredFiles(os);
-      Iterator var5 = files.iterator();
+				addVersion(version);
+			} catch (Exception ex) {
+				log("Error occurred while parsing local version", id, ex);
+			}
+		}
+	}
 
-      File required;
-      do {
-         if (!var5.hasNext()) {
-            return true;
-         }
+	public void saveVersion(CompleteVersion version) throws IOException {
+		String text = serializeVersion(version);
+		File target = new File(this.baseVersionsDir, version.getID() + "/"
+				+ version.getID() + ".json");
 
-         String file = (String)var5.next();
-         required = new File(this.baseDirectory, file);
-      } while(required.isFile() && required.length() != 0L);
+		FileUtil.writeFile(target, text);
+	}
+	
+	public void deleteVersion(String id, boolean deleteLibraries) throws IOException {
+		CompleteVersion version = getCompleteVersion(id);
+		
+		if(version == null)
+			throw new IllegalArgumentException("Version is not installed!");
+		
+		File dir = new File(this.baseVersionsDir, id + '/');
+		
+		if(!dir.isDirectory())
+			throw new IOException("Cannot find directory: "+ dir.getAbsolutePath());
+		
+		FileUtil.deleteDirectory(dir);
+		
+		if(!deleteLibraries) return;
+		
+		for(File library : version.getClassPath(baseDirectory))
+			FileUtil.deleteFile(library);
+		
+		for(String nativeLib : version.getNatives())
+			FileUtil.deleteFile(new File(baseDirectory, nativeLib));
+	}
+	
+	@Override
+	protected InputStream getInputStream(String uri) throws IOException {
+		return new FileInputStream(new File(this.baseDirectory, uri));
+	}
 
-      return false;
-   }
+	@Override
+	public boolean hasAllFiles(CompleteVersion version, OS os) {
+		Set<String> files = version.getRequiredFiles(os);
+
+		for (String file : files) {
+			File required = new File(this.baseDirectory, file);
+			if (!required.isFile() || required.length() == 0L)
+				return false;
+		}
+
+		return true;
+	}
+
 }

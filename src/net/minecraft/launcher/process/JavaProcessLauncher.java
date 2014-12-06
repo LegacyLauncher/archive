@@ -3,106 +3,100 @@ package net.minecraft.launcher.process;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+
 import ru.turikhay.util.OS;
 
 public class JavaProcessLauncher {
-   private final String jvmPath;
-   private final List commands;
-   private File directory;
-   private ProcessBuilder process;
+	private final String jvmPath;
+	private final List<String> commands;
+	private File directory;
+	private ProcessBuilder process;
 
-   public JavaProcessLauncher(String jvmPath, String[] commands) {
-      if (jvmPath == null) {
-         jvmPath = OS.getJavaPath();
-      }
+	public JavaProcessLauncher(String jvmPath, String[] commands) {
+		if (jvmPath == null)
+			jvmPath = OS.getJavaPath();
 
-      this.jvmPath = jvmPath;
-      this.commands = new ArrayList();
-      Collections.addAll(this.commands, commands);
-   }
+		this.jvmPath = jvmPath;
+		this.commands = new ArrayList<String>();
+		Collections.addAll(this.commands, commands);
+	}
 
-   public JavaProcess start() throws IOException {
-      List full = this.getFullCommands();
-      return new JavaProcess(full, this.createProcess().start());
-   }
+	public JavaProcess start() throws IOException {
+		List<String> full = getFullCommands();
+		return new JavaProcess(full, createProcess().start());
+	}
 
-   public ProcessBuilder createProcess() {
-      if (this.process == null) {
-         this.process = (new ProcessBuilder(this.getFullCommands())).directory(this.directory).redirectErrorStream(true);
-      }
+	// If process is created, there won't be any change applied.
+	public ProcessBuilder createProcess() {
+		if (process == null)
+			process = new ProcessBuilder(getFullCommands()).directory(
+					this.directory).redirectErrorStream(true);
+		return process;
+	}
 
-      return this.process;
-   }
+	List<String> getFullCommands() {
+		List<String> result = new ArrayList<String>(this.commands);
+		result.add(0, getJavaPath());
+		return result;
+	}
 
-   List getFullCommands() {
-      List result = new ArrayList(this.commands);
-      result.add(0, this.getJavaPath());
-      return result;
-   }
+	public String getCommandsAsString() {
+		List<String> parts = getFullCommands();
+		StringBuilder full = new StringBuilder();
+		boolean first = true;
 
-   public String getCommandsAsString() {
-      List parts = this.getFullCommands();
-      StringBuilder full = new StringBuilder();
-      boolean first = true;
+		for (String part : parts) {
+			if (first)
+				first = false;
+			else
+				full.append(' ');
+			full.append(part);
+		}
 
-      String part;
-      for(Iterator var5 = parts.iterator(); var5.hasNext(); full.append(part)) {
-         part = (String)var5.next();
-         if (first) {
-            first = false;
-         } else {
-            full.append(" ");
-         }
-      }
+		return full.toString();
+	}
 
-      return full.toString();
-   }
+	public List<String> getCommands() {
+		return this.commands;
+	}
 
-   public List getCommands() {
-      return this.commands;
-   }
+	public void addCommand(Object command) {
+		this.commands.add(command.toString());
+	}
 
-   public void addCommand(Object command) {
-      this.commands.add(command.toString());
-   }
+	public void addCommand(Object key, Object value) {
+		this.commands.add(key.toString());
+		this.commands.add(value.toString());
+	}
 
-   public void addCommand(Object key, Object value) {
-      this.commands.add(key.toString());
-      this.commands.add(value.toString());
-   }
+	public void addCommands(Object[] commands) {
+		for (Object c : commands)
+			this.commands.add(c.toString());
+	}
 
-   public void addCommands(Object[] commands) {
-      Iterator var3 = Arrays.asList(commands).iterator();
+	public void addSplitCommands(Object commands) {
+		addCommands(commands.toString().split(" "));
+	}
 
-      while(var3.hasNext()) {
-         Object c = var3.next();
-         this.commands.add(c.toString());
-      }
+	public JavaProcessLauncher directory(File directory) {
+		this.directory = directory;
 
-   }
+		return this;
+	}
 
-   public void addSplitCommands(Object commands) {
-      this.addCommands(commands.toString().split(" "));
-   }
+	public File getDirectory() {
+		return this.directory;
+	}
 
-   public JavaProcessLauncher directory(File directory) {
-      this.directory = directory;
-      return this;
-   }
+	String getJavaPath() {
+		return this.jvmPath;
+	}
 
-   public File getDirectory() {
-      return this.directory;
-   }
-
-   String getJavaPath() {
-      return this.jvmPath;
-   }
-
-   public String toString() {
-      return "JavaProcessLauncher[commands=" + this.commands + ", java=" + this.jvmPath + "]";
-   }
+	@Override
+	public String toString() {
+		return "JavaProcessLauncher[commands=" + this.commands + ", java="
+				+ this.jvmPath + "]";
+	}
 }

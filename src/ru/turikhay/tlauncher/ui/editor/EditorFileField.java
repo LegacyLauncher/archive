@@ -1,10 +1,12 @@
 package ru.turikhay.tlauncher.ui.editor;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.regex.Pattern;
+
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
@@ -13,132 +15,145 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.U;
 
 public class EditorFileField extends BorderPanel implements EditorField {
-   private static final long serialVersionUID = 5136327098130653756L;
-   public static final char DEFAULT_DELIMITER = ';';
-   private final EditorTextField textField;
-   private final LocalizableButton explorerButton;
-   private final FileExplorer explorer;
-   private final char delimiterChar;
-   private final Pattern delimiterSplitter;
+	private static final long serialVersionUID = 5136327098130653756L;
+	public static final char DEFAULT_DELIMITER = ';';
 
-   public EditorFileField(String prompt, boolean canBeEmpty, String button, FileExplorer chooser, char delimiter) {
-      if (chooser == null) {
-         throw new NullPointerException("FileExplorer should be defined!");
-      } else {
-         this.textField = new EditorTextField(prompt, canBeEmpty);
-         this.explorerButton = new LocalizableButton(button);
-         this.explorer = chooser;
-         this.delimiterChar = delimiter;
-         this.delimiterSplitter = Pattern.compile(String.valueOf(this.delimiterChar), 16);
-         this.explorerButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               EditorFileField.this.explorerButton.setEnabled(false);
-               EditorFileField.this.explorer.setCurrentDirectory(EditorFileField.this.getFirstFile());
-               int result = EditorFileField.this.explorer.showDialog(EditorFileField.this);
-               if (result == 0) {
-                  EditorFileField.this.setRawValue(EditorFileField.this.explorer.getSelectedFiles());
-               }
+	private final EditorTextField textField;
+	private final LocalizableButton explorerButton;
+	private final FileExplorer explorer;
 
-               EditorFileField.this.explorerButton.setEnabled(true);
-            }
-         });
-         this.add(this.textField, "Center");
-         this.add(this.explorerButton, "East");
-      }
-   }
+	private final char delimiterChar;
+	private final Pattern delimiterSplitter;
 
-   public EditorFileField(String prompt, boolean canBeEmpty, FileExplorer chooser) {
-      this(prompt, canBeEmpty, "explorer.browse", chooser, ';');
-   }
+	public EditorFileField(String prompt, boolean canBeEmpty, String button,
+			FileExplorer chooser, char delimiter) {
+		if (chooser == null)
+			throw new NullPointerException("FileExplorer should be defined!");
 
-   public EditorFileField(String prompt, FileExplorer chooser) {
-      this(prompt, false, chooser);
-   }
+		this.textField = new EditorTextField(prompt, canBeEmpty);
+		this.explorerButton = new LocalizableButton(button);
+		this.explorer = chooser;
 
-   public String getSettingsValue() {
-      return this.getValueFromRaw(this.getRawValues());
-   }
+		this.delimiterChar = delimiter;
+		this.delimiterSplitter = Pattern.compile(String.valueOf(delimiterChar),
+				Pattern.LITERAL);
 
-   private File[] getRawValues() {
-      String[] paths = this.getRawSplitValue();
-      if (paths == null) {
-         return null;
-      } else {
-         int len = paths.length;
-         File[] files = new File[len];
+		this.explorerButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				explorerButton.setEnabled(false);
 
-         for(int i = 0; i < paths.length; ++i) {
-            files[i] = new File(paths[i]);
-         }
+				explorer.setCurrentDirectory(getFirstFile());
+				int result = explorer.showDialog(EditorFileField.this);
 
-         return files;
-      }
-   }
+				if (result == FileExplorer.APPROVE_OPTION)
+					setRawValue(explorer.getSelectedFiles());
 
-   public void setSettingsValue(String value) {
-      this.textField.setSettingsValue(value);
-   }
+				explorerButton.setEnabled(true);
+			}
+		});
 
-   private void setRawValue(File[] fileList) {
-      this.setSettingsValue(this.getValueFromRaw(fileList));
-   }
+		this.add(textField, BorderLayout.CENTER);
+		this.add(explorerButton, BorderLayout.EAST);
+	}
 
-   private String[] getRawSplitValue() {
-      return this.splitString(this.textField.getValue());
-   }
+	public EditorFileField(String prompt, boolean canBeEmpty, FileExplorer chooser) {
+		this(prompt, canBeEmpty, "explorer.browse", chooser, DEFAULT_DELIMITER);
+	}
 
-   private String getValueFromRaw(File[] files) {
-      if (files == null) {
-         return null;
-      } else {
-         StringBuilder builder = new StringBuilder();
-         File[] var6 = files;
-         int var5 = files.length;
+	public EditorFileField(String prompt, FileExplorer chooser) {
+		this(prompt, false, chooser);
+	}
 
-         for(int var4 = 0; var4 < var5; ++var4) {
-            File file = var6[var4];
-            String path = file.getAbsolutePath();
-            builder.append(this.delimiterChar).append(path);
-         }
+	@Override
+	public String getSettingsValue() {
+		return getValueFromRaw(getRawValues());
+	}
 
-         return builder.substring(1);
-      }
-   }
+	private File[] getRawValues() {
+		String[] paths = getRawSplitValue();
+		if (paths == null)
+			return null;
 
-   private String[] splitString(String s) {
-      if (s == null) {
-         return null;
-      } else {
-         String[] split = this.delimiterSplitter.split(s);
-         return split.length == 0 ? null : split;
-      }
-   }
+		int len = paths.length;
+		File[] files = new File[len];
 
-   private File getFirstFile() {
-      File[] files = this.getRawValues();
-      return files != null && files.length != 0 ? files[0] : TLauncher.getDirectory();
-   }
+		for (int i = 0; i < paths.length; i++)
+			files[i] = new File(paths[i]);
 
-   public boolean isValueValid() {
-      return this.textField.isValueValid();
-   }
+		return files;
+	}
 
-   public void setBackground(Color bg) {
-      if (this.textField != null) {
-         this.textField.setBackground(bg);
-      }
+	@Override
+	public void setSettingsValue(String value) {
+		this.textField.setSettingsValue(value);
+	}
 
-   }
+	private void setRawValue(File[] fileList) {
+		setSettingsValue(getValueFromRaw(fileList));
+	}
 
-   public void block(Object reason) {
-      Blocker.blockComponents(reason, this.textField, this.explorerButton);
-   }
+	private String[] getRawSplitValue() {
+		return splitString(textField.getValue());
+	}
 
-   public void unblock(Object reason) {
-      Blocker.unblockComponents(Blocker.UNIVERSAL_UNBLOCK, this.textField, this.explorerButton);
-   }
+	private String getValueFromRaw(File[] files) {
+		if (files == null)
+			return null;
 
-   protected void log(Object... w) {
-      U.log("[" + this.getClass().getSimpleName() + "]", w);
-   }
+		StringBuilder builder = new StringBuilder();
+
+		for (File file : files) {
+			String path = file.getAbsolutePath();
+			builder.append(delimiterChar).append(path);
+		}
+
+		return builder.substring(1);
+	}
+
+	private String[] splitString(String s) {
+		if (s == null)
+			return null;
+
+		String[] split = delimiterSplitter.split(s);
+		if (split.length == 0)
+			return null;
+
+		return split;
+	}
+
+	private File getFirstFile() {
+		File[] files = getRawValues();
+
+		if (files == null || files.length == 0)
+			return TLauncher.getDirectory();
+
+		return files[0];
+	}
+
+	@Override
+	public boolean isValueValid() {
+		return textField.isValueValid();
+	}
+
+	@Override
+	public void setBackground(Color bg) {
+		if (textField != null)
+			textField.setBackground(bg);
+	}
+
+	@Override
+	public void block(Object reason) {
+		Blocker.blockComponents(reason, textField, explorerButton);
+	}
+
+	@Override
+	public void unblock(Object reason) {
+		Blocker.unblockComponents(Blocker.UNIVERSAL_UNBLOCK, textField,
+				explorerButton);
+	}
+
+	protected void log(Object... w) {
+		U.log("[" + getClass().getSimpleName() + "]", w);
+	}
 }

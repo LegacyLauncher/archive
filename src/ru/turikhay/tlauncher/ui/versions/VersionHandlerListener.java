@@ -1,16 +1,14 @@
 package ru.turikhay.tlauncher.ui.versions;
 
 import java.util.List;
+
+import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.managers.VersionManager;
 
 public interface VersionHandlerListener {
-   void onVersionRefreshing(VersionManager var1);
-
-   void onVersionRefreshed(VersionManager var1);
-
-   void onVersionSelected(List var1);
-
-   void onVersionDeselected();
-
-   void onVersionDownload(List var1);
+	void onVersionRefreshing(VersionManager vm);
+	void onVersionRefreshed(VersionManager vm);
+	void onVersionSelected(List<VersionSyncInfo> versions);
+	void onVersionDeselected();
+	void onVersionDownload(List<VersionSyncInfo> list);
 }
