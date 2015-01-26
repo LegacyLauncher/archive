@@ -1,320 +1,372 @@
 package ru.turikhay.tlauncher.updater;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.URI;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Type;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.Bootstrapper;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.DownloadableHandler;
 import ru.turikhay.tlauncher.downloader.Downloader;
-import ru.turikhay.tlauncher.downloader.RetryDownloadException;
+import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
 public class Update {
-	public static final int NONE = 0, DOWNLOADING = 1, DOWNLOADED = 2,
-			UPDATING = 3;
-
-	private int step;
-
-	private double version;
-	private String code, description;
-	private boolean required;
-
-	private Map<PackageType, URI> links = new HashMap<PackageType, URI>();
-
-	private final Updater upd;
-	private final Downloader d;
-
-	private final List<UpdateListener> listeners = Collections
-			.synchronizedList(new ArrayList<UpdateListener>());
-
-	public void addListener(UpdateListener l) {
-		listeners.add(l);
-	}
-
-	public void removeListener(UpdateListener l) {
-		listeners.remove(l);
-	}
-
-	Update(Updater upd, Downloader d, SimpleConfiguration settings) {
-		if (upd == null)
-			throw new NullPointerException("Updater is NULL!");
-		if (d == null)
-			throw new NullPointerException("Downloader is NULL!");
-		if (settings == null)
-			throw new NullPointerException("Settings is NULL!");
-
-		this.upd = upd;
-		this.d = d;
-
-		setVersion(settings.getDouble("latest"));
-		setCode(settings.get("code"));
-		setDescription(settings.get("description"));
-		setRequired(settings.getBoolean("required"));
-
-		for (String key : settings.getKeys())
-			try {
-				links.put(PackageType.valueOf(key.toUpperCase()),
-						U.makeURI(settings.get(key)));
-			} catch (Exception e) {
-			}
-	}
-
-	public Updater getUpdater() {
-		return upd;
-	}
-
-	public URI getDownloadLinkFor(PackageType pt) {
-		return links.get(pt);
-	}
-
-	public URI getDownloadLink() {
-		return getDownloadLinkFor(PackageType.getCurrent());
-	}
-
-	public double getVersion() {
-		return version;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public boolean isRequired() {
-		return required;
-	}
-
-	public int getStep() {
-		return step;
-	}
-
-	public void download(boolean async) {
-		downloadFor(PackageType.getCurrent(), async);
-	}
-
-	public void download() {
-		download(false);
-	}
-
-	public void asyncDownload() {
-		download(true);
-	}
-
-	void downloadFor(PackageType pt, boolean async) {
-		try {
-			downloadFor_(pt, async);
-		} catch (Exception e) {
-			onUpdateError(e);
-		}
-	}
-
-	private void downloadFor_(PackageType pt, boolean async) throws Exception {
-		if (step > NONE)
-			throw new IllegalStepException(step);
-
-		URI download_link = getDownloadLinkFor(pt);
-		if (download_link == null)
-			throw new NullPointerException("Update for package \"" + pt
-					+ "\" is not found");
-
-		File destination = Updater.getUpdateFileFor(pt);
-		destination.deleteOnExit();
-
-		Downloadable downloadable = new Downloadable(download_link.toString(), destination);
-		downloadable.setInsertUA(true);
-		downloadable.addHandler(new DownloadableHandler() {
-			@Override
-			public void onStart(Downloadable d) {
-				onUpdateDownloading();
-			}
-
-			@Override
-			public void onComplete(Downloadable d)
-					throws RetryDownloadException {
-				step = DOWNLOADED;
-				onUpdateReady();
-			}
-
-			@Override
-			public void onError(Downloadable d, Throwable e) {
-				step = NONE;
-				onUpdateDownloadError(e);
-			}
-
-			@Override
-			public void onAbort(Downloadable d) {
-				step = NONE;
-				onUpdateDownloadError(d.getError());
-			}
-		});
-
-		d.add(downloadable);
-
-		if (async)
-			d.startDownload();
-		else
-			d.startDownloadAndWait();
-	}
-
-	public void apply() {
-		applyFor(PackageType.getCurrent());
-	}
-
-	void applyFor(PackageType pt) {
-		try {
-			applyFor_(pt);
-		} catch (Exception e) {
-			onUpdateApplyError(e);
-		}
-	}
-
-	private void applyFor_(PackageType pt) throws Exception {
-		if (step < DOWNLOADED)
-			throw new IllegalStepException(step);
-
-		log("Saving update... Launcher will be reopened.");
-
-		File replace = Updater.getFileFor(pt), replacer = Updater.getUpdateFileFor(pt);
-		replacer.deleteOnExit();
-
-		String[] args = (TLauncher.getInstance() != null) ? TLauncher.getArgs()
-				: new String[0];
-		ProcessBuilder builder = Bootstrapper.createLauncher(args).createProcess();
-
-		FileInputStream in = new FileInputStream(replacer);
-		FileOutputStream out = new FileOutputStream(replace);
-
-		onUpdateApplying();
-
-		byte[] buffer = new byte[65536];
-
-		int curread = in.read(buffer);
-		while (curread > 0) {
-			out.write(buffer, 0, curread);
-
-			curread = in.read(buffer);
-		}
-
-		in.close();
-		out.close();
-
-		try {
-			builder.start();
-		} catch (Exception e) {
-		}
-
-		System.exit(0);
-	}
-
-	void setVersion(double v) {
-		if (v <= 0.0)
-			throw new IllegalArgumentException("Invalid version!");
-		this.version = v;
-	}
-
-	void setCode(String cd) {
-		this.code = cd;
-	}
-
-	void setDescription(String desc) {
-		this.description = desc;
-	}
-
-	void setRequired(boolean required) {
-		this.required = required;
-	}
-
-	void setLinkFor(PackageType pt, URI link) {
-		if (pt == null)
-			throw new NullPointerException("PackageType is NULL!");
-		if (link == null)
-			throw new NullPointerException("URI is NULL!");
-
-		if (links.containsKey(pt))
-			links.remove(pt);
-		links.put(pt, link);
-	}
-
-	private void onUpdateError(Throwable e) {
-		synchronized (listeners) {
-			for (UpdateListener l : listeners)
-				l.onUpdateError(this, e);
-		}
-	}
-
-	private void onUpdateDownloading() {
-		synchronized (listeners) {
-			for (UpdateListener l : listeners)
-				l.onUpdateDownloading(this);
-		}
-	}
-
-	private void onUpdateDownloadError(Throwable e) {
-		synchronized (listeners) {
-			for (UpdateListener l : listeners)
-				l.onUpdateDownloadError(this, e);
-		}
-	}
-
-	private void onUpdateReady() {
-		synchronized (listeners) {
-			for (UpdateListener l : listeners)
-				l.onUpdateReady(this);
-		}
-	}
-
-	private void onUpdateApplying() {
-		synchronized (listeners) {
-			for (UpdateListener l : listeners)
-				l.onUpdateApplying(this);
-		}
-	}
-
-	private void onUpdateApplyError(Throwable e) {
-		U.log("Apply error", e);
-
-		synchronized (listeners) {
-			for (UpdateListener l : listeners)
-				l.onUpdateApplyError(this, e);
-		}
-	}
-
-	private static void log(Object... obj) {
-		U.log("[Updater]", obj);
-	}
-
-	private static String getMessageForStep(int step, String description) {
-		String r = "Illegal action on step #" + step;
-
-		if (description != null)
-			r += " : " + description;
-
-		return r;
-	}
-
-	public class IllegalStepException extends RuntimeException {
-		private static final long serialVersionUID = -1988019882288031411L;
-
-		IllegalStepException(int step, String description) {
-			super(getMessageForStep(step, description));
-		}
-
-		IllegalStepException(int step) {
-			super(getMessageForStep(step, null));
-		}
-
-	}
+   protected double version;
+   protected double requiredAtLeastFor;
+   protected Map description = new HashMap();
+   protected Map links = new HashMap();
+   @Expose(
+      serialize = false,
+      deserialize = false
+   )
+   protected Update.State state;
+   @Expose(
+      serialize = false,
+      deserialize = false
+   )
+   protected Downloader downloader;
+   @Expose(
+      serialize = false,
+      deserialize = false
+   )
+   private Downloadable download;
+   @Expose(
+      serialize = false,
+      deserialize = false
+   )
+   private final List listeners;
+
+   public Update() {
+      this.state = Update.State.NONE;
+      this.downloader = this.getDefaultDownloader();
+      this.listeners = Collections.synchronizedList(new ArrayList());
+   }
+
+   public Update(double version, Map description, Map links) {
+      this.state = Update.State.NONE;
+      this.downloader = this.getDefaultDownloader();
+      this.listeners = Collections.synchronizedList(new ArrayList());
+      this.version = version;
+      if (description != null) {
+         this.description.putAll(description);
+      }
+
+      if (links != null) {
+         this.links.putAll(links);
+      }
+
+   }
+
+   public double getVersion() {
+      return this.version;
+   }
+
+   public void setVersion(double version) {
+      this.version = version;
+   }
+
+   public double getRequiredAtLeastFor() {
+      return this.requiredAtLeastFor;
+   }
+
+   public void setRequiredAtLeastFor(double version) {
+      this.requiredAtLeastFor = version;
+   }
+
+   public Map getDescriptionMap() {
+      return this.description;
+   }
+
+   public Map getLinks() {
+      return this.links;
+   }
+
+   public String getLink(PackageType packageType) {
+      return (String)this.links.get(packageType);
+   }
+
+   public String getLink() {
+      return this.getLink(PackageType.CURRENT);
+   }
+
+   public Update.State getState() {
+      return this.state;
+   }
+
+   protected void setState(Update.State newState) {
+      if (newState.ordinal() <= this.state.ordinal() && this.state.ordinal() != Update.State.values().length - 1) {
+         throw new IllegalStateException("tried to change from " + this.state + " to " + newState);
+      } else {
+         this.state = newState;
+         this.log("Set state:", newState);
+      }
+   }
+
+   public Downloader getDownloader() {
+      return this.downloader;
+   }
+
+   public void setDownloader(Downloader downloader) {
+      this.downloader = downloader;
+   }
+
+   public boolean isApplicable() {
+      return StringUtils.isNotBlank((CharSequence)this.links.get(PackageType.CURRENT)) && TLauncher.getVersion() < this.version;
+   }
+
+   public boolean isRequired() {
+      return this.requiredAtLeastFor != 0.0D && TLauncher.getVersion() <= this.requiredAtLeastFor;
+   }
+
+   public String getDescription(String key) {
+      return this.description == null ? null : (String)this.description.get(key);
+   }
+
+   public String getDescription() {
+      return this.getDescription(TLauncher.getInstance().getSettings().getLocale().toString());
+   }
+
+   protected void download0(PackageType packageType, boolean async) throws Throwable {
+      this.setState(Update.State.DOWNLOADING);
+      URL url = new URL(this.getLink(packageType));
+      this.log("url:", url);
+      File destination = new File(FileUtil.getRunningJar().getAbsolutePath() + ".update");
+      destination.deleteOnExit();
+      this.log("dest", destination);
+      this.download = new Downloadable(url.toExternalForm(), destination);
+      this.download.setInsertUA(true);
+      this.download.addHandler(new DownloadableHandler() {
+         public void onStart(Downloadable d) {
+         }
+
+         public void onAbort(Downloadable d) {
+            Update.this.onUpdateDownloadError(d.getError());
+         }
+
+         public void onComplete(Downloadable d) {
+            Update.this.onUpdateReady();
+         }
+
+         public void onError(Downloadable d, Throwable e) {
+            Update.this.onUpdateDownloadError(e);
+         }
+      });
+      this.downloader.add(this.download);
+      this.onUpdateDownloading();
+      if (async) {
+         this.downloader.startDownload();
+      } else {
+         this.downloader.startDownloadAndWait();
+      }
+
+   }
+
+   public void download(PackageType type, boolean async) {
+      try {
+         this.download0(type, async);
+      } catch (Throwable var4) {
+         this.onUpdateError(var4);
+      }
+
+   }
+
+   public void download(boolean async) {
+      this.download(PackageType.CURRENT, async);
+   }
+
+   public void download() {
+      this.download(false);
+   }
+
+   public void asyncDownload() {
+      this.download(true);
+   }
+
+   protected void apply0() throws Throwable {
+      this.setState(Update.State.APPLYING);
+      File replace = FileUtil.getRunningJar();
+      File replaceWith = this.download.getDestination();
+      String[] args = TLauncher.getInstance() != null ? TLauncher.getArgs() : new String[0];
+      ProcessBuilder builder = Bootstrapper.createLauncher(args).createProcess();
+      this.onUpdateApplying();
+      InputStream in = new FileInputStream(replaceWith);
+      OutputStream out = new FileOutputStream(replace);
+      byte[] buffer = new byte[2048];
+
+      for(int read = in.read(buffer); read > 0; read = in.read(buffer)) {
+         out.write(buffer, 0, read);
+      }
+
+      try {
+         in.close();
+      } catch (IOException var12) {
+      }
+
+      try {
+         out.close();
+      } catch (IOException var11) {
+      }
+
+      try {
+         builder.start();
+      } catch (Throwable var10) {
+      }
+
+      System.exit(0);
+   }
+
+   public void apply() {
+      try {
+         this.apply0();
+      } catch (Throwable var2) {
+         this.onUpdateApplyError(var2);
+      }
+
+   }
+
+   public void addListener(UpdateListener l) {
+      this.listeners.add(l);
+   }
+
+   public void removeListener(UpdateListener l) {
+      this.listeners.remove(l);
+   }
+
+   protected void onUpdateError(Throwable e) {
+      this.setState(Update.State.ERRORED);
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
+
+         while(var4.hasNext()) {
+            UpdateListener l = (UpdateListener)var4.next();
+            l.onUpdateError(this, e);
+         }
+
+      }
+   }
+
+   protected void onUpdateDownloading() {
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
+
+         while(var3.hasNext()) {
+            UpdateListener l = (UpdateListener)var3.next();
+            l.onUpdateDownloading(this);
+         }
+
+      }
+   }
+
+   protected void onUpdateDownloadError(Throwable e) {
+      this.setState(Update.State.ERRORED);
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
+
+         while(var4.hasNext()) {
+            UpdateListener l = (UpdateListener)var4.next();
+            l.onUpdateDownloadError(this, e);
+         }
+
+      }
+   }
+
+   protected void onUpdateReady() {
+      this.setState(Update.State.READY);
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
+
+         while(var3.hasNext()) {
+            UpdateListener l = (UpdateListener)var3.next();
+            l.onUpdateReady(this);
+         }
+
+      }
+   }
+
+   protected void onUpdateApplying() {
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
+
+         while(var3.hasNext()) {
+            UpdateListener l = (UpdateListener)var3.next();
+            l.onUpdateApplying(this);
+         }
+
+      }
+   }
+
+   protected void onUpdateApplyError(Throwable e) {
+      this.setState(Update.State.ERRORED);
+      synchronized(this.listeners) {
+         Iterator var4 = this.listeners.iterator();
+
+         while(var4.hasNext()) {
+            UpdateListener l = (UpdateListener)var4.next();
+            l.onUpdateApplyError(this, e);
+         }
+
+      }
+   }
+
+   protected Downloader getDefaultDownloader() {
+      return TLauncher.getInstance().getDownloader();
+   }
+
+   protected void log(Object... o) {
+      U.log("[Update:" + this.version + "]", o);
+   }
+
+   public String toString() {
+      return "Update{version=" + this.version + "," + "requiredAtLeastFor=" + this.requiredAtLeastFor + "," + "description=" + this.description + "," + "links=" + this.links + "}";
+   }
+
+   public static class Deserializer implements JsonDeserializer {
+      public Update deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+         JsonObject object = json.getAsJsonObject();
+         Update update = new Update();
+         update.version = object.get("version").getAsDouble();
+         update.requiredAtLeastFor = object.has("requiredAtLeastFor") ? object.get("requiredAtLeastFor").getAsDouble() : 0.0D;
+         Map description = (Map)context.deserialize(object.get("description"), (new TypeToken() {
+         }).getType());
+         if (description != null) {
+            update.description.putAll(description);
+         }
+
+         Map links = (Map)context.deserialize(object.get("links"), (new TypeToken() {
+         }).getType());
+         if (links != null) {
+            update.links.putAll(links);
+         }
+
+         return update;
+      }
+   }
+
+   public static enum State {
+      NONE,
+      DOWNLOADING,
+      READY,
+      APPLYING,
+      ERRORED;
+   }
 }

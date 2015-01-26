@@ -4,37 +4,35 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ru.turikhay.tlauncher.minecraft.crash.CrashSignatureContainer.CrashSignature;
-
 public class Crash {
-	private String file;
-	private List<CrashSignature> signatures = new ArrayList<CrashSignature>();
+   private String file;
+   private List signatures = new ArrayList();
 
-	void addSignature(CrashSignature sign) {
-		signatures.add(sign);
-	}
+   void addSignature(CrashSignatureContainer.CrashSignature sign) {
+      this.signatures.add(sign);
+   }
 
-	void removeSignature(CrashSignature sign) {
-		signatures.remove(sign);
-	}
+   void removeSignature(CrashSignatureContainer.CrashSignature sign) {
+      this.signatures.remove(sign);
+   }
 
-	void setFile(String path) {
-		this.file = path;
-	}
+   void setFile(String path) {
+      this.file = path;
+   }
 
-	public String getFile() {
-		return this.file;
-	}
+   public String getFile() {
+      return this.file;
+   }
 
-	public List<CrashSignature> getSignatures() {
-		return Collections.unmodifiableList(signatures);
-	}
+   public List getSignatures() {
+      return Collections.unmodifiableList(this.signatures);
+   }
 
-	public boolean hasSignature(CrashSignature s) {
-		return signatures.contains(s);
-	}
+   public boolean hasSignature(CrashSignatureContainer.CrashSignature s) {
+      return this.signatures.contains(s);
+   }
 
-	public boolean isRecognized() {
-		return !signatures.isEmpty();
-	}
+   public boolean isRecognized() {
+      return !this.signatures.isEmpty();
+   }
 }

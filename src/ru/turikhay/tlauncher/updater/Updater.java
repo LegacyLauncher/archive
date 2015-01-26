@@ -1,264 +1,218 @@
 package ru.turikhay.tlauncher.updater;
 
-import java.io.File;
-import java.io.InputStream;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.downloader.Downloader;
-import ru.turikhay.tlauncher.exceptions.TLauncherException;
-import ru.turikhay.tlauncher.updater.AdParser.AdMap;
-import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 public class Updater {
-	private static final String[] links = TLauncher.getUpdateRepos();
-	private static final URI[] URIs = makeURIs();
+   private final Gson gson = this.buildGson();
+   private Update update;
+   private final List listeners = Collections.synchronizedList(new ArrayList());
 
-	private final Downloader d;
+   public Update getUpdate() {
+      return this.update;
+   }
 
-	private final List<UpdaterListener> listeners = Collections.synchronizedList(new ArrayList<UpdaterListener>());
+   protected Updater.SearchResult findUpdate0() {
+      this.log("Requesting an update...");
+      List errorList = new ArrayList();
+      Updater.SearchResult result = null;
+      Iterator var4 = this.getUpdateUrlList().iterator();
 
-	public void addListener(UpdaterListener l) {
-		listeners.add(l);
-	}
+      while(var4.hasNext()) {
+         String updateUrl = (String)var4.next();
+         long startTime = System.currentTimeMillis();
+         this.log("Requesting from:", updateUrl);
 
-	public void removeListener(UpdaterListener l) {
-		listeners.remove(l);
-	}
+         try {
+            URL url = new URL(updateUrl);
+            HttpURLConnection connection = Downloadable.setUp(url.openConnection(U.getProxy()), true);
+            if (connection.getResponseCode() != 200) {
+               throw new IOException("illegal response code: " + connection.getResponseCode());
+            }
 
-	private Update found;
-	private SimpleConfiguration parsed;
+            result = new Updater.SearchSucceeded((Updater.UpdaterResponse)this.gson.fromJson((Reader)(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8"))), (Class)Updater.UpdaterResponse.class));
+         } catch (Exception var9) {
+            this.log("Failed to request from:", updateUrl, var9);
+            result = null;
+            errorList.add(var9);
+         }
 
-	private UpdaterState state;
+         this.log("Request time:", System.currentTimeMillis() - startTime, "ms");
+         if (result != null) {
+            this.log("Successfully requested from:", updateUrl);
+            this.log(result);
+            break;
+         }
+      }
 
-	public Updater(TLauncher t) {
-		this.d = t.getDownloader();
+      return (Updater.SearchResult)(result == null ? new Updater.SearchFailed(errorList) : result);
+   }
 
-		if (!PackageType.isCurrent(PackageType.JAR)) {
-			File oldfile = Updater.getTempFile();
-			if (oldfile.delete())
-				log("Old version has been deleted (.update)");
-		}
+   public Updater.SearchResult findUpdate() {
+      Updater.SearchResult result = this.findUpdate0();
+      this.dispatchResult(result);
+      return result;
+   }
 
-		log("Initialized.");
-		log("Package type:", PackageType.getCurrent());
-	}
+   public void asyncFindUpdate() {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Updater.this.findUpdate();
+         }
+      });
+   }
 
-	public UpdaterState getState() {
-		return state;
-	}
+   public void addListener(UpdaterListener l) {
+      this.listeners.add(l);
+   }
 
-	UpdaterState findUpdate() {
-		try {
-			return (this.state = findUpdate_());
-		} catch (Throwable e) {
-			this.state = UpdaterState.ERROR;
-		}
-		return this.state;
-	}
+   public void removeListener(UpdaterListener l) {
+      this.listeners.remove(l);
+   }
 
-	private UpdaterState findUpdate_() {
-		log("Requesting an update...");
-		this.onUpdaterRequests();
+   protected void dispatchResult(Updater.SearchResult result) {
+      requireNotNull(result, "result");
+      UpdaterListener l;
+      Iterator var4;
+      if (result instanceof Updater.SearchSucceeded) {
+         synchronized(this.listeners) {
+            var4 = this.listeners.iterator();
 
-		int attempt = 0;
-		for (URI uri : URIs) {
-			++attempt;
-			log("Attempt #" + attempt + ". URL:", uri);
-			try {
-				URL url = uri.toURL();
-				HttpURLConnection connection = Downloadable.setUp(url.openConnection(), true);
-				connection.setInstanceFollowRedirects(true);
+            while(var4.hasNext()) {
+               l = (UpdaterListener)var4.next();
+               l.onUpdaterSucceeded((Updater.SearchSucceeded)result);
+            }
+         }
+      } else {
+         if (!(result instanceof Updater.SearchFailed)) {
+            throw new IllegalArgumentException("unknown result of " + result.getClass());
+         }
 
-				int code = connection.getResponseCode();
-				switch (code) {
-				case 200:
-					break;
-				default:
-					throw new IllegalStateException("Response code (" + code + ") is not supported by Updater!");
-				}
+         synchronized(this.listeners) {
+            var4 = this.listeners.iterator();
 
-				InputStream is = connection.getInputStream();
-				this.parsed = new SimpleConfiguration(is);
-				connection.disconnect();
+            while(var4.hasNext()) {
+               l = (UpdaterListener)var4.next();
+               l.onUpdaterErrored((Updater.SearchFailed)result);
+            }
+         }
+      }
 
-				Update update = new Update(this, d, parsed);
-				double version = update.getVersion();
+   }
 
-				log("Success! Found:", version);
+   protected void onUpdaterRequests() {
+      synchronized(this.listeners) {
+         Iterator var3 = this.listeners.iterator();
 
-				AdMap adMap = AdParser.parse(parsed);
-				if (adMap != null)
-					onAdFound(adMap);
+         while(var3.hasNext()) {
+            UpdaterListener l = (UpdaterListener)var3.next();
+            l.onUpdaterRequesting(this);
+         }
 
-				if (TLauncher.getVersion() > version)
-					log("Found version is older than running:", version, "("+ TLauncher.getVersion() +")");
+      }
+   }
 
-				if (update.getDownloadLink() == null)
-					log("An update for current package type is not available.");
-				else if (TLauncher.getVersion() < version) {
-					log("Found actual version:", version);
-					this.found = update;
+   protected List getUpdateUrlList() {
+      return Arrays.asList(TLauncher.getUpdateRepos());
+   }
 
-					onUpdateFound(update);
-					return UpdaterState.FOUND;
-				}
+   protected Gson buildGson() {
+      return (new GsonBuilder()).registerTypeAdapter(Ads.class, new Ads.Deserializer()).registerTypeAdapter(Update.class, new Update.Deserializer()).create();
+   }
 
-				noUpdateFound();
-				return UpdaterState.NOT_FOUND;
-			} catch (Exception e) {
-				log("Cannot get update information", e);
-			}
-		}
+   protected void log(Object... o) {
+      U.log("[Updater]", o);
+   }
 
-		log("Updating is impossible - cannot get any information.");
-		this.onUpdaterRequestError();
+   private static Object requireNotNull(Object obj, String name) {
+      if (obj == null) {
+         throw new NullPointerException(name);
+      } else {
+         return obj;
+      }
+   }
 
-		return UpdaterState.ERROR;
-	}
+   public class SearchFailed extends Updater.SearchResult {
+      protected final List errorList = new ArrayList();
 
-	public void notifyAboutUpdate() {
-		if (found == null)
-			return;
+      public SearchFailed(List list) {
+         super((Updater.UpdaterResponse)null);
+         Iterator var4 = list.iterator();
 
-		this.onUpdateFound(found);
-	}
+         while(var4.hasNext()) {
+            Throwable t = (Throwable)var4.next();
+            if (t == null) {
+               throw new NullPointerException();
+            }
+         }
 
-	public Update getUpdate() {
-		return found;
-	}
+         this.errorList.addAll(list);
+      }
 
-	public SimpleConfiguration getParsed() {
-		return parsed;
-	}
+      public final List getCauseList() {
+         return this.errorList;
+      }
 
-	public boolean isRequesting() {
-		return this.state == Updater.UpdaterState.READY;
-	}
+      public String toString() {
+         return this.getClass().getSimpleName() + "{errors=" + this.errorList + "}";
+      }
+   }
 
-	public void asyncFindUpdate() {
-		AsyncThread.execute(new Runnable() {
-			@Override
-			public void run() {
-				findUpdate();
-			}
-		});
-	}
+   public abstract class SearchResult {
+      protected final Updater.UpdaterResponse response;
 
-	private void onUpdaterRequests() {
-		synchronized (listeners) {
-			for (UpdaterListener l : listeners)
-				l.onUpdaterRequesting(this);
-		}
-	}
+      public SearchResult(Updater.UpdaterResponse response) {
+         this.response = response;
+      }
 
-	private void onUpdaterRequestError() {
-		synchronized (listeners) {
-			for (UpdaterListener l : listeners)
-				l.onUpdaterRequestError(this);
-		}
-	}
+      public final Updater.UpdaterResponse getResponse() {
+         return this.response;
+      }
 
-	private void onUpdateFound(Update u) {
-		synchronized (listeners) {
-			for (UpdaterListener l : listeners)
-				l.onUpdateFound(u);
-		}
-	}
+      public final Updater getUpdater() {
+         return Updater.this;
+      }
 
-	private void noUpdateFound() {
-		synchronized (listeners) {
-			for (UpdaterListener l : listeners)
-				l.onUpdaterNotFoundUpdate(this);
-		}
-	}
+      public String toString() {
+         return this.getClass().getSimpleName() + "{response=" + this.response + "}";
+      }
+   }
 
-	private void onAdFound(AdMap ad) {
-		synchronized (listeners) {
-			for (UpdaterListener l : listeners)
-				l.onAdFound(this, ad);
-		}
-	}
+   public class SearchSucceeded extends Updater.SearchResult {
+      public SearchSucceeded(Updater.UpdaterResponse response) {
+         super((Updater.UpdaterResponse)Updater.requireNotNull(response, "response"));
+      }
+   }
 
-	private static boolean isAutomodeFor(PackageType pt) {
-		if (pt == null)
-			throw new NullPointerException("PackageType is NULL!");
+   public static class UpdaterResponse {
+      private Update update;
+      private Ads ads;
 
-		switch (pt) {
-		case EXE:
-		case JAR:
-			return true;
-		default:
-			throw new IllegalArgumentException("Unknown PackageType!");
-		}
-	}
+      public final Update getUpdate() {
+         return this.update;
+      }
 
-	public static boolean isAutomode() {
-		return isAutomodeFor(PackageType.getCurrent());
-	}
+      public final Ads getAds() {
+         return this.ads;
+      }
 
-	public static File getFileFor(PackageType pt) {
-		if (pt == null)
-			throw new NullPointerException("PackageType is NULL!");
-
-		switch (pt) {
-		case EXE:
-		case JAR:
-			return FileUtil.getRunningJar();
-		default:
-			throw new IllegalArgumentException("Unknown PackageType!");
-		}
-	}
-
-	public static File getFile() {
-		return getFileFor(PackageType.getCurrent());
-	}
-
-	public static File getUpdateFileFor(PackageType pt) {
-		return new File(getFileFor(pt).getAbsolutePath() + ".update");
-	}
-
-	public static File getUpdateFile() {
-		return getUpdateFileFor(PackageType.getCurrent());
-	}
-
-	private static File getTempFileFor(PackageType pt) {
-		return new File(getFileFor(pt).getAbsolutePath() + ".replace");
-	}
-
-	private static File getTempFile() {
-		return getTempFileFor(PackageType.getCurrent());
-	}
-
-	private static URI[] makeURIs() {
-		int len = links.length;
-		URI[] r = new URI[len];
-
-		for (int i = 0; i < len; i++)
-			try {
-				r[i] = new URL(links[i]).toURI();
-			} catch (Exception e) {
-				throw new TLauncherException("Cannot create link from at i:"
-						+ i, e);
-			}
-
-		return r;
-	}
-
-	private static void log(Object... obj) {
-		U.log("[Updater]", obj);
-	}
-
-	public enum UpdaterState {
-		READY, FOUND, NOT_FOUND, ERROR
-	}
+      public String toString() {
+         return "UpdaterResponse{update=" + this.update + ", ads=" + this.ads + "}";
+      }
+   }
 }

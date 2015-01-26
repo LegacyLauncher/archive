@@ -3,56 +3,48 @@ package ru.turikhay.tlauncher.ui.center;
 import java.awt.Color;
 
 public class DefaultCenterPanelTheme extends CenterPanelTheme {
-	protected final Color backgroundColor = new Color(255, 255, 255, 255); // White
+   protected final Color backgroundColor = new Color(255, 255, 255, 255);
+   protected final Color panelBackgroundColor = new Color(255, 255, 255, 128);
+   protected final Color focusColor = new Color(0, 0, 0, 255);
+   protected final Color focusLostColor = new Color(128, 128, 128, 255);
+   protected final Color successColor = new Color(78, 196, 78, 255);
+   protected final Color failureColor = Color.getHSBColor(0.0F, 0.3F, 1.0F);
+   protected final Color borderColor = new Color(28, 128, 28, 255);
+   protected final Color delPanelColor;
 
-	protected final Color panelBackgroundColor = new Color(255, 255, 255, 128); // Half-white
+   public DefaultCenterPanelTheme() {
+      this.delPanelColor = this.successColor;
+   }
 
-	protected final Color focusColor = new Color(0, 0, 0, 255); // Black
-	protected final Color focusLostColor = new Color(128, 128, 128, 255); // Gray
+   public Color getBackground() {
+      return this.backgroundColor;
+   }
 
-	protected final Color successColor = new Color(78, 196, 78, 255); // Green
-	protected final Color failureColor = Color.getHSBColor(0F, 0.3F, 1F); // Pink
+   public Color getPanelBackground() {
+      return this.panelBackgroundColor;
+   }
 
-	protected final Color borderColor = new Color(28, 128, 28, 255); // Dark green
-	protected final Color delPanelColor = successColor;
+   public Color getFocus() {
+      return this.focusColor;
+   }
 
-	@Override
-	public Color getBackground() {
-		return backgroundColor;
-	}
+   public Color getFocusLost() {
+      return this.focusLostColor;
+   }
 
-	@Override
-	public Color getPanelBackground() {
-		return panelBackgroundColor;
-	}
+   public Color getSuccess() {
+      return this.successColor;
+   }
 
-	@Override
-	public Color getFocus() {
-		return focusColor;
-	}
+   public Color getFailure() {
+      return this.failureColor;
+   }
 
-	@Override
-	public Color getFocusLost() {
-		return focusLostColor;
-	}
+   public Color getBorder() {
+      return this.borderColor;
+   }
 
-	@Override
-	public Color getSuccess() {
-		return successColor;
-	}
-
-	@Override
-	public Color getFailure() {
-		return failureColor;
-	}
-
-	@Override
-	public Color getBorder() {
-		return borderColor;
-	}
-
-	@Override
-	public Color getDelPanel() {
-		return delPanelColor;
-	}
+   public Color getDelPanel() {
+      return this.delPanelColor;
+   }
 }

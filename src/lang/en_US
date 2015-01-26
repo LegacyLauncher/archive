@@ -28,7 +28,9 @@ loginform.button.support.email=Contact developer
 # Account
 account.username=User name
 account.email=E-mail
-account.premium=Premium login:
+account.auth.free=No password
+account.auth.mojang=Password at Mojang.com:
+account.auth.ely=Password at Ely.by:
 account.save=Save account
 account.list=Available accounts:
 account.empty=(no account)
@@ -107,21 +109,12 @@ auth.error.nopass.title=Password required!
 auth.error.nopass=Please enter the account password!
 auth.error.nousername.title=Username required!
 auth.error.nousername=Please enter username (or e-mail)!
-auth.helper.premium=Help with premium account
-auth.helper.premium.add=1. Add a new account
-auth.helper.premium.username=2. Enter your e-mail
-auth.helper.premium.checkbox=3. Check this
-auth.helper.premium.password=4. Enter your password
-auth.helper.premium.button=5. Authenticate
-auth.helper.premium.exit=6. Ready :)
-auth.helper.free=Help with a free account
-auth.helper.free.add=1. Add a new account
-auth.helper.free.username=2. Enter ANY username
-auth.helper.free.checkbox=3. DO NOT check this
-auth.helper.free.button=4. Save account
-auth.helper.free.exit=5. Ready :)
-auth.helper.help.help=Need help? Click on "i"
-auth.helper.none=Hide any help
+auth.tip.free=Use <b>Free account</b> if you don't have Mojang account. Don't forget to <a href="https://minecraft.net/store/minecraft">buy Minecraft</a>!
+auth.tip.free.height=20
+auth.tip.mojang=<b>Mojang account</b> is the best solution for Minecraft player: you can see skins and play at any public server you want!
+auth.tip.mojang.height=30
+auth.tip.ely=<b>Ely account</b> brings you benefits of free skin system. You should <a href="http://ely.by/?utm_source=tlauncher&utm_medium=link&utm_term=accounts_page&utm_campaign=TLauncher%20%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F">register</a> to use it.
+auth.tip.ely.height=20
 forceupdate.local.title=Updating is not possible
 forceupdate.local=This version is not found on the server, so it can't be updated.
 forceupdate.question.title=Possible data loss!
@@ -188,11 +181,13 @@ crash.missing-main=Java couldn't run Minecraft because the main class is missing
 crash.permgen-error=Minecraft has closed due to PermGen error. You can do next:\n— Tick «Force update» and then press «Reinstall» to re-download invalid files.\n- Don't use mods and resource packs\n- Turn off the sounds in Minecraft.
 crash.outofmemory=Minecraft has closed due to lack of RAM.\nTry to allocate more memory using JVM argument "-Xmx".
 crash.old-videocard=Your card doesn't support OpenGL version, which is used in this version of Minecraft. The latest version supported by your video card is 1.7.2.
+crash.invalid-sys-username=You shouldn't use symbol «!» in your Minecraft path.
 crash.old-ati-vdrivers=Your system uses an outdated video card driver or the video card itself is old.\nAnyway, try to update the driver from the official <a href="http://amd.com/">AMD</a> website.\nIf this won't work, try to install <a href="http://www.omegadrivers.net/index.php?option=com_phocadownload&view=section&id=1&Itemid=54">ATI Omega Drivers</a>.
 # Settings
 settings.warning=Change if you know what you do.
 settings.restart=Will be applied after restart.
 settings.res.def=Default size: %0x%1
+settings.range=Range: %0-%1
 settings.tab.minecraft=Minecraft settings
 settings.tab.tlauncher=TLauncher settings
 settings.tab.about=About
@@ -233,6 +228,10 @@ settings.console.label=Developer console
 settings.console.global=Global
 settings.console.minecraft=Only Minecraft Logger
 settings.console.none=None
+settings.console.fullcommand.label=Full command:
+settings.console.fullcommand=Show full command launching Minecraft
+settings.console.fullcommand.warning.title=Warning!
+settings.console.fullcommand.warning=<b>You've turned on "Full command"</b>.<br/>If you're a premium user don't transmit content from the console over insecure data channels as the console stores your token required for loggining in.
 settings.extra.label=Extra:
 settings.extra.check-username=Check username
 settings.connection.label=Connection quality:
@@ -256,6 +255,7 @@ settings.launch-action.hide=Hide TLauncher
 settings.launch-action.exit=Close TLauncher
 settings.launch-action.nothing=Do nothing
 settings.lang.label=Language:
+settings.tab.about=About
 settings.default=Reset to defaults
 settings.default.warning.title=Warning!
 settings.default.warning=Are you sure want to set settings to default values?\nIf you want to reset specific field right-click on it and select «Reset value»
@@ -300,15 +300,13 @@ popup.copy=Copy
 popup.paste=Paste
 popup.copyall=Copy all
 # Console
-console.close.text=This window will be closed in %0 s...
-console.close.cancel=Cancel
-console.search.placeholder=Find...
-console.search.prefs.case=Match case
-console.search.prefs.whole=Whole words
-console.search.prefs.cycle=Wrap around
-console.search.prefs.regexp=Regexp
-console.save.popup=Save all in file...
-console.save.error=Cannot save file!
+console=Developer console
+console.kill=Kill Minecraft process
+console.close.cancel=Cancel console close (%0 s)
+console.save.popup=Save all as...
+console.save.exists=File already exists!
+console.save.error=Couln't save file!
+console.clear.popup=Clear
 # Ad
 ad.error.title=An error occurred
 ad.error.message=An error occurred while trying to open advertisement link. Please, visit it yourself:
@@ -390,6 +388,7 @@ boot.loading=Loading TLauncher %0...
 about.text=one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
 about.bottom=Stay in touch with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)
 about.partners.mcoffline=set up and run MC server easily!
+about.partners.ely=free skin system.
 # Ad
 ad.server.error=Error launching the game to connect the server:
 # Browser

@@ -1,46 +1,43 @@
 package ru.turikhay.tlauncher.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
-
+import java.awt.Window.Type;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-
 import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 public class LoadingFrame extends JFrame {
-	private final ProgressBar progress;
+   private final ProgressBar progress;
 
-	public LoadingFrame() {
-		SwingUtil.initLookAndFeel();
-		setLayout(new BorderLayout());
+   public LoadingFrame() {
+      SwingUtil.initLookAndFeel();
+      this.setLayout(new BorderLayout());
+      this.progress = new ProgressBar();
+      this.progress.setPreferredSize(new Dimension(250, 18));
+      this.add(this.progress, "Center");
+      this.add(new JLabel(ImageCache.getIcon("fav32.png")), "West");
+      if (OS.JAVA_VERSION > 1.6D) {
+         this.setType(Type.UTILITY);
+      }
 
-		this.progress = new ProgressBar();
-		progress.setPreferredSize(new Dimension(250, 18));
+      this.pack();
+      this.setResizable(false);
+      this.setAlwaysOnTop(true);
+      this.setLocationRelativeTo((Component)null);
+   }
 
-		add(progress, BorderLayout.CENTER);
-		add(new JLabel(ImageCache.getIcon("fav32.png")), BorderLayout.WEST);
+   public ProgressBar getProgressBar() {
+      return this.progress;
+   }
 
-		if(OS.JAVA_VERSION > 1.6)
-			setType(Type.UTILITY);
-
-		pack();
-		setResizable(false);
-		setAlwaysOnTop(true);
-		setLocationRelativeTo(null);
-	}
-
-	public ProgressBar getProgressBar() {
-		return progress;
-	}
-
-	public void setProgress(int percent) {
-		progress.setIndeterminate(false);
-		progress.setValue(percent);
-		progress.setCenterString(String.valueOf(percent) +'%');
-	}
-
+   public void setProgress(int percent) {
+      this.progress.setIndeterminate(false);
+      this.progress.setValue(percent);
+      this.progress.setCenterString(String.valueOf(percent) + '%');
+   }
 }

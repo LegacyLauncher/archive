@@ -3,86 +3,70 @@ package ru.turikhay.tlauncher.ui.login.buttons;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.JPopupMenu;
-
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.ui.scenes.DefaultScene.SidePanel;
+import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class SettingsButton extends ImageButton implements Blockable {
-	private static final long serialVersionUID = 1321382157134544911L;
+   private static final long serialVersionUID = 1321382157134544911L;
+   private final LoginForm lf;
+   private final JPopupMenu popup;
+   private final LocalizableMenuItem accountManager;
+   private final LocalizableMenuItem versionManager;
+   private final LocalizableMenuItem settings;
 
-	private final LoginForm lf;
+   SettingsButton(LoginForm loginform) {
+      this.lf = loginform;
+      this.image = loadImage("settings.png");
+      this.rotation = ImageButton.ImageRotation.CENTER;
+      this.popup = new JPopupMenu();
+      this.settings = new LocalizableMenuItem("loginform.button.settings.launcher");
+      this.settings.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsButton.this.lf.scene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
+         }
+      });
+      this.popup.add(this.settings);
+      this.versionManager = new LocalizableMenuItem("loginform.button.settings.version");
+      this.versionManager.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsButton.this.lf.pane.openVersionManager();
+         }
+      });
+      this.popup.add(this.versionManager);
+      this.accountManager = new LocalizableMenuItem("loginform.button.settings.account");
+      this.accountManager.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsButton.this.lf.pane.openAccountEditor();
+         }
+      });
+      this.popup.add(this.accountManager);
+      this.setPreferredSize(new Dimension(30, this.getHeight()));
+      this.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            SettingsButton.this.callPopup();
+         }
+      });
+      this.initImage();
+   }
 
-	private final JPopupMenu popup;
+   void callPopup() {
+      this.lf.defocus();
+      this.popup.show(this, 0, this.getHeight());
+   }
 
-	private final LocalizableMenuItem accountManager, versionManager, settings;
+   public void block(Object reason) {
+      if (reason.equals("auth") || reason.equals("launch")) {
+         Blocker.blockComponents(reason, this.accountManager, this.versionManager);
+      }
 
-	SettingsButton(LoginForm loginform) {
-		this.lf = loginform;
+   }
 
-		this.image = loadImage("settings.png");
-		this.rotation = ImageRotation.CENTER;
-
-		this.popup = new JPopupMenu();
-
-		this.settings = new LocalizableMenuItem("loginform.button.settings.launcher");
-		settings.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				lf.scene.setSidePanel(SidePanel.SETTINGS);
-			}
-		});
-		popup.add(settings);
-
-		this.versionManager = new LocalizableMenuItem("loginform.button.settings.version");
-		versionManager.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				lf.pane.openVersionManager();
-			}
-		});
-		popup.add(versionManager);
-
-		this.accountManager = new LocalizableMenuItem("loginform.button.settings.account");
-		accountManager.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				lf.pane.openAccountEditor();
-			}
-		});
-		popup.add(accountManager);
-
-
-		this.setPreferredSize(new Dimension(30, getHeight()));
-		this.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				callPopup();
-			}
-		});
-
-		this.initImage();
-	}
-
-	void callPopup() {
-		lf.defocus();
-		popup.show(this, 0, getHeight());
-	}
-
-	@Override
-	public void block(Object reason) {
-		if(reason.equals(LoginForm.AUTH_BLOCK) || reason.equals(LoginForm.LAUNCH_BLOCK))
-			Blocker.blockComponents(reason, accountManager, versionManager);
-	}
-
-	@Override
-	public void unblock(Object reason) {
-		Blocker.unblockComponents(reason, accountManager, versionManager);
-	}
-
+   public void unblock(Object reason) {
+      Blocker.unblockComponents(reason, this.accountManager, this.versionManager);
+   }
 }

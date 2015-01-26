@@ -1,17 +1,16 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
 import java.util.List;
-import java.util.Map;
 
 public class User {
-	private String id;
-	private List<Map<String, String>> properties;
+   private String id;
+   private List properties;
 
-	public String getID() {
-		return this.id;
-	}
+   public String getID() {
+      return this.id;
+   }
 
-	public List<Map<String, String>> getProperties() {
-		return properties;
-	}
+   public List getProperties() {
+      return this.properties;
+   }
 }

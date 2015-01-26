@@ -3,7 +3,7 @@ package ru.turikhay.tlauncher.managers;
 import ru.turikhay.tlauncher.minecraft.auth.AccountListener;
 
 public interface ProfileManagerListener extends AccountListener {
-	public void onProfilesRefreshed(ProfileManager pm);
+   void onProfilesRefreshed(ProfileManager var1);
 
-	public void onProfileManagerChanged(ProfileManager pm);
+   void onProfileManagerChanged(ProfileManager var1);
 }

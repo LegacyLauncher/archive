@@ -3,22 +3,16 @@ package ru.turikhay.tlauncher.updater;
 import ru.turikhay.util.FileUtil;
 
 public enum PackageType {
-	EXE, JAR;
-	public String toLowerCase() {
-		return this.name().toLowerCase();
-	}
+   EXE,
+   JAR;
 
-	public static PackageType getCurrent() {
-		if (isWrapped())
-			return EXE;
-		return JAR;
-	}
+   public static final PackageType CURRENT = FileUtil.getRunningJar().toString().endsWith(".exe") ? EXE : JAR;
 
-	public static boolean isCurrent(PackageType pt) {
-		return getCurrent() == pt;
-	}
+   public String toLowerCase() {
+      return this.name().toLowerCase();
+   }
 
-	private static boolean isWrapped() {
-		return FileUtil.getRunningJar().toString().endsWith(".exe");
-	}
+   public static boolean isCurrent(PackageType pt) {
+      return pt == CURRENT;
+   }
 }

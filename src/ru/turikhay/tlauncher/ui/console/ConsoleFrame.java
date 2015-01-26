@@ -2,276 +2,256 @@ package ru.turikhay.tlauncher.ui.console;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Insets;
-import java.awt.LayoutManager;
+import java.awt.event.ActionEvent;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-
+import java.awt.event.MouseEvent;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import javax.swing.Action;
 import javax.swing.BoundedRangeModel;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
-
-import ru.turikhay.tlauncher.configuration.Configuration;
+import javax.swing.text.JTextComponent;
+import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.explorer.ExtensionFileFilter;
+import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import ru.turikhay.tlauncher.ui.swing.EmptyAction;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
+import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
+import ru.turikhay.util.stream.StringStream;
 
 public class ConsoleFrame extends JFrame implements LocalizableComponent {
-	private static final long serialVersionUID = 5667131709333334581L;
-	public static final int minWidth = 670, minHeight = 500;
+   public static final int MIN_WIDTH = 670;
+   public static final int MIN_HEIGHT = 500;
+   public final Console console;
+   public final JTextArea textarea;
+   public final JScrollBar vScrollbar;
+   public final ConsoleFrameBottom bottom;
+   private int lastWindowWidth;
+   private int scrollBarValue;
+   private boolean scrollDown;
+   private final Object busy = new Object();
+   boolean hiding;
 
-	private int w = minWidth, h = minHeight, v = 0;
-	boolean update = true;
+   ConsoleFrame(Console console) {
+      this.console = console;
+      this.textarea = new JTextArea();
+      this.textarea.setLineWrap(true);
+      this.textarea.setEditable(false);
+      this.textarea.setAutoscrolls(true);
+      this.textarea.setMargin(new Insets(0, 0, 0, 0));
+      this.textarea.setFont(new Font("DialogInput", 0, (int)((double)(new LocalizableLabel()).getFont().getSize() * 1.2D)));
+      this.textarea.setForeground(Color.white);
+      this.textarea.setCaretColor(Color.white);
+      this.textarea.setBackground(Color.black);
+      this.textarea.setSelectionColor(Color.gray);
+      ((DefaultCaret)this.textarea.getCaret()).setUpdatePolicy(2);
+      this.textarea.addMouseListener(new ConsoleFrame.ConsoleTextPopup());
+      ScrollPane scrollPane = new ScrollPane(this.textarea);
+      scrollPane.setBorder((Border)null);
+      scrollPane.setVBPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+      this.vScrollbar = scrollPane.getVerticalScrollBar();
+      final BoundedRangeModel vsbModel = this.vScrollbar.getModel();
+      this.vScrollbar.addAdjustmentListener(new AdjustmentListener() {
+         public void adjustmentValueChanged(AdjustmentEvent e) {
+            if (ConsoleFrame.this.getWidth() == ConsoleFrame.this.lastWindowWidth) {
+               int nv = e.getValue();
+               if (nv < ConsoleFrame.this.scrollBarValue) {
+                  ConsoleFrame.this.scrollDown = false;
+               } else if (nv == vsbModel.getMaximum() - vsbModel.getExtent()) {
+                  ConsoleFrame.this.scrollDown = true;
+               }
 
-	private final Object busy = new Object();
+               ConsoleFrame.this.scrollBarValue = nv;
+            }
+         }
+      });
+      this.addComponentListener(new ComponentAdapter() {
+         public void componentResized(ComponentEvent e) {
+            ConsoleFrame.this.lastWindowWidth = ConsoleFrame.this.getWidth();
+         }
+      });
+      this.getContentPane().setLayout(new BorderLayout());
+      this.getContentPane().add(scrollPane, "Center");
+      this.getContentPane().add(this.bottom = new ConsoleFrameBottom(this), "South");
+      SwingUtil.setFavicons(this);
+   }
 
-	private final JPanel panel;
-	private final SearchPanel sp;
-	private final ExitCancelPanel ecp;
+   public void println(String string) {
+      this.print(string + '\n');
+   }
 
-	private final TextPopup textpopup;
+   public void print(String string) {
+      synchronized(this.busy) {
+         Document document = this.textarea.getDocument();
 
-	final JTextArea textArea;
-	private final JScrollBar scrollBar;
-	private final BoundedRangeModel scrollBarModel;
+         try {
+            document.insertString(document.getLength(), string, (AttributeSet)null);
+         } catch (Throwable var5) {
+         }
 
-	final Console c;
+         if (this.scrollDown) {
+            this.scrollDown();
+         }
 
-	private boolean hiding = false;
+      }
+   }
 
-	public ConsoleFrame(Console c, Configuration s, String name) {
-		super(name);
+   public void clear() {
+      this.textarea.setText("");
+   }
 
-		if (c == null)
-			throw new NullPointerException("Console can't be NULL!");
+   public void scrollDown() {
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            ConsoleFrame.this.vScrollbar.setValue(ConsoleFrame.this.vScrollbar.getMaximum());
+         }
+      });
+   }
 
-		this.c = c;
+   public void updateLocale() {
+      Localizable.updateContainer(this);
+   }
 
-		LayoutManager layout = new BorderLayout();
-		panel = new JPanel(layout);
-		panel.setAlignmentX(CENTER_ALIGNMENT);
-		panel.setAlignmentY(CENTER_ALIGNMENT);
+   void hideIn(long millis) {
+      this.hiding = true;
+      this.bottom.closeCancelButton.setVisible(true);
+      this.bottom.closeCancelButton.setText("console.close.cancel", millis / 1000L);
+      AsyncThread.execute(new Runnable(millis) {
+         long remaining;
 
-		Font font = new Font("DialogInput", 0, 14);
+         {
+            this.remaining = var2;
+         }
 
-		this.textpopup = new ConsoleTextPopup(c);
+         public void run() {
+            ConsoleFrame.this.bottom.closeCancelButton.setText("console.close.cancel", this.remaining / 1000L);
+            U.log(this.remaining);
 
-		this.textArea = new JTextArea();
-		this.textArea.setLineWrap(true);
-		this.textArea.setEditable(false);
-		this.textArea.setMargin(new Insets(0, 0, 0, 0));
-		this.textArea.setFont(font);
-		this.textArea.setForeground(Color.white);
-		this.textArea.setCaretColor(Color.white);
-		this.textArea.setBackground(Color.black);
-		this.textArea.setSelectionColor(Color.gray);
-		this.textArea.setAutoscrolls(true);
-		((DefaultCaret) this.textArea.getCaret())
-		.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-		this.textArea.addMouseListener(textpopup);
+            while(ConsoleFrame.this.hiding && this.remaining > 1999L) {
+               this.remaining -= 1000L;
+               ConsoleFrame.this.bottom.closeCancelButton.setText("console.close.cancel", this.remaining / 1000L);
+               U.sleepFor(1000L);
+            }
 
-		JScrollPane scrollPane = new JScrollPane(this.textArea);
-		scrollPane.setBorder(null);
-		scrollPane
-		.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+            if (ConsoleFrame.this.hiding) {
+               ConsoleFrame.this.dispose();
+            }
 
-		this.scrollBar = scrollPane.getVerticalScrollBar();
-		this.scrollBarModel = this.scrollBar.getModel();
-		this.scrollBar.addAdjustmentListener(new AdjustmentListener() {
-			@Override
-			public void adjustmentValueChanged(AdjustmentEvent e) {
-				boolean resizing = getWidth() != w;
-				if (resizing)
-					return;
+         }
+      });
+   }
 
-				int nv = e.getValue();
+   public class ConsoleTextPopup extends TextPopup {
+      private final FileExplorer explorer = new FileExplorer();
+      private final Action saveAllAction;
+      private final Action clearAllAction;
 
-				if (nv < v) // Scrolling up
-					update = false; // Turn off auto-scroll
-				else {
-					// Scrolling down
-					int max = scrollBarModel.getMaximum()
-							- scrollBarModel.getExtent();
-					if (nv == max)
-						update = true; // Turn on auto-scroll
-				}
+      ConsoleTextPopup() {
+         this.explorer.setFileFilter(new ExtensionFileFilter("log"));
+         this.saveAllAction = new EmptyAction() {
+            public void actionPerformed(ActionEvent e) {
+               ConsoleTextPopup.this.onSavingCalled();
+            }
+         };
+         this.clearAllAction = new EmptyAction() {
+            public void actionPerformed(ActionEvent e) {
+               ConsoleTextPopup.this.onClearCalled();
+            }
+         };
+      }
 
-				v = nv;
-			}
-		});
+      protected JPopupMenu getPopup(MouseEvent e, JTextComponent comp) {
+         JPopupMenu menu = super.getPopup(e, comp);
+         if (menu == null) {
+            return null;
+         } else {
+            menu.addSeparator();
+            menu.add(this.saveAllAction).setText(Localizable.get("console.save.popup"));
+            menu.addSeparator();
+            menu.add(this.clearAllAction).setText(Localizable.get("console.clear.popup"));
+            return menu;
+         }
+      }
 
-		this.sp = new SearchPanel(this);
-		this.ecp = new ExitCancelPanel(this);
+      protected void onSavingCalled() {
+         this.explorer.setSelectedFile(new File(ConsoleFrame.this.console.getName() + ".log"));
+         int result = this.explorer.showSaveDialog(ConsoleFrame.this.console.frame);
+         if (result == 0) {
+            File file = this.explorer.getSelectedFile();
+            if (file == null) {
+               U.log("Returned NULL. Damn it!");
+            } else {
+               String path = file.getAbsolutePath();
+               if (!path.endsWith(".log")) {
+                  path = path + ".log";
+               }
 
-		this.addComponentListener(new ComponentListener() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				w = getWidth();
-				h = getHeight();
+               file = new File(path);
+               BufferedOutputStream output = null;
 
-				sp.repaint();
-			}
+               try {
+                  FileUtil.createFile(file);
+                  StringStream input = ConsoleFrame.this.console.getStream();
+                  output = new BufferedOutputStream(new FileOutputStream(file));
+                  boolean addR = OS.WINDOWS.isCurrent();
+                  int caret = -1;
 
-			@Override
-			public void componentMoved(ComponentEvent e) {
-			}
+                  while(true) {
+                     ++caret;
+                     if (caret >= input.getLength()) {
+                        output.close();
+                        break;
+                     }
 
-			@Override
-			public void componentShown(ComponentEvent e) {
-			}
+                     char current = input.getCharAt(caret);
+                     if (current == '\n' && addR) {
+                        output.write(13);
+                     }
 
-			@Override
-			public void componentHidden(ComponentEvent e) {
-			}
-		});
+                     output.write(current);
+                  }
+               } catch (Throwable var17) {
+                  Alert.showLocError("console.save.error", var17);
+               } finally {
+                  if (output != null) {
+                     try {
+                        output.close();
+                     } catch (IOException var16) {
+                        var16.printStackTrace();
+                     }
+                  }
 
-		setFont(font);
-		setBackground(Color.black);
-		Dimension sizes = new Dimension(w, h);
-		setSize(sizes);
-		setMinimumSize(sizes);
-		setLocation(0, 0);
+               }
 
-		SwingUtil.setFavicons(this);
+            }
+         }
+      }
 
-		panel.add("Center", scrollPane);
-		panel.add("South", this.sp);
-
-		add(panel);
-	}
-
-	@Override
-	public void paint(Graphics g) {
-		try {
-			super.paint(g);
-		} catch (Exception e) {
-		}
-	}
-
-	@Override
-	public void update(Graphics g) {
-		try {
-			super.update(g);
-		} catch (Exception e) {
-		}
-	}
-
-	public void println(String string) {
-		print(new StringBuilder().append(string).append('\n').toString());
-	}
-
-	public void print(String string) {
-		synchronized (busy) {
-
-			Document document = this.textArea.getDocument();
-
-			try {
-				document.insertString(document.getLength(), string, null);
-			} catch (Throwable ignored) {
-			}
-
-			if (update)
-				scrollBottom();
-		}
-	}
-
-	public void scrollBottom() {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				scrollBar.setValue(scrollBar.getMaximum());
-			}
-		});
-	}
-
-	public String getOutput() {
-		return c.getOutput();
-	}
-
-	public SearchPrefs getSearchPrefs() {
-		return sp.prefs;
-	}
-
-	public void hideIn(final long millis) {
-		this.hiding = true;
-		this.showTimer();
-
-		AsyncThread.execute(new Runnable() {
-			long remaining = millis;
-
-			@Override
-			public void run() {
-				ecp.setTimeout((int) remaining / 1000);
-				U.sleepFor(1000);
-
-				while (hiding && remaining > 1999) {
-					remaining -= 1000;
-					ecp.setTimeout((int) remaining / 1000);
-
-					U.sleepFor(1000);
-				}
-
-				if (hiding)
-					setVisible(false);
-			}
-		});
-	}
-
-	private void showTimer() {
-		panel.remove(sp);
-		panel.remove(ecp);
-
-		panel.add("South", ecp);
-
-		this.validate();
-		panel.repaint();
-		this.scrollBottom();
-		this.toFront();
-	}
-
-	private void showSearch() {
-		panel.remove(sp);
-		panel.remove(ecp);
-
-		panel.add("South", sp);
-
-		this.validate();
-		panel.repaint();
-		this.scrollBottom();
-	}
-
-	public void cancelHiding() {
-		this.hiding = false;
-		this.showSearch();
-	}
-
-	public void clear() {
-		this.textArea.setText("");
-	}
-
-	public void selectAll() {
-		this.textArea.requestFocusInWindow();
-		this.textArea.selectAll();
-	}
-
-	@Override
-	public void updateLocale() {
-		Localizable.updateContainer(this);
-	}
-
+      protected void onClearCalled() {
+         ConsoleFrame.this.console.clear();
+      }
+   }
 }

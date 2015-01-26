@@ -1,15 +1,9 @@
 package ru.turikhay.tlauncher.updater;
 
-import ru.turikhay.tlauncher.updater.AdParser.AdMap;
-
 public interface UpdaterListener {
-	public void onUpdaterRequesting(Updater u);
+   void onUpdaterRequesting(Updater var1);
 
-	public void onUpdaterRequestError(Updater u);
+   void onUpdaterErrored(Updater.SearchFailed var1);
 
-	public void onUpdateFound(Update upd);
-
-	public void onUpdaterNotFoundUpdate(Updater u);
-
-	public void onAdFound(Updater u, AdMap adMap);
+   void onUpdaterSucceeded(Updater.SearchSucceeded var1);
 }

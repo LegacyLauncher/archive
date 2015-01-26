@@ -1,91 +1,148 @@
 package ru.turikhay.tlauncher.ui.swing;
 
 import java.awt.Component;
-import java.awt.Font;
-
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
-
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 
-public class AccountCellRenderer implements ListCellRenderer<Account> {
-	public static final Account EMPTY = Account.randomAccount(), MANAGE = Account.randomAccount();
+public class AccountCellRenderer implements ListCellRenderer {
+   public static final Account EMPTY = Account.randomAccount();
+   public static final Account MANAGE = Account.randomAccount();
+   private static final Icon MANAGE_ICON = ImageCache.getIcon("gear.png");
+   private static final Icon MOJANG_USER_ICON = ImageCache.getIcon("mojang-user.png");
+   private static final Icon ELY_USER_ICON = ImageCache.getIcon("ely.png");
+   private final DefaultListCellRenderer defaultRenderer;
+   private AccountCellRenderer.AccountCellType type;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType;
 
-	private static final Icon MANAGE_ICON = ImageCache.getIcon("gear.png");
-	private static final Icon PREMIUM_ICON = ImageCache.getIcon("premium.png");
+   public AccountCellRenderer(AccountCellRenderer.AccountCellType type) {
+      if (type == null) {
+         throw new NullPointerException("CellType cannot be NULL!");
+      } else {
+         this.defaultRenderer = new DefaultListCellRenderer();
+         this.type = type;
+      }
+   }
 
-	private final DefaultListCellRenderer defaultRenderer;
-	private AccountCellType type;
+   public AccountCellRenderer() {
+      this(AccountCellRenderer.AccountCellType.PREVIEW);
+   }
 
-	public AccountCellRenderer(AccountCellType type) {
-		if (type == null)
-			throw new NullPointerException("CellType cannot be NULL!");
+   public AccountCellRenderer.AccountCellType getType() {
+      return this.type;
+   }
 
-		this.defaultRenderer = new DefaultListCellRenderer();
-		this.type = type;
-	}
+   public void setType(AccountCellRenderer.AccountCellType type) {
+      if (type == null) {
+         throw new NullPointerException("CellType cannot be NULL!");
+      } else {
+         this.type = type;
+      }
+   }
 
-	public AccountCellRenderer() {
-		this(AccountCellType.PREVIEW);
-	}
+   public Component getListCellRendererComponent(JList list, Account value, int index, boolean isSelected, boolean cellHasFocus) {
+      JLabel renderer = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+      renderer.setAlignmentY(0.5F);
+      if (value != null && !value.equals(EMPTY)) {
+         if (value.equals(MANAGE)) {
+            renderer.setText(Localizable.get("account.manage"));
+            renderer.setIcon(MANAGE_ICON);
+         } else {
+            Icon icon = null;
+            switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[value.getType().ordinal()]) {
+            case 1:
+               icon = ELY_USER_ICON;
+               break;
+            case 2:
+               icon = MOJANG_USER_ICON;
+            }
 
-	public AccountCellType getType() {
-		return type;
-	}
+            if (icon != null) {
+               renderer.setIcon(icon);
+               renderer.setFont(renderer.getFont().deriveFont(1));
+            }
 
-	public void setType(AccountCellType type) {
-		if (type == null)
-			throw new NullPointerException("CellType cannot be NULL!");
+            switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType()[this.type.ordinal()]) {
+            case 2:
+               if (!value.hasUsername()) {
+                  renderer.setText(Localizable.get("account.creating"));
+                  renderer.setFont(renderer.getFont().deriveFont(2));
+               } else {
+                  renderer.setText(value.getUsername());
+               }
+               break;
+            default:
+               renderer.setText(value.getDisplayName());
+            }
+         }
+      } else {
+         renderer.setText(Localizable.get("account.empty"));
+      }
 
-		this.type = type;
-	}
+      return renderer;
+   }
 
-	@Override
-	public Component getListCellRendererComponent(
-			JList<? extends Account> list, Account value, int index,
-			boolean isSelected, boolean cellHasFocus) {
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[Account.AccountType.values().length];
 
-		JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+         try {
+            var0[Account.AccountType.ELY.ordinal()] = 1;
+         } catch (NoSuchFieldError var3) {
+         }
 
-		renderer.setAlignmentY(Component.CENTER_ALIGNMENT);
+         try {
+            var0[Account.AccountType.FREE.ordinal()] = 3;
+         } catch (NoSuchFieldError var2) {
+         }
 
-		if (value == null || value.equals(EMPTY)) {
-			renderer.setText(Localizable.get("account.empty"));
-		} else if (value.equals(MANAGE)) {
-			renderer.setText(Localizable.get("account.manage"));
-			renderer.setIcon(MANAGE_ICON);
-		} else {
+         try {
+            var0[Account.AccountType.MOJANG.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
 
-			if (value.isPremium()) {
-				renderer.setIcon(PREMIUM_ICON);
-				renderer.setFont(renderer.getFont().deriveFont(Font.BOLD));
-			}
+         $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType = var0;
+         return var0;
+      }
+   }
 
-			switch (type) {
-			case EDITOR:
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[AccountCellRenderer.AccountCellType.values().length];
 
-				if (!value.hasUsername()) {
-					renderer.setText(Localizable.get("account.creating"));
-					renderer.setFont(renderer.getFont().deriveFont(Font.ITALIC));
-				} else {
-					renderer.setText(value.getUsername());
-				}
+         try {
+            var0[AccountCellRenderer.AccountCellType.EDITOR.ordinal()] = 2;
+         } catch (NoSuchFieldError var2) {
+         }
 
-				break;
-			default:
-				renderer.setText(value.getDisplayName());
-			}
-		}
+         try {
+            var0[AccountCellRenderer.AccountCellType.PREVIEW.ordinal()] = 1;
+         } catch (NoSuchFieldError var1) {
+         }
 
-		return renderer;
-	}
+         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType = var0;
+         return var0;
+      }
+   }
 
-	public enum AccountCellType {
-		PREVIEW, EDITOR
-	}
+   public static enum AccountCellType {
+      PREVIEW,
+      EDITOR;
+   }
 }

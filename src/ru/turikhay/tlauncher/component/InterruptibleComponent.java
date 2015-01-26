@@ -1,70 +1,74 @@
 package ru.turikhay.tlauncher.component;
 
+import java.util.concurrent.Semaphore;
 import ru.turikhay.tlauncher.managers.ComponentManager;
 
-/**
- * An abstract <code>RefreshableComponent</code> whose refresh process can be
- * cancelled.
- * 
- * @author Artur Khusainov
- * 
- */
 public abstract class InterruptibleComponent extends RefreshableComponent {
-	protected final boolean[] refreshList;
-	private int lastRefreshID;
+   protected final boolean[] refreshList;
+   private int lastRefreshID;
+   protected final Semaphore semaphore;
+   protected boolean lastResult;
 
-	protected InterruptibleComponent(ComponentManager manager) throws Exception {
-		this(manager, 64); // default size.
-	}
+   protected InterruptibleComponent(ComponentManager manager) throws Exception {
+      this(manager, 64);
+   }
 
-	private InterruptibleComponent(ComponentManager manager, int listSize)
-			throws Exception {
-		super(manager);
+   private InterruptibleComponent(ComponentManager manager, int listSize) throws Exception {
+      super(manager);
+      this.semaphore = new Semaphore(1);
+      if (listSize < 1) {
+         throw new IllegalArgumentException("Invalid list size: " + listSize + " < 1");
+      } else {
+         this.refreshList = new boolean[listSize];
+      }
+   }
 
-		if (listSize < 1)
-			throw new IllegalArgumentException("Invalid list size: " + listSize
-					+ " < 1");
+   public final boolean refresh() {
+      if (this.semaphore.tryAcquire()) {
+         boolean var2;
+         try {
+            var2 = this.lastResult = this.refresh(this.nextID());
+         } finally {
+            this.semaphore.release();
+         }
 
-		this.refreshList = new boolean[listSize];
-	}
+         return var2;
+      } else {
+         try {
+            this.semaphore.acquire();
+            boolean var3 = this.lastResult;
+            return var3;
+         } catch (InterruptedException var11) {
+            var11.printStackTrace();
+         } finally {
+            this.semaphore.release();
+         }
 
-	/**
-	 * Starts a new refresh process with next queueID.
-	 */
-	public boolean startRefresh() {
-		return refresh(nextID());
-	}
+         return false;
+      }
+   }
 
-	@Override
-	protected boolean refresh() {
-		return startRefresh();
-	}
+   public synchronized void stopRefresh() {
+      for(int i = 0; i < this.refreshList.length; ++i) {
+         this.refreshList[i] = false;
+      }
 
-	/**
-	 * Sets every refresh process as stopped.
-	 */
-	public synchronized void stopRefresh() {
-		for (int i = 0; i < refreshList.length; i++)
-			refreshList[i] = false;
-	}
+   }
 
-	protected synchronized int nextID() {
-		int listSize = refreshList.length, next = lastRefreshID++;
+   protected synchronized int nextID() {
+      int listSize = this.refreshList.length;
+      int next = this.lastRefreshID++;
+      if (next >= listSize) {
+         next = 0;
+      }
 
-		if (next >= listSize)
-			next = 0;
+      this.lastRefreshID = next;
+      return next;
+   }
 
-		this.lastRefreshID = next;
-		return next;
-	}
+   protected boolean isCancelled(int refreshID) {
+      return !this.refreshList[refreshID];
+   }
 
-	protected boolean isCancelled(int refreshID) {
-		return !refreshList[refreshID];
-	}
-
-	/**
-	 * Refreshes information and then flushes it if the <code>refreshID</code>
-	 * is not set as stopped.
-	 */
-	protected abstract boolean refresh(int refreshID);
+   protected abstract boolean refresh(int var1);
 }

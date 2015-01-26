@@ -1,22 +1,22 @@
 package ru.turikhay.tlauncher.ui.login;
 
 public class LoginWaitException extends LoginException {
-	private final LoginWaitTask waitTask;
+   private final LoginWaitException.LoginWaitTask waitTask;
 
-	public LoginWaitException(String reason, LoginWaitTask waitTask) {
-		super(reason);
+   public LoginWaitException(String reason, LoginWaitException.LoginWaitTask waitTask) {
+      super(reason);
+      if (waitTask == null) {
+         throw new NullPointerException("wait task");
+      } else {
+         this.waitTask = waitTask;
+      }
+   }
 
-		if (waitTask == null)
-			throw new NullPointerException("wait task");
+   public LoginWaitException.LoginWaitTask getWaitTask() {
+      return this.waitTask;
+   }
 
-		this.waitTask = waitTask;
-	}
-
-	public LoginWaitTask getWaitTask() {
-		return waitTask;
-	}
-
-	public interface LoginWaitTask {
-		public void runTask() throws LoginException;
-	}
+   public interface LoginWaitTask {
+      void runTask() throws LoginException;
+   }
 }
