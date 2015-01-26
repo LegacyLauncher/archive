@@ -1,93 +1,82 @@
 package net.minecraft.launcher.versions;
 
 import java.util.Date;
-
 import net.minecraft.launcher.updater.VersionList;
 import ru.turikhay.tlauncher.repository.Repository;
 
 public class PartialVersion implements Version {
-	private String id;
-	private Date time;
-	private Date releaseTime;
-	private ReleaseType type;
+   private String id;
+   private String jar;
+   private Date time;
+   private Date releaseTime;
+   private ReleaseType type;
+   private Repository source;
+   private VersionList list;
 
-	private Repository source;
-	private VersionList list;
+   public String getID() {
+      return this.id;
+   }
 
-	@Override
-	public String getID() {
-		return id;
-	}
+   public String getJar() {
+      return this.jar;
+   }
 
-	@Override
-	public void setID(String id) {
-		this.id = id;
-	}
+   public void setID(String id) {
+      this.id = id;
+   }
 
-	@Override
-	public ReleaseType getReleaseType() {
-		return type;
-	}
+   public ReleaseType getReleaseType() {
+      return this.type;
+   }
 
-	@Override
-	public Repository getSource() {
-		return source;
-	}
+   public Repository getSource() {
+      return this.source;
+   }
 
-	@Override
-	public void setSource(Repository repository) {
-		if (repository == null)
-			throw new NullPointerException();
+   public void setSource(Repository repository) {
+      if (repository == null) {
+         throw new NullPointerException();
+      } else {
+         this.source = repository;
+      }
+   }
 
-		this.source = repository;
-	}
+   public Date getUpdatedTime() {
+      return this.time;
+   }
 
-	@Override
-	public Date getUpdatedTime() {
-		return time;
-	}
+   public Date getReleaseTime() {
+      return this.releaseTime;
+   }
 
-	@Override
-	public Date getReleaseTime() {
-		return releaseTime;
-	}
+   public VersionList getVersionList() {
+      return this.list;
+   }
 
-	@Override
-	public VersionList getVersionList() {
-		return list;
-	}
+   public void setVersionList(VersionList list) {
+      if (list == null) {
+         throw new NullPointerException();
+      } else {
+         this.list = list;
+      }
+   }
 
-	@Override
-	public void setVersionList(VersionList list) {
-		if (list == null)
-			throw new NullPointerException();
+   public boolean equals(Object o) {
+      if (this == o) {
+         return true;
+      } else if (o == null) {
+         return false;
+      } else if (this.hashCode() == o.hashCode()) {
+         return true;
+      } else if (!(o instanceof Version)) {
+         return false;
+      } else {
+         Version compare = (Version)o;
+         return compare.getID() == null ? false : compare.getID().equals(this.id);
+      }
+   }
 
-		this.list = list;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null)
-			return false;
-		if (this.hashCode() == o.hashCode())
-			return true;
-
-		if (!(o instanceof Version))
-			return false;
-
-		Version compare = (Version) o;
-		if (compare.getID() == null)
-			return false;
-
-		return compare.getID().equals(id);
-	}
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "{id='" + id + "', time=" + time
-				+ ", release=" + releaseTime + ", type=" + type + ", source="
-				+ source + ", list=" + list + "}";
-	}
+   public String toString() {
+      return this.getClass().getSimpleName() + "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", source=" + this.source + ", list=" + this.list + "}";
+   }
 }

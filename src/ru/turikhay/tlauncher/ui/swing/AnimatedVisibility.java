@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.ui.swing;
 
 public interface AnimatedVisibility {
-	public void setShown(boolean shown);
+   void setShown(boolean var1);
 
-	public void setShown(boolean shown, boolean animate);
+   void setShown(boolean var1, boolean var2);
 }

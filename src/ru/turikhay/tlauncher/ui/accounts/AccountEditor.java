@@ -1,132 +1,221 @@
 package ru.turikhay.tlauncher.ui.accounts;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import javax.swing.ButtonGroup;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.ui.accounts.UsernameField.UsernameState;
+import ru.turikhay.tlauncher.ui.block.Blockable;
+import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
-import ru.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
+import ru.turikhay.tlauncher.ui.loc.LocalizableRadioButton;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import ru.turikhay.tlauncher.ui.swing.CheckBoxListener;
-import ru.turikhay.tlauncher.ui.swing.Del;
 import ru.turikhay.tlauncher.ui.text.ExtendedPasswordField;
 
 public class AccountEditor extends CenterPanel {
-	private static final long serialVersionUID = 7061277150214976212L;
+   private static final String passlock = "passlock";
+   private final AccountEditorScene scene;
+   public final UsernameField username;
+   public final AccountEditor.BlockablePasswordField password;
+   public final ButtonGroup authGroup;
+   public final AccountEditor.AuthTypeRadio freeAuth;
+   public final AccountEditor.AuthTypeRadio mojangAuth;
+   public final AccountEditor.AuthTypeRadio elyAuth;
+   public final LinkedHashMap radioMap = new LinkedHashMap();
+   public final LocalizableButton save;
+   private final ProgressBar progressBar;
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
 
-	private final AccountEditorScene scene;
+   public AccountEditor(AccountEditorScene sc) {
+      super(squareInsets);
+      this.scene = sc;
+      ActionListener enterHandler = new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            AccountEditor.this.defocus();
+            AccountEditor.this.scene.handler.saveEditor();
+         }
+      };
+      this.username = new UsernameField(this, UsernameField.UsernameState.USERNAME);
+      this.username.addActionListener(enterHandler);
+      this.password = new AccountEditor.BlockablePasswordField((AccountEditor.BlockablePasswordField)null);
+      this.password.addActionListener(enterHandler);
+      this.password.setEnabled(false);
+      this.authGroup = new ButtonGroup();
+      this.freeAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.FREE, (AccountEditor.AuthTypeRadio)null);
+      this.mojangAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.MOJANG, (AccountEditor.AuthTypeRadio)null);
+      this.elyAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.ELY, (AccountEditor.AuthTypeRadio)null);
+      this.save = new LocalizableButton("account.save");
+      this.save.addActionListener(enterHandler);
+      this.progressBar = new ProgressBar();
+      this.progressBar.setPreferredSize(new Dimension(200, 20));
+      this.add(this.del(0));
+      this.add(sepPan(new Component[]{this.username}));
+      this.add(sepPan(new Component[]{this.freeAuth, this.mojangAuth, this.elyAuth}));
+      this.add(sepPan(new Component[]{this.password}));
+      this.add(this.del(0));
+      this.add(sepPan(new Component[]{this.save}));
+      this.add(sepPan(new Component[]{this.progressBar}));
+   }
 
-	public final UsernameField username;
-	public final ExtendedPasswordField password;
+   public Account.AccountType getSelectedAccountType() {
+      Iterator var2 = this.radioMap.entrySet().iterator();
 
-	public final LocalizableCheckbox premiumBox;
-	public final LocalizableButton save;
+      while(var2.hasNext()) {
+         Entry en = (Entry)var2.next();
+         if (((AccountEditor.AuthTypeRadio)en.getValue()).isSelected()) {
+            return (Account.AccountType)en.getKey();
+         }
+      }
 
-	private final ProgressBar progressBar;
+      return Account.AccountType.FREE;
+   }
 
-	public AccountEditor(AccountEditorScene sc) {
-		super(squareInsets);
+   public void setSelectedAccountType(Account.AccountType type) {
+      AccountEditor.AuthTypeRadio selectable = (AccountEditor.AuthTypeRadio)this.radioMap.get(type);
+      if (selectable != null) {
+         selectable.setSelected(true);
+      }
 
-		this.scene = sc;
+   }
 
-		ActionListener enterHandler = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				defocus();
-				scene.handler.saveEditor();
-			}
-		};
+   public void fill(Account account) {
+      this.setSelectedAccountType(account.getType());
+      this.username.setText(account.getUsername());
+      this.password.setText((String)null);
+   }
 
-		this.username = new UsernameField(this, UsernameState.USERNAME);
-		username.addActionListener(enterHandler);
+   public void clear() {
+      this.setSelectedAccountType((Account.AccountType)null);
+      this.username.setText((String)null);
+      this.password.setText((String)null);
+   }
 
-		this.password = new ExtendedPasswordField();
-		password.addActionListener(enterHandler);
-		password.setEnabled(false);
+   public Account get() {
+      Account account = new Account();
+      account.setUsername(this.username.getValue());
+      Account.AccountType type = this.getSelectedAccountType();
+      switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[type.ordinal()]) {
+      case 1:
+      case 2:
+         if (this.password.hasPassword()) {
+            account.setPassword(this.password.getPassword());
+         }
+      case 3:
+      default:
+         account.setType(type);
+         return account;
+      }
+   }
 
-		premiumBox = new LocalizableCheckbox("account.premium");
-		premiumBox.addItemListener(new CheckBoxListener() {
-			@Override
-			public void itemStateChanged(boolean newstate) {
-				if (newstate && !password.hasPassword())
-					password.setText(null);
+   public Insets getInsets() {
+      return squareInsets;
+   }
 
-				password.setEnabled(newstate);
-				username.setState(newstate ? UsernameState.EMAIL
-						: UsernameState.USERNAME);
+   public void block(Object reason) {
+      super.block(reason);
+      if (!reason.equals("empty")) {
+         this.progressBar.setIndeterminate(true);
+      }
 
-				defocus();
-			}
-		});
+   }
 
-		save = new LocalizableButton("account.save");
-		save.addActionListener(enterHandler);
+   public void unblock(Object reason) {
+      super.unblock(reason);
+      if (!reason.equals("empty")) {
+         this.progressBar.setIndeterminate(false);
+      }
 
-		progressBar = new ProgressBar();
-		progressBar.setPreferredSize(new Dimension(200, 20));
+   }
 
-		this.add(del(Del.CENTER));
-		this.add(sepPan(username));
-		this.add(sepPan(premiumBox));
-		this.add(sepPan(password));
-		this.add(del(Del.CENTER));
-		this.add(sepPan(save));
-		this.add(sepPan(progressBar));
-	}
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[Account.AccountType.values().length];
 
-	public void fill(Account account) {
-		this.premiumBox.setSelected(account.isPremium());
-		this.username.setText(account.getUsername());
-		this.password.setText(null);
-	}
+         try {
+            var0[Account.AccountType.ELY.ordinal()] = 1;
+         } catch (NoSuchFieldError var3) {
+         }
 
-	public void clear() {
-		this.premiumBox.setSelected(false);
-		this.username.setText(null);
-		this.password.setText(null);
-	}
+         try {
+            var0[Account.AccountType.FREE.ordinal()] = 3;
+         } catch (NoSuchFieldError var2) {
+         }
 
-	public Account get() {
-		Account account = new Account();
-		account.setUsername(username.getValue());
+         try {
+            var0[Account.AccountType.MOJANG.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
 
-		if (premiumBox.isSelected()) {
-			account.setPremium(true);
+         $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType = var0;
+         return var0;
+      }
+   }
 
-			if (password.hasPassword())
-				account.setPassword(password.getPassword());
-		}
+   public class AuthTypeRadio extends LocalizableRadioButton {
+      private final Account.AccountType type;
 
-		return account;
-	}
+      private AuthTypeRadio(final Account.AccountType type) {
+         super("account.auth." + type.toString());
+         AccountEditor.this.radioMap.put(type, this);
+         AccountEditor.this.authGroup.add(this);
+         this.type = type;
+         final boolean free = type == Account.AccountType.FREE;
+         this.addItemListener(new CheckBoxListener() {
+            public void itemStateChanged(boolean newstate) {
+               if (newstate && !AccountEditor.this.password.hasPassword()) {
+                  AccountEditor.this.password.setText((String)null);
+               }
 
-	@Override
-	public Insets getInsets() {
-		return squareInsets;
-	}
+               if (newstate) {
+                  AccountEditor.this.scene.tip.setAccountType(type);
+               }
 
-	@Override
-	public void block(Object reason) {
-		super.block(reason);
+               newstate &= free;
+               Blocker.setBlocked(AccountEditor.this.password, "passlock", newstate);
+               AccountEditor.this.username.setState(newstate ? UsernameField.UsernameState.USERNAME : UsernameField.UsernameState.EMAIL);
+               AccountEditor.this.defocus();
+            }
+         });
+      }
 
-		password.setEnabled(premiumBox.isSelected());
+      public Account.AccountType getAccountType() {
+         return this.type;
+      }
 
-		if (!reason.equals("empty"))
-			progressBar.setIndeterminate(true);
-	}
+      // $FF: synthetic method
+      AuthTypeRadio(Account.AccountType var2, AccountEditor.AuthTypeRadio var3) {
+         this(var2);
+      }
+   }
 
-	@Override
-	public void unblock(Object reason) {
-		super.unblock(reason);
+   private class BlockablePasswordField extends ExtendedPasswordField implements Blockable {
+      private BlockablePasswordField() {
+      }
 
-		password.setEnabled(premiumBox.isSelected());
+      public void block(Object reason) {
+         this.setEnabled(false);
+      }
 
-		if (!reason.equals("empty"))
-			progressBar.setIndeterminate(false);
-	}
+      public void unblock(Object reason) {
+         this.setEnabled(true);
+      }
+
+      // $FF: synthetic method
+      BlockablePasswordField(AccountEditor.BlockablePasswordField var2) {
+         this();
+      }
+   }
 }

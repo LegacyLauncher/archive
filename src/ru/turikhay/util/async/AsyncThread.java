@@ -5,16 +5,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 public class AsyncThread {
+   private static ExecutorService service = Executors.newCachedThreadPool(new ThreadFactory() {
+      public Thread newThread(Runnable r) {
+         return new RunnableThread(r);
+      }
+   });
 
-	private static ExecutorService service = Executors.newCachedThreadPool(new ThreadFactory() {
-		@Override
-		public Thread newThread(Runnable r) {
-			return new RunnableThread(r);
-		}
-	});
-
-	public static void execute(Runnable r) {
-		service.execute(r);
-	}
-
+   public static void execute(Runnable r) {
+      service.execute(r);
+   }
 }

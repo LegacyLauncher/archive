@@ -1,178 +1,114 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.UUID;
-
-import net.minecraft.launcher.Http;
-
-import org.apache.commons.lang3.StringUtils;
-
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+public abstract class Authenticator {
+   protected final Account account;
+   private final String logPrefix = '[' + this.getClass().getSimpleName() + ']';
+   // $FF: synthetic field
+   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
 
-public class Authenticator {
-	private static final URL ROUTE_AUTHENTICATE = Http
-			.constantURL("https://authserver.mojang.com/authenticate");
-	private static final URL ROUTE_REFRESH = Http
-			.constantURL("https://authserver.mojang.com/refresh");
-	// private static final URL ROUTE_VALIDATE =
-	// Http.constantURL("https://authserver.mojang.com/validate");
-	// private static final URL ROUTE_INVALIDATE =
-	// Http.constantURL("https://authserver.mojang.com/invalidate");
-	// private static final URL ROUTE_SIGNOUT =
-	// Http.constantURL("https://authserver.mojang.com/signout");
+   protected Authenticator(Account account) {
+      if (account == null) {
+         throw new NullPointerException("account");
+      } else {
+         this.account = account;
+      }
+   }
 
-	public final Account account;
+   public final Account getAccount() {
+      return this.account;
+   }
 
-	private final Authenticator instance;
-	private final Gson gson;
+   public boolean pass(AuthenticatorListener l) {
+      if (l != null) {
+         l.onAuthPassing(this);
+      }
 
-	public Authenticator(Account account) {
-		if (account == null)
-			throw new NullPointerException();
+      try {
+         this.pass();
+      } catch (Exception var3) {
+         this.log("Cannot authenticate:", var3);
+         if (l != null) {
+            l.onAuthPassingError(this, var3);
+         }
 
-		this.instance = this;
+         return false;
+      }
 
-	    GsonBuilder builder = new GsonBuilder();
-	    builder.registerTypeAdapter(UUID.class, new UUIDTypeAdapter());
-	    this.gson = builder.create();
+      if (l != null) {
+         l.onAuthPassed(this);
+      }
 
-		this.account = account;
-	}
+      return true;
+   }
 
-	public UUID getClientToken() {
-		return TLauncher.getInstance().getProfileManager().getClientToken();
-	}
+   public void asyncPass(final AuthenticatorListener l) {
+      AsyncThread.execute(new Runnable() {
+         public void run() {
+            Authenticator.this.pass(l);
+         }
+      });
+   }
 
-	private static void setClientToken(String uuid) {
-		TLauncher.getInstance().getProfileManager().setClientToken(uuid);
-	}
+   protected abstract void pass() throws AuthenticatorException;
 
-	void pass() throws AuthenticatorException {
-		if (!account.isPremium())
-			throw new IllegalArgumentException("Invalid account type!");
+   protected void log(Object... o) {
+      U.log(this.logPrefix, o);
+   }
 
-		if (account.getPassword() == null && account.getAccessToken() == null)
-			throw new AuthenticatorException("Password and token are NULL!");
+   public static Authenticator instanceFor(Account account) {
+      if (account == null) {
+         throw new NullPointerException("account");
+      } else {
+         U.log("instancefor:", account);
+         switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[account.getType().ordinal()]) {
+         case 1:
+            return new ElyAuthenticator(account);
+         case 2:
+            return new MojangAuthenticator(account);
+         default:
+            throw new IllegalArgumentException("illegal account type");
+         }
+      }
+   }
 
-		log("Staring to authenticate:");
-		log("hasUsername:", account.getUsername());
-		log("hasPassword:", account.getPassword() != null);
-		log("hasAccessToken:", account.getAccessToken() != null);
+   protected static UUID getClientToken() {
+      return TLauncher.getInstance().getProfileManager().getClientToken();
+   }
 
-		if (account.getPassword() == null)
-			tokenLogin();
-		else
-			passwordLogin();
+   protected static void setClientToken(String uuid) {
+      TLauncher.getInstance().getProfileManager().setClientToken(uuid);
+   }
 
-		log("Log in successful!");
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType() {
+      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[Account.AccountType.values().length];
 
-		log("hasUUID:", account.getUUID() != null);
-		log("hasAccessToken:", account.getAccessToken() != null);
-		log("hasProfiles:", account.getProfiles() != null);
-		log("hasProfile:", account.getProfiles() != null);
-		log("hasProperties:", account.getProperties() != null);
-	}
+         try {
+            var0[Account.AccountType.ELY.ordinal()] = 1;
+         } catch (NoSuchFieldError var3) {
+         }
 
-	public boolean pass(AuthenticatorListener l) {
-		if (l != null)
-			l.onAuthPassing(instance);
+         try {
+            var0[Account.AccountType.FREE.ordinal()] = 3;
+         } catch (NoSuchFieldError var2) {
+         }
 
-		try {
-			instance.pass();
-		} catch (Exception e) {
-			log("Cannot authenticate:", e);
-			if (l != null)
-				l.onAuthPassingError(instance, e);
-			return false;
-		}
-		if (l != null)
-			l.onAuthPassed(instance);
-		return true;
-	}
+         try {
+            var0[Account.AccountType.MOJANG.ordinal()] = 2;
+         } catch (NoSuchFieldError var1) {
+         }
 
-	public void asyncPass(final AuthenticatorListener l) {
-		AsyncThread.execute(new Runnable() {
-			@Override
-			public void run() {
-				pass(l);
-			}
-		});
-	}
-
-	void passwordLogin() throws AuthenticatorException {
-		log("Loggining in with password");
-
-		AuthenticationRequest request = new AuthenticationRequest(this);
-		AuthenticationResponse response = makeRequest(ROUTE_AUTHENTICATE,
-				request, AuthenticationResponse.class);
-
-		account.setUserID((response.getUserID() != null) ? response.getUserID()
-				: account.getUsername());
-		account.setAccessToken(response.getAccessToken());
-		account.setProfiles(response.getAvailableProfiles());
-		account.setProfile(response.getSelectedProfile());
-		account.setUser(response.getUser());
-
-		setClientToken(response.getClientToken());
-
-		if (response.getSelectedProfile() != null) {
-			account.setUUID(response.getSelectedProfile().getId());
-			account.setDisplayName(response.getSelectedProfile().getName());
-		}
-	}
-
-	void tokenLogin() throws AuthenticatorException {
-		log("Loggining in with token");
-
-		RefreshRequest request = new RefreshRequest(this);
-		RefreshResponse response = makeRequest(ROUTE_REFRESH, request,
-				RefreshResponse.class);
-
-		setClientToken(response.getClientToken());
-
-		account.setAccessToken(response.getAccessToken());
-		account.setProfile(response.getSelectedProfile());
-		account.setUser(response.getUser());
-	}
-
-	<T extends Response> T makeRequest(URL url, Request input, Class<T> classOfT)
-			throws AuthenticatorException {
-		String jsonResult;
-
-		try {
-			jsonResult = (input == null) ? AuthenticatorService
-					.performGetRequest(url) : AuthenticatorService
-					.performPostRequest(url, this.gson.toJson(input),
-							"application/json");
-		} catch (IOException e) {
-			throw new AuthenticatorException(
-					"Error making request, uncaught IOException",
-					"unreachable", e);
-		}
-
-		T result = this.gson.fromJson(jsonResult, classOfT);
-
-		if (result == null)
-			return null;
-		if (StringUtils.isBlank(result.getError()))
-			return result;
-
-		if ("UserMigratedException".equals(result.getCause()))
-			throw new UserMigratedException();
-
-		if (result.getError().equals("ForbiddenOperationException"))
-			throw new InvalidCredentialsException();
-
-		throw new AuthenticatorException(result.getErrorMessage(), "internal");
-	}
-
-	void log(Object... o) {
-		U.log("[AUTH]", o);
-	}
+         $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType = var0;
+         return var0;
+      }
+   }
 }

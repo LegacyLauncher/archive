@@ -4,57 +4,51 @@ import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.text.ExtendedTextField;
 
-public class LocalizableTextField extends ExtendedTextField implements
-LocalizableComponent {
-	private static final long serialVersionUID = 359096767189321072L;
+public class LocalizableTextField extends ExtendedTextField implements LocalizableComponent {
+   private static final long serialVersionUID = 359096767189321072L;
+   protected String placeholderPath;
+   protected String[] variables;
 
-	protected String placeholderPath;
-	protected String[] variables;
+   public LocalizableTextField(CenterPanel panel, String placeholderPath, String value) {
+      super(panel, (String)null, value);
+      this.setValue(value);
+      this.setPlaceholder(placeholderPath);
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
+   }
 
-	public LocalizableTextField(CenterPanel panel, String placeholderPath,
-			String value) {
-		super(panel, null, value);
+   public LocalizableTextField(CenterPanel panel, String placeholderPath) {
+      this(panel, placeholderPath, (String)null);
+   }
 
-		this.setValue(value);
-		this.setPlaceholder(placeholderPath);
-		this.setFont(getFont().deriveFont(TLauncherFrame.fontSize));
-	}
+   public LocalizableTextField(String placeholderPath) {
+      this((CenterPanel)null, placeholderPath, (String)null);
+   }
 
-	public LocalizableTextField(CenterPanel panel, String placeholderPath) {
-		this(panel, placeholderPath, null);
-	}
+   public LocalizableTextField() {
+      this((CenterPanel)null, (String)null, (String)null);
+   }
 
-	public LocalizableTextField(String placeholderPath) {
-		this(null, placeholderPath, null);
-	}
+   public void setPlaceholder(String placeholderPath, Object... vars) {
+      this.placeholderPath = placeholderPath;
+      this.variables = Localizable.checkVariables(vars);
+      String value = Localizable.get(placeholderPath);
 
-	public LocalizableTextField() {
-		this(null, null, null);
-	}
+      for(int i = 0; i < this.variables.length; ++i) {
+         value = value.replace("%" + i, this.variables[i]);
+      }
 
-	public void setPlaceholder(String placeholderPath, Object... vars) {
-		this.placeholderPath = placeholderPath;
-		this.variables = Localizable.checkVariables(vars);
+      super.setPlaceholder(value);
+   }
 
-		String value = Localizable.get(placeholderPath);
+   public void setPlaceholder(String placeholderPath) {
+      this.setPlaceholder(placeholderPath, Localizable.EMPTY_VARS);
+   }
 
-		for (int i = 0; i < variables.length; i++)
-			value = value.replace("%" + i, variables[i]);
+   public String getPlaceholderPath() {
+      return this.placeholderPath;
+   }
 
-		super.setPlaceholder(value);
-	}
-
-	@Override
-	public void setPlaceholder(String placeholderPath) {
-		setPlaceholder(placeholderPath, Localizable.EMPTY_VARS);
-	}
-
-	public String getPlaceholderPath() {
-		return this.placeholderPath;
-	}
-
-	@Override
-	public void updateLocale() {
-		setPlaceholder(placeholderPath, (Object[]) variables);
-	}
+   public void updateLocale() {
+      this.setPlaceholder(this.placeholderPath, this.variables);
+   }
 }

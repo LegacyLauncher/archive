@@ -2,272 +2,268 @@ package ru.turikhay.tlauncher.minecraft.auth;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import ru.turikhay.util.Reflect;
 
 public class Account {
-	private String username;
-	private String userID;
-	private String displayName;
-	private String password;
-	private String accessToken;
-	private String uuid;
-	private List<Map<String, String>> userProperties;
-
-	private AccountType type;
-
-	private GameProfile[] profiles;
-	private GameProfile selectedProfile;
-
-	private User user;
-
-	private final Authenticator auth;
-
-	public Account() {
-		this.type = AccountType.FREE;
-		this.auth = new Authenticator(this);
-	}
-
-	public Account(String username) {
-		this();
-		this.setUsername(username);
-	}
-
-	public Account(Map<String, Object> map) {
-		this();
-		this.fillFromMap(map);
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public boolean hasUsername() {
-		return username != null;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getUserID() {
-		return userID;
-	}
-
-	public void setUserID(String userID) {
-		this.userID = userID;
-	}
-
-	public String getDisplayName() {
-		return displayName == null? username : displayName;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	void setPassword(String password) {
-		this.password = password;
-		if (password != null)
-			type = AccountType.PREMIUM;
-	}
-
-	public void setPassword(char[] password) {
-		setPassword(new String(password));
-	}
-
-	public String getAccessToken() {
-		return accessToken;
-	}
-
-	public void setAccessToken(String accessToken) {
-		if ("null".equals(accessToken))
-			accessToken = null;
-
-		this.accessToken = accessToken;
-		this.type = (accessToken == null) ? AccountType.FREE
-				: AccountType.PREMIUM;
-	}
-
-	public String getUUID() {
-		return uuid;
-	}
-
-	public void setUUID(String uuid) {
-		this.uuid = uuid;
-	}
-
-	public GameProfile[] getProfiles() {
-		return profiles;
-	}
-
-	public void setProfiles(GameProfile[] p) {
-		this.profiles = p;
-	}
-
-	public GameProfile getProfile() {
-		return (selectedProfile != null) ? selectedProfile
-				: GameProfile.DEFAULT_PROFILE;
-	}
-
-	public void setProfile(GameProfile p) {
-		this.selectedProfile = p;
-	}
-
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public Map<String, List<String>> getProperties() {
-		Map<String, List<String>> map = new HashMap<String, List<String>>();
-		List<UserProperty> list = new ArrayList<UserProperty>();
-
-		if (userProperties != null)
-			for (Map<String, String> properties : userProperties)
-				list.add(new UserProperty(properties.get("name"), properties
-						.get("value")));
-
-		if (user != null && user.getProperties() != null)
-			for (Map<String, String> properties : user.getProperties())
-				list.add(new UserProperty(properties.get("name"), properties
-						.get("value")));
-
-		for (UserProperty property : list) {
-			List<String> values = new ArrayList<String>();
-			values.add(property.getValue());
-
-			map.put(property.getKey(), values);
-		}
-
-		return map;
-	}
-
-	void setProperties(List<Map<String, String>> properties) {
-		this.userProperties = properties;
-	}
-
-	public AccountType getType() {
-		return type;
-	}
-
-	void setType(AccountType type) {
-		if (type == null)
-			throw new NullPointerException();
-
-		this.type = type;
-	}
-
-	public boolean isPremium() {
-		return type.equals(AccountType.PREMIUM);
-	}
-
-	public void setPremium(boolean premium) {
-		setType(premium ? AccountType.PREMIUM : AccountType.FREE);
-	}
-
-	public Authenticator getAuthenticator() {
-		return auth;
-	}
-
-	Map<String, Object> createMap() {
-		Map<String, Object> r = new HashMap<String, Object>();
-
-		r.put("username", username);
-		r.put("userid", userID);
-		r.put("uuid", UUIDTypeAdapter.toUUID(uuid));
-		r.put("displayName", displayName);
-
-		if (isPremium())
-			r.put("accessToken", accessToken);
-
-		if (userProperties != null)
-			r.put("userProperties", userProperties);
-
-		return r;
-	}
-
-	@SuppressWarnings("unchecked")
-	void fillFromMap(Map<String, Object> map) {
-
-		if (map.containsKey("username"))
-			setUsername(map.get("username").toString());
-
-		setUserID(map.containsKey("userid") ? map.get("userid").toString()
-				: getUsername());
-		setDisplayName(map.containsKey("displayName") ? map.get("displayName")
-				.toString() : getUsername());
-
-		setProperties(map.containsKey("userProperties") ? (List<Map<String, String>>) map
-				.get("userProperties") : null);
-
-		setUUID(map.containsKey("uuid") ? UUIDTypeAdapter.toUUID(map.get("uuid").toString()) : null);
-		setAccessToken(map.containsKey("accessToken") ? map.get("accessToken")
-				.toString() : null);
-	}
-
-	public void complete(Account acc) {
-		if (acc == null)
-			throw new NullPointerException();
-
-		boolean sameName = acc.username.equals(username);
-
-		username = acc.username;
-		type = acc.type;
-
-		if (acc.userID != null)
-			userID = acc.userID;
-		if (acc.displayName != null)
-			displayName = acc.displayName;
-		if (acc.password != null)
-			password = acc.password;
-		if (!sameName)
-			accessToken = null;
-
-	}
-
-	public boolean equals(Account acc) {
-		if (acc == null)
-			return false;
-		if (username == null)
-			return acc.username == null;
-
-		boolean pass = password == null || password.equals(acc.password);
-
-		return username.equals(acc.username) && type.equals(acc.type) && pass;
-	}
-
-	@Override
-	public String toString() {
-		if (username == null)
-			return "...";
-		return username
-				+ (displayName != null && isPremium() ? " (" + displayName
-						+ ")" : "");
-	}
-
-	public String toDebugString() {
-		return "Account" + createMap();
-	}
-
-	public static Account randomAccount() {
-		return new Account("random" + new Random().nextLong());
-	}
-
-	public enum AccountType {
-		PREMIUM, FREE;
-
-		@Override
-		public String toString() {
-			return super.toString().toLowerCase();
-		}
-	}
+   private String username;
+   private String userID;
+   private String displayName;
+   private String password;
+   private String accessToken;
+   private String uuid;
+   private List userProperties;
+   private Account.AccountType type;
+   private GameProfile[] profiles;
+   private GameProfile selectedProfile;
+   private User user;
+
+   public Account() {
+      this.type = Account.AccountType.FREE;
+   }
+
+   public Account(String username) {
+      this();
+      this.setUsername(username);
+   }
+
+   public Account(Map map) {
+      this();
+      this.fillFromMap(map);
+   }
+
+   public String getUsername() {
+      return this.username;
+   }
+
+   public boolean hasUsername() {
+      return this.username != null;
+   }
+
+   public void setUsername(String username) {
+      this.username = username;
+   }
+
+   public String getUserID() {
+      return this.userID;
+   }
+
+   public void setUserID(String userID) {
+      this.userID = userID;
+   }
+
+   public String getDisplayName() {
+      return this.displayName == null ? this.username : this.displayName;
+   }
+
+   public String getPassword() {
+      return this.password;
+   }
+
+   void setPassword(String password) {
+      this.password = password;
+   }
+
+   public void setPassword(char[] password) {
+      this.setPassword(new String(password));
+   }
+
+   public String getAccessToken() {
+      return this.accessToken;
+   }
+
+   public void setAccessToken(String accessToken) {
+      if ("null".equals(accessToken)) {
+         accessToken = null;
+      }
+
+      this.accessToken = accessToken;
+   }
+
+   public String getUUID() {
+      return this.uuid;
+   }
+
+   public void setUUID(String uuid) {
+      this.uuid = uuid;
+   }
+
+   public GameProfile[] getProfiles() {
+      return this.profiles;
+   }
+
+   public void setProfiles(GameProfile[] p) {
+      this.profiles = p;
+   }
+
+   public GameProfile getProfile() {
+      return this.selectedProfile != null ? this.selectedProfile : GameProfile.DEFAULT_PROFILE;
+   }
+
+   public void setProfile(GameProfile p) {
+      this.selectedProfile = p;
+   }
+
+   public void setDisplayName(String displayName) {
+      this.displayName = displayName;
+   }
+
+   public User getUser() {
+      return this.user;
+   }
+
+   public void setUser(User user) {
+      this.user = user;
+   }
+
+   public Map getProperties() {
+      Map map = new HashMap();
+      List list = new ArrayList();
+      Map properties;
+      Iterator var4;
+      if (this.userProperties != null) {
+         var4 = this.userProperties.iterator();
+
+         while(var4.hasNext()) {
+            properties = (Map)var4.next();
+            list.add(new UserProperty((String)properties.get("name"), (String)properties.get("value")));
+         }
+      }
+
+      if (this.user != null && this.user.getProperties() != null) {
+         var4 = this.user.getProperties().iterator();
+
+         while(var4.hasNext()) {
+            properties = (Map)var4.next();
+            list.add(new UserProperty((String)properties.get("name"), (String)properties.get("value")));
+         }
+      }
+
+      var4 = list.iterator();
+
+      while(var4.hasNext()) {
+         UserProperty property = (UserProperty)var4.next();
+         List values = new ArrayList();
+         values.add(property.getValue());
+         map.put(property.getKey(), values);
+      }
+
+      return map;
+   }
+
+   void setProperties(List properties) {
+      this.userProperties = properties;
+   }
+
+   public Account.AccountType getType() {
+      return this.type;
+   }
+
+   public void setType(Account.AccountType type) {
+      if (type == null) {
+         throw new NullPointerException();
+      } else {
+         this.type = type;
+      }
+   }
+
+   public boolean isFree() {
+      return this.type.equals(Account.AccountType.FREE);
+   }
+
+   Map createMap() {
+      Map r = new HashMap();
+      r.put("username", this.username);
+      r.put("userid", this.userID);
+      r.put("uuid", UUIDTypeAdapter.toUUID(this.uuid));
+      r.put("displayName", this.displayName);
+      if (!this.isFree()) {
+         r.put("type", this.type);
+         r.put("accessToken", this.accessToken);
+      }
+
+      if (this.userProperties != null) {
+         r.put("userProperties", this.userProperties);
+      }
+
+      return r;
+   }
+
+   void fillFromMap(Map map) {
+      if (map.containsKey("username")) {
+         this.setUsername(map.get("username").toString());
+      }
+
+      this.setUserID(map.containsKey("userid") ? map.get("userid").toString() : this.getUsername());
+      this.setDisplayName(map.containsKey("displayName") ? map.get("displayName").toString() : this.getUsername());
+      this.setProperties(map.containsKey("userProperties") ? (List)map.get("userProperties") : null);
+      this.setUUID(map.containsKey("uuid") ? UUIDTypeAdapter.toUUID(map.get("uuid").toString()) : null);
+      boolean hasAccessToken = map.containsKey("accessToken");
+      if (hasAccessToken) {
+         this.setAccessToken(map.get("accessToken").toString());
+      }
+
+      this.setType(map.containsKey("type") ? (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, map.get("type").toString()) : (hasAccessToken ? Account.AccountType.MOJANG : Account.AccountType.FREE));
+   }
+
+   public void complete(Account acc) {
+      if (acc == null) {
+         throw new NullPointerException();
+      } else {
+         boolean sameName = acc.username.equals(this.username);
+         this.username = acc.username;
+         this.type = acc.type;
+         if (acc.userID != null) {
+            this.userID = acc.userID;
+         }
+
+         if (acc.displayName != null) {
+            this.displayName = acc.displayName;
+         }
+
+         if (acc.password != null) {
+            this.password = acc.password;
+         }
+
+         if (!sameName) {
+            this.accessToken = null;
+         }
+
+      }
+   }
+
+   public boolean equals(Account acc) {
+      if (acc == null) {
+         return false;
+      } else if (this.username == null) {
+         return acc.username == null;
+      } else {
+         return this.username.equals(acc.username) && this.type.equals(acc.type) && (this.password == null || this.password.equals(acc.password));
+      }
+   }
+
+   public String toString() {
+      return this.toDebugString();
+   }
+
+   public String toDebugString() {
+      return "Account" + this.createMap();
+   }
+
+   public static Account randomAccount() {
+      return new Account("random" + (new Random()).nextLong());
+   }
+
+   public static enum AccountType {
+      ELY,
+      MOJANG,
+      FREE;
+
+      public String toString() {
+         return super.toString().toLowerCase();
+      }
+   }
 }

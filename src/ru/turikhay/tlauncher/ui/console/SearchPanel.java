@@ -1,131 +1,124 @@
 package ru.turikhay.tlauncher.ui.console;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Insets;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import ru.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
+import ru.turikhay.tlauncher.ui.loc.LocalizableInvalidateTextField;
+import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 
-import ru.turikhay.tlauncher.ui.block.BlockablePanel;
-import ru.turikhay.util.StringUtil;
+public class SearchPanel extends ExtendedPanel {
+   final ConsoleFrame cf;
+   public final SearchPanel.SearchField field;
+   public final SearchPanel.SearchPrefs prefs;
+   public final SearchPanel.FindButton find;
+   public final SearchPanel.KillButton kill;
+   private int startIndex;
+   private int endIndex;
+   private String lastText;
+   private boolean lastRegexp;
 
-public class SearchPanel extends BlockablePanel {
-	private static final long serialVersionUID = -2659114952397165370L;
-	private Insets insets = new Insets(5, 10, 5, 10);
+   SearchPanel(ConsoleFrame cf) {
+      this.cf = cf;
+      this.field = new SearchPanel.SearchField((SearchPanel.SearchField)null);
+      this.prefs = new SearchPanel.SearchPrefs((SearchPanel.SearchPrefs)null);
+      this.find = new SearchPanel.FindButton((SearchPanel.FindButton)null);
+      this.kill = new SearchPanel.KillButton((SearchPanel.KillButton)null);
+      GroupLayout layout = new GroupLayout(this);
+      this.setLayout(layout);
+      layout.setAutoCreateContainerGaps(true);
+      layout.setHorizontalGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(Alignment.LEADING).addComponent(this.field).addComponent(this.prefs)).addGap(4).addGroup(layout.createParallelGroup(Alignment.LEADING).addComponent(this.find, 48, 48, Integer.MAX_VALUE).addComponent(this.kill)));
+      layout.linkSize(0, new Component[]{this.find, this.kill});
+      layout.setVerticalGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(Alignment.BASELINE).addComponent(this.field).addComponent(this.find, 24, 24, Integer.MAX_VALUE)).addGap(2).addGroup(layout.createParallelGroup(Alignment.BASELINE).addComponent(this.prefs).addComponent(this.kill)));
+      layout.linkSize(1, new Component[]{this.field, this.prefs, this.find, this.kill});
+   }
 
-	private ConsoleFrame cf;
+   void search() {
+   }
 
-	SearchField field;
-	SearchPrefs prefs;
-	SearchButton button;
+   private void focus() {
+      this.field.requestFocusInWindow();
+   }
 
-	private String regexp;
-	private Pattern pt;
-	private Matcher mt;
-	private int plastend;
-	private int lastend;
+   public class FindButton extends ImageButton {
+      private FindButton() {
+         this.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               SearchPanel.this.search();
+            }
+         });
+      }
 
-	SearchPanel(ConsoleFrame cf) {
-		setOpaque(true);
-		this.cf = cf;
+      // $FF: synthetic method
+      FindButton(SearchPanel.FindButton var2) {
+         this();
+      }
+   }
 
-		BorderLayout layout = new BorderLayout();
-		layout.setVgap(2);
-		layout.setHgap(5);
-		this.setLayout(layout);
+   public class KillButton extends ImageButton {
+      private KillButton() {
+      }
 
-		this.setBackground(Color.black);
-		this.setForeground(Color.white);
+      // $FF: synthetic method
+      KillButton(SearchPanel.KillButton var2) {
+         this();
+      }
+   }
 
-		add("Center", field = new SearchField(this));
-		add("East", button = new SearchButton(this));
-		add("South", prefs = new SearchPrefs(this));
-	}
+   private class Range {
+      private int start;
+      private int end;
 
-	public void search() {
-		focus();
-		String c_regexp = (prefs.isRegExp()) ? field.getValue() : StringUtil
-				.addSlashes(field.getValue(), StringUtil.EscapeGroup.REGEXP);
-		if (c_regexp == null || c_regexp.trim().length() == 0)
-			return;
+      Range(int start, int end) {
+         this.start = start;
+         this.end = end;
+      }
 
-		if (c_regexp.equalsIgnoreCase("fuck you")) {
-			log("No, fuck you! :C");
-			cf.scrollBottom();
-			return;
-		}
+      boolean isCorrect() {
+         return this.start > 0 && this.end > this.start;
+      }
+   }
 
-		int flags = Pattern.MULTILINE;
-		if (!prefs.isCaseSensetive())
-			flags |= Pattern.CASE_INSENSITIVE;
-		if (prefs.isWordSearch())
-			c_regexp = "^[.]*(\\s){0,1}(" + c_regexp
-					+ ")(?:\\1|[\\s]|[\\s]{0,1})";
+   public class SearchField extends LocalizableInvalidateTextField {
+      private SearchField() {
+         super("console.search.placeholder");
+         this.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               SearchPanel.this.search();
+            }
+         });
+      }
 
-		try {
-			pt = Pattern.compile(c_regexp, flags);
-		} catch (PatternSyntaxException e) {
-			log("Invalid pattern.\n", e.toString());
-			field.setInvalid(null);
-			return;
-		}
+      // $FF: synthetic method
+      SearchField(SearchPanel.SearchField var2) {
+         this();
+      }
+   }
 
-		if (!c_regexp.equals(regexp)) {
-			this.regexp = c_regexp;
-			this.lastend = 0;
-		}
+   public class SearchPrefs extends BorderPanel {
+      public final LocalizableCheckbox regexp;
 
-		this.find();
-	}
+      private SearchPrefs() {
+         this.regexp = new LocalizableCheckbox("console.search.prefs.regexp");
+         SearchPanel.this.field.setFont(this.regexp.getFont());
+         this.setWest(this.regexp);
+      }
 
-	private void find() {
-		field.setValid();
+      public boolean getUseRegExp() {
+         return this.regexp.isSelected();
+      }
 
-		String text = cf.getOutput();
+      public void setUseRegExp(boolean use) {
+         this.regexp.setSelected(use);
+      }
 
-		this.mt = pt.matcher(text);
-
-		if (!mt.find(lastend)) {
-			if (prefs.isCycled() && plastend != lastend) {
-				plastend = lastend = 0;
-
-				search();
-				return;
-			}
-
-			field.setInvalid(null);
-			return;
-		}
-
-		int group = prefs.isWordSearch() ? 2 : 0, start = mt.start(group);
-		lastend = mt.end(group);
-
-		cf.update = false;
-		cf.textArea.requestFocus();
-		cf.textArea.select(start, lastend);
-	}
-
-	void focus() {
-		field.requestFocusInWindow();
-	}
-
-	@Override
-	public Insets getInsets() {
-		return insets;
-	}
-
-	private void log(Object... o) {
-		cf.c.log("[CONSOLE]", o);
-		cf.scrollBottom();
-	}
-
-	@Override
-	public void block(Object reason) {
-	}
-
-	@Override
-	public void unblock(Object reason) {
-	}
-
+      // $FF: synthetic method
+      SearchPrefs(SearchPanel.SearchPrefs var2) {
+         this();
+      }
+   }
 }

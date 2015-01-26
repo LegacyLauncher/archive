@@ -6,9 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
-
 import javax.swing.JPopupMenu;
-
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -19,117 +17,109 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class SupportButton extends ImageButton implements Blockable, LocalizableComponent {
+   private final JPopupMenu[] popups = new JPopupMenu[SupportButton.SupportType.values().length];
+   private SupportButton.SupportType type;
+   private int i;
 
-	private final JPopupMenu[] popups = new JPopupMenu[SupportType.values().length]; {
-		for(int i=0;i<popups.length;i++) {
-			SupportType.values()[i].setupMenu(popups[i] = new JPopupMenu());
-		}
-	}
+   SupportButton(LoginForm loginForm) {
+      for(int i = 0; i < this.popups.length; ++i) {
+         SupportButton.SupportType.values()[i].setupMenu(this.popups[i] = new JPopupMenu());
+      }
 
-	private SupportType type;
-	private int i;
+      this.rotation = ImageButton.ImageRotation.CENTER;
+      this.addMouseListener(new MouseAdapter() {
+         public void mouseClicked(MouseEvent e) {
+            SupportButton.this.popups[SupportButton.this.i].show(SupportButton.this, 0, SupportButton.this.getHeight());
+         }
+      });
+      this.updateLocale();
+   }
 
-	SupportButton(LoginForm loginForm) {
-		this.rotation = ImageRotation.CENTER;
+   public SupportButton.SupportType getType() {
+      return this.type;
+   }
 
-		this.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				popups[i].show(SupportButton.this, 0, getHeight());
-			}
-		});
+   public void setType(SupportButton.SupportType type) {
+      if (type == null) {
+         throw new NullPointerException("type");
+      } else {
+         this.type = type;
+         this.i = U.find(type, SupportButton.SupportType.values());
+         this.setImage(type.image);
+         this.repaint();
+      }
+   }
 
-		updateLocale();
-	}
+   public void updateLocale() {
+      String locale = TLauncher.getInstance().getSettings().getLocale().toString();
+      this.setType(!locale.equals("ru_RU") && !locale.equals("uk_UA") ? SupportButton.SupportType.GMAIL : SupportButton.SupportType.VK);
+   }
 
-	public SupportType getType() {
-		return type;
-	}
+   public void block(Object reason) {
+   }
 
-	public void setType(SupportType type) {
-		if(type == null)
-			throw new NullPointerException("type");
+   public void unblock(Object reason) {
+   }
 
-		this.type = type;
-		this.i = U.find(type, SupportType.values());
+   public static enum SupportType {
+      VK("vk.png") {
+         public void setupMenu(JPopupMenu menu) {
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.follow", new ActionListener() {
+               final URI followURI = U.makeURI("http://goo.gl/zOBYu6");
 
-		setImage(type.image);
-		repaint();
-	}
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.followURI);
+               }
+            }));
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.report", new ActionListener() {
+               final URI reportURI = U.makeURI("http://goo.gl/NBlzdI");
 
-	@Override
-	public void updateLocale() {
-		String locale = TLauncher.getInstance().getSettings().getLocale().toString();
-		setType(locale.equals("ru_RU") || locale.equals("uk_UA")? SupportType.VK : SupportType.GMAIL);
-	}
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.reportURI);
+               }
+            }));
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.author", new ActionListener() {
+               final URI helpURI = U.makeURI("http://goo.gl/WVlo1o");
 
-	@Override
-	public void block(Object reason) {
-	}
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.helpURI);
+               }
+            }));
+         }
+      },
+      GMAIL("mail.png") {
+         public void setupMenu(JPopupMenu menu) {
+            menu.add(SupportButton.SupportType.newItem("loginform.button.support.email", new ActionListener() {
+               final URI devURI = U.makeURI("http://turikhay.ru/");
 
-	@Override
-	public void unblock(Object reason) {
-	}
+               public void actionPerformed(ActionEvent e) {
+                  OS.openLink(this.devURI);
+               }
+            }));
+         }
+      };
 
-	public enum SupportType {
-		VK("vk.png") {
-			@Override
-			public void setupMenu(JPopupMenu menu) {
-				menu.add(newItem("loginform.button.support.follow", new ActionListener() {
-					final URI followURI = U.makeURI("http://goo.gl/zOBYu6");
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						OS.openLink(followURI);
-					}
-				}));
+      private final Image image;
 
-				menu.add(newItem("loginform.button.support.report", new ActionListener() {
-					final URI reportURI = U.makeURI("http://goo.gl/NBlzdI");
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						OS.openLink(reportURI);
-					}
-				}));
+      private SupportType(String imagePath) {
+         this.image = SupportButton.loadImage(imagePath);
+      }
 
-				menu.add(newItem("loginform.button.support.author", new ActionListener() {
-					final URI helpURI = U.makeURI("http://goo.gl/WVlo1o");
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						OS.openLink(helpURI);
-					}
-				}));
-			}
-		},
-		GMAIL("mail.png") {
-			@Override
-			public void setupMenu(JPopupMenu menu) {
-				menu.add(newItem("loginform.button.support.email", new ActionListener() {
-					final URI devURI = U.makeURI("http://turikhay.ru/");
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						OS.openLink(devURI);
-					}
-				}));
-			}
-		};
+      public Image getImage() {
+         return this.image;
+      }
 
-		private final Image image;
+      public abstract void setupMenu(JPopupMenu var1);
 
-		SupportType(String imagePath) {
-			this.image = loadImage(imagePath);
-		}
+      private static final LocalizableMenuItem newItem(String key, ActionListener action) {
+         LocalizableMenuItem item = new LocalizableMenuItem(key);
+         item.addActionListener(action);
+         return item;
+      }
 
-		public Image getImage() {
-			return image;
-		}
-
-		public abstract void setupMenu(JPopupMenu menu);
-
-		private static final LocalizableMenuItem newItem(String key, ActionListener action) {
-			LocalizableMenuItem item = new LocalizableMenuItem(key);
-			item.addActionListener(action);
-			return item;
-		}
-	}
-
+      // $FF: synthetic method
+      SupportType(String var3, SupportButton.SupportType var4) {
+         this(var3);
+      }
+   }
 }

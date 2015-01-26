@@ -1,22 +1,21 @@
 package ru.turikhay.tlauncher.minecraft.launcher;
 
 public interface MinecraftExtendedListener extends MinecraftListener {
-	void onMinecraftCollecting();
+   void onMinecraftCollecting();
 
-	void onMinecraftComparingAssets();
+   void onMinecraftComparingAssets();
 
-	void onMinecraftDownloading();
+   void onMinecraftDownloading();
 
-	void onMinecraftReconstructingAssets();
+   void onMinecraftReconstructingAssets();
 
-	void onMinecraftUnpackingNatives();
+   void onMinecraftUnpackingNatives();
 
-	void onMinecraftDeletingEntries();
+   void onMinecraftDeletingEntries();
 
-	void onMinecraftConstructing();
+   void onMinecraftConstructing();
 
-	@Override
-	void onMinecraftLaunch();
+   void onMinecraftLaunch();
 
-	void onMinecraftPostLaunch();
+   void onMinecraftPostLaunch();
 }

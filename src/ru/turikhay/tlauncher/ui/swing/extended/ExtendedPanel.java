@@ -9,158 +9,174 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-
 import javax.swing.JPanel;
 
 public class ExtendedPanel extends JPanel {
-	private final List<MouseListener> mouseListeners;
-	private Insets insets;
+   private final List mouseListeners;
+   private Insets insets;
+   private float opacity;
+   private AlphaComposite aComp;
 
-	private float opacity = 1;
-	private AlphaComposite aComp;
+   public ExtendedPanel(LayoutManager layout, boolean isDoubleBuffered) {
+      super(layout, isDoubleBuffered);
+      this.opacity = 1.0F;
+      this.mouseListeners = new ArrayList();
+      this.setOpaque(false);
+   }
 
-	public ExtendedPanel(LayoutManager layout, boolean isDoubleBuffered) {
-		super(layout, isDoubleBuffered);
+   public ExtendedPanel(LayoutManager layout) {
+      this(layout, true);
+   }
 
-		this.mouseListeners = new ArrayList<MouseListener>();
+   public ExtendedPanel(boolean isDoubleBuffered) {
+      this(new FlowLayout(), isDoubleBuffered);
+   }
 
-		setOpaque(false);
-	}
+   public ExtendedPanel() {
+      this(true);
+   }
 
-	public ExtendedPanel(LayoutManager layout) {
-		this(layout, true);
-	}
+   public float getOpacity() {
+      return this.opacity;
+   }
 
-	public ExtendedPanel(boolean isDoubleBuffered) {
-		this(new FlowLayout(), isDoubleBuffered);
-	}
+   public void setOpacity(float f) {
+      if (!(f < 0.0F) && !(f > 1.0F)) {
+         this.opacity = f;
+         this.aComp = AlphaComposite.getInstance(3, f);
+         this.repaint();
+      } else {
+         throw new IllegalArgumentException("opacity must be in [0;1]");
+      }
+   }
 
-	public ExtendedPanel() {
-		this(true);
-	}
+   public Insets getInsets() {
+      return this.insets == null ? super.getInsets() : this.insets;
+   }
 
-	public float getOpacity() {
-		return opacity;
-	}
+   public void setInsets(Insets insets) {
+      this.insets = insets;
+   }
 
-	public void setOpacity(float f) {
-		if(f < 0 || f > 1)
-			throw new IllegalArgumentException("opacity must be in [0;1]");
+   public Component add(Component comp) {
+      super.add(comp);
+      if (comp == null) {
+         return null;
+      } else {
+         MouseListener[] compareListeners = comp.getMouseListeners();
+         Iterator var4 = this.mouseListeners.iterator();
 
-		this.opacity = f;
-		this.aComp = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, f);
+         while(var4.hasNext()) {
+            MouseListener listener = (MouseListener)var4.next();
+            MouseListener add = listener;
+            MouseListener[] var9 = compareListeners;
+            int var8 = compareListeners.length;
 
-		repaint();
-	}
+            for(int var7 = 0; var7 < var8; ++var7) {
+               MouseListener compareListener = var9[var7];
+               if (listener.equals(compareListener)) {
+                  add = null;
+                  break;
+               }
+            }
 
-	@Override
-	public Insets getInsets() {
-		return insets == null? super.getInsets() : insets;
-	}
+            if (add != null) {
+               comp.addMouseListener(add);
+            }
+         }
 
-	public void setInsets(Insets insets) {
-		this.insets = insets;
-	}
+         return comp;
+      }
+   }
 
-	@Override
-	public Component add(Component comp) {
-		super.add(comp);
+   public void add(Component... components) {
+      if (components == null) {
+         throw new NullPointerException();
+      } else {
+         Component[] var5 = components;
+         int var4 = components.length;
 
-		if (comp == null)
-			return null;
+         for(int var3 = 0; var3 < var4; ++var3) {
+            Component comp = var5[var3];
+            this.add(comp);
+         }
 
-		MouseListener[] compareListeners = comp.getMouseListeners();
+      }
+   }
 
-		for (MouseListener listener : mouseListeners) {
-			MouseListener add = listener;
+   public void add(Component component0, Component component1) {
+      this.add(component0, component1);
+   }
 
-			for (MouseListener compareListener : compareListeners)
-				if (listener.equals(compareListener)) {
-					add = null;
-					break;
-				}
+   public synchronized void addMouseListener(MouseListener listener) {
+      if (listener != null) {
+         this.mouseListeners.add(listener);
+         Component[] var5;
+         int var4 = (var5 = this.getComponents()).length;
 
-			if (add == null)
-				continue;
-			comp.addMouseListener(add);
-		}
+         for(int var3 = 0; var3 < var4; ++var3) {
+            Component comp = var5[var3];
+            comp.addMouseListener(listener);
+         }
 
-		return comp;
-	}
+      }
+   }
 
-	public void add(Component... components) {
-		if (components == null)
-			throw new NullPointerException();
+   protected synchronized void addMouseListenerOriginally(MouseListener listener) {
+      super.addMouseListener(listener);
+   }
 
-		for (Component comp : components)
-			add(comp);
-	}
+   public synchronized void removeMouseListener(MouseListener listener) {
+      if (listener != null) {
+         this.mouseListeners.remove(listener);
+         Component[] var5;
+         int var4 = (var5 = this.getComponents()).length;
 
-	public void add(Component component0, Component component1) {
-		add(new Component[] { component0, component1 });
-	}
+         for(int var3 = 0; var3 < var4; ++var3) {
+            Component comp = var5[var3];
+            comp.removeMouseListener(listener);
+         }
 
-	@Override
-	public synchronized void addMouseListener(MouseListener listener) {
-		if (listener == null)
-			return;
+      }
+   }
 
-		this.mouseListeners.add(listener);
+   protected synchronized void removeMouseListenerOriginally(MouseListener listener) {
+      super.removeMouseListener(listener);
+   }
 
-		for (Component comp : getComponents())
-			comp.addMouseListener(listener);
-	}
+   public boolean contains(Component comp) {
+      if (comp == null) {
+         return false;
+      } else {
+         Component[] var5;
+         int var4 = (var5 = this.getComponents()).length;
 
-	protected synchronized void addMouseListenerOriginally(
-			MouseListener listener) {
-		super.addMouseListener(listener);
-	}
+         for(int var3 = 0; var3 < var4; ++var3) {
+            Component c = var5[var3];
+            if (comp.equals(c)) {
+               return true;
+            }
+         }
 
-	@Override
-	public synchronized void removeMouseListener(MouseListener listener) {
-		if (listener == null)
-			return;
+         return false;
+      }
+   }
 
-		this.mouseListeners.remove(listener);
+   public Insets setInsets(int top, int left, int bottom, int right) {
+      Insets insets = new Insets(top, left, bottom, right);
+      this.setInsets(insets);
+      return insets;
+   }
 
-		for (Component comp : getComponents())
-			comp.removeMouseListener(listener);
-	}
-
-	protected synchronized void removeMouseListenerOriginally(MouseListener listener) {
-		super.removeMouseListener(listener);
-	}
-
-	public boolean contains(Component comp) {
-		if(comp == null)
-			return false;
-
-		for(Component c : getComponents())
-			if(comp.equals(c))
-				return true;
-
-		return false;
-	}
-
-	public Insets setInsets(int top, int left, int bottom, int right) {
-		Insets insets = new Insets(top, left, bottom, right);
-		setInsets(insets);
-
-		return insets;
-	}
-
-	@Override
-	protected void paintComponent(Graphics g0) {
-		if(opacity == 1.0f) {
-			super.paintComponent(g0);
-			return;
-		}
-
-		Graphics2D g = (Graphics2D) g0;
-		g.setComposite(aComp);
-
-		super.paintComponent(g0);
-	}
-
+   protected void paintComponent(Graphics g0) {
+      if (this.opacity == 1.0F) {
+         super.paintComponent(g0);
+      } else {
+         Graphics2D g = (Graphics2D)g0;
+         g.setComposite(this.aComp);
+         super.paintComponent(g0);
+      }
+   }
 }

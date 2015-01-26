@@ -1,72 +1,63 @@
 package ru.turikhay.tlauncher;
 
 import joptsimple.OptionSet;
-import ru.turikhay.tlauncher.configuration.Configuration.ConsoleType;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
-import ru.turikhay.tlauncher.ui.console.Console.CloseAction;
+import ru.turikhay.tlauncher.ui.console.Console;
 
 public class TLauncherLite implements MinecraftListener {
-	private final TLauncher tlauncher;
-	private final OptionSet args;
+   private final TLauncher tlauncher;
+   private final OptionSet args;
 
-	TLauncherLite(TLauncher tlauncher) {
-		if (tlauncher == null)
-			throw new NullPointerException();
+   TLauncherLite(TLauncher tlauncher) {
+      if (tlauncher == null) {
+         throw new NullPointerException();
+      } else {
+         this.tlauncher = tlauncher;
+         tlauncher.getVersionManager().startRefresh(true);
+         tlauncher.getProfileManager().refreshComponent();
+         this.args = tlauncher.getArguments();
+         MinecraftLauncher launcher = new MinecraftLauncher(this, this.args);
+         launcher.addListener(tlauncher.getMinecraftListener());
+         launcher.addListener(this);
+         if (launcher.getConsole() != null) {
+            launcher.getConsole().setCloseAction(Console.CloseAction.EXIT);
+         }
 
-		this.tlauncher = tlauncher;
-		tlauncher.getVersionManager().startRefresh(true);
-		tlauncher.getProfileManager().refreshComponent();
+         launcher.start();
+         TLauncher.kill();
+      }
+   }
 
-		this.args = tlauncher.getArguments();
+   public TLauncher getLauncher() {
+      return this.tlauncher;
+   }
 
-		MinecraftLauncher launcher = new MinecraftLauncher(this, args);
-		launcher.addListener(tlauncher.getMinecraftListener());
-		launcher.addListener(this);
+   public void onMinecraftPrepare() {
+   }
 
-		if (launcher.getConsole() != null)
-			launcher.getConsole().setCloseAction(CloseAction.EXIT);
+   public void onMinecraftAbort() {
+   }
 
-		launcher.start();
-		TLauncher.kill();
-	}
+   public void onMinecraftLaunch() {
+   }
 
-	public TLauncher getLauncher() {
-		return tlauncher;
-	}
+   public void onMinecraftClose() {
+      if (!this.args.has("console") && this.tlauncher.getSettings().getConsoleType().equals(Configuration.ConsoleType.NONE)) {
+         TLauncher.kill();
+      }
 
-	@Override
-	public void onMinecraftPrepare() {
-	}
+   }
 
-	@Override
-	public void onMinecraftAbort() {
-	}
+   public void onMinecraftError(Throwable e) {
+   }
 
-	@Override
-	public void onMinecraftLaunch() {
-	}
+   public void onMinecraftKnownError(MinecraftException e) {
+   }
 
-	@Override
-	public void onMinecraftClose() {
-		if (!args.has("console")
-				&& tlauncher.getSettings().getConsoleType()
-				.equals(ConsoleType.NONE))
-			TLauncher.kill();
-	}
-
-	@Override
-	public void onMinecraftError(Throwable e) {
-	}
-
-	@Override
-	public void onMinecraftKnownError(MinecraftException e) {
-	}
-
-	@Override
-	public void onMinecraftCrash(Crash crash) {
-	}
-
+   public void onMinecraftCrash(Crash crash) {
+   }
 }

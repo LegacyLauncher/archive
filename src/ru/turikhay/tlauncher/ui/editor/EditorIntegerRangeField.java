@@ -3,24 +3,27 @@ package ru.turikhay.tlauncher.ui.editor;
 import ru.turikhay.util.Range;
 
 public class EditorIntegerRangeField extends EditorIntegerField {
+   private final Range range;
 
-	private final Range<Integer> range;
+   public EditorIntegerRangeField(String placeholder, Range range) {
+      if (range == null) {
+         throw new NullPointerException("range");
+      } else {
+         this.range = range;
+         this.setPlaceholder(placeholder);
+      }
+   }
 
-	public EditorIntegerRangeField(Range<Integer> range) {
-		if(range == null)
-			throw new NullPointerException("range");
+   public EditorIntegerRangeField(Range range) {
+      this((String)null, range);
+      this.setPlaceholder("settings.range", new Object[]{range.getMinValue(), range.getMaxValue()});
+   }
 
-		this.range = range;
-		this.setPlaceholder("settings.range", range.getMinValue(), range.getMaxValue());
-	}
-
-	@Override
-	public boolean isValueValid() {
-		try {
-			return range.fits(Integer.parseInt(getSettingsValue()));
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
+   public boolean isValueValid() {
+      try {
+         return this.range.fits(Integer.parseInt(this.getSettingsValue()));
+      } catch (Exception var2) {
+         return false;
+      }
+   }
 }
