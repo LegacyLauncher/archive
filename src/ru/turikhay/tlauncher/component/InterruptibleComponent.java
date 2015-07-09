@@ -48,6 +48,10 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
       }
    }
 
+   public final boolean isRefreshing() {
+      return this.semaphore.hasQueuedThreads();
+   }
+
    public synchronized void stopRefresh() {
       for(int i = 0; i < this.refreshList.length; ++i) {
          this.refreshList[i] = false;

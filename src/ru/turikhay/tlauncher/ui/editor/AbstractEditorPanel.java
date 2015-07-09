@@ -8,8 +8,8 @@ import java.util.List;
 import javax.swing.JComponent;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 
 public abstract class AbstractEditorPanel extends CenterPanel {
@@ -53,7 +53,7 @@ public abstract class AbstractEditorPanel extends CenterPanel {
    protected JComponent createTip(String label, boolean warning) {
       LocalizableLabel tip = new LocalizableLabel(label);
       if (warning) {
-         ImageIcon.setup(tip, ImageCache.getIcon("warning.png", 16, 16));
+         ImageIcon.setup(tip, Images.getIcon("warning.png", 16, 16));
       }
 
       return tip;

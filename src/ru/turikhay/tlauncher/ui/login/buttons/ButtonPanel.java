@@ -20,22 +20,29 @@ public class ButtonPanel extends BlockablePanel {
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$login$buttons$ButtonPanel$ButtonPanelState;
 
    public ButtonPanel(LoginForm lf) {
+      boolean letUserDoWhatHeWants = !lf.global.getBoolean("gui.settings.blocked");
       BorderLayout lm = new BorderLayout(1, 2);
       this.setLayout(lm);
       this.setOpaque(false);
       this.play = new PlayButton(lf);
       this.add("Center", this.play);
       this.cancel = new CancelAutoLoginButton(lf);
-      this.manageButtonsPanel = new JPanel(new GridLayout(0, 4));
+      this.manageButtonsPanel = new JPanel(new GridLayout(0, letUserDoWhatHeWants ? 4 : 2));
       this.manageButtonsPanel.setOpaque(false);
       this.support = new SupportButton(lf);
       this.manageButtonsPanel.add(this.support);
       this.folder = new FolderButton(lf);
-      this.manageButtonsPanel.add(this.folder);
+      if (letUserDoWhatHeWants) {
+         this.manageButtonsPanel.add(this.folder);
+      }
+
       this.refresh = new RefreshButton(lf);
       this.manageButtonsPanel.add(this.refresh);
       this.settings = new SettingsButton(lf);
-      this.manageButtonsPanel.add(this.settings);
+      if (letUserDoWhatHeWants) {
+         this.manageButtonsPanel.add(this.settings);
+      }
+
       this.setState(lf.autologin.isEnabled() ? ButtonPanel.ButtonPanelState.AUTOLOGIN_CANCEL : ButtonPanel.ButtonPanelState.MANAGE_BUTTONS);
    }
 

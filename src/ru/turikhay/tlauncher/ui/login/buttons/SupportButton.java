@@ -65,21 +65,21 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
       VK("vk.png") {
          public void setupMenu(JPopupMenu menu) {
             menu.add(SupportButton.SupportType.newItem("loginform.button.support.follow", new ActionListener() {
-               final URI followURI = U.makeURI("http://goo.gl/zOBYu6");
+               final URI followURI = U.makeURI("http://tlauncher.ru/go/vk");
 
                public void actionPerformed(ActionEvent e) {
                   OS.openLink(this.followURI);
                }
             }));
             menu.add(SupportButton.SupportType.newItem("loginform.button.support.report", new ActionListener() {
-               final URI reportURI = U.makeURI("http://goo.gl/NBlzdI");
+               final URI reportURI = U.makeURI("http://tlauncher.ru/go/report");
 
                public void actionPerformed(ActionEvent e) {
                   OS.openLink(this.reportURI);
                }
             }));
             menu.add(SupportButton.SupportType.newItem("loginform.button.support.author", new ActionListener() {
-               final URI helpURI = U.makeURI("http://goo.gl/WVlo1o");
+               final URI helpURI = U.makeURI("http://tlauncher.ru/go/support");
 
                public void actionPerformed(ActionEvent e) {
                   OS.openLink(this.helpURI);

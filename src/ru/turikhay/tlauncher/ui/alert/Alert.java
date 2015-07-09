@@ -4,7 +4,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.U;
-import ru.turikhay.util.async.AsyncThread;
 
 public class Alert {
    private static final JFrame frame = new JFrame();
@@ -55,14 +54,6 @@ public class Alert {
       showLocError(path, (Object)null);
    }
 
-   public static void showLocAsyncError(final String path) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showLocError(path);
-         }
-      });
-   }
-
    public static void showMessage(String title, String message, Object textarea) {
       showMonolog(1, title, message, textarea);
    }
@@ -75,28 +66,12 @@ public class Alert {
       showMessage(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
    }
 
-   public static void showLocAsyncMessage(final String titlePath, final String messagePath, final Object textarea) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showLocMessage(titlePath, messagePath, textarea);
-         }
-      });
-   }
-
    public static void showLocMessage(String path, Object textarea) {
       showMessage(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
    }
 
    public static void showLocMessage(String path) {
       showLocMessage(path, (Object)null);
-   }
-
-   public static void showLocAsyncMessage(final String path) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showLocMessage(path);
-         }
-      });
    }
 
    public static void showWarning(String title, String message, Object textarea) {
@@ -107,36 +82,8 @@ public class Alert {
       showWarning(title, message, (Object)null);
    }
 
-   public static void showAsyncWarning(final String title, final String message) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showWarning(title, message, (Object)null);
-         }
-      });
-   }
-
    public static void showLocWarning(String titlePath, String messagePath, Object textarea) {
       showWarning(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
-   }
-
-   public static void showLocAsyncWarning(final String titlePath, final String messagePath, final Object textarea) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showLocWarning(titlePath, messagePath, textarea);
-         }
-      });
-   }
-
-   private static void showLocWarning(String titlePath, String messagePath) {
-      showLocWarning(titlePath, messagePath, (Object)null);
-   }
-
-   public static void showLocAsyncWarning(final String titlePath, final String messagePath) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showLocWarning(titlePath, messagePath);
-         }
-      });
    }
 
    public static void showLocWarning(String path, Object textarea) {
@@ -145,14 +92,6 @@ public class Alert {
 
    public static void showLocWarning(String path) {
       showLocWarning(path, (Object)null);
-   }
-
-   public static void showLocAsyncWarning(final String path) {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Alert.showLocWarning(path);
-         }
-      });
    }
 
    public static boolean showQuestion(String title, String question, Object textarea) {
@@ -168,7 +107,7 @@ public class Alert {
    }
 
    public static boolean showLocQuestion(String titlePath, String questionPath) {
-      return showQuestion(titlePath, questionPath, (Object)null);
+      return showLocQuestion(titlePath, questionPath, (Object)null);
    }
 
    public static boolean showLocQuestion(String path, Object textarea) {
@@ -179,12 +118,28 @@ public class Alert {
       return showLocQuestion(path, (Object)null);
    }
 
+   public static String showInputQuestion(String title, String question) {
+      return showInputDialog(3, title, question);
+   }
+
+   public static String showLocInputQuestion(String titlePath, String questionPath) {
+      return showInputQuestion(getLoc(titlePath, "MISSING TITLE"), getLoc(questionPath, "MISSING QUESTION"));
+   }
+
+   public static String showLocInputQuestion(String path) {
+      return showLocInputQuestion(path + ".title", path);
+   }
+
    private static void showMonolog(int messageType, String title, String message, Object textarea) {
       JOptionPane.showMessageDialog(frame, new AlertPanel(message, textarea), getTitle(title), messageType);
    }
 
    private static int showConfirmDialog(int optionType, int messageType, String title, String message, Object textarea) {
       return JOptionPane.showConfirmDialog(frame, new AlertPanel(message, textarea), getTitle(title), optionType, messageType);
+   }
+
+   private static String showInputDialog(int messageType, String title, String message) {
+      return JOptionPane.showInputDialog(frame, new AlertPanel(message, (Object)null), title, messageType);
    }
 
    public static void prepareLocal() {

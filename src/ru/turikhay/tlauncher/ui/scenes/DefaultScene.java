@@ -2,8 +2,8 @@ package ru.turikhay.tlauncher.ui.scenes;
 
 import java.awt.Dimension;
 import ru.turikhay.tlauncher.configuration.Configuration;
-import ru.turikhay.tlauncher.ui.InfoPanel;
 import ru.turikhay.tlauncher.ui.MainPane;
+import ru.turikhay.tlauncher.ui.NoticePanel;
 import ru.turikhay.tlauncher.ui.SideNotifier;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
@@ -12,7 +12,7 @@ import ru.turikhay.util.Direction;
 
 public class DefaultScene extends PseudoScene {
    public static final Dimension LOGIN_SIZE = new Dimension(250, 240);
-   public static final Dimension SETTINGS_SIZE = new Dimension(500, 475);
+   public static final Dimension SETTINGS_SIZE = new Dimension(500, 500);
    public static final int EDGE_INSETS = 10;
    public static final int INSETS = 15;
    public final SideNotifier notifier;
@@ -21,7 +21,7 @@ public class DefaultScene extends PseudoScene {
    private DefaultScene.SidePanel sidePanel;
    private ExtendedPanel sidePanelComp;
    private Direction lfDirection;
-   public final InfoPanel infoPanel;
+   public final NoticePanel infoPanel;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
    // $FF: synthetic field
@@ -37,7 +37,7 @@ public class DefaultScene extends PseudoScene {
       this.loginForm = new LoginForm(this);
       this.loginForm.setSize(LOGIN_SIZE);
       this.add(this.loginForm);
-      this.infoPanel = new InfoPanel(this);
+      this.infoPanel = new NoticePanel(this);
       this.add(this.infoPanel);
       this.updateDirection();
    }

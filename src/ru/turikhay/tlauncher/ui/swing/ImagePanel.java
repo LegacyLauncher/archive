@@ -10,7 +10,7 @@ import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.ImageObserver;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.U;
 
@@ -31,7 +31,7 @@ public class ImagePanel extends ExtendedPanel {
    private boolean animating;
 
    public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-      this((Image)ImageCache.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
+      this((Image)Images.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
    }
 
    public ImagePanel(String image) {

@@ -7,12 +7,13 @@ import java.net.URL;
 import java.util.regex.Pattern;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileFilter;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
 public class SlideBackgroundThread extends LoopedThread {
+   private static SlideBackgroundThread instance;
    private static final Pattern extensionPattern;
    private static final String defaultImageName = "plains.jpg";
    private final SlideBackground background;
@@ -23,10 +24,15 @@ public class SlideBackgroundThread extends LoopedThread {
       extensionPattern = ImageFileFilter.extensionPattern;
    }
 
+   public static void alert() {
+      U.log(instance.defaultSlide, instance.currentSlide);
+   }
+
    SlideBackgroundThread(SlideBackground background) {
       super("SlideBackgroundThread");
+      instance = this;
       this.background = background;
-      this.defaultSlide = new Slide(ImageCache.getRes("plains.jpg"));
+      this.defaultSlide = new Slide(Images.getRes("plains.jpg"));
       this.startAndWait();
    }
 
@@ -39,8 +45,7 @@ public class SlideBackgroundThread extends LoopedThread {
    }
 
    public synchronized void refreshSlide(boolean animate) {
-      String path = TLauncher.getInstance().getSettings().get("gui.background");
-      URL url = this.getImageURL(path);
+      URL url = this.getImageURL(TLauncher.getInstance().getSettings().get("gui.background"));
       Slide slide = url == null ? this.defaultSlide : new Slide(url);
       this.setSlide(slide, animate);
    }
@@ -76,9 +81,7 @@ public class SlideBackgroundThread extends LoopedThread {
    }
 
    private URL getImageURL(String path) {
-      this.log("Trying to resolve path:", path);
       if (path == null) {
-         this.log("Na NULL i suda NULL.");
          return null;
       } else {
          URL asURL = U.makeURL(path);

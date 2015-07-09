@@ -42,6 +42,7 @@ public class VersionManager extends InterruptibleComponent {
    private Map latestVersions;
    private final List listeners;
    private final Object versionFlushLock;
+   private boolean hadRemote;
 
    public VersionManager(ComponentManager manager) throws Exception {
       super(manager);
@@ -73,14 +74,20 @@ public class VersionManager extends InterruptibleComponent {
 
    boolean refresh(int refreshID, boolean local) {
       this.refreshList[refreshID] = true;
-      this.log(new Object[]{"Refreshing versions..."});
-      if (!local) {
+      local |= !this.manager.getLauncher().getSettings().getBoolean("minecraft.versions.sub.remote");
+      this.hadRemote |= !local;
+      if (local) {
+         this.log(new Object[]{"Refreshing versions locally..."});
+      } else {
+         this.log(new Object[]{"Refreshing versions remotely..."});
          this.latestVersions.clear();
-         Iterator var4 = this.listeners.iterator();
+         synchronized(this.listeners) {
+            Iterator var5 = this.listeners.iterator();
 
-         while(var4.hasNext()) {
-            VersionManagerListener listener = (VersionManagerListener)var4.next();
-            listener.onVersionsRefreshing(this);
+            while(var5.hasNext()) {
+               VersionManagerListener listener = (VersionManagerListener)var5.next();
+               listener.onVersionsRefreshing(this);
+            }
          }
       }
 
@@ -99,14 +106,20 @@ public class VersionManager extends InterruptibleComponent {
          this.log(new Object[]{"Version refresh has been cancelled (" + Time.stop(lock) + " ms)"});
          return false;
       } else {
+         Iterator var8;
          VersionManagerListener listener;
-         Iterator var16;
          if (e != null) {
-            var16 = this.listeners.iterator();
+            synchronized(this.listeners) {
+               var8 = this.listeners.iterator();
 
-            while(var16.hasNext()) {
-               listener = (VersionManagerListener)var16.next();
-               listener.onVersionsRefreshingFailed(this);
+               while(true) {
+                  if (!var8.hasNext()) {
+                     break;
+                  }
+
+                  listener = (VersionManagerListener)var8.next();
+                  listener.onVersionsRefreshingFailed(this);
+               }
             }
 
             this.log(new Object[]{"Cannot refresh versions (" + Time.stop(lock) + " ms)", e});
@@ -114,7 +127,7 @@ public class VersionManager extends InterruptibleComponent {
          } else {
             if (result != null) {
                synchronized(this.versionFlushLock) {
-                  Iterator var8 = result.keySet().iterator();
+                  var8 = result.keySet().iterator();
 
                   while(var8.hasNext()) {
                      AsyncObject object = (AsyncObject)var8.next();
@@ -132,14 +145,16 @@ public class VersionManager extends InterruptibleComponent {
             this.latestVersions = U.sortMap(this.latestVersions, ReleaseType.values());
             this.log(new Object[]{"Versions has been refreshed (" + Time.stop(lock) + " ms)"});
             this.refreshList[refreshID] = false;
-            var16 = this.listeners.iterator();
+            synchronized(this.listeners) {
+               var8 = this.listeners.iterator();
 
-            while(var16.hasNext()) {
-               listener = (VersionManagerListener)var16.next();
-               listener.onVersionsRefreshed(this);
+               while(var8.hasNext()) {
+                  listener = (VersionManagerListener)var8.next();
+                  listener.onVersionsRefreshed(this);
+               }
+
+               return true;
             }
-
-            return true;
          }
       }
    }
@@ -188,11 +203,15 @@ public class VersionManager extends InterruptibleComponent {
    }
 
    public void updateVersionList() {
-      Iterator var2 = this.listeners.iterator();
+      if (!this.hadRemote) {
+         this.asyncRefresh();
+      } else {
+         Iterator var2 = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         VersionManagerListener listener = (VersionManagerListener)var2.next();
-         listener.onVersionsRefreshed(this);
+         while(var2.hasNext()) {
+            VersionManagerListener listener = (VersionManagerListener)var2.next();
+            listener.onVersionsRefreshed(this);
+         }
       }
 
    }

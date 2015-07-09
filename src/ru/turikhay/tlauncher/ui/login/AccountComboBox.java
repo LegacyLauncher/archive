@@ -14,11 +14,13 @@ import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
+import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.listener.AuthUIListener;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
+import ru.turikhay.util.Reflect;
 
 public class AccountComboBox extends ExtendedComboBox implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
    private static final long serialVersionUID = 6618039863712810645L;
@@ -28,7 +30,8 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
    private final LoginForm loginForm;
    private final AuthenticatorListener listener;
    private final SimpleComboBoxModel model;
-   private String selectedAccount;
+   private Account selectedAccount;
+   boolean refreshing;
 
    static {
       EMPTY = AccountCellRenderer.EMPTY;
@@ -41,7 +44,7 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
       this.model = this.getSimpleModel();
       this.manager = TLauncher.getInstance().getProfileManager();
       this.manager.addListener(this);
-      this.listener = new AuthUIListener(true, lf);
+      this.listener = new AuthUIListener(lf);
       this.addItemListener(new ItemListener() {
          public void itemStateChanged(ItemEvent e) {
             Account selected = (Account)AccountComboBox.this.getSelectedItem();
@@ -50,13 +53,31 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
                   AccountComboBox.this.loginForm.pane.openAccountEditor();
                   AccountComboBox.this.setSelectedIndex(0);
                } else {
-                  AccountComboBox.this.selectedAccount = selected.getUsername();
-                  VersionComboBox.showElyVersions = selected.getType() == Account.AccountType.ELY;
+                  AccountComboBox.this.selectedAccount = selected;
+                  AccountComboBox.this.updateAccount();
                }
             }
          }
       });
-      this.selectedAccount = lf.global.get("login.account");
+   }
+
+   public void updateAccount() {
+      if (!this.refreshing) {
+         if (this.selectedAccount.getType() == Account.AccountType.ELY) {
+            if (this.loginForm.tlauncher.getElyManager().isRefreshing()) {
+               Blocker.block((Blockable)this.loginForm.buttons.play, (Object)"ely");
+            } else {
+               this.loginForm.tlauncher.getElyManager().refreshOnce();
+            }
+         } else {
+            Blocker.unblock((Blockable)this.loginForm.buttons.play, (Object)"ely");
+         }
+
+         VersionComboBox.showElyVersions = this.selectedAccount.getType() == Account.AccountType.ELY;
+         this.loginForm.global.setForcefully("login.account", this.selectedAccount.getUsername(), false);
+         this.loginForm.global.setForcefully("login.account.type", this.selectedAccount.getType(), false);
+         this.loginForm.global.store();
+      }
    }
 
    public Account getAccount() {
@@ -100,8 +121,16 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
    public void loginSucceed() {
    }
 
-   public void refreshAccounts(AuthenticatorDatabase db, String select) {
-      if (select == null && this.selectedAccount != null) {
+   public void refreshAccounts(AuthenticatorDatabase db, Account select) {
+      if (select == null) {
+         if (this.selectedAccount == null) {
+            String username = this.loginForm.global.get("login.account");
+            if (username != null) {
+               Account.AccountType type = (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, this.loginForm.global.get("login.account.type"));
+               this.selectedAccount = this.loginForm.tlauncher.getProfileManager().getAuthDatabase().getByUsername(username, type);
+            }
+         }
+
          select = this.selectedAccount;
       }
 
@@ -110,34 +139,39 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
       if (list.isEmpty()) {
          this.addItem(EMPTY);
       } else {
+         this.refreshing = true;
          this.model.addElements(list);
          Iterator var5 = list.iterator();
 
          while(var5.hasNext()) {
             Account account = (Account)var5.next();
-            if (select != null && select.equals(account.getUsername())) {
+            if (select != null && select.equals(account)) {
                this.setSelectedItem(account);
+               break;
             }
          }
+
+         this.refreshing = false;
+         this.updateAccount();
       }
 
       this.addItem(MANAGE);
    }
 
    public void updateLocale() {
-      this.refreshAccounts(this.manager.getAuthDatabase(), (String)null);
+      this.refreshAccounts(this.manager.getAuthDatabase(), (Account)null);
    }
 
    public void onAccountsRefreshed(AuthenticatorDatabase db) {
-      this.refreshAccounts(db, (String)null);
+      this.refreshAccounts(db, (Account)null);
    }
 
    public void onProfilesRefreshed(ProfileManager pm) {
-      this.refreshAccounts(pm.getAuthDatabase(), (String)null);
+      this.refreshAccounts(pm.getAuthDatabase(), (Account)null);
    }
 
    public void onProfileManagerChanged(ProfileManager pm) {
-      this.refreshAccounts(pm.getAuthDatabase(), (String)null);
+      this.refreshAccounts(pm.getAuthDatabase(), (Account)null);
    }
 
    public void block(Object reason) {

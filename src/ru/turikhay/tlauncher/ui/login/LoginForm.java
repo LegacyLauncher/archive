@@ -8,9 +8,12 @@ import java.util.List;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
+import ru.turikhay.tlauncher.managers.ElyManager;
+import ru.turikhay.tlauncher.managers.ElyManagerListener;
 import ru.turikhay.tlauncher.managers.ServerList;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
@@ -27,7 +30,7 @@ import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
-public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener {
+public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener, ElyManagerListener {
    private final List stateListeners = Collections.synchronizedList(new ArrayList());
    private final List processListeners = Collections.synchronizedList(new ArrayList());
    public final DefaultScene scene;
@@ -58,9 +61,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       this.stopThread = new LoginForm.StopThread();
       this.autologin = new AutoLogin(this);
       this.accounts = new AccountComboBox(this);
+      this.buttons = new ButtonPanel(this);
       this.versions = new VersionComboBox(this);
       this.checkbox = new CheckBoxPanel(this);
-      this.buttons = new ButtonPanel(this);
       this.processListeners.add(this.autologin);
       this.processListeners.add(this.settings);
       this.processListeners.add(this.checkbox);
@@ -75,6 +78,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       this.add(this.checkbox);
       this.add(this.del(0));
       this.add(this.buttons);
+      this.tlauncher.getElyManager().addListener(this);
       this.tlauncher.getVersionManager().addListener(this);
       this.tlauncher.getDownloader().addListener(this);
    }
@@ -148,7 +152,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
    private void stopProcess() {
       while(!this.tlauncher.isLauncherWorking()) {
-         this.log(new Object[]{"waiting for launcher"});
          U.sleepFor(500L);
       }
 
@@ -162,6 +165,10 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
    public void startLauncher(ServerList.Server server) {
       if (!Blocker.isBlocked(this)) {
+         while(this.accounts.getAccount() != null && this.accounts.getAccount().getType() == Account.AccountType.ELY && this.tlauncher.getElyManager().isRefreshing()) {
+            U.sleepFor(500L);
+         }
+
          this.server = server;
          this.autologin.setActive(false);
          this.startThread.iterate();
@@ -195,7 +202,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       Blocker.block(reason, this.settings, this.versions, this.checkbox, this.buttons);
    }
 
-   public void unblock(Object reason) {
+   public synchronized void unblock(Object reason) {
       Blocker.unblock(reason, this.settings, this.accounts, this.versions, this.checkbox, this.buttons);
    }
 
@@ -229,14 +236,27 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       Blocker.unblock((Blockable)this, (Object)"refresh");
    }
 
+   public void onElyUpdating(ElyManager manager) {
+      if (this.accounts.getAccount() != null && this.accounts.getAccount().getType() == Account.AccountType.ELY) {
+         Blocker.block((Blockable)this.buttons.play, (Object)"ely");
+      }
+
+      this.accounts.updateAccount();
+      this.repaint();
+   }
+
+   public void onElyUpdated(ElyManager manager) {
+      Blocker.unblock((Blockable)this.buttons.play, (Object)"ely");
+      this.repaint();
+   }
+
    public void onAuthPassing(Authenticator auth) {
       Blocker.block((Blockable)this, (Object)"auth");
    }
 
    public void onAuthPassingError(Authenticator auth, Throwable e) {
       Blocker.unblock((Blockable)this, (Object)"auth");
-      Throwable cause = e.getCause();
-      if (cause == null || !(e.getCause() instanceof IOException)) {
+      if (!(e.getCause() instanceof IOException) && !(e.getCause() instanceof RuntimeException)) {
          throw new LoginException("Cannot auth!");
       }
    }
@@ -262,6 +282,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       Blocker.unblock((Blockable)this, (Object)"launch");
       this.changeState(LoginForm.LoginState.STOPPED);
       this.tlauncher.getVersionManager().startRefresh(true);
+      this.scene.infoPanel.updateNotice(false);
    }
 
    public void onMinecraftError(Throwable e) {

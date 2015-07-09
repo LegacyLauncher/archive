@@ -6,7 +6,7 @@ import java.awt.Dimension;
 import java.awt.Window.Type;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
@@ -20,7 +20,7 @@ public class LoadingFrame extends JFrame {
       this.progress = new ProgressBar();
       this.progress.setPreferredSize(new Dimension(250, 18));
       this.add(this.progress, "Center");
-      this.add(new JLabel(ImageCache.getIcon("fav32.png")), "West");
+      this.add(new JLabel(Images.getIcon("fav32.png")), "West");
       if (OS.JAVA_VERSION > 1.6D) {
          this.setType(Type.UTILITY);
       }

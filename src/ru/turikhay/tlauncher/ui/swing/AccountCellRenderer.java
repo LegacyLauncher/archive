@@ -6,16 +6,18 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 
 public class AccountCellRenderer implements ListCellRenderer {
    public static final Account EMPTY = Account.randomAccount();
    public static final Account MANAGE = Account.randomAccount();
-   private static final Icon MANAGE_ICON = ImageCache.getIcon("gear.png");
-   private static final Icon MOJANG_USER_ICON = ImageCache.getIcon("mojang-user.png");
-   private static final Icon ELY_USER_ICON = ImageCache.getIcon("ely.png");
+   private static final ImageIcon MANAGE_ICON = Images.getIcon("gear.png");
+   private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("mojang-user.png");
+   private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png");
    private final DefaultListCellRenderer defaultRenderer;
    private AccountCellRenderer.AccountCellType type;
    // $FF: synthetic field
@@ -59,14 +61,14 @@ public class AccountCellRenderer implements ListCellRenderer {
             Icon icon = null;
             switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[value.getType().ordinal()]) {
             case 1:
-               icon = ELY_USER_ICON;
+               icon = TLauncher.getInstance().getElyManager().isRefreshing() ? ELY_USER_ICON.getDisabledInstance() : ELY_USER_ICON;
                break;
             case 2:
                icon = MOJANG_USER_ICON;
             }
 
             if (icon != null) {
-               renderer.setIcon(icon);
+               renderer.setIcon((Icon)icon);
                renderer.setFont(renderer.getFont().deriveFont(1));
             }
 
@@ -80,7 +82,11 @@ public class AccountCellRenderer implements ListCellRenderer {
                }
                break;
             default:
-               renderer.setText(value.getDisplayName());
+               if (value.getType() == Account.AccountType.ELY && TLauncher.getInstance().getElyManager().isRefreshing()) {
+                  renderer.setText(value.getDisplayName() + " " + Localizable.get("account.loading.ely"));
+               } else {
+                  renderer.setText(value.getDisplayName());
+               }
             }
          }
       } else {

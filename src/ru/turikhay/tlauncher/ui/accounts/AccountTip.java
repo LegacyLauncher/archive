@@ -5,7 +5,7 @@ import java.awt.event.MouseListener;
 import java.net.URL;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
@@ -14,6 +14,7 @@ import ru.turikhay.util.OS;
 
 public class AccountTip extends CenterPanel implements LocalizableComponent {
    public static final int WIDTH = 510;
+   private static final float FONT_SIZE;
    private final AccountEditorScene scene;
    public final AccountTip.Tip freeTip;
    public final AccountTip.Tip mojangTip;
@@ -23,10 +24,14 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
 
+   static {
+      FONT_SIZE = OS.OSX.isCurrent() ? 10.0F : 12.0F;
+   }
+
    public AccountTip(AccountEditorScene sc) {
       super(smallSquareInsets);
       this.scene = sc;
-      this.content = new EditorPane();
+      this.content = new EditorPane(this.getFont().deriveFont(FONT_SIZE));
       this.content.addMouseListener(new MouseListener() {
          public void mouseClicked(MouseEvent e) {
             if (!AccountTip.this.isVisible()) {
@@ -65,8 +70,8 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
       });
       this.add(this.content);
       this.freeTip = new AccountTip.Tip(Account.AccountType.FREE, (URL)null);
-      this.mojangTip = new AccountTip.Tip(Account.AccountType.MOJANG, ImageCache.getRes("mojang-user.png"));
-      this.elyTip = new AccountTip.Tip(Account.AccountType.ELY, ImageCache.getRes("ely.png"));
+      this.mojangTip = new AccountTip.Tip(Account.AccountType.MOJANG, Images.getRes("mojang-user.png"));
+      this.elyTip = new AccountTip.Tip(Account.AccountType.ELY, Images.getRes("ely.png"));
       this.setTip((AccountTip.Tip)null);
    }
 
@@ -113,11 +118,6 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
    void setContent(String text, int width, int height) {
       if (width >= 1 && height >= 1) {
          this.content.setText(text);
-         if (OS.CURRENT == OS.LINUX) {
-            width = (int)((double)width * 1.2D);
-            height = (int)((double)height * 1.2D);
-         }
-
          this.setSize(width, height + this.getInsets().top + this.getInsets().bottom);
       } else {
          throw new IllegalArgumentException();

@@ -5,8 +5,8 @@ import java.util.Iterator;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import net.minecraft.launcher.updater.VersionSyncInfo;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 
@@ -16,7 +16,7 @@ public class VersionListCellRenderer extends VersionCellRenderer {
 
    VersionListCellRenderer(VersionList list) {
       this.handler = list.handler;
-      this.downloading = ImageCache.getIcon("down.png", 16, 16);
+      this.downloading = Images.getIcon("down.png", 16, 16);
    }
 
    public Component getListCellRendererComponent(JList list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {

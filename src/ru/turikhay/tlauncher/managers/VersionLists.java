@@ -9,14 +9,11 @@ import ru.turikhay.tlauncher.component.LauncherComponent;
 import ru.turikhay.util.MinecraftUtil;
 
 public class VersionLists extends LauncherComponent {
-   private final LocalVersionList localList = new LocalVersionList(MinecraftUtil.getWorkingDirectory());
-   private final RemoteVersionList[] remoteLists;
+   private final LocalVersionList localList = new LocalVersionList();
+   private final RemoteVersionList[] remoteLists = new RemoteVersionList[]{new OfficialVersionList(), new ExtraVersionList()};
 
    public VersionLists(ComponentManager manager) throws Exception {
       super(manager);
-      OfficialVersionList officialList = new OfficialVersionList();
-      ExtraVersionList extraList = new ExtraVersionList();
-      this.remoteLists = new RemoteVersionList[]{officialList, extraList};
    }
 
    public LocalVersionList getLocal() {
@@ -25,6 +22,7 @@ public class VersionLists extends LauncherComponent {
 
    public void updateLocal() throws IOException {
       this.localList.setBaseDirectory(MinecraftUtil.getWorkingDirectory());
+      this.manager.getLauncher().getSettings().set("minecraft.gamedir", this.localList.getBaseDirectory());
    }
 
    public RemoteVersionList[] getRemoteLists() {

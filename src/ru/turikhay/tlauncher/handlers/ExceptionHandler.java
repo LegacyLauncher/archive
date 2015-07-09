@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.handlers;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.background.slide.SlideBackgroundThread;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
@@ -41,11 +42,13 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
          return false;
       } else {
          U.log("OutOfMemory error has occurred, solving...");
+         SlideBackgroundThread.alert();
          long currentTime = System.currentTimeMillis();
          long diff = Math.abs(currentTime - gcLastCall);
          if (diff > 5000L) {
             gcLastCall = currentTime;
             U.gc();
+            SlideBackgroundThread.alert();
             return true;
          } else {
             U.log("GC is unable to reduce memory usage");

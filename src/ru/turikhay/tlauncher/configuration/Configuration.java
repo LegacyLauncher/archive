@@ -11,15 +11,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
-import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.util.Direction;
@@ -103,7 +99,7 @@ public class Configuration extends SimpleConfiguration {
             if (defvalue != null) {
                try {
                   PlainParser.parse(value, defvalue);
-               } catch (ParseException var10) {
+               } catch (Exception var10) {
                   this.log(new Object[]{"Key \"" + key + "\" is invalid!", var10});
                   this.set(key, defvalue, false);
                }
@@ -127,6 +123,13 @@ public class Configuration extends SimpleConfiguration {
          selected = Locale.US;
       }
 
+      String oldJavaPath = this.get("minecraft.javadir");
+      if (oldJavaPath != null) {
+         this.log(new Object[]{"Migrating Java path into Command:", oldJavaPath});
+         this.set("minecraft.cmd", oldJavaPath);
+         this.set("minecraft.javadir", (Object)null);
+      }
+
       this.set("locale", selected, false);
       if (this.isSaveable()) {
          try {
@@ -148,6 +151,11 @@ public class Configuration extends SimpleConfiguration {
 
    public Locale getLocale() {
       return getLocaleOf(this.get("locale"));
+   }
+
+   public boolean isUSSRLocale() {
+      String locale = this.get("locale");
+      return "ru_RU".equals(locale) || "uk_UA".equals(locale);
    }
 
    public Locale[] getLocales() {
@@ -213,16 +221,24 @@ public class Configuration extends SimpleConfiguration {
 
    public VersionFilter getVersionFilter() {
       VersionFilter filter = new VersionFilter();
-      ReleaseType[] var5;
-      int var4 = (var5 = ReleaseType.getDefinable()).length;
+      Iterator var3 = ReleaseType.getDefinable().iterator();
 
-      for(int var3 = 0; var3 < var4; ++var3) {
-         ReleaseType type = var5[var3];
-         if (!type.equals(ReleaseType.UNKNOWN)) {
-            boolean include = this.getBoolean("minecraft.versions." + type);
-            if (!include) {
-               filter.excludeType(type);
-            }
+      while(var3.hasNext()) {
+         ReleaseType type = (ReleaseType)var3.next();
+         boolean include = this.getBoolean("minecraft.versions." + type);
+         if (!include) {
+            filter.exclude(type);
+         }
+      }
+
+      ReleaseType.SubType[] var5;
+      int var9 = (var5 = ReleaseType.SubType.values()).length;
+
+      for(int var8 = 0; var8 < var9; ++var8) {
+         ReleaseType.SubType type = var5[var8];
+         boolean include = this.getBoolean("minecraft.versions.sub." + type);
+         if (!include) {
+            filter.exclude(type);
          }
       }
 
@@ -235,6 +251,14 @@ public class Configuration extends SimpleConfiguration {
 
    public Proxy getProxy() {
       return Proxy.NO_PROXY;
+   }
+
+   public UUID getClient() {
+      try {
+         return UUID.fromString(this.get("client"));
+      } catch (Exception var2) {
+         return null;
+      }
    }
 
    public String getDefault(String key) {
@@ -297,32 +321,7 @@ public class Configuration extends SimpleConfiguration {
    }
 
    private List getSupportedLocales() {
-      this.log(new Object[]{"Searching for supported locales..."});
-      Pattern lang_pattern = Pattern.compile("lang/([\\w]+)$");
-      File file = FileUtil.getRunningJar();
-      ArrayList locales = new ArrayList();
-
-      try {
-         URL jar = file.toURI().toURL();
-         ZipInputStream zip = new ZipInputStream(jar.openStream());
-
-         while(true) {
-            ZipEntry e = zip.getNextEntry();
-            if (e == null) {
-               return (List)(locales.isEmpty() ? this.defaultLocales : locales);
-            }
-
-            String name = e.getName();
-            Matcher mt = lang_pattern.matcher(name);
-            if (mt.matches()) {
-               this.log(new Object[]{"Found locale:", mt.group(1)});
-               locales.add(getLocaleOf(mt.group(1)));
-            }
-         }
-      } catch (Exception var9) {
-         this.log(new Object[]{"Cannot get locales!", var9});
-         return this.defaultLocales;
-      }
+      return this.defaultLocales;
    }
 
    private static List getDefaultLocales() {

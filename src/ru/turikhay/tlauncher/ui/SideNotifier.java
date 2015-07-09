@@ -3,14 +3,13 @@ package ru.turikhay.tlauncher.ui;
 import java.awt.Image;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.listener.UpdateUIListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.ImagePanel;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
-import ru.turikhay.util.U;
 
 public class SideNotifier extends ImagePanel implements UpdaterListener {
    private static final String LANG_PREFIX = "notifier.";
@@ -58,7 +57,7 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
       } else {
          switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$SideNotifier$NotifierStatus()[this.status.ordinal()]) {
          case 1:
-            Alert.showAsyncWarning(Localizable.get("notifier.failed.title"), Localizable.get("notifier.failed" + (U.getProxy() == null ? "" : ".proxy")));
+            Alert.showWarning(Localizable.get("notifier.failed.title"), Localizable.get("notifier.failed"));
             break;
          case 2:
             if (this.update == null) {
@@ -102,7 +101,10 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
       this.update = upd;
       this.setStatus(upd == null ? SideNotifier.NotifierStatus.NONE : SideNotifier.NotifierStatus.FOUND);
       if (upd != null && !TLauncher.getInstance().isLauncherWorking() && TLauncher.getInstance().getSettings().getDouble("update.asked") != upd.getVersion()) {
-         this.processClick();
+         if (!this.update.isRequired()) {
+            this.processClick();
+         }
+
          TLauncher.getInstance().getSettings().set("update.asked", upd.getVersion());
       }
    }
@@ -143,7 +145,7 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
       private final Image image;
 
       private NotifierStatus(String imagePath) {
-         this.image = imagePath == null ? null : ImageCache.getImage(imagePath);
+         this.image = imagePath == null ? null : Images.getImage(imagePath);
       }
 
       private NotifierStatus() {

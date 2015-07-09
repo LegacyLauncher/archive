@@ -5,16 +5,14 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorException;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
+import ru.turikhay.tlauncher.minecraft.auth.ServiceUnavailableException;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 public class AuthUIListener implements AuthenticatorListener {
    private final AuthenticatorListener listener;
-   private final boolean showErrorOnce;
-   private boolean errorShown;
 
-   public AuthUIListener(boolean showErrorOnce, AuthenticatorListener listener) {
+   public AuthUIListener(AuthenticatorListener listener) {
       this.listener = listener;
-      this.showErrorOnce = showErrorOnce;
    }
 
    public void onAuthPassing(Authenticator auth) {
@@ -32,28 +30,22 @@ public class AuthUIListener implements AuthenticatorListener {
    }
 
    private void showError(Throwable e) {
-      boolean serious = true;
-      String langpath = "unknown";
+      String description = "unknown";
+      Object textarea = e;
       if (e instanceof AuthenticatorException) {
-         Throwable cause = e.getCause();
-         if (cause instanceof IOException) {
-            serious = false;
-         }
-
-         if (this.showErrorOnce && this.errorShown && !serious) {
-            return;
-         }
-
          AuthenticatorException ae = (AuthenticatorException)e;
-         langpath = ae.getLangpath() == null ? "unknown" : ae.getLangpath();
-         e = null;
+         if (ae.getLangpath() != null) {
+            description = ae.getLangpath();
+         }
+
+         if (e instanceof ServiceUnavailableException) {
+            textarea = e.getMessage();
+         } else {
+            textarea = null;
+         }
       }
 
-      Alert.showLocError("auth.error.title", "auth.error." + langpath, e);
-      if (!serious) {
-         this.errorShown = true;
-      }
-
+      Alert.showLocError("auth.error.title", "auth.error." + description, textarea);
    }
 
    public void onAuthPassed(Authenticator auth) {

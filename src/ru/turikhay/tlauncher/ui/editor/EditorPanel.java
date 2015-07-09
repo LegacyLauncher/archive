@@ -4,7 +4,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.swing.BoxLayout;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
@@ -66,7 +65,7 @@ public class EditorPanel extends AbstractEditorPanel {
       c.gridx = 1;
       c.weightx = 1.0D;
       panel.add(field, c);
-      Collections.addAll(this.handlers, pair.getHandlers());
+      this.handlers.addAll(pair.getHandlers());
    }
 
    protected void nextPane() {

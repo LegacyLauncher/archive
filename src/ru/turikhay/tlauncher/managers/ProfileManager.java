@@ -2,17 +2,20 @@ package ru.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.FileTypeAdapter;
@@ -27,26 +30,22 @@ import ru.turikhay.util.U;
 
 public class ProfileManager extends RefreshableComponent {
    public static final String DEFAULT_PROFILE_NAME = "TLauncher";
-   public static final String DEFAULT_PROFILE_FILENAME = "launcher_profiles.json";
+   public static final String OLD_PROFILE_FILENAME = "launcher_profiles.json";
+   public static final String DEFAULT_PROFILE_FILENAME = "tlauncher_profiles.json";
    private final List listeners;
    private final AccountListener accountListener;
-   private final JsonParser parser;
    private final Gson gson;
-   private final Map profiles;
-   private String selectedProfile;
    private File file;
    private UUID clientToken;
    private AuthenticatorDatabase authDatabase;
 
    public ProfileManager(ComponentManager manager, File file) throws Exception {
       super(manager);
-      this.parser = new JsonParser();
       if (file == null) {
          throw new NullPointerException();
       } else {
          this.file = file;
          this.listeners = Collections.synchronizedList(new ArrayList());
-         this.profiles = new HashMap();
          this.clientToken = UUID.randomUUID();
          this.accountListener = new AccountListener() {
             public void onAccountsRefreshed(AuthenticatorDatabase db) {
@@ -99,16 +98,31 @@ public class ProfileManager extends RefreshableComponent {
    }
 
    private void loadProfiles() {
-      this.log(new Object[]{"Loading profiles from:", this.file});
-      this.selectedProfile = null;
-      this.profiles.clear();
-      ProfileManager.RawProfileList raw = null;
-      if (this.file.isFile()) {
+      this.log(new Object[]{"Refreshing profiles from:", this.file});
+      File oldFile = new File(this.file.getParentFile(), "launcher_profiles.json");
+      OutputStreamWriter writer = null;
+      if (!oldFile.isFile()) {
          try {
-            raw = (ProfileManager.RawProfileList)this.gson.fromJson((JsonElement)this.parser.parse(FileUtil.readFile(this.file)).getAsJsonObject(), (Class)ProfileManager.RawProfileList.class);
-         } catch (Exception var3) {
-            U.log("Cannot parse profile list! Loading an empty one.", var3);
+            writer = new OutputStreamWriter(new FileOutputStream(oldFile), Charset.forName("UTF-8"));
+            this.gson.toJson((Object)(new ProfileManager.OldProfileList()), (Appendable)writer);
+            writer.close();
+         } catch (Exception var17) {
+            this.log(new Object[]{"Cannot write into", "launcher_profiles.json", var17});
+         } finally {
+            U.close(writer);
          }
+      }
+
+      ProfileManager.RawProfileList raw = null;
+      InputStreamReader reader = null;
+
+      try {
+         reader = new InputStreamReader(new FileInputStream(this.file.isFile() ? this.file : oldFile), Charset.forName("UTF-8"));
+         raw = (ProfileManager.RawProfileList)this.gson.fromJson((Reader)reader, (Class)ProfileManager.RawProfileList.class);
+      } catch (Exception var15) {
+         this.log(new Object[]{"Cannot read from", "tlauncher_profiles.json", var15});
+      } finally {
+         U.close(reader);
       }
 
       if (raw == null) {
@@ -116,17 +130,13 @@ public class ProfileManager extends RefreshableComponent {
       }
 
       this.clientToken = raw.clientToken;
-      this.selectedProfile = raw.selectedProfile;
       this.authDatabase = raw.authenticationDatabase;
       this.authDatabase.setListener(this.accountListener);
-      this.profiles.putAll(raw.profiles);
    }
 
    public void saveProfiles() throws IOException {
       ProfileManager.RawProfileList raw = new ProfileManager.RawProfileList();
       raw.clientToken = this.clientToken;
-      raw.selectedProfile = this.selectedProfile;
-      raw.profiles = this.profiles;
       raw.authenticationDatabase = this.authDatabase;
       FileUtil.writeFile(this.file, this.gson.toJson((Object)raw));
    }
@@ -174,12 +184,15 @@ public class ProfileManager extends RefreshableComponent {
    }
 
    private static File getDefaultFile() {
-      return new File(MinecraftUtil.getWorkingDirectory(), "launcher_profiles.json");
+      return new File(MinecraftUtil.getWorkingDirectory(), "tlauncher_profiles.json");
+   }
+
+   static class OldProfileList {
+      UUID clientToken = UUID.randomUUID();
+      HashMap profiles = new HashMap();
    }
 
    static class RawProfileList {
-      Map profiles = new HashMap();
-      String selectedProfile;
       UUID clientToken = UUID.randomUUID();
       AuthenticatorDatabase authenticationDatabase = new AuthenticatorDatabase();
    }

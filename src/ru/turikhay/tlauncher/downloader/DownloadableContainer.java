@@ -26,9 +26,11 @@ public class DownloadableContainer {
          throw new NullPointerException();
       } else {
          this.checkLocked();
-         this.list.add(d);
-         d.setContainer(this);
-         this.sum.incrementAndGet();
+         if (!this.list.contains(d)) {
+            this.list.add(d);
+            d.setContainer(this);
+            this.sum.incrementAndGet();
+         }
       }
    }
 
@@ -41,9 +43,11 @@ public class DownloadableContainer {
                throw new NullPointerException("Downloadable at " + i + " is NULL!");
             }
 
-            this.list.add(ds[i]);
-            ds[i].setContainer(this);
-            this.sum.incrementAndGet();
+            if (!this.list.contains(ds[i])) {
+               this.list.add(ds[i]);
+               ds[i].setContainer(this);
+               this.sum.incrementAndGet();
+            }
          }
 
       }
@@ -172,7 +176,7 @@ public class DownloadableContainer {
       }
    }
 
-   public static void removeDublicates(DownloadableContainer a, DownloadableContainer b) {
+   public static void removeDuplicates(DownloadableContainer a, DownloadableContainer b) {
       if (a.locked) {
          throw new IllegalStateException("First conatiner is already locked!");
       } else if (b.locked) {
@@ -207,13 +211,13 @@ public class DownloadableContainer {
       }
    }
 
-   public static void removeDublicates(List list) {
+   public static void removeDuplicates(List list) {
       if (list == null) {
          throw new NullPointerException();
       } else if (list.size() >= 2) {
          for(int i = 0; i < list.size() - 1; ++i) {
             for(int k = i + 1; k < list.size(); ++k) {
-               removeDublicates((DownloadableContainer)list.get(i), (DownloadableContainer)list.get(k));
+               removeDuplicates((DownloadableContainer)list.get(i), (DownloadableContainer)list.get(k));
             }
          }
 

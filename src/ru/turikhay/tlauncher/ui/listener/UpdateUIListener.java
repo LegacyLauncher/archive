@@ -49,7 +49,7 @@ public class UpdateUIListener implements UpdateListener {
    }
 
    private static void onUpdateReady(Update u, boolean showChangeLog) {
-      Alert.showLocWarning("updater.downloaded", (Object)(showChangeLog ? u.getDescription() : null));
+      Alert.showLocWarning("updater.downloaded", showChangeLog ? u.getDescription() : null);
       u.apply();
    }
 

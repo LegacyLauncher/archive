@@ -42,22 +42,34 @@
         	pattern: '^java.lang.OutOfMemoryError: .+'
         },
         {
-        	name: "OpenGL unsupported by videocard",
-        	path: "old-videocard",
-        	exit: 1,
-        	pattern: '^# C \\[ig4dev32\\.dll\\+0x3e88\\]$'
-        },
-        {
         	name: "Invalid system user name",
         	path: "invalid-sys-username",
         	exit: 1,
         	pattern: "^[\\s]*at org.apache.logging.log4j.util.PropertiesUtil.<init>\\(PropertiesUtil.java:71\\)$"
         },
         {
-        	name: "Old ATI/AMD videocard drivers",
-        	path: "old-ati-vdrivers",
+            name: "Firewall error",
+            path: "firewall",
+            exit: -1,
+            pattern: '^Caused by: io\\.netty\\.channel\\.ChannelException: failed to open a new selector$'
+        },
+        {
+        	name: "Bad ATI/AMD videocard drivers",
+        	path: "old-videocard.ati",
         	exit: 1,
-        	pattern: '^# C \\[atioglxx\\.dll\\+0x[0-9a-z]+\\]$'
+        	pattern: '^# C  \\[atio(?:gl|[0-9a-z]{2,})xx\\.dll\\+0x[0-9a-z]+\\]$'
+        },
+        {
+            name: "Old Intel videocard",
+            path: "old-videocard.intel",
+            exit: 1,
+            pattern: '^# C  \\[ig4dev[\\d]{2}\\.dll\\+0x[0-9a-z]+]$'
+        },
+        {
+            name: "Too heavy heap",
+            path: "reserve-space",
+            exit: 1,
+            pattern: '^(?:Could not reserve enough space|Initial heap size set to a larger value than the maximum heap size)$'
         }
     ]
 }

@@ -15,6 +15,7 @@ import ru.turikhay.util.async.ExtendedThread;
 public class Downloader extends ExtendedThread {
    public static final int MAX_THREADS = 6;
    public static final String DOWNLOAD_BLOCK = "download";
+   static final double SMOOTHING_FACTOR = 0.005D;
    static final String ITERATION_BLOCK = "iteration";
    private final DownloaderThread[] threads;
    private final List list;
@@ -23,11 +24,10 @@ public class Downloader extends ExtendedThread {
    private final AtomicInteger remainingObjects;
    private int runningThreads;
    private int workingThreads;
-   private final double[] speedContainer;
    private final double[] progressContainer;
    private double lastAverageProgress;
    private double averageProgress;
-   private double averageSpeed;
+   private double speed;
    private boolean aborted;
    private final Object workLock;
    private boolean haveWork;
@@ -39,7 +39,6 @@ public class Downloader extends ExtendedThread {
       this.threads = new DownloaderThread[6];
       this.list = Collections.synchronizedList(new ArrayList());
       this.listeners = Collections.synchronizedList(new ArrayList());
-      this.speedContainer = new double[6];
       this.progressContainer = new double[6];
       this.workLock = new Object();
       this.startAndWait();
@@ -62,7 +61,7 @@ public class Downloader extends ExtendedThread {
    }
 
    public double getSpeed() {
-      return this.averageSpeed;
+      return this.speed;
    }
 
    public void add(Downloadable d) {
@@ -214,8 +213,8 @@ public class Downloader extends ExtendedThread {
          }
 
          this.notifyWork();
-         Arrays.fill(this.speedContainer, 0.0D);
          Arrays.fill(this.progressContainer, 0.0D);
+         this.speed = 0.0D;
          this.averageProgress = 0.0D;
          this.lastAverageProgress = 0.0D;
          this.workingThreads = 0;
@@ -292,16 +291,15 @@ public class Downloader extends ExtendedThread {
    void onProgress(DownloaderThread thread, double curprogress, double curspeed) {
       int id = thread.getID() - 1;
       this.progressContainer[id] = curprogress;
-      this.speedContainer[id] = curspeed;
       this.averageProgress = U.getAverage(this.progressContainer, this.workingThreads);
       if (!(this.averageProgress - this.lastAverageProgress < 0.01D)) {
+         this.speed = 0.005D * this.speed + 0.995D * curspeed;
          this.lastAverageProgress = this.averageProgress;
-         this.averageSpeed = U.getSum(this.speedContainer);
          Iterator var8 = this.listeners.iterator();
 
          while(var8.hasNext()) {
             DownloaderListener listener = (DownloaderListener)var8.next();
-            listener.onDownloaderProgress(this, this.averageProgress, this.averageSpeed);
+            listener.onDownloaderProgress(this, this.averageProgress, this.speed);
          }
 
       }

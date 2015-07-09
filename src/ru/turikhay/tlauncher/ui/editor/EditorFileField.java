@@ -13,7 +13,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.U;
 
 public class EditorFileField extends BorderPanel implements EditorField {
-   private static final long serialVersionUID = 5136327098130653756L;
    public static final char DEFAULT_DELIMITER = ';';
    private final EditorTextField textField;
    private final LocalizableButton explorerButton;
@@ -22,16 +21,14 @@ public class EditorFileField extends BorderPanel implements EditorField {
    private final Pattern delimiterSplitter;
 
    public EditorFileField(String prompt, boolean canBeEmpty, String button, FileExplorer chooser, char delimiter) {
-      if (chooser == null) {
-         throw new NullPointerException("FileExplorer should be defined!");
-      } else {
-         this.textField = new EditorTextField(prompt, canBeEmpty);
-         this.explorerButton = new LocalizableButton(button);
-         this.explorer = chooser;
-         this.delimiterChar = delimiter;
-         this.delimiterSplitter = Pattern.compile(String.valueOf(this.delimiterChar), 16);
-         this.explorerButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+      this.textField = new EditorTextField(prompt, canBeEmpty);
+      this.explorerButton = new LocalizableButton(button);
+      this.explorer = chooser;
+      this.delimiterChar = delimiter;
+      this.delimiterSplitter = Pattern.compile(String.valueOf(this.delimiterChar), 16);
+      this.explorerButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            if (EditorFileField.this.explorer != null) {
                EditorFileField.this.explorerButton.setEnabled(false);
                EditorFileField.this.explorer.setCurrentDirectory(EditorFileField.this.getFirstFile());
                int result = EditorFileField.this.explorer.showDialog(EditorFileField.this);
@@ -41,10 +38,13 @@ public class EditorFileField extends BorderPanel implements EditorField {
 
                EditorFileField.this.explorerButton.setEnabled(true);
             }
-         });
-         this.add(this.textField, "Center");
+         }
+      });
+      this.add(this.textField, "Center");
+      if (this.explorer != null) {
          this.add(this.explorerButton, "East");
       }
+
    }
 
    public EditorFileField(String prompt, boolean canBeEmpty, FileExplorer chooser) {

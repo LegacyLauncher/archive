@@ -6,17 +6,31 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
+import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
+import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
+import ru.turikhay.util.pastebin.Paste;
+import ru.turikhay.util.pastebin.PasteResult;
 import ru.turikhay.util.stream.LinkedStringStream;
 import ru.turikhay.util.stream.Logger;
 import ru.turikhay.util.stream.PrintLogger;
@@ -32,6 +46,7 @@ public class Console implements Logger {
    private Console.CloseAction close;
    private boolean killed;
    MinecraftLauncher launcher;
+   private FileExplorer explorer;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$console$Console$CloseAction;
 
@@ -43,7 +58,6 @@ public class Console implements Logger {
       this.update();
       this.frame.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
-            Console.this.save();
             Console.this.onClose();
          }
 
@@ -98,10 +112,7 @@ public class Console implements Logger {
          this.show();
       }
 
-      if (this.stream.getLength() != 0) {
-         this.rawlog(this.stream.getOutput());
-      }
-
+      this.stream.flush();
       if (logger != null) {
          logger.setMirror(this);
       }
@@ -165,7 +176,7 @@ public class Console implements Logger {
    }
 
    public String getOutput() {
-      return this.stream.getOutput();
+      return this.frame.textarea.getText();
    }
 
    StringStream getStream() {
@@ -238,8 +249,8 @@ public class Console implements Logger {
 
    public void clear() {
       this.check();
+      this.stream.flush();
       this.frame.clear();
-      this.stream.clear();
    }
 
    public void kill() {
@@ -251,19 +262,79 @@ public class Console implements Logger {
       this.killed = true;
    }
 
-   public void killIn(final long millis) {
+   public void killIn(long millis) {
       this.check();
       this.save();
       this.frame.hideIn(millis);
+   }
+
+   public void sendPaste() {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            U.sleepFor(millis + 1000L);
-            if (Console.this.isHidden()) {
-               Console.this.kill();
+            Paste paste = new Paste();
+            paste.addListener(Console.this.frame);
+            paste.setTitle(Console.this.frame.getTitle());
+            paste.setContent(Console.this.frame.console.getOutput());
+            PasteResult result = paste.paste();
+            if (result instanceof PasteResult.PasteUploaded) {
+               PasteResult.PasteUploaded uploaded = (PasteResult.PasteUploaded)result;
+               if (Alert.showLocQuestion("console.pastebin.sent", (Object)uploaded.getURL())) {
+                  OS.openLink(uploaded.getURL());
+               }
+            } else if (result instanceof PasteResult.PasteFailed) {
+               Throwable error = ((PasteResult.PasteFailed)result).getError();
+               if (error instanceof RuntimeException) {
+                  Alert.showLocError("console.pastebin.invalid", error);
+               } else if (error instanceof IOException) {
+                  Alert.showLocError("console.pastebin.failed", error);
+               }
             }
 
          }
       });
+   }
+
+   public void saveAs() {
+      if (this.explorer == null) {
+         try {
+            this.explorer = FileExplorer.newExplorer();
+         } catch (InternalError var16) {
+            Alert.showError(Localizable.get("explorer.unavailable.title"), Localizable.get("explorer.unvailable") + (OS.WINDOWS.isCurrent() ? "\n" + Localizable.get("explorer.unavailable.win") : ""));
+            return;
+         }
+      }
+
+      this.explorer.setSelectedFile(new File(this.getName() + ".log"));
+      int result = this.explorer.showSaveDialog(this.frame);
+      if (result == 0) {
+         File file = this.explorer.getSelectedFile();
+         if (file != null) {
+            String path = file.getAbsolutePath();
+            if (!path.endsWith(".log")) {
+               path = path + ".log";
+            }
+
+            file = new File(path);
+            FileOutputStream output = null;
+
+            try {
+               FileUtil.createFile(file);
+               IOUtils.copy((Reader)(new StringReader(this.getOutput())), (OutputStream)(output = new FileOutputStream(file)));
+            } catch (Throwable var15) {
+               Alert.showLocError("console.save.error", var15);
+            } finally {
+               if (output != null) {
+                  try {
+                     output.close();
+                  } catch (IOException var14) {
+                     var14.printStackTrace();
+                  }
+               }
+
+            }
+
+         }
+      }
    }
 
    public boolean isKilled() {
@@ -272,7 +343,6 @@ public class Console implements Logger {
    }
 
    boolean isHidden() {
-      this.check();
       return !this.frame.isShowing();
    }
 

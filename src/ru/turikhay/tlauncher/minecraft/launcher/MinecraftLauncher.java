@@ -8,9 +8,12 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -26,7 +29,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import joptsimple.OptionSet;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessListener;
@@ -43,7 +45,6 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.TLauncherLite;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.Downloadable;
@@ -63,6 +64,7 @@ import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashDescriptor;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.console.Console;
+import ru.turikhay.tlauncher.updater.Stats;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
@@ -74,7 +76,6 @@ import ru.turikhay.util.stream.PrintLogger;
 public class MinecraftLauncher implements JavaProcessListener {
    private static final int OFFICIAL_VERSION = 16;
    private static final int ALTERNATIVE_VERSION = 8;
-   private static final boolean[] ASSETS_PROBLEM = new boolean[2];
    private boolean working;
    private boolean killed;
    private final Thread parentThread;
@@ -87,7 +88,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    private final VersionManager vm;
    private final AssetsManager am;
    private final ProfileManager pm;
-   private final LinkedStringStream output;
+   private final StringBuffer output;
    private final PrintLogger logger;
    private Console console;
    private final MinecraftLauncher.ConsoleVisibility consoleVis;
@@ -102,7 +103,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    private CompleteVersion deJureVersion;
    private String accountName;
    private Account account;
-   private File javaDir;
+   private String cmd;
    private File gameDir;
    private File localAssetsDir;
    private File nativeDir;
@@ -120,7 +121,9 @@ public class MinecraftLauncher implements JavaProcessListener {
    private long startupTime;
    private int exitCode;
    private ServerList.Server server;
+   private static boolean ASSETS_WARNING_SHOWN;
    private JavaProcess process;
+   private boolean firstLine;
 
    public Downloader getDownloader() {
       return this.downloader;
@@ -138,12 +141,12 @@ public class MinecraftLauncher implements JavaProcessListener {
       return this.assistLaunch;
    }
 
-   public LinkedStringStream getStream() {
-      return this.output;
-   }
-
-   public PrintLogger getLogger() {
-      return this.logger;
+   public String getOutput() {
+      if (this.console != null) {
+         return this.console.getOutput();
+      } else {
+         return this.output != null ? this.output.toString() : null;
+      }
    }
 
    public MinecraftLauncher.ConsoleVisibility getConsoleVisibility() {
@@ -167,6 +170,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    private MinecraftLauncher(ComponentManager manager, Downloader downloader, Configuration configuration, boolean forceUpdate, MinecraftLauncher.ConsoleVisibility visibility, boolean exit) {
+      this.firstLine = true;
       if (manager == null) {
          throw new NullPointerException("Ti sovsem s duba ruhnul?");
       } else if (downloader == null) {
@@ -187,10 +191,10 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.pm = (ProfileManager)manager.getComponent(ProfileManager.class);
          this.forceUpdate = forceUpdate;
          this.assistLaunch = !exit;
-         this.output = new LinkedStringStream();
-         this.logger = new PrintLogger(this.output);
          this.consoleVis = visibility;
-         this.console = this.consoleVis.equals(MinecraftLauncher.ConsoleVisibility.NONE) ? null : new Console(this.settings, this.logger, "Minecraft", this.consoleVis.equals(MinecraftLauncher.ConsoleVisibility.ALWAYS) && this.assistLaunch);
+         this.logger = this.consoleVis.equals(MinecraftLauncher.ConsoleVisibility.NONE) ? null : new PrintLogger(new LinkedStringStream());
+         this.console = this.logger == null ? null : new Console(this.settings, this.logger, "Minecraft", this.consoleVis.equals(MinecraftLauncher.ConsoleVisibility.ALWAYS) && this.assistLaunch);
+         this.output = this.console == null ? new StringBuffer() : null;
          if (this.console != null) {
             this.console.frame.addWindowListener(new WindowAdapter() {
                public void windowClosing(WindowEvent e) {
@@ -213,10 +217,6 @@ public class MinecraftLauncher implements JavaProcessListener {
 
    public MinecraftLauncher(TLauncher t, boolean forceUpdate) {
       this(t.getManager(), t.getDownloader(), t.getSettings(), forceUpdate, t.getSettings().getConsoleType().getVisibility(), t.getSettings().getActionOnLaunch() == Configuration.ActionOnLaunch.EXIT);
-   }
-
-   public MinecraftLauncher(TLauncherLite tl, OptionSet options) {
-      this(tl.getLauncher().getManager(), tl.getLauncher().getDownloader(), tl.getLauncher().getSettings(), options.has("force"), MinecraftLauncher.ConsoleVisibility.NONE, false);
    }
 
    public void addListener(MinecraftListener listener) {
@@ -271,7 +271,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       this.working = false;
       this.step = MinecraftLauncher.MinecraftLauncherStep.NONE;
-      this.log("Launcher exited.");
+      this.log("Launcher stopped.");
    }
 
    public void stop() {
@@ -324,10 +324,6 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.versionName = this.settings.get("login.version");
       if (this.versionName != null && !this.versionName.isEmpty()) {
          this.log("Selected version:", this.versionName);
-         if (this.console != null) {
-            this.console.setName("Logger for " + this.versionName);
-         }
-
          this.accountName = this.settings.get("login.account");
          if (this.accountName != null && !this.accountName.isEmpty()) {
             Account.AccountType type = (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, this.settings.get("login.account.type"));
@@ -358,9 +354,13 @@ public class MinecraftLauncher implements JavaProcessListener {
                      this.version = this.deJureVersion;
                   }
 
-                  String javaDirPath = this.settings.get("minecraft.javadir");
-                  this.javaDir = new File(javaDirPath == null ? OS.getJavaPath() : javaDirPath);
-                  this.log("Java path:", this.javaDir);
+                  if (this.console != null) {
+                     this.console.setName(this.version.getID());
+                  }
+
+                  String command = this.settings.get("minecraft.cmd");
+                  this.cmd = command == null ? OS.getJavaPath() : command;
+                  this.log("Command:", this.cmd);
                   this.gameDir = new File(this.settings.get("minecraft.gamedir"));
 
                   try {
@@ -435,11 +435,11 @@ public class MinecraftLauncher implements JavaProcessListener {
                            throw new MinecraftException("Alternative launcher is incompatible with launching version!", "incompatible", new Object[0]);
                         } else {
                            if (this.version.getMinimumCustomLauncherVersion() == 0 && this.version.getMinimumLauncherVersion() > 16) {
-                              Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.launcher");
+                              Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.launcher");
                            }
 
                            if (!this.version.appliesToCurrentEnvironment()) {
-                              Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.incompatible.environment");
+                              Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.environment");
                            }
 
                            this.downloadResources();
@@ -508,7 +508,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       });
       assetsContainer = null;
       DownloadableContainer assetsContainer = this.am.downloadResources(this.version, assets, this.forceUpdate);
-      final boolean[] kasperkyBlocking = new boolean[1];
+      final boolean[] suspectKaspersky = new boolean[2];
       if (assetsContainer != null) {
          assetsContainer.addHandler(new DownloadableContainerHandler() {
             public void onStart(DownloadableContainer c) {
@@ -533,22 +533,19 @@ public class MinecraftLauncher implements JavaProcessListener {
                }
 
                if (object == null) {
-                  MinecraftLauncher.this.log("Couldn't find object:", filename);
+                  MinecraftLauncher.this.log("couldn't find asset object:", filename);
                } else {
                   File destination = d.getDestination();
                   String hash = FileUtil.getDigest(destination, "SHA-1", 40);
                   if (hash == null) {
-                     throw new RetryDownloadException("File hash is NULL!");
+                     throw new RetryDownloadException("cannot calculate hash for: " + destination);
                   } else {
-                     String assetHash = object.getHash();
-                     if (assetHash == null) {
-                        MinecraftLauncher.this.log("Hash of", object.getHash(), "is NULL");
-                     } else if (!hash.equals(assetHash)) {
-                        if (hash.equals("2daeaa8b5f19f0bc209d976c02bd6acb51b00b0a")) {
-                           kasperkyBlocking[0] = true;
-                        }
-
-                        throw new RetryDownloadException("illegal hash. got: " + hash + "; expected: " + assetHash);
+                     String expectedHash = object.getHash();
+                     if (expectedHash == null) {
+                        MinecraftLauncher.this.log("null hash:", object.getFilename());
+                     } else if (!hash.equals(expectedHash)) {
+                        suspectKaspersky[0] = filename.startsWith("ad");
+                        throw new RetryDownloadException("illegal hash for: " + expectedHash + " (got: " + hash + ")");
                      }
                   }
                }
@@ -587,15 +584,17 @@ public class MinecraftLauncher implements JavaProcessListener {
          throw new MinecraftException(message.toString(), "download", (Throwable)execContainer.getErrors().get(0));
       } else {
          if (assetsContainer != null && !assetsContainer.getErrors().isEmpty() && !(assetsContainer.getErrors().get(0) instanceof AbortedDownloadException)) {
-            if (kasperkyBlocking[0] && !ASSETS_PROBLEM[1]) {
-               Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.assets.kaspersky", "http://resources.download.minecraft.net/ad/ad*");
-               ASSETS_PROBLEM[1] = true;
-            } else if (!ASSETS_PROBLEM[0]) {
-               Alert.showLocAsyncWarning("launcher.warning.title", "launcher.warning.assets");
-               ASSETS_PROBLEM[0] = true;
+            if (!ASSETS_WARNING_SHOWN) {
+               if (suspectKaspersky[0]) {
+                  Alert.showLocWarning("launcher.warning.title", "launcher.warning.assets.kaspersky", "http://resources.download.minecraft.net/ad/ad*");
+               } else {
+                  Alert.showLocWarning("launcher.warning.title", "launcher.warning.assets", (Object)null);
+               }
+
+               ASSETS_WARNING_SHOWN = true;
             }
          } else {
-            Arrays.fill(ASSETS_PROBLEM, false);
+            ASSETS_WARNING_SHOWN = false;
          }
 
          try {
@@ -666,7 +665,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          listener.onMinecraftConstructing();
       }
 
-      this.launcher = new JavaProcessLauncher(this.javaDir.getAbsolutePath(), new String[0]);
+      this.launcher = new JavaProcessLauncher(this.cmd, new String[0]);
       this.launcher.directory(this.gameDir);
       if (OS.OSX.isCurrent()) {
          File icon = null;
@@ -752,7 +751,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.launchMinecraft();
    }
 
-   private File reconstructAssets() throws IOException {
+   private File reconstructAssets() throws IOException, MinecraftException {
       String assetVersion = this.version.getAssets() == null ? "legacy" : this.version.getAssets();
       File indexFile = new File(this.assetsIndexesDir, assetVersion + ".json");
       File virtualRoot = new File(new File(this.globalAssetsDir, "virtual"), assetVersion);
@@ -760,7 +759,13 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.log("No assets index file " + virtualRoot + "; can't reconstruct assets");
          return virtualRoot;
       } else {
-         AssetIndex index = (AssetIndex)this.gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
+         AssetIndex index;
+         try {
+            index = (AssetIndex)this.gson.fromJson((Reader)(new FileReader(indexFile)), (Class)AssetIndex.class);
+         } catch (Exception var9) {
+            throw new MinecraftException("Cannot read index file!", "index-file", var9);
+         }
+
          if (index.isVirtual()) {
             this.log("Reconstructing virtual assets folder at " + virtualRoot);
             Iterator var6 = index.getFileMap().entrySet().iterator();
@@ -966,11 +971,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
    private String[] getJVMArguments() {
       String jvmargs = this.version.getJVMArguments();
-      if (StringUtils.isNotEmpty(jvmargs)) {
-         return StringUtils.split(jvmargs, ' ');
-      } else {
-         return OS.JAVA_VERSION > 1.7D ? new String[0] : StringUtils.split("-XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:-UseAdaptiveSizePolicy -Xmn128M", ' ');
-      }
+      return StringUtils.isNotEmpty(jvmargs) ? StringUtils.split(jvmargs, ' ') : StringUtils.split("-XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:-UseAdaptiveSizePolicy -Xmn128M", ' ');
    }
 
    private List compareAssets() {
@@ -986,11 +987,16 @@ public class MinecraftLauncher implements JavaProcessListener {
 
    private void migrateOldAssets() {
       if (this.globalAssetsDir.isDirectory()) {
+         File skinsDir = new File(this.globalAssetsDir, "skins");
+         if (skinsDir.isDirectory()) {
+            FileUtil.deleteDirectory(skinsDir);
+         }
+
          IOFileFilter migratableFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("indexes"), FileFilterUtils.nameFileFilter("objects"), FileFilterUtils.nameFileFilter("virtual")));
 
          File file;
-         for(Iterator var3 = (new TreeSet(FileUtils.listFiles(this.globalAssetsDir, TrueFileFilter.TRUE, migratableFilter))).iterator(); var3.hasNext(); FileUtils.deleteQuietly(file)) {
-            file = (File)var3.next();
+         for(Iterator var4 = (new TreeSet(FileUtils.listFiles(this.globalAssetsDir, TrueFileFilter.TRUE, migratableFilter))).iterator(); var4.hasNext(); FileUtils.deleteQuietly(file)) {
+            file = (File)var4.next();
             String hash = FileUtil.getDigest(file, "SHA-1", 40);
             File destinationFile = new File(this.assetsObjectsDir, hash.substring(0, 2) + "/" + hash);
             if (!destinationFile.exists()) {
@@ -998,19 +1004,19 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                try {
                   FileUtils.copyFile(file, destinationFile);
-               } catch (IOException var7) {
-                  this.log("Couldn't migrate old asset", var7);
+               } catch (IOException var8) {
+                  this.log("Couldn't migrate old asset", var8);
                }
             }
          }
 
          File[] assets = this.globalAssetsDir.listFiles();
          if (assets != null) {
-            File[] var6 = assets;
-            int var11 = assets.length;
+            File[] var7 = assets;
+            int var12 = assets.length;
 
-            for(int var10 = 0; var10 < var11; ++var10) {
-               File file = var6[var10];
+            for(int var11 = 0; var11 < var12; ++var11) {
+               File file = var7[var11];
                if (!file.getName().equals("indexes") && !file.getName().equals("objects") && !file.getName().equals("virtual")) {
                   this.log("Cleaning up old assets directory", file, "after migration");
                   FileUtils.deleteQuietly(file);
@@ -1036,6 +1042,9 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.startupTime = System.currentTimeMillis();
       TLauncher.getConsole().setLauncher(this);
       if (this.console != null) {
+         Calendar startDate = Calendar.getInstance();
+         startDate.setTimeInMillis(this.startupTime);
+         this.console.setName(this.version.getID() + " (" + DateFormat.getDateTimeInstance().format(startDate.getTime()) + ")");
          this.console.setLauncher(this);
       }
 
@@ -1061,6 +1070,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          listener.onMinecraftPostLaunch();
       }
 
+      Stats.minecraftLaunched(this.account, this.version, this.server);
       if (this.assistLaunch) {
          this.waitForClose();
       } else {
@@ -1076,14 +1086,29 @@ public class MinecraftLauncher implements JavaProcessListener {
       if (!this.minecraftWorking) {
          throw new IllegalStateException();
       } else {
+         this.log("Killing Minecraft forcefully");
          this.killed = true;
          this.process.stop();
       }
    }
 
-   private void log(Object... o) {
+   private void plog(Object... o) {
+      String text = U.toLog(o);
+      if (this.console == null) {
+         if (this.output != null) {
+            synchronized(this.output) {
+               this.output.append(text).append('\n');
+            }
+         }
+      } else {
+         this.console.log(text);
+      }
+
+   }
+
+   public void log(Object... o) {
       U.log("[Launcher]", o);
-      this.logger.log("[L]", o);
+      this.plog("[L]", o);
    }
 
    private void checkThread() {
@@ -1119,8 +1144,14 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    public void onJavaProcessLog(JavaProcess jp, String line) {
+      if (this.firstLine) {
+         this.firstLine = false;
+         U.plog("===============================================================================================");
+         this.plog("===============================================================================================");
+      }
+
       U.plog(">", line);
-      this.logger.log(line);
+      this.plog(line);
    }
 
    public void onJavaProcessEnded(JavaProcess jp) {
@@ -1198,7 +1229,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    private void removeFrom(File zipFile, List entries) throws IOException {
-      File tempFile = File.createTempFile(zipFile.getName(), (String)null);
+      File tempFile = new File(zipFile.getAbsolutePath() + "." + System.currentTimeMillis());
       tempFile.delete();
       tempFile.deleteOnExit();
       boolean renameOk = zipFile.renameTo(tempFile);
@@ -1237,8 +1268,6 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    class MinecraftLauncherAborted extends RuntimeException {
-      private static final long serialVersionUID = -3001265213093607559L;
-
       MinecraftLauncherAborted(String message) {
          super(message);
       }

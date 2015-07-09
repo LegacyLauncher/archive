@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.minecraft.crash;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class Crash {
@@ -30,6 +31,19 @@ public class Crash {
 
    public boolean hasSignature(CrashSignatureContainer.CrashSignature s) {
       return this.signatures.contains(s);
+   }
+
+   public boolean contains(String name) {
+      Iterator var3 = this.signatures.iterator();
+
+      while(var3.hasNext()) {
+         CrashSignatureContainer.CrashSignature signature = (CrashSignatureContainer.CrashSignature)var3.next();
+         if (signature.getName().equals(name)) {
+            return true;
+         }
+      }
+
+      return false;
    }
 
    public boolean isRecognized() {

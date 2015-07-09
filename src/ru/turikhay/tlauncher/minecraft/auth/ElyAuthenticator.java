@@ -7,7 +7,8 @@ public class ElyAuthenticator extends StandardAuthenticator {
       super(account, "http://minecraft.ely.by/auth/authenticate", "http://minecraft.ely.by/auth/refresh");
    }
 
-   protected void pass() throws AuthenticatorException {
-      super.pass();
+   protected AuthenticatorException getException(StandardAuthenticator.Response result) {
+      AuthenticatorException exception = super.getException(result);
+      return (AuthenticatorException)(exception.getClass().equals(AuthenticatorException.class) && "ServiceUnavailableException".equals(result.getError()) ? new ServiceUnavailableException(result.getErrorMessage()) : exception);
    }
 }

@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.configuration;
 
+import java.util.UUID;
 import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.StringUtil;
@@ -31,8 +32,12 @@ class PlainParser {
                   if (!Configuration.ConsoleType.parse(value)) {
                      throw new ParseException("Cannot parse ConsoleType");
                   }
-               } else if (defaultValue instanceof Configuration.ConnectionQuality && !Configuration.ConnectionQuality.parse(value)) {
-                  throw new ParseException("Cannot parse ConnectionQuality");
+               } else if (defaultValue instanceof Configuration.ConnectionQuality) {
+                  if (!Configuration.ConnectionQuality.parse(value)) {
+                     throw new ParseException("Cannot parse ConnectionQuality");
+                  }
+               } else if (defaultValue instanceof UUID) {
+                  UUID.fromString(value);
                }
 
             } catch (Exception var4) {

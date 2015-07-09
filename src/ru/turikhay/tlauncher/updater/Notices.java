@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.updater;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -16,15 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.IntegerArray;
+import ru.turikhay.util.Reflect;
+import ru.turikhay.util.U;
 
-public class Ads {
+public class Notices {
    private final Map map = new HashMap();
    private final Map unmodifiable;
 
-   public Ads() {
+   public Notices() {
       this.unmodifiable = Collections.unmodifiableMap(this.map);
    }
 
@@ -36,11 +41,11 @@ public class Ads {
       return this.map;
    }
 
-   public final Ads.AdList getByName(String name) {
-      return (Ads.AdList)this.map.get(name);
+   public final Notices.NoticeList getByName(String name) {
+      return (Notices.NoticeList)this.map.get(name);
    }
 
-   protected void add(Ads.AdList list) {
+   protected void add(Notices.NoticeList list) {
       if (list == null) {
          throw new NullPointerException("list");
       } else {
@@ -48,17 +53,17 @@ public class Ads {
       }
    }
 
-   protected void add(String listName, Ads.Ad ad) {
-      if (ad == null) {
-         throw new NullPointerException("ad");
+   protected void add(String listName, Notices.Notice notice) {
+      if (notice == null) {
+         throw new NullPointerException("notice");
       } else {
-         Ads.AdList list = (Ads.AdList)this.map.get(listName);
+         Notices.NoticeList list = (Notices.NoticeList)this.map.get(listName);
          boolean add = list == null;
          if (add) {
-            list = new Ads.AdList(listName);
+            list = new Notices.NoticeList(listName);
          }
 
-         list.add(ad);
+         list.add(notice);
          if (add) {
             this.add(list);
          }
@@ -76,22 +81,93 @@ public class Ads {
       } else if (image.startsWith("data:image")) {
          return image;
       } else {
-         URL url = ImageCache.getRes(image);
+         URL url = Images.getRes(image, false);
          return url == null ? null : url.toString();
       }
    }
 
-   public static class Ad {
-      private int chance;
+   public static class Deserializer implements JsonDeserializer {
+      public Notices deserialize(JsonElement root, Type type, JsonDeserializationContext context) throws JsonParseException {
+         try {
+            return this.deserialize0(root);
+         } catch (Exception var5) {
+            U.log("Cannot parse notices:", var5);
+            return new Notices();
+         }
+      }
+
+      private Notices deserialize0(JsonElement root) throws JsonParseException {
+         Notices notices = new Notices();
+         JsonObject rootObject = root.getAsJsonObject();
+         Iterator var5 = rootObject.entrySet().iterator();
+
+         label51:
+         while(var5.hasNext()) {
+            Entry entry = (Entry)var5.next();
+            String listName = (String)entry.getKey();
+            JsonArray ntArray = ((JsonElement)entry.getValue()).getAsJsonArray();
+            Iterator var9 = ntArray.iterator();
+
+            while(true) {
+               JsonObject ntObj;
+               Pattern pattern;
+               do {
+                  if (!var9.hasNext()) {
+                     continue label51;
+                  }
+
+                  JsonElement elem = (JsonElement)var9.next();
+                  ntObj = elem.getAsJsonObject();
+                  if (!ntObj.has("version")) {
+                     break;
+                  }
+
+                  String version = ntObj.get("version").getAsString();
+                  pattern = Pattern.compile(version);
+               } while(!pattern.matcher(String.valueOf(TLauncher.getVersion())).matches());
+
+               Notices.Notice notice = new Notices.Notice();
+               notice.setContent(ntObj.get("content").getAsString());
+               notice.setSize(IntegerArray.parseIntegerArray(ntObj.get("size").getAsString(), 'x').toArray());
+               if (ntObj.has("chance")) {
+                  notice.setChance(ntObj.get("chance").getAsInt());
+               }
+
+               if (ntObj.has("type")) {
+                  notice.setType((Notices.NoticeType)Reflect.parseEnum(Notices.NoticeType.class, ntObj.get("type").getAsString()));
+               }
+
+               if (ntObj.has("image")) {
+                  notice.setImage(ntObj.get("image").getAsString());
+               }
+
+               notices.add(listName, notice);
+            }
+         }
+
+         if (notices.getByName("uk_UA") == null && notices.getByName("ru_RU") != null) {
+            var5 = notices.getByName("ru_RU").getList().iterator();
+
+            while(var5.hasNext()) {
+               Notices.Notice notice = (Notices.Notice)var5.next();
+               notices.add("uk_UA", notice);
+            }
+         }
+
+         return notices;
+      }
+   }
+
+   public static class Notice {
       private String content;
-      private int[] size = new int[2];
+      private int chance = 100;
+      private Notices.NoticeType type;
+      private int[] size;
       private String image;
 
-      public Ad(int chance, String content, int[] size, String image) {
-         this.setChance(chance);
-         this.setContent(content);
-         this.setSize(size);
-         this.setImage(image);
+      public Notice() {
+         this.type = Notices.NoticeType.NOTICE;
+         this.size = new int[2];
       }
 
       public final int getChance() {
@@ -116,6 +192,14 @@ public class Ads {
          } else {
             this.content = content;
          }
+      }
+
+      public final Notices.NoticeType getType() {
+         return this.type;
+      }
+
+      public final void setType(Notices.NoticeType type) {
+         this.type = type;
       }
 
       public final int[] getSize() {
@@ -162,7 +246,7 @@ public class Ads {
       }
 
       public final void setImage(String image) {
-         this.image = StringUtils.isBlank(image) ? null : Ads.parseImage(image);
+         this.image = StringUtils.isBlank(image) ? null : Notices.parseImage(image);
       }
 
       public String toString() {
@@ -186,16 +270,16 @@ public class Ads {
       }
    }
 
-   public static class AdList {
+   public static class NoticeList {
       private final String name;
       private final List list = new ArrayList();
       private final List unmodifiable;
-      private final Ads.Ad[] chances;
+      private final Notices.Notice[] chances;
       private int totalChance;
 
-      public AdList(String name) {
+      public NoticeList(String name) {
          this.unmodifiable = Collections.unmodifiableList(this.list);
-         this.chances = new Ads.Ad[100];
+         this.chances = new Notices.Notice[100];
          this.totalChance = 0;
          if (name == null) {
             throw new NullPointerException("name");
@@ -210,7 +294,7 @@ public class Ads {
          return this.name;
       }
 
-      public final List getAds() {
+      public final List getList() {
          return this.unmodifiable;
       }
 
@@ -218,19 +302,19 @@ public class Ads {
          return this.list;
       }
 
-      public final Ads.Ad getRandom() {
+      public final Notices.Notice getRandom() {
          return this.chances[(new Random()).nextInt(100)];
       }
 
-      protected void add(Ads.Ad ad) {
-         if (ad == null) {
+      protected void add(Notices.Notice notice) {
+         if (notice == null) {
             throw new NullPointerException();
-         } else if (this.totalChance + ad.chance > 100) {
-            throw new IllegalArgumentException("chance overflow: " + (this.totalChance + ad.chance));
+         } else if (this.totalChance + notice.chance > 100) {
+            throw new IllegalArgumentException("chance overflow: " + (this.totalChance + notice.chance));
          } else {
-            this.list.add(ad);
-            Arrays.fill(this.chances, this.totalChance, this.totalChance + ad.chance, ad);
-            this.totalChance += ad.chance;
+            this.list.add(notice);
+            Arrays.fill(this.chances, this.totalChance, this.totalChance + notice.chance, notice);
+            this.totalChance += notice.chance;
          }
       }
 
@@ -239,20 +323,25 @@ public class Ads {
       }
    }
 
-   public static class Deserializer implements JsonDeserializer {
-      public Ads deserialize(JsonElement root, Type type, JsonDeserializationContext context) throws JsonParseException {
-         Ads ads = new Ads();
-         JsonObject rootObject = root.getAsJsonObject();
-         Iterator var7 = rootObject.entrySet().iterator();
+   public static enum NoticeType {
+      NOTICE(false),
+      WARNING(false),
+      AD_SERVER,
+      AD_YOUTUBE,
+      AD_OTHER;
 
-         while(var7.hasNext()) {
-            Entry entry = (Entry)var7.next();
-            String listName = (String)entry.getKey();
-            JsonObject adObj = ((JsonElement)entry.getValue()).getAsJsonObject();
-            ads.add(listName, new Ads.Ad(adObj.has("chance") ? adObj.get("chance").getAsInt() : 100, adObj.get("content").getAsString(), IntegerArray.parseIntegerArray(adObj.get("size").getAsString(), 'x').toArray(), adObj.has("image") ? adObj.get("image").getAsString() : null));
-         }
+      private final boolean advert;
 
-         return ads;
+      private NoticeType(boolean advert) {
+         this.advert = advert;
+      }
+
+      private NoticeType() {
+         this(true);
+      }
+
+      public boolean isAdvert() {
+         return this.advert;
       }
    }
 }

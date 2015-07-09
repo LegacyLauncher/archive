@@ -2,7 +2,7 @@ package ru.turikhay.tlauncher.ui.settings;
 
 import java.io.IOException;
 import java.io.StringReader;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
@@ -12,22 +12,22 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
-public class AboutPage extends BorderPanel implements LocalizableComponent {
-   private final AboutPage.AboutPageTokenResolver resolver;
+public class HTMLPage extends BorderPanel implements LocalizableComponent {
+   private final HTMLPage.AboutPageTokenResolver resolver;
    private final String source;
    private final EditorPane editor;
 
-   AboutPage() {
+   HTMLPage(String resourceName) {
       String tempSource;
       try {
-         tempSource = FileUtil.getResource(this.getClass().getResource("about.html"));
-      } catch (Exception var3) {
-         U.log(var3);
+         tempSource = FileUtil.getResource(this.getClass().getResource(resourceName));
+      } catch (Exception var4) {
+         U.log(var4);
          tempSource = null;
       }
 
       this.source = tempSource;
-      this.resolver = new AboutPage.AboutPageTokenResolver((AboutPage.AboutPageTokenResolver)null);
+      this.resolver = new HTMLPage.AboutPageTokenResolver((HTMLPage.AboutPageTokenResolver)null);
       this.editor = new EditorPane();
       this.updateLocale();
       this.setCenter(this.editor);
@@ -72,7 +72,6 @@ public class AboutPage extends BorderPanel implements LocalizableComponent {
    private class AboutPageTokenResolver implements ITokenResolver {
       private static final String image = "image:";
       private static final String loc = "loc:";
-      private static final String width = "width";
       private static final String color = "color";
 
       private AboutPageTokenResolver() {
@@ -80,18 +79,16 @@ public class AboutPage extends BorderPanel implements LocalizableComponent {
 
       public String resolveToken(String token) {
          if (token.startsWith("image:")) {
-            return ImageCache.getRes(token.substring("image:".length())).toExternalForm();
+            return Images.getRes(token.substring("image:".length())).toExternalForm();
          } else if (token.startsWith("loc:")) {
             return Localizable.get(token.substring("loc:".length()));
-         } else if (token.equals("width")) {
-            return "445";
          } else {
             return token.equals("color") ? "black" : token;
          }
       }
 
       // $FF: synthetic method
-      AboutPageTokenResolver(AboutPage.AboutPageTokenResolver var2) {
+      AboutPageTokenResolver(HTMLPage.AboutPageTokenResolver var2) {
          this();
       }
    }

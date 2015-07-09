@@ -5,10 +5,10 @@ import javax.swing.BoxLayout;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.BlockablePanel;
-import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
 import ru.turikhay.tlauncher.ui.swing.CheckBoxListener;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 
 public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProcessListener {
    private static final long serialVersionUID = 768489049585749260L;
@@ -29,7 +29,11 @@ public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProc
          public void itemStateChanged(boolean newstate) {
             CheckBoxPanel.this.loginForm.autologin.setEnabled(newstate);
             if (newstate) {
-               Alert.showLocAsyncMessage("loginform.checkbox.autologin.tip.title", "loginform.checkbox.autologin.tip", Localizable.get("loginform.checkbox.autologin.tip.arg"));
+               AsyncThread.execute(new Runnable() {
+                  public void run() {
+                     Alert.showLocMessage("loginform.checkbox.autologin.tip");
+                  }
+               });
             }
 
          }

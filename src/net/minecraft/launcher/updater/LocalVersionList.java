@@ -6,17 +6,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Set;
+import javax.swing.JFrame;
 import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 
 public class LocalVersionList extends StreamVersionList {
+   private FileExplorer explorer;
+   private JFrame parent;
    private File baseDirectory;
    private File baseVersionsDir;
 
-   public LocalVersionList(File baseDirectory) throws IOException {
-      this.setBaseDirectory(baseDirectory);
+   public LocalVersionList() throws IOException {
+      this.setBaseDirectory(MinecraftUtil.getWorkingDirectory());
    }
 
    public File getBaseDirectory() {
@@ -26,9 +31,11 @@ public class LocalVersionList extends StreamVersionList {
    public void setBaseDirectory(File directory) throws IOException {
       if (directory == null) {
          throw new IllegalArgumentException("Base directory is NULL!");
+      } else if (!directory.isDirectory()) {
+         throw new IOException("Directory is not yet created!");
+      } else if (!directory.canWrite()) {
+         throw new IOException("Directory is not accessible!");
       } else {
-         FileUtil.createFolder(directory);
-         this.log(new Object[]{"Base directory:", directory.getAbsolutePath()});
          this.baseDirectory = directory;
          this.baseVersionsDir = new File(this.baseDirectory, "versions");
       }

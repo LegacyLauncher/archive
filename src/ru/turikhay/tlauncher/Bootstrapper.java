@@ -168,7 +168,8 @@ public final class Bootstrapper {
    public static enum LoadingStep {
       INITALIZING(21),
       LOADING_CONFIGURATION(35),
-      LOADING_CONSOLE(41),
+      LOADING_LOOKANDFEEL(41),
+      LOADING_CONSOLE(44),
       LOADING_MANAGERS(51),
       LOADING_WINDOW(62),
       PREPARING_MAINPANE(77),

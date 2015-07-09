@@ -250,7 +250,13 @@ public class Account {
    }
 
    public String toDebugString() {
-      return "Account" + this.createMap();
+      Map map = this.createMap();
+      if (map.containsKey("accessToken")) {
+         map.remove("accessToken");
+         map.put("accessToken", "(not null)");
+      }
+
+      return "Account" + map;
    }
 
    public static Account randomAccount() {
