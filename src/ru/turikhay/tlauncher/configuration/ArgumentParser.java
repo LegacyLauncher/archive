@@ -12,25 +12,51 @@ import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 public class ArgumentParser {
-   private static Map m = createLinkMap();
-   private static OptionParser parser = createParser();
+   private static final Map m = new HashMap();
+   private static final OptionParser parser;
+
+   static {
+      m.put("directory", "minecraft.gamedir");
+      m.put("java-directory", "minecraft.javadir");
+      m.put("version", "login.version");
+      m.put("username", "login.account");
+      m.put("usertype", "login.account.type");
+      m.put("javaargs", "minecraft.javaargs");
+      m.put("margs", "minecraft.args");
+      m.put("window", "minecraft.size");
+      m.put("background", "gui.background");
+      m.put("fullscreen", "minecraft.fullscreen");
+      m.put("-block-settings", "gui.settings.blocked");
+      parser = new OptionParser();
+      parser.accepts("help", "Shows this help");
+      parser.accepts("nogui", "Starts minimal version");
+      parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
+      parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();
+      parser.accepts("version", "Specifies version to run").withRequiredArg();
+      parser.accepts("username", "Specifies username").withRequiredArg();
+      parser.accepts("usertype", "Specifies user type (if multiple with the same name)").withRequiredArg();
+      parser.accepts("javaargs", "Specifies JVM arguments").withRequiredArg();
+      parser.accepts("margs", "Specifies Minecraft arguments").withRequiredArg();
+      parser.accepts("window", "Specifies window size in format: width;height").withRequiredArg();
+      parser.accepts("settings", "Specifies path to settings file").withRequiredArg();
+      parser.accepts("background", "Specifies background image. URL links, JPEG and PNG formats are supported.").withRequiredArg();
+      parser.accepts("fullscreen", "Specifies whether fullscreen mode enabled or not").withRequiredArg();
+      parser.accepts("block-settings", "Disables settings and folder buttons");
+   }
 
    public static OptionParser getParser() {
       return parser;
    }
 
    public static OptionSet parseArgs(String[] args) throws IOException {
-      OptionSet set = null;
-
       try {
-         set = parser.parse(args);
-      } catch (OptionException var3) {
-         var3.printStackTrace();
+         return parser.parse(args);
+      } catch (OptionException var2) {
+         var2.printStackTrace();
          parser.printHelpOn((OutputStream)System.out);
-         Alert.showError(var3, false);
+         Alert.showError(var2, false);
+         return null;
       }
-
-      return set;
    }
 
    public static Map parse(OptionSet set) {
@@ -60,36 +86,5 @@ public class ArgumentParser {
 
          return r;
       }
-   }
-
-   private static Map createLinkMap() {
-      Map r = new HashMap();
-      r.put("directory", "minecraft.gamedir");
-      r.put("java-directory", "minecraft.javadir");
-      r.put("version", "login.version");
-      r.put("username", "login.account");
-      r.put("javaargs", "minecraft.javaargs");
-      r.put("margs", "minecraft.args");
-      r.put("window", "minecraft.size");
-      r.put("background", "gui.background");
-      r.put("fullscreen", "minecraft.fullscreen");
-      return r;
-   }
-
-   private static OptionParser createParser() {
-      OptionParser parser = new OptionParser();
-      parser.accepts("help", "Shows this help");
-      parser.accepts("nogui", "Starts minimal version");
-      parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
-      parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();
-      parser.accepts("version", "Specifies version to run").withRequiredArg();
-      parser.accepts("username", "Specifies username").withRequiredArg();
-      parser.accepts("javaargs", "Specifies JVM arguments").withRequiredArg();
-      parser.accepts("margs", "Specifies Minecraft arguments").withRequiredArg();
-      parser.accepts("window", "Specifies window size in format: width;height").withRequiredArg();
-      parser.accepts("settings", "Specifies path to settings file").withRequiredArg();
-      parser.accepts("background", "Specifies background image. URL links, JPEG and PNG formats are supported.").withRequiredArg();
-      parser.accepts("fullscreen", "Specifies whether fullscreen mode enabled or not").withRequiredArg();
-      return parser;
    }
 }

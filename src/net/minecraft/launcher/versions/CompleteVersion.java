@@ -300,24 +300,20 @@ public class CompleteVersion implements Version, Cloneable {
          throw new NullPointerException("version manager");
       } else if (this.inheritsFrom == null) {
          return this;
+      } else if (inheristance.contains(this.id)) {
+         throw new IllegalArgumentException(this.id + " should be already resolved.");
       } else {
-         this.log("Resolving...");
-         if (inheristance.contains(this.id)) {
-            throw new IllegalArgumentException(this.id + " should be already resolved.");
-         } else {
-            inheristance.add(this.id);
-            this.log("Inherits from", this.inheritsFrom);
-            VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(this.inheritsFrom);
+         inheristance.add(this.id);
+         VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(this.inheritsFrom);
 
-            CompleteVersion result;
-            try {
-               result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
-            } catch (CloneNotSupportedException var7) {
-               throw new RuntimeException(var7);
-            }
-
-            return this.copyInto(result);
+         CompleteVersion result;
+         try {
+            result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
+         } catch (CloneNotSupportedException var7) {
+            throw new RuntimeException(var7);
          }
+
+         return this.copyInto(result);
       }
    }
 
@@ -350,8 +346,6 @@ public class CompleteVersion implements Version, Cloneable {
 
       ArrayList rulesCopy;
       if (this.libraries != null) {
-         U.log("result libraries", result.libraries);
-         U.log("own libraries:", this.libraries);
          rulesCopy = new ArrayList();
          rulesCopy.addAll(this.libraries);
          if (result.libraries != null) {

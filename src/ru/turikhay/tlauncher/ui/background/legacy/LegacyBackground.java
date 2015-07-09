@@ -5,14 +5,14 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.ImageObserver;
 import ru.turikhay.tlauncher.ui.background.BackgroundHolder;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.U;
 
 public class LegacyBackground extends PaintBackground {
    private static final long serialVersionUID = -3732711088655124975L;
-   private Image grass = ImageCache.getImage("grass.png");
-   private Image sun = ImageCache.getImage("sun.png");
-   private Image glow = ImageCache.getImage("glow.png");
+   private Image grass = Images.getImage("grass.png");
+   private Image sun = Images.getImage("sun.png");
+   private Image glow = Images.getImage("glow.png");
    private final int grassW;
    private final int grassH;
    private final int sunW;

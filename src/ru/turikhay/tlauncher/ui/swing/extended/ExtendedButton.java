@@ -7,11 +7,12 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
 
 public class ExtendedButton extends JButton {
    private static final long serialVersionUID = -2009736184875993130L;
 
-   protected ExtendedButton() {
+   public ExtendedButton() {
       this.init();
    }
 
@@ -33,6 +34,14 @@ public class ExtendedButton extends JButton {
    public ExtendedButton(String text, Icon icon) {
       super(text, icon);
       this.init();
+   }
+
+   public void setIcon(Icon icon) {
+      super.setIcon(icon);
+      if (icon instanceof ImageIcon) {
+         super.setDisabledIcon(((ImageIcon)icon).getDisabledInstance());
+      }
+
    }
 
    private void init() {

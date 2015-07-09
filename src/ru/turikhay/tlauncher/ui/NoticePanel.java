@@ -9,15 +9,16 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Iterator;
+import java.util.List;
+import javax.swing.JPopupMenu;
 import net.minecraft.launcher.updater.VersionSyncInfo;
-import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ServerList;
-import ru.turikhay.tlauncher.managers.VersionManager;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
@@ -25,18 +26,19 @@ import ru.turikhay.tlauncher.ui.swing.AnimatorAction;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.editor.ExtendedHTMLEditorKit;
-import ru.turikhay.tlauncher.ui.swing.editor.HyperlinkProcessor;
-import ru.turikhay.tlauncher.updater.Ads;
+import ru.turikhay.tlauncher.ui.swing.editor.ServerHyperlinkProcessor;
+import ru.turikhay.tlauncher.updater.Notices;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.Direction;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
-public class InfoPanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
+public class NoticePanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
    private static final int MARGIN = 10;
-   private static final float FONT_SIZE = 12.0F;
-   private final InfoPanel.InfoPanelAnimator animator = new InfoPanel.InfoPanelAnimator();
+   private static final float FONT_SIZE;
+   private final NoticePanel.InfoPanelAnimator animator = new NoticePanel.InfoPanelAnimator();
    private final EditorPane browser;
    private final DefaultScene parent;
    private final Object animationLock = new Object();
@@ -44,67 +46,60 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    private float opacity;
    private boolean shown;
    private boolean canshow;
-   private Ads ads;
+   private Notices ads;
    private String content;
    private int width;
    private int height;
+   private int mouseX;
+   private int mouseY;
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
 
-   public InfoPanel(DefaultScene p) {
+   static {
+      FONT_SIZE = OS.OSX.isCurrent() ? 10.0F : 12.0F;
+   }
+
+   public NoticePanel(DefaultScene p) {
       super(CenterPanel.tipTheme, new Insets(5, 10, 5, 10));
       this.parent = p;
-      this.browser = new EditorPane(this.getFont().deriveFont(12.0F));
+      this.browser = new EditorPane(this.getFont().deriveFont(FONT_SIZE));
       if (this.browser.getEditorKit() instanceof ExtendedHTMLEditorKit) {
-         ((ExtendedHTMLEditorKit)this.browser.getEditorKit()).setHyperlinkProcessor(new HyperlinkProcessor() {
-            public void process(String link) {
-               if (link != null && link.startsWith("server:")) {
-                  if (!Blocker.isBlocked(InfoPanel.this.parent.loginForm)) {
-                     try {
-                        this.openServer(link);
-                     } catch (Exception var3) {
-                        Alert.showLocError("ad.server.error", new RuntimeException("link: \"" + link + "\"", var3));
-                     }
-                  }
-
-               } else {
-                  ExtendedHTMLEditorKit.defaultHyperlinkProcessor.process(link);
-               }
+         ((ExtendedHTMLEditorKit)this.browser.getEditorKit()).setHyperlinkProcessor(new ServerHyperlinkProcessor() {
+            public void showPopup(JPopupMenu menu) {
+               menu.show(NoticePanel.this.browser, NoticePanel.this.mouseX, (int)((float)NoticePanel.this.mouseY + NoticePanel.FONT_SIZE));
             }
 
-            private void openServer(String link) throws ParseException {
-               String[] info = StringUtils.split(link.substring("server:".length()), ';');
-               if (info.length != 4) {
-                  throw new ParseException("split incorrectly");
-               } else if (StringUtils.isEmpty(info[0])) {
-                  throw new ParseException("ip is not defined");
-               } else if (StringUtils.isEmpty(info[1])) {
-                  throw new ParseException("port is not defined");
-               } else {
-                  Integer.parseInt(info[1]);
-                  if (StringUtils.isEmpty(info[2])) {
-                     throw new ParseException("version is not defined");
-                  } else if (StringUtils.isEmpty(info[3])) {
-                     throw new ParseException("name is not defined");
-                  } else {
-                     VersionManager vm = TLauncher.getInstance().getVersionManager();
-                     VersionSyncInfo versionSync = vm.getVersionSyncInfo(info[2]);
-                     if (versionSync == null) {
-                        throw new IllegalArgumentException("cannot find version: " + info[2]);
-                     } else {
-                        LoginForm lf = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm;
-                        lf.versions.setSelectedValue(versionSync);
-                        if (!versionSync.equals(lf.versions.getSelectedItem())) {
-                           throw new RuntimeException("cannot select version: " + versionSync);
-                        } else {
-                           ServerList.Server server = new ServerList.Server();
-                           server.setName(info[3]);
-                           server.setVersion(info[2]);
-                           server.setAddress(info[0] + ':' + info[1]);
-                           lf.startLauncher(server);
-                        }
-                     }
+            public void open(VersionSyncInfo vs, ServerList.Server server) {
+               LoginForm lf = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm;
+               if (vs != null) {
+                  lf.versions.setSelectedValue(vs);
+                  if (!vs.equals(lf.versions.getSelectedValue())) {
+                     return;
                   }
+               }
+
+               Account account = (Account)lf.accounts.getSelectedValue();
+               if (account != null && !server.isAccountTypeAllowed(account.getType())) {
+                  List allowedList = server.getAllowedAccountTypeList();
+                  String message;
+                  if (allowedList.size() == 1) {
+                     message = Localizable.get("ad.server.choose-account", Localizable.get("account.type." + allowedList.get(0)));
+                  } else {
+                     StringBuilder messageBuilder = (new StringBuilder(Localizable.get("ad.server.choose-account.multiple"))).append('\n');
+                     Iterator var9 = allowedList.iterator();
+
+                     while(var9.hasNext()) {
+                        Account.AccountType type = (Account.AccountType)var9.next();
+                        messageBuilder.append(Localizable.get("ad.server.choose-account.multiple.prefix", Localizable.get("account.type." + type))).append('\n');
+                     }
+
+                     message = messageBuilder.substring(0, messageBuilder.length() - 1);
+                  }
+
+                  lf.scene.getMainPane().openAccountEditor();
+                  Alert.showError(Localizable.get("ad.server.choose-account.title"), message);
+               } else {
+                  lf.startLauncher(server);
                }
             }
          });
@@ -112,35 +107,37 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
 
       this.browser.addMouseListener(new MouseListener() {
          public void mouseClicked(MouseEvent e) {
-            if (!InfoPanel.this.onClick()) {
+            if (!NoticePanel.this.onClick()) {
                e.consume();
             }
 
          }
 
          public void mousePressed(MouseEvent e) {
-            if (!InfoPanel.this.isVisible()) {
+            if (!NoticePanel.this.isVisible()) {
                e.consume();
             }
 
+            NoticePanel.this.mouseX = e.getX();
+            NoticePanel.this.mouseY = e.getY();
          }
 
          public void mouseReleased(MouseEvent e) {
-            if (!InfoPanel.this.isVisible()) {
+            if (!NoticePanel.this.isVisible()) {
                e.consume();
             }
 
          }
 
          public void mouseEntered(MouseEvent e) {
-            if (!InfoPanel.this.isVisible()) {
+            if (!NoticePanel.this.isVisible()) {
                e.consume();
             }
 
          }
 
          public void mouseExited(MouseEvent e) {
-            if (!InfoPanel.this.isVisible()) {
+            if (!NoticePanel.this.isVisible()) {
                e.consume();
             }
 
@@ -310,41 +307,46 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    }
 
    public void onUpdaterSucceeded(Updater.SearchSucceeded succeeded) {
-      this.ads = succeeded.getResponse().getAds();
-      this.updateAd(true);
+      this.ads = succeeded.getResponse().getNotices();
+      this.updateNotice(true);
    }
 
-   public void updateAd(boolean animate) {
+   public void updateNotice(boolean animate) {
       this.hide(animate);
-      this.canshow = this.prepareAd();
+      this.canshow = this.prepareNotice();
       if (this.parent.getSidePanel() != DefaultScene.SidePanel.SETTINGS) {
          this.show(animate);
       }
 
    }
 
-   private boolean prepareAd() {
+   private boolean prepareNotice() {
       if (this.ads == null) {
          return false;
       } else {
          String locale = this.parent.getMainPane().getRootFrame().getLauncher().getSettings().getLocale().toString();
-         Ads.AdList adList = this.ads.getByName(locale);
-         if (adList != null && !adList.getAds().isEmpty()) {
-            Ads.Ad ad = adList.getRandom();
-            if (ad == null) {
+         Notices.NoticeList noticeList = this.ads.getByName(locale);
+         if (noticeList != null && !noticeList.getList().isEmpty()) {
+            Notices.Notice notice = noticeList.getRandom();
+            if (notice == null) {
                return false;
             } else {
-               StringBuilder builder = new StringBuilder();
-               builder.append("<table width=\"").append(ad.getWidth()).append("\" height=\"").append(ad.getHeight()).append("\"><tr><td align=\"center\" valign=\"center\">");
-               if (ad.getImage() != null) {
-                  builder.append("<img src=\"").append(ad.getImage()).append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
-               }
+               boolean isAllowed = !notice.getType().isAdvert() || this.tlauncher.getSettings().getBoolean("gui.notice." + notice.getType().name().toLowerCase());
+               if (!isAllowed) {
+                  return false;
+               } else {
+                  StringBuilder builder = new StringBuilder();
+                  builder.append("<table width=\"").append(notice.getWidth()).append("\" height=\"").append(notice.getHeight()).append("\"><tr><td align=\"center\" valign=\"center\">");
+                  if (notice.getImage() != null) {
+                     builder.append("<img src=\"").append(notice.getImage()).append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
+                  }
 
-               builder.append(ad.getContent());
-               builder.append("</td></tr></table>");
-               this.content = builder.toString();
-               this.setContent(this.content, ad.getWidth(), ad.getHeight());
-               return true;
+                  builder.append(notice.getContent());
+                  builder.append("</td></tr></table>");
+                  this.content = builder.toString();
+                  this.setContent(this.content, notice.getWidth(), notice.getHeight());
+                  return true;
+               }
             }
          } else {
             return false;
@@ -359,7 +361,7 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
    }
 
    public void updateLocale() {
-      this.updateAd(false);
+      this.updateNotice(false);
    }
 
    // $FF: synthetic method
@@ -452,10 +454,10 @@ public class InfoPanel extends CenterPanel implements ResizeableComponent, Updat
             AnimatorAction action = this.currentAction;
             switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction()[action.ordinal()]) {
             case 1:
-               InfoPanel.this.show(true);
+               NoticePanel.this.show(true);
                break;
             case 2:
-               InfoPanel.this.hide(true);
+               NoticePanel.this.hide(true);
                break;
             default:
                throw new RuntimeException("unknown action: " + this.currentAction);

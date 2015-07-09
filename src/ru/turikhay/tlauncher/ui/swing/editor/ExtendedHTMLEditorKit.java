@@ -10,8 +10,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.swing.JEditorPane;
 import javax.swing.JPopupMenu;
 import javax.swing.text.AttributeSet;
@@ -27,25 +25,9 @@ import javax.swing.text.html.HTMLEditorKit.HTMLFactory;
 import javax.swing.text.html.HTMLEditorKit.LinkController;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
-import ru.turikhay.util.OS;
 
 public class ExtendedHTMLEditorKit extends HTMLEditorKit {
    protected static final ExtendedHTMLEditorKit.ExtendedHTMLFactory extendedFactory = new ExtendedHTMLEditorKit.ExtendedHTMLFactory();
-   public static final HyperlinkProcessor defaultHyperlinkProcessor = new HyperlinkProcessor() {
-      public void process(String link) {
-         if (link != null) {
-            URI uri;
-            try {
-               uri = new URI(link);
-            } catch (URISyntaxException var4) {
-               Alert.showLocError("browser.hyperlink.create.error", var4);
-               return;
-            }
-
-            OS.openLink(uri);
-         }
-      }
-   };
    protected final ExtendedHTMLEditorKit.ExtendedLinkController linkController = new ExtendedHTMLEditorKit.ExtendedLinkController();
    private HyperlinkProcessor hlProc;
    private boolean processPopup;
@@ -54,7 +36,7 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
    private final JPopupMenu popup;
 
    public ExtendedHTMLEditorKit() {
-      this.hlProc = defaultHyperlinkProcessor;
+      this.hlProc = HyperlinkProcessor.defaultProcessor;
       this.processPopup = true;
       this.popup = new JPopupMenu();
       LocalizableMenuItem open = new LocalizableMenuItem("browser.hyperlink.popup.open");
@@ -106,7 +88,7 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
    }
 
    public final void setHyperlinkProcessor(HyperlinkProcessor processor) {
-      this.hlProc = processor == null ? defaultHyperlinkProcessor : processor;
+      this.hlProc = processor == null ? HyperlinkProcessor.defaultProcessor : processor;
    }
 
    public final boolean getProcessPopup() {

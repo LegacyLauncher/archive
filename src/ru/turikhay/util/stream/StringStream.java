@@ -1,16 +1,27 @@
 package ru.turikhay.util.stream;
 
 public class StringStream extends SafeOutputStream {
-   protected final StringBuffer buffer = new StringBuffer();
+   protected final StringBuilder buffer = new StringBuilder();
    protected int caret;
 
    public void write(int b) {
       this.write((char)b);
    }
 
-   protected void write(char c) {
+   protected synchronized void write(char c) {
       this.buffer.append(c);
       ++this.caret;
+   }
+
+   protected synchronized void write(CharSequence cs) {
+      if (cs == null) {
+         throw new NullPointerException();
+      } else {
+         for(int i = 0; i < cs.length(); ++i) {
+            this.write(cs.charAt(i));
+         }
+
+      }
    }
 
    public void write(char[] c) {
@@ -24,19 +35,8 @@ public class StringStream extends SafeOutputStream {
       }
    }
 
-   public char getCharAt(int i) {
-      return this.buffer.charAt(i);
-   }
-
-   public String getOutput() {
-      return this.buffer.toString();
-   }
-
-   public int getLength() {
-      return this.buffer.length();
-   }
-
-   public void clear() {
-      this.buffer.delete(0, this.buffer.length());
+   public synchronized void flush() {
+      this.caret = 0;
+      this.buffer.setLength(0);
    }
 }

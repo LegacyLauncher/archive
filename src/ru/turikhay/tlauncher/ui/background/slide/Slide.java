@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.background.slide;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.lang.ref.SoftReference;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import ru.turikhay.util.Reflect;
@@ -9,7 +10,7 @@ import ru.turikhay.util.U;
 
 public class Slide {
    private final URL url;
-   private Image image;
+   private SoftReference image = new SoftReference((Object)null);
 
    public Slide(URL url) {
       if (url == null) {
@@ -41,29 +42,34 @@ public class Slide {
    }
 
    public Image getImage() {
-      if (this.image == null) {
+      if (this.image.get() == null) {
          this.load();
       }
 
-      return this.image;
+      return (Image)this.image.get();
    }
 
    private void load() {
-      this.log("Loading from:", this.url);
-      BufferedImage tempImage = null;
+      if (this.image.get() == null) {
+         this.log("Loading image...");
+         BufferedImage tempImage = null;
 
-      try {
-         tempImage = ImageIO.read(this.url);
-      } catch (Throwable var3) {
-         this.log("Cannot load slide!", var3);
-         return;
-      }
+         try {
+            tempImage = ImageIO.read(this.url);
+         } catch (OutOfMemoryError var3) {
+            this.log("Not enough space to load image, as it's is too big!", var3);
+            return;
+         } catch (Throwable var4) {
+            this.log("Cannot load slide!", var4);
+            return;
+         }
 
-      if (tempImage == null) {
-         this.log("Image seems to be corrupted.");
-      } else {
-         this.log("Loaded successfully!");
-         this.image = tempImage;
+         if (tempImage == null) {
+            this.log("Image seems to be corrupted:", this.url);
+         } else {
+            this.log("Loaded successfully!");
+            this.image = new SoftReference(tempImage);
+         }
       }
    }
 

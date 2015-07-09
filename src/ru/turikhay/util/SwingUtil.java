@@ -12,7 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 
 public class SwingUtil {
    private static final List favicons = new ArrayList();
@@ -28,7 +28,7 @@ public class SwingUtil {
 
          for(int var3 = 0; var3 < var4; ++var3) {
             int i = var5[var3];
-            Image image = ImageCache.getImage("fav" + i + ".png", false);
+            Image image = Images.getImage("fav" + i + ".png", false);
             if (image != null) {
                loaded = loaded + ", " + i + "px";
                favicons.add(image);
@@ -49,12 +49,21 @@ public class SwingUtil {
       frame.setIconImages(getFavicons());
    }
 
-   public static void initLookAndFeel() {
+   public static boolean initLookAndFeel() {
       try {
          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+         return true;
       } catch (Exception var1) {
-         log("Can't set system look and feel.");
-         var1.printStackTrace();
+         log("Can't set system look and feel.", var1);
+         return false;
+      }
+   }
+
+   public static void resetLookAndFeel() {
+      try {
+         UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+      } catch (Exception var1) {
+         log("Can't set default look and feel!", var1);
       }
 
    }

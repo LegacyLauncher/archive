@@ -81,7 +81,10 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
             this.setActive(enabled);
          }
 
-         this.loginForm.checkbox.autologin.setSelected(enabled);
+         if (this.loginForm.checkbox.autologin.isSelected() != enabled) {
+            this.loginForm.checkbox.autologin.setSelected(enabled);
+         }
+
          this.loginForm.global.set("login.auto", enabled);
       }
    }

@@ -12,7 +12,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 
 public class ImageButton extends ExtendedButton {
@@ -140,7 +140,7 @@ public class ImageButton extends ExtendedButton {
    }
 
    protected static Image loadImage(String path) {
-      return ImageCache.getImage(path);
+      return Images.getImage(path);
    }
 
    protected void initImage() {

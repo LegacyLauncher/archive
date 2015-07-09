@@ -2,24 +2,18 @@ package ru.turikhay.tlauncher.ui.images;
 
 import java.awt.image.BufferedImage;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import javax.imageio.ImageIO;
 import ru.turikhay.tlauncher.exceptions.TLauncherException;
 
-public class ImageCache {
+public class Images {
    private static final boolean THROW_IF_ERROR = true;
-   private static final Map imageCache = Collections.synchronizedMap(new HashMap());
 
    public static BufferedImage loadImage(URL url, boolean throwIfError) {
       if (url == null) {
          throw new NullPointerException("URL is NULL");
       } else {
          try {
-            BufferedImage image = ImageIO.read(url);
-            imageCache.put(url, image);
-            return image;
+            return ImageIO.read(url);
          } catch (Exception var3) {
             if (throwIfError) {
                throw new TLauncherException("Cannot load required image: " + url, var3);
@@ -63,7 +57,24 @@ public class ImageCache {
       return getIcon(uri, 0, 0);
    }
 
+   public static URL getRes(String uri, boolean throwIfNull) {
+      if (uri == null) {
+         if (throwIfNull) {
+            throw new NullPointerException();
+         } else {
+            return null;
+         }
+      } else {
+         URL url = Images.class.getResource(uri);
+         if (url == null && throwIfNull) {
+            throw new RuntimeException("cannot find resource: \"" + uri + "\"");
+         } else {
+            return url;
+         }
+      }
+   }
+
    public static URL getRes(String uri) {
-      return uri == null ? null : ImageCache.class.getResource(uri);
+      return getRes(uri, true);
    }
 }

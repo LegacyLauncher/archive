@@ -10,12 +10,6 @@ public class PrintLogger extends PrintStream implements Logger {
    private Logger mirror;
    private Formatter formatter;
 
-   public PrintLogger(LinkedStringStream stream, PrintStream printMirror, Logger mirror) {
-      super(stream);
-      this.stream = stream;
-      this.mirror = mirror;
-   }
-
    private PrintLogger(LinkedStringStream stream, Logger mirror) {
       super(stream);
       this.stream = stream;
@@ -81,7 +75,7 @@ public class PrintLogger extends PrintStream implements Logger {
          s = "null";
       }
 
-      this.stream.write(s.toCharArray());
+      this.stream.write(s);
    }
 
    public synchronized void print(char c) {
@@ -113,10 +107,6 @@ public class PrintLogger extends PrintStream implements Logger {
    }
 
    public synchronized void print(String s) {
-      if (s == null) {
-         s = "null";
-      }
-
       this.write(s);
    }
 

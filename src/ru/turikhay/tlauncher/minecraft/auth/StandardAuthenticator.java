@@ -82,22 +82,32 @@ public class StandardAuthenticator extends Authenticator {
             } else {
                jsonResult = AuthenticatorService.performPostRequest(url, this.gson.toJson((Object)input), "application/json");
             }
-         } catch (IOException var6) {
-            throw new AuthenticatorException("Error making request, uncaught IOException", "unreachable", var6);
+         } catch (IOException var8) {
+            throw new AuthenticatorException("Error making request, uncaught IOException", "unreachable", var8);
          }
 
-         StandardAuthenticator.Response result = (StandardAuthenticator.Response)this.gson.fromJson(jsonResult, classOfT);
+         StandardAuthenticator.Response result;
+         try {
+            result = (StandardAuthenticator.Response)this.gson.fromJson(jsonResult, classOfT);
+         } catch (RuntimeException var7) {
+            throw new AuthenticatorException("Error parsing response: \"" + jsonResult + "\"", "unparseable", var7);
+         }
+
          if (result == null) {
             return null;
          } else if (StringUtils.isBlank(result.getError())) {
             return result;
-         } else if ("UserMigratedException".equals(result.getCause())) {
-            throw new UserMigratedException();
-         } else if ("ForbiddenOperationException".equals(result.getError())) {
-            throw new InvalidCredentialsException();
          } else {
-            throw new AuthenticatorException(result.getErrorMessage(), "internal");
+            throw this.getException(result);
          }
+      }
+   }
+
+   protected AuthenticatorException getException(StandardAuthenticator.Response result) {
+      if ("UserMigratedException".equals(result.getCause())) {
+         return new UserMigratedException();
+      } else {
+         return (AuthenticatorException)("ForbiddenOperationException".equals(result.getError()) ? new InvalidCredentialsException() : new AuthenticatorException(result, "internal"));
       }
    }
 

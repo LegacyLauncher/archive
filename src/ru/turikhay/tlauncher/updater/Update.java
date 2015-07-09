@@ -4,7 +4,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.annotations.Expose;
 import com.google.gson.reflect.TypeToken;
 import java.io.File;
@@ -62,13 +61,17 @@ public class Update {
       this.listeners = Collections.synchronizedList(new ArrayList());
    }
 
-   public Update(double version, Map description, Map links) {
+   public Update(double version, double requiredAtLeastFor, Map description, Map links) {
       this.state = Update.State.NONE;
       this.downloader = this.getDefaultDownloader();
       this.listeners = Collections.synchronizedList(new ArrayList());
       this.version = version;
+      this.requiredAtLeastFor = requiredAtLeastFor;
       if (description != null) {
          this.description.putAll(description);
+         if (description.containsKey("ru_RU") && !description.containsKey("uk_UA")) {
+            this.description.put("uk_UA", (String)description.get("ru_RU"));
+         }
       }
 
       if (links != null) {
@@ -341,7 +344,16 @@ public class Update {
    }
 
    public static class Deserializer implements JsonDeserializer {
-      public Update deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+      public Update deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+         try {
+            return this.deserialize0(json, context);
+         } catch (Exception var5) {
+            U.log("Cannot parse update:", var5);
+            return new Update();
+         }
+      }
+
+      private Update deserialize0(JsonElement json, JsonDeserializationContext context) {
          JsonObject object = json.getAsJsonObject();
          Update update = new Update();
          update.version = object.get("version").getAsDouble();

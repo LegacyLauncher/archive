@@ -25,7 +25,7 @@ public class AccountHandler {
       this.scene = sc;
       this.list = this.scene.list;
       this.editor = this.scene.editor;
-      this.listener = new AuthUIListener(false, new AuthenticatorListener() {
+      this.listener = new AuthUIListener(new AuthenticatorListener() {
          public void onAuthPassing(Authenticator auth) {
             AccountHandler.this.block();
          }
@@ -35,7 +35,6 @@ public class AccountHandler {
          }
 
          public void onAuthPassed(Authenticator auth) {
-            TLauncher.getInstance().getElyManager().setRefreshAllowed(true);
             TLauncher.getInstance().getElyManager().refreshComponent();
             AccountHandler.this.unblock();
             AccountHandler.this.registerTemp();
@@ -114,7 +113,7 @@ public class AccountHandler {
    }
 
    void removeAccount() {
-      if (this.lastAccount != null) {
+      if (this.lastAccount != null && !this.list.model.isEmpty()) {
          Account acc = this.lastAccount;
          int num = this.list.model.indexOf(this.lastAccount) - 1;
          this.list.model.removeElement(this.lastAccount);
@@ -138,7 +137,7 @@ public class AccountHandler {
    void registerTemp() {
       if (this.tempAccount != null) {
          this.manager.getAuthDatabase().registerAccount(this.tempAccount);
-         this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount.getUsername());
+         this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount);
          int num = this.list.model.indexOf(this.tempAccount);
          this.list.list.setSelectedIndex(num);
          this.tempAccount = null;

@@ -2,8 +2,11 @@ package ru.turikhay.tlauncher.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Properties;
+import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.util.U;
 
 public class LangConfiguration extends SimpleConfiguration {
    private final Locale[] locales;
@@ -18,10 +21,11 @@ public class LangConfiguration extends SimpleConfiguration {
          this.locales = locales;
          this.prop = new Properties[size];
 
-         for(int i = 0; i < size; ++i) {
-            Locale locale = locales[i];
+         int defLocale;
+         for(defLocale = 0; defLocale < size; ++defLocale) {
+            Locale locale = locales[defLocale];
             if (locale == null) {
-               throw new NullPointerException("Locale at #" + i + " is NULL!");
+               throw new NullPointerException("Locale at #" + defLocale + " is NULL!");
             }
 
             String localeName = locale.toString();
@@ -30,9 +34,46 @@ public class LangConfiguration extends SimpleConfiguration {
                throw new IOException("Cannot find locale file for: " + localeName);
             }
 
-            this.prop[i] = loadFromStream(stream);
+            this.prop[defLocale] = loadFromStream(stream);
             if (localeName.equals("en_US")) {
-               copyProperties(this.prop[i], this.properties, true);
+               copyProperties(this.prop[defLocale], this.properties, true);
+            }
+         }
+
+         defLocale = -1;
+
+         int i;
+         for(i = 0; i < size; ++i) {
+            if (locales[i].toString().equals("ru_RU")) {
+               defLocale = i;
+               break;
+            }
+         }
+
+         if (TLauncher.getDebug() && defLocale != -1) {
+            Iterator var10 = this.prop[defLocale].keySet().iterator();
+
+            while(var10.hasNext()) {
+               Object key = var10.next();
+
+               for(int i = 0; i < size; ++i) {
+                  if (i != defLocale && !this.prop[i].containsKey(key)) {
+                     U.log("Locale", locales[i], "doesn't contain key", key);
+                  }
+               }
+            }
+
+            for(i = 0; i < size; ++i) {
+               if (i != defLocale) {
+                  Iterator var13 = this.prop[i].keySet().iterator();
+
+                  while(var13.hasNext()) {
+                     Object key = var13.next();
+                     if (!this.prop[defLocale].containsKey(key)) {
+                        U.log("Locale", locales[i], "contains redundant key", key);
+                     }
+                  }
+               }
             }
          }
 

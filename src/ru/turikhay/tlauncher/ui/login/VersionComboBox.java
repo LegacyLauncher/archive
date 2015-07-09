@@ -49,6 +49,8 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
             VersionSyncInfo selected = VersionComboBox.this.getVersion();
             if (selected != null) {
                VersionComboBox.this.selectedVersion = selected.getID();
+               VersionComboBox.this.loginForm.global.setForcefully("login.version", VersionComboBox.this.selectedVersion, false);
+               VersionComboBox.this.loginForm.global.store();
             }
 
          }

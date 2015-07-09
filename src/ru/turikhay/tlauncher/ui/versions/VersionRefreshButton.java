@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.JPopupMenu;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.ui.block.Blockable;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
@@ -127,7 +127,7 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
       final Image image;
 
       private ButtonState(String image) {
-         this.image = ImageCache.getImage(image);
+         this.image = Images.getImage(image);
       }
    }
 }

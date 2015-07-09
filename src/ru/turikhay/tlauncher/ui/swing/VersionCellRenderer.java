@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.swing;
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
@@ -11,7 +10,8 @@ import net.minecraft.launcher.updater.LatestVersionSyncInfo;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.U;
 
@@ -20,7 +20,7 @@ public class VersionCellRenderer implements ListCellRenderer {
    public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
    private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
    private final int averageColor = (new Color(128, 128, 128, 255)).getRGB();
-   private static final Icon ELY_ICON = ImageCache.getIcon("ely.png");
+   private static final ImageIcon ELY_ICON = Images.getIcon("ely.png");
    // $FF: synthetic field
    private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
 
@@ -62,10 +62,10 @@ public class VersionCellRenderer implements ListCellRenderer {
 
       label = Localizable.nget(label);
       switch($SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType()[type.ordinal()]) {
-      case 3:
+      case 4:
          id = id.substring(1);
          break;
-      case 4:
+      case 5:
          id = id.startsWith("a") ? id.substring(1) : id;
       }
 
@@ -86,22 +86,17 @@ public class VersionCellRenderer implements ListCellRenderer {
          int[] var0 = new int[ReleaseType.values().length];
 
          try {
-            var0[ReleaseType.MODIFIED.ordinal()] = 6;
-         } catch (NoSuchFieldError var7) {
-         }
-
-         try {
-            var0[ReleaseType.OLD.ordinal()] = 5;
+            var0[ReleaseType.MODIFIED.ordinal()] = 3;
          } catch (NoSuchFieldError var6) {
          }
 
          try {
-            var0[ReleaseType.OLD_ALPHA.ordinal()] = 4;
+            var0[ReleaseType.OLD_ALPHA.ordinal()] = 5;
          } catch (NoSuchFieldError var5) {
          }
 
          try {
-            var0[ReleaseType.OLD_BETA.ordinal()] = 3;
+            var0[ReleaseType.OLD_BETA.ordinal()] = 4;
          } catch (NoSuchFieldError var4) {
          }
 
@@ -116,7 +111,7 @@ public class VersionCellRenderer implements ListCellRenderer {
          }
 
          try {
-            var0[ReleaseType.UNKNOWN.ordinal()] = 7;
+            var0[ReleaseType.UNKNOWN.ordinal()] = 6;
          } catch (NoSuchFieldError var1) {
          }
 

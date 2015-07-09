@@ -72,12 +72,26 @@ public class ImageIcon implements Icon {
       }
    }
 
+   public static ImageIcon get(Icon icon) {
+      if (icon == null) {
+         return null;
+      } else if (icon instanceof ImageIcon) {
+         return (ImageIcon)icon;
+      } else {
+         return icon instanceof ImageIcon.DisabledImageIcon ? ((ImageIcon.DisabledImageIcon)icon).getParent() : null;
+      }
+   }
+
    public class DisabledImageIcon implements Icon {
       private float disabledOpacity;
       private AlphaComposite opacityComposite;
 
       private DisabledImageIcon() {
          this.setDisabledOpacity(0.5F);
+      }
+
+      public final ImageIcon getParent() {
+         return ImageIcon.this;
       }
 
       public float getDisabledOpacity() {

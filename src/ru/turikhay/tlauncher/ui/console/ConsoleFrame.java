@@ -10,10 +10,6 @@ import java.awt.event.AdjustmentListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import javax.swing.Action;
 import javax.swing.BoundedRangeModel;
 import javax.swing.JFrame;
@@ -26,29 +22,26 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
-import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.explorer.ExtensionFileFilter;
-import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.EmptyAction;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
-import ru.turikhay.util.stream.StringStream;
+import ru.turikhay.util.pastebin.Paste;
+import ru.turikhay.util.pastebin.PasteListener;
 
-public class ConsoleFrame extends JFrame implements LocalizableComponent {
+public class ConsoleFrame extends JFrame implements PasteListener, LocalizableComponent {
    public static final int MIN_WIDTH = 670;
    public static final int MIN_HEIGHT = 500;
    public final Console console;
    public final JTextArea textarea;
    public final JScrollBar vScrollbar;
    public final ConsoleFrameBottom bottom;
+   public final ConsoleFrame.ConsoleTextPopup popup;
    private int lastWindowWidth;
    private int scrollBarValue;
    private boolean scrollDown;
@@ -68,7 +61,8 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       this.textarea.setBackground(Color.black);
       this.textarea.setSelectionColor(Color.gray);
       ((DefaultCaret)this.textarea.getCaret()).setUpdatePolicy(2);
-      this.textarea.addMouseListener(new ConsoleFrame.ConsoleTextPopup());
+      this.popup = new ConsoleFrame.ConsoleTextPopup();
+      this.textarea.addMouseListener(this.popup);
       ScrollPane scrollPane = new ScrollPane(this.textarea);
       scrollPane.setBorder((Border)null);
       scrollPane.setVBPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -135,6 +129,16 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
       Localizable.updateContainer(this);
    }
 
+   public void pasteUploading(Paste paste) {
+      this.bottom.pastebin.setEnabled(false);
+      this.popup.pastebinAction.setEnabled(false);
+   }
+
+   public void pasteDone(Paste paste) {
+      this.bottom.pastebin.setEnabled(true);
+      this.popup.pastebinAction.setEnabled(true);
+   }
+
    void hideIn(long millis) {
       this.hiding = true;
       this.bottom.closeCancelButton.setVisible(true);
@@ -148,7 +152,6 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
 
          public void run() {
             ConsoleFrame.this.bottom.closeCancelButton.setText("console.close.cancel", this.remaining / 1000L);
-            U.log(this.remaining);
 
             while(ConsoleFrame.this.hiding && this.remaining > 1999L) {
                this.remaining -= 1000L;
@@ -165,22 +168,23 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
    }
 
    public class ConsoleTextPopup extends TextPopup {
-      private final FileExplorer explorer = new FileExplorer();
-      private final Action saveAllAction;
-      private final Action clearAllAction;
+      private final Action saveAllAction = new EmptyAction() {
+         public void actionPerformed(ActionEvent e) {
+            ConsoleFrame.this.console.saveAs();
+         }
+      };
+      private final Action pastebinAction = new EmptyAction() {
+         public void actionPerformed(ActionEvent e) {
+            ConsoleFrame.this.console.sendPaste();
+         }
+      };
+      private final Action clearAllAction = new EmptyAction() {
+         public void actionPerformed(ActionEvent e) {
+            ConsoleTextPopup.this.onClearCalled();
+         }
+      };
 
       ConsoleTextPopup() {
-         this.explorer.setFileFilter(new ExtensionFileFilter("log"));
-         this.saveAllAction = new EmptyAction() {
-            public void actionPerformed(ActionEvent e) {
-               ConsoleTextPopup.this.onSavingCalled();
-            }
-         };
-         this.clearAllAction = new EmptyAction() {
-            public void actionPerformed(ActionEvent e) {
-               ConsoleTextPopup.this.onClearCalled();
-            }
-         };
       }
 
       protected JPopupMenu getPopup(MouseEvent e, JTextComponent comp) {
@@ -190,63 +194,10 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent {
          } else {
             menu.addSeparator();
             menu.add(this.saveAllAction).setText(Localizable.get("console.save.popup"));
+            menu.add(this.pastebinAction).setText(Localizable.get("console.pastebin"));
             menu.addSeparator();
             menu.add(this.clearAllAction).setText(Localizable.get("console.clear.popup"));
             return menu;
-         }
-      }
-
-      protected void onSavingCalled() {
-         this.explorer.setSelectedFile(new File(ConsoleFrame.this.console.getName() + ".log"));
-         int result = this.explorer.showSaveDialog(ConsoleFrame.this.console.frame);
-         if (result == 0) {
-            File file = this.explorer.getSelectedFile();
-            if (file == null) {
-               U.log("Returned NULL. Damn it!");
-            } else {
-               String path = file.getAbsolutePath();
-               if (!path.endsWith(".log")) {
-                  path = path + ".log";
-               }
-
-               file = new File(path);
-               BufferedOutputStream output = null;
-
-               try {
-                  FileUtil.createFile(file);
-                  StringStream input = ConsoleFrame.this.console.getStream();
-                  output = new BufferedOutputStream(new FileOutputStream(file));
-                  boolean addR = OS.WINDOWS.isCurrent();
-                  int caret = -1;
-
-                  while(true) {
-                     ++caret;
-                     if (caret >= input.getLength()) {
-                        output.close();
-                        break;
-                     }
-
-                     char current = input.getCharAt(caret);
-                     if (current == '\n' && addR) {
-                        output.write(13);
-                     }
-
-                     output.write(current);
-                  }
-               } catch (Throwable var17) {
-                  Alert.showLocError("console.save.error", var17);
-               } finally {
-                  if (output != null) {
-                     try {
-                        output.close();
-                     } catch (IOException var16) {
-                        var16.printStackTrace();
-                     }
-                  }
-
-               }
-
-            }
          }
       }
 

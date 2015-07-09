@@ -10,9 +10,10 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.event.ChangeEvent;
@@ -45,6 +46,7 @@ import ru.turikhay.tlauncher.ui.editor.TabbedEditorPanel;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginException;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
@@ -53,10 +55,9 @@ import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.Range;
 
-public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener {
+public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
    private final DefaultScene scene;
    private final TabbedEditorPanel.EditorPanelTab minecraftTab;
    public final EditorFieldHandler directory;
@@ -64,11 +65,12 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
    public final EditorFieldHandler fullscreen;
    public final EditorFieldHandler javaArgs;
    public final EditorFieldHandler mcArgs;
-   public final EditorFieldHandler javaPath;
+   public final EditorFieldHandler cmd;
    public final EditorFieldHandler memory;
    public final EditorGroupHandler versionHandler;
    private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
    public final EditorFieldHandler launcherResolution;
+   public final EditorFieldHandler systemTheme;
    public final EditorFieldHandler background;
    public final EditorFieldHandler loginFormDirection;
    public final EditorFieldHandler autologinTimeout;
@@ -78,7 +80,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
    public final EditorFieldHandler launchAction;
    public final EditorFieldHandler locale;
    private final TabbedEditorPanel.EditorPanelTab aboutTab;
-   public final AboutPage about;
+   public final HTMLPage about;
+   private final TabbedEditorPanel.EditorPanelTab serverTab;
+   public final HTMLPage serverPage;
    private final BorderPanel buttonPanel;
    private final LocalizableButton saveButton;
    private final LocalizableButton defaultButton;
@@ -97,7 +101,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.scene = sc;
       FocusListener warning = new FocusListener() {
          public void focusGained(FocusEvent e) {
-            SettingsPanel.this.setMessage("settings.warning");
+            SettingsPanel.this.setError("settings.warning");
          }
 
          public void focusLost(FocusEvent e) {
@@ -114,7 +118,17 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          }
       };
       this.minecraftTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.minecraft");
-      this.directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", new FileExplorer(1, true)), warning);
+
+      FileExplorer dirExplorer;
+      try {
+         dirExplorer = FileExplorer.newExplorer();
+         dirExplorer.setFileSelectionMode(1);
+         dirExplorer.setFileHidingEnabled(false);
+      } catch (InternalError var13) {
+         dirExplorer = null;
+      }
+
+      this.directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", dirExplorer), warning);
       this.directory.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
@@ -135,14 +149,16 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.fullscreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
       this.minecraftTab.add(new EditorPair("settings.client.resolution.label", new EditorHandler[]{this.resolution, this.fullscreen}));
       this.minecraftTab.nextPane();
-      ReleaseType[] releaseTypes = ReleaseType.getDefinable();
-      EditorFieldHandler[] versions = new EditorFieldHandler[releaseTypes.length];
+      List releaseTypes = ReleaseType.getDefinable();
+      List versions = new ArrayList(releaseTypes.size());
+      Iterator var8 = ReleaseType.getDefinable().iterator();
 
-      for(int i = 0; i < releaseTypes.length; ++i) {
-         ReleaseType releaseType = releaseTypes[i];
-         versions[i] = new EditorFieldHandler("minecraft.versions." + releaseType, new EditorCheckBox("settings.versions." + releaseType));
+      while(var8.hasNext()) {
+         ReleaseType releaseType = (ReleaseType)var8.next();
+         versions.add(new EditorFieldHandler("minecraft.versions." + releaseType, new EditorCheckBox("settings.versions." + releaseType)));
       }
 
+      versions.add(new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.OLD_RELEASE)));
       this.versionHandler = new EditorGroupHandler(versions);
       this.versionHandler.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldvalue, String newvalue) {
@@ -154,34 +170,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
       this.mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
       this.minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.mcArgs}));
-      final boolean isWindows = OS.WINDOWS.isCurrent();
-      this.javaPath = new EditorFieldHandler("minecraft.javadir", new EditorFileField("settings.java.path.prompt", true, new FileExplorer(isWindows ? 0 : 1, true)) {
-         public boolean isValueValid() {
-            if (this.checkPath()) {
-               return true;
-            } else {
-               Alert.showLocAsyncError("settings.java.path.doesnotexist");
-               return false;
-            }
-         }
-
-         private boolean checkPath() {
-            if (!isWindows) {
-               return true;
-            } else {
-               String path = this.getSettingsValue();
-               if (path == null) {
-                  return true;
-               } else if (!path.endsWith(".exe")) {
-                  return false;
-               } else {
-                  File javaDir = new File(path);
-                  return javaDir.isFile();
-               }
-            }
-         }
-      }, warning);
-      this.minecraftTab.add(new EditorPair("settings.java.path.label", new EditorHandler[]{this.javaPath}));
+      this.cmd = new EditorFieldHandler("minecraft.cmd", new EditorTextField("settings.java.cmd", true), warning);
+      this.minecraftTab.add(new EditorPair("settings.java.cmd.label", new EditorHandler[]{this.cmd}));
       this.minecraftTab.nextPane();
       this.memory = new EditorFieldHandler("minecraft.memory", new SettingsMemorySlider(), warning);
       this.minecraftTab.add(new EditorPair("settings.java.memory.label", new EditorHandler[]{this.memory}));
@@ -197,6 +187,16 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          }
       });
       this.tlauncherTab.add(new EditorPair("settings.clientres.label", new EditorHandler[]{this.launcherResolution}));
+      this.systemTheme = new EditorFieldHandler("gui.systemlookandfeel", new EditorCheckBox("settings.systemlnf"));
+      this.systemTheme.addListener(new EditorFieldChangeListener() {
+         protected void onChange(String oldValue, String newValue) {
+            if (SettingsPanel.this.tlauncher.isReady()) {
+               Alert.showLocWarning("settings.systemlnf.note.title", "settings.systemlnf.note." + newValue, (Object)null);
+            }
+
+         }
+      });
+      this.tlauncherTab.add(new EditorPair("settings.systemlnf.label", new EditorHandler[]{this.systemTheme}));
       this.tlauncherTab.nextPane();
       this.loginFormDirection = new EditorFieldHandler("gui.direction.loginform", new EditorComboBox(new DirectionConverter(), Direction.values()));
       this.loginFormDirection.addListener(new EditorFieldChangeListener() {
@@ -210,7 +210,15 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.autologinTimeout = new EditorFieldHandler("login.auto.timeout", new EditorIntegerRangeField(new Range(2, 10)));
       this.tlauncherTab.add(new EditorPair("settings.tlauncher.autologin.label", new EditorHandler[]{this.autologinTimeout}));
       this.tlauncherTab.nextPane();
-      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, new ImageFileExplorer()));
+
+      ImageFileExplorer imgExplorer;
+      try {
+         imgExplorer = ImageFileExplorer.newExplorer();
+      } catch (InternalError var12) {
+         imgExplorer = null;
+      }
+
+      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, imgExplorer));
       this.background.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
@@ -275,7 +283,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.fullCommand.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady() && "true".equals(newValue)) {
-               Alert.showLocAsyncWarning("settings.console.fullcommand.warning");
+               Alert.showLocWarning("settings.console.fullcommand.warning");
             }
 
          }
@@ -304,9 +312,14 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.tlauncherTab.add(new EditorPair("settings.lang.label", new EditorHandler[]{this.locale}));
       this.add(this.tlauncherTab);
       this.aboutTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.about");
-      this.about = new AboutPage();
+      this.aboutTab.setSavingEnabled(false);
+      this.about = new HTMLPage("about.html");
       this.aboutTab.add(this.about);
       this.add(this.aboutTab);
+      this.serverTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.server");
+      this.serverTab.setSavingEnabled(false);
+      this.serverPage = new HTMLPage("server.html");
+      this.serverTab.add(this.serverPage);
       this.saveButton = new LocalizableButton("settings.save");
       this.saveButton.setFont(this.saveButton.getFont().deriveFont(1));
       this.saveButton.addActionListener(new ActionListener() {
@@ -342,7 +355,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          private final String aboutBlock = "abouttab";
 
          public void stateChanged(ChangeEvent e) {
-            if (SettingsPanel.this.tabPane.getSelectedComponent() == SettingsPanel.this.aboutTab.getScroll()) {
+            if (SettingsPanel.this.tabPane.getSelectedComponent() instanceof TabbedEditorPanel.EditorScrollPane && !((TabbedEditorPanel.EditorScrollPane)SettingsPanel.this.tabPane.getSelectedComponent()).getTab().getSavingEnabled()) {
                Blocker.blockComponents((Object)"abouttab", (Component[])(SettingsPanel.this.buttonPanel));
             } else {
                Blocker.unblockComponents((Object)"abouttab", (Component[])(SettingsPanel.this.buttonPanel));
@@ -364,10 +377,10 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          }
       });
       this.popup.add(this.defaultItem);
-      Iterator var9 = this.handlers.iterator();
+      Iterator var10 = this.handlers.iterator();
 
-      while(var9.hasNext()) {
-         final EditorHandler handler = (EditorHandler)var9.next();
+      while(var10.hasNext()) {
+         final EditorHandler handler = (EditorHandler)var10.next();
          Component handlerComponent = handler.getComponent();
          handlerComponent.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -379,6 +392,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       }
 
       this.updateValues();
+      this.updateLocale();
    }
 
    void updateValues() {
@@ -419,6 +433,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          }
 
          this.global.store();
+         this.updateValues();
          return true;
       }
    }
@@ -490,5 +505,14 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
    }
 
    public void loginSucceed() {
+   }
+
+   public void updateLocale() {
+      if (this.tlauncher.getSettings().isUSSRLocale()) {
+         this.add(this.serverTab);
+      } else {
+         this.remove(this.serverTab);
+      }
+
    }
 }

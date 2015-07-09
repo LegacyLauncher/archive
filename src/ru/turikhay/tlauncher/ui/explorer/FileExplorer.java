@@ -4,38 +4,9 @@ import java.awt.Component;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.UIManager;
-import javax.swing.filechooser.FileSystemView;
 
 public class FileExplorer extends JFileChooser {
-   private static final long serialVersionUID = 3826379908958645663L;
-
-   public FileExplorer() {
-   }
-
-   public FileExplorer(String currentDirectoryPath) {
-      super(currentDirectoryPath);
-   }
-
-   public FileExplorer(int selectionMode, boolean showHidden) {
-      this();
-      this.setFileSelectionMode(selectionMode);
-      this.setFileHidingEnabled(!showHidden);
-   }
-
-   public FileExplorer(File currentDirectory) {
-      super(currentDirectory);
-   }
-
-   public FileExplorer(FileSystemView fsv) {
-      super(fsv);
-   }
-
-   protected FileExplorer(File currentDirectory, FileSystemView fsv) {
-      super(currentDirectory);
-   }
-
-   public FileExplorer(String currentDirectoryPath, FileSystemView fsv) {
-      super(currentDirectoryPath, fsv);
+   protected FileExplorer() {
    }
 
    public void setCurrentDirectory(File dir) {
@@ -62,6 +33,14 @@ public class FileExplorer extends JFileChooser {
       } else {
          File selectedFile = super.getSelectedFile();
          return selectedFile == null ? null : new File[]{selectedFile};
+      }
+   }
+
+   public static FileExplorer newExplorer() throws InternalError {
+      try {
+         return new FileExplorer();
+      } catch (Throwable var1) {
+         throw new InternalError("couldn't create explorer");
       }
    }
 }

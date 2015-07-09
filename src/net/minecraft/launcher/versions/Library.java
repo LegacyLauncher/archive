@@ -181,51 +181,55 @@ public class Library {
       InputStream in = null;
       JarOutputStream jos = null;
 
-      try {
-         InputStream in = new FileInputStream(library);
-         in = new XZInputStream(in);
-         forgeLibLog("Decompressing...");
-         byte[] decompressed = readFully(in);
-         forgeLibLog("Decompressed successfully");
-         String end = new String(decompressed, decompressed.length - 4, 4);
-         if (!end.equals("SIGN")) {
-            throw new RetryDownloadException("signature missing");
-         }
+      label61: {
+         try {
+            InputStream in = new FileInputStream(library);
+            in = new XZInputStream(in);
+            forgeLibLog("Decompressing...");
+            byte[] decompressed = readFully(in);
+            forgeLibLog("Decompressed successfully");
+            String end = new String(decompressed, decompressed.length - 4, 4);
+            if (!end.equals("SIGN")) {
+               throw new RetryDownloadException("signature missing");
+            }
 
-         forgeLibLog("Signature matches!");
-         int x = decompressed.length;
-         int len = decompressed[x - 8] & 255 | (decompressed[x - 7] & 255) << 8 | (decompressed[x - 6] & 255) << 16 | (decompressed[x - 5] & 255) << 24;
-         forgeLibLog("Now getting checksums...");
-         byte[] checksums = Arrays.copyOfRange(decompressed, decompressed.length - len - 8, decompressed.length - 8);
-         FileUtil.createFile(output);
-         FileOutputStream jarBytes = new FileOutputStream(output);
-         jos = new JarOutputStream(jarBytes);
-         forgeLibLog("Now unpacking...");
-         Pack200.newUnpacker().unpack(new ByteArrayInputStream(decompressed), jos);
-         forgeLibLog("Unpacked successfully");
-         forgeLibLog("Now trying to write checksums...");
-         jos.putNextEntry(new JarEntry("checksums.sha1"));
-         jos.write(checksums);
-         jos.closeEntry();
-         forgeLibLog("Now finishing...");
-      } catch (OutOfMemoryError var15) {
-         forgeLibLog("Out of memory, oops", var15);
-         U.gc();
-         if (retryOnOutOfMemory) {
+            forgeLibLog("Signature matches!");
+            int x = decompressed.length;
+            int len = decompressed[x - 8] & 255 | (decompressed[x - 7] & 255) << 8 | (decompressed[x - 6] & 255) << 16 | (decompressed[x - 5] & 255) << 24;
+            forgeLibLog("Now getting checksums...");
+            byte[] checksums = Arrays.copyOfRange(decompressed, decompressed.length - len - 8, decompressed.length - 8);
+            FileUtil.createFile(output);
+            FileOutputStream jarBytes = new FileOutputStream(output);
+            jos = new JarOutputStream(jarBytes);
+            forgeLibLog("Now unpacking...");
+            Pack200.newUnpacker().unpack(new ByteArrayInputStream(decompressed), jos);
+            forgeLibLog("Unpacked successfully");
+            forgeLibLog("Now trying to write checksums...");
+            jos.putNextEntry(new JarEntry("checksums.sha1"));
+            jos.write(checksums);
+            jos.closeEntry();
+            forgeLibLog("Now finishing...");
+            break label61;
+         } catch (OutOfMemoryError var15) {
+            forgeLibLog("Out of memory, oops", var15);
+            U.gc();
+            if (!retryOnOutOfMemory) {
+               throw var15;
+            }
+
             forgeLibLog("Retrying...");
             close(in, jos);
             FileUtil.deleteFile(library);
             unpackLibrary(library, output, false);
-            return;
+         } catch (IOException var16) {
+            output.delete();
+            throw var16;
+         } finally {
+            close(in, jos);
+            FileUtil.deleteFile(library);
          }
 
-         throw var15;
-      } catch (IOException var16) {
-         output.delete();
-         throw var16;
-      } finally {
-         close(in, jos);
-         FileUtil.deleteFile(library);
+         return;
       }
 
       forgeLibLog("Done:", output);

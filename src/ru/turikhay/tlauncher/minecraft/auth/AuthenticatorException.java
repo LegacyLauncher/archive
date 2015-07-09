@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.minecraft.auth;
 
 public class AuthenticatorException extends Exception {
    private static final long serialVersionUID = -6773418626800336871L;
+   private StandardAuthenticator.Response response;
    private String langpath;
 
    AuthenticatorException(String message) {
@@ -17,6 +18,12 @@ public class AuthenticatorException extends Exception {
       this.langpath = langpath;
    }
 
+   AuthenticatorException(StandardAuthenticator.Response response, String langpath) {
+      super(response.getErrorMessage());
+      this.response = response;
+      this.langpath = langpath;
+   }
+
    AuthenticatorException(String message, String langpath, Throwable cause) {
       super(message, cause);
       this.langpath = langpath;
@@ -24,5 +31,9 @@ public class AuthenticatorException extends Exception {
 
    public String getLangpath() {
       return this.langpath;
+   }
+
+   public StandardAuthenticator.Response getResponse() {
+      return this.response;
    }
 }

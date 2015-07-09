@@ -38,6 +38,10 @@ public class AuthenticatorDatabase {
       return Collections.unmodifiableCollection(this.accounts.values());
    }
 
+   public Account getByUUID(String uuid) {
+      return (Account)this.accounts.get(uuid);
+   }
+
    public Account getByUsername(String username, Account.AccountType type) {
       if (username == null) {
          throw new NullPointerException();

@@ -6,7 +6,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
@@ -61,6 +60,19 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
       }
    }
 
+   protected void remove(TabbedEditorPanel.EditorPanelTab tab) {
+      if (tab == null) {
+         throw new NullPointerException("tab is null");
+      } else {
+         int index = this.tabs.indexOf(tab);
+         if (index != -1) {
+            this.tabPane.removeTabAt(index);
+            this.tabs.remove(index);
+         }
+
+      }
+   }
+
    protected int getTabOf(EditorPair pair) {
       return this.tabPane.indexOfComponent(pair.getPanel());
    }
@@ -84,9 +96,11 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
       private final List constraints;
       private byte paneNum;
       private byte rowNum;
-      private final ScrollPane scroll;
+      private final TabbedEditorPanel.EditorScrollPane scroll;
+      private boolean savingEnabled;
 
       public EditorPanelTab(String name, String tip, Icon icon) {
+         this.savingEnabled = true;
          if (name == null) {
             throw new NullPointerException();
          } else if (name.isEmpty()) {
@@ -99,7 +113,7 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
             this.constraints = new ArrayList();
             this.setLayout(new BoxLayout(this, 3));
             this.setInsets(0, 10, 0, 10);
-            this.scroll = new ScrollPane(this);
+            this.scroll = TabbedEditorPanel.this.new EditorScrollPane(this);
          }
       }
 
@@ -119,8 +133,16 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
          return Localizable.get(this.tip);
       }
 
-      public ScrollPane getScroll() {
+      public TabbedEditorPanel.EditorScrollPane getScroll() {
          return this.scroll;
+      }
+
+      public boolean getSavingEnabled() {
+         return this.savingEnabled;
+      }
+
+      public void setSavingEnabled(boolean b) {
+         this.savingEnabled = b;
       }
 
       public void add(EditorPair pair) {
@@ -130,8 +152,8 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
          GridBagConstraints c;
          if (this.paneNum == this.panels.size()) {
             panel = new ExtendedPanel(new GridBagLayout());
-            panel.getInsets().set(0, 0, 0, 0);
             c = new GridBagConstraints();
+            c.insets = new Insets(2, 0, 2, 0);
             c.fill = 2;
             this.add(panel, TabbedEditorPanel.this.del(0));
             this.panels.add(panel);
@@ -153,7 +175,7 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
          c.gridx = 1;
          c.weightx = 1.0D;
          panel.add(field, c);
-         Collections.addAll(TabbedEditorPanel.this.handlers, pair.getHandlers());
+         TabbedEditorPanel.this.handlers.addAll(pair.getHandlers());
       }
 
       public void nextPane() {
@@ -169,6 +191,19 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
             TabbedEditorPanel.this.tabPane.setTitleAt(index, this.getTabName());
             TabbedEditorPanel.this.tabPane.setToolTipTextAt(index, this.getTabTip());
          }
+      }
+   }
+
+   public class EditorScrollPane extends ScrollPane {
+      private final TabbedEditorPanel.EditorPanelTab tab;
+
+      EditorScrollPane(TabbedEditorPanel.EditorPanelTab tab) {
+         super(tab);
+         this.tab = tab;
+      }
+
+      public TabbedEditorPanel.EditorPanelTab getTab() {
+         return this.tab;
       }
    }
 }

@@ -3,9 +3,8 @@ package ru.turikhay.tlauncher;
 import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Calendar;
-import java.util.Iterator;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.Locale;
 import javax.net.ssl.HttpsURLConnection;
 import joptsimple.OptionSet;
@@ -19,11 +18,8 @@ import ru.turikhay.tlauncher.managers.ComponentManager;
 import ru.turikhay.tlauncher.managers.ComponentManagerListenerHelper;
 import ru.turikhay.tlauncher.managers.ElyManager;
 import ru.turikhay.tlauncher.managers.ProfileManager;
-import ru.turikhay.tlauncher.managers.ProfileManagerListener;
 import ru.turikhay.tlauncher.managers.ServerList;
 import ru.turikhay.tlauncher.managers.VersionManager;
-import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
@@ -44,7 +40,8 @@ import ru.turikhay.util.stream.MirroredLinkedStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.5D;
+   private static final double VERSION = 1.571D;
+   private static final boolean DEBUG = false;
    private static final boolean BETA = false;
    private static TLauncher instance;
    private static String[] sargs;
@@ -52,13 +49,11 @@ public class TLauncher {
    private static PrintLogger print;
    private static Console console;
    private static Gson gson;
-   private TLauncher.TLauncherState state;
    private LangConfiguration lang;
    private Configuration settings;
    private Downloader downloader;
    private Updater updater;
    private TLauncherFrame frame;
-   private TLauncherLite lite;
    private ComponentManager manager;
    private VersionManager versionManager;
    private ProfileManager profileManager;
@@ -72,117 +67,87 @@ public class TLauncher {
    private static final String BRAND = "Legacy";
    private static final String FOLDER = "minecraft";
    private static final String DEVELOPER = "turikhay";
-   private static final String[] UPDATE_REPO = new String[]{"http://goo.gl/NKb9uI", "http://tlauncher.ru/update/update.json", "http://goo.gl/FnZ4Th", "http://turikhay.ru/tlauncher/update/update.json"};
+   private static final String[] UPDATE_REPO = new String[]{"http://tlauncher.ru/update/", "http://turikhay.1gb.ru/update.json", "http://turikhay.ru/tlauncher/update/update.json"};
    private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
-   private static final String[] EXTRA_REPO = new String[]{"http://tlauncher.ru/update/repo/", "http://turikhay.ru/tlauncher/repo/"};
+   private static final String[] EXTRA_REPO = new String[]{"http://tlauncher.ru/repo/", "http://turikhay.1gb.ru/repo/", "http://turikhay.ru/tlauncher/repo/"};
    private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/"};
    private static final String[] ASSETS_REPO = new String[]{"http://resources.download.minecraft.net/"};
    private static final String[] SERVER_LIST = new String[0];
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$TLauncher$TLauncherState;
+   private static boolean useSystemLookAndFeel = true;
 
-   private TLauncher(TLauncher.TLauncherState state, OptionSet set) throws Exception {
-      if (state == null) {
-         throw new IllegalArgumentException("TLauncherState can't be NULL!");
-      } else {
-         U.log("TLauncher is loading in state", state);
-         Time.start(this);
-         instance = this;
-         this.state = state;
-         this.args = set;
-         gson = new Gson();
-         File oldConfig = MinecraftUtil.getSystemRelatedFile("tlauncher.cfg");
-         File newConfig = MinecraftUtil.getSystemRelatedDirectory("tlauncher/legacy.properties");
-         if (!oldConfig.isFile()) {
-            oldConfig = MinecraftUtil.getSystemRelatedFile(".tlauncher/tlauncher.properties");
-         }
-
-         if (oldConfig.isFile() && !newConfig.isFile()) {
-            boolean copied = true;
-
-            try {
-               FileUtil.createFile(newConfig);
-               FileUtil.copyFile(oldConfig, newConfig, true);
-            } catch (IOException var7) {
-               U.log("Cannot copy old configuration to the new place", oldConfig, newConfig, var7);
-               copied = false;
-            }
-
-            if (copied) {
-               U.log("Old configuration successfully moved to the new place:", newConfig);
-               FileUtil.deleteFile(oldConfig);
-            }
-         }
-
-         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONFIGURATION);
-         this.settings = Configuration.createConfiguration(set);
-         this.reloadLocale();
-         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONSOLE);
-         console = new Console(this.settings, print, this.lang.get("console"), this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
-         console.setCloseAction(Console.CloseAction.KILL);
-         Console.updateLocale();
-         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
-         this.manager = new ComponentManager(this);
-         this.elyManager = (ElyManager)this.manager.loadComponent(ElyManager.class);
-         this.versionManager = (VersionManager)this.manager.loadComponent(VersionManager.class);
-         this.profileManager = (ProfileManager)this.manager.loadComponent(ProfileManager.class);
-         this.manager.loadComponent(ComponentManagerListenerHelper.class);
-         this.init();
-         U.log("Started! (" + Time.stop(this) + " ms.)");
-         this.ready = true;
-         U.setLoadingStep(Bootstrapper.LoadingStep.SUCCESS);
+   private TLauncher(OptionSet set) throws Exception {
+      Time.start(this);
+      instance = this;
+      this.args = set;
+      gson = new Gson();
+      File oldConfig = MinecraftUtil.getSystemRelatedFile("tlauncher.cfg");
+      File newConfig = MinecraftUtil.getSystemRelatedDirectory("tlauncher/legacy.properties");
+      if (!oldConfig.isFile()) {
+         oldConfig = MinecraftUtil.getSystemRelatedFile(".tlauncher/tlauncher.properties");
       }
+
+      if (oldConfig.isFile() && !newConfig.isFile()) {
+         boolean copied = true;
+
+         try {
+            FileUtil.createFile(newConfig);
+            FileUtil.copyFile(oldConfig, newConfig, true);
+         } catch (IOException var6) {
+            U.log("Cannot copy old configuration to the new place", oldConfig, newConfig, var6);
+            copied = false;
+         }
+
+         if (copied) {
+            U.log("Old configuration successfully moved to the new place:", newConfig);
+            FileUtil.deleteFile(oldConfig);
+         }
+      }
+
+      U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONFIGURATION);
+      this.settings = Configuration.createConfiguration(set);
+      useSystemLookAndFeel &= this.settings.getBoolean("gui.systemlookandfeel");
+      this.reloadLocale();
+      if (useSystemLookAndFeel) {
+         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_LOOKANDFEEL);
+         useSystemLookAndFeel = SwingUtil.initLookAndFeel();
+      }
+
+      this.settings.set("gui.systemlookandfeel", useSystemLookAndFeel, false);
+      U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONSOLE);
+      console = new Console(this.settings, print, this.lang.get("console"), this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
+      console.setCloseAction(Console.CloseAction.KILL);
+      Console.updateLocale();
+      U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
+      this.manager = new ComponentManager(this);
+      this.settings.set("minecraft.gamedir", MinecraftUtil.getWorkingDirectory(), false);
+      this.elyManager = (ElyManager)this.manager.loadComponent(ElyManager.class);
+      this.versionManager = (VersionManager)this.manager.loadComponent(VersionManager.class);
+      this.profileManager = (ProfileManager)this.manager.loadComponent(ProfileManager.class);
+      this.manager.loadComponent(ComponentManagerListenerHelper.class);
+      this.init();
+      U.log("Started! (" + Time.stop(this) + " ms.)");
+      this.ready = true;
+      U.setLoadingStep(Bootstrapper.LoadingStep.SUCCESS);
    }
 
    private void init() {
       this.downloader = new Downloader(this);
       this.minecraftListener = new MinecraftUIListener(this);
-      switch($SWITCH_TABLE$ru$turikhay$tlauncher$TLauncher$TLauncherState()[this.state.ordinal()]) {
-      case 1:
-         this.updater = new Updater();
-         this.updateListener = new RequiredUpdateListener(this.updater);
-         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_WINDOW);
-         this.frame = new TLauncherFrame(this);
-         LoginForm lf = this.frame.mp.defaultScene.loginForm;
-         U.setLoadingStep(Bootstrapper.LoadingStep.REFRESHING_INFO);
-         if (lf.autologin.isEnabled()) {
-            this.versionManager.startRefresh(true);
-            lf.autologin.setActive(true);
-         } else {
-            this.versionManager.asyncRefresh();
-            this.updater.asyncFindUpdate();
-         }
-
-         this.profileManager.addListener(new ProfileManagerListener() {
-            public void onAccountsRefreshed(AuthenticatorDatabase db) {
-               boolean allow = false;
-
-               Account check;
-               for(Iterator var4 = db.getAccounts().iterator(); var4.hasNext(); allow |= check.getType() == Account.AccountType.ELY) {
-                  check = (Account)var4.next();
-               }
-
-               TLauncher.this.elyManager.setRefreshAllowed(allow);
-               if (allow) {
-                  TLauncher.this.elyManager.asyncRefresh();
-               }
-
-            }
-
-            public void onProfilesRefreshed(ProfileManager pm) {
-               this.onAccountsRefreshed(pm.getAuthDatabase());
-            }
-
-            public void onProfileManagerChanged(ProfileManager pm) {
-               this.onAccountsRefreshed(pm.getAuthDatabase());
-            }
-         });
-         this.profileManager.refresh();
-         break;
-      case 2:
-         this.lite = new TLauncherLite(this);
+      this.updater = new Updater();
+      this.updateListener = new RequiredUpdateListener(this.updater);
+      U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_WINDOW);
+      this.frame = new TLauncherFrame(this);
+      LoginForm lf = this.frame.mp.defaultScene.loginForm;
+      U.setLoadingStep(Bootstrapper.LoadingStep.REFRESHING_INFO);
+      if (lf.autologin.isEnabled()) {
+         this.versionManager.startRefresh(true);
+         lf.autologin.setActive(true);
+      } else {
+         this.versionManager.asyncRefresh();
+         this.updater.asyncFindUpdate();
       }
 
+      this.profileManager.refresh();
    }
 
    public Downloader getDownloader() {
@@ -207,10 +172,6 @@ public class TLauncher {
 
    public TLauncherFrame getFrame() {
       return this.frame;
-   }
-
-   public TLauncherLite getLoader() {
-      return this.lite;
    }
 
    public static Console getConsole() {
@@ -325,48 +286,74 @@ public class TLauncher {
       Thread.setDefaultUncaughtExceptionHandler(handler);
       Thread.currentThread().setUncaughtExceptionHandler(handler);
       HttpsURLConnection.setDefaultHostnameVerifier(SimpleHostnameVerifier.getInstance());
-      U.setPrefix("[TLauncher]");
-      MirroredLinkedStringStream stream = new MirroredLinkedStringStream();
+      U.setPrefix(">>");
+      MirroredLinkedStringStream stream = new MirroredLinkedStringStream() {
+         public void flush() {
+            if (TLauncher.console == null) {
+               try {
+                  this.getMirror().flush();
+               } catch (IOException var2) {
+               }
+            } else {
+               super.flush();
+            }
+
+         }
+      };
       stream.setMirror(System.out);
       print = new PrintLogger(stream);
       stream.setLogger(print);
       System.setOut(print);
       U.setLoadingStep(Bootstrapper.LoadingStep.INITALIZING);
-      SwingUtil.initLookAndFeel();
 
       try {
          launch(args);
-      } catch (Throwable var4) {
+      } catch (Throwable var10) {
+         Throwable e = var10;
          U.log("Error launching TLauncher:");
-         var4.printStackTrace(print);
-         Alert.showError(var4, true);
+         var10.printStackTrace(print);
+         StackTraceElement[] var7;
+         int var6 = (var7 = var10.getStackTrace()).length;
+
+         for(int var5 = 0; var5 < var6; ++var5) {
+            StackTraceElement stE = var7[var5];
+            if (stE.toString().toLowerCase().contains("lookandfeel")) {
+               U.log("Found problem with L&F at:", stE);
+               if (useSystemLookAndFeel) {
+                  U.log("System L&F was used. Trying to reinit without it.");
+                  SwingUtil.resetLookAndFeel();
+                  useSystemLookAndFeel = false;
+
+                  try {
+                     launch(args);
+                     e = null;
+                  } catch (Throwable var9) {
+                     e = var9;
+                  }
+
+                  if (e == null) {
+                     return;
+                  }
+               } else {
+                  U.log("Default L&F was used. Nothing to do with it.");
+               }
+               break;
+            }
+         }
+
+         Alert.showError(e, true);
       }
 
    }
 
    private static void launch(String[] args) throws Exception {
-      U.log("Hello!");
-      U.log("Starting TLauncher", "Legacy", 1.5D, "by", "turikhay");
-      U.log("Have question? Find my e-mail in lang files.");
+      U.log("Starting TLauncher", "Legacy", 1.571D);
+      U.log("Beta: false, debug: false");
       U.log("Machine info:", OS.getSummary());
-      U.log("Startup time:", Calendar.getInstance().getTime());
+      U.log("Startup time:", DateFormat.getDateTimeInstance(3, 1).format(new Date()));
       U.log("---");
       sargs = args;
-      OptionSet set = ArgumentParser.parseArgs(args);
-      if (set == null) {
-         new TLauncher(TLauncher.TLauncherState.FULL, (OptionSet)null);
-      } else {
-         if (set.has("help")) {
-            ArgumentParser.getParser().printHelpOn((OutputStream)System.out);
-         }
-
-         TLauncher.TLauncherState state = TLauncher.TLauncherState.FULL;
-         if (set.has("nogui")) {
-            state = TLauncher.TLauncherState.MINIMAL;
-         }
-
-         new TLauncher(state, set);
-      }
+      new TLauncher(ArgumentParser.parseArgs(args));
    }
 
    public static String[] getArgs() {
@@ -394,10 +381,14 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.5D;
+      return 1.571D;
    }
 
    public static boolean isBeta() {
+      return false;
+   }
+
+   public static boolean getDebug() {
       return false;
    }
 
@@ -439,33 +430,5 @@ public class TLauncher {
 
    public static String[] getServerList() {
       return SERVER_LIST;
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$TLauncher$TLauncherState() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$TLauncher$TLauncherState;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[TLauncher.TLauncherState.values().length];
-
-         try {
-            var0[TLauncher.TLauncherState.FULL.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[TLauncher.TLauncherState.MINIMAL.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$TLauncher$TLauncherState = var0;
-         return var0;
-      }
-   }
-
-   public static enum TLauncherState {
-      FULL,
-      MINIMAL;
    }
 }

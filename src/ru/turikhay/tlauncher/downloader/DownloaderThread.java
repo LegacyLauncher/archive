@@ -11,7 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import ru.turikhay.util.FileUtil;
@@ -19,15 +18,13 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class DownloaderThread extends ExtendedThread {
+   private static final double SMOOTHING_FACTOR = 0.005D;
    private static final String ITERATION_BLOCK = "iteration";
-   private static final int CONTAINER_SIZE = 100;
    private static final int NOTIFY_TIMER = 15000;
    private final int ID;
    private final String LOGGER_PREFIX;
    private final Downloader downloader;
    private final List list;
-   private final double[] averageSpeedContainer;
-   private int speedCaret;
    private double currentProgress;
    private double lastProgress;
    private double doneProgress;
@@ -42,7 +39,6 @@ public class DownloaderThread extends ExtendedThread {
       this.LOGGER_PREFIX = "[D#" + id + "]";
       this.downloader = d;
       this.list = new ArrayList();
-      this.averageSpeedContainer = new double[100];
       this.startAndWait();
    }
 
@@ -125,7 +121,7 @@ public class DownloaderThread extends ExtendedThread {
             }
          }
 
-         Arrays.fill(this.averageSpeedContainer, 0.0D);
+         this.speed = 0.0D;
          this.list.clear();
          this.lockThread("iteration");
          this.launched = false;
@@ -208,10 +204,10 @@ public class DownloaderThread extends ExtendedThread {
                   double curspeed = (double)read / (double)downloaded_e;
                   if (speed_s - timer > 15000L) {
                      timer = speed_s;
-                     this.dlog("Still downloading:", (int)(curdone * 100.0D) + "% at speed", U.setFractional(curspeed, 2), "kb/s");
+                     this.dlog(String.format("Still downloading: %d\\% at speed %.10f kb/s", curdone * 100.0D, curspeed));
                   }
 
-                  this.onProgress((double)curread, curdone, curspeed);
+                  this.onProgress(curdone, curspeed);
                }
             }
 
@@ -237,7 +233,7 @@ public class DownloaderThread extends ExtendedThread {
                this.dlog("Copying completed.");
             }
 
-            this.dlog("Downloaded in " + downloaded_e + " ms. at " + curdone + " kb/s");
+            this.dlog("Downloaded " + read / 1024L + " kb in " + downloaded_e + " ms. at " + curdone + " kb/s");
             this.onComplete();
          }
       }
@@ -252,16 +248,11 @@ public class DownloaderThread extends ExtendedThread {
       this.downloader.onFileComplete(this, this.current);
    }
 
-   private void onProgress(double curread, double curdone, double curspeed) {
-      if (++this.speedCaret == 100) {
-         this.speedCaret = 0;
-      }
-
-      this.averageSpeedContainer[this.speedCaret] = curspeed;
+   private void onProgress(double curdone, double curspeed) {
       this.currentProgress = this.doneProgress + this.eachProgress * curdone;
+      this.speed = 0.005D * this.speed + 0.995D * curspeed;
       if (!(this.currentProgress - this.lastProgress < 0.01D)) {
          this.lastProgress = this.currentProgress;
-         this.speed = U.getAverage(this.averageSpeedContainer);
          this.downloader.onProgress(this, this.currentProgress, this.speed);
       }
    }

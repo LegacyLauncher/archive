@@ -26,7 +26,7 @@ import ru.turikhay.util.U;
 public abstract class VersionList {
    protected final Gson gson;
    protected final Map byName = new Hashtable();
-   protected final List versions = new ArrayList();
+   protected final List versions = Collections.synchronizedList(new ArrayList());
    protected final Map latest = new Hashtable();
 
    VersionList() {
@@ -40,13 +40,11 @@ public abstract class VersionList {
    }
 
    public List getVersions() {
-      synchronized(this.versions) {
-         return Collections.unmodifiableList(this.versions);
-      }
+      return this.versions;
    }
 
    public Map getLatestVersions() {
-      return Collections.unmodifiableMap(this.latest);
+      return this.latest;
    }
 
    public Version getVersion(String name) {

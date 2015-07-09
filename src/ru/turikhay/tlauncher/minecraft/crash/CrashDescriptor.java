@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
@@ -13,8 +14,8 @@ import ru.turikhay.util.U;
 public class CrashDescriptor {
    private static CrashSignatureContainer container;
    public static final int goodExitCode = 0;
-   private static final String loggerPrefix = "[Crash]";
    private final MinecraftLauncher launcher;
+   private static final String[] phrases = new String[]{"Мы катапультировались. Приятного полёта.", "Сейчас лучше выпить чаю. С бубликами.", "Шаманские бубны. Большой ассортимент. Звоните!", "Тут только звуковая отвётка поможет. Или большая кувалда."};
 
    static {
       GsonBuilder builder = new GsonBuilder();
@@ -44,64 +45,80 @@ public class CrashDescriptor {
          return null;
       } else {
          Crash crash = new Crash();
-         Pattern filePattern = container.getPattern("crash");
-         String version = this.launcher.getVersion();
-         Scanner scanner = new Scanner(this.launcher.getStream().getOutput());
+         String output = this.launcher.getOutput();
+         if (output == null) {
+            this.log("Could not get console output.");
+            return crash;
+         } else {
+            Scanner scanner = new Scanner(output);
+            Pattern filePattern = container.getPattern("crash");
+            String version = this.launcher.getVersion();
 
-         while(true) {
-            label67:
-            while(scanner.hasNextLine()) {
-               String line = scanner.nextLine();
-               if (filePattern.matcher(line).matches()) {
-                  Matcher fileMatcher = filePattern.matcher(line);
-                  if (fileMatcher.matches() && fileMatcher.groupCount() == 1) {
-                     crash.setFile(fileMatcher.group(1));
-                     this.log("Found crash report file:", crash.getFile());
-                  }
-               } else {
-                  Iterator var8 = container.getSignatures().iterator();
+            while(true) {
+               String line;
+               label85:
+               while(scanner.hasNextLine()) {
+                  line = scanner.nextLine();
+                  if (filePattern.matcher(line).matches()) {
+                     Matcher fileMatcher = filePattern.matcher(line);
+                     if (fileMatcher.matches() && fileMatcher.groupCount() == 1) {
+                        crash.setFile(fileMatcher.group(1));
+                        this.log("Found crash report file:", crash.getFile());
+                     }
+                  } else {
+                     Iterator var9 = container.getSignatures().iterator();
 
-                  while(true) {
-                     CrashSignatureContainer.CrashSignature signature;
-                     do {
+                     while(true) {
+                        CrashSignatureContainer.CrashSignature signature;
                         do {
                            do {
-                              if (!var8.hasNext()) {
-                                 continue label67;
-                              }
+                              do {
+                                 if (!var9.hasNext()) {
+                                    continue label85;
+                                 }
 
-                              signature = (CrashSignatureContainer.CrashSignature)var8.next();
-                           } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
-                        } while(signature.getExitCode() != 0 && signature.getExitCode() != exitCode);
-                     } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
+                                 signature = (CrashSignatureContainer.CrashSignature)var9.next();
+                              } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
+                           } while(signature.getExitCode() != 0 && signature.getExitCode() != exitCode);
+                        } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
 
-                     if (signature.isFake()) {
-                        this.log("Minecraft closed with an illegal exit code not due to error. Scanning has been cancelled");
-                        this.log("Fake signature:", signature.getName());
-                        scanner.close();
-                        return null;
-                     }
+                        if (signature.isFake()) {
+                           this.log("Minecraft closed with an illegal exit code not due to error. Scanning has been cancelled");
+                           this.log("Fake signature:", signature.getName());
+                           scanner.close();
+                           return null;
+                        }
 
-                     if (!crash.hasSignature(signature)) {
-                        this.log("Signature \"" + signature.getName() + "\" matches!");
-                        crash.addSignature(signature);
+                        if (!crash.hasSignature(signature)) {
+                           this.log("Signature \"" + signature.getName() + "\" matches!");
+                           crash.addSignature(signature);
+                        }
                      }
                   }
                }
-            }
 
-            scanner.close();
-            if (crash.isRecognized()) {
-               this.log("Crash has been recognized!");
-            }
+               scanner.close();
+               if (!crash.contains("PermGen error") && !crash.contains("OutOfMemory error") && !crash.contains("Too heavy heap")) {
+                  line = (String)U.getRandom(phrases);
+                  String[] var11;
+                  int var10 = (var11 = StringUtils.split(line, '\n')).length;
 
-            return crash;
+                  for(int var14 = 0; var14 < var10; ++var14) {
+                     String line = var11[var14];
+                     U.log("//", line);
+                  }
+               } else {
+                  U.log("– И это всё потому что у кого-то слишком узкие двери...");
+                  U.log("– Нет! Всё потому что кто-то слишком много ест!");
+               }
+
+               return crash;
+            }
          }
       }
    }
 
    void log(Object... w) {
-      this.launcher.getLogger().log("[Crash]", w);
-      U.log("[Crash]", w);
+      this.launcher.log(w);
    }
 }

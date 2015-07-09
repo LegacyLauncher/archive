@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.JComponent;
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 
 public abstract class EditorHandler implements Blockable {
@@ -38,11 +39,13 @@ public abstract class EditorHandler implements Blockable {
    }
 
    public void onChange(String newvalue) {
-      Iterator var3 = this.listeners.iterator();
+      if (TLauncher.getInstance().isReady()) {
+         Iterator var3 = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         EditorFieldListener listener = (EditorFieldListener)var3.next();
-         listener.onChange(this, this.value, newvalue);
+         while(var3.hasNext()) {
+            EditorFieldListener listener = (EditorFieldListener)var3.next();
+            listener.onChange(this, this.value, newvalue);
+         }
       }
 
       this.value = newvalue;

@@ -18,11 +18,13 @@ public class LinkedStringStream extends BufferedStringStream {
       this.logger = logger;
    }
 
-   public void flush() {
+   public synchronized void flush() {
       if (this.logger != null) {
-         char[] chars = new char[this.caret - this.caretFlush];
-         this.buffer.getChars(this.caretFlush, this.caret, chars, 0);
+         char[] chars = new char[this.caret];
+         this.buffer.getChars(0, this.caret, chars, 0);
          this.logger.rawlog(chars);
       }
+
+      super.flush();
    }
 }

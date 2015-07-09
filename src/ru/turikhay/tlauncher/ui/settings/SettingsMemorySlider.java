@@ -11,8 +11,8 @@ import javax.swing.event.DocumentListener;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.editor.EditorField;
 import ru.turikhay.tlauncher.ui.editor.EditorIntegerField;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableHTMLLabel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
@@ -195,7 +195,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       private final ImageIcon icon;
 
       private ValueType(String image) {
-         this.icon = ImageCache.getIcon(image, 16, 16);
+         this.icon = Images.getIcon(image, 16, 16);
       }
    }
 }

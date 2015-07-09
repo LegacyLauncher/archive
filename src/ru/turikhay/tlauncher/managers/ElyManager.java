@@ -18,7 +18,6 @@ import ru.turikhay.tlauncher.component.InterruptibleComponent;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.U;
 
 public class ElyManager extends InterruptibleComponent {
    private static final double VERSION = 1.0D;
@@ -26,25 +25,40 @@ public class ElyManager extends InterruptibleComponent {
    private List authlib = nl();
    private List asm = nl();
    private List total = nl();
+   private boolean refreshedOnce;
    private final List listeners = Collections.synchronizedList(new ArrayList());
-   private boolean refreshAllowed;
 
    public ElyManager(ComponentManager manager) throws Exception {
       super(manager);
    }
 
-   public List getLibraries(String version) {
-      ArrayList libList = new ArrayList();
-      Iterator var4 = this.total.iterator();
+   public boolean hasLibraries(VersionSyncInfo version) {
+      return version.isInstalled() && this.hasLibraries(version.getLocal()) || version.hasRemote() && this.hasLibraries(version.getRemote());
+   }
 
-      while(var4.hasNext()) {
-         ElyManager.ElyLib library = (ElyManager.ElyLib)var4.next();
-         if (library.getSupportedList().contains(version)) {
-            libList.add(library);
+   public boolean hasLibraries(Version version) {
+      if (this.hasLibraries(version.getID())) {
+         return true;
+      } else if (!(version instanceof CompleteVersion)) {
+         return false;
+      } else {
+         CompleteVersion complete = (CompleteVersion)version;
+         Iterator var4 = complete.getLibraries().iterator();
+
+         while(var4.hasNext()) {
+            Library library = (Library)var4.next();
+            Iterator var6 = this.total.iterator();
+
+            while(var6.hasNext()) {
+               ElyManager.ElyLib elyLib = (ElyManager.ElyLib)var6.next();
+               if (elyLib.replaces(library)) {
+                  return true;
+               }
+            }
          }
-      }
 
-      return libList;
+         return false;
+      }
    }
 
    public boolean hasLibraries(String version) {
@@ -60,79 +74,91 @@ public class ElyManager extends InterruptibleComponent {
       return false;
    }
 
-   public CompleteVersion elyficate(CompleteVersion original) {
-      this.log(new Object[]{"Trying to elyficate version:", original.getID()});
-      List libList = this.getLibraries(original.getID());
-      if (libList.isEmpty()) {
-         this.log(new Object[]{"No applicable library for this version"});
-         return original;
-      } else {
-         CompleteVersion version = original.copyInto(new CompleteVersion());
+   public List getLibraries(CompleteVersion complete) {
+      String id = complete.getID();
+      ArrayList libList = new ArrayList();
+      Iterator var5 = this.total.iterator();
 
-         ElyManager.ElyLib lib;
-         for(Iterator var5 = libList.iterator(); var5.hasNext(); version.getLibraries().add(lib)) {
-            lib = (ElyManager.ElyLib)var5.next();
-            this.log(new Object[]{"Processing Ely library:", lib.getName()});
-            if (lib.getReplacementPattern() != null) {
-               Pattern pattern = lib.getReplacementPattern();
-               this.log(new Object[]{"This library replaces another library:", pattern});
-               Iterator iter = version.getLibraries().iterator();
+      while(true) {
+         while(var5.hasNext()) {
+            ElyManager.ElyLib elyLib = (ElyManager.ElyLib)var5.next();
+            if (elyLib.supports(id)) {
+               libList.add(elyLib);
+            } else {
+               Iterator var7 = complete.getLibraries().iterator();
 
-               while(iter.hasNext()) {
-                  Library current = (Library)iter.next();
-                  if (pattern.matcher(current.getName()).matches()) {
-                     this.log(new Object[]{"Remove", current.getName()});
-                     iter.remove();
+               while(var7.hasNext()) {
+                  Library library = (Library)var7.next();
+                  if (elyLib.replaces(library)) {
+                     libList.add(elyLib);
                   }
                }
-            }
-
-            if (StringUtils.isNotBlank(lib.getArgs())) {
-               String args = version.getMinecraftArguments();
-               if (StringUtils.isBlank(args)) {
-                  args = lib.getArgs();
-               } else {
-                  args = args + ' ' + lib.getArgs();
-               }
-
-               version.setMinecraftArguments(args);
-            }
-
-            if (StringUtils.isNotBlank(lib.getMainClass())) {
-               version.setMainClass(lib.getMainClass());
-            }
-
-            if (lib.getRequirementList() != null) {
-               List add = new ArrayList(lib.getRequirementList());
-               Iterator var14 = add.iterator();
-
-               while(var14.hasNext()) {
-                  Library current = (Library)var14.next();
-                  Iterator it = version.getLibraries().iterator();
-
-                  while(it.hasNext()) {
-                     Library compare = (Library)it.next();
-                     if (current.getPlainName().equals(compare.getPlainName())) {
-                        this.log(new Object[]{"Version library list already contains:", compare.getName()});
-                        it.remove();
-                     }
-                  }
-               }
-
-               version.getLibraries().addAll(add);
             }
          }
 
-         return version;
+         return libList;
       }
    }
 
-   public boolean hasLibraries(VersionSyncInfo version) {
-      return version.isInstalled() && this.hasLibraries(version.getLocal()) || version.hasRemote() && this.hasLibraries(version.getRemote());
-   }
+   public CompleteVersion elyficate(CompleteVersion original) {
+      this.log(new Object[]{"Trying to elyficate version:", original.getID()});
+      List libList = this.getLibraries(original);
+      CompleteVersion complete = original.copyInto(new CompleteVersion());
 
-   public boolean hasLibraries(Version version) {
-      return this.hasLibraries(version.getID());
+      ElyManager.ElyLib lib;
+      for(Iterator var5 = libList.iterator(); var5.hasNext(); complete.getLibraries().add(lib)) {
+         lib = (ElyManager.ElyLib)var5.next();
+         this.log(new Object[]{"Processing Ely library:", lib.getName()});
+         if (lib.getPattern() != null) {
+            Pattern pattern = lib.getPattern();
+            Iterator iter = complete.getLibraries().iterator();
+
+            while(iter.hasNext()) {
+               Library current = (Library)iter.next();
+               if (pattern.matcher(current.getName()).matches()) {
+                  this.log(new Object[]{"Remove", current.getName()});
+                  iter.remove();
+               }
+            }
+         }
+
+         if (StringUtils.isNotBlank(lib.getArgs())) {
+            String args = complete.getMinecraftArguments();
+            if (StringUtils.isBlank(args)) {
+               args = lib.getArgs();
+            } else {
+               args = args + ' ' + lib.getArgs();
+            }
+
+            complete.setMinecraftArguments(args);
+         }
+
+         if (StringUtils.isNotBlank(lib.getMainClass())) {
+            complete.setMainClass(lib.getMainClass());
+         }
+
+         if (lib.getRequirementList() != null) {
+            List add = new ArrayList(lib.getRequirementList());
+            Iterator var14 = add.iterator();
+
+            while(var14.hasNext()) {
+               Library current = (Library)var14.next();
+               Iterator it = complete.getLibraries().iterator();
+
+               while(it.hasNext()) {
+                  Library compare = (Library)it.next();
+                  if (current.getPlainName().equals(compare.getPlainName())) {
+                     this.log(new Object[]{"Version library list already contains:", compare.getName()});
+                     it.remove();
+                  }
+               }
+            }
+
+            complete.getLibraries().addAll(add);
+         }
+      }
+
+      return complete;
    }
 
    public boolean refreshComponent() {
@@ -140,23 +166,35 @@ public class ElyManager extends InterruptibleComponent {
    }
 
    protected boolean refresh(int refreshID) {
-      if (!this.refreshAllowed) {
-         this.log(new Object[]{"Refresh is not allowed."});
-         this.clearAll();
-         return false;
-      } else {
-         this.log(new Object[]{"Refreshing Ely..."});
+      this.log(new Object[]{"Refreshing Ely..."});
+      Iterator var3 = this.listeners.iterator();
 
+      while(var3.hasNext()) {
+         ElyManagerListener listener = (ElyManagerListener)var3.next();
+         listener.onElyUpdating(this);
+      }
+
+      label82: {
          try {
             this.refreshDirectly();
-         } catch (Exception var3) {
-            this.log(new Object[]{"Failed to refresh Ely", var3});
-            return false;
+            break label82;
+         } catch (Exception var8) {
+            this.log(new Object[]{"Failed to refresh Ely", var8});
+         } finally {
+            Iterator var5 = this.listeners.iterator();
+
+            while(var5.hasNext()) {
+               ElyManagerListener listener = (ElyManagerListener)var5.next();
+               listener.onElyUpdated(this);
+            }
+
          }
 
-         this.log(new Object[]{"Refreshed successfully!"});
-         return true;
+         return false;
       }
+
+      this.log(new Object[]{"Refreshed successfully!"});
+      return true;
    }
 
    private void refreshDirectly() throws Exception {
@@ -185,13 +223,13 @@ public class ElyManager extends InterruptibleComponent {
             this.total.addAll(this.asm);
          }
 
-         Iterator var4 = this.listeners.iterator();
+         this.refreshedOnce = true;
+      }
+   }
 
-         while(var4.hasNext()) {
-            ElyManagerListener listener = (ElyManagerListener)var4.next();
-            listener.onElyUpdated(this);
-         }
-
+   public void refreshOnce() {
+      if (!this.refreshedOnce) {
+         this.asyncRefresh();
       }
    }
 
@@ -207,17 +245,12 @@ public class ElyManager extends InterruptibleComponent {
       this.listeners.add(listener);
    }
 
+   void removeListener(ElyManagerListener listener) {
+      this.listeners.remove(listener);
+   }
+
    private static List nl() {
       return Collections.synchronizedList(new ArrayList());
-   }
-
-   public boolean getRefreshAllowed() {
-      return this.refreshAllowed;
-   }
-
-   public void setRefreshAllowed(boolean allowed) {
-      this.log(new Object[]{"Refresh allowed:", allowed});
-      this.refreshAllowed = true;
    }
 
    public static class ElyLib extends Library {
@@ -231,8 +264,12 @@ public class ElyManager extends InterruptibleComponent {
          this.url = "/libraries/";
       }
 
-      public Pattern getReplacementPattern() {
+      public Pattern getPattern() {
          return this.replaces;
+      }
+
+      public boolean replaces(Library lib) {
+         return this.replaces != null && this.replaces.matcher(lib.getName()).matches();
       }
 
       public String getArgs() {
@@ -251,8 +288,11 @@ public class ElyManager extends InterruptibleComponent {
          return this.supports;
       }
 
+      public boolean supports(String version) {
+         return this.supports != null && this.supports.contains(version);
+      }
+
       public Downloadable getDownloadable(Repository versionSource, File file, OS os) {
-         U.log("getting downloadable", this.getName(), versionSource, file, os);
          return super.getDownloadable(Repository.EXTRA_VERSION_REPO, file, os);
       }
 

@@ -1,6 +1,4 @@
 # TLauncher language file UTF-8
-# Have questions? Ask: tlauncher@turikhay.ru
-# Translator: turikhay (second try C:)
 # Loginform
 loginform.checkbox.autologin=Autologin
 loginform.checkbox.forceupdate=Force update
@@ -26,6 +24,9 @@ loginform.button.support.report=Report the problem
 loginform.button.support.author=Help financially
 loginform.button.support.email=Contact developer
 # Account
+account.type.free=Free (no password)
+account.type.mojang=Mojang (premium)
+account.type.ely=Ely.by
 account.username=User name
 account.email=E-mail
 account.auth.free=No password
@@ -36,6 +37,7 @@ account.list=Available accounts:
 account.empty=(no account)
 account.manage=Configure accounts...
 account.creating=(new account)
+account.loading.ely=(waiting...)
 # Versions
 versions.loading=Loading version list...
 versions.notfound.title=Error getting versions!
@@ -96,13 +98,21 @@ version.manager.delete.error.multiply=Errors occurred while trying to delete ver
 version.manager.delete.menu.jar=Remove version folder
 version.manager.delete.menu.libraries=Remove version folder and libraries
 version.list.needsupdate=(update available)
+version.dir.noaccess.title=No access
+version.dir.noaccess=Can't access Minecraft folder. Please, choose another one:
+version.dir.noexplorer.title=Error creating explorer
+version.dir.noexplorer=Please, enter new folder path by yourself:
+version.dir.exit.title=Application will close
+version.dir.exit=TLauncher can't work in folder it doesn't have access to. Application will close.
 # Loginform.errors
 auth.error.title=Authentication error
 auth.error.unknown=An unknown error occurred during the authentication process.
 auth.error.unreachable=Authentication server may be not available by now. If you don't think so, please check your Internet connection and firewall settings.
+auth.error.unparseable=Cannot recognise server response.\nProbably the server is undergoing maintenance.
 auth.error.relogin=Invalid login/password/token. Please enter login and password again.
 auth.error.migrated=This user is already migrated to Mojang account. Use your e-mail address instead of username.
 auth.error.internal=An internal error occurred. Please contact the developer.
+auth.error.unavailable=Service temporary not available.
 auth.profiles.save-error.title=Error saving profiles.
 auth.profiles.save-error=An unknown error occurred saving profiles into file.
 auth.error.nopass.title=Password required!
@@ -123,14 +133,13 @@ account.empty.error.title=Account list is empty
 account.empty.error=You should create at least one account and select it.
 # Loginform.info
 loginform.checkbox.autologin.tip.title=Autologin tip
-loginform.checkbox.autologin.tip=Next time TLauncher will launch Minecraft automatically.\nIf you want to connect to the server on start, please use special Minecraft argument that you can specify in settings:
-loginform.checkbox.autologin.tip.arg=--server SERVER_ADDRESS --port PORT
+loginform.checkbox.autologin.tip=Next time TLauncher will launch selected Minecraft version automatically.
 # Progressbar
 progressBar.init=Initializating...
 progressBar.speed=kb/s
 progressBar.completed=File %0 is downloaded
 progressBar.downloading=Downloading %0 files
-progressBar.remaining-one=%0 file left
+progressBar.downloading-one=Downloading 1 file
 progressBar.remaining=%0 files left
 # Launcher
 launcher.error.title=An error occurred
@@ -139,6 +148,8 @@ launcher.error.noArgs=Error gettings arguments for this version.
 launcher.error.download-jar=Error getting executable files from the server. Check the Internet connection.
 launcher.error.download-assets=Error getting assets from the server. Check the Internet connection.
 launcher.error.save=Error saving version.
+launcher.error.index-file=Could not parse assets index file.\nTry to disable antivirus protection for a while and then update this version forcefully
+launcher.error.reconstruct-assets=Error creating virtual folder. Please, try again...
 launcher.error.unpack-natives=Error occurred while unpacking native libraries.\nTick "Force update" to download them again.
 launcher.error.java-exec=Cannot find Java path (under Windows it should be a file):
 launcher.error.folder-not-found=Cannot find specified Minecraft folder:
@@ -161,10 +172,10 @@ launcher.step.deleting-entries=Deleting entires...
 launcher.step.constructing=Creating process...
 # Launcher warning
 launcher.warning.title=Warning!
-launcher.warning.incompatible=Selected version is incompatible with your environment but TLauncher will try to run it.
+launcher.warning.incompatible.environment=Selected version is incompatible with your environment but TLauncher will try to run it.
 launcher.warning.incompatible.launcher=Selected version is incompatible with TLauncher but launcher will try to run it.
 launcher.warning.assets=An error occurred while trying to download assets. This message won't be shown during this session. Remember that some files are missing.
-launcher.warning.assets.kaspersky=The error occurred while trying to download assets. Kaspersky Antivirus installed on this PC substitutes files from Mojang server.\nThis message won't be shown during this session. Remember that some files are missing.\nIf you'd like to solve this problem add the exception to White-list of Anti-Banner:
+launcher.warning.assets.kaspersky=Error occurred while trying to download assets. If you have Kaspersky installed on this computer, please add the exception to White-list of Anti-Banner:
 # Crashes
 crash.title=Unexpected error occurred!
 crash.unknown=Minecraft has closed due to unexpected error. Developer console has been called to help you to solve the problem.
@@ -178,11 +189,13 @@ crash.opengl=Minecraft has closed due to old graphics card drivers. Please updat
 crash.invalid-modify=Minecraft has closed due to error that usually occurres because of incorrect mod installation. Reinstall it and retry.
 crash.meta-inf=Java couldn't load classes of Minecraft. Remove folder /META-INF/ from JAR file of launching Minecraft version and retry.
 crash.missing-main=Java couldn't run Minecraft because the main class is missing. If you can't repair JAR file yourself, click "Force update".
-crash.permgen-error=Minecraft has closed due to PermGen error. You can do next:\n— Tick «Force update» and then press «Reinstall» to re-download invalid files.\n- Don't use mods and resource packs\n- Turn off the sounds in Minecraft.
-crash.outofmemory=Minecraft has closed due to lack of RAM.\nTry to allocate more memory using JVM argument "-Xmx".
-crash.old-videocard=Your card doesn't support OpenGL version, which is used in this version of Minecraft. The latest version supported by your video card is 1.7.2.
-crash.invalid-sys-username=You shouldn't use symbol «!» in your Minecraft path.
-crash.old-ati-vdrivers=Your system uses an outdated video card driver or the video card itself is old.\nAnyway, try to update the driver from the official <a href="http://amd.com/">AMD</a> website.\nIf this won't work, try to install <a href="http://www.omegadrivers.net/index.php?option=com_phocadownload&view=section&id=1&Itemid=54">ATI Omega Drivers</a>.
+crash.invalid-sys-username=You shouldn't use symbol «!» in Minecraft directory path.
+crash.permgen-error=PermGen error. Possible solutions:\n- «Force update».\n- In Minecraft settings tab, append to JVM arguments:\n-XX:MaxPermSize=256M
+crash.outofmemory=Out of memory error.\nYou can try to increase amount of memory in Minecraft settings tab. 
+crash.firewall=Firewall blocks creating Minecraft server. Please check its preferences.
+crash.old-videocard.intel=You're using old Intel videocard. No known solution.
+crash.old-videocard.ati=Your system uses old ATI videocard driver. Please, update it.
+crash.reserve-space=Could not reserve enough heap space. Decrease it in Minecraft settings tab.
 # Settings
 settings.warning=Change if you know what you do.
 settings.restart=Will be applied after restart.
@@ -190,7 +203,6 @@ settings.res.def=Default size: %0x%1
 settings.range=Range: %0-%1
 settings.tab.minecraft=Minecraft settings
 settings.tab.tlauncher=TLauncher settings
-settings.tab.about=About
 settings.client.gamedir.label=Directory:
 settings.client.gamedir.invalid=Invalid directory!
 settings.client.gamedir.noaccess.title=Error changing Minecraft directory
@@ -202,26 +214,28 @@ settings.client.resolution.width.invalid=Invalid width!
 settings.client.resolution.height=Height (pix.)
 settings.client.resolution.height.invalid=Invalid height!
 settings.client.resolution.fullscreen=Fullscreen
-settings.versions.label=Versions:
+settings.versions.label=Version list:
 settings.versions.snapshot=Show Snapshots
-settings.versions.old_beta=Show Beta
-settings.versions.old_alpha=Show Alpha
-settings.versions.modified=Show modified versions
-settings.versions.old=Show old versions (before 1.5.2)
-settings.java.path.label=Java path:
-settings.java.path.invalid=Invalid path!
-settings.java.path.prompt=A path to "bin" folder (in Windows: to "javaw.exe" file)
-settings.java.path.doesnotexist.title=Cannot find executable file!
-settings.java.path.doesnotexist=Java path you specified is incorrect.\nIf you don't know the location of "javaw.exe" file then empty paramater "Java path".
+settings.versions.old_beta=Show Beta (2010-2011)
+settings.versions.old_alpha=Show Alpha (2010)
+settings.versions.modified=Show modified
+settings.versions.sub.old_release=Show old releases (older 1.5.2)
 settings.java.args.label=Arguments:
 settings.java.args.jvm=JVM arguments (e.g. -XX:MaxPermSize=256M)
 settings.java.args.minecraft=Minecraft arguments (e.g. --server 127.0.0.1)
+settings.java.cmd.label=Command:
+settings.java.cmd=Path to the speicific executable (if required)
 settings.java.memory.label=Memory allocation:
 settings.java.memory.mb=MB
 settings.java.memory.hint.ok=Recommended value
 settings.java.memory.hint.warning=Deprecated value
 settings.java.memory.hint.danger=Dangerous value!
 settings.clientres.label=Window size:
+settings.systemlnf.label=Look and feel:
+settings.systemlnf.note.title=L&F has been changed.
+settings.systemlnf.note.true=You've chosen system L&F. If it refuses to work with Java, TLauncher will try to load default one instead. Please, restart TLauncher for changes to take effect. 
+settings.systemlnf.note.false=You've chosen default L&F. And... why? :D\nAnyway, restart TLauncher for changes to take effect.
+settings.systemlnf=Use system L&F
 settings.slide.list.label=Background image:
 settings.slide.list.prompt=A path to the image (JPG, PNG)
 settings.console.label=Developer console
@@ -232,8 +246,6 @@ settings.console.fullcommand.label=Full command:
 settings.console.fullcommand=Show full command launching Minecraft
 settings.console.fullcommand.warning.title=Warning!
 settings.console.fullcommand.warning=<b>You've turned on "Full command"</b>.<br/>If you're a premium user don't transmit content from the console over insecure data channels as the console stores your token required for loggining in.
-settings.extra.label=Extra:
-settings.extra.check-username=Check username
 settings.connection.label=Connection quality:
 settings.connection.good=Good
 settings.connection.normal=Normal
@@ -256,6 +268,7 @@ settings.launch-action.exit=Close TLauncher
 settings.launch-action.nothing=Do nothing
 settings.lang.label=Language:
 settings.tab.about=About
+settings.tab.server=Setting up a server
 settings.default=Reset to defaults
 settings.default.warning.title=Warning!
 settings.default.warning=Are you sure want to set settings to default values?\nIf you want to reset specific field right-click on it and select «Reset value»
@@ -276,8 +289,8 @@ updater.downloaded=TLauncher is ready to be updated.\nApplication will be update
 updater.save-error.title=Error occurred while saving an update.
 updater.save-error=Error occurred while saving an update. Do you want to download the update yourself?
 # Firstrun
-firstrun.title=Welcome!
-firstrun=Welcome to TLauncher for Minecraft!\n\nDeveloper reminds you that Minecraft is not a freeware application. If you're not a Premium user or you want to have profit using launcher features, please do not use TLauncher.\n\nPlease visit <a href="http://minecraft.net">official Minecraft site</a> to purchase Premium account.
+firstrun.title=TLauncher
+firstrun=Hello!\nRemember that Minecraft is owned by Mojang and all rights belongs to them. Please do not use this application if you are not going to <a href=\"https://minecraft.net/store/minecraft\">purchase Minecraft</a> or want to use it in unacceptable way.\nYou use this application at your own risk: developers are not responsible for results this application may produce.\n\nIf you agree, welcome!
 # Notifier
 notifier.failed.title=Connection may be blocked!
 notifier.failed=TLauncher couldn't connect to the Internet to check for updates.\nIf this machine is not connected at all, you can ignore this message.\nOtherwise, check your Internet connection and firewall settings.
@@ -303,13 +316,21 @@ popup.copyall=Copy all
 console=Developer console
 console.kill=Kill Minecraft process
 console.close.cancel=Cancel console close (%0 s)
-console.save.popup=Save all as...
+console.save=Save as...
+console.save.popup=Save as...
 console.save.exists=File already exists!
 console.save.error=Couln't save file!
 console.clear.popup=Clear
-# Ad
-ad.error.title=An error occurred
-ad.error.message=An error occurred while trying to open advertisement link. Please, visit it yourself:
+console.pastebin=Save online at Pastebin...
+console.pastebin.sent.title=Sent successfully
+console.pastebin.sent=Console was successfully saved online on <a href=\"http://pastebin.com\">Pastebin.com</a>.\n\nDo you want to open it now?
+console.pastebin.failed.title=Could not send console output
+console.pastebin.failed=Could not send console output to <a href=\"http://pastebin.com\">Pastebin.com</a>. Make sure you have Internet access and antivirus software doesn't block the connection.
+console.pastebin.invalid.title=Something went wrong...
+console.pastebin.invalid=Could not send console output.
+# Link
+link.error.title=Could not open the link
+link.error=Could not open the link. Please, do it yourself: 
 # Autoupdater
 autoupdater.preparing=Preparing...
 autoupdater.requesting=Requesting an update for TLauncher...
@@ -379,18 +400,31 @@ explorer.details.file=File
 explorer.details.dir=Directory
 explorer.error.newfolder=Error creating new folder
 explorer.error.newfolder-nopath=Cannot create folder here.
-explorer.error.rename.title=Error while renaming
+explorer.error.rename.title=Error while renaming\n{0}
 explorer.error.rename=Cannot rename this object.
 explorer.error.rename-exists=Cannot rename this file because it dublicates another one.
+explorer.unavailable.title=Explorer is unavailable
+explorer.unavailable=Could not initialize file chooser. 
+explorer.unavailable.win=Perhaps, you're using modified Windows themes that cause an error.
 # Boot
 boot.loading=Loading TLauncher %0...
 # About page
 about.text=one of the best simple Minecraft launchers.<br/><b>Our mission</b> — spread Minecraft all over the world. Help us, if you can!<br/>If you'd like to get source code, contact the developer.
-about.bottom=Stay in touch with us at <a href="http://vk.com/tlauncher"><b style="color: #55779b">VK.com</b></a> :)
+about.bottom=Stay in touch with us at <a href="http://tlauncher.ru/go/vk"><b style="color: #55779b">VK.com</b></a> :)
 about.partners.mcoffline=set up and run MC server easily!
 about.partners.ely=free skin system.
+about.license=And you can also redistrubute unmodified versions of TLauncher. You use this application at your own risk: developers are not responsible for results this application may produce.
 # Ad
-ad.server.error=Error launching the game to connect the server:
+ad.server.error=Error launching game to connect the server:
+ad.server.openwith=Choose version to open "%0":
+ad.server.openwith.current=Use selected in list
+ad.server.copy=Copy server address
+ad.server.required-account="%0" account required
+ad.server.required-account.multiple=Required account type: %0
+ad.server.choose-account.title=Account required
+ad.server.choose-account=You should create «%0» account to play at this server.
+ad.server.choose-account.multiple=You should select one of the following account types to play at this server:
+ad.server.choose-account.multiple.prefix=* %0
 # Browser
 browser.hyperlink.popup.open=Open link
 browser.hyperlink.popup.copy=Copy link

@@ -17,7 +17,7 @@ import ru.turikhay.tlauncher.managers.VersionSyncInfoContainer;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Unblockable;
-import ru.turikhay.tlauncher.ui.images.ImageCache;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
@@ -195,7 +195,7 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
             }
 
             if (containers.size() > 1) {
-               DownloadableContainer.removeDublicates(containers);
+               DownloadableContainer.removeDuplicates(containers);
             }
 
             if (this.aborted) {
@@ -300,7 +300,7 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
       final Image image;
 
       private ButtonState(String image) {
-         this.image = ImageCache.getImage(image);
+         this.image = Images.getImage(image);
       }
    }
 }

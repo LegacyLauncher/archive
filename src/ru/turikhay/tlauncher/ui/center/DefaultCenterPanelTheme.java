@@ -8,7 +8,7 @@ public class DefaultCenterPanelTheme extends CenterPanelTheme {
    protected final Color focusColor = new Color(0, 0, 0, 255);
    protected final Color focusLostColor = new Color(128, 128, 128, 255);
    protected final Color successColor = new Color(78, 196, 78, 255);
-   protected final Color failureColor = Color.getHSBColor(0.0F, 0.3F, 1.0F);
+   protected final Color failureColor = Color.getHSBColor(0.0F, 1.0F, 0.7F);
    protected final Color borderColor = new Color(28, 128, 28, 255);
    protected final Color delPanelColor;
 

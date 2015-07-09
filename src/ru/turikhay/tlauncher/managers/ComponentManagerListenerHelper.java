@@ -8,7 +8,7 @@ import ru.turikhay.tlauncher.component.LauncherComponent;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 
-public class ComponentManagerListenerHelper extends LauncherComponent implements Blockable, VersionManagerListener, ElyManagerListener {
+public class ComponentManagerListenerHelper extends LauncherComponent implements Blockable, VersionManagerListener {
    private final List listeners = Collections.synchronizedList(new ArrayList());
 
    public ComponentManagerListenerHelper(ComponentManager manager) throws Exception {
@@ -54,13 +54,5 @@ public class ComponentManagerListenerHelper extends LauncherComponent implements
          listener.onComponentsRefreshed(this.manager);
       }
 
-   }
-
-   public void onElyUpdating(ElyManager manager) {
-      Blocker.block((Blockable)this, (Object)manager);
-   }
-
-   public void onElyUpdated(ElyManager manager) {
-      Blocker.unblock((Blockable)this, (Object)manager);
    }
 }

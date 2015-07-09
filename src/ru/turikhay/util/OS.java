@@ -362,7 +362,7 @@ public enum OS {
          switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
          case 1:
             if (TOTAL_RAM_MB > 4000L) {
-               return 1024;
+               return 768;
             }
 
             return 512;

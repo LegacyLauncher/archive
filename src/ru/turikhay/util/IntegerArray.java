@@ -1,5 +1,6 @@
 package ru.turikhay.util;
 
+import java.awt.Dimension;
 import ru.turikhay.exceptions.ParseException;
 
 public class IntegerArray {
@@ -8,7 +9,7 @@ public class IntegerArray {
    private final char delimiter;
    private final int length;
 
-   private IntegerArray(char del, int... values) {
+   public IntegerArray(char del, int... values) {
       this.delimiter = del;
       this.length = values.length;
       this.integers = new int[this.length];
@@ -86,8 +87,7 @@ public class IntegerArray {
             try {
                cur = Integer.parseInt(ints[i]);
             } catch (NumberFormatException var9) {
-               U.log("Cannot parse integer (iteration: " + i + ")", var9);
-               throw new ParseException("Cannot parse integer (iteration: " + i + ")", var9);
+               throw new ParseException("Cannot parse integer (iteration: " + i + ", del: \"" + del + "\")", var9);
             }
 
             arr[i] = cur;
@@ -108,5 +108,9 @@ public class IntegerArray {
 
    public static int[] toArray(String val) throws ParseException {
       return toArray(val, ';');
+   }
+
+   public static IntegerArray fromDimension(Dimension d) {
+      return new IntegerArray('x', new int[]{d.width, d.height});
    }
 }

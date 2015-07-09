@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.editor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -11,11 +12,11 @@ public class EditorGroupHandler {
    private int changedFlag;
    private int checkedFlag;
 
-   public EditorGroupHandler(EditorHandler... handlers) {
+   public EditorGroupHandler(List handlers) {
       if (handlers == null) {
          throw new NullPointerException();
       } else {
-         this.checkedLimit = handlers.length;
+         this.checkedLimit = handlers.size();
          EditorFieldListener listener = new EditorFieldListener() {
             protected void onChange(EditorHandler handler, String oldValue, String newValue) {
                if (newValue != null) {
@@ -46,8 +47,8 @@ public class EditorGroupHandler {
             }
          };
 
-         for(int i = 0; i < handlers.length; ++i) {
-            EditorHandler handler = handlers[i];
+         for(int i = 0; i < handlers.size(); ++i) {
+            EditorHandler handler = (EditorHandler)handlers.get(i);
             if (handler == null) {
                throw new NullPointerException("Handler is NULL at " + i);
             }
@@ -55,10 +56,12 @@ public class EditorGroupHandler {
             handler.addListener(listener);
          }
 
-         EditorHandler[] handlers1 = new EditorHandler[handlers.length];
-         System.arraycopy(handlers, 0, handlers1, 0, handlers.length);
          this.listeners = Collections.synchronizedList(new ArrayList());
       }
+   }
+
+   public EditorGroupHandler(EditorHandler... handlers) {
+      this(Arrays.asList(handlers));
    }
 
    public boolean addListener(EditorFieldChangeListener listener) {
