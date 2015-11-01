@@ -7,14 +7,13 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.ByteArrayInputStream;
 import java.net.URL;
-import java.util.Dictionary;
 import javax.imageio.ImageIO;
 import javax.swing.GrayFilter;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
@@ -38,6 +37,8 @@ import javax.swing.text.html.StyleSheet;
 import javax.swing.text.html.HTML.Attribute;
 import javax.swing.text.html.HTML.Tag;
 import javax.xml.bind.DatatypeConverter;
+import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class ExtendedImageView extends View {
@@ -71,7 +72,7 @@ public class ExtendedImageView extends View {
    private short rightInset;
    private short topInset;
    private short bottomInset;
-   private ImageObserver imageObserver = new ExtendedImageView.ImageHandler((ExtendedImageView.ImageHandler)null);
+   private ImageObserver imageObserver = new ExtendedImageView.ImageHandler();
    private View altView;
    private float vAlign;
 
@@ -153,10 +154,10 @@ public class ExtendedImageView extends View {
       Object alignment = attr.getAttribute(Attribute.ALIGN);
       this.vAlign = 1.0F;
       if (alignment != null) {
-         Object alignment = alignment.toString();
-         if ("top".equals(alignment)) {
+         String alignment1 = alignment.toString();
+         if ("top".equals(alignment1)) {
             this.vAlign = 0.0F;
-         } else if ("middle".equals(alignment)) {
+         } else if ("middle".equals(alignment1)) {
             this.vAlign = 0.5F;
          }
       }
@@ -254,7 +255,7 @@ public class ExtendedImageView extends View {
          int xOffset = this.leftInset - this.borderSize;
          int yOffset = this.topInset - this.borderSize;
          g.setColor(color);
-         int n = this.image == null ? 1 : this.borderSize;
+         short n = this.image == null ? 1 : this.borderSize;
 
          for(int counter = 0; counter < n; ++counter) {
             g.drawRect(rect.x + xOffset + counter, rect.y + yOffset + counter, rect.width - counter - counter - xOffset - xOffset - 1, rect.height - counter - counter - yOffset - yOffset - 1);
@@ -415,15 +416,24 @@ public class ExtendedImageView extends View {
          this.width = this.height = 0;
       }
 
+      boolean var11 = false;
+
       try {
+         var11 = true;
          this.loadImage();
          this.updateImageSize();
+         var11 = false;
       } finally {
-         synchronized(this) {
-            this.state = (this.state | 1) ^ 1;
+         if (var11) {
+            synchronized(this) {
+               this.state = (this.state | 1) ^ 1;
+            }
          }
       }
 
+      synchronized(this) {
+         this.state = (this.state | 1) ^ 1;
+      }
    }
 
    private void loadImage() {
@@ -440,84 +450,65 @@ public class ExtendedImageView extends View {
       String source = this.getImageSource();
       if (source == null) {
          return null;
+      } else if (!source.startsWith(base64s)) {
+         URL src1 = U.makeURL(source);
+         return src1 == null ? null : Images.loadMagnifiedImage(src1);
       } else {
-         String imageType;
-         if (!source.startsWith(base64s)) {
-            URL src = U.makeURL(source);
-            if (src == null) {
+         int src = base64s.length();
+         String newImage = source.substring(src, src + 4);
+         if (!newImage.startsWith("png") && !newImage.startsWith("jpg")) {
+            if (!newImage.equals("jpeg")) {
                return null;
-            } else {
-               imageType = null;
-               Dictionary cache = (Dictionary)this.getDocument().getProperty("imageCache");
-               Image newImage;
-               if (cache != null) {
-                  newImage = (Image)cache.get(src);
-               } else {
-                  newImage = Toolkit.getDefaultToolkit().createImage(src);
-                  if (newImage != null && this.getLoadsSynchronously()) {
-                     ImageIcon ii = new ImageIcon();
-                     ii.setImage(newImage);
-                  }
-               }
-
-               return newImage;
             }
+
+            src += 4;
          } else {
-            int startPoint = base64s.length();
-            imageType = source.substring(startPoint, startPoint + 4);
-            if (!imageType.startsWith("png") && !imageType.startsWith("jpg")) {
-               if (!imageType.equals("jpeg")) {
-                  return null;
-               }
+            src += 3;
+         }
 
-               startPoint += 4;
-            } else {
-               startPoint += 3;
-            }
-
-            if (!source.substring(startPoint, startPoint + base64e.length()).equals(base64e)) {
-               return null;
-            } else {
-               startPoint += base64e.length();
-               byte[] bytes = DatatypeConverter.parseBase64Binary(source.substring(startPoint));
-               return ImageIO.read(new ByteArrayInputStream(bytes));
-            }
+         if (!source.substring(src, src + base64e.length()).equals(base64e)) {
+            return null;
+         } else {
+            src += base64e.length();
+            byte[] cache = DatatypeConverter.parseBase64Binary(source.substring(src));
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(cache));
+            return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
          }
       }
    }
 
    private void updateImageSize() {
-      int newWidth = false;
-      int newHeight = false;
+      boolean newWidth = false;
+      boolean newHeight = false;
       int newState = 0;
       Image newImage = this.getImage();
       if (newImage != null) {
-         int newWidth = this.getIntAttr(Attribute.WIDTH, -1);
-         if (newWidth > 0) {
+         int newWidth1 = this.getIntAttr(Attribute.WIDTH, -1);
+         if (newWidth1 > 0) {
             newState |= 4;
          }
 
-         int newHeight = this.getIntAttr(Attribute.HEIGHT, -1);
-         if (newHeight > 0) {
+         int newHeight1 = this.getIntAttr(Attribute.HEIGHT, -1);
+         if (newHeight1 > 0) {
             newState |= 8;
          }
 
-         if (newWidth <= 0) {
-            newWidth = newImage.getWidth(this.imageObserver);
-            if (newWidth <= 0) {
-               newWidth = 38;
+         if (newWidth1 <= 0) {
+            newWidth1 = newImage.getWidth(this.imageObserver);
+            if (newWidth1 <= 0) {
+               newWidth1 = 38;
             }
          }
 
-         if (newHeight <= 0) {
-            newHeight = newImage.getHeight(this.imageObserver);
-            if (newHeight <= 0) {
-               newHeight = 38;
+         if (newHeight1 <= 0) {
+            newHeight1 = newImage.getHeight(this.imageObserver);
+            if (newHeight1 <= 0) {
+               newHeight1 = 38;
             }
          }
 
          if ((newState & 12) != 0) {
-            Toolkit.getDefaultToolkit().prepareImage(newImage, newWidth, newHeight, this.imageObserver);
+            Toolkit.getDefaultToolkit().prepareImage(newImage, newWidth1, newHeight1, this.imageObserver);
          } else {
             Toolkit.getDefaultToolkit().prepareImage(newImage, -1, -1, this.imageObserver);
          }
@@ -527,19 +518,19 @@ public class ExtendedImageView extends View {
             if (this.image == null) {
                createText = true;
                if ((newState & 4) == 4) {
-                  this.width = newWidth;
+                  this.width = newWidth1;
                }
 
                if ((newState & 8) == 8) {
-                  this.height = newHeight;
+                  this.height = newHeight1;
                }
             } else {
                if ((newState & 4) == 4 || this.width == 0) {
-                  this.width = newWidth;
+                  this.width = newWidth1;
                }
 
                if ((newState & 8) == 8 || this.height == 0) {
-                  this.height = newHeight;
+                  this.height = newHeight1;
                }
             }
 
@@ -602,86 +593,6 @@ public class ExtendedImageView extends View {
 
    }
 
-   private class ImageHandler implements ImageObserver {
-      private ImageHandler() {
-      }
-
-      public boolean imageUpdate(Image img, int flags, int x, int y, int newWidth, int newHeight) {
-         if ((img == ExtendedImageView.this.image || img == ExtendedImageView.this.disabledImage) && ExtendedImageView.this.image != null && ExtendedImageView.this.getParent() != null) {
-            if ((flags & 192) != 0) {
-               ExtendedImageView.this.repaint(0L);
-               synchronized(ExtendedImageView.this) {
-                  if (ExtendedImageView.this.image == img) {
-                     ExtendedImageView.this.image = null;
-                     if ((ExtendedImageView.this.state & 4) != 4) {
-                        ExtendedImageView.this.width = 38;
-                     }
-
-                     if ((ExtendedImageView.this.state & 8) != 8) {
-                        ExtendedImageView.this.height = 38;
-                     }
-                  } else {
-                     ExtendedImageView.this.disabledImage = null;
-                  }
-
-                  if ((ExtendedImageView.this.state & 1) == 1) {
-                     return false;
-                  }
-               }
-
-               ExtendedImageView.this.updateAltTextView();
-               ExtendedImageView.this.safePreferenceChanged();
-               return false;
-            } else {
-               if (ExtendedImageView.this.image == img) {
-                  short changed = 0;
-                  if ((flags & 2) != 0 && !ExtendedImageView.this.getElement().getAttributes().isDefined(Attribute.HEIGHT)) {
-                     changed = (short)(changed | 1);
-                  }
-
-                  if ((flags & 1) != 0 && !ExtendedImageView.this.getElement().getAttributes().isDefined(Attribute.WIDTH)) {
-                     changed = (short)(changed | 2);
-                  }
-
-                  synchronized(ExtendedImageView.this) {
-                     if ((changed & 1) == 1 && (ExtendedImageView.this.state & 4) == 0) {
-                        ExtendedImageView.this.width = newWidth;
-                     }
-
-                     if ((changed & 2) == 2 && (ExtendedImageView.this.state & 8) == 0) {
-                        ExtendedImageView.this.height = newHeight;
-                     }
-
-                     if ((ExtendedImageView.this.state & 1) == 1) {
-                        return true;
-                     }
-                  }
-
-                  if (changed != 0) {
-                     ExtendedImageView.this.safePreferenceChanged();
-                     return true;
-                  }
-               }
-
-               if ((flags & 48) != 0) {
-                  ExtendedImageView.this.repaint(0L);
-               } else if ((flags & 8) != 0 && ExtendedImageView.sIsInc) {
-                  ExtendedImageView.this.repaint((long)ExtendedImageView.sIncRate);
-               }
-
-               return (flags & 32) == 0;
-            }
-         } else {
-            return false;
-         }
-      }
-
-      // $FF: synthetic method
-      ImageHandler(ExtendedImageView.ImageHandler var2) {
-         this();
-      }
-   }
-
    private class ImageLabelView extends InlineView {
       private Segment segment;
       private Color fg;
@@ -737,6 +648,88 @@ public class ExtendedImageView extends View {
          }
 
          return this.fg;
+      }
+   }
+
+   private class ImageHandler implements ImageObserver {
+      private ImageHandler() {
+      }
+
+      public boolean imageUpdate(Image img, int flags, int x, int y, int newWidth, int newHeight) {
+         if ((img == ExtendedImageView.this.image || img == ExtendedImageView.this.disabledImage) && ExtendedImageView.this.image != null && ExtendedImageView.this.getParent() != null) {
+            if ((flags & 192) != 0) {
+               ExtendedImageView.this.repaint(0L);
+               ExtendedImageView changed1 = ExtendedImageView.this;
+               synchronized(ExtendedImageView.this) {
+                  if (ExtendedImageView.this.image == img) {
+                     ExtendedImageView.this.image = null;
+                     if ((ExtendedImageView.this.state & 4) != 4) {
+                        ExtendedImageView.this.width = 38;
+                     }
+
+                     if ((ExtendedImageView.this.state & 8) != 8) {
+                        ExtendedImageView.this.height = 38;
+                     }
+                  } else {
+                     ExtendedImageView.this.disabledImage = null;
+                  }
+
+                  if ((ExtendedImageView.this.state & 1) == 1) {
+                     return false;
+                  }
+               }
+
+               ExtendedImageView.this.updateAltTextView();
+               ExtendedImageView.this.safePreferenceChanged();
+               return false;
+            } else {
+               if (ExtendedImageView.this.image == img) {
+                  short changed = 0;
+                  if ((flags & 2) != 0 && !ExtendedImageView.this.getElement().getAttributes().isDefined(Attribute.HEIGHT)) {
+                     changed = (short)(changed | 1);
+                  }
+
+                  if ((flags & 1) != 0 && !ExtendedImageView.this.getElement().getAttributes().isDefined(Attribute.WIDTH)) {
+                     changed = (short)(changed | 2);
+                  }
+
+                  ExtendedImageView var8 = ExtendedImageView.this;
+                  synchronized(ExtendedImageView.this) {
+                     if ((changed & 1) == 1 && (ExtendedImageView.this.state & 4) == 0) {
+                        ExtendedImageView.this.width = newWidth;
+                     }
+
+                     if ((changed & 2) == 2 && (ExtendedImageView.this.state & 8) == 0) {
+                        ExtendedImageView.this.height = newHeight;
+                     }
+
+                     if ((ExtendedImageView.this.state & 1) == 1) {
+                        return true;
+                     }
+                  }
+
+                  if (changed != 0) {
+                     ExtendedImageView.this.safePreferenceChanged();
+                     return true;
+                  }
+               }
+
+               if ((flags & 48) != 0) {
+                  ExtendedImageView.this.repaint(0L);
+               } else if ((flags & 8) != 0 && ExtendedImageView.sIsInc) {
+                  ExtendedImageView.this.repaint((long)ExtendedImageView.sIncRate);
+               }
+
+               return (flags & 32) == 0;
+            }
+         } else {
+            return false;
+         }
+      }
+
+      // $FF: synthetic method
+      ImageHandler(Object x1) {
+         this();
       }
    }
 }

@@ -33,11 +33,6 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
    private Account selectedAccount;
    boolean refreshing;
 
-   static {
-      EMPTY = AccountCellRenderer.EMPTY;
-      MANAGE = AccountCellRenderer.MANAGE;
-   }
-
    AccountComboBox(LoginForm lf) {
       super((ListCellRenderer)(new AccountCellRenderer()));
       this.loginForm = lf;
@@ -57,6 +52,7 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
                   AccountComboBox.this.updateAccount();
                }
             }
+
          }
       });
    }
@@ -78,6 +74,7 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
          this.loginForm.global.setForcefully("login.account.type", this.selectedAccount.getType(), false);
          this.loginForm.global.store();
       }
+
    }
 
    public Account getAccount() {
@@ -86,11 +83,10 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
    }
 
    public void setAccount(Account account) {
-      if (account != null) {
-         if (!account.equals(this.getAccount())) {
-            this.setSelectedItem(account);
-         }
+      if (account != null && !account.equals(this.getAccount())) {
+         this.setSelectedItem(account);
       }
+
    }
 
    void setAccount(String username, Account.AccountType type) {
@@ -124,10 +120,10 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
    public void refreshAccounts(AuthenticatorDatabase db, Account select) {
       if (select == null) {
          if (this.selectedAccount == null) {
-            String username = this.loginForm.global.get("login.account");
-            if (username != null) {
-               Account.AccountType type = (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, this.loginForm.global.get("login.account.type"));
-               this.selectedAccount = this.loginForm.tlauncher.getProfileManager().getAuthDatabase().getByUsername(username, type);
+            String list = this.loginForm.global.get("login.account");
+            if (list != null) {
+               Account.AccountType account = (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, this.loginForm.global.get("login.account.type"));
+               this.selectedAccount = this.loginForm.tlauncher.getProfileManager().getAuthDatabase().getByUsername(list, account);
             }
          }
 
@@ -135,18 +131,18 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
       }
 
       this.removeAllItems();
-      Collection list = db.getAccounts();
-      if (list.isEmpty()) {
+      Collection list1 = db.getAccounts();
+      if (list1.isEmpty()) {
          this.addItem(EMPTY);
       } else {
          this.refreshing = true;
-         this.model.addElements(list);
-         Iterator var5 = list.iterator();
+         this.model.addElements(list1);
+         Iterator var5 = list1.iterator();
 
          while(var5.hasNext()) {
-            Account account = (Account)var5.next();
-            if (select != null && select.equals(account)) {
-               this.setSelectedItem(account);
+            Account account1 = (Account)var5.next();
+            if (select != null && select.equals(account1)) {
+               this.setSelectedItem(account1);
                break;
             }
          }
@@ -180,5 +176,10 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
 
    public void unblock(Object reason) {
       this.setEnabled(true);
+   }
+
+   static {
+      EMPTY = AccountCellRenderer.EMPTY;
+      MANAGE = AccountCellRenderer.MANAGE;
    }
 }

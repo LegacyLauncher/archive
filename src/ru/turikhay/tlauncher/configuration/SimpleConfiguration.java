@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -117,7 +116,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
    }
 
    public Set getKeys() {
-      Set set = new HashSet();
+      HashSet set = new HashSet();
       Iterator var3 = this.properties.keySet().iterator();
 
       while(var3.hasNext()) {
@@ -246,7 +245,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
       if (stream == null) {
          throw new NullPointerException();
       } else {
-         Reader reader = new InputStreamReader(new BufferedInputStream(stream), Charset.forName("UTF-8"));
+         InputStreamReader reader = new InputStreamReader(new BufferedInputStream(stream), Charset.forName("UTF-8"));
          properties.clear();
          properties.load(reader);
       }

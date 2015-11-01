@@ -204,7 +204,7 @@ public class PrintLogger extends PrintStream implements Logger {
    }
 
    public synchronized PrintStream append(CharSequence csq, int start, int end) {
-      CharSequence cs = csq == null ? "null" : csq;
+      Object cs = csq == null ? "null" : csq;
       this.write(((CharSequence)cs).subSequence(start, end).toString());
       return this;
    }

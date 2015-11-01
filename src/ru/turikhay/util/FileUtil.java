@@ -83,15 +83,16 @@ public class FileUtil {
 
       try {
          stream = new DigestInputStream(new FileInputStream(file), MessageDigest.getInstance(algorithm));
-         byte[] buffer = new byte[65536];
+         byte[] ignored = new byte[65536];
 
          int read;
          do {
-            read = stream.read(buffer);
+            read = stream.read(ignored);
          } while(read > 0);
 
-         return String.format("%1$0" + hashLength + "x", new BigInteger(1, stream.getMessageDigest().digest()));
-      } catch (Exception var9) {
+         String var6 = String.format("%1$0" + hashLength + "x", new BigInteger(1, stream.getMessageDigest().digest()));
+         return var6;
+      } catch (Exception var10) {
       } finally {
          close(stream);
       }
@@ -127,20 +128,21 @@ public class FileUtil {
 
       try {
          fis = new BufferedInputStream(new FileInputStream(file));
-         byte[] buffer = new byte[1024];
+         byte[] e = new byte[1024];
          MessageDigest complete = MessageDigest.getInstance(algorithm);
 
          int numRead;
          do {
-            numRead = fis.read(buffer);
+            numRead = fis.read(e);
             if (numRead > 0) {
-               complete.update(buffer, 0, numRead);
+               complete.update(e, 0, numRead);
             }
          } while(numRead != -1);
 
          byte[] var7 = complete.digest();
+         byte[] var7 = var7;
          return var7;
-      } catch (Exception var10) {
+      } catch (Exception var11) {
       } finally {
          close(fis);
       }
@@ -198,7 +200,7 @@ public class FileUtil {
          createFile(dest);
       }
 
-      InputStream is = null;
+      BufferedInputStream is = null;
       BufferedOutputStream os = null;
 
       try {
@@ -236,6 +238,7 @@ public class FileUtil {
             }
          }
       }
+
    }
 
    public static void deleteFile(String path) {
@@ -246,19 +249,23 @@ public class FileUtil {
       if (!dir.isDirectory()) {
          throw new IllegalArgumentException("Specified path is not a directory: " + dir.getAbsolutePath());
       } else {
-         File[] var4;
-         int var3 = (var4 = dir.listFiles()).length;
+         File[] var4 = dir.listFiles();
+         if (var4 == null) {
+            throw new RuntimeException("Folder is corrupted: " + dir.getAbsolutePath());
+         } else {
+            int var3 = var4.length;
 
-         for(int var2 = 0; var2 < var3; ++var2) {
-            File file = var4[var2];
-            if (file.isDirectory()) {
-               deleteDirectory(file);
-            } else {
-               deleteFile(file);
+            for(int var2 = 0; var2 < var3; ++var2) {
+               File file = var4[var2];
+               if (file.isDirectory()) {
+                  deleteDirectory(file);
+               } else {
+                  deleteFile(file);
+               }
             }
-         }
 
-         deleteFile(dir);
+            deleteFile(dir);
+         }
       }
    }
 
@@ -277,13 +284,15 @@ public class FileUtil {
 
          while(true) {
             ZipEntry entry;
+            byte[] buf;
             do {
                if ((entry = in.getNextEntry()) == null) {
-                  return out.toByteArray();
+                  buf = out.toByteArray();
+                  return buf;
                }
             } while(!entry.getName().equals(requestedFile));
 
-            byte[] buf = new byte[1024];
+            buf = new byte[1024];
 
             int len;
             while((len = in.read(buf)) > 0) {
@@ -345,6 +354,7 @@ public class FileUtil {
             throw new IOException("Cannot create file, or it was created during runtime: " + file.getAbsolutePath());
          }
       }
+
    }
 
    public static void createFile(String file) throws IOException {
@@ -384,7 +394,7 @@ public class FileUtil {
    }
 
    public static String getResource(URL resource, String charset) throws IOException {
-      InputStream is = new BufferedInputStream(resource.openStream());
+      BufferedInputStream is = new BufferedInputStream(resource.openStream());
       InputStreamReader reader = new InputStreamReader(is, charset);
       StringBuilder b = new StringBuilder();
 

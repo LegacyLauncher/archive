@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.versions;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,7 +9,6 @@ import java.util.List;
 import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
@@ -19,6 +19,7 @@ import ru.turikhay.tlauncher.ui.swing.SimpleListModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.util.SwingUtil;
 
 public class VersionList extends CenterPanel implements VersionHandlerListener {
    private static final long serialVersionUID = -7192156096621636270L;
@@ -33,7 +34,7 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
    VersionList(VersionHandler h) {
       super(squareInsets);
       this.handler = h;
-      BorderPanel panel = new BorderPanel(0, 5);
+      BorderPanel panel = new BorderPanel(0, SwingUtil.magnify(5));
       LocalizableLabel label = new LocalizableLabel("version.manager.list");
       panel.setNorth(label);
       this.model = new SimpleListModel();
@@ -63,7 +64,7 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
       panel.setSouth(buttons);
       this.add(panel);
       this.handler.addListener(this);
-      this.setSize(300, 350);
+      this.setSize(SwingUtil.magnify(new Dimension(300, 350)));
    }
 
    void select(List list) {
@@ -72,11 +73,12 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
          int[] indexes = new int[list.size()];
 
          for(int i = 0; i < size; ++i) {
-            indexes[i] = this.model.indexOf((VersionSyncInfo)list.get(i));
+            indexes[i] = this.model.indexOf(list.get(i));
          }
 
          this.list.setSelectedIndices(indexes);
       }
+
    }
 
    void deselect() {

@@ -43,26 +43,26 @@ public class ServerListManager extends InterruptibleComponent {
    protected boolean refresh(int refreshID) {
       this.refreshList[refreshID] = true;
       this.log("Refreshing servers...");
-      Iterator var3 = this.listeners.iterator();
+      Iterator result = this.listeners.iterator();
 
-      while(var3.hasNext()) {
-         ServerListManagerListener listener = (ServerListManagerListener)var3.next();
-         listener.onServersRefreshing(this);
+      while(result.hasNext()) {
+         ServerListManagerListener lock = (ServerListManagerListener)result.next();
+         lock.onServersRefreshing(this);
       }
 
-      Object lock = new Object();
-      Time.start(lock);
-      ServerList result = null;
+      Object lock1 = new Object();
+      Time.start(lock1);
+      ServerList result1 = null;
       Throwable e = null;
 
       try {
-         result = this.loadFromList();
-      } catch (Throwable var7) {
-         e = var7;
+         result1 = this.loadFromList();
+      } catch (Throwable var8) {
+         e = var8;
       }
 
       if (this.isCancelled(refreshID)) {
-         this.log("Server list refreshing has been cancelled (" + Time.stop(lock) + " ms)");
+         this.log("Server list refreshing has been cancelled (" + Time.stop(lock1) + " ms)");
          return false;
       } else {
          ServerListManagerListener listener;
@@ -75,14 +75,14 @@ public class ServerListManager extends InterruptibleComponent {
                listener.onServersRefreshingFailed(this);
             }
 
-            this.log("Cannot refresh servers (" + Time.stop(lock) + " ms)", e);
+            this.log("Cannot refresh servers (" + Time.stop(lock1) + " ms)", e);
             return true;
          } else {
-            if (result != null) {
-               this.serverList = result;
+            if (result1 != null) {
+               this.serverList = result1;
             }
 
-            this.log("Servers has been refreshed (" + Time.stop(lock) + " ms)");
+            this.log("Servers has been refreshed (" + Time.stop(lock1) + " ms)");
             this.log(this.serverList);
             this.refreshList[refreshID] = false;
             var6 = this.listeners.iterator();
@@ -105,18 +105,19 @@ public class ServerListManager extends InterruptibleComponent {
       } else {
          slog("Reconstructing...");
          slog("Loading from file...");
-         ServerList userList = ServerList.loadFromFile(serversDat);
+         boolean exist = serversDat.isFile();
+         ServerList userList = exist ? ServerList.loadFromFile(serversDat) : new ServerList();
          Iterator var4 = promoted.getList().iterator();
 
          while(var4.hasNext()) {
-            ServerList.Server promotedServer = (ServerList.Server)var4.next();
-            if (userList.contains(promotedServer)) {
-               userList.remove(promotedServer);
+            ServerList.Server resultList = (ServerList.Server)var4.next();
+            if (userList.contains(resultList)) {
+               userList.remove(resultList);
             }
          }
 
-         ServerList resultList = ServerList.sortLists(promoted, userList);
-         resultList.save(serversDat);
+         ServerList resultList1 = ServerList.sortLists(promoted, userList);
+         resultList1.save(serversDat);
          return true;
       }
    }

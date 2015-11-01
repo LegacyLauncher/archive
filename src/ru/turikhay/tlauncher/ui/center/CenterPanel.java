@@ -16,6 +16,7 @@ import ru.turikhay.tlauncher.ui.block.BlockablePanel;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.Del;
+import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.util.U;
@@ -26,11 +27,11 @@ public class CenterPanel extends BlockablePanel {
    public static final CenterPanelTheme tipTheme = new TipPanelTheme();
    public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
    public static final CenterPanelTheme settingsTheme = new SettingsPanelTheme();
-   public static final Insets defaultInsets = new Insets(5, 24, 18, 24);
-   public static final Insets squareInsets = new Insets(15, 15, 15, 15);
-   public static final Insets smallSquareInsets = new Insets(7, 7, 7, 7);
-   public static final Insets smallSquareNoTopInsets = new Insets(5, 15, 5, 15);
-   public static final Insets noInsets = new Insets(0, 0, 0, 0);
+   public static final Insets defaultInsets = new MagnifiedInsets(5, 24, 18, 24);
+   public static final Insets squareInsets = new MagnifiedInsets(15, 15, 15, 15);
+   public static final Insets smallSquareInsets = new MagnifiedInsets(7, 7, 7, 7);
+   public static final Insets smallSquareNoTopInsets = new MagnifiedInsets(5, 15, 5, 15);
+   public static final Insets noInsets = new MagnifiedInsets(0, 0, 0, 0);
    protected static final int ARC_SIZE = 24;
    private final Insets insets;
    private final CenterPanelTheme theme;
@@ -59,7 +60,14 @@ public class CenterPanel extends BlockablePanel {
       CenterPanelTheme var10001 = theme == null ? defaultTheme : theme;
       theme = var10001;
       this.theme = var10001;
-      this.insets = insets == null ? defaultInsets : insets;
+      Insets var10001 = insets == null ? defaultInsets : MagnifiedInsets.get(insets);
+      if (insets == null) {
+         Insets var10000 = defaultInsets;
+      } else {
+         MagnifiedInsets.get(insets);
+      }
+
+      this.insets = (Insets)var10001;
       this.setLayout(new BoxLayout(this, 3));
       this.setBackground(theme.getPanelBackground());
       this.messageLabel = new LocalizableLabel("  ");
@@ -76,19 +84,19 @@ public class CenterPanel extends BlockablePanel {
 
    public void paintComponent(Graphics g0) {
       Graphics2D g = (Graphics2D)g0;
-      int x = 0;
+      byte x = 0;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g.setColor(this.getBackground());
       g.fillRoundRect(x, x, this.getWidth(), this.getHeight(), 24, 24);
       g.setColor(this.theme.getBorder());
 
-      int x;
-      for(x = 1; x < 3; ++x) {
-         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 24 - 2 * x + 1, 24 - 2 * x + 1);
+      int var5;
+      for(var5 = 1; var5 < 3; ++var5) {
+         g.drawRoundRect(var5 - 1, var5 - 1, this.getWidth() - 2 * var5 + 1, this.getHeight() - 2 * var5 + 1, 24 - 2 * var5 + 1, 24 - 2 * var5 + 1);
       }
 
       Color shadow = U.shiftAlpha(Color.gray, -155);
-      x = 3;
+      var5 = 3;
 
       while(true) {
          shadow = U.shiftAlpha(shadow, -10);
@@ -99,8 +107,8 @@ public class CenterPanel extends BlockablePanel {
          }
 
          g.setColor(shadow);
-         g.drawRoundRect(x - 1, x - 1, this.getWidth() - 2 * x + 1, this.getHeight() - 2 * x + 1, 24 - 2 * x + 1, 24 - 2 * x + 1);
-         ++x;
+         g.drawRoundRect(var5 - 1, var5 - 1, this.getWidth() - 2 * var5 + 1, this.getHeight() - 2 * var5 + 1, 24 - 2 * var5 + 1, 24 - 2 * var5 + 1);
+         ++var5;
       }
    }
 

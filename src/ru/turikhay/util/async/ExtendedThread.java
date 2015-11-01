@@ -10,9 +10,9 @@ public abstract class ExtendedThread extends Thread {
    private final Object monitor;
 
    public ExtendedThread(String name) {
-      super(name + "#" + threadNum.incrementAndGet());
+      super((name == null ? "ExtendedThread" : name) + "#" + threadNum.incrementAndGet());
       this.monitor = new Object();
-      this.caller = new ExtendedThread.ExtendedThreadCaller((ExtendedThread.ExtendedThreadCaller)null);
+      this.caller = new ExtendedThread.ExtendedThreadCaller();
    }
 
    public ExtendedThread() {
@@ -44,8 +44,8 @@ public abstract class ExtendedThread extends Thread {
             while(this.blockReason != null) {
                try {
                   this.monitor.wait();
-               } catch (InterruptedException var4) {
-                  var4.printStackTrace();
+               } catch (InterruptedException var5) {
+                  var5.printStackTrace();
                }
             }
 
@@ -60,6 +60,7 @@ public abstract class ExtendedThread extends Thread {
          throw new IllegalStateException("Unlocking denied! Locked with: " + this.blockReason + ", tried to unlock with: " + reason);
       } else {
          this.blockReason = null;
+         Object var2 = this.monitor;
          synchronized(this.monitor) {
             this.monitor.notifyAll();
          }
@@ -100,7 +101,7 @@ public abstract class ExtendedThread extends Thread {
       }
 
       // $FF: synthetic method
-      ExtendedThreadCaller(ExtendedThread.ExtendedThreadCaller var2) {
+      ExtendedThreadCaller(Object x1) {
          this();
       }
    }

@@ -11,19 +11,16 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.util.SwingUtil;
 
 public class AccountCellRenderer implements ListCellRenderer {
    public static final Account EMPTY = Account.randomAccount();
    public static final Account MANAGE = Account.randomAccount();
-   private static final ImageIcon MANAGE_ICON = Images.getIcon("gear.png");
-   private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("mojang-user.png");
-   private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png");
+   private static final ImageIcon MANAGE_ICON = Images.getIcon("gear.png", SwingUtil.magnify(16));
+   private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("mojang-user.png", SwingUtil.magnify(16));
+   private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
    private final DefaultListCellRenderer defaultRenderer;
    private AccountCellRenderer.AccountCellType type;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType;
 
    public AccountCellRenderer(AccountCellRenderer.AccountCellType type) {
       if (type == null) {
@@ -58,12 +55,12 @@ public class AccountCellRenderer implements ListCellRenderer {
             renderer.setText(Localizable.get("account.manage"));
             renderer.setIcon(MANAGE_ICON);
          } else {
-            Icon icon = null;
-            switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[value.getType().ordinal()]) {
-            case 1:
+            Object icon = null;
+            switch(value.getType()) {
+            case ELY:
                icon = TLauncher.getInstance().getElyManager().isRefreshing() ? ELY_USER_ICON.getDisabledInstance() : ELY_USER_ICON;
                break;
-            case 2:
+            case MOJANG:
                icon = MOJANG_USER_ICON;
             }
 
@@ -72,8 +69,8 @@ public class AccountCellRenderer implements ListCellRenderer {
                renderer.setFont(renderer.getFont().deriveFont(1));
             }
 
-            switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType()[this.type.ordinal()]) {
-            case 2:
+            switch(this.type) {
+            case EDITOR:
                if (!value.hasUsername()) {
                   renderer.setText(Localizable.get("account.creating"));
                   renderer.setFont(renderer.getFont().deriveFont(2));
@@ -94,57 +91,6 @@ public class AccountCellRenderer implements ListCellRenderer {
       }
 
       return renderer;
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[Account.AccountType.values().length];
-
-         try {
-            var0[Account.AccountType.ELY.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[Account.AccountType.FREE.ordinal()] = 3;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[Account.AccountType.MOJANG.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType = var0;
-         return var0;
-      }
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[AccountCellRenderer.AccountCellType.values().length];
-
-         try {
-            var0[AccountCellRenderer.AccountCellType.EDITOR.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[AccountCellRenderer.AccountCellType.PREVIEW.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AccountCellRenderer$AccountCellType = var0;
-         return var0;
-      }
    }
 
    public static enum AccountCellType {

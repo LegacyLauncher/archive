@@ -47,13 +47,12 @@ public class Console implements Logger {
    private boolean killed;
    MinecraftLauncher launcher;
    private FileExplorer explorer;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$console$Console$CloseAction;
 
    public Console(Configuration global, PrintLogger logger, String name, boolean show) {
       this.global = global;
+      this.name = name;
       this.frame = new ConsoleFrame(this);
-      this.setName(name);
+      this.frame.setTitle(name);
       frames.add(this.frame);
       this.update();
       this.frame.addWindowListener(new WindowAdapter() {
@@ -138,7 +137,14 @@ public class Console implements Logger {
 
    public void setLauncher(MinecraftLauncher launcher) {
       this.launcher = launcher;
-      this.frame.bottom.kill.setEnabled(launcher != null);
+      this.frame.bottom.folder.setEnabled(true);
+      if (launcher != null) {
+         this.frame.bottom.kill.setEnabled(true);
+         if (!"DevConsole".equals(this.name)) {
+            this.frame.bottom.openFolder = launcher.getGameDir();
+         }
+      }
+
    }
 
    public void log(String s) {
@@ -194,6 +200,7 @@ public class Console implements Logger {
          this.frame.setSize(width, height);
          this.frame.setLocation(x, y);
       }
+
    }
 
    void save() {
@@ -211,6 +218,7 @@ public class Console implements Logger {
          this.global.set(prefix + "x", position[0], false);
          this.global.set(prefix + "y", position[1], false);
       }
+
    }
 
    private void check() {
@@ -277,16 +285,16 @@ public class Console implements Logger {
             paste.setContent(Console.this.frame.console.getOutput());
             PasteResult result = paste.paste();
             if (result instanceof PasteResult.PasteUploaded) {
-               PasteResult.PasteUploaded uploaded = (PasteResult.PasteUploaded)result;
-               if (Alert.showLocQuestion("console.pastebin.sent", (Object)uploaded.getURL())) {
-                  OS.openLink(uploaded.getURL());
+               PasteResult.PasteUploaded error = (PasteResult.PasteUploaded)result;
+               if (Alert.showLocQuestion("console.pastebin.sent", (Object)error.getURL())) {
+                  OS.openLink(error.getURL());
                }
             } else if (result instanceof PasteResult.PasteFailed) {
-               Throwable error = ((PasteResult.PasteFailed)result).getError();
-               if (error instanceof RuntimeException) {
-                  Alert.showLocError("console.pastebin.invalid", error);
-               } else if (error instanceof IOException) {
-                  Alert.showLocError("console.pastebin.failed", error);
+               Throwable error1 = ((PasteResult.PasteFailed)result).getError();
+               if (error1 instanceof RuntimeException) {
+                  Alert.showLocError("console.pastebin.invalid", error1);
+               } else if (error1 instanceof IOException) {
+                  Alert.showLocError("console.pastebin.failed", error1);
                }
             }
 
@@ -298,7 +306,7 @@ public class Console implements Logger {
       if (this.explorer == null) {
          try {
             this.explorer = FileExplorer.newExplorer();
-         } catch (InternalError var16) {
+         } catch (InternalError var17) {
             Alert.showError(Localizable.get("explorer.unavailable.title"), Localizable.get("explorer.unvailable") + (OS.WINDOWS.isCurrent() ? "\n" + Localizable.get("explorer.unavailable.win") : ""));
             return;
          }
@@ -332,9 +340,9 @@ public class Console implements Logger {
                }
 
             }
-
          }
       }
+
    }
 
    public boolean isKilled() {
@@ -378,14 +386,14 @@ public class Console implements Logger {
 
    private void onClose() {
       if (this.close != null) {
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$console$Console$CloseAction()[this.close.ordinal()]) {
-         case 1:
+         switch(this.close) {
+         case EXIT:
             this.kill();
-         case 2:
+         case KILL:
             TLauncher.kill();
-         default:
          }
       }
+
    }
 
    public static void updateLocale() {
@@ -396,29 +404,6 @@ public class Console implements Logger {
          frame.updateLocale();
       }
 
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$console$Console$CloseAction() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$console$Console$CloseAction;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[Console.CloseAction.values().length];
-
-         try {
-            var0[Console.CloseAction.EXIT.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[Console.CloseAction.KILL.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$console$Console$CloseAction = var0;
-         return var0;
-      }
    }
 
    public static enum CloseAction {

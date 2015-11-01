@@ -86,80 +86,84 @@ public class Notices {
       }
    }
 
-   public static class Deserializer implements JsonDeserializer {
-      public Notices deserialize(JsonElement root, Type type, JsonDeserializationContext context) throws JsonParseException {
-         try {
-            return this.deserialize0(root);
-         } catch (Exception var5) {
-            U.log("Cannot parse notices:", var5);
-            return new Notices();
+   public static enum NoticeType {
+      NOTICE(false),
+      WARNING(false),
+      AD_SERVER,
+      AD_YOUTUBE,
+      AD_OTHER;
+
+      private final boolean advert;
+
+      private NoticeType(boolean advert) {
+         this.advert = advert;
+      }
+
+      private NoticeType() {
+         this(true);
+      }
+
+      public boolean isAdvert() {
+         return this.advert;
+      }
+   }
+
+   public static class NoticeList {
+      private final String name;
+      private final List list = new ArrayList();
+      private final List unmodifiable;
+      private final Notices.Notice[] chances;
+      private int totalChance;
+
+      public NoticeList(String name) {
+         this.unmodifiable = Collections.unmodifiableList(this.list);
+         this.chances = new Notices.Notice[100];
+         this.totalChance = 0;
+         if (name == null) {
+            throw new NullPointerException("name");
+         } else if (name.isEmpty()) {
+            throw new IllegalArgumentException("name is empty");
+         } else {
+            this.name = name;
          }
       }
 
-      private Notices deserialize0(JsonElement root) throws JsonParseException {
-         Notices notices = new Notices();
-         JsonObject rootObject = root.getAsJsonObject();
-         Iterator var5 = rootObject.entrySet().iterator();
+      public final String getName() {
+         return this.name;
+      }
 
-         label51:
-         while(var5.hasNext()) {
-            Entry entry = (Entry)var5.next();
-            String listName = (String)entry.getKey();
-            JsonArray ntArray = ((JsonElement)entry.getValue()).getAsJsonArray();
-            Iterator var9 = ntArray.iterator();
+      public final List getList() {
+         return this.unmodifiable;
+      }
 
-            while(true) {
-               JsonObject ntObj;
-               Pattern pattern;
-               do {
-                  if (!var9.hasNext()) {
-                     continue label51;
-                  }
+      protected final List list() {
+         return this.list;
+      }
 
-                  JsonElement elem = (JsonElement)var9.next();
-                  ntObj = elem.getAsJsonObject();
-                  if (!ntObj.has("version")) {
-                     break;
-                  }
+      public final Notices.Notice getRandom() {
+         return this.chances[(new Random()).nextInt(100)];
+      }
 
-                  String version = ntObj.get("version").getAsString();
-                  pattern = Pattern.compile(version);
-               } while(!pattern.matcher(String.valueOf(TLauncher.getVersion())).matches());
-
-               Notices.Notice notice = new Notices.Notice();
-               notice.setContent(ntObj.get("content").getAsString());
-               notice.setSize(IntegerArray.parseIntegerArray(ntObj.get("size").getAsString(), 'x').toArray());
-               if (ntObj.has("chance")) {
-                  notice.setChance(ntObj.get("chance").getAsInt());
-               }
-
-               if (ntObj.has("type")) {
-                  notice.setType((Notices.NoticeType)Reflect.parseEnum(Notices.NoticeType.class, ntObj.get("type").getAsString()));
-               }
-
-               if (ntObj.has("image")) {
-                  notice.setImage(ntObj.get("image").getAsString());
-               }
-
-               notices.add(listName, notice);
-            }
+      protected void add(Notices.Notice notice) {
+         if (notice == null) {
+            throw new NullPointerException();
+         } else if (this.totalChance + notice.chance > 100) {
+            throw new IllegalArgumentException("chance overflow: " + (this.totalChance + notice.chance));
+         } else {
+            this.list.add(notice);
+            Arrays.fill(this.chances, this.totalChance, this.totalChance + notice.chance, notice);
+            this.totalChance += notice.chance;
          }
+      }
 
-         if (notices.getByName("uk_UA") == null && notices.getByName("ru_RU") != null) {
-            var5 = notices.getByName("ru_RU").getList().iterator();
-
-            while(var5.hasNext()) {
-               Notices.Notice notice = (Notices.Notice)var5.next();
-               notices.add("uk_UA", notice);
-            }
-         }
-
-         return notices;
+      public String toString() {
+         return this.getClass().getSimpleName() + this.list();
       }
    }
 
    public static class Notice {
       private String content;
+      private int id;
       private int chance = 100;
       private Notices.NoticeType type;
       private int[] size;
@@ -168,6 +172,14 @@ public class Notices {
       public Notice() {
          this.type = Notices.NoticeType.NOTICE;
          this.size = new int[2];
+      }
+
+      public final int getId() {
+         return this.id;
+      }
+
+      public final void setId(int id) {
+         this.id = id;
       }
 
       public final int getChance() {
@@ -270,78 +282,79 @@ public class Notices {
       }
    }
 
-   public static class NoticeList {
-      private final String name;
-      private final List list = new ArrayList();
-      private final List unmodifiable;
-      private final Notices.Notice[] chances;
-      private int totalChance;
-
-      public NoticeList(String name) {
-         this.unmodifiable = Collections.unmodifiableList(this.list);
-         this.chances = new Notices.Notice[100];
-         this.totalChance = 0;
-         if (name == null) {
-            throw new NullPointerException("name");
-         } else if (name.isEmpty()) {
-            throw new IllegalArgumentException("name is empty");
-         } else {
-            this.name = name;
+   public static class Deserializer implements JsonDeserializer {
+      public Notices deserialize(JsonElement root, Type type, JsonDeserializationContext context) throws JsonParseException {
+         try {
+            return this.deserialize0(root);
+         } catch (Exception var5) {
+            U.log("Cannot parse notices:", var5);
+            return new Notices();
          }
       }
 
-      public final String getName() {
-         return this.name;
-      }
+      private Notices deserialize0(JsonElement root) throws JsonParseException {
+         Notices notices = new Notices();
+         JsonObject rootObject = root.getAsJsonObject();
+         Iterator var5 = rootObject.entrySet().iterator();
 
-      public final List getList() {
-         return this.unmodifiable;
-      }
+         label56:
+         while(var5.hasNext()) {
+            Entry notice = (Entry)var5.next();
+            String listName = (String)notice.getKey();
+            JsonArray ntArray = ((JsonElement)notice.getValue()).getAsJsonArray();
+            Iterator var9 = ntArray.iterator();
 
-      protected final List list() {
-         return this.list;
-      }
+            while(true) {
+               JsonObject ntObj;
+               Pattern pattern;
+               do {
+                  if (!var9.hasNext()) {
+                     continue label56;
+                  }
 
-      public final Notices.Notice getRandom() {
-         return this.chances[(new Random()).nextInt(100)];
-      }
+                  JsonElement elem = (JsonElement)var9.next();
+                  ntObj = elem.getAsJsonObject();
+                  if (!ntObj.has("version")) {
+                     break;
+                  }
 
-      protected void add(Notices.Notice notice) {
-         if (notice == null) {
-            throw new NullPointerException();
-         } else if (this.totalChance + notice.chance > 100) {
-            throw new IllegalArgumentException("chance overflow: " + (this.totalChance + notice.chance));
-         } else {
-            this.list.add(notice);
-            Arrays.fill(this.chances, this.totalChance, this.totalChance + notice.chance, notice);
-            this.totalChance += notice.chance;
+                  String notice1 = ntObj.get("version").getAsString();
+                  pattern = Pattern.compile(notice1);
+               } while(!pattern.matcher(String.valueOf(TLauncher.getVersion())).matches());
+
+               Notices.Notice notice3 = new Notices.Notice();
+               notice3.setContent(ntObj.get("content").getAsString());
+               notice3.setSize(IntegerArray.parseIntegerArray(ntObj.get("size").getAsString(), 'x').toArray());
+               if (ntObj.has("id")) {
+                  notice3.setId(ntObj.get("id").getAsInt());
+               }
+
+               if (ntObj.has("chance")) {
+                  notice3.setChance(ntObj.get("chance").getAsInt());
+               }
+
+               if (ntObj.has("type")) {
+                  notice3.setType((Notices.NoticeType)Reflect.parseEnum(Notices.NoticeType.class, ntObj.get("type").getAsString()));
+               }
+
+               if (ntObj.has("image")) {
+                  notice3.setImage(ntObj.get("image").getAsString());
+               }
+
+               notices.add(listName, notice3);
+            }
          }
-      }
 
-      public String toString() {
-         return this.getClass().getSimpleName() + this.list();
-      }
-   }
+         if (notices.getByName("uk_UA") == null && notices.getByName("ru_RU") != null) {
+            var5 = notices.getByName("ru_RU").getList().iterator();
 
-   public static enum NoticeType {
-      NOTICE(false),
-      WARNING(false),
-      AD_SERVER,
-      AD_YOUTUBE,
-      AD_OTHER;
+            while(var5.hasNext()) {
+               Notices.Notice notice2 = (Notices.Notice)var5.next();
+               notices.add("uk_UA", notice2);
+            }
+         }
 
-      private final boolean advert;
-
-      private NoticeType(boolean advert) {
-         this.advert = advert;
-      }
-
-      private NoticeType() {
-         this(true);
-      }
-
-      public boolean isAdvert() {
-         return this.advert;
+         return notices;
       }
    }
 }

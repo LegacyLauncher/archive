@@ -15,8 +15,53 @@ public class ArgumentParser {
    private static final Map m = new HashMap();
    private static final OptionParser parser;
 
+   public static OptionParser getParser() {
+      return parser;
+   }
+
+   public static OptionSet parseArgs(String[] args) throws IOException {
+      try {
+         return parser.parse(args);
+      } catch (OptionException var2) {
+         var2.printStackTrace();
+         parser.printHelpOn((OutputStream)System.out);
+         Alert.showError(var2, false);
+         return null;
+      }
+   }
+
+   public static Map parse(OptionSet set) {
+      HashMap r = new HashMap();
+      if (set == null) {
+         return r;
+      } else {
+         Iterator var3 = m.entrySet().iterator();
+
+         while(var3.hasNext()) {
+            Entry a = (Entry)var3.next();
+            String key = (String)a.getKey();
+            Object value = null;
+            if (key.startsWith("-")) {
+               key = key.substring(1);
+               value = true;
+            }
+
+            if (set.has(key)) {
+               if (value == null) {
+                  value = set.valueOf(key);
+               }
+
+               r.put(a.getValue(), value);
+            }
+         }
+
+         return r;
+      }
+   }
+
    static {
       m.put("directory", "minecraft.gamedir");
+      m.put("profiles", "profiles");
       m.put("java-directory", "minecraft.javadir");
       m.put("version", "login.version");
       m.put("username", "login.account");
@@ -42,49 +87,5 @@ public class ArgumentParser {
       parser.accepts("background", "Specifies background image. URL links, JPEG and PNG formats are supported.").withRequiredArg();
       parser.accepts("fullscreen", "Specifies whether fullscreen mode enabled or not").withRequiredArg();
       parser.accepts("block-settings", "Disables settings and folder buttons");
-   }
-
-   public static OptionParser getParser() {
-      return parser;
-   }
-
-   public static OptionSet parseArgs(String[] args) throws IOException {
-      try {
-         return parser.parse(args);
-      } catch (OptionException var2) {
-         var2.printStackTrace();
-         parser.printHelpOn((OutputStream)System.out);
-         Alert.showError(var2, false);
-         return null;
-      }
-   }
-
-   public static Map parse(OptionSet set) {
-      Map r = new HashMap();
-      if (set == null) {
-         return r;
-      } else {
-         Iterator var3 = m.entrySet().iterator();
-
-         while(var3.hasNext()) {
-            Entry a = (Entry)var3.next();
-            String key = (String)a.getKey();
-            Object value = null;
-            if (key.startsWith("-")) {
-               key = key.substring(1);
-               value = true;
-            }
-
-            if (set.has(key)) {
-               if (value == null) {
-                  value = set.valueOf(key);
-               }
-
-               r.put((String)a.getValue(), value);
-            }
-         }
-
-         return r;
-      }
    }
 }

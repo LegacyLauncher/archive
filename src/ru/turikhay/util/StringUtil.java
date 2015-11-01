@@ -11,11 +11,7 @@ import ru.turikhay.exceptions.ParseException;
 
 public class StringUtil {
    private static String addQuotes(String a, char quote) {
-      if (a == null) {
-         return null;
-      } else {
-         return a.length() == 0 ? "" : quote + a.replaceAll("\\" + quote, "\\\\" + quote) + quote;
-      }
+      return a == null ? null : (a.length() == 0 ? "" : quote + a.replaceAll("\\" + quote, "\\\\" + quote) + quote);
    }
 
    public static String addQuotes(String a) {
@@ -67,8 +63,8 @@ public class StringUtil {
       CharsetEncoder encoder = out.newEncoder();
 
       try {
-         ByteBuffer bbuf = encoder.encode(CharBuffer.wrap(str));
-         CharBuffer cbuf = decoder.decode(bbuf);
+         ByteBuffer e = encoder.encode(CharBuffer.wrap(str));
+         CharBuffer cbuf = decoder.decode(e);
          return cbuf.toString();
       } catch (Exception var9) {
          var9.printStackTrace();
@@ -116,11 +112,7 @@ public class StringUtil {
          throw new NullPointerException();
       } else {
          int len = str.length();
-         if (len == 0) {
-            return '\u0000';
-         } else {
-            return len == 1 ? str.charAt(0) : str.charAt(len - 1);
-         }
+         return len == 0 ? '\u0000' : (len == 1 ? str.charAt(0) : str.charAt(len - 1));
       }
    }
 
@@ -143,11 +135,11 @@ public class StringUtil {
             int i;
             int tries;
             for(i = len - 1; i > -1; --i) {
-               char curChar = chars[i];
-               tries = Character.getType(curChar);
-               boolean canBeReversed = tries == 1 || tries == 2;
-               reversedFlag[i] |= !canBeReversed;
-               if (canBeReversed && !chosenLastLetter) {
+               char newPos = chars[i];
+               tries = Character.getType(newPos);
+               boolean curChar = tries == 1 || tries == 2;
+               reversedFlag[i] |= !curChar;
+               if (curChar && !chosenLastLetter) {
                   reversedFlag[i] = true;
                   chosenLastLetter = true;
                }
@@ -155,25 +147,25 @@ public class StringUtil {
 
             for(i = 0; i < len; ++i) {
                if (!reversedFlag[i]) {
-                  int newPos = i;
+                  int var11 = i;
                   tries = 0;
 
                   while(tries < 3) {
                      ++tries;
-                     newPos = (new Random()).nextInt(len);
-                     if (!reversedFlag[newPos]) {
+                     var11 = (new Random()).nextInt(len);
+                     if (!reversedFlag[var11]) {
                         tries = 10;
                         break;
                      }
                   }
 
                   if (tries == 10) {
-                     char curChar = chars[i];
-                     char replaceChar = chars[newPos];
+                     char var12 = chars[i];
+                     char replaceChar = chars[var11];
                      chars[i] = replaceChar;
-                     chars[newPos] = curChar;
+                     chars[var11] = var12;
                      reversedFlag[i] = true;
-                     reversedFlag[newPos] = true;
+                     reversedFlag[var11] = true;
                   }
                }
             }
@@ -271,7 +263,10 @@ public class StringUtil {
                builder.append(current);
             } else {
                --remaining;
-               if (s[x] != '\n' && (remaining >= 1 || current != ' ')) {
+               if (s[x] == '\n' || remaining < 1 && current == ' ') {
+                  remaining = maxChars;
+                  builder.append(lineBreak);
+               } else {
                   if (lookForward(s, x, lineBreak)) {
                      remaining = maxChars;
                   }
@@ -281,9 +276,6 @@ public class StringUtil {
                      remaining = maxChars;
                      builder.append(lineBreak);
                   }
-               } else {
-                  remaining = maxChars;
-                  builder.append(lineBreak);
                }
             }
          }

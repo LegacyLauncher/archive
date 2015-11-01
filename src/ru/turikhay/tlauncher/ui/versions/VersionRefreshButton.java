@@ -20,8 +20,6 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
    private final LocalizableMenuItem local;
    private final LocalizableMenuItem remote;
    private VersionRefreshButton.ButtonState state;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionRefreshButton$ButtonState;
 
    VersionRefreshButton(VersionList list) {
       this.handler = list.handler;
@@ -50,11 +48,11 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
    }
 
    void onPressed() {
-      switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionRefreshButton$ButtonState()[this.state.ordinal()]) {
-      case 1:
+      switch(this.state) {
+      case REFRESH:
          this.menu.show(this, 0, this.getHeight());
          break;
-      case 2:
+      case CANCEL:
          this.handler.stopRefresh();
       }
 
@@ -95,29 +93,6 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
 
    public void unblock(Object reason) {
       this.setEnabled(true);
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionRefreshButton$ButtonState() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionRefreshButton$ButtonState;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[VersionRefreshButton.ButtonState.values().length];
-
-         try {
-            var0[VersionRefreshButton.ButtonState.CANCEL.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[VersionRefreshButton.ButtonState.REFRESH.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionRefreshButton$ButtonState = var0;
-         return var0;
-      }
    }
 
    static enum ButtonState {

@@ -15,8 +15,6 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
    private static final String LANG_PREFIX = "notifier.";
    private SideNotifier.NotifierStatus status;
    private Update update;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$SideNotifier$NotifierStatus;
 
    public SideNotifier() {
       super((Image)null, 1.0F, 0.75F, false, true);
@@ -55,16 +53,16 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
       if (!super.onClick()) {
          return false;
       } else {
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$SideNotifier$NotifierStatus()[this.status.ordinal()]) {
-         case 1:
+         switch(this.status) {
+         case FAILED:
             Alert.showWarning(Localizable.get("notifier.failed.title"), Localizable.get("notifier.failed"));
             break;
-         case 2:
+         case FOUND:
             if (this.update == null) {
                throw new IllegalStateException("Update is NULL!");
             }
 
-            String prefix = "notifier." + this.status.toString() + ".";
+            String prefix = "notifier." + this.status + ".";
             String title = prefix + "title";
             String question = prefix + "question";
             boolean ask = Alert.showQuestion(Localizable.get(title), Localizable.get(question, this.update.getVersion()), this.update.getDescription());
@@ -74,7 +72,7 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
 
             UpdateUIListener listener = new UpdateUIListener(this.update);
             listener.push();
-         case 3:
+         case NONE:
             break;
          default:
             throw new IllegalStateException("Unknown status: " + this.status);
@@ -107,34 +105,7 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
 
          TLauncher.getInstance().getSettings().set("update.asked", upd.getVersion());
       }
-   }
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$SideNotifier$NotifierStatus() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$SideNotifier$NotifierStatus;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[SideNotifier.NotifierStatus.values().length];
-
-         try {
-            var0[SideNotifier.NotifierStatus.FAILED.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[SideNotifier.NotifierStatus.FOUND.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[SideNotifier.NotifierStatus.NONE.ordinal()] = 3;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$SideNotifier$NotifierStatus = var0;
-         return var0;
-      }
    }
 
    public static enum NotifierStatus {

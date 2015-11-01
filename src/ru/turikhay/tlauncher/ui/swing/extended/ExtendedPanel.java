@@ -43,7 +43,7 @@ public class ExtendedPanel extends JPanel {
    }
 
    public void setOpacity(float f) {
-      if (!(f < 0.0F) && !(f > 1.0F)) {
+      if (f >= 0.0F && f <= 1.0F) {
          this.opacity = f;
          this.aComp = AlphaComposite.getInstance(3, f);
          this.repaint();
@@ -120,8 +120,8 @@ public class ExtendedPanel extends JPanel {
             Component comp = var5[var3];
             comp.addMouseListener(listener);
          }
-
       }
+
    }
 
    protected synchronized void addMouseListenerOriginally(MouseListener listener) {
@@ -138,8 +138,8 @@ public class ExtendedPanel extends JPanel {
             Component comp = var5[var3];
             comp.removeMouseListener(listener);
          }
-
       }
+
    }
 
    protected synchronized void removeMouseListenerOriginally(MouseListener listener) {
@@ -178,5 +178,6 @@ public class ExtendedPanel extends JPanel {
          g.setComposite(this.aComp);
          super.paintComponent(g0);
       }
+
    }
 }

@@ -64,6 +64,7 @@ public class ImagePanel extends ExtendedPanel {
    }
 
    protected void setImage(Image image, boolean resetSize) {
+      Object var3 = this.animationLock;
       synchronized(this.animationLock) {
          this.originalImage = image;
          this.image = image;
@@ -79,7 +80,7 @@ public class ImagePanel extends ExtendedPanel {
    }
 
    protected void setActiveOpacity(float opacity) {
-      if (!(opacity > 1.0F) && !(opacity < 0.0F)) {
+      if (opacity <= 1.0F && opacity >= 0.0F) {
          this.activeOpacity = opacity;
       } else {
          throw new IllegalArgumentException("Invalid opacity! Condition: 0.0F <= opacity (got: " + opacity + ") <= 1.0F");
@@ -87,7 +88,7 @@ public class ImagePanel extends ExtendedPanel {
    }
 
    protected void setNonActiveOpacity(float opacity) {
-      if (!(opacity > 1.0F) && !(opacity < 0.0F)) {
+      if (opacity <= 1.0F && opacity >= 0.0F) {
          this.nonActiveOpacity = opacity;
       } else {
          throw new IllegalArgumentException("Invalid opacity! Condition: 0.0F <= opacity (got: " + opacity + ") <= 1.0F");
@@ -106,11 +107,13 @@ public class ImagePanel extends ExtendedPanel {
          g.drawImage(this.image, 0, 0, this.getWidth(), this.getHeight(), (ImageObserver)null);
          g.setComposite(oldComp);
       }
+
    }
 
    public void show() {
       if (!this.shown) {
          this.shown = true;
+         Object var1 = this.animationLock;
          synchronized(this.animationLock) {
             this.animating = true;
             this.setVisible(true);
@@ -130,11 +133,13 @@ public class ImagePanel extends ExtendedPanel {
             this.animating = false;
          }
       }
+
    }
 
    public void hide() {
       if (this.shown) {
          this.shown = false;
+         Object var1 = this.animationLock;
          synchronized(this.animationLock) {
             this.animating = true;
 
@@ -152,12 +157,14 @@ public class ImagePanel extends ExtendedPanel {
             this.animating = false;
          }
       }
+
    }
 
    public void setPreferredSize() {
       if (this.image != null) {
          this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null)));
       }
+
    }
 
    protected boolean onClick() {
@@ -170,6 +177,7 @@ public class ImagePanel extends ExtendedPanel {
          this.opacity = this.activeOpacity;
          this.repaint();
       }
+
    }
 
    protected void onMouseExited() {
@@ -178,5 +186,6 @@ public class ImagePanel extends ExtendedPanel {
          this.opacity = this.nonActiveOpacity;
          this.repaint();
       }
+
    }
 }

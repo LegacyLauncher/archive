@@ -1,18 +1,20 @@
 package ru.turikhay.tlauncher.ui.login.buttons;
 
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JPopupMenu;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
-import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
+import ru.turikhay.util.SwingUtil;
 
-public class SettingsButton extends ImageButton implements Blockable {
-   private static final long serialVersionUID = 1321382157134544911L;
+public class SettingsButton extends ExtendedButton implements Blockable {
    private final LoginForm lf;
    private final JPopupMenu popup;
    private final LocalizableMenuItem accountManager;
@@ -21,8 +23,7 @@ public class SettingsButton extends ImageButton implements Blockable {
 
    SettingsButton(LoginForm loginform) {
       this.lf = loginform;
-      this.image = loadImage("settings.png");
-      this.rotation = ImageButton.ImageRotation.CENTER;
+      this.setIcon(Images.getScaledIcon("settings.png", 16));
       this.popup = new JPopupMenu();
       this.settings = new LocalizableMenuItem("loginform.button.settings.launcher");
       this.settings.addActionListener(new ActionListener() {
@@ -51,7 +52,10 @@ public class SettingsButton extends ImageButton implements Blockable {
             SettingsButton.this.callPopup();
          }
       });
-      this.initImage();
+   }
+
+   public Insets getInsets() {
+      return SwingUtil.magnify(super.getInsets());
    }
 
    void callPopup() {

@@ -24,10 +24,10 @@ public class SearchPanel extends ExtendedPanel {
 
    SearchPanel(ConsoleFrame cf) {
       this.cf = cf;
-      this.field = new SearchPanel.SearchField((SearchPanel.SearchField)null);
-      this.prefs = new SearchPanel.SearchPrefs((SearchPanel.SearchPrefs)null);
-      this.find = new SearchPanel.FindButton((SearchPanel.FindButton)null);
-      this.kill = new SearchPanel.KillButton((SearchPanel.KillButton)null);
+      this.field = new SearchPanel.SearchField();
+      this.prefs = new SearchPanel.SearchPrefs();
+      this.find = new SearchPanel.FindButton();
+      this.kill = new SearchPanel.KillButton();
       GroupLayout layout = new GroupLayout(this);
       this.setLayout(layout);
       layout.setAutoCreateContainerGaps(true);
@@ -42,61 +42,6 @@ public class SearchPanel extends ExtendedPanel {
 
    private void focus() {
       this.field.requestFocusInWindow();
-   }
-
-   public class FindButton extends ImageButton {
-      private FindButton() {
-         this.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               SearchPanel.this.search();
-            }
-         });
-      }
-
-      // $FF: synthetic method
-      FindButton(SearchPanel.FindButton var2) {
-         this();
-      }
-   }
-
-   public class KillButton extends ImageButton {
-      private KillButton() {
-      }
-
-      // $FF: synthetic method
-      KillButton(SearchPanel.KillButton var2) {
-         this();
-      }
-   }
-
-   private class Range {
-      private int start;
-      private int end;
-
-      Range(int start, int end) {
-         this.start = start;
-         this.end = end;
-      }
-
-      boolean isCorrect() {
-         return this.start > 0 && this.end > this.start;
-      }
-   }
-
-   public class SearchField extends LocalizableInvalidateTextField {
-      private SearchField() {
-         super("console.search.placeholder");
-         this.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               SearchPanel.this.search();
-            }
-         });
-      }
-
-      // $FF: synthetic method
-      SearchField(SearchPanel.SearchField var2) {
-         this();
-      }
    }
 
    public class SearchPrefs extends BorderPanel {
@@ -117,7 +62,62 @@ public class SearchPanel extends ExtendedPanel {
       }
 
       // $FF: synthetic method
-      SearchPrefs(SearchPanel.SearchPrefs var2) {
+      SearchPrefs(Object x1) {
+         this();
+      }
+   }
+
+   public class SearchField extends LocalizableInvalidateTextField {
+      private SearchField() {
+         super("console.search.placeholder");
+         this.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               SearchPanel.this.search();
+            }
+         });
+      }
+
+      // $FF: synthetic method
+      SearchField(Object x1) {
+         this();
+      }
+   }
+
+   private class Range {
+      private int start;
+      private int end;
+
+      Range(int start, int end) {
+         this.start = start;
+         this.end = end;
+      }
+
+      boolean isCorrect() {
+         return this.start > 0 && this.end > this.start;
+      }
+   }
+
+   public class KillButton extends ImageButton {
+      private KillButton() {
+      }
+
+      // $FF: synthetic method
+      KillButton(Object x1) {
+         this();
+      }
+   }
+
+   public class FindButton extends ImageButton {
+      private FindButton() {
+         this.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               SearchPanel.this.search();
+            }
+         });
+      }
+
+      // $FF: synthetic method
+      FindButton(Object x1) {
          this();
       }
    }

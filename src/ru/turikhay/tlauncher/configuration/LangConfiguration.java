@@ -23,29 +23,29 @@ public class LangConfiguration extends SimpleConfiguration {
 
          int defLocale;
          for(defLocale = 0; defLocale < size; ++defLocale) {
-            Locale locale = locales[defLocale];
-            if (locale == null) {
+            Locale i = locales[defLocale];
+            if (i == null) {
                throw new NullPointerException("Locale at #" + defLocale + " is NULL!");
             }
 
-            String localeName = locale.toString();
-            InputStream stream = this.getClass().getResourceAsStream("/lang/" + localeName);
-            if (stream == null) {
-               throw new IOException("Cannot find locale file for: " + localeName);
+            String key = i.toString();
+            InputStream i1 = this.getClass().getResourceAsStream("/lang/" + key);
+            if (i1 == null) {
+               throw new IOException("Cannot find locale file for: " + key);
             }
 
-            this.prop[defLocale] = loadFromStream(stream);
-            if (localeName.equals("en_US")) {
+            this.prop[defLocale] = loadFromStream(i1);
+            if (key.equals("en_US")) {
                copyProperties(this.prop[defLocale], this.properties, true);
             }
          }
 
          defLocale = -1;
 
-         int i;
-         for(i = 0; i < size; ++i) {
-            if (locales[i].toString().equals("ru_RU")) {
-               defLocale = i;
+         int var8;
+         for(var8 = 0; var8 < size; ++var8) {
+            if (locales[var8].toString().equals("ru_RU")) {
+               defLocale = var8;
                break;
             }
          }
@@ -54,23 +54,23 @@ public class LangConfiguration extends SimpleConfiguration {
             Iterator var10 = this.prop[defLocale].keySet().iterator();
 
             while(var10.hasNext()) {
-               Object key = var10.next();
+               Object var9 = var10.next();
 
-               for(int i = 0; i < size; ++i) {
-                  if (i != defLocale && !this.prop[i].containsKey(key)) {
-                     U.log("Locale", locales[i], "doesn't contain key", key);
+               for(int var12 = 0; var12 < size; ++var12) {
+                  if (var12 != defLocale && !this.prop[var12].containsKey(var9)) {
+                     U.log("Locale", locales[var12], "doesn't contain key", var9);
                   }
                }
             }
 
-            for(i = 0; i < size; ++i) {
-               if (i != defLocale) {
-                  Iterator var13 = this.prop[i].keySet().iterator();
+            for(var8 = 0; var8 < size; ++var8) {
+               if (var8 != defLocale) {
+                  Iterator var13 = this.prop[var8].keySet().iterator();
 
                   while(var13.hasNext()) {
-                     Object key = var13.next();
-                     if (!this.prop[defLocale].containsKey(key)) {
-                        U.log("Locale", locales[i], "contains redundant key", key);
+                     Object var11 = var13.next();
+                     if (!this.prop[defLocale].containsKey(var11)) {
+                        U.log("Locale", locales[var8], "contains redundant key", var11);
                      }
                   }
                }

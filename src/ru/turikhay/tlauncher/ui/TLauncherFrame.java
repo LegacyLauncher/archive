@@ -25,7 +25,6 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.Dragger;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.IntegerArray;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
@@ -34,7 +33,10 @@ import ru.turikhay.util.async.ExtendedThread;
 public class TLauncherFrame extends JFrame {
    public static final Dimension minSize = new Dimension(530, 550);
    public static final Dimension maxSize = new Dimension(1920, 1080);
-   public static final float fontSize;
+   public static final float minFontSize = 12.0F;
+   public static final float maxFontSize = 22.0F;
+   private static float fontSize;
+   public static double magnifyDimensions;
    private final TLauncherFrame instance = this;
    private final TLauncher tlauncher;
    private final Configuration settings;
@@ -45,8 +47,13 @@ public class TLauncherFrame extends JFrame {
    private String brand;
    private SimpleConfiguration uiConfig;
 
-   static {
-      fontSize = OS.WINDOWS.isCurrent() ? 12.0F : 14.0F;
+   public static float getFontSize() {
+      return fontSize;
+   }
+
+   public static void setFontSize(float size) {
+      fontSize = size;
+      magnifyDimensions = (double)(fontSize / 12.0F);
    }
 
    public TLauncherFrame(TLauncher t) {
@@ -55,7 +62,7 @@ public class TLauncherFrame extends JFrame {
       this.lang = t.getLang();
       this.windowSize = this.settings.getLauncherWindowSize();
       this.maxPoint = new Point();
-      SwingUtil.initFontSize((int)fontSize);
+      SwingUtil.initFontSize((int)getFontSize());
       SwingUtil.setFavicons(this);
       this.setupUI();
       this.updateUILocale();
@@ -79,6 +86,7 @@ public class TLauncherFrame extends JFrame {
                TLauncherFrame.this.mp.defaultScene.settingsForm.launcherResolution.setValue(arr);
                TLauncherFrame.this.settings.set("gui.size", arr);
             }
+
          }
 
          public void componentShown(ComponentEvent e) {
@@ -98,6 +106,7 @@ public class TLauncherFrame extends JFrame {
             if (newState != -1) {
                TLauncherFrame.this.settings.set("gui.window", newState);
             }
+
          }
       });
       U.setLoadingStep(Bootstrapper.LoadingStep.PREPARING_MAINPANE);
@@ -111,7 +120,7 @@ public class TLauncherFrame extends JFrame {
       this.mp.background.startBackground();
       this.updateMaxPoint();
       Dragger.ready(this.settings, this.maxPoint);
-      if (TLauncher.isBeta()) {
+      if (TLauncher.getDebug()) {
          new TLauncherFrame.TitleUpdaterThread();
       } else {
          this.setWindowTitle();
@@ -162,7 +171,7 @@ public class TLauncherFrame extends JFrame {
    }
 
    public void updateTitle() {
-      StringBuilder brandBuilder = (new StringBuilder()).append(TLauncher.getBrand()).append(' ').append(TLauncher.getVersion());
+      StringBuilder brandBuilder = (new StringBuilder()).append(TLauncher.getVersion()).append(" [").append(TLauncher.getBrand()).append("]");
       if (TLauncher.getDebug()) {
          brandBuilder.append(" [DEBUG]");
       }
@@ -177,7 +186,7 @@ public class TLauncherFrame extends JFrame {
    public void setWindowTitle() {
       this.updateTitle();
       String title;
-      if (TLauncher.isBeta()) {
+      if (TLauncher.getDebug()) {
          title = String.format("TLauncher %s [%s]", this.brand, U.memoryStatus());
       } else {
          title = String.format("TLauncher %s", this.brand);
@@ -229,21 +238,19 @@ public class TLauncherFrame extends JFrame {
    }
 
    public void setSize(int width, int height) {
-      if (this.getWidth() != width || this.getHeight() != height) {
-         if (this.getExtendedState() == 0) {
-            boolean show = this.isVisible();
-            if (show) {
-               this.setVisible(false);
-            }
+      if ((this.getWidth() != width || this.getHeight() != height) && this.getExtendedState() == 0) {
+         boolean show = this.isVisible();
+         if (show) {
+            this.setVisible(false);
+         }
 
-            super.setSize(width, height);
-            if (show) {
-               this.setVisible(true);
-               this.setLocationRelativeTo((Component)null);
-            }
-
+         super.setSize(width, height);
+         if (show) {
+            this.setVisible(true);
+            this.setLocationRelativeTo((Component)null);
          }
       }
+
    }
 
    public void setSize(Dimension d) {

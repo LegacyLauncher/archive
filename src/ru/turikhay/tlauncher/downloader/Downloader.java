@@ -143,11 +143,12 @@ public class Downloader extends ExtendedThread {
       this.haveWork = true;
 
       while(this.haveWork) {
+         Object var1 = this.workLock;
          synchronized(this.workLock) {
             try {
                this.workLock.wait();
-            } catch (InterruptedException var3) {
-               var3.printStackTrace();
+            } catch (InterruptedException var5) {
+               var5.printStackTrace();
             }
          }
       }
@@ -156,6 +157,7 @@ public class Downloader extends ExtendedThread {
 
    private void notifyWork() {
       this.haveWork = false;
+      Object var1 = this.workLock;
       synchronized(this.workLock) {
          this.workLock.notifyAll();
       }
@@ -197,12 +199,13 @@ public class Downloader extends ExtendedThread {
       while(true) {
          this.lockThread("iteration");
          log("Files in queue", this.list.size());
+         List i = this.list;
          synchronized(this.list) {
             this.sortOut();
          }
 
-         for(int i = 0; i < this.runningThreads; ++i) {
-            this.threads[i].startDownload();
+         for(int var3 = 0; var3 < this.runningThreads; ++var3) {
+            this.threads[var3].startDownload();
          }
 
          this.lockThread("download");
@@ -227,26 +230,26 @@ public class Downloader extends ExtendedThread {
       if (size != 0) {
          int downloadablesAtThread = U.getMaxMultiply(size, 6);
          int x = 0;
-         int y = true;
+         boolean y = true;
          log("Starting download " + size + " files...");
          this.onStart(size);
          int max = this.configuration.getMaxThreads();
 
          boolean[] workers;
+         int var11;
          for(workers = new boolean[max]; size > 0; downloadablesAtThread = U.getMaxMultiply(size, 6)) {
-            for(int i = 0; i < max; ++i) {
-               workers[i] = true;
+            for(int worker = 0; worker < max; ++worker) {
+               workers[worker] = true;
                size -= downloadablesAtThread;
-               if (this.threads[i] == null) {
-                  this.threads[i] = new DownloaderThread(this, ++this.runningThreads);
+               if (this.threads[worker] == null) {
+                  this.threads[worker] = new DownloaderThread(this, ++this.runningThreads);
                }
 
-               int y;
-               for(y = x; y < x + downloadablesAtThread; ++y) {
-                  this.threads[i].add((Downloadable)this.list.get(y));
+               for(var11 = x; var11 < x + downloadablesAtThread; ++var11) {
+                  this.threads[worker].add((Downloadable)this.list.get(var11));
                }
 
-               x = y;
+               x = var11;
                if (size == 0) {
                   break;
                }
@@ -254,17 +257,18 @@ public class Downloader extends ExtendedThread {
          }
 
          boolean[] var10 = workers;
-         int var9 = workers.length;
+         var11 = workers.length;
 
-         for(int var8 = 0; var8 < var9; ++var8) {
-            boolean worker = var10[var8];
-            if (worker) {
+         for(int var8 = 0; var8 < var11; ++var8) {
+            boolean var12 = var10[var8];
+            if (var12) {
                ++this.workingThreads;
             }
          }
 
          this.list.clear();
       }
+
    }
 
    private void onStart(int size) {
@@ -292,7 +296,7 @@ public class Downloader extends ExtendedThread {
       int id = thread.getID() - 1;
       this.progressContainer[id] = curprogress;
       this.averageProgress = U.getAverage(this.progressContainer, this.workingThreads);
-      if (!(this.averageProgress - this.lastAverageProgress < 0.01D)) {
+      if (this.averageProgress - this.lastAverageProgress >= 0.01D) {
          this.speed = 0.005D * this.speed + 0.995D * curspeed;
          this.lastAverageProgress = this.averageProgress;
          Iterator var8 = this.listeners.iterator();
@@ -301,8 +305,8 @@ public class Downloader extends ExtendedThread {
             DownloaderListener listener = (DownloaderListener)var8.next();
             listener.onDownloaderProgress(this, this.averageProgress, this.speed);
          }
-
       }
+
    }
 
    void onFileComplete(DownloaderThread thread, Downloadable file) {

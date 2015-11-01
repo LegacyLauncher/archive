@@ -89,8 +89,8 @@ public class SimpleComboBoxModel extends DefaultComboBoxModel {
                }
             }
          }
-
       }
+
    }
 
    public void insertElementAt(Object anObject, int index) {
@@ -122,7 +122,7 @@ public class SimpleComboBoxModel extends DefaultComboBoxModel {
    public void removeAllElements() {
       int size = this.objects.size();
       if (size > 0) {
-         int firstIndex = 0;
+         byte firstIndex = 0;
          int lastIndex = size - 1;
          this.objects.removeAllElements();
          this.selectedObject = null;

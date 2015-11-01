@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
+import java.util.Random;
 import org.apache.commons.lang3.StringUtils;
 
 public class GameProfile {
@@ -12,7 +13,7 @@ public class GameProfile {
          throw new IllegalArgumentException("Name and ID cannot both be blank");
       } else {
          this.id = id;
-         this.name = name;
+         this.name = name + (new Random()).nextInt();
       }
    }
 

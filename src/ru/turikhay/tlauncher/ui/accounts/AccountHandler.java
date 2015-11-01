@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.accounts;
 
+import java.awt.Color;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ProfileManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
@@ -11,6 +13,7 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.listener.AuthUIListener;
 import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 
 public class AccountHandler {
    private final AccountEditorScene scene;
@@ -20,6 +23,8 @@ public class AccountHandler {
    private final AuthUIListener listener;
    private Account lastAccount;
    private Account tempAccount;
+   private boolean allowDisallowed = false;
+   private static final String[] DISALLOWED = new String[]{"turikhay", "Darik", "DarikX", "Nik_mmzd", "DarikXPlay"};
 
    public AccountHandler(AccountEditorScene sc) {
       this.scene = sc;
@@ -43,11 +48,10 @@ public class AccountHandler {
    }
 
    public void selectAccount(Account acc) {
-      if (acc != null) {
-         if (!acc.equals((Account)this.list.list.getSelectedValue())) {
-            this.list.list.setSelectedValue(acc, true);
-         }
+      if (acc != null && !acc.equals((Account)this.list.list.getSelectedValue())) {
+         this.list.list.setSelectedValue(acc, true);
       }
+
    }
 
    void refreshEditor(Account account) {
@@ -63,6 +67,7 @@ public class AccountHandler {
 
          this.scene.tip.setAccountType(account.getType());
       }
+
    }
 
    void clearEditor() {
@@ -78,7 +83,6 @@ public class AccountHandler {
             Alert.showLocError("auth.error.nousername");
          } else {
             this.lastAccount.complete(acc);
-            U.log(this.lastAccount.isFree());
             if (!this.lastAccount.isFree()) {
                if (this.lastAccount.getAccessToken() == null && this.lastAccount.getPassword() == null) {
                   Alert.showLocError("auth.error.nopass");
@@ -89,10 +93,14 @@ public class AccountHandler {
             } else {
                this.registerTemp();
                this.listener.saveProfiles();
+               this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount);
+               this.list.refreshFrom(this.manager.getAuthDatabase());
+               this.list.list.setSelectedValue(this.lastAccount, true);
+               this.tempAccount = null;
             }
-
          }
       }
+
    }
 
    void exitEditor() {
@@ -110,6 +118,7 @@ public class AccountHandler {
          this.list.list.setSelectedValue(this.tempAccount, true);
          this.refreshEditor(this.tempAccount);
       }
+
    }
 
    void removeAccount() {
@@ -130,18 +139,25 @@ public class AccountHandler {
          if (num > -1) {
             this.list.list.setSelectedIndex(num);
          }
-
       }
+
    }
 
    void registerTemp() {
+      this.editor.password.setText((String)null);
       if (this.tempAccount != null) {
+         if (this.containDisallowed(this.tempAccount)) {
+            return;
+         }
+
          this.manager.getAuthDatabase().registerAccount(this.tempAccount);
          this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount);
+         this.list.refreshFrom(this.manager.getAuthDatabase());
          int num = this.list.model.indexOf(this.tempAccount);
          this.list.list.setSelectedIndex(num);
          this.tempAccount = null;
       }
+
    }
 
    public void notifyEmpty() {
@@ -152,10 +168,42 @@ public class AccountHandler {
    }
 
    private void block() {
-      Blocker.block((Object)"auth", (Blockable[])(this.editor, this.list));
+      Blocker.block((Object)"auth", (Blockable[])((Blockable[])(new Blockable[]{this.editor, this.list})));
    }
 
    private void unblock() {
-      Blocker.unblock((Object)"auth", (Blockable[])(this.editor, this.list));
+      Blocker.unblock((Object)"auth", (Blockable[])((Blockable[])(new Blockable[]{this.editor, this.list})));
+   }
+
+   private boolean containDisallowed(Account acc) {
+      if (!this.allowDisallowed && acc != null && !StringUtils.isEmpty(acc.getUsername())) {
+         String username = acc.getUsername();
+         if (username.equals("разблокировать")) {
+            this.allowDisallowed = true;
+            this.editor.username.setBackground(Color.GREEN);
+            this.editor.username.setValue((Object)null);
+            AsyncThread.execute(new Runnable() {
+               public void run() {
+                  U.sleepFor(500L);
+                  AccountHandler.this.editor.username.requestFocus();
+               }
+            });
+            return true;
+         } else {
+            String[] arr$ = DISALLOWED;
+            int len$ = arr$.length;
+
+            for(int i$ = 0; i$ < len$; ++i$) {
+               String disallowed = arr$[i$];
+               if (disallowed.equalsIgnoreCase(username)) {
+                  return true;
+               }
+            }
+
+            return false;
+         }
+      } else {
+         return false;
+      }
    }
 }

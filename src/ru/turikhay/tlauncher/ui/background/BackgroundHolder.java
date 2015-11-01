@@ -54,29 +54,23 @@ public class BackgroundHolder extends ExtendedLayeredPane {
    }
 
    public void startBackground() {
-      if (this.currentBackground != null) {
-         if (this.currentBackground instanceof AnimatedBackground) {
-            ((AnimatedBackground)this.currentBackground).startBackground();
-         }
-
+      if (this.currentBackground != null && this.currentBackground instanceof AnimatedBackground) {
+         ((AnimatedBackground)this.currentBackground).startBackground();
       }
+
    }
 
    public void suspendBackground() {
-      if (this.currentBackground != null) {
-         if (this.currentBackground instanceof AnimatedBackground) {
-            ((AnimatedBackground)this.currentBackground).suspendBackground();
-         }
-
+      if (this.currentBackground != null && this.currentBackground instanceof AnimatedBackground) {
+         ((AnimatedBackground)this.currentBackground).suspendBackground();
       }
+
    }
 
    public void stopBackground() {
-      if (this.currentBackground != null) {
-         if (this.currentBackground instanceof AnimatedBackground) {
-            ((AnimatedBackground)this.currentBackground).stopBackground();
-         }
-
+      if (this.currentBackground != null && this.currentBackground instanceof AnimatedBackground) {
+         ((AnimatedBackground)this.currentBackground).stopBackground();
       }
+
    }
 }

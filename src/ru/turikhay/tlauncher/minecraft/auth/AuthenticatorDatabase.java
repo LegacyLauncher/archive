@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -90,6 +89,7 @@ public class AuthenticatorDatabase {
       if (this.listener != null) {
          this.listener.onAccountsRefreshed(this);
       }
+
    }
 
    public void setListener(AccountListener listener) {
@@ -98,33 +98,33 @@ public class AuthenticatorDatabase {
 
    public static class Serializer implements JsonDeserializer, JsonSerializer {
       public AuthenticatorDatabase deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-         Map services = new LinkedHashMap();
+         LinkedHashMap services = new LinkedHashMap();
          Map credentials = this.deserializeCredentials((JsonObject)json, context);
          Iterator var7 = credentials.entrySet().iterator();
 
          while(var7.hasNext()) {
             Entry en = (Entry)var7.next();
-            services.put((String)en.getKey(), new Account((Map)en.getValue()));
+            services.put(en.getKey(), new Account((Map)en.getValue()));
          }
 
          return new AuthenticatorDatabase(services);
       }
 
       Map deserializeCredentials(JsonObject json, JsonDeserializationContext context) {
-         Map result = new LinkedHashMap();
+         LinkedHashMap result = new LinkedHashMap();
          Iterator var5 = json.entrySet().iterator();
 
          while(var5.hasNext()) {
             Entry authEntry = (Entry)var5.next();
-            Map credentials = new LinkedHashMap();
+            LinkedHashMap credentials = new LinkedHashMap();
             Iterator var8 = ((JsonObject)authEntry.getValue()).entrySet().iterator();
 
             while(var8.hasNext()) {
                Entry credentialsEntry = (Entry)var8.next();
-               credentials.put((String)credentialsEntry.getKey(), this.deserializeCredential((JsonElement)credentialsEntry.getValue()));
+               credentials.put(credentialsEntry.getKey(), this.deserializeCredential((JsonElement)credentialsEntry.getValue()));
             }
 
-            result.put((String)authEntry.getKey(), credentials);
+            result.put(authEntry.getKey(), credentials);
          }
 
          return result;
@@ -133,19 +133,19 @@ public class AuthenticatorDatabase {
       private Object deserializeCredential(JsonElement element) {
          Iterator var4;
          if (element instanceof JsonObject) {
-            Map result = new LinkedHashMap();
+            LinkedHashMap result1 = new LinkedHashMap();
             var4 = ((JsonObject)element).entrySet().iterator();
 
             while(var4.hasNext()) {
-               Entry entry = (Entry)var4.next();
-               result.put((String)entry.getKey(), this.deserializeCredential((JsonElement)entry.getValue()));
+               Entry entry1 = (Entry)var4.next();
+               result1.put(entry1.getKey(), this.deserializeCredential((JsonElement)entry1.getValue()));
             }
 
-            return result;
+            return result1;
          } else if (!(element instanceof JsonArray)) {
             return element.getAsString();
          } else {
-            List result = new ArrayList();
+            ArrayList result = new ArrayList();
             var4 = ((JsonArray)element).iterator();
 
             while(var4.hasNext()) {
@@ -159,12 +159,12 @@ public class AuthenticatorDatabase {
 
       public JsonElement serialize(AuthenticatorDatabase src, Type typeOfSrc, JsonSerializationContext context) {
          Map services = src.accounts;
-         Map credentials = new LinkedHashMap();
+         LinkedHashMap credentials = new LinkedHashMap();
          Iterator var7 = services.entrySet().iterator();
 
          while(var7.hasNext()) {
             Entry en = (Entry)var7.next();
-            credentials.put((String)en.getKey(), ((Account)en.getValue()).createMap());
+            credentials.put(en.getKey(), ((Account)en.getValue()).createMap());
          }
 
          return context.serialize(credentials);

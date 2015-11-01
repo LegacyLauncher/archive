@@ -25,9 +25,7 @@ public class U {
    private static final int ST_PROGRAM = 10;
    private static String PREFIX;
    private static final Object lock = new Object();
-
-   private U() {
-   }
+   private static Random rnd;
 
    public static void setPrefix(String prefix) {
       PREFIX = prefix;
@@ -38,6 +36,7 @@ public class U {
    }
 
    public static void linelog(Object what) {
+      Object var1 = lock;
       synchronized(lock) {
          System.out.print(what);
       }
@@ -52,6 +51,7 @@ public class U {
    }
 
    private static void hlog(String prefix, Object[] append) {
+      Object var2 = lock;
       synchronized(lock) {
          System.out.println(toLog(prefix, append));
       }
@@ -78,7 +78,7 @@ public class U {
                   }
 
                   if (e instanceof Object[]) {
-                     b.append(toLog((Object[])e));
+                     b.append(toLog((Object[])((Object[])e)));
                   } else {
                      b.append(arrayToLog(e));
                   }
@@ -100,25 +100,25 @@ public class U {
                      b.append(" ");
                   }
 
-                  File file = (File)e;
-                  String absPath = file.getAbsolutePath();
+                  File en = (File)e;
+                  String absPath = en.getAbsolutePath();
                   b.append(absPath);
-                  if (file.isDirectory() && !absPath.endsWith(File.separator)) {
+                  if (en.isDirectory() && !absPath.endsWith(File.separator)) {
                      b.append(File.separator);
                   }
                } else if (e instanceof Iterator) {
-                  Iterator i = (Iterator)e;
+                  Iterator var10 = (Iterator)e;
 
-                  while(i.hasNext()) {
+                  while(var10.hasNext()) {
                      b.append(" ");
-                     b.append(toLog(i.next()));
+                     b.append(toLog(var10.next()));
                   }
                } else if (e instanceof Enumeration) {
-                  Enumeration en = (Enumeration)e;
+                  Enumeration var11 = (Enumeration)e;
 
-                  while(en.hasMoreElements()) {
+                  while(var11.hasMoreElements()) {
                      b.append(" ");
-                     b.append(toLog(en.nextElement()));
+                     b.append(toLog(var11.nextElement()));
                   }
                } else {
                   if (!first) {
@@ -160,7 +160,7 @@ public class U {
          int var5;
          if (e instanceof Object[]) {
             Object[] var6;
-            var5 = (var6 = (Object[])e).length;
+            var5 = (var6 = (Object[])((Object[])e)).length;
 
             for(var4 = 0; var4 < var5; ++var4) {
                Object i = var6[var4];
@@ -174,117 +174,117 @@ public class U {
             }
          } else if (e instanceof int[]) {
             int[] var16;
-            var5 = (var16 = (int[])e).length;
+            var5 = (var16 = (int[])((int[])e)).length;
 
             for(var4 = 0; var4 < var5; ++var4) {
-               int i = var16[var4];
+               int var8 = var16[var4];
                if (!first) {
                   b.append(" ");
                } else {
                   first = false;
                }
 
-               b.append(i);
+               b.append(var8);
             }
          } else if (e instanceof boolean[]) {
             boolean[] var17;
-            var5 = (var17 = (boolean[])e).length;
+            var5 = (var17 = (boolean[])((boolean[])e)).length;
 
             for(var4 = 0; var4 < var5; ++var4) {
-               boolean i = var17[var4];
+               boolean var9 = var17[var4];
                if (!first) {
                   b.append(" ");
                } else {
                   first = false;
                }
 
-               b.append(i);
+               b.append(var9);
             }
          } else {
             int var18;
             if (e instanceof long[]) {
                long[] var7;
-               var18 = (var7 = (long[])e).length;
+               var18 = (var7 = (long[])((long[])e)).length;
 
                for(var5 = 0; var5 < var18; ++var5) {
-                  long i = var7[var5];
+                  long var10 = var7[var5];
                   if (!first) {
                      b.append(" ");
                   } else {
                      first = false;
                   }
 
-                  b.append(i);
+                  b.append(var10);
                }
             } else if (e instanceof float[]) {
                float[] var19;
-               var5 = (var19 = (float[])e).length;
+               var5 = (var19 = (float[])((float[])e)).length;
 
                for(var4 = 0; var4 < var5; ++var4) {
-                  float i = var19[var4];
+                  float var11 = var19[var4];
                   if (!first) {
                      b.append(" ");
                   } else {
                      first = false;
                   }
 
-                  b.append(i);
+                  b.append(var11);
                }
             } else if (e instanceof double[]) {
                double[] var20;
-               var18 = (var20 = (double[])e).length;
+               var18 = (var20 = (double[])((double[])e)).length;
 
                for(var5 = 0; var5 < var18; ++var5) {
-                  double i = var20[var5];
+                  double var12 = var20[var5];
                   if (!first) {
                      b.append(" ");
                   } else {
                      first = false;
                   }
 
-                  b.append(i);
+                  b.append(var12);
                }
             } else if (e instanceof byte[]) {
                byte[] var21;
-               var5 = (var21 = (byte[])e).length;
+               var5 = (var21 = (byte[])((byte[])e)).length;
 
                for(var4 = 0; var4 < var5; ++var4) {
-                  byte i = var21[var4];
+                  byte var13 = var21[var4];
                   if (!first) {
                      b.append(" ");
                   } else {
                      first = false;
                   }
 
-                  b.append(i);
+                  b.append(var13);
                }
             } else if (e instanceof short[]) {
                short[] var22;
-               var5 = (var22 = (short[])e).length;
+               var5 = (var22 = (short[])((short[])e)).length;
 
                for(var4 = 0; var4 < var5; ++var4) {
-                  short i = var22[var4];
+                  short var14 = var22[var4];
                   if (!first) {
                      b.append(" ");
                   } else {
                      first = false;
                   }
 
-                  b.append(i);
+                  b.append(var14);
                }
             } else if (e instanceof char[]) {
                char[] var23;
-               var5 = (var23 = (char[])e).length;
+               var5 = (var23 = (char[])((char[])e)).length;
 
                for(var4 = 0; var4 < var5; ++var4) {
-                  char i = var23[var4];
+                  char var15 = var23[var4];
                   if (!first) {
                      b.append(" ");
                   } else {
                      first = false;
                   }
 
-                  b.append(i);
+                  b.append(var15);
                }
             }
          }
@@ -496,14 +496,14 @@ public class U {
          int programElements = 0;
          int totalElements = 0;
          StringBuilder builder = new StringBuilder();
-         builder.append(e.toString());
+         builder.append(e);
          StackTraceElement[] var8 = elems;
          int var7 = elems.length;
 
          for(int var6 = 0; var6 < var7; ++var6) {
-            StackTraceElement elem = var8[var6];
+            StackTraceElement cause = var8[var6];
             ++totalElements;
-            String description = elem.toString();
+            String description = cause.toString();
             if (description.startsWith("ru.turikhay")) {
                ++programElements;
             }
@@ -518,9 +518,9 @@ public class U {
             }
          }
 
-         Throwable cause = e.getCause();
-         if (cause != null) {
-            builder.append("\nCaused by: ").append(rawStackTrace(cause));
+         Throwable var11 = e.getCause();
+         if (var11 != null) {
+            builder.append("\nCaused by: ").append(rawStackTrace(var11));
          }
 
          return builder;
@@ -553,9 +553,8 @@ public class U {
       try {
          Thread.sleep(millis);
       } catch (Exception var3) {
-         var3.printStackTrace();
+         throw new RuntimeException(var3);
       }
-
    }
 
    public static URL makeURL(String p) {
@@ -587,11 +586,7 @@ public class U {
    }
 
    public static int fitInterval(int val, int min, int max) {
-      if (val > max) {
-         return max;
-      } else {
-         return val < min ? min : val;
-      }
+      return val > max ? max : (val < min ? min : val);
    }
 
    public static long m() {
@@ -621,13 +616,7 @@ public class U {
    }
 
    public static Object getRandom(Object[] array) {
-      if (array == null) {
-         return null;
-      } else if (array.length == 0) {
-         return null;
-      } else {
-         return array.length == 1 ? array[0] : array[(new Random()).nextInt(array.length)];
-      }
+      return array == null ? null : (array.length == 0 ? null : (array.length == 1 ? array[0] : array[(new Random()).nextInt(array.length)]));
    }
 
    public static LinkedHashMap sortMap(Map map, Object[] sortedKeys) {
@@ -700,11 +689,7 @@ public class U {
    }
 
    public static boolean equal(Object a, Object b) {
-      if (a == b) {
-         return true;
-      } else {
-         return a != null ? a.equals(b) : false;
-      }
+      return a == b ? true : (a != null ? a.equals(b) : false);
    }
 
    public static String[] extend(String[] a0, String[] a1) {
@@ -774,5 +759,32 @@ public class U {
       }
 
       return -1;
+   }
+
+   private static void swap(Object[] arr, int i, int j) {
+      Object tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+   }
+
+   public static Object[] shuffle(Object[] arr) {
+      if (rnd == null) {
+         rnd = new Random();
+      }
+
+      int size = arr.length;
+
+      for(int i = size; i > 1; --i) {
+         swap(arr, i - 1, rnd.nextInt(i));
+      }
+
+      return arr;
+   }
+
+   public static String reverse(String s) {
+      StringBuilder b = new StringBuilder();
+      b.append(s);
+      b.reverse();
+      return b.toString();
    }
 }

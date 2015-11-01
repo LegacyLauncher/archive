@@ -19,8 +19,6 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
    private CenterPanelPipe_unused.PipeOrientation pipeOrientation;
    private int pipeX;
    private int pipeY;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$center$CenterPanelPipe_unused$PipeOrientation;
 
    protected CenterPanelPipe_unused(CenterPanel panel) {
       this.parent = panel;
@@ -54,7 +52,7 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
          MainPane pane = this.parent.tlauncher.getFrame().mp;
          Point parentPoint = pane.getLocationOf(this.parent);
          Point targetPoint = pane.getLocationOf(this.targetComponent);
-         int safeZone = 24;
+         byte safeZone = 24;
          int targetX = targetPoint.x + this.targetComponent.getWidth() / 2;
          int targetY = targetPoint.y + this.targetComponent.getHeight() / 2;
          int parentMinX = parentPoint.x;
@@ -99,6 +97,7 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
             this.setSize(pipeWidth, pipeHeight);
          }
       }
+
    }
 
    public void paintComponent(Graphics g0) {
@@ -109,8 +108,8 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
          int midY = maxY / 2;
          int[] triangleX = new int[3];
          int[] triangleY = new int[3];
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$center$CenterPanelPipe_unused$PipeOrientation()[this.pipeOrientation.ordinal()]) {
-         case 1:
+         switch(this.pipeOrientation) {
+         case LEFT:
             triangleX[0] = maxX;
             triangleY[0] = 0;
             triangleX[1] = 0;
@@ -118,7 +117,7 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
             triangleX[2] = maxX;
             triangleY[2] = maxY;
             break;
-         case 2:
+         case UP:
             triangleX[0] = 0;
             triangleY[0] = maxY;
             triangleX[1] = midX;
@@ -126,7 +125,7 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
             triangleX[2] = maxX;
             triangleY[2] = maxY;
             break;
-         case 3:
+         case RIGHT:
             triangleX[0] = 0;
             triangleY[0] = 0;
             triangleX[1] = maxX;
@@ -134,7 +133,7 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
             triangleX[2] = 0;
             triangleY[2] = maxY;
             break;
-         case 4:
+         case DOWN:
             triangleX[0] = 0;
             triangleY[0] = 0;
             triangleX[1] = midX;
@@ -154,43 +153,11 @@ public class CenterPanelPipe_unused extends JComponent implements ResizeableComp
          g.setColor(theme.getBorder());
          g.drawPolygon(triangleX, triangleY, 3);
       }
+
    }
 
    protected void log(Object... o) {
       U.log("[CPipe]", o);
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$center$CenterPanelPipe_unused$PipeOrientation() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$center$CenterPanelPipe_unused$PipeOrientation;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[CenterPanelPipe_unused.PipeOrientation.values().length];
-
-         try {
-            var0[CenterPanelPipe_unused.PipeOrientation.DOWN.ordinal()] = 4;
-         } catch (NoSuchFieldError var4) {
-         }
-
-         try {
-            var0[CenterPanelPipe_unused.PipeOrientation.LEFT.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[CenterPanelPipe_unused.PipeOrientation.RIGHT.ordinal()] = 3;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[CenterPanelPipe_unused.PipeOrientation.UP.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$center$CenterPanelPipe_unused$PipeOrientation = var0;
-         return var0;
-      }
    }
 
    public static enum PipeOrientation {

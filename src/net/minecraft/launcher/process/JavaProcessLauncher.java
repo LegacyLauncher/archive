@@ -38,7 +38,7 @@ public class JavaProcessLauncher {
    }
 
    List getFullCommands() {
-      List result = new ArrayList(this.commands);
+      ArrayList result = new ArrayList(this.commands);
       result.add(0, this.getJavaPath());
       return result;
    }

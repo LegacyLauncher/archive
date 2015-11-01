@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -142,11 +143,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    public String getOutput() {
-      if (this.console != null) {
-         return this.console.getOutput();
-      } else {
-         return this.output != null ? this.output.toString() : null;
-      }
+      return this.console != null ? this.console.getOutput() : (this.output != null ? this.output.toString() : null);
    }
 
    public MinecraftLauncher.ConsoleVisibility getConsoleVisibility() {
@@ -237,32 +234,32 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       try {
          this.collectInfo();
-      } catch (Throwable var5) {
-         Throwable e = var5;
-         this.log("Error occurred:", var5);
-         if (var5 instanceof MinecraftException) {
-            MinecraftException me = (MinecraftException)var5;
-            Iterator var4 = this.listeners.iterator();
+      } catch (Throwable var6) {
+         Throwable e = var6;
+         this.log("Error occurred:", var6);
+         Iterator listener1;
+         if (var6 instanceof MinecraftException) {
+            MinecraftException listener2 = (MinecraftException)var6;
+            listener1 = this.listeners.iterator();
 
-            while(var4.hasNext()) {
-               MinecraftListener listener = (MinecraftListener)var4.next();
-               listener.onMinecraftKnownError(me);
+            while(listener1.hasNext()) {
+               MinecraftListener listener3 = (MinecraftListener)listener1.next();
+               listener3.onMinecraftKnownError(listener2);
             }
          } else {
             MinecraftListener listener;
-            Iterator var3;
-            if (var5 instanceof MinecraftLauncher.MinecraftLauncherAborted) {
-               var3 = this.listeners.iterator();
+            if (var6 instanceof MinecraftLauncher.MinecraftLauncherAborted) {
+               listener1 = this.listeners.iterator();
 
-               while(var3.hasNext()) {
-                  listener = (MinecraftListener)var3.next();
+               while(listener1.hasNext()) {
+                  listener = (MinecraftListener)listener1.next();
                   listener.onMinecraftAbort();
                }
             } else {
-               var3 = this.listeners.iterator();
+               listener1 = this.listeners.iterator();
 
-               while(var3.hasNext()) {
-                  listener = (MinecraftListener)var3.next();
+               while(listener1.hasNext()) {
+                  listener = (MinecraftListener)listener1.next();
                   listener.onMinecraftError(e);
                }
             }
@@ -306,18 +303,18 @@ public class MinecraftLauncher implements JavaProcessListener {
    private void collectInfo() throws MinecraftException {
       this.checkStep(MinecraftLauncher.MinecraftLauncherStep.NONE, MinecraftLauncher.MinecraftLauncherStep.COLLECTING);
       this.log("Collecting info...");
-      Iterator var2 = this.listeners.iterator();
+      Iterator command = this.listeners.iterator();
 
-      while(var2.hasNext()) {
-         MinecraftListener listener = (MinecraftListener)var2.next();
-         listener.onMinecraftPrepare();
+      while(command.hasNext()) {
+         MinecraftListener type = (MinecraftListener)command.next();
+         type.onMinecraftPrepare();
       }
 
-      var2 = this.extListeners.iterator();
+      command = this.extListeners.iterator();
 
-      while(var2.hasNext()) {
-         MinecraftExtendedListener listener = (MinecraftExtendedListener)var2.next();
-         listener.onMinecraftCollecting();
+      while(command.hasNext()) {
+         MinecraftExtendedListener type1 = (MinecraftExtendedListener)command.next();
+         type1.onMinecraftCollecting();
       }
 
       this.log("Force update:", this.forceUpdate);
@@ -326,8 +323,8 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.log("Selected version:", this.versionName);
          this.accountName = this.settings.get("login.account");
          if (this.accountName != null && !this.accountName.isEmpty()) {
-            Account.AccountType type = (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, this.settings.get("login.account.type"));
-            this.account = this.pm.getAuthDatabase().getByUsername(this.accountName, type);
+            Account.AccountType type2 = (Account.AccountType)Reflect.parseEnum(Account.AccountType.class, this.settings.get("login.account.type"));
+            this.account = this.pm.getAuthDatabase().getByUsername(this.accountName, type2);
             if (this.account == null) {
                this.account = new Account(this.accountName);
             }
@@ -341,8 +338,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                try {
                   this.deJureVersion = this.versionSync.resolveCompleteVersion(this.vm, this.forceUpdate);
-               } catch (IOException var10) {
-                  throw new RuntimeException("Cannot get complete version!");
+               } catch (IOException var11) {
+                  throw new RuntimeException("Cannot get complete version!", var11);
                }
 
                if (this.deJureVersion == null) {
@@ -358,47 +355,47 @@ public class MinecraftLauncher implements JavaProcessListener {
                      this.console.setName(this.version.getID());
                   }
 
-                  String command = this.settings.get("minecraft.cmd");
-                  this.cmd = command == null ? OS.getJavaPath() : command;
+                  String command1 = this.settings.get("minecraft.cmd");
+                  this.cmd = command1 == null ? OS.getJavaPath() : command1;
                   this.log("Command:", this.cmd);
                   this.gameDir = new File(this.settings.get("minecraft.gamedir"));
 
                   try {
                      FileUtil.createFolder(this.gameDir);
-                  } catch (IOException var9) {
-                     throw new MinecraftException("Cannot create working directory!", "folder-not-found", var9);
+                  } catch (IOException var10) {
+                     throw new MinecraftException("Cannot create working directory!", "folder-not-found", var10);
                   }
 
                   this.globalAssetsDir = new File(this.gameDir, "assets");
 
                   try {
                      FileUtil.createFolder(this.globalAssetsDir);
-                  } catch (IOException var8) {
-                     throw new RuntimeException("Cannot create assets directory!", var8);
+                  } catch (IOException var9) {
+                     throw new RuntimeException("Cannot create assets directory!", var9);
                   }
 
                   this.assetsIndexesDir = new File(this.globalAssetsDir, "indexes");
 
                   try {
                      FileUtil.createFolder(this.assetsIndexesDir);
-                  } catch (IOException var7) {
-                     throw new RuntimeException("Cannot create assets indexes directory!", var7);
+                  } catch (IOException var8) {
+                     throw new RuntimeException("Cannot create assets indexes directory!", var8);
                   }
 
                   this.assetsObjectsDir = new File(this.globalAssetsDir, "objects");
 
                   try {
                      FileUtil.createFolder(this.assetsObjectsDir);
-                  } catch (IOException var6) {
-                     throw new RuntimeException("Cannot create assets objects directory!", var6);
+                  } catch (IOException var7) {
+                     throw new RuntimeException("Cannot create assets objects directory!", var7);
                   }
 
                   this.nativeDir = new File(this.gameDir, "versions/" + this.version.getID() + "/" + "natives");
 
                   try {
                      FileUtil.createFolder(this.nativeDir);
-                  } catch (IOException var5) {
-                     throw new RuntimeException("Cannot create native files directory!", var5);
+                  } catch (IOException var6) {
+                     throw new RuntimeException("Cannot create native files directory!", var6);
                   }
 
                   this.javaArgs = this.settings.get("minecraft.javaargs");
@@ -456,32 +453,36 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
    }
 
+   public File getGameDir() {
+      return this.gameDir;
+   }
+
    private void downloadResources() throws MinecraftException {
       this.checkStep(MinecraftLauncher.MinecraftLauncherStep.COLLECTING, MinecraftLauncher.MinecraftLauncherStep.DOWNLOADING);
-      Iterator var2 = this.extListeners.iterator();
+      Iterator execContainer = this.extListeners.iterator();
 
-      while(var2.hasNext()) {
-         MinecraftExtendedListener listener = (MinecraftExtendedListener)var2.next();
-         listener.onMinecraftComparingAssets();
+      while(execContainer.hasNext()) {
+         MinecraftExtendedListener assets = (MinecraftExtendedListener)execContainer.next();
+         assets.onMinecraftComparingAssets();
       }
 
-      final List assets = this.compareAssets();
+      final List assets1 = this.compareAssets();
       Iterator assetsContainer = this.extListeners.iterator();
 
       while(assetsContainer.hasNext()) {
-         MinecraftExtendedListener listener = (MinecraftExtendedListener)assetsContainer.next();
-         listener.onMinecraftDownloading();
+         MinecraftExtendedListener execContainer1 = (MinecraftExtendedListener)assetsContainer.next();
+         execContainer1.onMinecraftDownloading();
       }
 
-      VersionSyncInfoContainer execContainer;
+      VersionSyncInfoContainer execContainer2;
       try {
-         execContainer = this.vm.downloadVersion(this.versionSync, this.account.getType() == Account.AccountType.ELY, this.forceUpdate);
-      } catch (IOException var8) {
-         throw new MinecraftException("Cannot download version!", "download-jar", var8);
+         execContainer2 = this.vm.downloadVersion(this.versionSync, this.account.getType() == Account.AccountType.ELY, this.forceUpdate);
+      } catch (IOException var11) {
+         throw new MinecraftException("Cannot download version!", "download-jar", var11);
       }
 
-      execContainer.setConsole(this.console);
-      execContainer.addHandler(new DownloadableContainerHandler() {
+      execContainer2.setConsole(this.console);
+      execContainer2.addHandler(new DownloadableContainerHandler() {
          public void onStart(DownloadableContainer c) {
          }
 
@@ -501,16 +502,17 @@ public class MinecraftLauncher implements JavaProcessListener {
                   }
                }
             }
+
          }
 
          public void onFullComplete(DownloadableContainer c) {
          }
       });
       assetsContainer = null;
-      DownloadableContainer assetsContainer = this.am.downloadResources(this.version, assets, this.forceUpdate);
+      DownloadableContainer assetsContainer1 = this.am.downloadResources(this.version, assets1, this.forceUpdate);
       final boolean[] suspectKaspersky = new boolean[2];
-      if (assetsContainer != null) {
-         assetsContainer.addHandler(new DownloadableContainerHandler() {
+      if (assetsContainer1 != null) {
+         assetsContainer1.addHandler(new DownloadableContainerHandler() {
             public void onStart(DownloadableContainer c) {
             }
 
@@ -523,67 +525,68 @@ public class MinecraftLauncher implements JavaProcessListener {
             public void onComplete(DownloadableContainer c, Downloadable d) throws RetryDownloadException {
                String filename = d.getFilename();
                AssetIndex.AssetObject object = null;
-               Iterator var6 = assets.iterator();
+               Iterator hash = assets1.iterator();
 
-               while(var6.hasNext()) {
-                  AssetIndex.AssetObject asset = (AssetIndex.AssetObject)var6.next();
-                  if (filename.equals(asset.getHash())) {
-                     object = asset;
+               while(hash.hasNext()) {
+                  AssetIndex.AssetObject destination = (AssetIndex.AssetObject)hash.next();
+                  if (filename.equals(destination.getHash())) {
+                     object = destination;
                   }
                }
 
                if (object == null) {
                   MinecraftLauncher.this.log("couldn't find asset object:", filename);
                } else {
-                  File destination = d.getDestination();
-                  String hash = FileUtil.getDigest(destination, "SHA-1", 40);
-                  if (hash == null) {
-                     throw new RetryDownloadException("cannot calculate hash for: " + destination);
-                  } else {
-                     String expectedHash = object.getHash();
-                     if (expectedHash == null) {
-                        MinecraftLauncher.this.log("null hash:", object.getFilename());
-                     } else if (!hash.equals(expectedHash)) {
-                        suspectKaspersky[0] = filename.startsWith("ad");
-                        throw new RetryDownloadException("illegal hash for: " + expectedHash + " (got: " + hash + ")");
-                     }
+                  File destination1 = d.getDestination();
+                  String hash1 = FileUtil.getDigest(destination1, "SHA-1", 40);
+                  if (hash1 == null) {
+                     throw new RetryDownloadException("cannot calculate hash for: " + destination1);
+                  }
+
+                  String expectedHash = object.getHash();
+                  if (expectedHash == null) {
+                     MinecraftLauncher.this.log("null hash:", object.getFilename());
+                  } else if (!hash1.equals(expectedHash)) {
+                     suspectKaspersky[0] = filename.startsWith("ad");
+                     throw new RetryDownloadException("illegal hash for: " + expectedHash + " (got: " + hash1 + ")");
                   }
                }
+
             }
 
             public void onFullComplete(DownloadableContainer c) {
                MinecraftLauncher.this.log("Assets have been downloaded");
             }
          });
-         assetsContainer.setConsole(this.console);
+         assetsContainer1.setConsole(this.console);
       }
 
-      if (assetsContainer != null) {
-         this.downloader.add(assetsContainer);
+      if (assetsContainer1 != null) {
+         this.downloader.add(assetsContainer1);
       }
 
-      this.downloader.add((DownloadableContainer)execContainer);
-      Iterator var6 = this.assistants.iterator();
+      this.downloader.add((DownloadableContainer)execContainer2);
+      Iterator message = this.assistants.iterator();
 
-      while(var6.hasNext()) {
-         MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant)var6.next();
-         assistant.collectResources(this.downloader);
+      while(message.hasNext()) {
+         MinecraftLauncherAssistant e = (MinecraftLauncherAssistant)message.next();
+         e.collectResources(this.downloader);
       }
 
       this.downloader.startDownloadAndWait();
-      if (execContainer.isAborted()) {
+      if (execContainer2.isAborted()) {
          throw new MinecraftLauncher.MinecraftLauncherAborted(new AbortedDownloadException());
-      } else if (!execContainer.getErrors().isEmpty()) {
-         boolean onlyOne = execContainer.getErrors().size() == 1;
-         StringBuilder message = new StringBuilder();
-         message.append(execContainer.getErrors().size()).append(" error").append(onlyOne ? "" : "s").append(" occurred while trying to download binaries.");
-         if (!onlyOne) {
-            message.append(" Cause is the first of them.");
+      } else if (!execContainer2.getErrors().isEmpty()) {
+         boolean e1 = execContainer2.getErrors().size() == 1;
+         StringBuilder message1 = new StringBuilder();
+         message1.append(execContainer2.getErrors().size()).append(" error").append(e1 ? "" : "s").append(" occurred while trying to download binaries.");
+         if (!e1) {
+            message1.append(" Cause is the first of them.");
          }
 
-         throw new MinecraftException(message.toString(), "download", (Throwable)execContainer.getErrors().get(0));
+         throw new MinecraftException(message1.toString(), "download", (Throwable)execContainer2.getErrors().get(0));
       } else {
-         if (assetsContainer != null && !assetsContainer.getErrors().isEmpty() && !(assetsContainer.getErrors().get(0) instanceof AbortedDownloadException)) {
+         if (assetsContainer1 != null && !assetsContainer1.getErrors().isEmpty() && !(assetsContainer1.getErrors().get(0) instanceof AbortedDownloadException)) {
             if (!ASSETS_WARNING_SHOWN) {
                if (suspectKaspersky[0]) {
                   Alert.showLocWarning("launcher.warning.title", "launcher.warning.assets.kaspersky", "http://resources.download.minecraft.net/ad/ad*");
@@ -599,8 +602,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
          try {
             this.vm.getLocalList().saveVersion(this.deJureVersion);
-         } catch (IOException var7) {
-            this.log("Cannot save version!", var7);
+         } catch (IOException var10) {
+            this.log("Cannot save version!", var10);
          }
 
          this.constructProcess();
@@ -609,78 +612,79 @@ public class MinecraftLauncher implements JavaProcessListener {
 
    private void constructProcess() throws MinecraftException {
       this.checkStep(MinecraftLauncher.MinecraftLauncherStep.DOWNLOADING, MinecraftLauncher.MinecraftLauncherStep.CONSTRUCTING);
-      Iterator var2 = this.extListeners.iterator();
+      Iterator address = this.extListeners.iterator();
 
-      MinecraftExtendedListener listener;
-      while(var2.hasNext()) {
-         listener = (MinecraftExtendedListener)var2.next();
-         listener.onMinecraftReconstructingAssets();
+      MinecraftExtendedListener assistant;
+      while(address.hasNext()) {
+         assistant = (MinecraftExtendedListener)address.next();
+         assistant.onMinecraftReconstructingAssets();
       }
 
       try {
          this.localAssetsDir = this.reconstructAssets();
-      } catch (IOException var8) {
-         throw new MinecraftException("Cannot recounstruct assets!", "reconstruct-assets", var8);
+      } catch (IOException var12) {
+         throw new MinecraftException("Cannot recounstruct assets!", "reconstruct-assets", var12);
       }
 
-      var2 = this.extListeners.iterator();
+      address = this.extListeners.iterator();
 
-      while(var2.hasNext()) {
-         listener = (MinecraftExtendedListener)var2.next();
-         listener.onMinecraftUnpackingNatives();
+      while(address.hasNext()) {
+         assistant = (MinecraftExtendedListener)address.next();
+         assistant.onMinecraftUnpackingNatives();
       }
 
       try {
          this.unpackNatives(this.forceUpdate);
-      } catch (IOException var7) {
-         throw new MinecraftException("Cannot unpack natives!", "unpack-natives", var7);
+      } catch (IOException var11) {
+         throw new MinecraftException("Cannot unpack natives!", "unpack-natives", var11);
       }
 
       this.checkAborted();
-      var2 = this.extListeners.iterator();
+      address = this.extListeners.iterator();
 
-      while(var2.hasNext()) {
-         listener = (MinecraftExtendedListener)var2.next();
-         listener.onMinecraftDeletingEntries();
+      while(address.hasNext()) {
+         assistant = (MinecraftExtendedListener)address.next();
+         assistant.onMinecraftDeletingEntries();
       }
 
       try {
          this.deleteEntries();
-      } catch (IOException var6) {
-         throw new MinecraftException("Cannot delete entries!", "delete-entries", var6);
+      } catch (IOException var10) {
+         throw new MinecraftException("Cannot delete entries!", "delete-entries", var10);
       }
 
       try {
          this.deleteLibraryEntries();
-      } catch (Exception var5) {
-         throw new MinecraftException("Cannot delete library entries!", "delete-entries", var5);
+      } catch (Exception var9) {
+         throw new MinecraftException("Cannot delete library entries!", "delete-entries", var9);
       }
 
       this.checkAborted();
       this.log("Constructing process...");
-      var2 = this.extListeners.iterator();
+      address = this.extListeners.iterator();
 
-      while(var2.hasNext()) {
-         listener = (MinecraftExtendedListener)var2.next();
-         listener.onMinecraftConstructing();
+      while(address.hasNext()) {
+         assistant = (MinecraftExtendedListener)address.next();
+         assistant.onMinecraftConstructing();
       }
 
       this.launcher = new JavaProcessLauncher(this.cmd, new String[0]);
       this.launcher.directory(this.gameDir);
       if (OS.OSX.isCurrent()) {
-         File icon = null;
+         File assistant1 = null;
 
          try {
-            icon = this.getAssetObject("icons/minecraft.icns");
-         } catch (IOException var4) {
-            this.log("Cannot get icon file from assets.", var4);
+            assistant1 = this.getAssetObject("icons/minecraft.icns");
+         } catch (IOException var8) {
+            this.log("Cannot get icon file from assets.", var8);
          }
 
-         if (icon != null) {
-            this.launcher.addCommand("-Xdock:icon=\"" + icon.getAbsolutePath() + "\"", "-Xdock:name=Minecraft");
+         if (assistant1 != null) {
+            this.launcher.addCommand("-Xdock:icon=\"" + assistant1.getAbsolutePath() + "\"", "-Xdock:name=Minecraft");
          }
       }
 
+      this.launcher.addCommand("-XX:HeapDumpPath=ThisTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
       this.launcher.addCommand("-Xmx" + this.ramSize + "M");
       this.launcher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
       this.launcher.addCommand("-cp", this.constructClassPath(this.version));
@@ -691,12 +695,12 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.launcher.addSplitCommands(this.javaArgs);
       }
 
-      var2 = this.assistants.iterator();
+      address = this.assistants.iterator();
 
-      MinecraftLauncherAssistant assistant;
-      while(var2.hasNext()) {
-         assistant = (MinecraftLauncherAssistant)var2.next();
-         assistant.constructJavaArguments();
+      MinecraftLauncherAssistant assistant2;
+      while(address.hasNext()) {
+         assistant2 = (MinecraftLauncherAssistant)address.next();
+         assistant2.constructJavaArguments();
       }
 
       this.launcher.addCommand(this.version.getMainClass());
@@ -711,22 +715,31 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.launcher.addCommand("--fullscreen");
       }
 
+      try {
+         File serversDat = new File(this.gameDir, "servers.dat");
+         if (serversDat.isFile()) {
+            FileUtil.copyFile(serversDat, new File(serversDat.getAbsolutePath() + ".bak"), true);
+         }
+      } catch (IOException var7) {
+         this.log("Could not make backup for servers.dat", var7);
+      }
+
       if (this.server != null) {
-         ServerList serverList = new ServerList();
-         serverList.add(this.server);
+         ServerList assistant3 = new ServerList();
+         assistant3.add(this.server);
 
          try {
-            ServerListManager.reconstructList(serverList, new File(this.gameDir, "servers.dat"));
-         } catch (Exception var3) {
-            this.log("Couldn't reconstruct server list.", var3);
+            ServerListManager.reconstructList(assistant3, new File(this.gameDir, "servers.dat"));
+         } catch (Exception var6) {
+            this.log("Couldn't reconstruct server list.", var6);
          }
 
-         String[] address = StringUtils.split(this.server.getAddress(), ':');
-         switch(address.length) {
+         String[] address1 = StringUtils.split(this.server.getAddress(), ':');
+         switch(address1.length) {
          case 2:
-            this.launcher.addCommand("--port", address[1]);
+            this.launcher.addCommand("--port", address1[1]);
          case 1:
-            this.launcher.addCommand("--server", address[0]);
+            this.launcher.addCommand("--server", address1[0]);
             break;
          default:
             this.log("Cannot recognize server:", this.server);
@@ -737,11 +750,11 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.launcher.addSplitCommands(this.programArgs);
       }
 
-      var2 = this.assistants.iterator();
+      address = this.assistants.iterator();
 
-      while(var2.hasNext()) {
-         assistant = (MinecraftLauncherAssistant)var2.next();
-         assistant.constructProgramArguments();
+      while(address.hasNext()) {
+         assistant2 = (MinecraftLauncherAssistant)address.next();
+         assistant2.constructProgramArguments();
       }
 
       if (this.fullCommand) {
@@ -816,7 +829,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
       Iterator var7 = libraries.iterator();
 
-      label79:
+      label78:
       while(true) {
          Library library;
          Map nativesPerOs;
@@ -853,7 +866,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                   do {
                      if (!entries.hasMoreElements()) {
                         zip.close();
-                        continue label79;
+                        continue label78;
                      }
 
                      entry = (ZipEntry)entries.nextElement();
@@ -890,6 +903,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          File file = this.version.getFile(this.gameDir);
          this.removeFrom(file, entries);
       }
+
    }
 
    private void deleteLibraryEntries() throws IOException {
@@ -932,7 +946,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       if (this.version.getMinecraftArguments() == null) {
          throw new MinecraftException("Can't run version, missing minecraftArguments", "noArgs", new Object[0]);
       } else {
-         Map map = new HashMap();
+         HashMap map = new HashMap();
          StrSubstitutor substitutor = new StrSubstitutor(map);
          String assets = this.version.getAssets();
          String[] split = this.version.getMinecraftArguments().split(" ");
@@ -970,8 +984,25 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    private String[] getJVMArguments() {
-      String jvmargs = this.version.getJVMArguments();
-      return StringUtils.isNotEmpty(jvmargs) ? StringUtils.split(jvmargs, ' ') : StringUtils.split("-XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:-UseAdaptiveSizePolicy -Xmn128M", ' ');
+      List args = new ArrayList();
+      if (this.settings.getBoolean("minecraft.improvedargs")) {
+         args.add("-Xmn128M");
+         args.add("-XX:+UseConcMarkSweepGC");
+         args.add("-XX:-UseAdaptiveSizePolicy");
+         args.add("-XX:-UseGCOverheadLimit");
+         args.add("-XX:+CMSParallelRemarkEnabled");
+         args.add("-XX:+ParallelRefProcEnabled");
+         args.add("-XX:+CMSClassUnloadingEnabled");
+         args.add("-XX:+UseCMSInitiatingOccupancyOnly");
+         args.add("-Xms256M");
+      }
+
+      String rawArgs = this.version.getJVMArguments();
+      if (StringUtils.isNotEmpty(rawArgs)) {
+         args.addAll(Arrays.asList(StringUtils.split(rawArgs, ' ')));
+      }
+
+      return (String[])args.toArray(new String[args.size()]);
    }
 
    private List compareAssets() {
@@ -994,37 +1025,37 @@ public class MinecraftLauncher implements JavaProcessListener {
 
          IOFileFilter migratableFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("indexes"), FileFilterUtils.nameFileFilter("objects"), FileFilterUtils.nameFileFilter("virtual")));
 
-         File file;
-         for(Iterator var4 = (new TreeSet(FileUtils.listFiles(this.globalAssetsDir, TrueFileFilter.TRUE, migratableFilter))).iterator(); var4.hasNext(); FileUtils.deleteQuietly(file)) {
-            file = (File)var4.next();
-            String hash = FileUtil.getDigest(file, "SHA-1", 40);
+         File assets;
+         for(Iterator file = (new TreeSet(FileUtils.listFiles(this.globalAssetsDir, TrueFileFilter.TRUE, migratableFilter))).iterator(); file.hasNext(); FileUtils.deleteQuietly(assets)) {
+            assets = (File)file.next();
+            String hash = FileUtil.getDigest(assets, "SHA-1", 40);
             File destinationFile = new File(this.assetsObjectsDir, hash.substring(0, 2) + "/" + hash);
             if (!destinationFile.exists()) {
-               this.log("Migrated old asset", file, "into", destinationFile);
+               this.log("Migrated old asset", assets, "into", destinationFile);
 
                try {
-                  FileUtils.copyFile(file, destinationFile);
-               } catch (IOException var8) {
-                  this.log("Couldn't migrate old asset", var8);
+                  FileUtils.copyFile(assets, destinationFile);
+               } catch (IOException var9) {
+                  this.log("Couldn't migrate old asset", var9);
                }
             }
          }
 
-         File[] assets = this.globalAssetsDir.listFiles();
-         if (assets != null) {
-            File[] var7 = assets;
-            int var12 = assets.length;
+         File[] var9 = this.globalAssetsDir.listFiles();
+         if (var9 != null) {
+            File[] e = var9;
+            int var12 = var9.length;
 
             for(int var11 = 0; var11 < var12; ++var11) {
-               File file = var7[var11];
-               if (!file.getName().equals("indexes") && !file.getName().equals("objects") && !file.getName().equals("virtual")) {
-                  this.log("Cleaning up old assets directory", file, "after migration");
-                  FileUtils.deleteQuietly(file);
+               File var10 = e[var11];
+               if (!var10.getName().equals("indexes") && !var10.getName().equals("objects") && !var10.getName().equals("virtual")) {
+                  this.log("Cleaning up old assets directory", var10, "after migration");
+                  FileUtils.deleteQuietly(var10);
                }
             }
          }
-
       }
+
    }
 
    private void launchMinecraft() throws MinecraftException {
@@ -1033,8 +1064,8 @@ public class MinecraftLauncher implements JavaProcessListener {
       Iterator var2 = this.listeners.iterator();
 
       while(var2.hasNext()) {
-         MinecraftListener listener = (MinecraftListener)var2.next();
-         listener.onMinecraftLaunch();
+         MinecraftListener e = (MinecraftListener)var2.next();
+         e.onMinecraftLaunch();
       }
 
       this.log("Starting Minecraft " + this.versionName + "...");
@@ -1042,9 +1073,9 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.startupTime = System.currentTimeMillis();
       TLauncher.getConsole().setLauncher(this);
       if (this.console != null) {
-         Calendar startDate = Calendar.getInstance();
-         startDate.setTimeInMillis(this.startupTime);
-         this.console.setName(this.version.getID() + " (" + DateFormat.getDateTimeInstance().format(startDate.getTime()) + ")");
+         Calendar e1 = Calendar.getInstance();
+         e1.setTimeInMillis(this.startupTime);
+         this.console.setName(this.version.getID() + " (" + DateFormat.getDateTimeInstance().format(e1.getTime()) + ")");
          this.console.setLauncher(this);
       }
 
@@ -1096,6 +1127,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       String text = U.toLog(o);
       if (this.console == null) {
          if (this.output != null) {
+            StringBuffer var3 = this.output;
             synchronized(this.output) {
                this.output.append(text).append('\n');
             }
@@ -1261,10 +1293,13 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
    }
 
-   public static enum ConsoleVisibility {
-      ALWAYS,
-      ON_CRASH,
-      NONE;
+   public static enum MinecraftLauncherStep {
+      NONE,
+      COLLECTING,
+      DOWNLOADING,
+      CONSTRUCTING,
+      LAUNCHING,
+      POSTLAUNCH;
    }
 
    class MinecraftLauncherAborted extends RuntimeException {
@@ -1277,12 +1312,9 @@ public class MinecraftLauncher implements JavaProcessListener {
       }
    }
 
-   public static enum MinecraftLauncherStep {
-      NONE,
-      COLLECTING,
-      DOWNLOADING,
-      CONSTRUCTING,
-      LAUNCHING,
-      POSTLAUNCH;
+   public static enum ConsoleVisibility {
+      ALWAYS,
+      ON_CRASH,
+      NONE;
    }
 }

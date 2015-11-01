@@ -18,7 +18,7 @@ public class LoadingFrame extends JFrame {
       SwingUtil.initLookAndFeel();
       this.setLayout(new BorderLayout());
       this.progress = new ProgressBar();
-      this.progress.setPreferredSize(new Dimension(250, 18));
+      this.progress.setPreferredSize(new Dimension(250, 0));
       this.add(this.progress, "Center");
       this.add(new JLabel(Images.getIcon("fav32.png")), "West");
       if (OS.JAVA_VERSION > 1.6D) {
@@ -37,7 +37,7 @@ public class LoadingFrame extends JFrame {
 
    public void setProgress(int percent) {
       this.progress.setIndeterminate(false);
+      this.progress.setCenterString("kek");
       this.progress.setValue(percent);
-      this.progress.setCenterString(String.valueOf(percent) + '%');
    }
 }

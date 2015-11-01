@@ -27,5 +27,6 @@ public class RequiredUpdateListener implements UpdaterListener {
          UpdateUIListener listener = new UpdateUIListener(update);
          listener.push();
       }
+
    }
 }

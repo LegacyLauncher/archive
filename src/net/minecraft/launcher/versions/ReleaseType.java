@@ -13,10 +13,10 @@ import ru.turikhay.tlauncher.repository.Repository;
 
 public enum ReleaseType {
    RELEASE("release", false, true),
-   SNAPSHOT("snapshot"),
+   SNAPSHOT("snapshot", true, true),
    MODIFIED("modified", true, true),
-   OLD_BETA("old-beta"),
-   OLD_ALPHA("old-alpha"),
+   OLD_BETA("old-beta", true, true),
+   OLD_ALPHA("old-alpha", true, true),
    UNKNOWN("unknown", false, false);
 
    private static final Map lookup;
@@ -25,30 +25,6 @@ public enum ReleaseType {
    private final String name;
    private final boolean isDefinable;
    private final boolean isDefault;
-
-   static {
-      HashMap types = new HashMap(values().length);
-      ArrayList deflTypes = new ArrayList();
-      ArrayList defnTypes = new ArrayList();
-      ReleaseType[] var6;
-      int var5 = (var6 = values()).length;
-
-      for(int var4 = 0; var4 < var5; ++var4) {
-         ReleaseType type = var6[var4];
-         types.put(type.getName(), type);
-         if (type.isDefault()) {
-            deflTypes.add(type);
-         }
-
-         if (type.isDefinable()) {
-            defnTypes.add(type);
-         }
-      }
-
-      lookup = Collections.unmodifiableMap(types);
-      defaultTypes = Collections.unmodifiableList(deflTypes);
-      definableTypes = Collections.unmodifiableList(defnTypes);
-   }
 
    private ReleaseType(String name, boolean isDefinable, boolean isDefault) {
       this.name = name;
@@ -92,6 +68,30 @@ public enum ReleaseType {
       return definableTypes;
    }
 
+   static {
+      HashMap types = new HashMap(values().length);
+      ArrayList deflTypes = new ArrayList();
+      ArrayList defnTypes = new ArrayList();
+      ReleaseType[] var6;
+      int var5 = (var6 = values()).length;
+
+      for(int var4 = 0; var4 < var5; ++var4) {
+         ReleaseType type = var6[var4];
+         types.put(type.getName(), type);
+         if (type.isDefault()) {
+            deflTypes.add(type);
+         }
+
+         if (type.isDefinable()) {
+            defnTypes.add(type);
+         }
+      }
+
+      lookup = Collections.unmodifiableMap(types);
+      defaultTypes = Collections.unmodifiableList(deflTypes);
+      definableTypes = Collections.unmodifiableList(defnTypes);
+   }
+
    public static enum SubType {
       OLD_RELEASE("old_release") {
          private final Date marker;
@@ -116,24 +116,6 @@ public enum ReleaseType {
       private static final List defaultSubTypes;
       private final String name;
       private final boolean isDefault;
-
-      static {
-         HashMap subTypes = new HashMap(values().length);
-         ArrayList defSubTypes = new ArrayList();
-         ReleaseType.SubType[] var5;
-         int var4 = (var5 = values()).length;
-
-         for(int var3 = 0; var3 < var4; ++var3) {
-            ReleaseType.SubType subType = var5[var3];
-            subTypes.put(subType.getName(), subType);
-            if (subType.isDefault()) {
-               defSubTypes.add(subType);
-            }
-         }
-
-         lookup = Collections.unmodifiableMap(subTypes);
-         defaultSubTypes = Collections.unmodifiableList(defSubTypes);
-      }
 
       private SubType(String name, boolean isDefault) {
          this.name = name;
@@ -168,25 +150,44 @@ public enum ReleaseType {
          return defaultSubTypes;
       }
 
-      public static ReleaseType.SubType get(Version version) {
+      public static List get(Version version) {
+         ArrayList result = new ArrayList();
          ReleaseType.SubType[] var4;
          int var3 = (var4 = values()).length;
 
          for(int var2 = 0; var2 < var3; ++var2) {
             ReleaseType.SubType subType = var4[var2];
             if (subType.isSubType(version)) {
-               return subType;
+               result.add(subType);
             }
          }
 
-         return null;
+         return result;
       }
 
       public abstract boolean isSubType(Version var1);
 
       // $FF: synthetic method
-      SubType(String var3, ReleaseType.SubType var4) {
-         this(var3);
+      SubType(String x2, Object x3) {
+         this(x2);
+      }
+
+      static {
+         HashMap subTypes = new HashMap(values().length);
+         ArrayList defSubTypes = new ArrayList();
+         ReleaseType.SubType[] var5;
+         int var4 = (var5 = values()).length;
+
+         for(int var3 = 0; var3 < var4; ++var3) {
+            ReleaseType.SubType subType = var5[var3];
+            subTypes.put(subType.getName(), subType);
+            if (subType.isDefault()) {
+               defSubTypes.add(subType);
+            }
+         }
+
+         lookup = Collections.unmodifiableMap(subTypes);
+         defaultSubTypes = Collections.unmodifiableList(defSubTypes);
       }
    }
 }

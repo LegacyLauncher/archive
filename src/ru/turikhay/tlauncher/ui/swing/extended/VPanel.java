@@ -23,9 +23,10 @@ public class VPanel extends ExtendedPanel {
          int axis = ((BoxLayout)Reflect.cast(mgr, BoxLayout.class)).getAxis();
          if (axis != 3 && axis != 1) {
             throw new IllegalArgumentException("Illegal BoxLayout axis!");
-         } else {
-            super.setLayout(mgr);
          }
+
+         super.setLayout(mgr);
       }
+
    }
 }

@@ -10,8 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.ArrayList;
@@ -70,7 +68,7 @@ public class Update {
       if (description != null) {
          this.description.putAll(description);
          if (description.containsKey("ru_RU") && !description.containsKey("uk_UA")) {
-            this.description.put("uk_UA", (String)description.get("ru_RU"));
+            this.description.put("uk_UA", description.get("ru_RU"));
          }
       }
 
@@ -212,8 +210,8 @@ public class Update {
       String[] args = TLauncher.getInstance() != null ? TLauncher.getArgs() : new String[0];
       ProcessBuilder builder = Bootstrapper.createLauncher(args).createProcess();
       this.onUpdateApplying();
-      InputStream in = new FileInputStream(replaceWith);
-      OutputStream out = new FileOutputStream(replace);
+      FileInputStream in = new FileInputStream(replaceWith);
+      FileOutputStream out = new FileOutputStream(replace);
       byte[] buffer = new byte[2048];
 
       for(int read = in.read(buffer); read > 0; read = in.read(buffer)) {
@@ -222,17 +220,17 @@ public class Update {
 
       try {
          in.close();
-      } catch (IOException var12) {
-      }
-
-      try {
-         out.close();
       } catch (IOException var11) {
       }
 
       try {
+         out.close();
+      } catch (IOException var10) {
+      }
+
+      try {
          builder.start();
-      } catch (Throwable var10) {
+      } catch (Throwable var9) {
       }
 
       System.exit(0);
@@ -257,6 +255,7 @@ public class Update {
 
    protected void onUpdateError(Throwable e) {
       this.setState(Update.State.ERRORED);
+      List var2 = this.listeners;
       synchronized(this.listeners) {
          Iterator var4 = this.listeners.iterator();
 
@@ -269,6 +268,7 @@ public class Update {
    }
 
    protected void onUpdateDownloading() {
+      List var1 = this.listeners;
       synchronized(this.listeners) {
          Iterator var3 = this.listeners.iterator();
 
@@ -282,6 +282,7 @@ public class Update {
 
    protected void onUpdateDownloadError(Throwable e) {
       this.setState(Update.State.ERRORED);
+      List var2 = this.listeners;
       synchronized(this.listeners) {
          Iterator var4 = this.listeners.iterator();
 
@@ -295,6 +296,7 @@ public class Update {
 
    protected void onUpdateReady() {
       this.setState(Update.State.READY);
+      List var1 = this.listeners;
       synchronized(this.listeners) {
          Iterator var3 = this.listeners.iterator();
 
@@ -307,6 +309,7 @@ public class Update {
    }
 
    protected void onUpdateApplying() {
+      List var1 = this.listeners;
       synchronized(this.listeners) {
          Iterator var3 = this.listeners.iterator();
 
@@ -320,6 +323,7 @@ public class Update {
 
    protected void onUpdateApplyError(Throwable e) {
       this.setState(Update.State.ERRORED);
+      List var2 = this.listeners;
       synchronized(this.listeners) {
          Iterator var4 = this.listeners.iterator();
 
@@ -341,6 +345,14 @@ public class Update {
 
    public String toString() {
       return "Update{version=" + this.version + "," + "requiredAtLeastFor=" + this.requiredAtLeastFor + "," + "description=" + this.description + "," + "links=" + this.links + "}";
+   }
+
+   public static enum State {
+      NONE,
+      DOWNLOADING,
+      READY,
+      APPLYING,
+      ERRORED;
    }
 
    public static class Deserializer implements JsonDeserializer {
@@ -372,13 +384,5 @@ public class Update {
 
          return update;
       }
-   }
-
-   public static enum State {
-      NONE,
-      DOWNLOADING,
-      READY,
-      APPLYING,
-      ERRORED;
    }
 }

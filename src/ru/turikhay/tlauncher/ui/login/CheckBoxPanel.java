@@ -12,7 +12,7 @@ import ru.turikhay.util.async.AsyncThread;
 
 public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProcessListener {
    private static final long serialVersionUID = 768489049585749260L;
-   private static final String[] phrases = new String[]{"Y R U DOIN THIS?", "STOP DOING THIS, OKAY?", "MAN, DAFUQ?"};
+   private static final String[] phrases = new String[]{"This ain't easter egg."};
    public final LocalizableCheckbox autologin;
    public final LocalizableCheckbox forceupdate;
    private boolean state;
@@ -72,8 +72,8 @@ public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProc
                throw new LoginException("User has cancelled force updating.");
             }
          }
-
       }
+
    }
 
    public void loginFailed() {

@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.U;
 
 class AuthenticatorService {
@@ -22,6 +23,10 @@ class AuthenticatorService {
    }
 
    private static void debug(Object... o) {
+      if (TLauncher.getDebug()) {
+         log(o);
+      }
+
    }
 
    private static HttpURLConnection createUrlConnection(URL url) throws IOException {
@@ -59,11 +64,10 @@ class AuthenticatorService {
       String var10;
       try {
          inputStream = connection.getInputStream();
-         String result = IOUtils.toString(inputStream, Charsets.UTF_8);
+         String e = IOUtils.toString(inputStream, Charsets.UTF_8);
          debug("Successful read, server response was " + connection.getResponseCode());
-         debug("Response: " + result);
-         var10 = result;
-         return var10;
+         debug("Response: " + e);
+         var10 = e;
       } catch (IOException var18) {
          IOUtils.closeQuietly(inputStream);
          inputStream = connection.getErrorStream();
@@ -92,13 +96,14 @@ class AuthenticatorService {
 
       String var6;
       try {
+         String result;
          try {
             inputStream = connection.getInputStream();
-            String result = IOUtils.toString(inputStream, Charsets.UTF_8);
+            result = IOUtils.toString(inputStream, Charsets.UTF_8);
             debug("Successful read, server response was " + connection.getResponseCode());
             debug("Response: " + result);
-            var6 = result;
-            return var6;
+            String var5 = result;
+            return var5;
          } catch (IOException var9) {
             IOUtils.closeQuietly(inputStream);
             inputStream = connection.getErrorStream();
@@ -106,13 +111,13 @@ class AuthenticatorService {
                debug("Request failed", var9);
                throw var9;
             }
-         }
 
-         debug("Reading error page from " + url);
-         String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-         debug("Successful read, server response was " + connection.getResponseCode());
-         debug("Response: " + result);
-         var6 = result;
+            debug("Reading error page from " + url);
+            result = IOUtils.toString(inputStream, Charsets.UTF_8);
+            debug("Successful read, server response was " + connection.getResponseCode());
+            debug("Response: " + result);
+            var6 = result;
+         }
       } finally {
          IOUtils.closeQuietly(inputStream);
       }

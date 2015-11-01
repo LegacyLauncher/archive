@@ -21,23 +21,21 @@ public class VersionHandlerThread {
       this.deleteThread = new VersionHandlerThread.VersionDeleteThread(this);
    }
 
-   class StartDownloadThread extends LoopedThread {
+   class VersionDeleteThread extends LoopedThread {
       private final VersionHandler handler;
-      private final VersionDownloadButton button;
+      private final VersionRemoveButton button;
 
-      StartDownloadThread(VersionHandlerThread parent) {
-         super("StartDownloadThread");
+      VersionDeleteThread(VersionHandlerThread parent) {
+         super("VersionDeleteThread");
          this.handler = parent.handler;
-         this.button = this.handler.list.download;
+         this.button = this.handler.list.remove;
          this.startAndWait();
       }
 
       protected void iterateOnce() {
-         this.button.setState(VersionDownloadButton.ButtonState.STOP);
-         Blocker.block((Blockable)this.handler, (Object)"start-download");
-         this.button.startDownload();
-         Blocker.unblock((Blockable)this.handler, (Object)"start-download");
-         this.button.setState(VersionDownloadButton.ButtonState.DOWNLOAD);
+         Blocker.block((Blockable)this.handler, (Object)"deleting");
+         this.button.delete();
+         Blocker.unblock((Blockable)this.handler, (Object)"deleting");
       }
    }
 
@@ -63,21 +61,23 @@ public class VersionHandlerThread {
       }
    }
 
-   class VersionDeleteThread extends LoopedThread {
+   class StartDownloadThread extends LoopedThread {
       private final VersionHandler handler;
-      private final VersionRemoveButton button;
+      private final VersionDownloadButton button;
 
-      VersionDeleteThread(VersionHandlerThread parent) {
-         super("VersionDeleteThread");
+      StartDownloadThread(VersionHandlerThread parent) {
+         super("StartDownloadThread");
          this.handler = parent.handler;
-         this.button = this.handler.list.remove;
+         this.button = this.handler.list.download;
          this.startAndWait();
       }
 
       protected void iterateOnce() {
-         Blocker.block((Blockable)this.handler, (Object)"deleting");
-         this.button.delete();
-         Blocker.unblock((Blockable)this.handler, (Object)"deleting");
+         this.button.setState(VersionDownloadButton.ButtonState.STOP);
+         Blocker.block((Blockable)this.handler, (Object)"start-download");
+         this.button.startDownload();
+         Blocker.unblock((Blockable)this.handler, (Object)"start-download");
+         this.button.setState(VersionDownloadButton.ButtonState.DOWNLOAD);
       }
    }
 }

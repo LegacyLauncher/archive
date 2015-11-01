@@ -18,9 +18,6 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
       return instance;
    }
 
-   private ExceptionHandler() {
-   }
-
    public void uncaughtException(Thread t, Throwable e) {
       OutOfMemoryError asOOM = (OutOfMemoryError)Reflect.cast(e, OutOfMemoryError.class);
       if (asOOM == null || !reduceMemory(asOOM)) {
@@ -33,8 +30,8 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
          } else {
             U.log("Hidden exception in thread " + t.getName(), e);
          }
-
       }
+
    }
 
    public static boolean reduceMemory(OutOfMemoryError e) {

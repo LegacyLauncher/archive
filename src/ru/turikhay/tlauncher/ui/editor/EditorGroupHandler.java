@@ -20,14 +20,11 @@ public class EditorGroupHandler {
          EditorFieldListener listener = new EditorFieldListener() {
             protected void onChange(EditorHandler handler, String oldValue, String newValue) {
                if (newValue != null) {
-                  EditorGroupHandler var10000;
                   if (!newValue.equals(oldValue)) {
-                     var10000 = EditorGroupHandler.this;
-                     var10000.changedFlag = var10000.changedFlag + 1;
+                     EditorGroupHandler.this.changedFlag = EditorGroupHandler.this.changedFlag + 1;
                   }
 
-                  var10000 = EditorGroupHandler.this;
-                  var10000.checkedFlag = var10000.checkedFlag + 1;
+                  EditorGroupHandler.this.checkedFlag = EditorGroupHandler.this.checkedFlag + 1;
                   if (EditorGroupHandler.this.checkedFlag == EditorGroupHandler.this.checkedLimit) {
                      if (EditorGroupHandler.this.changedFlag > 0) {
                         Iterator var5 = EditorGroupHandler.this.listeners.iterator();
@@ -38,12 +35,12 @@ public class EditorGroupHandler {
                         }
                      }
 
-                     var10000 = EditorGroupHandler.this;
+                     EditorGroupHandler var10000 = EditorGroupHandler.this;
                      EditorGroupHandler.this.changedFlag = 0;
                      var10000.checkedFlag = 0;
                   }
-
                }
+
             }
          };
 

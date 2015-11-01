@@ -129,13 +129,6 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
       }
    }
 
-   public static class ExtendedHTMLFactory extends HTMLFactory {
-      public View create(Element elem) {
-         Tag kind = ExtendedHTMLEditorKit.getTag(elem);
-         return (View)(kind == Tag.IMG ? new ExtendedImageView(elem) : super.create(elem));
-      }
-   }
-
    public class ExtendedLinkController extends MouseAdapter {
       public void mouseClicked(MouseEvent e) {
          JEditorPane editor = (JEditorPane)e.getSource();
@@ -152,9 +145,9 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
                default:
                   ExtendedHTMLEditorKit.this.hlProc.process(href);
                }
-
             }
          }
+
       }
 
       public void mouseMoved(MouseEvent e) {
@@ -162,6 +155,7 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
          if (editor.isEnabled() || editor.isDisplayable()) {
             editor.setCursor(ExtendedHTMLEditorKit.getAnchorHref(e) == null ? Cursor.getDefaultCursor() : ExtendedHTMLEditorKit.HAND);
          }
+
       }
 
       public void mouseExited(MouseEvent e) {
@@ -169,6 +163,14 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
          if (editor.isEnabled() || editor.isDisplayable()) {
             editor.setCursor(Cursor.getDefaultCursor());
          }
+
+      }
+   }
+
+   public static class ExtendedHTMLFactory extends HTMLFactory {
+      public View create(Element elem) {
+         Tag kind = ExtendedHTMLEditorKit.getTag(elem);
+         return (View)(kind == Tag.IMG ? new ExtendedImageView(elem) : super.create(elem));
       }
    }
 }

@@ -24,20 +24,21 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
    }
 
    public final boolean refresh() {
+      boolean var3;
       if (this.semaphore.tryAcquire()) {
-         boolean var2;
          try {
-            var2 = this.lastResult = this.refresh(this.nextID());
+            var3 = this.lastResult = this.refresh(this.nextID());
          } finally {
             this.semaphore.release();
          }
 
-         return var2;
+         return var3;
       } else {
          try {
             this.semaphore.acquire();
-            boolean var3 = this.lastResult;
-            return var3;
+            var3 = this.lastResult;
+            boolean var2 = var3;
+            return var2;
          } catch (InterruptedException var11) {
             var11.printStackTrace();
          } finally {

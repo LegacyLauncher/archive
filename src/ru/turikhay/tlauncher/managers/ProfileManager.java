@@ -20,6 +20,7 @@ import java.util.UUID;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.FileTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.component.RefreshableComponent;
 import ru.turikhay.tlauncher.minecraft.auth.AccountListener;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
@@ -72,11 +73,11 @@ public class ProfileManager extends RefreshableComponent {
    }
 
    public ProfileManager(ComponentManager manager) throws Exception {
-      this(manager, getDefaultFile());
+      this(manager, getDefaultFile(manager));
    }
 
    public void recreate() {
-      this.setFile(getDefaultFile());
+      this.setFile(getDefaultFile(this.manager));
       this.refresh();
    }
 
@@ -85,8 +86,8 @@ public class ProfileManager extends RefreshableComponent {
       Iterator var2 = this.listeners.iterator();
 
       while(var2.hasNext()) {
-         ProfileManagerListener listener = (ProfileManagerListener)var2.next();
-         listener.onProfilesRefreshed(this);
+         ProfileManagerListener e = (ProfileManagerListener)var2.next();
+         e.onProfilesRefreshed(this);
       }
 
       try {
@@ -183,17 +184,18 @@ public class ProfileManager extends RefreshableComponent {
       }
    }
 
-   private static File getDefaultFile() {
-      return new File(MinecraftUtil.getWorkingDirectory(), "tlauncher_profiles.json");
-   }
-
-   static class OldProfileList {
-      UUID clientToken = UUID.randomUUID();
-      HashMap profiles = new HashMap();
+   private static File getDefaultFile(ComponentManager manager) {
+      String profileFile = manager.getLauncher().getSettings().get("profiles");
+      return StringUtils.isNotEmpty(profileFile) ? new File(profileFile) : new File(MinecraftUtil.getWorkingDirectory(), "tlauncher_profiles.json");
    }
 
    static class RawProfileList {
       UUID clientToken = UUID.randomUUID();
       AuthenticatorDatabase authenticationDatabase = new AuthenticatorDatabase();
+   }
+
+   static class OldProfileList {
+      UUID clientToken = UUID.randomUUID();
+      HashMap profiles = new HashMap();
    }
 }

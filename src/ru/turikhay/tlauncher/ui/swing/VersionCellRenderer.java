@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class VersionCellRenderer implements ListCellRenderer {
@@ -20,9 +21,7 @@ public class VersionCellRenderer implements ListCellRenderer {
    public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
    private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
    private final int averageColor = (new Color(128, 128, 128, 255)).getRGB();
-   private static final ImageIcon ELY_ICON = Images.getIcon("ely.png");
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
+   private static final ImageIcon ELY_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
 
    public Component getListCellRendererComponent(JList list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
       JLabel mainText = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -61,11 +60,11 @@ public class VersionCellRenderer implements ListCellRenderer {
       }
 
       label = Localizable.nget(label);
-      switch($SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType()[type.ordinal()]) {
-      case 4:
+      switch(type) {
+      case OLD_BETA:
          id = id.substring(1);
          break;
-      case 5:
+      case OLD_ALPHA:
          id = id.startsWith("a") ? id.substring(1) : id;
       }
 
@@ -75,48 +74,5 @@ public class VersionCellRenderer implements ListCellRenderer {
 
    public boolean getShowElyVersions() {
       return false;
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType() {
-      int[] var10000 = $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[ReleaseType.values().length];
-
-         try {
-            var0[ReleaseType.MODIFIED.ordinal()] = 3;
-         } catch (NoSuchFieldError var6) {
-         }
-
-         try {
-            var0[ReleaseType.OLD_ALPHA.ordinal()] = 5;
-         } catch (NoSuchFieldError var5) {
-         }
-
-         try {
-            var0[ReleaseType.OLD_BETA.ordinal()] = 4;
-         } catch (NoSuchFieldError var4) {
-         }
-
-         try {
-            var0[ReleaseType.RELEASE.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[ReleaseType.SNAPSHOT.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[ReleaseType.UNKNOWN.ordinal()] = 6;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$net$minecraft$launcher$versions$ReleaseType = var0;
-         return var0;
-      }
    }
 }

@@ -40,6 +40,7 @@ public class EditorPane extends JEditorPane {
                   OS.openLink(url);
                }
             }
+
          }
       });
    }

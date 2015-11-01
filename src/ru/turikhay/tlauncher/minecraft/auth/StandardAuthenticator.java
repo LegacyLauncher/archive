@@ -25,7 +25,7 @@ public class StandardAuthenticator extends Authenticator {
       } else if (this.account.getPassword() == null && this.account.getAccessToken() == null) {
          throw new AuthenticatorException(new NullPointerException("password/accessToken"));
       } else {
-         this.log(new Object[]{"Staring to authenticate:", this.account});
+         this.log(new Object[]{this.account});
          this.log(new Object[]{"hasUsername:", this.account.getUsername()});
          this.log(new Object[]{"hasPassword:", this.account.getPassword() != null});
          this.log(new Object[]{"hasAccessToken:", this.account.getAccessToken() != null});
@@ -41,6 +41,7 @@ public class StandardAuthenticator extends Authenticator {
          this.log(new Object[]{"hasProfiles:", this.account.getProfiles() != null});
          this.log(new Object[]{"hasProfile:", this.account.getProfiles() != null});
          this.log(new Object[]{"hasProperties:", this.account.getProperties() != null});
+         this.log(new Object[]{this.account.getProfile()});
       }
    }
 
@@ -50,6 +51,7 @@ public class StandardAuthenticator extends Authenticator {
       StandardAuthenticator.AuthenticationResponse response = (StandardAuthenticator.AuthenticationResponse)this.makeRequest(this.AUTHENTICATE_URL, request, StandardAuthenticator.AuthenticationResponse.class);
       this.account.setUserID(response.getUserID() != null ? response.getUserID() : this.account.getUsername());
       this.account.setAccessToken(response.getAccessToken());
+      this.account.setPassword((String)null);
       this.account.setProfiles(response.getAvailableProfiles());
       this.account.setProfile(response.getSelectedProfile());
       this.account.setUser(response.getUser());
@@ -65,10 +67,15 @@ public class StandardAuthenticator extends Authenticator {
       this.log(new Object[]{"Loggining in with token"});
       StandardAuthenticator.RefreshRequest request = new StandardAuthenticator.RefreshRequest(this);
       StandardAuthenticator.RefreshResponse response = (StandardAuthenticator.RefreshResponse)this.makeRequest(this.REFRESH_URL, request, StandardAuthenticator.RefreshResponse.class);
-      setClientToken(response.getClientToken());
       this.account.setAccessToken(response.getAccessToken());
       this.account.setProfile(response.getSelectedProfile());
       this.account.setUser(response.getUser());
+      setClientToken(response.getClientToken());
+      if (response.getSelectedProfile() != null) {
+         this.account.setUUID(response.getSelectedProfile().getId());
+         this.account.setDisplayName(response.getSelectedProfile().getName());
+      }
+
    }
 
    protected StandardAuthenticator.Response makeRequest(URL url, StandardAuthenticator.Request input, Class classOfT) throws AuthenticatorException {
@@ -104,56 +111,34 @@ public class StandardAuthenticator extends Authenticator {
    }
 
    protected AuthenticatorException getException(StandardAuthenticator.Response result) {
-      if ("UserMigratedException".equals(result.getCause())) {
-         return new UserMigratedException();
-      } else {
-         return (AuthenticatorException)("ForbiddenOperationException".equals(result.getError()) ? new InvalidCredentialsException() : new AuthenticatorException(result, "internal"));
+      return (AuthenticatorException)("UserMigratedException".equals(result.getCause()) ? new UserMigratedException() : ("ForbiddenOperationException".equals(result.getError()) ? new InvalidCredentialsException() : new AuthenticatorException(result, "internal")));
+   }
+
+   protected static class Response {
+      private String error;
+      private String errorMessage;
+      private String cause;
+
+      public String getError() {
+         return this.error;
+      }
+
+      public String getCause() {
+         return this.cause;
+      }
+
+      public String getErrorMessage() {
+         return this.errorMessage;
       }
    }
 
-   protected static class AuthenticationRequest extends StandardAuthenticator.Request {
-      private Agent agent;
-      private String username;
-      private String password;
-      private String clientToken;
-
-      protected AuthenticationRequest(String username, String password, String clientToken) {
-         this.agent = Agent.MINECRAFT;
-         this.username = username;
-         this.password = password;
-         this.clientToken = clientToken;
-      }
-
-      protected AuthenticationRequest(Authenticator auth) {
-         this(auth.account.getUsername(), auth.account.getPassword(), Authenticator.getClientToken().toString());
-      }
-
-      public Agent getAgent() {
-         return this.agent;
-      }
-
-      public String getUsername() {
-         return this.username;
-      }
-
-      public String getPassword() {
-         return this.password;
-      }
-
-      public String getClientToken() {
-         return this.clientToken;
-      }
-
-      public boolean isRequestingUser() {
-         return true;
-      }
+   protected static class Request {
    }
 
-   protected static class AuthenticationResponse extends StandardAuthenticator.Response {
+   protected static class RefreshResponse extends StandardAuthenticator.Response {
       private String accessToken;
       private String clientToken;
       private GameProfile selectedProfile;
-      private GameProfile[] availableProfiles;
       private User user;
 
       public String getAccessToken() {
@@ -164,20 +149,12 @@ public class StandardAuthenticator extends Authenticator {
          return this.clientToken;
       }
 
-      public GameProfile[] getAvailableProfiles() {
-         return this.availableProfiles;
-      }
-
       public GameProfile getSelectedProfile() {
          return this.selectedProfile;
       }
 
       public User getUser() {
          return this.user;
-      }
-
-      public String getUserID() {
-         return this.user != null ? this.user.getID() : null;
       }
    }
 
@@ -219,10 +196,11 @@ public class StandardAuthenticator extends Authenticator {
       }
    }
 
-   protected static class RefreshResponse extends StandardAuthenticator.Response {
+   protected static class AuthenticationResponse extends StandardAuthenticator.Response {
       private String accessToken;
       private String clientToken;
       private GameProfile selectedProfile;
+      private GameProfile[] availableProfiles;
       private User user;
 
       public String getAccessToken() {
@@ -233,6 +211,10 @@ public class StandardAuthenticator extends Authenticator {
          return this.clientToken;
       }
 
+      public GameProfile[] getAvailableProfiles() {
+         return this.availableProfiles;
+      }
+
       public GameProfile getSelectedProfile() {
          return this.selectedProfile;
       }
@@ -240,26 +222,47 @@ public class StandardAuthenticator extends Authenticator {
       public User getUser() {
          return this.user;
       }
+
+      public String getUserID() {
+         return this.user != null ? this.user.getID() : null;
+      }
    }
 
-   protected static class Request {
-   }
+   protected static class AuthenticationRequest extends StandardAuthenticator.Request {
+      private Agent agent;
+      private String username;
+      private String password;
+      private String clientToken;
 
-   protected static class Response {
-      private String error;
-      private String errorMessage;
-      private String cause;
-
-      public String getError() {
-         return this.error;
+      protected AuthenticationRequest(String username, String password, String clientToken) {
+         this.agent = Agent.MINECRAFT;
+         this.username = username;
+         this.password = password;
+         this.clientToken = clientToken;
       }
 
-      public String getCause() {
-         return this.cause;
+      protected AuthenticationRequest(Authenticator auth) {
+         this(auth.account.getUsername(), auth.account.getPassword(), Authenticator.getClientToken().toString());
       }
 
-      public String getErrorMessage() {
-         return this.errorMessage;
+      public Agent getAgent() {
+         return this.agent;
+      }
+
+      public String getUsername() {
+         return this.username;
+      }
+
+      public String getPassword() {
+         return this.password;
+      }
+
+      public String getClientToken() {
+         return this.clientToken;
+      }
+
+      public boolean isRequestingUser() {
+         return true;
       }
    }
 }

@@ -130,10 +130,10 @@ public enum Repository {
                   Time.start(lock);
 
                   try {
-                     String result = Http.performGet(new URL(this.getRepo(x) + uri), timeout, timeout);
+                     String e0 = Http.performGet(new URL(this.getRepo(x) + uri), timeout, timeout);
                      this.setSelected(x);
                      this.log("Success: Reached the repo in", Time.stop(lock), "ms.");
-                     return result;
+                     return e0;
                   } catch (IOException var13) {
                      this.log("Failed: Repo is not reachable!", var13);
                      e = var13;

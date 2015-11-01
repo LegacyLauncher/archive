@@ -18,8 +18,8 @@ public class EditorComboBox extends ExtendedComboBox implements EditorField {
             Object value = var7[var5];
             this.addItem(value);
          }
-
       }
+
    }
 
    public EditorComboBox(StringConverter converter, Object[] values) {

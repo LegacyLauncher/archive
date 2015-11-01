@@ -14,7 +14,7 @@ import ru.turikhay.util.OS;
 
 class ConfigurationDefaults {
    private static final int version = 3;
-   private final Map d = new HashMap();
+   private final HashMap d = new HashMap();
 
    ConfigurationDefaults() {
       this.d.put("settings.version", 3);
@@ -23,32 +23,34 @@ class ConfigurationDefaults {
       this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
       this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
       this.d.put("minecraft.fullscreen", false);
-      Iterator var2 = ReleaseType.getDefault().iterator();
+      Iterator i$ = ReleaseType.getDefault().iterator();
 
-      while(var2.hasNext()) {
-         ReleaseType type = (ReleaseType)var2.next();
+      while(i$.hasNext()) {
+         ReleaseType type = (ReleaseType)i$.next();
          this.d.put("minecraft.versions." + type.name().toLowerCase(), true);
       }
 
-      var2 = ReleaseType.SubType.getDefault().iterator();
+      i$ = ReleaseType.SubType.getDefault().iterator();
 
-      while(var2.hasNext()) {
-         ReleaseType.SubType type = (ReleaseType.SubType)var2.next();
-         this.d.put("minecraft.versions.sub." + type.name().toLowerCase(), true);
+      while(i$.hasNext()) {
+         ReleaseType.SubType subType = (ReleaseType.SubType)i$.next();
+         this.d.put("minecraft.versions.sub." + subType.name().toLowerCase(), true);
       }
 
       Notices.NoticeType[] var4;
       int var3 = (var4 = Notices.NoticeType.values()).length;
 
       for(int var7 = 0; var7 < var3; ++var7) {
-         Notices.NoticeType type = var4[var7];
-         if (type.isAdvert()) {
-            this.d.put("gui.notice." + type.name().toLowerCase(), true);
+         Notices.NoticeType var6 = var4[var7];
+         if (var6.isAdvert()) {
+            this.d.put("gui.notice." + var6.name().toLowerCase(), true);
          }
       }
 
+      this.d.put("minecraft.improvedargs", true);
       this.d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
       this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
+      this.d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
       this.d.put("gui.size", new IntegerArray(new int[]{925, 550}));
       this.d.put("gui.console", Configuration.ConsoleType.getDefault());
       this.d.put("gui.console.width", 720);

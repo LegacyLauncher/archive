@@ -15,21 +15,7 @@ public class CrashDescriptor {
    private static CrashSignatureContainer container;
    public static final int goodExitCode = 0;
    private final MinecraftLauncher launcher;
-   private static final String[] phrases = new String[]{"Мы катапультировались. Приятного полёта.", "Сейчас лучше выпить чаю. С бубликами.", "Шаманские бубны. Большой ассортимент. Звоните!", "Тут только звуковая отвётка поможет. Или большая кувалда."};
-
-   static {
-      GsonBuilder builder = new GsonBuilder();
-      builder.registerTypeAdapter(CrashSignatureContainer.class, new CrashSignatureContainer.CrashSignatureContainerDeserializer());
-      Gson gson = builder.create();
-
-      try {
-         container = (CrashSignatureContainer)gson.fromJson(FileUtil.getResource(CrashDescriptor.class.getResource("signatures.json")), CrashSignatureContainer.class);
-      } catch (Exception var3) {
-         U.log("Cannot parse crash signatures!", var3);
-         container = new CrashSignatureContainer();
-      }
-
-   }
+   private static final String[] phrases = new String[]{"Мы катапультировались. Приятного полёта.", "Сейчас лучше выпить чаю. С бубликами.", "Шаманские бубны. Большой ассортимент. Звоните!", "Тут только звуковая отвёртка поможет. Или большая кувалда."};
 
    public CrashDescriptor(MinecraftLauncher launcher) {
       if (launcher == null) {
@@ -55,21 +41,21 @@ public class CrashDescriptor {
             String version = this.launcher.getVersion();
 
             while(true) {
-               String line;
+               String phrase;
                label85:
                while(scanner.hasNextLine()) {
-                  line = scanner.nextLine();
-                  if (filePattern.matcher(line).matches()) {
-                     Matcher fileMatcher = filePattern.matcher(line);
-                     if (fileMatcher.matches() && fileMatcher.groupCount() == 1) {
-                        crash.setFile(fileMatcher.group(1));
+                  phrase = scanner.nextLine();
+                  if (filePattern.matcher(phrase).matches()) {
+                     Matcher var12 = filePattern.matcher(phrase);
+                     if (var12.matches() && var12.groupCount() == 1) {
+                        crash.setFile(var12.group(1));
                         this.log("Found crash report file:", crash.getFile());
                      }
                   } else {
                      Iterator var9 = container.getSignatures().iterator();
 
                      while(true) {
-                        CrashSignatureContainer.CrashSignature signature;
+                        CrashSignatureContainer.CrashSignature line;
                         do {
                            do {
                               do {
@@ -77,21 +63,21 @@ public class CrashDescriptor {
                                     continue label85;
                                  }
 
-                                 signature = (CrashSignatureContainer.CrashSignature)var9.next();
-                              } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
-                           } while(signature.getExitCode() != 0 && signature.getExitCode() != exitCode);
-                        } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
+                                 line = (CrashSignatureContainer.CrashSignature)var9.next();
+                              } while(line.hasVersion() && !line.getVersion().matcher(version).matches());
+                           } while(line.getExitCode() != 0 && line.getExitCode() != exitCode);
+                        } while(line.hasPattern() && !line.getPattern().matcher(phrase).matches());
 
-                        if (signature.isFake()) {
+                        if (line.isFake()) {
                            this.log("Minecraft closed with an illegal exit code not due to error. Scanning has been cancelled");
-                           this.log("Fake signature:", signature.getName());
+                           this.log("Fake signature:", line.getName());
                            scanner.close();
                            return null;
                         }
 
-                        if (!crash.hasSignature(signature)) {
-                           this.log("Signature \"" + signature.getName() + "\" matches!");
-                           crash.addSignature(signature);
+                        if (!crash.hasSignature(line)) {
+                           this.log("Signature \"" + line.getName() + "\" matches!");
+                           crash.addSignature(line);
                         }
                      }
                   }
@@ -99,13 +85,13 @@ public class CrashDescriptor {
 
                scanner.close();
                if (!crash.contains("PermGen error") && !crash.contains("OutOfMemory error") && !crash.contains("Too heavy heap")) {
-                  line = (String)U.getRandom(phrases);
+                  phrase = (String)U.getRandom(phrases);
                   String[] var11;
-                  int var10 = (var11 = StringUtils.split(line, '\n')).length;
+                  int var10 = (var11 = StringUtils.split(phrase, '\n')).length;
 
                   for(int var14 = 0; var14 < var10; ++var14) {
-                     String line = var11[var14];
-                     U.log("//", line);
+                     String var13 = var11[var14];
+                     U.log("//", var13);
                   }
                } else {
                   U.log("– И это всё потому что у кого-то слишком узкие двери...");
@@ -120,5 +106,19 @@ public class CrashDescriptor {
 
    void log(Object... w) {
       this.launcher.log(w);
+   }
+
+   static {
+      GsonBuilder builder = new GsonBuilder();
+      builder.registerTypeAdapter(CrashSignatureContainer.class, new CrashSignatureContainer.CrashSignatureContainerDeserializer());
+      Gson gson = builder.create();
+
+      try {
+         container = (CrashSignatureContainer)gson.fromJson(FileUtil.getResource(CrashDescriptor.class.getResource("signatures.json")), CrashSignatureContainer.class);
+      } catch (Exception var3) {
+         U.log("Cannot parse crash signatures!", var3);
+         container = new CrashSignatureContainer();
+      }
+
    }
 }

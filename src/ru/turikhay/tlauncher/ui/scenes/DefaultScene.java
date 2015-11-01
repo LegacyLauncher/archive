@@ -9,6 +9,7 @@ import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.Direction;
+import ru.turikhay.util.SwingUtil;
 
 public class DefaultScene extends PseudoScene {
    public static final Dimension LOGIN_SIZE = new Dimension(250, 240);
@@ -22,20 +23,18 @@ public class DefaultScene extends PseudoScene {
    private ExtendedPanel sidePanelComp;
    private Direction lfDirection;
    public final NoticePanel infoPanel;
-   // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
-   // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel;
 
    public DefaultScene(MainPane main) {
       super(main);
       this.notifier = main.notifier;
       this.settingsForm = new SettingsPanel(this);
-      this.settingsForm.setSize(SETTINGS_SIZE);
+      this.settingsForm.setSize(SwingUtil.magnify(SETTINGS_SIZE));
       this.settingsForm.setVisible(false);
       this.add(this.settingsForm);
       this.loginForm = new LoginForm(this);
-      this.loginForm.setSize(LOGIN_SIZE);
+      this.loginForm.setSize(SwingUtil.magnify(LOGIN_SIZE));
       this.add(this.loginForm);
       this.infoPanel = new NoticePanel(this);
       this.add(this.infoPanel);
@@ -47,6 +46,7 @@ public class DefaultScene extends PseudoScene {
          this.setBounds(0, 0, this.parent.getWidth(), this.parent.getHeight());
          this.updateCoords();
       }
+
    }
 
    private void updateCoords() {
@@ -101,7 +101,7 @@ public class DefaultScene extends PseudoScene {
          }
       } else {
          n_x = this.sidePanelComp.getWidth();
-         int sp_h = this.sidePanelComp.getHeight();
+         int n_y = this.sidePanelComp.getHeight();
          int bw = lf_w + n_x + 15;
          int hbw = bw / 2;
          int sp_x;
@@ -141,13 +141,13 @@ public class DefaultScene extends PseudoScene {
             case 5:
             case 6:
                lf_y = hh - lf_h / 2;
-               sp_y = hh - sp_h / 2;
+               sp_y = hh - n_y / 2;
                break;
             case 7:
             case 8:
             case 9:
                lf_y = h - 10 - lf_h;
-               sp_y = h - 10 - sp_h;
+               sp_y = h - 10 - n_y;
                break;
             default:
                throw new RuntimeException("unknown direction:" + this.lfDirection);
@@ -156,13 +156,13 @@ public class DefaultScene extends PseudoScene {
             lf_x = w * 2;
             lf_y = 0;
             sp_x = hw - n_x / 2;
-            sp_y = hh - sp_h / 2;
+            sp_y = hh - n_y / 2;
          }
 
          this.sidePanelComp.setLocation(sp_x, sp_y);
       }
 
-      int n_y = 10;
+      byte n_y1 = 10;
       switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.lfDirection.ordinal()]) {
       case 1:
       case 4:
@@ -177,7 +177,7 @@ public class DefaultScene extends PseudoScene {
          n_x = 10;
       }
 
-      this.notifier.setLocation(n_x, n_y);
+      this.notifier.setLocation(n_x, n_y1);
       this.loginForm.setLocation(lf_x, lf_y);
       this.infoPanel.onResize();
    }
@@ -202,6 +202,7 @@ public class DefaultScene extends PseudoScene {
          this.infoPanel.setShown(noSidePanel, noSidePanel);
          this.updateCoords();
       }
+
    }
 
    public void toggleSidePanel(DefaultScene.SidePanel side) {
@@ -216,8 +217,8 @@ public class DefaultScene extends PseudoScene {
       if (side == null) {
          throw new NullPointerException("side");
       } else {
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel()[side.ordinal()]) {
-         case 1:
+         switch(side) {
+         case SETTINGS:
             return this.settingsForm;
          default:
             throw new RuntimeException("unknown side:" + side);
@@ -244,78 +245,59 @@ public class DefaultScene extends PseudoScene {
       this.lfDirection = loginFormDirection;
    }
 
-   // $FF: synthetic method
    static int[] $SWITCH_TABLE$ru$turikhay$util$Direction() {
       int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$Direction;
-      if (var10000 != null) {
+      if ($SWITCH_TABLE$ru$turikhay$util$Direction != null) {
          return var10000;
       } else {
          int[] var0 = new int[Direction.values().length];
 
          try {
             var0[Direction.BOTTOM.ordinal()] = 8;
-         } catch (NoSuchFieldError var9) {
+         } catch (NoSuchFieldError var11) {
          }
 
          try {
             var0[Direction.BOTTOM_LEFT.ordinal()] = 7;
-         } catch (NoSuchFieldError var8) {
+         } catch (NoSuchFieldError var10) {
          }
 
          try {
             var0[Direction.BOTTOM_RIGHT.ordinal()] = 9;
-         } catch (NoSuchFieldError var7) {
+         } catch (NoSuchFieldError var9) {
          }
 
          try {
             var0[Direction.CENTER.ordinal()] = 5;
-         } catch (NoSuchFieldError var6) {
+         } catch (NoSuchFieldError var8) {
          }
 
          try {
             var0[Direction.CENTER_LEFT.ordinal()] = 4;
-         } catch (NoSuchFieldError var5) {
+         } catch (NoSuchFieldError var7) {
          }
 
          try {
             var0[Direction.CENTER_RIGHT.ordinal()] = 6;
-         } catch (NoSuchFieldError var4) {
+         } catch (NoSuchFieldError var6) {
          }
 
          try {
             var0[Direction.TOP.ordinal()] = 2;
-         } catch (NoSuchFieldError var3) {
+         } catch (NoSuchFieldError var5) {
          }
 
          try {
             var0[Direction.TOP_LEFT.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
+         } catch (NoSuchFieldError var4) {
          }
 
          try {
             var0[Direction.TOP_RIGHT.ordinal()] = 3;
-         } catch (NoSuchFieldError var1) {
+         } catch (NoSuchFieldError var3) {
          }
 
          $SWITCH_TABLE$ru$turikhay$util$Direction = var0;
-         return var0;
-      }
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[DefaultScene.SidePanel.values().length];
-
-         try {
-            var0[DefaultScene.SidePanel.SETTINGS.ordinal()] = 1;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel = var0;
          return var0;
       }
    }

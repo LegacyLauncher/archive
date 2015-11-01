@@ -5,7 +5,7 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 
 public class LocaleConverter implements StringConverter {
    public String toString(Locale from) {
-      return from == null ? null : from.getDisplayCountry(Locale.US) + " (" + from.toString() + ")";
+      return from == null ? null : from.getDisplayCountry(Locale.US) + " (" + from + ")";
    }
 
    public Locale fromString(String from) {

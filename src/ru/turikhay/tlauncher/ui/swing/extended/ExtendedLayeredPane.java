@@ -35,12 +35,13 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
             }
          });
       }
+
    }
 
    public Component add(Component comp) {
-      Integer var10004 = this.LAYER_COUNT;
-      this.LAYER_COUNT = var10004 + 1;
-      super.add(comp, var10004);
+      Integer var10002 = this.LAYER_COUNT;
+      this.LAYER_COUNT = this.LAYER_COUNT + 1;
+      super.add(comp, var10002);
       return comp;
    }
 
@@ -71,7 +72,7 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
                ((ResizeableComponent)comp).onResize();
             }
          }
-
       }
+
    }
 }

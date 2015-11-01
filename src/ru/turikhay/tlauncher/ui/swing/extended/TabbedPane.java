@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import com.sun.java.swing.plaf.windows.WindowsTabbedPaneUI;
 import javax.swing.JTabbedPane;
-import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.TabbedPaneUI;
 import ru.turikhay.tlauncher.ui.swing.util.Orientation;
 
@@ -30,7 +29,7 @@ public class TabbedPane extends JTabbedPane {
    }
 
    public ExtendedUI getExtendedUI() {
-      ComponentUI ui = this.getUI();
+      TabbedPaneUI ui = this.getUI();
       return ui instanceof ExtendedUI ? (ExtendedUI)ui : null;
    }
 

@@ -38,6 +38,7 @@ public class EditorFileField extends BorderPanel implements EditorField {
 
                EditorFileField.this.explorerButton.setEnabled(true);
             }
+
          }
       });
       this.add(this.textField, "Center");

@@ -14,12 +14,8 @@ public abstract class EditorHandler implements Blockable {
    private final List listeners;
 
    public EditorHandler(String path) {
-      if (path == null) {
-         throw new NullPointerException();
-      } else {
-         this.path = path;
-         this.listeners = Collections.synchronizedList(new ArrayList());
-      }
+      this.path = path;
+      this.listeners = Collections.synchronizedList(new ArrayList());
    }
 
    public boolean addListener(EditorFieldListener listener) {

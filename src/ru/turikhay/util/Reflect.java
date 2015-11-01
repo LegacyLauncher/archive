@@ -66,11 +66,11 @@ public class Reflect {
          throw new NullPointerException("string is null");
       } else {
          Enum[] constants = (Enum[])enumClass.getEnumConstants();
-         Enum[] var6 = constants;
-         int var5 = constants.length;
+         Enum[] arr$ = constants;
+         int len$ = constants.length;
 
-         for(int var4 = 0; var4 < var5; ++var4) {
-            Enum constant = var6[var4];
+         for(int i$ = 0; i$ < len$; ++i$) {
+            Enum constant = arr$[i$];
             if (string.equalsIgnoreCase(constant.toString())) {
                return constant;
             }

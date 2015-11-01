@@ -49,8 +49,8 @@ public class IntegerArray {
    public String toString() {
       StringBuilder sb = new StringBuilder();
       boolean first = true;
-      int[] var6;
-      int var5 = (var6 = this.integers).length;
+      int[] var6 = this.integers;
+      int var5 = this.integers.length;
 
       for(int var4 = 0; var4 < var5; ++var4) {
          int i = var6[var4];

@@ -120,16 +120,16 @@ public class Account {
    }
 
    public Map getProperties() {
-      Map map = new HashMap();
-      List list = new ArrayList();
-      Map properties;
+      HashMap map = new HashMap();
+      ArrayList list = new ArrayList();
+      Map property;
       Iterator var4;
       if (this.userProperties != null) {
          var4 = this.userProperties.iterator();
 
          while(var4.hasNext()) {
-            properties = (Map)var4.next();
-            list.add(new UserProperty((String)properties.get("name"), (String)properties.get("value")));
+            property = (Map)var4.next();
+            list.add(new UserProperty((String)property.get("name"), (String)property.get("value")));
          }
       }
 
@@ -137,18 +137,18 @@ public class Account {
          var4 = this.user.getProperties().iterator();
 
          while(var4.hasNext()) {
-            properties = (Map)var4.next();
-            list.add(new UserProperty((String)properties.get("name"), (String)properties.get("value")));
+            property = (Map)var4.next();
+            list.add(new UserProperty((String)property.get("name"), (String)property.get("value")));
          }
       }
 
       var4 = list.iterator();
 
       while(var4.hasNext()) {
-         UserProperty property = (UserProperty)var4.next();
-         List values = new ArrayList();
-         values.add(property.getValue());
-         map.put(property.getKey(), values);
+         UserProperty property1 = (UserProperty)var4.next();
+         ArrayList values = new ArrayList();
+         values.add(property1.getValue());
+         map.put(property1.getKey(), values);
       }
 
       return map;
@@ -175,7 +175,7 @@ public class Account {
    }
 
    Map createMap() {
-      Map r = new HashMap();
+      HashMap r = new HashMap();
       r.put("username", this.username);
       r.put("userid", this.userID);
       r.put("uuid", UUIDTypeAdapter.toUUID(this.uuid));
@@ -236,13 +236,7 @@ public class Account {
    }
 
    public boolean equals(Account acc) {
-      if (acc == null) {
-         return false;
-      } else if (this.username == null) {
-         return acc.username == null;
-      } else {
-         return this.username.equals(acc.username) && this.type.equals(acc.type) && (this.password == null || this.password.equals(acc.password));
-      }
+      return acc == null ? false : (this.username == null ? acc.username == null : this.username.equals(acc.username) && this.type.equals(acc.type) && (this.password == null || this.password.equals(acc.password)));
    }
 
    public String toString() {

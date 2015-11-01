@@ -18,11 +18,7 @@ public class AccountConverter extends LocalizableStringConverter {
    }
 
    public String toString(Account from) {
-      if (from == null) {
-         return Localizable.get("account.empty");
-      } else {
-         return from.getUsername() == null ? null : from.getUsername();
-      }
+      return from == null ? Localizable.get("account.empty") : (from.getUsername() == null ? null : from.getUsername());
    }
 
    public Account fromString(String from) {

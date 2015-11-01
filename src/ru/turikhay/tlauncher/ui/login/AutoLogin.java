@@ -56,8 +56,8 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
          } else {
             this.stopActive();
          }
-
       }
+
    }
 
    public boolean isActive() {
@@ -87,6 +87,7 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
 
          this.loginForm.global.set("login.auto", enabled);
       }
+
    }
 
    public boolean isEnabled() {

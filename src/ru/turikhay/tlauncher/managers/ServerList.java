@@ -63,17 +63,17 @@ public class ServerList {
       Iterator var4 = this.list.iterator();
 
       while(var4.hasNext()) {
-         ServerList.Server server = (ServerList.Server)var4.next();
-         servers.appendTag(server.getNBT());
+         ServerList.Server compound = (ServerList.Server)var4.next();
+         servers.appendTag(compound.getNBT());
       }
 
-      NBTTagCompound compound = new NBTTagCompound();
-      compound.setTag("servers", servers);
-      CompressedStreamTools.safeWrite(compound, file);
+      NBTTagCompound compound1 = new NBTTagCompound();
+      compound1.setTag("servers", servers);
+      CompressedStreamTools.safeWrite(compound1, file);
    }
 
    public String toString() {
-      return "ServerList{" + this.list.toString() + "}";
+      return "ServerList{" + this.list + "}";
    }
 
    public static ServerList loadFromFile(File file) throws IOException {
@@ -81,7 +81,7 @@ public class ServerList {
       List list = serverList.list;
       NBTTagCompound compound = CompressedStreamTools.read(file);
       if (compound == null) {
-         return serverList;
+         return null;
       } else {
          NBTTagList servers = compound.getTagList("servers");
 
@@ -128,6 +128,38 @@ public class ServerList {
          throw new ParseException(name + " is blank");
       } else {
          return s;
+      }
+   }
+
+   private static class ServerDeserializer implements JsonDeserializer {
+      private ServerDeserializer() {
+      }
+
+      public ServerList.Server deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+         ServerList.Server server = new ServerList.Server();
+         JsonObject root = json.getAsJsonObject();
+         server.setName(root.getAsJsonPrimitive("name").getAsString());
+         server.setAddress(root.getAsJsonPrimitive("address").getAsString());
+         List versions = (List)context.deserialize(root.getAsJsonArray("versions"), (new TypeToken() {
+         }).getType());
+         server.versions.addAll(versions);
+         if (root.has("allowedAccounts")) {
+            List accountTypesStr = (List)context.deserialize(root.getAsJsonArray("allowedAccounts"), (new TypeToken() {
+            }).getType());
+            Iterator var9 = accountTypesStr.iterator();
+
+            while(var9.hasNext()) {
+               String accountType = (String)var9.next();
+               server.allowAccountType((Account.AccountType)Reflect.parseEnum0(Account.AccountType.class, accountType));
+            }
+         }
+
+         return server;
+      }
+
+      // $FF: synthetic method
+      ServerDeserializer(Object x0) {
+         this();
       }
    }
 
@@ -245,8 +277,8 @@ public class ServerList {
                type = var5[var3];
                this.allowedAccounts.remove(type);
             }
-
          }
+
       }
 
       public boolean isAccountTypeAllowed(Account.AccountType type) {
@@ -333,7 +365,7 @@ public class ServerList {
 
       private static ServerList.Server parseJsonString(String s) throws ParseException {
          if (gson == null) {
-            gson = (new GsonBuilder()).registerTypeAdapter(ServerList.Server.class, new ServerList.ServerDeserializer((ServerList.ServerDeserializer)null)).create();
+            gson = (new GsonBuilder()).registerTypeAdapter(ServerList.Server.class, new ServerList.ServerDeserializer()).create();
          }
 
          try {
@@ -341,38 +373,6 @@ public class ServerList {
          } catch (RuntimeException var2) {
             throw new ParseException("could not parse json server string", var2);
          }
-      }
-   }
-
-   private static class ServerDeserializer implements JsonDeserializer {
-      private ServerDeserializer() {
-      }
-
-      public ServerList.Server deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-         ServerList.Server server = new ServerList.Server();
-         JsonObject root = json.getAsJsonObject();
-         server.setName(root.getAsJsonPrimitive("name").getAsString());
-         server.setAddress(root.getAsJsonPrimitive("address").getAsString());
-         List versions = (List)context.deserialize(root.getAsJsonArray("versions"), (new TypeToken() {
-         }).getType());
-         server.versions.addAll(versions);
-         if (root.has("allowedAccounts")) {
-            List accountTypesStr = (List)context.deserialize(root.getAsJsonArray("allowedAccounts"), (new TypeToken() {
-            }).getType());
-            Iterator var9 = accountTypesStr.iterator();
-
-            while(var9.hasNext()) {
-               String accountType = (String)var9.next();
-               server.allowAccountType((Account.AccountType)Reflect.parseEnum0(Account.AccountType.class, accountType));
-            }
-         }
-
-         return server;
-      }
-
-      // $FF: synthetic method
-      ServerDeserializer(ServerList.ServerDeserializer var1) {
-         this();
       }
    }
 }

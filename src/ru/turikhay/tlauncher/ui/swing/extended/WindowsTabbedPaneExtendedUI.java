@@ -45,25 +45,25 @@ public class WindowsTabbedPaneExtendedUI extends WindowsTabbedPaneUI implements 
       int y = insets.top;
       int w = this.tabPane.getWidth() - insets.right - insets.left;
       int h = this.tabPane.getHeight() - insets.top - insets.bottom;
-      int tabWidth;
+      int g;
       if (tabPlacement != 2 && tabPlacement != 4) {
-         tabWidth = this.calculateTabAreaHeight(tabPlacement, this.runCount, this.maxTabHeight);
+         g = this.calculateTabAreaHeight(tabPlacement, this.runCount, this.maxTabHeight);
          if (tabPlacement == 1) {
-            y += tabWidth - tabAreaInsets.bottom;
+            y += g - tabAreaInsets.bottom;
          }
 
-         h -= tabWidth - tabAreaInsets.bottom;
+         h -= g - tabAreaInsets.bottom;
       } else {
-         tabWidth = this.calculateTabAreaWidth(tabPlacement, this.runCount, this.maxTabWidth);
+         g = this.calculateTabAreaWidth(tabPlacement, this.runCount, this.maxTabWidth);
          if (tabPlacement == 2) {
-            x += tabWidth - tabAreaInsets.bottom;
+            x += g - tabAreaInsets.bottom;
          }
 
-         w -= tabWidth - tabAreaInsets.bottom;
+         w -= g - tabAreaInsets.bottom;
       }
 
-      Graphics2D g = (Graphics2D)g0;
-      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      Graphics2D var14 = (Graphics2D)g0;
+      var14.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       Color background;
       Color border;
       if (this.theme == null) {
@@ -74,12 +74,12 @@ public class WindowsTabbedPaneExtendedUI extends WindowsTabbedPaneUI implements 
          border = this.theme.getBorder();
       }
 
-      g.setColor(background);
-      g.fillRoundRect(x, y - 5, w, h + 5, 16, 16);
-      g.setColor(border);
+      var14.setColor(background);
+      var14.fillRoundRect(x, y - 5, w, h + 5, 16, 16);
+      var14.setColor(border);
 
       for(int i = 1; i < 2; ++i) {
-         g.drawRoundRect(x + i - 1, y + i - 5 - 1, w - 2 * i + 1, h - 2 * i + 1 + 5, 16, 16);
+         var14.drawRoundRect(x + i - 1, y + i - 5 - 1, w - 2 * i + 1, h - 2 * i + 1 + 5, 16, 16);
       }
 
    }

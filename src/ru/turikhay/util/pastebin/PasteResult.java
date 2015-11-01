@@ -13,23 +13,6 @@ public abstract class PasteResult {
       return this.paste;
    }
 
-   public static class PasteFailed extends PasteResult {
-      private final Throwable error;
-
-      PasteFailed(Paste paste, Throwable error) {
-         super(paste);
-         this.error = error;
-      }
-
-      public final Throwable getError() {
-         return this.error;
-      }
-
-      public String toString() {
-         return "PasteFailed{error='" + this.error + "'}";
-      }
-   }
-
    public static class PasteUploaded extends PasteResult {
       private final URL url;
 
@@ -44,6 +27,23 @@ public abstract class PasteResult {
 
       public String toString() {
          return "PasteUploaded{url='" + this.url + "'}";
+      }
+   }
+
+   public static class PasteFailed extends PasteResult {
+      private final Throwable error;
+
+      PasteFailed(Paste paste, Throwable error) {
+         super(paste);
+         this.error = error;
+      }
+
+      public final Throwable getError() {
+         return this.error;
+      }
+
+      public String toString() {
+         return "PasteFailed{error='" + this.error + "'}";
       }
    }
 }

@@ -14,9 +14,6 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import javax.net.ssl.HttpsURLConnection;
-import ru.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Http {
@@ -59,11 +56,6 @@ public class Http {
       connection.setConnectTimeout(connTimeout);
       connection.setReadTimeout(readTimeout);
       connection.setRequestMethod("GET");
-      HttpsURLConnection securedConnection = (HttpsURLConnection)Reflect.cast(connection, HttpsURLConnection.class);
-      if (securedConnection != null) {
-         securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
-      }
-
       BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       StringBuilder response = new StringBuilder();
 
@@ -101,11 +93,6 @@ public class Http {
       connection.setUseCaches(false);
       connection.setDoInput(true);
       connection.setDoOutput(true);
-      HttpsURLConnection securedConnection = (HttpsURLConnection)Reflect.cast(connection, HttpsURLConnection.class);
-      if (securedConnection != null) {
-         securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
-      }
-
       DataOutputStream writer = new DataOutputStream(connection.getOutputStream());
       writer.write(paramAsBytes);
       writer.flush();

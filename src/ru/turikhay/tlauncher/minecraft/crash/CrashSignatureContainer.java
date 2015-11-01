@@ -43,96 +43,13 @@ public class CrashSignatureContainer {
       return this.getClass().getSimpleName() + "{\nvariables='" + this.variables + "',\nsignatures='" + this.signatures + "'}";
    }
 
-   public class CrashSignature {
-      private String name;
-      private String version;
-      private String path;
-      private String pattern;
-      private int exit;
-      private boolean fake;
-      private boolean forge;
-      private Pattern versionPattern;
-      private Pattern linePattern;
-
-      public String getName() {
-         return this.name;
-      }
-
-      public Pattern getVersion() {
-         return this.versionPattern;
-      }
-
-      public boolean hasVersion() {
-         return this.version != null;
-      }
-
-      public boolean isFake() {
-         return this.fake;
-      }
-
-      public Pattern getPattern() {
-         return this.linePattern;
-      }
-
-      public boolean hasPattern() {
-         return this.pattern != null;
-      }
-
-      public String getPath() {
-         return this.path;
-      }
-
-      public int getExitCode() {
-         return this.exit;
-      }
-
-      public String toString() {
-         return this.getClass().getSimpleName() + "{name='" + this.name + "', version='" + this.version + "', path='" + this.path + "', pattern='" + this.pattern + "', exitCode=" + this.exit + ", forge=" + this.forge + ", versionPattern='" + this.versionPattern + "', linePattern='" + this.linePattern + "'}";
-      }
-   }
-
-   static class CrashSignatureContainerDeserializer implements JsonDeserializer {
-      private final CrashSignatureContainer.CrashSignatureListSimpleDeserializer listDeserializer = new CrashSignatureContainer.CrashSignatureListSimpleDeserializer();
-      private final Gson defaultContext = TLauncher.getGson();
-
-      public CrashSignatureContainer deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
-         JsonObject object = element.getAsJsonObject();
-         Map rawVariables = (Map)this.defaultContext.fromJson(object.get("variables"), (new TypeToken() {
-         }).getType());
-         Map variables = new LinkedHashMap();
-         Iterator var8 = rawVariables.entrySet().iterator();
-
-         while(var8.hasNext()) {
-            Entry rawEn = (Entry)var8.next();
-            String varName = (String)rawEn.getKey();
-            String varVal = (String)rawEn.getValue();
-
-            String replaceName;
-            String replaceVal;
-            for(Iterator var12 = variables.entrySet().iterator(); var12.hasNext(); varVal = varVal.replace("${" + replaceName + "}", replaceVal)) {
-               Entry en = (Entry)var12.next();
-               replaceName = (String)en.getKey();
-               replaceVal = (String)en.getValue();
-            }
-
-            variables.put(varName, varVal);
-         }
-
-         this.listDeserializer.setVariables(variables);
-         List signatures = this.listDeserializer.deserialize(object.get("signatures"));
-         CrashSignatureContainer list = new CrashSignatureContainer();
-         list.variables = variables;
-         list.signatures = signatures;
-         return list;
-      }
-   }
-
    private static class CrashSignatureListSimpleDeserializer {
-      private final Gson defaultContext = TLauncher.getGson();
+      private final Gson defaultContext;
       private Map variables;
       private String forgePrefix;
 
-      CrashSignatureListSimpleDeserializer() {
+      private CrashSignatureListSimpleDeserializer() {
+         this.defaultContext = TLauncher.getGson();
       }
 
       public void setVariables(Map vars) {
@@ -196,6 +113,95 @@ public class CrashSignatureContainer {
          } else {
             throw new JsonParseException("Invalid name: \"" + signature.name + "\"");
          }
+      }
+
+      // $FF: synthetic method
+      CrashSignatureListSimpleDeserializer(Object x0) {
+         this();
+      }
+   }
+
+   static class CrashSignatureContainerDeserializer implements JsonDeserializer {
+      private final CrashSignatureContainer.CrashSignatureListSimpleDeserializer listDeserializer = new CrashSignatureContainer.CrashSignatureListSimpleDeserializer();
+      private final Gson defaultContext = TLauncher.getGson();
+
+      public CrashSignatureContainer deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+         JsonObject object = element.getAsJsonObject();
+         Map rawVariables = (Map)this.defaultContext.fromJson(object.get("variables"), (new TypeToken() {
+         }).getType());
+         LinkedHashMap variables = new LinkedHashMap();
+         Iterator list = rawVariables.entrySet().iterator();
+
+         while(list.hasNext()) {
+            Entry signatures = (Entry)list.next();
+            String varName = (String)signatures.getKey();
+            String varVal = (String)signatures.getValue();
+
+            String replaceName;
+            String replaceVal;
+            for(Iterator var12 = variables.entrySet().iterator(); var12.hasNext(); varVal = varVal.replace("${" + replaceName + "}", replaceVal)) {
+               Entry en = (Entry)var12.next();
+               replaceName = (String)en.getKey();
+               replaceVal = (String)en.getValue();
+            }
+
+            variables.put(varName, varVal);
+         }
+
+         this.listDeserializer.setVariables(variables);
+         List signatures1 = this.listDeserializer.deserialize(object.get("signatures"));
+         CrashSignatureContainer list1 = new CrashSignatureContainer();
+         list1.variables = variables;
+         list1.signatures = signatures1;
+         return list1;
+      }
+   }
+
+   public class CrashSignature {
+      private String name;
+      private String version;
+      private String path;
+      private String pattern;
+      private int exit;
+      private boolean fake;
+      private boolean forge;
+      private Pattern versionPattern;
+      private Pattern linePattern;
+
+      public String getName() {
+         return this.name;
+      }
+
+      public Pattern getVersion() {
+         return this.versionPattern;
+      }
+
+      public boolean hasVersion() {
+         return this.version != null;
+      }
+
+      public boolean isFake() {
+         return this.fake;
+      }
+
+      public Pattern getPattern() {
+         return this.linePattern;
+      }
+
+      public boolean hasPattern() {
+         return this.pattern != null;
+      }
+
+      public String getPath() {
+         return this.path;
+      }
+
+      public int getExitCode() {
+         return this.exit;
+      }
+
+      public String toString() {
+         return this.getClass().getSimpleName() + "{name='" + this.name + "', version='" + this.version + "', path='" + this.path + "', pattern='" + this.pattern + "', exitCode=" + this.exit + ", forge=" + this.forge + ", versionPattern='" + this.versionPattern + "', linePattern='" + this.linePattern + "'}";
       }
    }
 }

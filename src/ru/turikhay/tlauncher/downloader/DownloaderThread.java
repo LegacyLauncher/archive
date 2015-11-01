@@ -5,14 +5,14 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
@@ -32,9 +32,12 @@ public class DownloaderThread extends ExtendedThread {
    private double speed;
    private Downloadable current;
    private boolean launched;
+   private final StringBuilder b = new StringBuilder();
+   private final Formatter formatter;
 
    DownloaderThread(Downloader d, int id) {
       super("DT#" + id);
+      this.formatter = new Formatter(this.b, Locale.US);
       this.ID = id;
       this.LOGGER_PREFIX = "[D#" + id + "]";
       this.downloader = d;
@@ -66,7 +69,7 @@ public class DownloaderThread extends ExtendedThread {
          this.currentProgress = this.doneProgress = 0.0D;
          Iterator var2 = this.list.iterator();
 
-         label54:
+         label55:
          while(var2.hasNext()) {
             Downloadable d = (Downloadable)var2.next();
             this.current = d;
@@ -84,24 +87,24 @@ public class DownloaderThread extends ExtendedThread {
                try {
                   this.download(timeout);
                   break;
-               } catch (GaveUpDownloadException var9) {
+               } catch (GaveUpDownloadException var10) {
                   this.dlog("File is not reachable at all.");
-                  error = var9;
+                  error = var10;
                   if (attempt >= max) {
                      FileUtil.deleteFile(d.getDestination());
                      var8 = d.getAdditionalDestinations().iterator();
 
                      while(var8.hasNext()) {
-                        File file = (File)var8.next();
-                        FileUtil.deleteFile(file);
+                        File downloadable = (File)var8.next();
+                        FileUtil.deleteFile(downloadable);
                      }
 
-                     this.dlog("Gave up trying to download this file.", var9);
-                     this.onError(var9);
+                     this.dlog("Gave up trying to download this file.", var10);
+                     this.onError(var10);
                   }
-               } catch (AbortedDownloadException var10) {
+               } catch (AbortedDownloadException var11) {
                   this.dlog("This download process has been aborted.");
-                  error = var10;
+                  error = var11;
                   break;
                }
             }
@@ -112,11 +115,11 @@ public class DownloaderThread extends ExtendedThread {
 
                while(true) {
                   if (!var8.hasNext()) {
-                     break label54;
+                     break label55;
                   }
 
-                  Downloadable downloadable = (Downloadable)var8.next();
-                  downloadable.onAbort((AbortedDownloadException)error);
+                  Downloadable var11 = (Downloadable)var8.next();
+                  var11.onAbort((AbortedDownloadException)error);
                }
             }
          }
@@ -132,29 +135,34 @@ public class DownloaderThread extends ExtendedThread {
       boolean hasRepo = this.current.hasRepository();
       int attempt = 0;
       int max = hasRepo ? this.current.getRepository().getCount() : 1;
-      IOException cause = null;
+      Object cause = null;
 
       while(attempt < max) {
          ++attempt;
          String url = hasRepo ? this.current.getRepository().getSelectedRepo() + this.current.getURL() : this.current.getURL();
-         this.dlog("Trying to download from: " + url);
+         this.dlog("Downloading: " + url);
 
          try {
             this.downloadURL(url, timeout);
             return;
          } catch (IOException var8) {
-            this.dlog("Failed to download from: " + url, var8);
+            this.dlog("Failed: " + url, var8);
             cause = var8;
             if (hasRepo) {
                this.current.getRepository().selectNext();
             }
+         } catch (AbortedDownloadException var9) {
+            throw var9;
+         } catch (Throwable var10) {
+            this.dlog("Unknown error occurred:", var10);
+            cause = var10;
          }
       }
 
-      throw new GaveUpDownloadException(this.current, cause);
+      throw new GaveUpDownloadException(this.current, (Throwable)cause);
    }
 
-   private void downloadURL(String path, int timeout) throws IOException, AbortedDownloadException, RetryDownloadException {
+   private void downloadURL(String path, int timeout) throws IOException, AbortedDownloadException {
       URL url = new URL(path);
       URLConnection urlConnection = url.openConnection(U.getProxy());
       if (!(urlConnection instanceof HttpURLConnection)) {
@@ -168,11 +176,11 @@ public class DownloaderThread extends ExtendedThread {
             long reply_s = System.currentTimeMillis();
             connection.connect();
             long reply = System.currentTimeMillis() - reply_s;
-            this.dlog("Got reply in " + reply + " ms.");
-            InputStream in = new BufferedInputStream(connection.getInputStream());
+            this.dlog("Replied in " + reply + " ms.");
+            BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
             File file = this.current.getDestination();
             File temp = FileUtil.makeTemp(new File(file.getAbsolutePath() + ".tlauncherdownload"));
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
+            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
             long read = 0L;
             long length = (long)connection.getContentLength();
             long downloaded_s = System.currentTimeMillis();
@@ -182,7 +190,7 @@ public class DownloaderThread extends ExtendedThread {
             int curread = in.read(buffer);
 
             long downloaded_e;
-            double curdone;
+            double downloadSpeed;
             while(curread > 0) {
                if (!this.launched) {
                   out.close();
@@ -200,28 +208,30 @@ public class DownloaderThread extends ExtendedThread {
                if (speed_e >= 50L) {
                   speed_s = System.currentTimeMillis();
                   downloaded_e = speed_s - downloaded_s;
-                  curdone = (double)((float)read / (float)length);
-                  double curspeed = (double)read / (double)downloaded_e;
+                  downloadSpeed = length > 0L ? (double)((float)read / (float)length) : 0.0D;
+                  double copies = downloaded_e > 0L ? (double)read / (double)downloaded_e : 0.0D;
                   if (speed_s - timer > 15000L) {
                      timer = speed_s;
-                     this.dlog(String.format("Still downloading: %d\\% at speed %.10f kb/s", curdone * 100.0D, curspeed));
+                     this.b.setLength(0);
+                     this.formatter.format("Still downloading: %.0f%% at speed %.1f kb/s", downloadSpeed * 100.0D, copies);
+                     this.dlog(this.b.toString());
                   }
 
-                  this.onProgress(curdone, curspeed);
+                  this.onProgress(downloadSpeed, copies);
                }
             }
 
             downloaded_e = System.currentTimeMillis() - downloaded_s;
-            curdone = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
+            downloadSpeed = downloaded_e != 0L ? (double)read / (double)downloaded_e : 0.0D;
             in.close();
             out.close();
             connection.disconnect();
             FileUtil.copyFile(temp, file, true);
             FileUtil.deleteFile(temp);
-            List copies = this.current.getAdditionalDestinations();
-            if (copies.size() > 0) {
+            List copies1 = this.current.getAdditionalDestinations();
+            if (copies1.size() > 0) {
                this.dlog("Found additional destinations. Copying...");
-               Iterator var34 = copies.iterator();
+               Iterator var34 = copies1.iterator();
 
                while(var34.hasNext()) {
                   File copy = (File)var34.next();
@@ -233,7 +243,7 @@ public class DownloaderThread extends ExtendedThread {
                this.dlog("Copying completed.");
             }
 
-            this.dlog("Downloaded " + read / 1024L + " kb in " + downloaded_e + " ms. at " + curdone + " kb/s");
+            this.dlog("Downloaded " + read / 1024L + " kb in " + downloaded_e + " ms. at " + downloadSpeed + " kb/s");
             this.onComplete();
          }
       }
@@ -251,10 +261,11 @@ public class DownloaderThread extends ExtendedThread {
    private void onProgress(double curdone, double curspeed) {
       this.currentProgress = this.doneProgress + this.eachProgress * curdone;
       this.speed = 0.005D * this.speed + 0.995D * curspeed;
-      if (!(this.currentProgress - this.lastProgress < 0.01D)) {
+      if (this.currentProgress - this.lastProgress >= 0.01D) {
          this.lastProgress = this.currentProgress;
          this.downloader.onProgress(this, this.currentProgress, this.speed);
       }
+
    }
 
    private void onComplete() throws RetryDownloadException {

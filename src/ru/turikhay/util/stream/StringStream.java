@@ -27,9 +27,11 @@ public class StringStream extends SafeOutputStream {
    public void write(char[] c) {
       if (c == null) {
          throw new NullPointerException();
-      } else if (c.length != 0) {
-         for(int i = 0; i < c.length; ++i) {
-            this.write(c[i]);
+      } else {
+         if (c.length != 0) {
+            for(int i = 0; i < c.length; ++i) {
+               this.write(c[i]);
+            }
          }
 
       }

@@ -67,14 +67,14 @@ public class VersionRemoveButton extends ImageButton implements VersionHandlerLi
    void delete() {
       if (this.handler.selected != null) {
          LocalVersionList localList = this.handler.vm.getLocalList();
-         List errors = new ArrayList();
-         Iterator var4 = this.handler.selected.iterator();
+         ArrayList errors = new ArrayList();
+         Iterator message = this.handler.selected.iterator();
 
-         while(var4.hasNext()) {
-            VersionSyncInfo version = (VersionSyncInfo)var4.next();
-            if (version.isInstalled()) {
+         while(message.hasNext()) {
+            VersionSyncInfo title = (VersionSyncInfo)message.next();
+            if (title.isInstalled()) {
                try {
-                  localList.deleteVersion(version.getID(), this.libraries);
+                  localList.deleteVersion(title.getID(), this.libraries);
                } catch (Throwable var6) {
                   errors.add(var6);
                }
@@ -82,9 +82,9 @@ public class VersionRemoveButton extends ImageButton implements VersionHandlerLi
          }
 
          if (!errors.isEmpty()) {
-            String title = Localizable.get("version.manager.delete.error.title");
-            String message = Localizable.get("version.manager.delete.error." + (errors.size() == 1 ? "single" : "multiply"), errors);
-            Alert.showError(title, message);
+            String title1 = Localizable.get("version.manager.delete.error.title");
+            String message1 = Localizable.get("version.manager.delete.error." + (errors.size() == 1 ? "single" : "multiply"), errors);
+            Alert.showError(title1, message1);
          }
       }
 

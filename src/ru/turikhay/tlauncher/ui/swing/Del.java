@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.util.SwingUtil;
 
 public class Del extends ExtendedPanel {
    private static final int TOP = -1;
@@ -15,13 +16,13 @@ public class Del extends ExtendedPanel {
    private Color color;
 
    public Del(int size, int aligment, Color color) {
-      this.size = size;
+      this.size = SwingUtil.magnify(size);
       this.aligment = aligment;
       this.color = color;
    }
 
    public Del(int size, int aligment, int width, int height, Color color) {
-      this.size = size;
+      this.size = SwingUtil.magnify(size);
       this.aligment = aligment;
       this.color = color;
       this.setPreferredSize(new Dimension(width, height));

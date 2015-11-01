@@ -19,6 +19,7 @@ public class AuthUIListener implements AuthenticatorListener {
       if (this.listener != null) {
          this.listener.onAuthPassing(auth);
       }
+
    }
 
    public void onAuthPassingError(Authenticator auth, Throwable e) {
@@ -41,7 +42,7 @@ public class AuthUIListener implements AuthenticatorListener {
          if (e instanceof ServiceUnavailableException) {
             textarea = e.getMessage();
          } else {
-            textarea = null;
+            textarea = e;
          }
       }
 

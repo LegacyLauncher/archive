@@ -12,7 +12,7 @@ public class LatestVersionSyncInfo extends VersionSyncInfo {
          throw new NullPointerException("ReleaseType cannot be NULL!");
       } else {
          this.type = type;
-         this.setID("latest-" + type.toString());
+         this.setID("latest-" + type);
       }
    }
 
@@ -21,11 +21,7 @@ public class LatestVersionSyncInfo extends VersionSyncInfo {
    }
 
    public String getVersionID() {
-      if (this.localVersion != null) {
-         return this.localVersion.getID();
-      } else {
-         return this.remoteVersion != null ? this.remoteVersion.getID() : null;
-      }
+      return this.localVersion != null ? this.localVersion.getID() : (this.remoteVersion != null ? this.remoteVersion.getID() : null);
    }
 
    public ReleaseType getReleaseType() {

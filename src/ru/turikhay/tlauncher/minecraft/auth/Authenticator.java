@@ -8,8 +8,6 @@ import ru.turikhay.util.async.AsyncThread;
 public abstract class Authenticator {
    protected final Account account;
    private final String logPrefix = '[' + this.getClass().getSimpleName() + ']';
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
 
    protected Authenticator(Account account) {
       if (account == null) {
@@ -65,10 +63,10 @@ public abstract class Authenticator {
          throw new NullPointerException("account");
       } else {
          U.log("instancefor:", account);
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[account.getType().ordinal()]) {
-         case 1:
+         switch(account.getType()) {
+         case ELY:
             return new ElyAuthenticator(account);
-         case 2:
+         case MOJANG:
             return new MojangAuthenticator(account);
          default:
             throw new IllegalArgumentException("illegal account type");
@@ -82,33 +80,5 @@ public abstract class Authenticator {
 
    protected static void setClientToken(String uuid) {
       TLauncher.getInstance().getProfileManager().setClientToken(uuid);
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[Account.AccountType.values().length];
-
-         try {
-            var0[Account.AccountType.ELY.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[Account.AccountType.FREE.ordinal()] = 3;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[Account.AccountType.MOJANG.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType = var0;
-         return var0;
-      }
    }
 }

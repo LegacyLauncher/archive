@@ -23,21 +23,22 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.AnimatorAction;
+import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.editor.ExtendedHTMLEditorKit;
 import ru.turikhay.tlauncher.ui.swing.editor.ServerHyperlinkProcessor;
 import ru.turikhay.tlauncher.updater.Notices;
+import ru.turikhay.tlauncher.updater.Stats;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
-import ru.turikhay.util.Direction;
-import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class NoticePanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
    private static final int MARGIN = 10;
-   private static final float FONT_SIZE;
+   private static final float FONT_SIZE = SwingUtil.magnify(12.0F);
    private final NoticePanel.InfoPanelAnimator animator = new NoticePanel.InfoPanelAnimator();
    private final EditorPane browser;
    private final DefaultScene parent;
@@ -52,15 +53,10 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
    private int height;
    private int mouseX;
    private int mouseY;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
-
-   static {
-      FONT_SIZE = OS.OSX.isCurrent() ? 10.0F : 12.0F;
-   }
+   private Notices.Notice notice;
 
    public NoticePanel(DefaultScene p) {
-      super(CenterPanel.tipTheme, new Insets(5, 10, 5, 10));
+      super(CenterPanel.tipTheme, new MagnifiedInsets(5, 10, 5, 10));
       this.parent = p;
       this.browser = new EditorPane(this.getFont().deriveFont(FONT_SIZE));
       if (this.browser.getEditorKit() instanceof ExtendedHTMLEditorKit) {
@@ -101,6 +97,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
                } else {
                   lf.startLauncher(server);
                }
+
             }
          });
       }
@@ -178,18 +175,18 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
          }
 
          int y;
-         switch($SWITCH_TABLE$ru$turikhay$util$Direction()[this.parent.getLoginFormDirection().ordinal()]) {
-         case 1:
-         case 2:
-         case 3:
-         case 4:
-         case 5:
-         case 6:
+         switch(this.parent.getLoginFormDirection()) {
+         case TOP_LEFT:
+         case TOP:
+         case TOP_RIGHT:
+         case CENTER_LEFT:
+         case CENTER:
+         case CENTER_RIGHT:
             y = loginFormLocation.y + loginFormSize.height + 10;
             break;
-         case 7:
-         case 8:
-         case 9:
+         case BOTTOM_LEFT:
+         case BOTTOM:
+         case BOTTOM_RIGHT:
             y = loginFormLocation.y - compHeight - 10;
             break;
          default:
@@ -206,6 +203,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
 
          this.setBounds(x, y, compWidth, compHeight);
       }
+
    }
 
    public void paint(Graphics g0) {
@@ -220,6 +218,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
       if (this.canshow) {
          this.onResize();
          if (!this.shown) {
+            Object var2 = this.animationLock;
             synchronized(this.animationLock) {
                this.setVisible(true);
                this.browser.setVisible(true);
@@ -233,7 +232,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
                      }
 
                      this.repaint();
-                     U.sleepFor((long)this.timeFrame);
+                     U.sleepFor(5L);
                   }
                } else {
                   this.opacity = selectedOpacity;
@@ -242,8 +241,13 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
 
                this.shown = true;
             }
+
+            if (this.notice != null) {
+               Stats.noticeViewed(this.notice);
+            }
          }
       }
+
    }
 
    public void show() {
@@ -252,6 +256,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
 
    void hide(boolean animate) {
       if (this.shown) {
+         Object var2 = this.animationLock;
          synchronized(this.animationLock) {
             if (animate) {
                while(this.opacity > 0.0F) {
@@ -261,7 +266,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
                   }
 
                   this.repaint();
-                  U.sleepFor((long)this.timeFrame);
+                  U.sleepFor(5L);
                }
             }
 
@@ -274,6 +279,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
             this.shown = false;
          }
       }
+
    }
 
    public void hide() {
@@ -322,29 +328,32 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
 
    private boolean prepareNotice() {
       if (this.ads == null) {
+         this.notice = null;
          return false;
       } else {
          String locale = this.parent.getMainPane().getRootFrame().getLauncher().getSettings().getLocale().toString();
          Notices.NoticeList noticeList = this.ads.getByName(locale);
          if (noticeList != null && !noticeList.getList().isEmpty()) {
-            Notices.Notice notice = noticeList.getRandom();
-            if (notice == null) {
+            this.notice = noticeList.getRandom();
+            if (this.notice == null) {
                return false;
             } else {
-               boolean isAllowed = !notice.getType().isAdvert() || this.tlauncher.getSettings().getBoolean("gui.notice." + notice.getType().name().toLowerCase());
+               boolean isAllowed = !this.notice.getType().isAdvert() || this.tlauncher.getSettings().getBoolean("gui.notice." + this.notice.getType().name().toLowerCase());
                if (!isAllowed) {
                   return false;
                } else {
                   StringBuilder builder = new StringBuilder();
-                  builder.append("<table width=\"").append(notice.getWidth()).append("\" height=\"").append(notice.getHeight()).append("\"><tr><td align=\"center\" valign=\"center\">");
-                  if (notice.getImage() != null) {
-                     builder.append("<img src=\"").append(notice.getImage()).append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
+                  int width = (int)((double)this.notice.getWidth() * TLauncherFrame.magnifyDimensions);
+                  int height = (int)((double)this.notice.getHeight() * TLauncherFrame.magnifyDimensions);
+                  builder.append("<table width=\"").append(width).append("\" height=\"").append(height).append("\"><tr><td align=\"center\" valign=\"center\">");
+                  if (this.notice.getImage() != null) {
+                     builder.append("<img src=\"").append(this.notice.getImage()).append("\" /></td><td align=\"center\" valign=\"center\" width=\"100%\">");
                   }
 
-                  builder.append(notice.getContent());
+                  builder.append(this.notice.getContent());
                   builder.append("</td></tr></table>");
                   this.content = builder.toString();
-                  this.setContent(this.content, notice.getWidth(), notice.getHeight());
+                  this.setContent(this.content, width, height);
                   return true;
                }
             }
@@ -364,68 +373,8 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
       this.updateNotice(false);
    }
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$Direction() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$Direction;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[Direction.values().length];
-
-         try {
-            var0[Direction.BOTTOM.ordinal()] = 8;
-         } catch (NoSuchFieldError var9) {
-         }
-
-         try {
-            var0[Direction.BOTTOM_LEFT.ordinal()] = 7;
-         } catch (NoSuchFieldError var8) {
-         }
-
-         try {
-            var0[Direction.BOTTOM_RIGHT.ordinal()] = 9;
-         } catch (NoSuchFieldError var7) {
-         }
-
-         try {
-            var0[Direction.CENTER.ordinal()] = 5;
-         } catch (NoSuchFieldError var6) {
-         }
-
-         try {
-            var0[Direction.CENTER_LEFT.ordinal()] = 4;
-         } catch (NoSuchFieldError var5) {
-         }
-
-         try {
-            var0[Direction.CENTER_RIGHT.ordinal()] = 6;
-         } catch (NoSuchFieldError var4) {
-         }
-
-         try {
-            var0[Direction.TOP.ordinal()] = 2;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[Direction.TOP_LEFT.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[Direction.TOP_RIGHT.ordinal()] = 3;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$util$Direction = var0;
-         return var0;
-      }
-   }
-
    private class InfoPanelAnimator extends ExtendedThread {
       private AnimatorAction currentAction;
-      // $FF: synthetic field
-      private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction;
 
       InfoPanelAnimator() {
          this.startAndWait();
@@ -447,48 +396,25 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
          this.lockThread("start");
 
          while(true) {
-            while(this.currentAction == null) {
-               U.sleepFor(100L);
+            while(this.currentAction != null) {
+               AnimatorAction action = this.currentAction;
+               switch(action) {
+               case SHOW:
+                  NoticePanel.this.show(true);
+                  break;
+               case HIDE:
+                  NoticePanel.this.hide(true);
+                  break;
+               default:
+                  throw new RuntimeException("unknown action: " + this.currentAction);
+               }
+
+               if (this.currentAction == action) {
+                  this.currentAction = null;
+               }
             }
 
-            AnimatorAction action = this.currentAction;
-            switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction()[action.ordinal()]) {
-            case 1:
-               NoticePanel.this.show(true);
-               break;
-            case 2:
-               NoticePanel.this.hide(true);
-               break;
-            default:
-               throw new RuntimeException("unknown action: " + this.currentAction);
-            }
-
-            if (this.currentAction == action) {
-               this.currentAction = null;
-            }
-         }
-      }
-
-      // $FF: synthetic method
-      static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction() {
-         int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction;
-         if (var10000 != null) {
-            return var10000;
-         } else {
-            int[] var0 = new int[AnimatorAction.values().length];
-
-            try {
-               var0[AnimatorAction.HIDE.ordinal()] = 2;
-            } catch (NoSuchFieldError var2) {
-            }
-
-            try {
-               var0[AnimatorAction.SHOW.ordinal()] = 1;
-            } catch (NoSuchFieldError var1) {
-            }
-
-            $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$AnimatorAction = var0;
-            return var0;
+            U.sleepFor(100L);
          }
       }
    }

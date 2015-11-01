@@ -29,11 +29,6 @@ public class Rule {
       return "Rule{action=" + this.action + ", os=" + this.os + '}';
    }
 
-   public static enum Action {
-      ALLOW,
-      DISALLOW;
-   }
-
    public class OSRestriction {
       private OS name;
       private String version;
@@ -65,5 +60,10 @@ public class Rule {
       public String toString() {
          return "OSRestriction{name=" + this.name + ", version='" + this.version + '\'' + '}';
       }
+   }
+
+   public static enum Action {
+      ALLOW,
+      DISALLOW;
    }
 }

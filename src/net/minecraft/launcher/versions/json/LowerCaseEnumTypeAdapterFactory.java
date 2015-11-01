@@ -19,11 +19,11 @@ public class LowerCaseEnumTypeAdapterFactory implements TypeAdapterFactory {
          return null;
       } else {
          final Map lowercaseToConstant = new HashMap();
-         Object[] var8;
-         int var7 = (var8 = rawType.getEnumConstants()).length;
+         Object[] arr$ = rawType.getEnumConstants();
+         int len$ = arr$.length;
 
-         for(int var6 = 0; var6 < var7; ++var6) {
-            Object constant = var8[var6];
+         for(int i$ = 0; i$ < len$; ++i$) {
+            Object constant = arr$[i$];
             lowercaseToConstant.put(toLowercase(constant), constant);
          }
 
