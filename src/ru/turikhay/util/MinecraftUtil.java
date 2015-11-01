@@ -10,8 +10,6 @@ import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 public class MinecraftUtil {
    private static FileExplorer explorer;
    private static JFrame parent;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS;
 
    public static File getWorkingDirectory() {
       File defaultDirectory = getDefaultWorkingDirectory();
@@ -78,17 +76,17 @@ public class MinecraftUtil {
    public static File getSystemRelatedFile(String path) {
       String userHome = System.getProperty("user.home", ".");
       File file;
-      switch($SWITCH_TABLE$ru$turikhay$util$OS()[OS.CURRENT.ordinal()]) {
-      case 1:
-      case 4:
+      switch(OS.CURRENT) {
+      case LINUX:
+      case SOLARIS:
          file = new File(userHome, path);
          break;
-      case 2:
+      case WINDOWS:
          String applicationData = System.getenv("APPDATA");
          String folder = applicationData != null ? applicationData : userHome;
          file = new File(folder, path);
          break;
-      case 3:
+      case OSX:
          file = new File(userHome, "Library/Application Support/" + path);
          break;
       default:
@@ -116,43 +114,5 @@ public class MinecraftUtil {
 
    private static File getFile(String name) {
       return new File(getWorkingDirectory(), name);
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$OS() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[OS.values().length];
-
-         try {
-            var0[OS.LINUX.ordinal()] = 1;
-         } catch (NoSuchFieldError var5) {
-         }
-
-         try {
-            var0[OS.OSX.ordinal()] = 3;
-         } catch (NoSuchFieldError var4) {
-         }
-
-         try {
-            var0[OS.SOLARIS.ordinal()] = 4;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[OS.UNKNOWN.ordinal()] = 5;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[OS.WINDOWS.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$util$OS = var0;
-         return var0;
-      }
    }
 }

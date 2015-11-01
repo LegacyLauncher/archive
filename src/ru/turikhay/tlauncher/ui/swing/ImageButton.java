@@ -14,6 +14,7 @@ import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
+import ru.turikhay.util.SwingUtil;
 
 public class ImageButton extends ExtendedButton {
    private static final long serialVersionUID = 1L;
@@ -21,8 +22,6 @@ public class ImageButton extends ExtendedButton {
    protected ImageButton.ImageRotation rotation;
    private int margin;
    private boolean pressed;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
 
    protected ImageButton() {
       this.rotation = ImageButton.ImageRotation.CENTER;
@@ -106,7 +105,7 @@ public class ImageButton extends ExtendedButton {
          int offset = this.pressed ? 1 : 0;
          int iwidth = this.image.getWidth((ImageObserver)null);
          int iheight = this.image.getHeight((ImageObserver)null);
-         int ix = false;
+         boolean ix = false;
          int iy = height / 2 - iheight / 2;
          int twidth;
          if (drawtext) {
@@ -116,16 +115,16 @@ public class ImageButton extends ExtendedButton {
             twidth = 0;
          }
 
-         int ix;
-         switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation()[this.rotation.ordinal()]) {
-         case 1:
-            ix = width / 2 - twidth / 2 - iwidth - rmargin;
+         int ix1;
+         switch(this.rotation) {
+         case LEFT:
+            ix1 = width / 2 - twidth / 2 - iwidth - rmargin;
             break;
-         case 2:
-            ix = width / 2 - iwidth / 2;
+         case CENTER:
+            ix1 = width / 2 - iwidth / 2;
             break;
-         case 3:
-            ix = width / 2 + twidth / 2 + rmargin;
+         case RIGHT:
+            ix1 = width / 2 + twidth / 2 + rmargin;
             break;
          default:
             throw new IllegalStateException("Unknown rotation!");
@@ -133,20 +132,23 @@ public class ImageButton extends ExtendedButton {
 
          Composite c = g.getComposite();
          g.setComposite(AlphaComposite.getInstance(3, opacity));
-         g.drawImage(this.image, ix + offset, iy + offset, (ImageObserver)null);
+         g.drawImage(this.image, ix1 + offset, iy + offset, (ImageObserver)null);
          g.setComposite(c);
          this.pressed = false;
       }
+
    }
 
    protected static Image loadImage(String path) {
-      return Images.getImage(path);
+      Image image = Images.getImage(path);
+      return image.getScaledInstance(SwingUtil.magnify(image.getWidth((ImageObserver)null)), SwingUtil.magnify(image.getHeight((ImageObserver)null)), 4);
    }
 
    protected void initImage() {
       if (this.image != null) {
          this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null) + 10, this.image.getHeight((ImageObserver)null) + 10));
       }
+
    }
 
    private void initListeners() {
@@ -173,6 +175,7 @@ public class ImageButton extends ExtendedButton {
             if (e.getKeyCode() == 32) {
                ImageButton.this.pressed = true;
             }
+
          }
 
          public void keyReleased(KeyEvent e) {
@@ -182,34 +185,6 @@ public class ImageButton extends ExtendedButton {
          public void keyTyped(KeyEvent e) {
          }
       });
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[ImageButton.ImageRotation.values().length];
-
-         try {
-            var0[ImageButton.ImageRotation.CENTER.ordinal()] = 2;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[ImageButton.ImageRotation.LEFT.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[ImageButton.ImageRotation.RIGHT.ordinal()] = 3;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ImageButton$ImageRotation = var0;
-         return var0;
-      }
    }
 
    public static enum ImageRotation {

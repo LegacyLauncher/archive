@@ -3,17 +3,24 @@ package ru.turikhay.tlauncher;
 import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.configuration.ArgumentParser;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
+import ru.turikhay.tlauncher.configuration.Static;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
-import ru.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import ru.turikhay.tlauncher.managers.ComponentManager;
 import ru.turikhay.tlauncher.managers.ComponentManagerListenerHelper;
 import ru.turikhay.tlauncher.managers.ElyManager;
@@ -30,17 +37,17 @@ import ru.turikhay.tlauncher.ui.listener.RequiredUpdateListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Updater;
-import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.RunnableThread;
 import ru.turikhay.util.stream.MirroredLinkedStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.571D;
+   private static final double VERSION = 1.639D;
    private static final boolean DEBUG = false;
    private static final boolean BETA = false;
    private static TLauncher instance;
@@ -63,16 +70,6 @@ public class TLauncher {
    private RequiredUpdateListener updateListener;
    private MinecraftUIListener minecraftListener;
    private boolean ready;
-   private static final String SETTINGS = "tlauncher/legacy.properties";
-   private static final String BRAND = "Legacy";
-   private static final String FOLDER = "minecraft";
-   private static final String DEVELOPER = "turikhay";
-   private static final String[] UPDATE_REPO = new String[]{"http://tlauncher.ru/update/", "http://turikhay.1gb.ru/update.json", "http://turikhay.ru/tlauncher/update/update.json"};
-   private static final String[] OFFICIAL_REPO = new String[]{"http://s3.amazonaws.com/Minecraft.Download/"};
-   private static final String[] EXTRA_REPO = new String[]{"http://tlauncher.ru/repo/", "http://turikhay.1gb.ru/repo/", "http://turikhay.ru/tlauncher/repo/"};
-   private static final String[] LIBRARY_REPO = new String[]{"https://libraries.minecraft.net/"};
-   private static final String[] ASSETS_REPO = new String[]{"http://resources.download.minecraft.net/"};
-   private static final String[] SERVER_LIST = new String[0];
    private static boolean useSystemLookAndFeel = true;
 
    private TLauncher(OptionSet set) throws Exception {
@@ -80,32 +77,10 @@ public class TLauncher {
       instance = this;
       this.args = set;
       gson = new Gson();
-      File oldConfig = MinecraftUtil.getSystemRelatedFile("tlauncher.cfg");
-      File newConfig = MinecraftUtil.getSystemRelatedDirectory("tlauncher/legacy.properties");
-      if (!oldConfig.isFile()) {
-         oldConfig = MinecraftUtil.getSystemRelatedFile(".tlauncher/tlauncher.properties");
-      }
-
-      if (oldConfig.isFile() && !newConfig.isFile()) {
-         boolean copied = true;
-
-         try {
-            FileUtil.createFile(newConfig);
-            FileUtil.copyFile(oldConfig, newConfig, true);
-         } catch (IOException var6) {
-            U.log("Cannot copy old configuration to the new place", oldConfig, newConfig, var6);
-            copied = false;
-         }
-
-         if (copied) {
-            U.log("Old configuration successfully moved to the new place:", newConfig);
-            FileUtil.deleteFile(oldConfig);
-         }
-      }
-
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONFIGURATION);
       this.settings = Configuration.createConfiguration(set);
       useSystemLookAndFeel &= this.settings.getBoolean("gui.systemlookandfeel");
+      TLauncherFrame.setFontSize(this.settings.getFloat("gui.font"));
       this.reloadLocale();
       if (useSystemLookAndFeel) {
          U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_LOOKANDFEEL);
@@ -114,7 +89,7 @@ public class TLauncher {
 
       this.settings.set("gui.systemlookandfeel", useSystemLookAndFeel, false);
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONSOLE);
-      console = new Console(this.settings, print, this.lang.get("console"), this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
+      console = new Console(this.settings, print, "DevConsole", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
       console.setCloseAction(Console.CloseAction.KILL);
       Console.updateLocale();
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
@@ -148,6 +123,14 @@ public class TLauncher {
       }
 
       this.profileManager.refresh();
+      (new RunnableThread("UpdaterWatchdog", new Runnable() {
+         public void run() {
+            while(true) {
+               U.sleepFor(1800000L);
+               TLauncher.this.updater.asyncFindUpdate();
+            }
+         }
+      })).start();
    }
 
    public Downloader getDownloader() {
@@ -282,10 +265,10 @@ public class TLauncher {
    }
 
    public static void main(String[] args) {
+      Bootstrapper.checkRunningPath();
       ExceptionHandler handler = ExceptionHandler.getInstance();
       Thread.setDefaultUncaughtExceptionHandler(handler);
       Thread.currentThread().setUncaughtExceptionHandler(handler);
-      HttpsURLConnection.setDefaultHostnameVerifier(SimpleHostnameVerifier.getInstance());
       U.setPrefix(">>");
       MirroredLinkedStringStream stream = new MirroredLinkedStringStream() {
          public void flush() {
@@ -308,12 +291,12 @@ public class TLauncher {
 
       try {
          launch(args);
-      } catch (Throwable var10) {
-         Throwable e = var10;
+      } catch (Throwable var11) {
+         Throwable e = var11;
          U.log("Error launching TLauncher:");
-         var10.printStackTrace(print);
+         var11.printStackTrace(print);
          StackTraceElement[] var7;
-         int var6 = (var7 = var10.getStackTrace()).length;
+         int var6 = (var7 = var11.getStackTrace()).length;
 
          for(int var5 = 0; var5 < var6; ++var5) {
             StackTraceElement stE = var7[var5];
@@ -327,8 +310,8 @@ public class TLauncher {
                   try {
                      launch(args);
                      e = null;
-                  } catch (Throwable var9) {
-                     e = var9;
+                  } catch (Throwable var10) {
+                     e = var10;
                   }
 
                   if (e == null) {
@@ -347,8 +330,8 @@ public class TLauncher {
    }
 
    private static void launch(String[] args) throws Exception {
-      U.log("Starting TLauncher", "Legacy", 1.571D);
-      U.log("Beta: false, debug: false");
+      U.log("Starting TLauncher", getVersion(), "[" + getBrand() + "]");
+      U.log("Beta:", isBeta(), ", debug:", getDebug());
       U.log("Machine info:", OS.getSummary());
       U.log("Startup time:", DateFormat.getDateTimeInstance(3, 1).format(new Date()));
       U.log("---");
@@ -376,12 +359,8 @@ public class TLauncher {
       return instance;
    }
 
-   public void newInstance() {
-      Bootstrapper.main(sargs);
-   }
-
    public static double getVersion() {
-      return 1.571D;
+      return 1.639D;
    }
 
    public static boolean isBeta() {
@@ -393,7 +372,7 @@ public class TLauncher {
    }
 
    public static String getBrand() {
-      return "Legacy";
+      return Static.getBrand();
    }
 
    public static String getDeveloper() {
@@ -401,34 +380,60 @@ public class TLauncher {
    }
 
    public static String getFolder() {
-      return "minecraft";
+      return Static.getFolder();
    }
 
    public static String[] getUpdateRepos() {
-      return UPDATE_REPO;
+      return Static.getUpdateRepo();
    }
 
    public static String getSettingsFile() {
-      return "tlauncher/legacy.properties";
+      return Static.getSettings();
    }
 
    public static String[] getOfficialRepo() {
-      return OFFICIAL_REPO;
+      return Static.getOfficialRepo();
    }
 
    public static String[] getExtraRepo() {
-      return EXTRA_REPO;
+      return Static.getExtraRepo();
    }
 
    public static String[] getLibraryRepo() {
-      return LIBRARY_REPO;
+      return Static.getLibraryRepo();
    }
 
    public static String[] getAssetsRepo() {
-      return ASSETS_REPO;
+      return Static.getAssetsRepo();
    }
 
    public static String[] getServerList() {
-      return SERVER_LIST;
+      return Static.getServerList();
+   }
+
+   static {
+      try {
+         SSLContext context = SSLContext.getInstance("SSL");
+         context.init((KeyManager[])null, new X509TrustManager[]{new X509TrustManager() {
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            public X509Certificate[] getAcceptedIssuers() {
+               return new X509Certificate[0];
+            }
+         }}, (SecureRandom)null);
+         HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
+      } catch (Throwable var1) {
+         var1.printStackTrace();
+      }
+
+      HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+         public boolean verify(String s, SSLSession sslSession) {
+            return true;
+         }
+      });
    }
 }

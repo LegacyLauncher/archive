@@ -24,6 +24,7 @@ public class VersionTipPanel extends CenterPanel implements LocalizableComponent
                View view = (View)o;
                BasicHTML.getHTMLBaseline(view, 300 - VersionTipPanel.this.getHorizontalInsets(), 0);
             }
+
          }
       });
       this.updateLocale();
@@ -37,6 +38,7 @@ public class VersionTipPanel extends CenterPanel implements LocalizableComponent
          this.tip.setText(text);
          this.onResize();
       }
+
    }
 
    public void onResize() {

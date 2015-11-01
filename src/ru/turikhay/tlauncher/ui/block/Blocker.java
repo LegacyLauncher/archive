@@ -41,21 +41,22 @@ public class Blocker {
       if (blockable != null) {
          if (reason == null) {
             throw new NullPointerException("Reason is NULL!");
-         } else {
-            if (!blockMap.containsKey(blockable)) {
-               add(blockable);
-            }
+         }
 
-            List reasons = (List)blockMap.get(blockable);
-            if (!reasons.contains(reason)) {
-               boolean blocked = !reasons.isEmpty();
-               reasons.add(reason);
-               if (!blocked) {
-                  blockable.block(reason);
-               }
+         if (!blockMap.containsKey(blockable)) {
+            add(blockable);
+         }
+
+         List reasons = (List)blockMap.get(blockable);
+         if (!reasons.contains(reason)) {
+            boolean blocked = !reasons.isEmpty();
+            reasons.add(reason);
+            if (!blocked) {
+               blockable.block(reason);
             }
          }
       }
+
    }
 
    public static void block(Object reason, Blockable... blockables) {
@@ -127,10 +128,8 @@ public class Blocker {
    public static boolean isBlocked(Blockable blockable) {
       if (blockable == null) {
          throw new NullPointerException();
-      } else if (!blockMap.containsKey(blockable)) {
-         return false;
       } else {
-         return !((List)blockMap.get(blockable)).isEmpty();
+         return !blockMap.containsKey(blockable) ? false : !((List)blockMap.get(blockable)).isEmpty();
       }
    }
 

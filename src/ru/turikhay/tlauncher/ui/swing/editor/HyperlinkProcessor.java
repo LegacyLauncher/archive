@@ -24,6 +24,7 @@ public abstract class HyperlinkProcessor {
 
             OS.openLink(uri);
          }
+
       }
    };
 

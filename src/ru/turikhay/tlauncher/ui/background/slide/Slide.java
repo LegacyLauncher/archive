@@ -71,6 +71,7 @@ public class Slide {
             this.image = new SoftReference(tempImage);
          }
       }
+
    }
 
    protected void log(Object... w) {

@@ -47,12 +47,10 @@ public class ImageFilePreview extends JComponent {
       });
       this.addMouseListener(new MouseAdapter() {
          public void mousePressed(MouseEvent e) {
-            if (e.getButton() == 1) {
-               if (ImageFilePreview.this.file != null) {
-                  OS.openFile(ImageFilePreview.this.file);
-               }
-
+            if (e.getButton() == 1 && ImageFilePreview.this.file != null) {
+               OS.openFile(ImageFilePreview.this.file);
             }
+
          }
       });
    }
@@ -69,8 +67,8 @@ public class ImageFilePreview extends JComponent {
          } else {
             this.thumbnail = tmpIcon;
          }
-
       }
+
    }
 
    protected void paintComponent(Graphics g) {

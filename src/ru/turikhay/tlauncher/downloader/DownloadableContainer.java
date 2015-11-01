@@ -31,6 +31,7 @@ public class DownloadableContainer {
             d.setContainer(this);
             this.sum.incrementAndGet();
          }
+
       }
    }
 
@@ -141,8 +142,8 @@ public class DownloadableContainer {
             handler = (DownloadableContainerHandler)var3.next();
             handler.onFullComplete(this);
          }
-
       }
+
    }
 
    void onAbort(Downloadable d) {
@@ -155,8 +156,8 @@ public class DownloadableContainer {
             DownloadableContainerHandler handler = (DownloadableContainerHandler)var3.next();
             handler.onAbort(this);
          }
-
       }
+
    }
 
    void onError(Downloadable d, Throwable e) {
@@ -174,6 +175,7 @@ public class DownloadableContainer {
       if (this.console != null) {
          this.console.log(o);
       }
+
    }
 
    public static void removeDuplicates(DownloadableContainer a, DownloadableContainer b) {
@@ -188,22 +190,30 @@ public class DownloadableContainer {
          try {
             List aList = a.list;
             List bList = b.list;
-            List deleteList = new ArrayList();
+            ArrayList deleteList = new ArrayList();
             Iterator var6 = aList.iterator();
 
-            while(var6.hasNext()) {
-               Downloadable aDownloadable = (Downloadable)var6.next();
-               Iterator var8 = bList.iterator();
+            label68:
+            while(true) {
+               if (var6.hasNext()) {
+                  Downloadable aDownloadable = (Downloadable)var6.next();
+                  Iterator var8 = bList.iterator();
 
-               while(var8.hasNext()) {
-                  Downloadable bDownloadable = (Downloadable)var8.next();
-                  if (aDownloadable.equals(bDownloadable)) {
-                     deleteList.add(bDownloadable);
+                  while(true) {
+                     if (!var8.hasNext()) {
+                        continue label68;
+                     }
+
+                     Downloadable bDownloadable = (Downloadable)var8.next();
+                     if (aDownloadable.equals(bDownloadable)) {
+                        deleteList.add(bDownloadable);
+                     }
                   }
                }
-            }
 
-            bList.removeAll(deleteList);
+               bList.removeAll(deleteList);
+               return;
+            }
          } finally {
             a.locked = false;
             b.locked = false;
@@ -214,10 +224,12 @@ public class DownloadableContainer {
    public static void removeDuplicates(List list) {
       if (list == null) {
          throw new NullPointerException();
-      } else if (list.size() >= 2) {
-         for(int i = 0; i < list.size() - 1; ++i) {
-            for(int k = i + 1; k < list.size(); ++k) {
-               removeDuplicates((DownloadableContainer)list.get(i), (DownloadableContainer)list.get(k));
+      } else {
+         if (list.size() >= 2) {
+            for(int i = 0; i < list.size() - 1; ++i) {
+               for(int k = i + 1; k < list.size(); ++k) {
+                  removeDuplicates((DownloadableContainer)list.get(i), (DownloadableContainer)list.get(k));
+               }
             }
          }
 

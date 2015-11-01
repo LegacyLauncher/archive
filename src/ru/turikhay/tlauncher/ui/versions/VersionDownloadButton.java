@@ -42,8 +42,6 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
    private boolean downloading;
    private boolean aborted;
    boolean forceDownload;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState;
 
    VersionDownloadButton(VersionList list) {
       this.handler = list.handler;
@@ -92,11 +90,11 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
    }
 
    void onPressed() {
-      switch($SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState()[this.state.ordinal()]) {
-      case 1:
+      switch(this.state) {
+      case DOWNLOAD:
          this.onDownloadPressed();
          break;
-      case 2:
+      case STOP:
          this.onStopCalled();
       }
 
@@ -128,42 +126,42 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
       if (list != null && !list.isEmpty()) {
          int countLocal = 0;
          VersionSyncInfo local = null;
-         Iterator var5 = list.iterator();
+         Iterator manager = list.iterator();
 
-         while(var5.hasNext()) {
-            VersionSyncInfo version = (VersionSyncInfo)var5.next();
+         while(manager.hasNext()) {
+            VersionSyncInfo containers = (VersionSyncInfo)manager.next();
             if (this.forceDownload) {
-               if (!version.hasRemote()) {
-                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.local", version.getID()));
+               if (!containers.hasRemote()) {
+                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.local", containers.getID()));
                   return;
                }
 
-               if (version.isUpToDate() && version.isInstalled()) {
+               if (containers.isUpToDate() && containers.isInstalled()) {
                   ++countLocal;
-                  local = version;
+                  local = containers;
                }
             }
          }
 
          if (countLocal > 0) {
-            String title = Localizable.get("version.manager.downloader.warning.title");
-            Object var;
-            String suffix;
+            String var17 = Localizable.get("version.manager.downloader.warning.title");
+            Object container;
+            String var19;
             if (countLocal == 1) {
-               suffix = "single";
-               var = local.getID();
+               var19 = "single";
+               container = local.getID();
             } else {
-               suffix = "multiply";
-               var = countLocal;
+               var19 = "multiply";
+               container = countLocal;
             }
 
-            if (!Alert.showQuestion(title, Localizable.get("version.manager.downloader.warning.force." + suffix, var))) {
+            if (!Alert.showQuestion(var17, Localizable.get("version.manager.downloader.warning.force." + var19, container))) {
                return;
             }
          }
 
-         List containers = new ArrayList();
-         VersionManager manager = TLauncher.getInstance().getVersionManager();
+         ArrayList var18 = new ArrayList();
+         VersionManager var20 = TLauncher.getInstance().getVersionManager();
 
          Iterator var7;
          try {
@@ -171,72 +169,76 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
             var7 = list.iterator();
 
             while(var7.hasNext()) {
-               VersionSyncInfo version = (VersionSyncInfo)var7.next();
+               VersionSyncInfo var21 = (VersionSyncInfo)var7.next();
 
                try {
-                  version.resolveCompleteVersion(manager, this.forceDownload);
-                  VersionSyncInfoContainer container = manager.downloadVersion(version, false, this.forceDownload);
+                  var21.resolveCompleteVersion(var20, this.forceDownload);
+                  VersionSyncInfoContainer errors = var20.downloadVersion(var21, false, this.forceDownload);
                   if (this.aborted) {
                      return;
                   }
 
-                  if (!container.getList().isEmpty()) {
-                     containers.add(container);
+                  if (!errors.getList().isEmpty()) {
+                     var18.add(errors);
                   }
-               } catch (Exception var15) {
-                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", version.getID()), var15);
+               } catch (Exception var16) {
+                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.getting", var21.getID()), var16);
                   return;
                }
             }
 
-            if (containers.isEmpty()) {
+            if (var18.isEmpty()) {
                Alert.showMessage(Localizable.get("version.manager.downloader.info.title"), Localizable.get("version.manager.downloader.info.no-needed"));
                return;
             }
 
-            if (containers.size() > 1) {
-               DownloadableContainer.removeDuplicates(containers);
+            if (var18.size() > 1) {
+               DownloadableContainer.removeDuplicates(var18);
             }
 
             if (this.aborted) {
                return;
             }
 
-            var7 = containers.iterator();
+            var7 = var18.iterator();
 
-            while(var7.hasNext()) {
-               DownloadableContainer c = (DownloadableContainer)var7.next();
-               this.handler.downloader.add(c);
+            while(true) {
+               if (!var7.hasNext()) {
+                  this.handler.downloading = list;
+                  this.handler.onVersionDownload(list);
+                  this.handler.downloader.startDownloadAndWait();
+                  break;
+               }
+
+               DownloadableContainer var22 = (DownloadableContainer)var7.next();
+               this.handler.downloader.add(var22);
             }
-
-            this.handler.downloading = list;
-            this.handler.onVersionDownload(list);
-            this.handler.downloader.startDownloadAndWait();
          } finally {
             this.downloading = false;
          }
 
          this.handler.downloading.clear();
-         var7 = containers.iterator();
+         var7 = var18.iterator();
 
          while(var7.hasNext()) {
-            VersionSyncInfoContainer container = (VersionSyncInfoContainer)var7.next();
-            List errors = container.getErrors();
-            VersionSyncInfo version = container.getVersion();
-            if (errors.isEmpty()) {
+            VersionSyncInfoContainer var23 = (VersionSyncInfoContainer)var7.next();
+            List var24 = var23.getErrors();
+            VersionSyncInfo version = var23.getVersion();
+            if (var24.isEmpty()) {
                try {
-                  manager.getLocalList().saveVersion(version.getCompleteVersion(this.forceDownload));
-               } catch (IOException var14) {
-                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.saving", version.getID()), var14);
+                  var20.getLocalList().saveVersion(version.getCompleteVersion(this.forceDownload));
+               } catch (IOException var15) {
+                  Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.saving", version.getID()), var15);
                   return;
                }
-            } else if (!(errors.get(0) instanceof AbortedDownloadException)) {
-               Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.downloading", version.getID()), errors);
+            } else if (!(var24.get(0) instanceof AbortedDownloadException)) {
+               Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.downloading", version.getID()), var24);
             }
          }
 
          this.handler.refresh();
       }
+
    }
 
    void stopDownload() {
@@ -268,29 +270,6 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
    }
 
    public void onVersionDownload(List list) {
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[VersionDownloadButton.ButtonState.values().length];
-
-         try {
-            var0[VersionDownloadButton.ButtonState.DOWNLOAD.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[VersionDownloadButton.ButtonState.STOP.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$ui$versions$VersionDownloadButton$ButtonState = var0;
-         return var0;
-      }
    }
 
    public static enum ButtonState {

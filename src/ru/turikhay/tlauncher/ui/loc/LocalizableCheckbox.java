@@ -55,7 +55,7 @@ public class LocalizableCheckbox extends JCheckBox implements LocalizableCompone
    }
 
    private void init() {
-      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
       this.setOpaque(false);
    }
 }

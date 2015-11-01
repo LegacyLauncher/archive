@@ -32,7 +32,6 @@ public class AccountEditor extends CenterPanel {
    public final LinkedHashMap radioMap = new LinkedHashMap();
    public final LocalizableButton save;
    private final ProgressBar progressBar;
-   // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
 
    public AccountEditor(AccountEditorScene sc) {
@@ -46,13 +45,13 @@ public class AccountEditor extends CenterPanel {
       };
       this.username = new UsernameField(this, UsernameField.UsernameState.USERNAME);
       this.username.addActionListener(enterHandler);
-      this.password = new AccountEditor.BlockablePasswordField((AccountEditor.BlockablePasswordField)null);
+      this.password = new AccountEditor.BlockablePasswordField();
       this.password.addActionListener(enterHandler);
       this.password.setEnabled(false);
       this.authGroup = new ButtonGroup();
-      this.freeAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.FREE, (AccountEditor.AuthTypeRadio)null);
-      this.mojangAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.MOJANG, (AccountEditor.AuthTypeRadio)null);
-      this.elyAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.ELY, (AccountEditor.AuthTypeRadio)null);
+      this.freeAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.FREE);
+      this.mojangAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.MOJANG);
+      this.elyAuth = new AccountEditor.AuthTypeRadio(Account.AccountType.ELY);
       this.save = new LocalizableButton("account.save");
       this.save.addActionListener(enterHandler);
       this.progressBar = new ProgressBar();
@@ -69,14 +68,16 @@ public class AccountEditor extends CenterPanel {
    public Account.AccountType getSelectedAccountType() {
       Iterator var2 = this.radioMap.entrySet().iterator();
 
-      while(var2.hasNext()) {
-         Entry en = (Entry)var2.next();
-         if (((AccountEditor.AuthTypeRadio)en.getValue()).isSelected()) {
-            return (Account.AccountType)en.getKey();
+      Entry en;
+      do {
+         if (!var2.hasNext()) {
+            return Account.AccountType.FREE;
          }
-      }
 
-      return Account.AccountType.FREE;
+         en = (Entry)var2.next();
+      } while(!((AccountEditor.AuthTypeRadio)en.getValue()).isSelected());
+
+      return (Account.AccountType)en.getKey();
    }
 
    public void setSelectedAccountType(Account.AccountType type) {
@@ -103,13 +104,13 @@ public class AccountEditor extends CenterPanel {
       Account account = new Account();
       account.setUsername(this.username.getValue());
       Account.AccountType type = this.getSelectedAccountType();
-      switch($SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType()[type.ordinal()]) {
-      case 1:
-      case 2:
+      switch(type) {
+      case MOJANG:
+      case ELY:
          if (this.password.hasPassword()) {
             account.setPassword(this.password.getPassword());
          }
-      case 3:
+      case FREE:
       default:
          account.setType(type);
          return account;
@@ -136,31 +137,21 @@ public class AccountEditor extends CenterPanel {
 
    }
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[Account.AccountType.values().length];
+   class BlockablePasswordField extends ExtendedPasswordField implements Blockable {
+      private BlockablePasswordField() {
+      }
 
-         try {
-            var0[Account.AccountType.ELY.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
-         }
+      public void block(Object reason) {
+         this.setEnabled(false);
+      }
 
-         try {
-            var0[Account.AccountType.FREE.ordinal()] = 3;
-         } catch (NoSuchFieldError var2) {
-         }
+      public void unblock(Object reason) {
+         this.setEnabled(true);
+      }
 
-         try {
-            var0[Account.AccountType.MOJANG.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType = var0;
-         return var0;
+      // $FF: synthetic method
+      BlockablePasswordField(Object x1) {
+         this();
       }
    }
 
@@ -168,7 +159,7 @@ public class AccountEditor extends CenterPanel {
       private final Account.AccountType type;
 
       private AuthTypeRadio(final Account.AccountType type) {
-         super("account.auth." + type.toString());
+         super("account.auth." + type);
          AccountEditor.this.radioMap.put(type, this);
          AccountEditor.this.authGroup.add(this);
          this.type = type;
@@ -196,26 +187,8 @@ public class AccountEditor extends CenterPanel {
       }
 
       // $FF: synthetic method
-      AuthTypeRadio(Account.AccountType var2, AccountEditor.AuthTypeRadio var3) {
-         this(var2);
-      }
-   }
-
-   private class BlockablePasswordField extends ExtendedPasswordField implements Blockable {
-      private BlockablePasswordField() {
-      }
-
-      public void block(Object reason) {
-         this.setEnabled(false);
-      }
-
-      public void unblock(Object reason) {
-         this.setEnabled(true);
-      }
-
-      // $FF: synthetic method
-      BlockablePasswordField(AccountEditor.BlockablePasswordField var2) {
-         this();
+      AuthTypeRadio(Account.AccountType x1, Object x2) {
+         this(x1);
       }
    }
 }

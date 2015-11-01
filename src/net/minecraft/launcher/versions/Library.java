@@ -39,13 +39,6 @@ public class Library {
    protected String checksum;
    protected List deleteEntries;
 
-   static {
-      HashMap map = new HashMap();
-      map.put("platform", OS.CURRENT.getName());
-      map.put("arch", OS.Arch.CURRENT.asString());
-      SUBSTITUTOR = new StrSubstitutor(map);
-   }
-
    public boolean equals(Object o) {
       if (o != null && o instanceof Library) {
          Library lib = (Library)o;
@@ -83,11 +76,7 @@ public class Library {
             }
          }
 
-         if (lastAction == Rule.Action.ALLOW) {
-            return true;
-         } else {
-            return false;
-         }
+         return lastAction == Rule.Action.ALLOW;
       }
    }
 
@@ -153,8 +142,8 @@ public class Library {
       boolean isForge = "forge".equals(this.packed);
       String path;
       if (this.exact_url == null) {
-         String nativePath = this.natives != null && this.appliesToCurrentEnvironment() ? (String)this.natives.get(os) : null;
-         path = this.getArtifactPath(nativePath) + (isForge ? ".pack.xz" : "");
+         String tempFile = this.natives != null && this.appliesToCurrentEnvironment() ? (String)this.natives.get(os) : null;
+         path = this.getArtifactPath(tempFile) + (isForge ? ".pack.xz" : "");
          if (this.url == null) {
             repo = Repository.LIBRARY_REPO;
          } else if (this.url.startsWith("/")) {
@@ -168,62 +157,62 @@ public class Library {
       }
 
       if (isForge) {
-         File tempFile = new File(file.getAbsolutePath() + ".pack.xz");
-         return new Library.ForgeLibDownloadable(path, tempFile, file);
+         File tempFile1 = new File(file.getAbsolutePath() + ".pack.xz");
+         return new Library.ForgeLibDownloadable(path, tempFile1, file);
       } else {
-         return repo == null ? new Library.LibraryDownloadable(path, file, (Library.LibraryDownloadable)null, (Library.LibraryDownloadable)null) : new Library.LibraryDownloadable(repo, path, file, (Library.LibraryDownloadable)null);
+         return repo == null ? new Library.LibraryDownloadable(path, file) : new Library.LibraryDownloadable(repo, path, file);
       }
    }
 
    private static synchronized void unpackLibrary(File library, File output, boolean retryOnOutOfMemory) throws IOException {
       forgeLibLog("Synchronized unpacking:", library);
       output.delete();
-      InputStream in = null;
+      XZInputStream in = null;
       JarOutputStream jos = null;
 
-      label61: {
+      label65: {
          try {
-            InputStream in = new FileInputStream(library);
-            in = new XZInputStream(in);
+            FileInputStream in1 = new FileInputStream(library);
+            in = new XZInputStream(in1);
             forgeLibLog("Decompressing...");
-            byte[] decompressed = readFully(in);
+            byte[] e = readFully(in);
             forgeLibLog("Decompressed successfully");
-            String end = new String(decompressed, decompressed.length - 4, 4);
+            String end = new String(e, e.length - 4, 4);
             if (!end.equals("SIGN")) {
                throw new RetryDownloadException("signature missing");
             }
 
             forgeLibLog("Signature matches!");
-            int x = decompressed.length;
-            int len = decompressed[x - 8] & 255 | (decompressed[x - 7] & 255) << 8 | (decompressed[x - 6] & 255) << 16 | (decompressed[x - 5] & 255) << 24;
+            int x = e.length;
+            int len = e[x - 8] & 255 | (e[x - 7] & 255) << 8 | (e[x - 6] & 255) << 16 | (e[x - 5] & 255) << 24;
             forgeLibLog("Now getting checksums...");
-            byte[] checksums = Arrays.copyOfRange(decompressed, decompressed.length - len - 8, decompressed.length - 8);
+            byte[] checksums = Arrays.copyOfRange(e, e.length - len - 8, e.length - 8);
             FileUtil.createFile(output);
             FileOutputStream jarBytes = new FileOutputStream(output);
             jos = new JarOutputStream(jarBytes);
             forgeLibLog("Now unpacking...");
-            Pack200.newUnpacker().unpack(new ByteArrayInputStream(decompressed), jos);
+            Pack200.newUnpacker().unpack(new ByteArrayInputStream(e), jos);
             forgeLibLog("Unpacked successfully");
             forgeLibLog("Now trying to write checksums...");
             jos.putNextEntry(new JarEntry("checksums.sha1"));
             jos.write(checksums);
             jos.closeEntry();
             forgeLibLog("Now finishing...");
-            break label61;
-         } catch (OutOfMemoryError var15) {
-            forgeLibLog("Out of memory, oops", var15);
+            break label65;
+         } catch (OutOfMemoryError var16) {
+            forgeLibLog("Out of memory, oops", var16);
             U.gc();
             if (!retryOnOutOfMemory) {
-               throw var15;
+               throw var16;
             }
 
             forgeLibLog("Retrying...");
             close(in, jos);
             FileUtil.deleteFile(library);
             unpackLibrary(library, output, false);
-         } catch (IOException var16) {
+         } catch (IOException var17) {
             output.delete();
-            throw var16;
+            throw var17;
          } finally {
             close(in, jos);
             FileUtil.deleteFile(library);
@@ -273,23 +262,11 @@ public class Library {
       U.log("[ForgeLibDownloadable]", o);
    }
 
-   public class ForgeLibDownloadable extends Library.LibraryDownloadable {
-      private final File unpacked;
-
-      public ForgeLibDownloadable(String url, File packedLib, File unpackedLib) {
-         super((String)url, (File)packedLib, (Library.LibraryDownloadable)null);
-         this.unpacked = unpackedLib;
-      }
-
-      protected void onComplete() throws RetryDownloadException {
-         super.onComplete();
-
-         try {
-            Library.unpackLibrary(this.getDestination(), this.unpacked);
-         } catch (Throwable var2) {
-            throw new RetryDownloadException("cannot unpack forge library", var2);
-         }
-      }
+   static {
+      HashMap map = new HashMap();
+      map.put("platform", OS.CURRENT.getName());
+      map.put("arch", OS.Arch.CURRENT.asString());
+      SUBSTITUTOR = new StrSubstitutor(map);
    }
 
    public class LibraryDownloadable extends Downloadable {
@@ -310,18 +287,32 @@ public class Library {
       }
 
       // $FF: synthetic method
-      LibraryDownloadable(String var2, File var3, Library.LibraryDownloadable var4) {
-         this(var2, var3);
+      LibraryDownloadable(String x1, File x2, Object x3) {
+         this(x1, x2);
       }
 
       // $FF: synthetic method
-      LibraryDownloadable(String var2, File var3, Library.LibraryDownloadable var4, Library.LibraryDownloadable var5) {
-         this(var2, var3);
+      LibraryDownloadable(Repository x1, String x2, File x3, Object x4) {
+         this((Repository)x1, (String)x2, (File)x3);
+      }
+   }
+
+   public class ForgeLibDownloadable extends Library.LibraryDownloadable {
+      private final File unpacked;
+
+      public ForgeLibDownloadable(String url, File packedLib, File unpackedLib) {
+         super((String)url, (File)packedLib, (<undefinedtype>)null);
+         this.unpacked = unpackedLib;
       }
 
-      // $FF: synthetic method
-      LibraryDownloadable(Repository var2, String var3, File var4, Library.LibraryDownloadable var5) {
-         this((Repository)var2, (String)var3, (File)var4);
+      protected void onComplete() throws RetryDownloadException {
+         super.onComplete();
+
+         try {
+            Library.unpackLibrary(this.getDestination(), this.unpacked);
+         } catch (Throwable var2) {
+            throw new RetryDownloadException("cannot unpack forge library", var2);
+         }
       }
    }
 }

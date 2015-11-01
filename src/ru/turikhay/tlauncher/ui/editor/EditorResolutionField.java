@@ -70,8 +70,8 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
 
    int[] getResolution() {
       try {
-         IntegerArray arr = IntegerArray.parseIntegerArray(this.getSettingsValue());
-         return arr.toArray();
+         IntegerArray e = IntegerArray.parseIntegerArray(this.getSettingsValue());
+         return e.toArray();
       } catch (Exception var2) {
          return new int[2];
       }
@@ -86,9 +86,9 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
       String width;
       String height;
       try {
-         IntegerArray arr = IntegerArray.parseIntegerArray(value);
-         width = String.valueOf(arr.get(0));
-         height = String.valueOf(arr.get(1));
+         IntegerArray e = IntegerArray.parseIntegerArray(value);
+         width = String.valueOf(e.get(0));
+         height = String.valueOf(e.get(1));
       } catch (Exception var5) {
          width = "";
          height = "";

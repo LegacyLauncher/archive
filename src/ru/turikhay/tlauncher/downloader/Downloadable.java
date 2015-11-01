@@ -7,12 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
-import ru.turikhay.tlauncher.handlers.SimpleHostnameVerifier;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Downloadable {
@@ -29,8 +26,6 @@ public class Downloadable {
    private DownloadableContainer container;
    private final List handlers;
    private Throwable error;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS;
 
    private Downloadable() {
       this.additionalDestinations = Collections.synchronizedList(new ArrayList());
@@ -267,8 +262,8 @@ public class Downloadable {
          if (this.container != null) {
             this.container.onError(this, e);
          }
-
       }
+
    }
 
    public String toString() {
@@ -286,23 +281,18 @@ public class Downloadable {
          connection.setReadTimeout(timeout);
          connection.setUseCaches(false);
          connection.setDefaultUseCaches(false);
-         connection.setRequestProperty("Cache-Control", "no-store,max-age=0,no-cache");
-         connection.setRequestProperty("Expires", "0");
+         connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
          connection.setRequestProperty("Pragma", "no-cache");
-         HttpsURLConnection securedConnection = (HttpsURLConnection)Reflect.cast(connection, HttpsURLConnection.class);
-         if (securedConnection != null) {
-            securedConnection.setHostnameVerifier(SimpleHostnameVerifier.getInstance());
-         }
-
+         connection.setRequestProperty("Expires", "0");
          if (!fake) {
             return connection;
          } else {
             String userAgent;
-            switch($SWITCH_TABLE$ru$turikhay$util$OS()[OS.CURRENT.ordinal()]) {
-            case 2:
+            switch(OS.CURRENT) {
+            case WINDOWS:
                userAgent = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0; .NET4.0C)";
                break;
-            case 3:
+            case OSX:
                userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8) AppleWebKit/535.18.5 (KHTML, like Gecko) Version/5.2 Safari/535.18.5";
                break;
             default:
@@ -328,48 +318,6 @@ public class Downloadable {
    }
 
    public static String getEtag(String etag) {
-      if (etag == null) {
-         return "-";
-      } else {
-         return etag.startsWith("\"") && etag.endsWith("\"") ? etag.substring(1, etag.length() - 1) : etag;
-      }
-   }
-
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$OS() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[OS.values().length];
-
-         try {
-            var0[OS.LINUX.ordinal()] = 1;
-         } catch (NoSuchFieldError var5) {
-         }
-
-         try {
-            var0[OS.OSX.ordinal()] = 3;
-         } catch (NoSuchFieldError var4) {
-         }
-
-         try {
-            var0[OS.SOLARIS.ordinal()] = 4;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[OS.UNKNOWN.ordinal()] = 5;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[OS.WINDOWS.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$util$OS = var0;
-         return var0;
-      }
+      return etag == null ? "-" : (etag.startsWith("\"") && etag.endsWith("\"") ? etag.substring(1, etag.length() - 1) : etag);
    }
 }

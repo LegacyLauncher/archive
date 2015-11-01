@@ -38,7 +38,6 @@ import ru.turikhay.tlauncher.ui.editor.EditorFieldListener;
 import ru.turikhay.tlauncher.ui.editor.EditorFileField;
 import ru.turikhay.tlauncher.ui.editor.EditorGroupHandler;
 import ru.turikhay.tlauncher.ui.editor.EditorHandler;
-import ru.turikhay.tlauncher.ui.editor.EditorIntegerRangeField;
 import ru.turikhay.tlauncher.ui.editor.EditorPair;
 import ru.turikhay.tlauncher.ui.editor.EditorResolutionField;
 import ru.turikhay.tlauncher.ui.editor.EditorTextField;
@@ -55,7 +54,6 @@ import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
-import ru.turikhay.util.Range;
 
 public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
    private final DefaultScene scene;
@@ -65,15 +63,16 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
    public final EditorFieldHandler fullscreen;
    public final EditorFieldHandler javaArgs;
    public final EditorFieldHandler mcArgs;
+   public final EditorFieldHandler improvedArgs;
    public final EditorFieldHandler cmd;
    public final EditorFieldHandler memory;
    public final EditorGroupHandler versionHandler;
    private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
    public final EditorFieldHandler launcherResolution;
    public final EditorFieldHandler systemTheme;
+   public final EditorFieldHandler font;
    public final EditorFieldHandler background;
    public final EditorFieldHandler loginFormDirection;
-   public final EditorFieldHandler autologinTimeout;
    public final EditorFieldHandler console;
    public final EditorFieldHandler fullCommand;
    public final EditorFieldHandler connQuality;
@@ -124,7 +123,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          dirExplorer = FileExplorer.newExplorer();
          dirExplorer.setFileSelectionMode(1);
          dirExplorer.setFileHidingEnabled(false);
-      } catch (InternalError var13) {
+      } catch (InternalError var15) {
          dirExplorer = null;
       }
 
@@ -142,20 +141,28 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                SettingsPanel.this.tlauncher.getVersionManager().asyncRefresh();
                SettingsPanel.this.tlauncher.getProfileManager().recreate();
             }
+
          }
       });
       this.minecraftTab.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{this.directory}));
-      this.resolution = new EditorFieldHandler("minecraft.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global.getDefaultClientWindowSize(), false), restart);
+      this.resolution = new EditorFieldHandler("minecraft.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global.getDefaultClientWindowSize(), false));
       this.fullscreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
       this.minecraftTab.add(new EditorPair("settings.client.resolution.label", new EditorHandler[]{this.resolution, this.fullscreen}));
       this.minecraftTab.nextPane();
       List releaseTypes = ReleaseType.getDefinable();
-      List versions = new ArrayList(releaseTypes.size());
-      Iterator var8 = ReleaseType.getDefinable().iterator();
+      ArrayList versions = new ArrayList(releaseTypes.size());
+      Iterator size = ReleaseType.getDefinable().iterator();
+      versions.add(new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.REMOTE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.REMOTE)));
+      versions.add(EditorPair.NEXT_COLUMN);
+      int i = 0;
 
-      while(var8.hasNext()) {
-         ReleaseType releaseType = (ReleaseType)var8.next();
-         versions.add(new EditorFieldHandler("minecraft.versions." + releaseType, new EditorCheckBox("settings.versions." + releaseType)));
+      while(size.hasNext()) {
+         ReleaseType imgExplorer = (ReleaseType)size.next();
+         versions.add(new EditorFieldHandler("minecraft.versions." + imgExplorer, new EditorCheckBox("settings.versions." + imgExplorer)));
+         ++i;
+         if (i % 2 == 0) {
+            versions.add(EditorPair.NEXT_COLUMN);
+         }
       }
 
       versions.add(new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.OLD_RELEASE)));
@@ -169,7 +176,16 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.minecraftTab.nextPane();
       this.javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
       this.mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
-      this.minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.mcArgs}));
+      this.improvedArgs = new EditorFieldHandler("minecraft.improvedargs", new EditorCheckBox("settings.java.args.improved"), new FocusListener() {
+         public void focusGained(FocusEvent e) {
+            SettingsPanel.this.setMessage("settings.java.args.improved.tip");
+         }
+
+         public void focusLost(FocusEvent e) {
+            SettingsPanel.this.setMessage((String)null);
+         }
+      });
+      this.minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.mcArgs, this.improvedArgs}));
       this.cmd = new EditorFieldHandler("minecraft.cmd", new EditorTextField("settings.java.cmd", true), warning);
       this.minecraftTab.add(new EditorPair("settings.java.cmd.label", new EditorHandler[]{this.cmd}));
       this.minecraftTab.nextPane();
@@ -184,9 +200,12 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                IntegerArray arr = IntegerArray.parseIntegerArray(newValue);
                SettingsPanel.this.tlauncher.getFrame().setSize(arr.get(0), arr.get(1));
             }
+
          }
       });
       this.tlauncherTab.add(new EditorPair("settings.clientres.label", new EditorHandler[]{this.launcherResolution}));
+      this.font = new EditorFieldHandler("gui.font", new SettingsFontSlider(), restart);
+      this.tlauncherTab.add(new EditorPair("settings.fontsize.label", new EditorHandler[]{this.font}));
       this.systemTheme = new EditorFieldHandler("gui.systemlookandfeel", new EditorCheckBox("settings.systemlnf"));
       this.systemTheme.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
@@ -204,90 +223,51 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             if (SettingsPanel.this.tlauncher.isReady()) {
                SettingsPanel.this.tlauncher.getFrame().mp.defaultScene.updateDirection();
             }
+
          }
       });
       this.tlauncherTab.add(new EditorPair("settings.direction.label", new EditorHandler[]{this.loginFormDirection}));
-      this.autologinTimeout = new EditorFieldHandler("login.auto.timeout", new EditorIntegerRangeField(new Range(2, 10)));
-      this.tlauncherTab.add(new EditorPair("settings.tlauncher.autologin.label", new EditorHandler[]{this.autologinTimeout}));
       this.tlauncherTab.nextPane();
 
-      ImageFileExplorer imgExplorer;
+      ImageFileExplorer imgExplorer1;
       try {
-         imgExplorer = ImageFileExplorer.newExplorer();
-      } catch (InternalError var12) {
-         imgExplorer = null;
+         imgExplorer1 = ImageFileExplorer.newExplorer();
+      } catch (InternalError var14) {
+         imgExplorer1 = null;
       }
 
-      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, imgExplorer));
+      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, imgExplorer1));
       this.background.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
                SettingsPanel.this.tlauncher.getFrame().mp.background.SLIDE_BACKGROUND.getThread().asyncRefreshSlide();
             }
+
          }
       });
       this.tlauncherTab.add(new EditorPair("settings.slide.list.label", new EditorHandler[]{this.background}));
       this.tlauncherTab.nextPane();
       this.console = new EditorFieldHandler("gui.console", new EditorComboBox(new ConsoleTypeConverter(), Configuration.ConsoleType.values()));
       this.console.addListener(new EditorFieldChangeListener() {
-         // $FF: synthetic field
-         private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType;
-
          protected void onChange(String oldvalue, String newvalue) {
             if (newvalue != null) {
-               switch($SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType()[Configuration.ConsoleType.get(newvalue).ordinal()]) {
-               case 1:
+               switch(Configuration.ConsoleType.get(newvalue)) {
+               case GLOBAL:
                   TLauncher.getConsole().show(false);
                   break;
-               case 2:
-               case 3:
+               case MINECRAFT:
+               case NONE:
                   TLauncher.getConsole().hide();
                   break;
                default:
                   throw new IllegalArgumentException("Unknown console type!");
                }
-
             }
-         }
 
-         // $FF: synthetic method
-         static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType() {
-            int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType;
-            if (var10000 != null) {
-               return var10000;
-            } else {
-               int[] var0 = new int[Configuration.ConsoleType.values().length];
-
-               try {
-                  var0[Configuration.ConsoleType.GLOBAL.ordinal()] = 1;
-               } catch (NoSuchFieldError var3) {
-               }
-
-               try {
-                  var0[Configuration.ConsoleType.MINECRAFT.ordinal()] = 2;
-               } catch (NoSuchFieldError var2) {
-               }
-
-               try {
-                  var0[Configuration.ConsoleType.NONE.ordinal()] = 3;
-               } catch (NoSuchFieldError var1) {
-               }
-
-               $SWITCH_TABLE$ru$turikhay$tlauncher$configuration$Configuration$ConsoleType = var0;
-               return var0;
-            }
          }
       });
       this.tlauncherTab.add(new EditorPair("settings.console.label", new EditorHandler[]{this.console}));
       this.fullCommand = new EditorFieldHandler("gui.console.fullcommand", new EditorCheckBox("settings.console.fullcommand"));
-      this.fullCommand.addListener(new EditorFieldChangeListener() {
-         protected void onChange(String oldValue, String newValue) {
-            if (SettingsPanel.this.tlauncher.isReady() && "true".equals(newValue)) {
-               Alert.showLocWarning("settings.console.fullcommand.warning");
-            }
-
-         }
-      });
       this.tlauncherTab.add(new EditorPair("settings.console.fullcommand.label", new EditorHandler[]{this.fullCommand}));
       this.tlauncherTab.nextPane();
       this.connQuality = new EditorFieldHandler("connection", new EditorComboBox(new ConnectionQualityConverter(), Configuration.ConnectionQuality.values()));
@@ -343,9 +323,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             SettingsPanel.this.scene.setSidePanel((DefaultScene.SidePanel)null);
          }
       });
-      Dimension size = this.homeButton.getPreferredSize();
-      if (size != null) {
-         this.homeButton.setPreferredSize(new Dimension(size.width * 2, size.height));
+      Dimension size1 = this.homeButton.getPreferredSize();
+      if (size1 != null) {
+         this.homeButton.setPreferredSize(new Dimension(size1.width * 2, size1.height));
       }
 
       this.buttonPanel = new BorderPanel();
@@ -356,9 +336,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
          public void stateChanged(ChangeEvent e) {
             if (SettingsPanel.this.tabPane.getSelectedComponent() instanceof TabbedEditorPanel.EditorScrollPane && !((TabbedEditorPanel.EditorScrollPane)SettingsPanel.this.tabPane.getSelectedComponent()).getTab().getSavingEnabled()) {
-               Blocker.blockComponents((Object)"abouttab", (Component[])(SettingsPanel.this.buttonPanel));
+               Blocker.blockComponents((Object)"abouttab", (Component[])((Component[])(new Component[]{SettingsPanel.this.buttonPanel})));
             } else {
-               Blocker.unblockComponents((Object)"abouttab", (Component[])(SettingsPanel.this.buttonPanel));
+               Blocker.unblockComponents((Object)"abouttab", (Component[])((Component[])(new Component[]{SettingsPanel.this.buttonPanel})));
             }
 
          }
@@ -374,6 +354,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             if (SettingsPanel.this.selectedHandler != null) {
                SettingsPanel.this.resetValue(SettingsPanel.this.selectedHandler);
             }
+
          }
       });
       this.popup.add(this.defaultItem);
@@ -381,14 +362,17 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
       while(var10.hasNext()) {
          final EditorHandler handler = (EditorHandler)var10.next();
-         Component handlerComponent = handler.getComponent();
-         handlerComponent.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-               if (e.getButton() == 3) {
-                  SettingsPanel.this.callPopup(e, handler);
+         JComponent handlerComponent = handler.getComponent();
+         if (handlerComponent != null) {
+            handlerComponent.addMouseListener(new MouseAdapter() {
+               public void mouseClicked(MouseEvent e) {
+                  if (e.getButton() == 3) {
+                     SettingsPanel.this.callPopup(e, handler);
+                  }
+
                }
-            }
-         });
+            });
+         }
       }
 
       this.updateValues();
@@ -409,9 +393,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
             handler = (EditorHandler)var3.next();
             path = handler.getPath();
-            String value = this.global.get(path);
-            handler.updateValue(value);
-            this.setValid(handler, true);
+            if (path != null) {
+               String value = this.global.get(path);
+               handler.updateValue(value);
+               this.setValid(handler, true);
+            }
          } while(!globalUnSaveable && this.global.isSaveable(path));
 
          Blocker.block((Blockable)handler, (Object)"unsaveable");
@@ -427,9 +413,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          while(var2.hasNext()) {
             EditorHandler handler = (EditorHandler)var2.next();
             String path = handler.getPath();
-            String value = handler.getValue();
-            this.global.set(path, value, false);
-            handler.onChange(value);
+            if (path != null) {
+               String value = handler.getValue();
+               this.global.set(path, value, false);
+               handler.onChange(value);
+            }
          }
 
          this.global.store();
@@ -456,6 +444,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          handler.setValue(value);
          this.log(new Object[]{"Reset!"});
       }
+
    }
 
    boolean canReset(EditorHandler handler) {

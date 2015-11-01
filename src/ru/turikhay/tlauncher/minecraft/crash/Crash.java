@@ -36,14 +36,16 @@ public class Crash {
    public boolean contains(String name) {
       Iterator var3 = this.signatures.iterator();
 
-      while(var3.hasNext()) {
-         CrashSignatureContainer.CrashSignature signature = (CrashSignatureContainer.CrashSignature)var3.next();
-         if (signature.getName().equals(name)) {
-            return true;
+      CrashSignatureContainer.CrashSignature signature;
+      do {
+         if (!var3.hasNext()) {
+            return false;
          }
-      }
 
-      return false;
+         signature = (CrashSignatureContainer.CrashSignature)var3.next();
+      } while(!signature.getName().equals(name));
+
+      return true;
    }
 
    public boolean isRecognized() {

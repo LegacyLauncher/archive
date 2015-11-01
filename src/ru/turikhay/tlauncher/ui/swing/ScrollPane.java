@@ -6,7 +6,6 @@ import javax.swing.border.Border;
 
 public class ScrollPane extends JScrollPane {
    private static final boolean DEFAULT_BORDER = false;
-   // $FF: synthetic field
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy;
 
    public ScrollPane(Component view, ScrollPane.ScrollBarPolicy vertical, ScrollPane.ScrollBarPolicy horizontal, boolean border) {
@@ -87,27 +86,26 @@ public class ScrollPane extends JScrollPane {
       this.setHorizontalScrollBarPolicy(policy);
    }
 
-   // $FF: synthetic method
    static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy() {
       int[] var10000 = $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy;
-      if (var10000 != null) {
+      if ($SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy != null) {
          return var10000;
       } else {
          int[] var0 = new int[ScrollPane.ScrollBarPolicy.values().length];
 
          try {
             var0[ScrollPane.ScrollBarPolicy.ALWAYS.ordinal()] = 1;
-         } catch (NoSuchFieldError var3) {
+         } catch (NoSuchFieldError var5) {
          }
 
          try {
             var0[ScrollPane.ScrollBarPolicy.AS_NEEDED.ordinal()] = 2;
-         } catch (NoSuchFieldError var2) {
+         } catch (NoSuchFieldError var4) {
          }
 
          try {
             var0[ScrollPane.ScrollBarPolicy.NEVER.ordinal()] = 3;
-         } catch (NoSuchFieldError var1) {
+         } catch (NoSuchFieldError var3) {
          }
 
          $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy = var0;

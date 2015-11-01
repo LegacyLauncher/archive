@@ -19,9 +19,9 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
 public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
-   private final BufferedImage idleImage;
+   private final Image idleImage;
    private final ArrayList animaImages;
-   private BufferedImage currentImage;
+   private Image currentImage;
    private final MainPane pane;
    private int y;
    private float opacity;
@@ -31,7 +31,7 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
    private boolean shown;
    private long lastCall;
 
-   private static BufferedImage load(String url) {
+   private static Image load(String url) {
       return Images.getImage(url);
    }
 
@@ -69,10 +69,10 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
       this.set(this.idleImage);
    }
 
-   private void set(BufferedImage img) {
+   private void set(Image img) {
       this.currentImage = img;
       if (img != null) {
-         this.setSize(img.getWidth(), img.getHeight());
+         this.setSize(img.getWidth((ImageObserver)null), img.getHeight((ImageObserver)null));
       }
 
    }
@@ -86,6 +86,7 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
             g.drawImage(image, this.getWidth() / 2 - image.getWidth((ImageObserver)null) / 2, this.getHeight() - this.y, (ImageObserver)null);
          }
       }
+
    }
 
    public void onResize() {
@@ -104,7 +105,7 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
 
       protected void iterateOnce() {
          if (!ServicePanel.this.shown) {
-            int timeout = 60;
+            int timeout = 5;
 
             while(true) {
                --timeout;
@@ -142,10 +143,8 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
       }
 
       private void onIn() {
-         ServicePanel var10000;
          if (ServicePanel.this.y < ServicePanel.this.getHeight()) {
-            var10000 = ServicePanel.this;
-            var10000.y = var10000.y + 5;
+            ServicePanel.this.y = ServicePanel.this.y + 5;
          }
 
          if (ServicePanel.this.y > ServicePanel.this.getHeight()) {
@@ -153,8 +152,7 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
          }
 
          if ((double)ServicePanel.this.opacity < 0.9D) {
-            var10000 = ServicePanel.this;
-            var10000.opacity = var10000.opacity + 0.05F;
+            ServicePanel.this.opacity = ServicePanel.this.opacity + 0.05F;
          }
 
          if (ServicePanel.this.opacity > 1.0F) {
@@ -171,17 +169,15 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
                U.sleepFor(100L);
             }
 
-            ServicePanel.this.set((BufferedImage)null);
+            ServicePanel.this.set((Image)null);
          }
 
          this.repaintSleep();
       }
 
       private void onOut() {
-         ServicePanel var10000;
          if (ServicePanel.this.y > 0) {
-            var10000 = ServicePanel.this;
-            var10000.y = var10000.y - 5;
+            ServicePanel.this.y = ServicePanel.this.y - 5;
          }
 
          if (ServicePanel.this.y < 0) {
@@ -189,8 +185,7 @@ public class ServicePanel extends ExtendedPanel implements ResizeableComponent {
          }
 
          if ((double)ServicePanel.this.opacity > 0.0D) {
-            var10000 = ServicePanel.this;
-            var10000.opacity = var10000.opacity - 0.05F;
+            ServicePanel.this.opacity = ServicePanel.this.opacity - 0.05F;
          }
 
          if (ServicePanel.this.opacity < 0.0F) {

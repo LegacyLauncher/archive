@@ -88,6 +88,19 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
       return new Del(1, aligment, border);
    }
 
+   public class EditorScrollPane extends ScrollPane {
+      private final TabbedEditorPanel.EditorPanelTab tab;
+
+      EditorScrollPane(TabbedEditorPanel.EditorPanelTab tab) {
+         super(tab);
+         this.tab = tab;
+      }
+
+      public TabbedEditorPanel.EditorPanelTab getTab() {
+         return this.tab;
+      }
+   }
+
    public class EditorPanelTab extends ExtendedPanel implements LocalizableComponent {
       private final String name;
       private final String tip;
@@ -145,7 +158,7 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
          this.savingEnabled = b;
       }
 
-      public void add(EditorPair pair) {
+      public void add(EditorPair pair, int rows) {
          LocalizableLabel label = pair.getLabel();
          ExtendedPanel field = pair.getPanel();
          ExtendedPanel panel;
@@ -178,6 +191,10 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
          TabbedEditorPanel.this.handlers.addAll(pair.getHandlers());
       }
 
+      public void add(EditorPair pair) {
+         this.add(pair, 1);
+      }
+
       public void nextPane() {
          this.rowNum = 0;
          ++this.paneNum;
@@ -191,19 +208,6 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
             TabbedEditorPanel.this.tabPane.setTitleAt(index, this.getTabName());
             TabbedEditorPanel.this.tabPane.setToolTipTextAt(index, this.getTabTip());
          }
-      }
-   }
-
-   public class EditorScrollPane extends ScrollPane {
-      private final TabbedEditorPanel.EditorPanelTab tab;
-
-      EditorScrollPane(TabbedEditorPanel.EditorPanelTab tab) {
-         super(tab);
-         this.tab = tab;
-      }
-
-      public TabbedEditorPanel.EditorPanelTab getTab() {
-         return this.tab;
       }
    }
 }

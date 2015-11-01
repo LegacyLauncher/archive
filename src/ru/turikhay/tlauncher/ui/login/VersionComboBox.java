@@ -28,11 +28,6 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
    private final SimpleComboBoxModel model;
    private String selectedVersion;
 
-   static {
-      LOADING = VersionCellRenderer.LOADING;
-      EMPTY = VersionCellRenderer.EMPTY;
-   }
-
    VersionComboBox(LoginForm lf) {
       super((ListCellRenderer)(new VersionCellRenderer() {
          public boolean getShowElyVersions() {
@@ -51,6 +46,7 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
                VersionComboBox.this.selectedVersion = selected.getID();
                VersionComboBox.this.loginForm.global.setForcefully("login.version", VersionComboBox.this.selectedVersion, false);
                VersionComboBox.this.loginForm.global.store();
+               VersionComboBox.this.setToolTipText(VersionComboBox.this.selectedVersion);
             }
 
          }
@@ -70,25 +66,31 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
             public void runTask() throws LoginException {
                VersionComboBox.this.manager.refresh();
                if (VersionComboBox.this.getVersion() == null) {
-                  Alert.showLocError("versions.notfound");
+                  if (VersionComboBox.this.loginForm.global.getBoolean("minecraft.versions.sub.remote")) {
+                     Alert.showLocError("versions.notfound");
+                  } else {
+                     Alert.showLocError("versions.notfound.disabled");
+                  }
                }
 
                throw new LoginException("Giving user a second chance to choose correct version...");
             }
          });
-      } else if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate()) {
-         if (!Alert.showLocQuestion("versions.found-update")) {
-            try {
-               CompleteVersion complete = this.manager.getLocalList().getCompleteVersion(selected.getLocal());
-               complete.setUpdatedTime(selected.getLatestVersion().getUpdatedTime());
-               this.manager.getLocalList().saveVersion(complete);
-            } catch (IOException var3) {
-               Alert.showLocError("versions.found-update.error");
+      } else {
+         if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate()) {
+            if (!Alert.showLocQuestion("versions.found-update")) {
+               try {
+                  CompleteVersion e = this.manager.getLocalList().getCompleteVersion(selected.getLocal());
+                  e.setUpdatedTime(selected.getLatestVersion().getUpdatedTime());
+                  this.manager.getLocalList().saveVersion(e);
+               } catch (IOException var3) {
+                  Alert.showLocError("versions.found-update.error");
+               }
+            } else {
+               this.loginForm.checkbox.forceupdate.setSelected(true);
             }
-
-         } else {
-            this.loginForm.checkbox.forceupdate.setSelected(true);
          }
+
       }
    }
 
@@ -99,7 +101,7 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
    }
 
    public void updateLocale() {
-      this.updateList(this.manager.getVersions(), (String)null);
+      this.updateList(this.manager);
    }
 
    public void onVersionsRefreshing(VersionManager vm) {
@@ -107,11 +109,19 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
    }
 
    public void onVersionsRefreshingFailed(VersionManager vm) {
-      this.updateList(this.manager.getVersions(), (String)null);
+      this.updateList(this.manager);
    }
 
    public void onVersionsRefreshed(VersionManager vm) {
-      this.updateList(this.manager.getVersions(), (String)null);
+      this.updateList(this.manager);
+   }
+
+   void updateList(VersionManager manager) {
+      if (manager == null) {
+         throw new NullPointerException();
+      } else {
+         this.updateList(manager.getVersions(), (String)null);
+      }
    }
 
    void updateList(List list, String select) {
@@ -122,22 +132,20 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
       this.removeAllItems();
       if (list == null) {
          this.addItem(LOADING);
+      } else if (list.isEmpty()) {
+         this.addItem(EMPTY);
       } else {
-         if (list.isEmpty()) {
-            this.addItem(EMPTY);
-         } else {
-            this.model.addElements(list);
-            Iterator var4 = list.iterator();
+         this.model.addElements(list);
+         Iterator var4 = list.iterator();
 
-            while(var4.hasNext()) {
-               VersionSyncInfo version = (VersionSyncInfo)var4.next();
-               if (select != null && version.getID().equals(select)) {
-                  this.setSelectedItem(version);
-               }
+         while(var4.hasNext()) {
+            VersionSyncInfo version = (VersionSyncInfo)var4.next();
+            if (select != null && version.getID().equals(select)) {
+               this.setSelectedItem(version);
             }
          }
-
       }
+
    }
 
    public void block(Object reason) {
@@ -146,5 +154,10 @@ public class VersionComboBox extends ExtendedComboBox implements Blockable, Vers
 
    public void unblock(Object reason) {
       this.setEnabled(true);
+   }
+
+   static {
+      LOADING = VersionCellRenderer.LOADING;
+      EMPTY = VersionCellRenderer.EMPTY;
    }
 }

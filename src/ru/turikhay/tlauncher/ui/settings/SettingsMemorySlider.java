@@ -18,14 +18,13 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 
 public class SettingsMemorySlider extends BorderPanel implements EditorField {
    private final JSlider slider = new JSlider();
    private final EditorIntegerField inputField;
    private final LocalizableLabel mb;
    private final LocalizableLabel hint;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
 
    SettingsMemorySlider() {
       this.slider.setOpaque(false);
@@ -122,8 +121,8 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
          value = SettingsMemorySlider.ValueType.OK;
       } else {
-         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[OS.Arch.CURRENT.ordinal()]) {
-         case 2:
+         switch(OS.Arch.CURRENT) {
+         case x32:
             if (OS.Arch.TOTAL_RAM_MB > 0L && (long)intVal > OS.Arch.TOTAL_RAM_MB) {
                value = SettingsMemorySlider.ValueType.DANGER;
             } else if (intVal > OS.Arch.MAX_MEMORY) {
@@ -133,8 +132,6 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
          default:
             if (intVal > OS.Arch.MAX_MEMORY) {
                value = SettingsMemorySlider.ValueType.DANGER;
-            } else if (intVal > OS.Arch.PREFERRED_MEMORY) {
-               value = SettingsMemorySlider.ValueType.WARNING;
             }
          }
       }
@@ -158,34 +155,6 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       this.updateTip();
    }
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[OS.Arch.values().length];
-
-         try {
-            var0[OS.Arch.UNKNOWN.ordinal()] = 3;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[OS.Arch.x32.ordinal()] = 1;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[OS.Arch.x64.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$util$OS$Arch = var0;
-         return var0;
-      }
-   }
-
    private static enum ValueType {
       OK("info.png"),
       WARNING("warning.png"),
@@ -195,7 +164,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       private final ImageIcon icon;
 
       private ValueType(String image) {
-         this.icon = Images.getIcon(image, 16, 16);
+         this.icon = Images.getIcon(image, SwingUtil.magnify(16), SwingUtil.magnify(16));
       }
    }
 }

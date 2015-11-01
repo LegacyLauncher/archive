@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
@@ -27,7 +28,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
       }
 
       this.source = tempSource;
-      this.resolver = new HTMLPage.AboutPageTokenResolver((HTMLPage.AboutPageTokenResolver)null);
+      this.resolver = new HTMLPage.AboutPageTokenResolver();
       this.editor = new EditorPane();
       this.updateLocale();
       this.setCenter(this.editor);
@@ -46,18 +47,18 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
          StringBuilder string = new StringBuilder();
          TokenReplacingReader replacer = new TokenReplacingReader(new StringReader(this.source), this.resolver);
 
-         label54: {
+         label62: {
             try {
                while(true) {
                   int read;
                   if ((read = replacer.read()) <= 0) {
-                     break label54;
+                     break label62;
                   }
 
                   string.append((char)read);
                }
-            } catch (IOException var8) {
-               var8.printStackTrace();
+            } catch (IOException var7) {
+               var7.printStackTrace();
             } finally {
                U.close(replacer);
             }
@@ -67,6 +68,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
 
          this.editor.setText(string.toString());
       }
+
    }
 
    private class AboutPageTokenResolver implements ITokenResolver {
@@ -78,17 +80,15 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
       }
 
       public String resolveToken(String token) {
-         if (token.startsWith("image:")) {
-            return Images.getRes(token.substring("image:".length())).toExternalForm();
-         } else if (token.startsWith("loc:")) {
-            return Localizable.get(token.substring("loc:".length()));
+         if (token.equals("width")) {
+            return String.valueOf(SwingUtil.magnify(425));
          } else {
-            return token.equals("color") ? "black" : token;
+            return token.startsWith("image:") ? Images.getRes(token.substring("image:".length())).toExternalForm() : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? "black" : token));
          }
       }
 
       // $FF: synthetic method
-      AboutPageTokenResolver(HTMLPage.AboutPageTokenResolver var2) {
+      AboutPageTokenResolver(Object x1) {
          this();
       }
    }

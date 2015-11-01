@@ -18,6 +18,7 @@ import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ServerList;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class Stats {
@@ -42,8 +43,15 @@ public class Stats {
       submitDenunciation(args);
    }
 
+   public static void noticeViewed(Notices.Notice notice) {
+      if (notice.getId() != 0) {
+         submitDenunciation(newAction("notice_viewed").add("notice_id", String.valueOf(notice.getId())));
+      }
+
+   }
+
    private static Stats.Args newAction(String name) {
-      return (new Stats.Args((Stats.Args)null)).add("client", TLauncher.getInstance().getSettings().getClient().toString()).add("version", String.valueOf(TLauncher.getVersion())).add("action", name);
+      return (new Stats.Args()).add("client", TLauncher.getInstance().getSettings().getClient().toString()).add("version", String.valueOf(TLauncher.getVersion())).add("brand", TLauncher.getBrand()).add("os", OS.CURRENT.getName()).add("locale", TLauncher.getInstance().getLang().getSelected().toString()).add("action", name);
    }
 
    private static void submitDenunciation(final Stats.Args args) {
@@ -55,6 +63,7 @@ public class Stats {
             }
          });
       }
+
    }
 
    private static String toRequest(Stats.Args args) {
@@ -89,13 +98,14 @@ public class Stats {
 
       String var7;
       try {
+         String result;
          try {
             inputStream = connection.getInputStream();
-            String result = IOUtils.toString(inputStream, Charsets.UTF_8);
+            result = IOUtils.toString(inputStream, Charsets.UTF_8);
             debug("Successful read, server response was " + connection.getResponseCode());
             debug("Response: " + result);
-            var7 = result;
-            return var7;
+            String var6 = result;
+            return var6;
          } catch (IOException var10) {
             IOUtils.closeQuietly(inputStream);
             inputStream = connection.getErrorStream();
@@ -103,13 +113,13 @@ public class Stats {
                debug("Request failed", var10);
                throw var10;
             }
-         }
 
-         debug("Reading error page from " + url);
-         String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-         debug("Successful read, server response was " + connection.getResponseCode());
-         debug("Response: " + result);
-         var7 = result;
+            debug("Reading error page from " + url);
+            result = IOUtils.toString(inputStream, Charsets.UTF_8);
+            debug("Successful read, server response was " + connection.getResponseCode());
+            debug("Response: " + result);
+            var7 = result;
+         }
       } finally {
          IOUtils.closeQuietly(inputStream);
       }
@@ -118,6 +128,10 @@ public class Stats {
    }
 
    private static void debug(Object... o) {
+      if (TLauncher.getDebug()) {
+         U.log("[Stats]", o);
+      }
+
    }
 
    private static class Args {
@@ -136,13 +150,8 @@ public class Stats {
          return this;
       }
 
-      public Stats.Args remove(String key) {
-         this.map.remove(key);
-         return this;
-      }
-
       // $FF: synthetic method
-      Args(Stats.Args var1) {
+      Args(Object x0) {
          this();
       }
    }

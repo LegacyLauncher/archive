@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.listener;
 
-import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
 import ru.turikhay.tlauncher.TLauncher;
@@ -41,6 +40,7 @@ public class MinecraftUIListener implements MinecraftListener {
       if (this.t.getLauncher().isLaunchAssist()) {
          this.t.show();
       }
+
    }
 
    public void onMinecraftCrash(Crash crash) {
@@ -72,26 +72,6 @@ public class MinecraftUIListener implements MinecraftListener {
          }
       }
 
-      if (report != null) {
-         if (Alert.showLocQuestion(p + "store")) {
-            U.log("Removing crash report...");
-            File file = new File(report);
-            if (!file.exists()) {
-               U.log("File is already removed. LOL.");
-            } else {
-               if (!file.delete()) {
-                  U.log("Can't delete crash report file. Okay.");
-                  Alert.showLocMessage(p + "store.failed");
-                  return;
-               }
-
-               U.log("Yay, crash report file doesn't exist by now.");
-            }
-
-            Alert.showLocMessage(p + "store.success");
-         }
-
-      }
    }
 
    public void onMinecraftError(Throwable e) {

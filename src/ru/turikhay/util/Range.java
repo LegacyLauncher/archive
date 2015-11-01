@@ -53,11 +53,7 @@ public class Range {
             return Range.RangeDifference.LESS;
          } else {
             double max = doubleValue - this.doubleMax;
-            if (max == 0.0D) {
-               return this.including ? Range.RangeDifference.FITS : Range.RangeDifference.GREATER;
-            } else {
-               return max > 0.0D ? Range.RangeDifference.GREATER : Range.RangeDifference.FITS;
-            }
+            return max == 0.0D ? (this.including ? Range.RangeDifference.FITS : Range.RangeDifference.GREATER) : (max > 0.0D ? Range.RangeDifference.GREATER : Range.RangeDifference.FITS);
          }
       }
    }

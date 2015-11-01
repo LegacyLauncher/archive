@@ -23,6 +23,7 @@ public class TextPopup extends MouseAdapter {
             }
          }
       }
+
    }
 
    protected JPopupMenu getPopup(MouseEvent e, final JTextComponent comp) {

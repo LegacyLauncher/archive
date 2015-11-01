@@ -45,7 +45,7 @@ public class ExtendedButton extends JButton {
    }
 
    private void init() {
-      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
       this.setOpaque(false);
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -53,14 +53,11 @@ public class ExtendedButton extends JButton {
             if (parent != null) {
                parent.requestFocusInWindow();
             }
+
          }
 
          private Component findRootParent(Component comp) {
-            if (comp == null) {
-               return null;
-            } else {
-               return comp.getParent() == null ? comp : this.findRootParent(comp.getParent());
-            }
+            return comp == null ? null : (comp.getParent() == null ? comp : this.findRootParent(comp.getParent()));
          }
       });
    }

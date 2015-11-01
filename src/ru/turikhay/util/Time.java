@@ -8,7 +8,7 @@ public class Time {
 
    public static void start(Object holder) {
       if (timers.containsKey(holder)) {
-         throw new IllegalArgumentException("This holder (" + holder.toString() + ") is already in use!");
+         throw new IllegalArgumentException("This holder (" + holder + ") is already in use!");
       } else {
          timers.put(holder, System.currentTimeMillis());
       }

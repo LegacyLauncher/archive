@@ -80,6 +80,7 @@ public class ConsoleFrame extends JFrame implements PasteListener, LocalizableCo
 
                ConsoleFrame.this.scrollBarValue = nv;
             }
+
          }
       });
       this.addComponentListener(new ComponentAdapter() {
@@ -98,12 +99,13 @@ public class ConsoleFrame extends JFrame implements PasteListener, LocalizableCo
    }
 
    public void print(String string) {
+      Object var2 = this.busy;
       synchronized(this.busy) {
          Document document = this.textarea.getDocument();
 
          try {
             document.insertString(document.getLength(), string, (AttributeSet)null);
-         } catch (Throwable var5) {
+         } catch (Throwable var7) {
          }
 
          if (this.scrollDown) {
@@ -139,16 +141,12 @@ public class ConsoleFrame extends JFrame implements PasteListener, LocalizableCo
       this.popup.pastebinAction.setEnabled(true);
    }
 
-   void hideIn(long millis) {
+   void hideIn(final long millis) {
       this.hiding = true;
       this.bottom.closeCancelButton.setVisible(true);
       this.bottom.closeCancelButton.setText("console.close.cancel", millis / 1000L);
-      AsyncThread.execute(new Runnable(millis) {
-         long remaining;
-
-         {
-            this.remaining = var2;
-         }
+      AsyncThread.execute(new Runnable() {
+         long remaining = millis;
 
          public void run() {
             ConsoleFrame.this.bottom.closeCancelButton.setText("console.close.cancel", this.remaining / 1000L);
@@ -183,9 +181,6 @@ public class ConsoleFrame extends JFrame implements PasteListener, LocalizableCo
             ConsoleTextPopup.this.onClearCalled();
          }
       };
-
-      ConsoleTextPopup() {
-      }
 
       protected JPopupMenu getPopup(MouseEvent e, JTextComponent comp) {
          JPopupMenu menu = super.getPopup(e, comp);

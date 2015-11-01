@@ -21,8 +21,6 @@ public enum OS {
    public static final OS CURRENT = getCurrent();
    private final String name;
    private final String[] aliases;
-   // $FF: synthetic field
-   private static int[] $SWITCH_TABLE$ru$turikhay$util$OS;
 
    private OS(String... aliases) {
       if (aliases == null) {
@@ -52,8 +50,8 @@ public enum OS {
 
       for(int var2 = 0; var2 < var3; ++var2) {
          OS os = var4[var2];
-         String[] var8;
-         int var7 = (var8 = os.aliases).length;
+         String[] var8 = os.aliases;
+         int var7 = os.aliases.length;
 
          for(int var6 = 0; var6 < var7; ++var6) {
             String alias = var8[var6];
@@ -120,7 +118,7 @@ public enum OS {
    }
 
    public static String getSummary() {
-      return NAME + " " + VERSION + " " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + ", " + OS.Arch.TOTAL_RAM_MB + " MB RAM";
+      return NAME + " " + VERSION + " " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + ", " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + OS.Arch.AVAILABLE_PROCESSORS + " cores";
    }
 
    private static void rawOpenLink(URI uri) throws Throwable {
@@ -167,27 +165,27 @@ public enum OS {
       String absPath = path.getAbsolutePath() + File.separatorChar;
       Runtime r = Runtime.getRuntime();
       Throwable t = null;
-      switch($SWITCH_TABLE$ru$turikhay$util$OS()[CURRENT.ordinal()]) {
-      case 2:
+      switch(CURRENT) {
+      case WINDOWS:
          String cmd = String.format("cmd.exe /C start \"Open path\" \"%s\"", absPath);
 
          try {
             r.exec(cmd);
             return;
-         } catch (Throwable var9) {
-            t = var9;
-            log("Cannot open folder using CMD.exe:\n", cmd, var9);
-            break;
-         }
-      case 3:
-         String[] cmdArr = new String[]{"/usr/bin/open", absPath};
-
-         try {
-            r.exec(cmdArr);
-            return;
          } catch (Throwable var10) {
             t = var10;
-            log("Cannot open folder using:\n", cmdArr, var10);
+            log("Cannot open folder using CMD.exe:\n", cmd, var10);
+            break;
+         }
+      case OSX:
+         String[] e = new String[]{"/usr/bin/open", absPath};
+
+         try {
+            r.exec(e);
+            return;
+         } catch (Throwable var9) {
+            t = var9;
+            log("Cannot open folder using:\n", e, var9);
             break;
          }
       default:
@@ -257,44 +255,6 @@ public enum OS {
       U.log("[OS]", o);
    }
 
-   // $FF: synthetic method
-   static int[] $SWITCH_TABLE$ru$turikhay$util$OS() {
-      int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS;
-      if (var10000 != null) {
-         return var10000;
-      } else {
-         int[] var0 = new int[values().length];
-
-         try {
-            var0[LINUX.ordinal()] = 1;
-         } catch (NoSuchFieldError var5) {
-         }
-
-         try {
-            var0[OSX.ordinal()] = 3;
-         } catch (NoSuchFieldError var4) {
-         }
-
-         try {
-            var0[SOLARIS.ordinal()] = 4;
-         } catch (NoSuchFieldError var3) {
-         }
-
-         try {
-            var0[UNKNOWN.ordinal()] = 5;
-         } catch (NoSuchFieldError var2) {
-         }
-
-         try {
-            var0[WINDOWS.ordinal()] = 2;
-         } catch (NoSuchFieldError var1) {
-         }
-
-         $SWITCH_TABLE$ru$turikhay$util$OS = var0;
-         return var0;
-      }
-   }
-
    public static enum Arch {
       x32,
       x64,
@@ -306,10 +266,9 @@ public enum OS {
       public static final int MIN_MEMORY = 512;
       public static final int PREFERRED_MEMORY = getPreferredMemory();
       public static final int MAX_MEMORY = getMaximumMemory();
+      public static final int AVAILABLE_PROCESSORS = getAvailableProcessors();
       private final String asString = this.toString().substring(1);
       private final int asInt;
-      // $FF: synthetic field
-      private static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
 
       private Arch() {
          int asInt_temp = 0;
@@ -358,30 +317,31 @@ public enum OS {
          }
       }
 
+      private static int getAvailableProcessors() {
+         try {
+            return ((OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean()).getAvailableProcessors();
+         } catch (Throwable var1) {
+            U.log("[ERROR] Cannot determine available processors", var1);
+            return 1;
+         }
+      }
+
       private static int getPreferredMemory() {
-         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
-         case 1:
+         switch(CURRENT) {
+         case x64:
+            return 1024;
+         case x32:
             if (TOTAL_RAM_MB > 4000L) {
                return 768;
             }
-
-            return 512;
-         case 2:
-            return 1024;
          default:
             return 512;
          }
       }
 
       private static int getMaximumMemory() {
-         switch($SWITCH_TABLE$ru$turikhay$util$OS$Arch()[CURRENT.ordinal()]) {
-         case 1:
-            if (TOTAL_RAM_MB > 4000L) {
-               return 1536;
-            }
-
-            return 1024;
-         case 2:
+         switch(CURRENT) {
+         case x64:
             if (TOTAL_RAM_MB > 6000L) {
                return 3072;
             } else {
@@ -391,36 +351,14 @@ public enum OS {
 
                return 1024;
             }
+         case x32:
+            if (TOTAL_RAM_MB > 4000L) {
+               return 1536;
+            }
+
+            return 1024;
          default:
             return 512;
-         }
-      }
-
-      // $FF: synthetic method
-      static int[] $SWITCH_TABLE$ru$turikhay$util$OS$Arch() {
-         int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$OS$Arch;
-         if (var10000 != null) {
-            return var10000;
-         } else {
-            int[] var0 = new int[values().length];
-
-            try {
-               var0[UNKNOWN.ordinal()] = 3;
-            } catch (NoSuchFieldError var3) {
-            }
-
-            try {
-               var0[x32.ordinal()] = 1;
-            } catch (NoSuchFieldError var2) {
-            }
-
-            try {
-               var0[x64.ordinal()] = 2;
-            } catch (NoSuchFieldError var1) {
-            }
-
-            $SWITCH_TABLE$ru$turikhay$util$OS$Arch = var0;
-            return var0;
          }
       }
    }

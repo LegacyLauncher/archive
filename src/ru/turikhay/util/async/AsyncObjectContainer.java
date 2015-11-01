@@ -18,11 +18,11 @@ public class AsyncObjectContainer {
 
    public AsyncObjectContainer(AsyncObject[] asyncObjects) {
       this();
-      AsyncObject[] var5 = asyncObjects;
-      int var4 = asyncObjects.length;
+      AsyncObject[] arr$ = asyncObjects;
+      int len$ = asyncObjects.length;
 
-      for(int var3 = 0; var3 < var4; ++var3) {
-         AsyncObject object = var5[var3];
+      for(int i$ = 0; i$ < len$; ++i$) {
+         AsyncObject object = arr$[i$];
          this.add(object);
       }
 
@@ -34,27 +34,27 @@ public class AsyncObjectContainer {
       synchronized(this.objects) {
          int i = 0;
          int size = this.objects.size();
-         Iterator var5 = this.objects.iterator();
+         Iterator i$ = this.objects.iterator();
 
          AsyncObject object;
-         while(var5.hasNext()) {
-            object = (AsyncObject)var5.next();
+         while(i$.hasNext()) {
+            object = (AsyncObject)i$.next();
             object.start();
          }
 
          while(i < size) {
-            var5 = this.objects.iterator();
+            i$ = this.objects.iterator();
 
-            while(var5.hasNext()) {
-               object = (AsyncObject)var5.next();
+            while(i$.hasNext()) {
+               object = (AsyncObject)i$.next();
 
                try {
                   if (!this.values.containsKey(object)) {
                      this.values.put(object, object.getValue());
                      ++i;
                   }
-               } catch (AsyncObjectNotReadyException var7) {
-               } catch (AsyncObjectGotErrorException var8) {
+               } catch (AsyncObjectNotReadyException var8) {
+               } catch (AsyncObjectGotErrorException var9) {
                   this.values.put(object, (Object)null);
                   ++i;
                }

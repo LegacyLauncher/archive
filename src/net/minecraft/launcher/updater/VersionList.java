@@ -102,24 +102,24 @@ public abstract class VersionList {
       Iterator var3 = versionList.getVersions().iterator();
 
       while(var3.hasNext()) {
-         Version version = (Version)var3.next();
-         if (version != null && version.getID() != null) {
-            this.versions.add(version);
-            this.byName.put(version.getID(), version);
+         Version en = (Version)var3.next();
+         if (en != null && en.getID() != null) {
+            this.versions.add(en);
+            this.byName.put(en.getID(), en);
          }
       }
 
       var3 = versionList.latest.entrySet().iterator();
 
       while(var3.hasNext()) {
-         Entry en = (Entry)var3.next();
-         ReleaseType releaseType = (ReleaseType)en.getKey();
+         Entry en1 = (Entry)var3.next();
+         ReleaseType releaseType = (ReleaseType)en1.getKey();
          if (releaseType == null) {
-            this.log("Unknown release type for latest version entry:", en);
+            this.log("Unknown release type for latest version entry:", en1);
          } else {
-            Version version = this.getVersion((String)en.getValue());
+            Version version = this.getVersion((String)en1.getValue());
             if (version == null) {
-               throw new NullPointerException("Cannot find version for latest version entry: " + en);
+               throw new NullPointerException("Cannot find version for latest version entry: " + en1);
             }
 
             this.latest.put(releaseType, version);
@@ -159,6 +159,7 @@ public abstract class VersionList {
       if (version != null) {
          this.removeVersion(version);
       }
+
    }
 
    public String serializeVersion(CompleteVersion version) {

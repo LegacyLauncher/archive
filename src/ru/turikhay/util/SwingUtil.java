@@ -1,8 +1,10 @@
 package ru.turikhay.util;
 
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -12,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 
 public class SwingUtil {
@@ -70,14 +73,14 @@ public class SwingUtil {
 
    public static void initFontSize(int defSize) {
       try {
-         UIDefaults defaults = UIManager.getDefaults();
+         UIDefaults e = UIManager.getDefaults();
          int minSize = defSize;
          int maxSize = defSize + 2;
-         Enumeration e = defaults.keys();
+         Enumeration e1 = e.keys();
 
-         while(e.hasMoreElements()) {
-            Object key = e.nextElement();
-            Object value = defaults.get(key);
+         while(e1.hasMoreElements()) {
+            Object key = e1.nextElement();
+            Object value = e.get(key);
             if (value instanceof Font) {
                Font font = (Font)value;
                int size = font.getSize();
@@ -88,9 +91,9 @@ public class SwingUtil {
                }
 
                if (value instanceof FontUIResource) {
-                  defaults.put(key, new FontUIResource(font.getName(), font.getStyle(), size));
+                  e.put(key, new FontUIResource(font.getName(), font.getStyle(), size));
                } else {
-                  defaults.put(key, new Font(font.getName(), font.getStyle(), size));
+                  e.put(key, new Font(font.getName(), font.getStyle(), size));
                }
             }
          }
@@ -111,6 +114,26 @@ public class SwingUtil {
 
    public static void setFontSize(JComponent comp, float size) {
       comp.setFont(comp.getFont().deriveFont(size));
+   }
+
+   public static int magnify(int i) {
+      return (int)Math.rint((double)i * TLauncherFrame.magnifyDimensions);
+   }
+
+   public static float magnify(float i) {
+      return (float)((double)i * TLauncherFrame.magnifyDimensions);
+   }
+
+   public static Dimension magnify(Dimension d) {
+      return new Dimension(magnify(d.width), magnify(d.height));
+   }
+
+   public static Insets magnify(Insets i) {
+      i.top = magnify(i.top);
+      i.left = magnify(i.left);
+      i.bottom = magnify(i.bottom);
+      i.right = magnify(i.right);
+      return i;
    }
 
    private static void log(Object... o) {

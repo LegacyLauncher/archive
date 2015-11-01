@@ -17,7 +17,7 @@ public class ExtendedComboBox extends JComboBox {
       this.setModel(new SimpleComboBoxModel());
       this.setRenderer(renderer);
       this.setOpaque(false);
-      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
       ((JComponent)Reflect.cast(this.getEditor().getEditorComponent(), JComponent.class)).setOpaque(false);
    }
 
@@ -53,6 +53,7 @@ public class ExtendedComboBox extends JComboBox {
       if (value != null) {
          this.setSelectedValue(value);
       }
+
    }
 
    public StringConverter getConverter() {
@@ -65,11 +66,7 @@ public class ExtendedComboBox extends JComboBox {
 
    protected String convert(Object obj) {
       Object from = this.returnAs(obj);
-      if (this.converter != null) {
-         return this.converter.toValue(from);
-      } else {
-         return from == null ? null : from.toString();
-      }
+      return this.converter != null ? this.converter.toValue(from) : (from == null ? null : from.toString());
    }
 
    protected Object convert(String from) {

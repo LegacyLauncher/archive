@@ -1,58 +1,59 @@
 package ru.turikhay.tlauncher.ui.login.buttons;
 
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.net.URI;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
+import javax.swing.Icon;
+import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
-public class SupportButton extends ImageButton implements Blockable, LocalizableComponent {
-   private final JPopupMenu[] popups = new JPopupMenu[SupportButton.SupportType.values().length];
-   private SupportButton.SupportType type;
-   private int i;
+public class SupportButton extends ExtendedButton implements Blockable, LocalizableComponent {
+   private final HashMap localeMap = new HashMap();
+   SupportButton.SupportMenu menu;
 
    SupportButton(LoginForm loginForm) {
-      for(int i = 0; i < this.popups.length; ++i) {
-         SupportButton.SupportType.values()[i].setupMenu(this.popups[i] = new JPopupMenu());
-      }
+      this.localeMap.put("ru_RU", (new SupportButton.SupportMenu("vk.png")).add("loginform.button.support.follow", actionURL("http://tlauncher.ru/go/vk?from=menu")).add("loginform.button.support.report", actionURL("http://tlauncher.ru/go/report?from=menu")).add("loginform.button.support.author", actionURL("http://tlauncher.ru/go/support?from=menu")));
+      this.localeMap.put("uk_UA", this.localeMap.get("ru_RU"));
+      this.localeMap.put("en_US", (new SupportButton.SupportMenu("mail.png")).add("loginform.button.support.email", actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))).add("loginform.button.support.developer", actionAlert("loginform.button.support.developer.alert", U.reverse("ur.rehcnualt@repoleved"))));
+      this.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            if (SupportButton.this.menu != null) {
+               SupportButton.this.menu.popup.show(SupportButton.this, 0, SupportButton.this.getHeight());
+            }
 
-      this.rotation = ImageButton.ImageRotation.CENTER;
-      this.addMouseListener(new MouseAdapter() {
-         public void mouseClicked(MouseEvent e) {
-            SupportButton.this.popups[SupportButton.this.i].show(SupportButton.this, 0, SupportButton.this.getHeight());
          }
       });
       this.updateLocale();
    }
 
-   public SupportButton.SupportType getType() {
-      return this.type;
-   }
-
-   public void setType(SupportButton.SupportType type) {
-      if (type == null) {
-         throw new NullPointerException("type");
-      } else {
-         this.type = type;
-         this.i = U.find(type, SupportButton.SupportType.values());
-         this.setImage(type.image);
-         this.repaint();
+   void setLocale(String locale) {
+      if (this.menu != null) {
+         this.menu.popup.setVisible(false);
       }
-   }
 
-   public void updateLocale() {
-      String locale = TLauncher.getInstance().getSettings().getLocale().toString();
-      this.setType(!locale.equals("ru_RU") && !locale.equals("uk_UA") ? SupportButton.SupportType.GMAIL : SupportButton.SupportType.VK);
+      this.menu = (SupportButton.SupportMenu)this.localeMap.get(locale);
+      if (this.menu == null) {
+         this.setIcon((Icon)null);
+         this.setEnabled(false);
+      } else {
+         this.setIcon(this.menu.icon);
+         this.setEnabled(true);
+      }
+
    }
 
    public void block(Object reason) {
@@ -61,65 +62,83 @@ public class SupportButton extends ImageButton implements Blockable, Localizable
    public void unblock(Object reason) {
    }
 
-   public static enum SupportType {
-      VK("vk.png") {
-         public void setupMenu(JPopupMenu menu) {
-            menu.add(SupportButton.SupportType.newItem("loginform.button.support.follow", new ActionListener() {
-               final URI followURI = U.makeURI("http://tlauncher.ru/go/vk");
+   public void updateLocale() {
+      String selectedLocale = TLauncher.getInstance().getSettings().getLocale().toString();
+      String newLocale = "en_US";
+      Iterator i$ = this.localeMap.keySet().iterator();
 
-               public void actionPerformed(ActionEvent e) {
-                  OS.openLink(this.followURI);
-               }
-            }));
-            menu.add(SupportButton.SupportType.newItem("loginform.button.support.report", new ActionListener() {
-               final URI reportURI = U.makeURI("http://tlauncher.ru/go/report");
-
-               public void actionPerformed(ActionEvent e) {
-                  OS.openLink(this.reportURI);
-               }
-            }));
-            menu.add(SupportButton.SupportType.newItem("loginform.button.support.author", new ActionListener() {
-               final URI helpURI = U.makeURI("http://tlauncher.ru/go/support");
-
-               public void actionPerformed(ActionEvent e) {
-                  OS.openLink(this.helpURI);
-               }
-            }));
+      while(i$.hasNext()) {
+         String locale = (String)i$.next();
+         if (locale.equals(selectedLocale)) {
+            newLocale = locale;
+            break;
          }
-      },
-      GMAIL("mail.png") {
-         public void setupMenu(JPopupMenu menu) {
-            menu.add(SupportButton.SupportType.newItem("loginform.button.support.email", new ActionListener() {
-               final URI devURI = U.makeURI("http://turikhay.ru/");
+      }
 
-               public void actionPerformed(ActionEvent e) {
-                  OS.openLink(this.devURI);
-               }
-            }));
+      this.setLocale(newLocale);
+   }
+
+   private static ActionListener actionURL(String rawURL) {
+      final URL tryURL;
+      try {
+         tryURL = new URL(rawURL);
+      } catch (MalformedURLException var3) {
+         throw new RuntimeException(var3);
+      }
+
+      return new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            OS.openLink(tryURL);
          }
       };
+   }
 
-      private final Image image;
+   private static ActionListener actionAlert(final String msgPath, final Object textArea) {
+      return new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            Alert.showLocMessage(msgPath, textArea);
+         }
+      };
+   }
 
-      private SupportType(String imagePath) {
-         this.image = SupportButton.loadImage(imagePath);
+   private class SupportMenu {
+      final ImageIcon icon;
+      final JPopupMenu popup = new JPopupMenu();
+
+      SupportMenu(String icon) {
+         this.icon = Images.getScaledIcon(icon, 16);
       }
 
-      public Image getImage() {
-         return this.image;
+      SupportButton.SupportMenu add(JMenuItem item) {
+         this.popup.add(item);
+         return this;
       }
 
-      public abstract void setupMenu(JPopupMenu var1);
-
-      private static final LocalizableMenuItem newItem(String key, ActionListener action) {
+      public SupportButton.SupportMenu add(String key, ImageIcon icon, ActionListener listener) {
          LocalizableMenuItem item = new LocalizableMenuItem(key);
-         item.addActionListener(action);
-         return item;
+         item.setIcon(icon);
+         if (listener != null) {
+            item.addActionListener(listener);
+         }
+
+         this.add((JMenuItem)item);
+         return this;
       }
 
-      // $FF: synthetic method
-      SupportType(String var3, SupportButton.SupportType var4) {
-         this(var3);
+      public SupportButton.SupportMenu add(String key, ActionListener listener) {
+         return this.add(key, (ImageIcon)null, listener);
+      }
+
+      public SupportButton.SupportMenu add(String key) {
+         LocalizableMenuItem item = new LocalizableMenuItem(key);
+         item.setEnabled(false);
+         this.add((JMenuItem)item);
+         return this;
+      }
+
+      public SupportButton.SupportMenu addSeparator() {
+         this.popup.addSeparator();
+         return this;
       }
    }
 }

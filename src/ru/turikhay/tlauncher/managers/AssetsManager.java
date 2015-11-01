@@ -37,7 +37,7 @@ public class AssetsManager extends LauncherComponent {
    }
 
    private static Set getResourceFiles(CompleteVersion version, File baseDirectory, List list) {
-      Set result = new HashSet();
+      HashSet result = new HashSet();
       File objectsFolder = new File(baseDirectory, "assets/objects");
       Iterator var6 = list.iterator();
 
@@ -77,7 +77,7 @@ public class AssetsManager extends LauncherComponent {
    }
 
    private List getLocalResourceFilesList(CompleteVersion version, File baseDirectory) {
-      List result = new ArrayList();
+      ArrayList result = new ArrayList();
       String indexName = version.getAssets();
       File indexesFolder = new File(baseDirectory, "assets/indexes/");
       File indexFile = new File(indexesFolder, indexName + ".json");
@@ -115,7 +115,7 @@ public class AssetsManager extends LauncherComponent {
    }
 
    private List getRemoteResourceFilesList(CompleteVersion version, File baseDirectory, boolean save) throws IOException {
-      List result = new ArrayList();
+      ArrayList result = new ArrayList();
       String indexName = version.getAssets();
       if (indexName == null) {
          indexName = "legacy";
@@ -127,13 +127,14 @@ public class AssetsManager extends LauncherComponent {
       this.log(new Object[]{"Reading from repository..."});
       String json = Repository.OFFICIAL_VERSION_REPO.getUrl("indexes/" + indexName + ".json");
       if (save) {
+         Object index = this.assetsFlushLock;
          synchronized(this.assetsFlushLock) {
             FileUtil.writeFile(indexFile, json);
          }
       }
 
-      AssetIndex index = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
-      Iterator var12 = index.getUniqueObjects().iterator();
+      AssetIndex index1 = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
+      Iterator var12 = index1.getUniqueObjects().iterator();
 
       while(var12.hasNext()) {
          AssetIndex.AssetObject object = (AssetIndex.AssetObject)var12.next();
@@ -145,7 +146,7 @@ public class AssetsManager extends LauncherComponent {
 
    List checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
       this.log(new Object[]{"Checking resources..."});
-      List r = new ArrayList();
+      ArrayList r = new ArrayList();
       List list;
       if (local) {
          list = this.getLocalResourceFilesList(version, baseDirectory);
@@ -179,16 +180,6 @@ public class AssetsManager extends LauncherComponent {
       String path = local.getFilename();
       File file = new File(baseDirectory, "assets/objects/" + path);
       long size = file.length();
-      if (file.isFile() && size != 0L) {
-         if (fast) {
-            return true;
-         } else if (local.getSize() != size) {
-            return false;
-         } else {
-            return local.getHash() == null ? true : local.getHash().equals(FileUtil.getChecksum(file, "SHA-1"));
-         }
-      } else {
-         return false;
-      }
+      return file.isFile() && size != 0L ? (fast ? true : (local.getSize() != size ? false : (local.getHash() == null ? true : local.getHash().equals(FileUtil.getChecksum(file, "SHA-1"))))) : false;
    }
 }

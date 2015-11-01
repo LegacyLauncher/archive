@@ -50,7 +50,7 @@ public class TokenReplacingReader extends Reader {
 
             this.tokenValue = this.tokenResolver.resolveToken(this.tokenNameBuffer.toString());
             if (this.tokenValue == null) {
-               this.tokenValue = "${" + this.tokenNameBuffer.toString() + "}";
+               this.tokenValue = "${" + this.tokenNameBuffer + "}";
             }
 
             return this.tokenValue.length() == 0 ? this.read() : this.tokenValue.charAt(this.tokenValueIndex++);

@@ -45,5 +45,6 @@ class AlertPanel extends JPanel {
 
          this.add(scroll);
       }
+
    }
 }

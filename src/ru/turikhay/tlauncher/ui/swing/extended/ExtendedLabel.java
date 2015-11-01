@@ -13,7 +13,7 @@ public class ExtendedLabel extends JLabel {
 
    public ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
       super(text, icon, horizontalAlignment);
-      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
       this.setOpaque(false);
    }
 
@@ -47,5 +47,6 @@ public class ExtendedLabel extends JLabel {
          super.paintComponent(g);
          g.setComposite(oldComposite);
       }
+
    }
 }

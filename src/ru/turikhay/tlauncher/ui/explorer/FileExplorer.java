@@ -6,9 +6,6 @@ import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 
 public class FileExplorer extends JFileChooser {
-   protected FileExplorer() {
-   }
-
    public void setCurrentDirectory(File dir) {
       if (dir == null) {
          dir = this.getFileSystemView().getDefaultDirectory();

@@ -40,6 +40,7 @@ public class SimpleListModel extends AbstractListModel {
          this.vector.addAll(elem);
          this.fireIntervalAdded(this, index0, index1);
       }
+
    }
 
    public void clear() {

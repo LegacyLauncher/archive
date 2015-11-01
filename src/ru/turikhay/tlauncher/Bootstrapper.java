@@ -1,13 +1,16 @@
 package ru.turikhay.tlauncher;
 
+import java.awt.Component;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import javax.swing.JOptionPane;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessListener;
 import org.apache.commons.lang3.StringUtils;
+import ru.turikhay.tlauncher.exceptions.TLauncherException;
 import ru.turikhay.tlauncher.ui.LoadingFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.FileUtil;
@@ -16,7 +19,7 @@ import ru.turikhay.util.U;
 
 public final class Bootstrapper {
    private static final String MAIN_CLASS = "ru.turikhay.tlauncher.TLauncher";
-   private static final int MAX_MEMORY = 128;
+   private static final int MAX_MEMORY = 176;
    private static final File DIRECTORY = new File(".");
    private final JavaProcessLauncher processLauncher;
    private final LoadingFrame frame;
@@ -25,6 +28,8 @@ public final class Bootstrapper {
    private boolean started;
 
    public static void main(String[] args) {
+      checkRunningPath();
+
       try {
          (new Bootstrapper(args)).start();
       } catch (IOException var2) {
@@ -37,7 +42,7 @@ public final class Bootstrapper {
    public static JavaProcessLauncher createLauncher(String[] args, boolean loadAdditionalArgs) {
       JavaProcessLauncher processLauncher = new JavaProcessLauncher((String)null, new String[0]);
       processLauncher.directory(DIRECTORY);
-      processLauncher.addCommand("-Xmx128m");
+      processLauncher.addCommand("-Xmx176m");
       processLauncher.addCommand("-cp", FileUtil.getRunningJar());
       processLauncher.addCommand("ru.turikhay.tlauncher.TLauncher");
       if (args != null && args.length > 0) {
@@ -70,7 +75,7 @@ public final class Bootstrapper {
             Bootstrapper.this.die(0);
          }
       });
-      this.listener = new Bootstrapper.BootstrapperListener((Bootstrapper.BootstrapperListener)null);
+      this.listener = new Bootstrapper.BootstrapperListener();
    }
 
    public void start() throws IOException {
@@ -112,6 +117,40 @@ public final class Bootstrapper {
 
    private static void log(Object... s) {
       U.log("[Bootstrapper]", s);
+   }
+
+   public static void checkRunningPath() {
+      String path = TLauncher.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+      if (path.contains("!/")) {
+         String message = "Please do not run (any) Java application which path contain folder name that ends with «!»:\n" + path;
+         JOptionPane.showMessageDialog((Component)null, message, "Error", 0);
+         throw new TLauncherException(message);
+      }
+   }
+
+   public static enum LoadingStep {
+      INITALIZING(21),
+      LOADING_CONFIGURATION(35),
+      LOADING_LOOKANDFEEL(41),
+      LOADING_CONSOLE(44),
+      LOADING_MANAGERS(51),
+      LOADING_WINDOW(62),
+      PREPARING_MAINPANE(77),
+      POSTINIT_GUI(82),
+      REFRESHING_INFO(91),
+      SUCCESS(100);
+
+      public static final String LOADING_PREFIX = "[Loading]";
+      public static final String LOADING_DELIMITER = " = ";
+      private final int percentage;
+
+      private LoadingStep(int percentage) {
+         this.percentage = percentage;
+      }
+
+      public int getPercentage() {
+         return this.percentage;
+      }
    }
 
    private class BootstrapperListener implements JavaProcessListener {
@@ -160,33 +199,8 @@ public final class Bootstrapper {
       }
 
       // $FF: synthetic method
-      BootstrapperListener(Bootstrapper.BootstrapperListener var2) {
+      BootstrapperListener(Object x1) {
          this();
-      }
-   }
-
-   public static enum LoadingStep {
-      INITALIZING(21),
-      LOADING_CONFIGURATION(35),
-      LOADING_LOOKANDFEEL(41),
-      LOADING_CONSOLE(44),
-      LOADING_MANAGERS(51),
-      LOADING_WINDOW(62),
-      PREPARING_MAINPANE(77),
-      POSTINIT_GUI(82),
-      REFRESHING_INFO(91),
-      SUCCESS(100);
-
-      public static final String LOADING_PREFIX = "[Loading]";
-      public static final String LOADING_DELIMITER = " = ";
-      private final int percentage;
-
-      private LoadingStep(int percentage) {
-         this.percentage = percentage;
-      }
-
-      public int getPercentage() {
-         return this.percentage;
       }
    }
 }

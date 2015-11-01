@@ -28,5 +28,6 @@ public abstract class PseudoScene extends ExtendedLayeredPane implements Animate
          this.shown = shown;
          this.setVisible(shown);
       }
+
    }
 }

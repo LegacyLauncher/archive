@@ -86,6 +86,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
    private void runProcess() {
       LoginException error = null;
       boolean success = true;
+      List force = this.processListeners;
       synchronized(this.processListeners) {
          Iterator var5 = this.processListeners.iterator();
 
@@ -96,19 +97,19 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             try {
                this.log(new Object[]{"Listener:", listener});
                listener.logginingIn();
-            } catch (LoginWaitException var9) {
-               LoginWaitException wait = var9;
+            } catch (LoginWaitException var12) {
+               LoginWaitException loginError = var12;
                this.log(new Object[]{"Catched a wait task from this listener, waiting..."});
 
                try {
-                  wait.getWaitTask().runTask();
-               } catch (LoginException var8) {
+                  loginError.getWaitTask().runTask();
+               } catch (LoginException var11) {
                   this.log(new Object[]{"Catched an error on a wait task."});
-                  error = var8;
+                  error = var11;
                }
-            } catch (LoginException var10) {
+            } catch (LoginException var13) {
                this.log(new Object[]{"Catched an error on a listener"});
-               error = var10;
+               error = var13;
             }
 
             if (error != null) {
@@ -143,11 +144,12 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
          this.global.setForcefully("login.version", this.versions.getVersion().getID(), false);
          this.global.store();
          this.log(new Object[]{"Login was OK. Trying to launch now."});
-         boolean force = this.checkbox.forceupdate.isSelected();
+         boolean force1 = this.checkbox.forceupdate.isSelected();
          this.changeState(LoginForm.LoginState.LAUNCHING);
-         this.tlauncher.launch(this, this.server, force);
+         this.tlauncher.launch(this, this.server, force1);
          this.checkbox.forceupdate.setSelected(false);
       }
+
    }
 
    private void stopProcess() {
@@ -165,14 +167,18 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
    public void startLauncher(ServerList.Server server) {
       if (!Blocker.isBlocked(this)) {
-         while(this.accounts.getAccount() != null && this.accounts.getAccount().getType() == Account.AccountType.ELY && this.tlauncher.getElyManager().isRefreshing()) {
+         while(true) {
+            if (this.accounts.getAccount() == null || this.accounts.getAccount().getType() != Account.AccountType.ELY || !this.tlauncher.getElyManager().isRefreshing()) {
+               this.server = server;
+               this.autologin.setActive(false);
+               this.startThread.iterate();
+               break;
+            }
+
             U.sleepFor(500L);
          }
-
-         this.server = server;
-         this.autologin.setActive(false);
-         this.startThread.iterate();
       }
+
    }
 
    public void stopLauncher() {
@@ -182,13 +188,15 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
    private void changeState(LoginForm.LoginState state) {
       if (state == null) {
          throw new NullPointerException();
-      } else if (this.state != state) {
-         this.state = state;
-         Iterator var3 = this.stateListeners.iterator();
+      } else {
+         if (this.state != state) {
+            this.state = state;
+            Iterator var3 = this.stateListeners.iterator();
 
-         while(var3.hasNext()) {
-            LoginForm.LoginStateListener listener = (LoginForm.LoginStateListener)var3.next();
-            listener.loginStateChanged(state);
+            while(var3.hasNext()) {
+               LoginForm.LoginStateListener listener = (LoginForm.LoginStateListener)var3.next();
+               listener.loginStateChanged(state);
+            }
          }
 
       }
@@ -281,8 +289,13 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
    public void onMinecraftClose() {
       Blocker.unblock((Blockable)this, (Object)"launch");
       this.changeState(LoginForm.LoginState.STOPPED);
-      this.tlauncher.getVersionManager().startRefresh(true);
-      this.scene.infoPanel.updateNotice(false);
+      if (this.autologin.isEnabled()) {
+         this.tlauncher.getVersionManager().asyncRefresh();
+         this.tlauncher.getUpdater().asyncFindUpdate();
+      } else {
+         this.tlauncher.getVersionManager().asyncRefresh(true);
+      }
+
    }
 
    public void onMinecraftError(Throwable e) {
@@ -300,36 +313,19 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       this.changeState(LoginForm.LoginState.STOPPED);
    }
 
-   class LoginAbortedException extends Exception {
-   }
-
-   public abstract static class LoginListener implements LoginForm.LoginProcessListener {
-      public abstract void logginingIn() throws LoginException;
-
-      public void loginFailed() {
+   class StopThread extends LoopedThread {
+      StopThread() {
+         this.startAndWait();
       }
 
-      public void loginSucceed() {
+      protected void iterateOnce() {
+         try {
+            LoginForm.this.stopProcess();
+         } catch (Throwable var2) {
+            Alert.showError(var2);
+         }
+
       }
-   }
-
-   public interface LoginProcessListener {
-      void logginingIn() throws LoginException;
-
-      void loginFailed();
-
-      void loginSucceed();
-   }
-
-   public static enum LoginState {
-      LAUNCHING,
-      STOPPING,
-      STOPPED,
-      LAUNCHED;
-   }
-
-   public interface LoginStateListener {
-      void loginStateChanged(LoginForm.LoginState var1);
    }
 
    class StartThread extends LoopedThread {
@@ -347,18 +343,35 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       }
    }
 
-   class StopThread extends LoopedThread {
-      StopThread() {
-         this.startAndWait();
+   public interface LoginStateListener {
+      void loginStateChanged(LoginForm.LoginState var1);
+   }
+
+   public static enum LoginState {
+      LAUNCHING,
+      STOPPING,
+      STOPPED,
+      LAUNCHED;
+   }
+
+   public interface LoginProcessListener {
+      void logginingIn() throws LoginException;
+
+      void loginFailed();
+
+      void loginSucceed();
+   }
+
+   public abstract static class LoginListener implements LoginForm.LoginProcessListener {
+      public abstract void logginingIn() throws LoginException;
+
+      public void loginFailed() {
       }
 
-      protected void iterateOnce() {
-         try {
-            LoginForm.this.stopProcess();
-         } catch (Throwable var2) {
-            Alert.showError(var2);
-         }
-
+      public void loginSucceed() {
       }
+   }
+
+   class LoginAbortedException extends Exception {
    }
 }

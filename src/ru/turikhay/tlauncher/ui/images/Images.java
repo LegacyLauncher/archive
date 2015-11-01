@@ -1,32 +1,65 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.util.Hashtable;
+import java.util.Map;
 import javax.imageio.ImageIO;
 import ru.turikhay.tlauncher.exceptions.TLauncherException;
+import ru.turikhay.util.SwingUtil;
 
 public class Images {
+   private static final Map loadedImages = new Hashtable();
+   private static final Map magnifiedImages = new Hashtable();
    private static final boolean THROW_IF_ERROR = true;
 
    public static BufferedImage loadImage(URL url, boolean throwIfError) {
       if (url == null) {
          throw new NullPointerException("URL is NULL");
       } else {
-         try {
-            return ImageIO.read(url);
-         } catch (Exception var3) {
-            if (throwIfError) {
-               throw new TLauncherException("Cannot load required image: " + url, var3);
-            } else {
-               var3.printStackTrace();
+         WeakReference ref = (WeakReference)loadedImages.get(url);
+         BufferedImage image = ref == null ? null : (BufferedImage)ref.get();
+         if (image != null) {
+            return image;
+         } else {
+            try {
+               image = ImageIO.read(url);
+            } catch (Exception var5) {
+               if (throwIfError) {
+                  throw new TLauncherException("Cannot load required image: " + url, var5);
+               }
+
+               var5.printStackTrace();
                return null;
             }
+
+            loadedImages.put(url, new WeakReference(image));
+            return image;
          }
       }
    }
 
    public static BufferedImage loadImage(URL url) {
       return loadImage(url, true);
+   }
+
+   public static Image loadMagnifiedImage(URL url, boolean throwIfError) {
+      WeakReference ref = (WeakReference)magnifiedImages.get(url);
+      Image cached = ref == null ? null : (Image)ref.get();
+      if (cached != null) {
+         return cached;
+      } else {
+         BufferedImage image = loadImage(url, throwIfError);
+         Image scaled = image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
+         magnifiedImages.put(url, new WeakReference(scaled));
+         return scaled;
+      }
+   }
+
+   public static Image loadMagnifiedImage(URL url) {
+      return loadMagnifiedImage(url, true);
    }
 
    public static BufferedImage getImage(String uri, boolean throwIfError) {
@@ -55,6 +88,14 @@ public class Images {
 
    public static ImageIcon getIcon(String uri) {
       return getIcon(uri, 0, 0);
+   }
+
+   public static ImageIcon getScaledIcon(String uri, int width, int height) {
+      return getIcon(uri, SwingUtil.magnify(width), SwingUtil.magnify(height));
+   }
+
+   public static ImageIcon getScaledIcon(String uri, int widthNheight) {
+      return getIcon(uri, SwingUtil.magnify(widthNheight));
    }
 
    public static URL getRes(String uri, boolean throwIfNull) {

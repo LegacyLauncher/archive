@@ -13,7 +13,7 @@ public class LocalizableTextField extends ExtendedTextField implements Localizab
       super(panel, (String)null, value);
       this.setValue(value);
       this.setPlaceholder(placeholderPath);
-      this.setFont(this.getFont().deriveFont(TLauncherFrame.fontSize));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
    }
 
    public LocalizableTextField(CenterPanel panel, String placeholderPath) {

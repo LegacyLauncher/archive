@@ -13,14 +13,14 @@ import java.awt.event.ComponentListener;
 import javax.swing.JProgressBar;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class ProgressBar extends JProgressBar {
-   public static int DEFAULT_HEIGHT = 20;
-   private static int BORDER_SIZE = 10;
+   public static int DEFAULT_HEIGHT = SwingUtil.magnify(20);
+   private static int BORDER_SIZE = SwingUtil.magnify(10);
    private static int EDGE_CHARS = 50;
    private static int CENTER_CHARS = 30;
-   private static float DEFAULT_FONT_SIZE;
    private static final long serialVersionUID = -8095192709934629794L;
    private final Object sync;
    private final Component parent;
@@ -34,10 +34,6 @@ public class ProgressBar extends JProgressBar {
    private int cS_x;
    private int eS_x;
    private int oldWidth;
-
-   static {
-      DEFAULT_FONT_SIZE = TLauncherFrame.fontSize;
-   }
 
    public ProgressBar(Component parentComp) {
       this.sync = new Object();
@@ -59,7 +55,7 @@ public class ProgressBar extends JProgressBar {
          });
       }
 
-      this.setFont(this.getFont().deriveFont(DEFAULT_FONT_SIZE));
+      this.setFont(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
       this.setOpaque(false);
    }
 
@@ -71,6 +67,7 @@ public class ProgressBar extends JProgressBar {
       if (this.parent != null) {
          this.setPreferredSize(new Dimension(this.parent.getWidth(), DEFAULT_HEIGHT));
       }
+
    }
 
    public void setStrings(String west, String center, String east, boolean acceptNull, boolean repaint) {
@@ -112,7 +109,7 @@ public class ProgressBar extends JProgressBar {
 
    public void setCenterString(String string, boolean update) {
       string = StringUtil.cut(string, CENTER_CHARS);
-      this.cS_changed = this.cS != string;
+      this.cS_changed = string == null ? this.cS == null : !string.equals(this.cS);
       this.cS = string;
       if (this.cS_changed && update) {
          this.repaint();
@@ -188,6 +185,7 @@ public class ProgressBar extends JProgressBar {
          this.drawString(g, this.cS, this.cS_x);
          this.drawString(g, this.eS, this.eS_x);
       }
+
    }
 
    private void drawString(Graphics g, String s, int x) {
@@ -204,16 +202,18 @@ public class ProgressBar extends JProgressBar {
          g.setColor(Color.black);
          g.drawString(s, x, y);
       }
+
    }
 
    public void update(Graphics g) {
       try {
          super.update(g);
-      } catch (Exception var4) {
-         U.log("Error updating progress bar:", var4.toString());
+      } catch (Exception var6) {
+         U.log("Error updating progress bar:", var6.toString());
          return;
       }
 
+      Object e = this.sync;
       synchronized(this.sync) {
          this.draw(g);
       }
@@ -222,11 +222,12 @@ public class ProgressBar extends JProgressBar {
    public void paint(Graphics g) {
       try {
          super.paint(g);
-      } catch (Exception var4) {
-         U.log("Error paining progress bar:", var4.toString());
+      } catch (Exception var6) {
+         U.log("Error paining progress bar:", var6.toString());
          return;
       }
 
+      Object e = this.sync;
       synchronized(this.sync) {
          this.draw(g);
       }

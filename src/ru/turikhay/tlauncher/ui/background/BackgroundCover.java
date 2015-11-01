@@ -32,6 +32,7 @@ public class BackgroundCover extends ExtendedPanel implements ResizeableComponen
    }
 
    public void makeCover(boolean animate) {
+      Object var2 = this.animationLock;
       synchronized(this.animationLock) {
          if (animate) {
             while(this.opacity < 1.0D) {
@@ -49,6 +50,7 @@ public class BackgroundCover extends ExtendedPanel implements ResizeableComponen
    }
 
    public void removeCover(boolean animate) {
+      Object var2 = this.animationLock;
       synchronized(this.animationLock) {
          if (animate) {
             while(this.opacity > 0.0D) {

@@ -37,7 +37,7 @@ public class QuickParameterListenerThread extends LoopedThread {
 
    protected void iterateOnce() {
       int[] initial = this.paramGetter.getIntegerArray();
-      boolean var3 = false;
+      boolean var2 = false;
 
       boolean equal;
       do {
@@ -45,8 +45,8 @@ public class QuickParameterListenerThread extends LoopedThread {
          int[] newvalue = this.paramGetter.getIntegerArray();
          equal = true;
 
-         for(int i = 0; i < initial.length; ++i) {
-            if (initial[i] != newvalue[i]) {
+         for(int var5 = 0; var5 < initial.length; ++var5) {
+            if (initial[var5] != newvalue[var5]) {
                equal = false;
             }
          }

@@ -41,7 +41,7 @@ public class VersionSyncInfo {
       this(info.getLocal(), info.getRemote());
    }
 
-   private VersionSyncInfo() {
+   protected VersionSyncInfo() {
       this.localVersion = null;
       this.remoteVersion = null;
    }
@@ -82,13 +82,7 @@ public class VersionSyncInfo {
    }
 
    public String getID() {
-      if (this.id != null) {
-         return this.id;
-      } else if (this.localVersion != null) {
-         return this.localVersion.getID();
-      } else {
-         return this.remoteVersion != null ? this.remoteVersion.getID() : null;
-      }
+      return this.id != null ? this.id : (this.localVersion != null ? this.localVersion.getID() : (this.remoteVersion != null ? this.remoteVersion.getID() : null));
    }
 
    public void setID(String id) {
@@ -116,13 +110,7 @@ public class VersionSyncInfo {
    }
 
    public boolean isUpToDate() {
-      if (this.localVersion == null) {
-         return false;
-      } else if (this.remoteVersion == null) {
-         return true;
-      } else {
-         return this.localVersion.getUpdatedTime().compareTo(this.remoteVersion.getUpdatedTime()) >= 0;
-      }
+      return this.localVersion == null ? false : (this.remoteVersion == null ? true : this.localVersion.getUpdatedTime().compareTo(this.remoteVersion.getUpdatedTime()) >= 0);
    }
 
    public String toString() {
@@ -190,7 +178,7 @@ public class VersionSyncInfo {
    }
 
    Set getRequiredDownloadables(OS os, File targetDirectory, boolean force, boolean ely) throws IOException {
-      Set neededFiles = new HashSet();
+      HashSet neededFiles = new HashSet();
       CompleteVersion version = this.getCompleteVersion(force);
       if (ely) {
          version = TLauncher.getInstance().getElyManager().elyficate(version);
@@ -204,7 +192,7 @@ public class VersionSyncInfo {
 
          while(true) {
             Library library;
-            File local;
+            File local1;
             do {
                String file;
                do {
@@ -215,19 +203,19 @@ public class VersionSyncInfo {
                   library = (Library)var9.next();
                   file = null;
                   if (library.getNatives() != null) {
-                     String natives = (String)library.getNatives().get(os);
-                     if (natives != null) {
-                        file = library.getArtifactPath(natives);
+                     String local = (String)library.getNatives().get(os);
+                     if (local != null) {
+                        file = library.getArtifactPath(local);
                      }
                   } else {
                      file = library.getArtifactPath();
                   }
                } while(file == null);
 
-               local = new File(targetDirectory, "libraries/" + file);
-            } while(!force && local.isFile() && (library.getChecksum() == null || library.getChecksum().equals(FileUtil.getChecksum(local, "SHA-1"))));
+               local1 = new File(targetDirectory, "libraries/" + file);
+            } while(!force && local1.isFile() && (library.getChecksum() == null || library.getChecksum().equals(FileUtil.getChecksum(local1, "SHA-1"))));
 
-            neededFiles.add(library.getDownloadable(source, local, os));
+            neededFiles.add(library.getDownloadable(source, local1, os));
          }
       }
    }

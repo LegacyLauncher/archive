@@ -28,6 +28,10 @@ public class LocalVersionList extends StreamVersionList {
       return this.baseDirectory;
    }
 
+   public File getVersionsDirectory() {
+      return this.baseVersionsDir;
+   }
+
    public void setBaseDirectory(File directory) throws IOException {
       if (directory == null) {
          throw new IllegalArgumentException("Base directory is NULL!");
@@ -54,22 +58,22 @@ public class LocalVersionList extends StreamVersionList {
             File jsonFile = new File(directory, id + ".json");
             if (directory.isDirectory() && jsonFile.isFile()) {
                try {
-                  CompleteVersion version = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
-                  if (version == null) {
+                  CompleteVersion ex = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
+                  if (ex == null) {
                      this.log(new Object[]{"JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local."});
                   } else {
-                     version.setID(id);
-                     version.setSource(Repository.LOCAL_VERSION_REPO);
-                     version.setVersionList(this);
-                     this.addVersion(version);
+                     ex.setID(id);
+                     ex.setSource(Repository.LOCAL_VERSION_REPO);
+                     ex.setVersionList(this);
+                     this.addVersion(ex);
                   }
                } catch (Exception var9) {
                   this.log(new Object[]{"Error occurred while parsing local version", id, var9});
                }
             }
          }
-
       }
+
    }
 
    public void saveVersion(CompleteVersion version) throws IOException {
@@ -92,18 +96,18 @@ public class LocalVersionList extends StreamVersionList {
                Iterator var6 = version.getClassPath(this.baseDirectory).iterator();
 
                while(var6.hasNext()) {
-                  File library = (File)var6.next();
-                  FileUtil.deleteFile(library);
+                  File nativeLib = (File)var6.next();
+                  FileUtil.deleteFile(nativeLib);
                }
 
                var6 = version.getNatives().iterator();
 
                while(var6.hasNext()) {
-                  String nativeLib = (String)var6.next();
-                  FileUtil.deleteFile(new File(this.baseDirectory, nativeLib));
+                  String nativeLib1 = (String)var6.next();
+                  FileUtil.deleteFile(new File(this.baseDirectory, nativeLib1));
                }
-
             }
+
          }
       }
    }

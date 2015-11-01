@@ -13,7 +13,7 @@ public class LimitedCapacityList {
 
    public LimitedCapacityList(Class clazz, int maxSize) {
       this.clazz = clazz;
-      this.items = (Object[])Array.newInstance(clazz, maxSize);
+      this.items = (Object[])((Object[])Array.newInstance(clazz, maxSize));
    }
 
    public Object add(Object value) {
@@ -43,7 +43,7 @@ public class LimitedCapacityList {
    }
 
    public Object[] getItems() {
-      Object[] result = (Object[])Array.newInstance(this.clazz, this.size);
+      Object[] result = (Object[])((Object[])Array.newInstance(this.clazz, this.size));
       this.locks.readLock().lock();
 
       for(int i = 0; i < this.size; ++i) {

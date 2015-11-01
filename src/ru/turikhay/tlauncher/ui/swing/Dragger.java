@@ -92,6 +92,7 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
          config.set(this.key, new IntegerArray(new int[]{x, y}));
          U.log(x, y);
       }
+
    }
 
    public void updateCoords() {
@@ -126,25 +127,25 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
       if (!ready) {
          if (config == null) {
             throw new NullPointerException("config");
-         } else if (maxPoint == null) {
+         }
+
+         if (maxPoint == null) {
             throw new NullPointerException("maxPoint");
-         } else {
-            Dragger.config = config;
-            Dragger.maxPoint = maxPoint;
-            ready = true;
-            Iterator var3 = draggers.iterator();
+         }
 
-            while(var3.hasNext()) {
-               SoftReference dragger = (SoftReference)var3.next();
-               if (dragger.get() == null) {
-                  U.log("dragger has been deleted :(");
-               } else {
-                  ((Dragger)dragger.get()).ready();
-               }
+         ready = true;
+         Iterator var3 = draggers.iterator();
+
+         while(var3.hasNext()) {
+            SoftReference dragger = (SoftReference)var3.next();
+            if (dragger.get() == null) {
+               U.log("dragger has been deleted :(");
+            } else {
+               ((Dragger)dragger.get()).ready();
             }
-
          }
       }
+
    }
 
    public static synchronized void update() {
@@ -169,12 +170,14 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
             this.startPoint[0] = e.getX();
             this.startPoint[1] = e.getY();
          }
+
       }
 
       public void mouseReleased(MouseEvent e) {
          if (Dragger.this.isEnabled()) {
             Dragger.this.dragComponent(Dragger.this.parent.getX() + e.getX() - this.startPoint[0], Dragger.this.parent.getY() + e.getY() - this.startPoint[1]);
          }
+
       }
    }
 }

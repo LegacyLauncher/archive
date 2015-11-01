@@ -49,11 +49,11 @@ public class ComponentManager {
             }
          }
 
-         return (LauncherComponent)this.rawLoadComponent(classOfT);
+         return this.rawLoadComponent(classOfT);
       }
    }
 
-   private Object rawLoadComponent(Class classOfT) {
+   private LauncherComponent rawLoadComponent(Class classOfT) {
       if (classOfT == null) {
          throw new NullPointerException();
       } else if (!LauncherComponent.class.isAssignableFrom(classOfT)) {
@@ -75,7 +75,7 @@ public class ComponentManager {
 
          LauncherComponent component = (LauncherComponent)instance;
          this.components.add(component);
-         return instance;
+         return component;
       }
    }
 
@@ -85,14 +85,16 @@ public class ComponentManager {
       } else {
          Iterator var3 = this.components.iterator();
 
-         while(var3.hasNext()) {
-            LauncherComponent component = (LauncherComponent)var3.next();
-            if (classOfT.isInstance(component)) {
-               return component;
+         LauncherComponent component;
+         do {
+            if (!var3.hasNext()) {
+               throw new IllegalArgumentException("Cannot find the component!");
             }
-         }
 
-         throw new IllegalArgumentException("Cannot find the component!");
+            component = (LauncherComponent)var3.next();
+         } while(!classOfT.isInstance(component));
+
+         return component;
       }
    }
 
@@ -102,19 +104,21 @@ public class ComponentManager {
       } else {
          Iterator var3 = this.components.iterator();
 
-         while(var3.hasNext()) {
-            LauncherComponent component = (LauncherComponent)var3.next();
-            if (classOfT.isInstance(component)) {
-               return true;
+         LauncherComponent component;
+         do {
+            if (!var3.hasNext()) {
+               return false;
             }
-         }
 
-         return false;
+            component = (LauncherComponent)var3.next();
+         } while(!classOfT.isInstance(component));
+
+         return true;
       }
    }
 
    public List getComponentsOf(Class classOfE) {
-      List list = new ArrayList();
+      ArrayList list = new ArrayList();
       if (classOfE == null) {
          return list;
       } else {

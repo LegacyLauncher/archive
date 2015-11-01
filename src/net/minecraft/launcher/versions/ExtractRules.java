@@ -38,14 +38,16 @@ public class ExtractRules {
       } else {
          Iterator var3 = this.exclude.iterator();
 
-         while(var3.hasNext()) {
-            String rule = (String)var3.next();
-            if (path.startsWith(rule)) {
-               return false;
+         String rule;
+         do {
+            if (!var3.hasNext()) {
+               return true;
             }
-         }
 
-         return true;
+            rule = (String)var3.next();
+         } while(!path.startsWith(rule));
+
+         return false;
       }
    }
 }

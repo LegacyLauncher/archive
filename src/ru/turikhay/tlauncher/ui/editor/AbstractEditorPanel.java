@@ -46,8 +46,11 @@ public abstract class AbstractEditorPanel extends CenterPanel {
 
    protected void setValid(EditorHandler handler, boolean valid) {
       Color color = valid ? this.getTheme().getBackground() : this.getTheme().getFailure();
-      handler.getComponent().setOpaque(!valid);
-      handler.getComponent().setBackground(color);
+      if (handler.getComponent() != null) {
+         handler.getComponent().setOpaque(!valid);
+         handler.getComponent().setBackground(color);
+      }
+
    }
 
    protected JComponent createTip(String label, boolean warning) {

@@ -2,6 +2,8 @@ package net.minecraft.launcher.updater;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
@@ -81,8 +83,19 @@ public class VersionFilter {
       } else if (!this.types.contains(releaseType)) {
          return false;
       } else {
-         ReleaseType.SubType subType = ReleaseType.SubType.get(v);
-         return subType == null ? true : this.subTypes.contains(subType);
+         List subTypeList = ReleaseType.SubType.get(v);
+         Iterator i$ = subTypeList.iterator();
+
+         ReleaseType.SubType subType;
+         do {
+            if (!i$.hasNext()) {
+               return true;
+            }
+
+            subType = (ReleaseType.SubType)i$.next();
+         } while(this.subTypes.contains(subType));
+
+         return false;
       }
    }
 

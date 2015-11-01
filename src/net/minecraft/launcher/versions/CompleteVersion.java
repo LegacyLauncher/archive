@@ -173,7 +173,11 @@ public class CompleteVersion implements Version, Cloneable {
    }
 
    public String toString() {
-      return this.getClass().getSimpleName() + "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", class=" + this.mainClass + ", minimumVersion=" + this.minimumLauncherVersion + ", assets='" + this.assets + "', source=" + this.source + ", list=" + this.list + ", libraries=" + this.libraries + "}";
+      return this.getClass().getSimpleName() + this.debugString();
+   }
+
+   public String debugString() {
+      return "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", class=" + this.mainClass + ", minimumVersion=" + this.minimumLauncherVersion + ", assets='" + this.assets + "', source=" + this.source + ", list=" + this.list + ", libraries=" + this.libraries + "}";
    }
 
    public File getFile(File base) {
@@ -186,20 +190,22 @@ public class CompleteVersion implements Version, Cloneable {
       } else {
          Iterator var2 = this.rules.iterator();
 
-         while(var2.hasNext()) {
-            Rule rule = (Rule)var2.next();
-            Rule.Action action = rule.getAppliedAction();
-            if (action == Rule.Action.DISALLOW) {
-               return false;
+         Rule.Action action;
+         do {
+            if (!var2.hasNext()) {
+               return true;
             }
-         }
 
-         return true;
+            Rule rule = (Rule)var2.next();
+            action = rule.getAppliedAction();
+         } while(action != Rule.Action.DISALLOW);
+
+         return false;
       }
    }
 
    public Collection getRelevantLibraries() {
-      List result = new ArrayList();
+      ArrayList result = new ArrayList();
       Iterator var3 = this.libraries.iterator();
 
       while(var3.hasNext()) {
@@ -214,7 +220,7 @@ public class CompleteVersion implements Version, Cloneable {
 
    public Collection getClassPath(OS os, File base) {
       Collection libraries = this.getRelevantLibraries();
-      Collection result = new ArrayList();
+      ArrayList result = new ArrayList();
       Iterator var6 = libraries.iterator();
 
       while(var6.hasNext()) {
@@ -234,7 +240,7 @@ public class CompleteVersion implements Version, Cloneable {
 
    public Collection getNatives(OS os) {
       Collection libraries = this.getRelevantLibraries();
-      Collection result = new ArrayList();
+      ArrayList result = new ArrayList();
       Iterator var5 = libraries.iterator();
 
       while(var5.hasNext()) {
@@ -253,7 +259,7 @@ public class CompleteVersion implements Version, Cloneable {
    }
 
    public Set getRequiredFiles(OS os) {
-      Set neededFiles = new HashSet();
+      HashSet neededFiles = new HashSet();
       Iterator var4 = this.getRelevantLibraries().iterator();
 
       while(var4.hasNext()) {
@@ -273,7 +279,7 @@ public class CompleteVersion implements Version, Cloneable {
 
    public Collection getExtractFiles(OS os) {
       Collection libraries = this.getRelevantLibraries();
-      Collection result = new ArrayList();
+      ArrayList result = new ArrayList();
       Iterator var5 = libraries.iterator();
 
       while(var5.hasNext()) {
@@ -301,19 +307,22 @@ public class CompleteVersion implements Version, Cloneable {
       } else if (this.inheritsFrom == null) {
          return this;
       } else if (inheristance.contains(this.id)) {
-         throw new IllegalArgumentException(this.id + " should be already resolved.");
+         throw new CompleteVersion.DuplicateInheritanceException();
       } else {
          inheristance.add(this.id);
          VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(this.inheritsFrom);
+         if (parentSyncInfo == null) {
+            throw new CompleteVersion.ParentNotFoundException();
+         } else {
+            CompleteVersion result;
+            try {
+               result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
+            } catch (CloneNotSupportedException var7) {
+               throw new RuntimeException(var7);
+            }
 
-         CompleteVersion result;
-         try {
-            result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
-         } catch (CloneNotSupportedException var7) {
-            throw new RuntimeException(var7);
+            return this.copyInto(result);
          }
-
-         return this.copyInto(result);
       }
    }
 
@@ -397,6 +406,36 @@ public class CompleteVersion implements Version, Cloneable {
       U.log("[Version:" + this.id + "]", o);
    }
 
+   public class ParentNotFoundException extends CompleteVersion.InheritanceException {
+      public ParentNotFoundException() {
+         super();
+      }
+   }
+
+   public class InheritanceException extends IOException {
+      InheritanceException() {
+         super(CompleteVersion.this.id + " should inherit from " + CompleteVersion.this.inheritsFrom);
+      }
+
+      public String getID() {
+         return CompleteVersion.this.id;
+      }
+
+      public String getInheritsFrom() {
+         return CompleteVersion.this.inheritsFrom;
+      }
+
+      public CompleteVersion getVersion() {
+         return CompleteVersion.this;
+      }
+   }
+
+   public class DuplicateInheritanceException extends CompleteVersion.InheritanceException {
+      public DuplicateInheritanceException() {
+         super();
+      }
+   }
+
    public static class CompleteVersionSerializer implements JsonSerializer, JsonDeserializer {
       private final Gson defaultContext;
 
@@ -413,15 +452,15 @@ public class CompleteVersion implements Version, Cloneable {
          JsonObject object = elem.getAsJsonObject();
          JsonElement originalId = object.get("original_id");
          if (originalId != null && originalId.isJsonPrimitive()) {
-            String jar = originalId.getAsString();
+            String unnecessaryEntries = originalId.getAsString();
             object.remove("original_id");
-            object.addProperty("jar", jar);
+            object.addProperty("jar", unnecessaryEntries);
          }
 
-         JsonElement unnecessaryEntries = object.get("unnecessaryEntries");
-         if (unnecessaryEntries != null && unnecessaryEntries.isJsonArray()) {
+         JsonElement unnecessaryEntries1 = object.get("unnecessaryEntries");
+         if (unnecessaryEntries1 != null && unnecessaryEntries1.isJsonArray()) {
             object.remove("unnecessaryEntries");
-            object.add("deleteEntries", unnecessaryEntries);
+            object.add("deleteEntries", unnecessaryEntries1);
          }
 
          CompleteVersion version = (CompleteVersion)this.defaultContext.fromJson(elem, CompleteVersion.class);

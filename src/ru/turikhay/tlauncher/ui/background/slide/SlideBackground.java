@@ -79,8 +79,8 @@ public class SlideBackground extends Background {
          } else {
             this.vImage = nullImageReference;
          }
-
       }
+
    }
 
    public void paintBackground(Graphics g) {
@@ -101,5 +101,6 @@ public class SlideBackground extends Background {
          double y = (windowHeight - height) / 2.0D;
          g.drawImage(_vImage, (int)x, (int)y, (int)width, (int)height, (ImageObserver)null);
       }
+
    }
 }

@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import net.minecraft.launcher.updater.VersionSyncInfo;
@@ -32,10 +31,10 @@ public abstract class ServerHyperlinkProcessor extends HyperlinkProcessor implem
                Alert.showLocError("ad.server.error", new RuntimeException("\"" + link + "\"", var3));
             }
          }
-
       } else {
          HyperlinkProcessor.defaultProcessor.process(link);
       }
+
    }
 
    private void openServer(String link) {
@@ -44,57 +43,57 @@ public abstract class ServerHyperlinkProcessor extends HyperlinkProcessor implem
       LocalizableMenuItem openWith = new LocalizableMenuItem("ad.server.openwith", new Object[]{server.getName()});
       openWith.setEnabled(false);
       this.popup.add(openWith);
-      List list = new ArrayList();
-      Iterator var6 = TLauncher.getInstance().getVersionManager().getVersions().iterator();
+      ArrayList list = new ArrayList();
+      Iterator copyAddress = TLauncher.getInstance().getVersionManager().getVersions().iterator();
 
-      while(var6.hasNext()) {
-         VersionSyncInfo syncInfo = (VersionSyncInfo)var6.next();
-         int index = server.getVersions().indexOf(syncInfo.getID());
-         if (index != -1) {
-            list.add(syncInfo);
+      while(copyAddress.hasNext()) {
+         VersionSyncInfo currentVersion = (VersionSyncInfo)copyAddress.next();
+         int requiredAccount = server.getVersions().indexOf(currentVersion.getID());
+         if (requiredAccount != -1) {
+            list.add(currentVersion);
          }
       }
 
-      for(int i = list.size() - 1; i > -1; --i) {
-         final VersionSyncInfo syncInfo = (VersionSyncInfo)list.get(i);
-         JMenuItem item = new JMenuItem(syncInfo.getID());
-         item.addActionListener(new ActionListener() {
+      for(int var11 = list.size() - 1; var11 > -1; --var11) {
+         final VersionSyncInfo var13 = (VersionSyncInfo)list.get(var11);
+         JMenuItem var15 = new JMenuItem(var13.getID());
+         var15.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               ServerHyperlinkProcessor.this.open(syncInfo, server);
+               ServerHyperlinkProcessor.this.open(var13, server);
             }
          });
-         this.popup.add(item);
+         this.popup.add(var15);
       }
 
-      LocalizableMenuItem currentVersion = new LocalizableMenuItem("ad.server.openwith.current", new Object[]{server.getName()});
-      currentVersion.addActionListener(new ActionListener() {
+      LocalizableMenuItem var12 = new LocalizableMenuItem("ad.server.openwith.current", new Object[]{server.getName()});
+      var12.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             ServerHyperlinkProcessor.this.open((VersionSyncInfo)null, server);
          }
       });
-      this.popup.add(currentVersion);
+      this.popup.add(var12);
       this.popup.addSeparator();
-      LocalizableMenuItem copyAddress = new LocalizableMenuItem("ad.server.copy");
-      copyAddress.addActionListener(new ActionListener() {
+      LocalizableMenuItem var14 = new LocalizableMenuItem("ad.server.copy");
+      var14.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             try {
-               StringSelection stringSelection = new StringSelection(server.getAddress());
-               Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, (ClipboardOwner)null);
+               StringSelection rE = new StringSelection(server.getAddress());
+               Toolkit.getDefaultToolkit().getSystemClipboard().setContents(rE, (ClipboardOwner)null);
             } catch (RuntimeException var3) {
                Alert.showMessage("IP:", (String)null, server.getAddress());
             }
 
          }
       });
-      this.popup.add(copyAddress);
+      this.popup.add(var14);
       if (!server.getAllowedAccountTypeList().isEmpty()) {
-         LocalizableMenuItem requiredAccount;
+         LocalizableMenuItem var16;
          label46: {
             StringBuilder types;
             Iterator var10;
             switch(server.getAllowedAccountTypeList().size()) {
             case 1:
-               requiredAccount = new LocalizableMenuItem("ad.server.required-account", new Object[]{Localizable.get("account.type." + server.getAllowedAccountTypeList().get(0))});
+               var16 = new LocalizableMenuItem("ad.server.required-account", new Object[]{Localizable.get("account.type." + server.getAllowedAccountTypeList().get(0))});
                break label46;
             default:
                types = new StringBuilder();
@@ -106,11 +105,11 @@ public abstract class ServerHyperlinkProcessor extends HyperlinkProcessor implem
                types.append(Localizable.get("account.type." + type)).append(", ");
             }
 
-            requiredAccount = new LocalizableMenuItem("ad.server.required-account.multiple", new Object[]{types.substring(0, types.length() - ", ".length())});
+            var16 = new LocalizableMenuItem("ad.server.required-account.multiple", new Object[]{types.substring(0, types.length() - ", ".length())});
          }
 
-         requiredAccount.setEnabled(false);
-         this.popup.add(requiredAccount);
+         var16.setEnabled(false);
+         this.popup.add(var16);
       }
 
       this.showPopup(this.popup);

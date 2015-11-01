@@ -67,6 +67,7 @@ public class VersionManager extends InterruptibleComponent {
    }
 
    public Map getLatestVersions() {
+      Object var1 = this.versionFlushLock;
       synchronized(this.versionFlushLock) {
          return Collections.unmodifiableMap(this.latestVersions);
       }
@@ -81,34 +82,37 @@ public class VersionManager extends InterruptibleComponent {
       } else {
          this.log(new Object[]{"Refreshing versions remotely..."});
          this.latestVersions.clear();
+         List lock = this.listeners;
          synchronized(this.listeners) {
-            Iterator var5 = this.listeners.iterator();
+            Iterator e = this.listeners.iterator();
 
-            while(var5.hasNext()) {
-               VersionManagerListener listener = (VersionManagerListener)var5.next();
-               listener.onVersionsRefreshing(this);
+            while(e.hasNext()) {
+               VersionManagerListener result = (VersionManagerListener)e.next();
+               result.onVersionsRefreshing(this);
             }
          }
       }
 
-      Object lock = new Object();
-      Time.start(lock);
-      Map result = null;
-      Throwable e = null;
+      Object lock1 = new Object();
+      Time.start(lock1);
+      Map result1 = null;
+      Throwable e1 = null;
 
       try {
-         result = this.refreshVersions(local);
-      } catch (Throwable var12) {
-         e = var12;
+         result1 = this.refreshVersions(local);
+      } catch (Throwable var17) {
+         e1 = var17;
       }
 
       if (this.isCancelled(refreshID)) {
-         this.log(new Object[]{"Version refresh has been cancelled (" + Time.stop(lock) + " ms)"});
+         this.log(new Object[]{"Version refresh has been cancelled (" + Time.stop(lock1) + " ms)"});
          return false;
       } else {
+         List e01;
+         VersionManagerListener listener1;
          Iterator var8;
-         VersionManagerListener listener;
-         if (e != null) {
+         if (e1 != null) {
+            e01 = this.listeners;
             synchronized(this.listeners) {
                var8 = this.listeners.iterator();
 
@@ -117,23 +121,24 @@ public class VersionManager extends InterruptibleComponent {
                      break;
                   }
 
-                  listener = (VersionManagerListener)var8.next();
-                  listener.onVersionsRefreshingFailed(this);
+                  listener1 = (VersionManagerListener)var8.next();
+                  listener1.onVersionsRefreshingFailed(this);
                }
             }
 
-            this.log(new Object[]{"Cannot refresh versions (" + Time.stop(lock) + " ms)", e});
+            this.log(new Object[]{"Cannot refresh versions (" + Time.stop(lock1) + " ms)", e1});
             return true;
          } else {
-            if (result != null) {
+            if (result1 != null) {
+               Object e0 = this.versionFlushLock;
                synchronized(this.versionFlushLock) {
-                  var8 = result.keySet().iterator();
+                  var8 = result1.keySet().iterator();
 
                   while(var8.hasNext()) {
-                     AsyncObject object = (AsyncObject)var8.next();
-                     VersionList.RawVersionList rawList = (VersionList.RawVersionList)result.get(object);
+                     AsyncObject listener = (AsyncObject)var8.next();
+                     VersionList.RawVersionList rawList = (VersionList.RawVersionList)result1.get(listener);
                      if (rawList != null) {
-                        VersionManager.AsyncRawVersionListObject listObject = (VersionManager.AsyncRawVersionListObject)object;
+                        VersionManager.AsyncRawVersionListObject listObject = (VersionManager.AsyncRawVersionListObject)listener;
                         RemoteVersionList versionList = listObject.getVersionList();
                         versionList.refreshVersions(rawList);
                         this.latestVersions.putAll(versionList.getLatestVersions());
@@ -143,14 +148,15 @@ public class VersionManager extends InterruptibleComponent {
             }
 
             this.latestVersions = U.sortMap(this.latestVersions, ReleaseType.values());
-            this.log(new Object[]{"Versions has been refreshed (" + Time.stop(lock) + " ms)"});
+            this.log(new Object[]{"Versions has been refreshed (" + Time.stop(lock1) + " ms)"});
             this.refreshList[refreshID] = false;
+            e01 = this.listeners;
             synchronized(this.listeners) {
                var8 = this.listeners.iterator();
 
                while(var8.hasNext()) {
-                  listener = (VersionManagerListener)var8.next();
-                  listener.onVersionsRefreshed(this);
+                  listener1 = (VersionManagerListener)var8.next();
+                  listener1.onVersionsRefreshed(this);
                }
 
                return true;
@@ -175,7 +181,12 @@ public class VersionManager extends InterruptibleComponent {
    public void asyncRefresh(final boolean local) {
       AsyncThread.execute(new Runnable() {
          public void run() {
-            VersionManager.this.startRefresh(local);
+            try {
+               VersionManager.this.startRefresh(local);
+            } catch (Exception var2) {
+               VersionManager.this.log(new Object[]{"Exception occured refreshing:", var2});
+            }
+
          }
       });
    }
@@ -190,8 +201,8 @@ public class VersionManager extends InterruptibleComponent {
          return null;
       } else {
          AsyncObjectContainer container = new AsyncObjectContainer();
-         RemoteVersionList[] var6;
-         int var5 = (var6 = this.remoteLists).length;
+         RemoteVersionList[] var6 = this.remoteLists;
+         int var5 = this.remoteLists.length;
 
          for(int var4 = 0; var4 < var5; ++var4) {
             RemoteVersionList remoteList = var6[var4];
@@ -217,7 +228,11 @@ public class VersionManager extends InterruptibleComponent {
    }
 
    public VersionSyncInfo getVersionSyncInfo(Version version) {
-      return this.getVersionSyncInfo(version.getID());
+      if (version == null) {
+         throw new NullPointerException();
+      } else {
+         return this.getVersionSyncInfo(version.getID());
+      }
    }
 
    public VersionSyncInfo getVersionSyncInfo(String name) {
@@ -225,14 +240,14 @@ public class VersionManager extends InterruptibleComponent {
          throw new NullPointerException("Cannot get sync info of NULL!");
       } else {
          if (name.startsWith("latest-")) {
-            String realID = name.substring(7);
+            String localVersion = name.substring(7);
             name = null;
-            Iterator var4 = this.latestVersions.entrySet().iterator();
+            Iterator list = this.latestVersions.entrySet().iterator();
 
-            while(var4.hasNext()) {
-               Entry entry = (Entry)var4.next();
-               if (((ReleaseType)entry.getKey()).toString().equals(realID)) {
-                  name = ((Version)entry.getValue()).getID();
+            while(list.hasNext()) {
+               Entry remoteVersion = (Entry)list.next();
+               if (remoteVersion.getKey().toString().equals(localVersion)) {
+                  name = ((Version)remoteVersion.getValue()).getID();
                   break;
                }
             }
@@ -242,29 +257,30 @@ public class VersionManager extends InterruptibleComponent {
             }
          }
 
-         Version localVersion = this.localList.getVersion(name);
-         if (localVersion instanceof CompleteVersion && ((CompleteVersion)localVersion).getInheritsFrom() != null) {
+         Object var10 = this.localList.getVersion(name);
+         if (var10 instanceof CompleteVersion && ((CompleteVersion)var10).getInheritsFrom() != null) {
             try {
-               localVersion = ((CompleteVersion)localVersion).resolve(this, false);
-            } catch (IOException var9) {
-               throw new RuntimeException("Can't resolve version " + localVersion, var9);
+               var10 = ((CompleteVersion)var10).resolve(this, false);
+            } catch (Exception var9) {
+               this.log(new Object[]{"Can't resolve version " + ((Version)var10).getID(), var9});
+               var10 = null;
             }
          }
 
-         Version remoteVersion = null;
-         RemoteVersionList[] var7;
-         int var6 = (var7 = this.remoteLists).length;
+         Version var11 = null;
+         RemoteVersionList[] var7 = this.remoteLists;
+         int var6 = this.remoteLists.length;
 
          for(int var5 = 0; var5 < var6; ++var5) {
-            RemoteVersionList list = var7[var5];
-            Version currentVersion = list.getVersion(name);
+            RemoteVersionList var12 = var7[var5];
+            Version currentVersion = var12.getVersion(name);
             if (currentVersion != null) {
-               remoteVersion = currentVersion;
+               var11 = currentVersion;
                break;
             }
          }
 
-         return localVersion == null && remoteVersion == null ? null : new VersionSyncInfo((Version)localVersion, remoteVersion);
+         return var10 == null && var11 == null ? null : new VersionSyncInfo((Version)var10, var11);
       }
    }
 
@@ -278,6 +294,7 @@ public class VersionManager extends InterruptibleComponent {
    }
 
    public List getVersions(VersionFilter filter, boolean includeLatest) {
+      Object var3 = this.versionFlushLock;
       synchronized(this.versionFlushLock) {
          return this.getVersions0(filter, includeLatest);
       }
@@ -296,19 +313,19 @@ public class VersionManager extends InterruptibleComponent {
          filter = new VersionFilter();
       }
 
-      List plainResult = new ArrayList();
-      List result = new ArrayList();
-      Map lookup = new HashMap();
-      Version version;
+      ArrayList plainResult = new ArrayList();
+      ArrayList result = new ArrayList();
+      HashMap lookup = new HashMap();
+      Version remoteList;
       Iterator var7;
       if (includeLatest) {
          var7 = this.latestVersions.values().iterator();
 
          while(var7.hasNext()) {
-            version = (Version)var7.next();
-            if (filter.satisfies(version)) {
-               LatestVersionSyncInfo syncInfo = this.getLatestVersionSyncInfo(version);
-               if (!result.contains(syncInfo)) {
+            remoteList = (Version)var7.next();
+            if (filter.satisfies(remoteList)) {
+               LatestVersionSyncInfo syncInfo = this.getLatestVersionSyncInfo(remoteList);
+               if (syncInfo != null && !result.contains(syncInfo)) {
                   result.add(syncInfo);
                }
             }
@@ -318,27 +335,31 @@ public class VersionManager extends InterruptibleComponent {
       var7 = this.localList.getVersions().iterator();
 
       while(var7.hasNext()) {
-         version = (Version)var7.next();
-         if (filter.satisfies(version)) {
-            VersionSyncInfo syncInfo = this.getVersionSyncInfo(version);
-            lookup.put(version.getID(), syncInfo);
-            plainResult.add(syncInfo);
+         remoteList = (Version)var7.next();
+         if (filter.satisfies(remoteList)) {
+            VersionSyncInfo var15 = this.getVersionSyncInfo(remoteList);
+            if (var15 != null) {
+               lookup.put(remoteList.getID(), var15);
+               plainResult.add(var15);
+            }
          }
       }
 
-      RemoteVersionList[] var9;
-      int var16 = (var9 = this.remoteLists).length;
+      RemoteVersionList[] var9 = this.remoteLists;
+      int var16 = this.remoteLists.length;
 
       for(int var14 = 0; var14 < var16; ++var14) {
-         RemoteVersionList remoteList = var9[var14];
-         Iterator var11 = remoteList.getVersions().iterator();
+         RemoteVersionList var13 = var9[var14];
+         Iterator var11 = var13.getVersions().iterator();
 
          while(var11.hasNext()) {
             Version version = (Version)var11.next();
             if (!lookup.containsKey(version.getID()) && filter.satisfies(version)) {
-               VersionSyncInfo syncInfo = this.getVersionSyncInfo(version);
-               lookup.put(version.getID(), syncInfo);
-               plainResult.add(syncInfo);
+               VersionSyncInfo syncInfo1 = this.getVersionSyncInfo(version);
+               if (syncInfo1 != null) {
+                  lookup.put(version.getID(), syncInfo1);
+                  plainResult.add(syncInfo1);
+               }
             }
          }
       }
@@ -359,7 +380,7 @@ public class VersionManager extends InterruptibleComponent {
          new VersionFilter();
       }
 
-      List result = new ArrayList();
+      ArrayList result = new ArrayList();
       Iterator var4 = this.localList.getVersions().iterator();
 
       while(var4.hasNext()) {
@@ -378,18 +399,18 @@ public class VersionManager extends InterruptibleComponent {
       VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
       CompleteVersion completeVersion = syncInfo.getCompleteVersion(force);
       if (ely) {
-         CompleteVersion elyfied = ((ElyManager)this.manager.getComponent(ElyManager.class)).elyficate(completeVersion);
+         CompleteVersion baseDirectory = ((ElyManager)this.manager.getComponent(ElyManager.class)).elyficate(completeVersion);
          if (syncInfo.getLocal() == completeVersion) {
-            syncInfo.setLocal(elyfied);
+            syncInfo.setLocal(baseDirectory);
          } else {
-            syncInfo.setRemote(elyfied);
+            syncInfo.setRemote(baseDirectory);
          }
 
-         completeVersion = elyfied;
+         completeVersion = baseDirectory;
       }
 
-      File baseDirectory = this.localList.getBaseDirectory();
-      Set required = syncInfo.getRequiredDownloadables(baseDirectory, force, ely);
+      File baseDirectory1 = this.localList.getBaseDirectory();
+      Set required = syncInfo.getRequiredDownloadables(baseDirectory1, force, ely);
       container.addAll(required);
       this.log(new Object[]{"Required for version " + syncInfo.getID() + ':', required});
       String originalId = completeVersion.getJar();
@@ -410,23 +431,23 @@ public class VersionManager extends InterruptibleComponent {
             saveFile = saveFile + id + "/" + id + ".jar";
          }
 
-         File file = new File(baseDirectory, saveFile);
+         File file = new File(baseDirectory1, saveFile);
          if (!badFile(file)) {
             return container;
          } else {
             if (!force && originalId != null) {
-               File originalFile = new File(baseDirectory, jarFile);
-               File originalFileBak = new File(baseDirectory, jarFile + ".bak");
-               if (originalFile.isFile() && originalFileBak.isFile() && originalFile.length() == originalFileBak.length()) {
-                  FileUtil.copyFile(originalFile, file, true);
+               File d = new File(baseDirectory1, jarFile);
+               File originalFileBak = new File(baseDirectory1, jarFile + ".bak");
+               if (d.isFile() && originalFileBak.isFile() && d.length() == originalFileBak.length()) {
+                  FileUtil.copyFile(d, file, true);
                   return container;
                }
             }
 
-            Downloadable d = new Downloadable(repo, jarFile, new File(baseDirectory, saveFile), force);
-            d.addAdditionalDestination(new File(d.getDestination() + ".bak"));
-            this.log(new Object[]{"Jar for " + syncInfo.getID() + ':', d});
-            container.add(d);
+            Downloadable d1 = new Downloadable(repo, jarFile, new File(baseDirectory1, saveFile), force);
+            d1.addAdditionalDestination(new File(d1.getDestination() + ".bak"));
+            this.log(new Object[]{"Jar for " + syncInfo.getID() + ':', d1});
+            container.add(d1);
             return container;
          }
       }

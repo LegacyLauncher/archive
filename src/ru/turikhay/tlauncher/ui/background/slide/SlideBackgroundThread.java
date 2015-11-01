@@ -20,10 +20,6 @@ public class SlideBackgroundThread extends LoopedThread {
    final Slide defaultSlide;
    private Slide currentSlide;
 
-   static {
-      extensionPattern = ImageFileFilter.extensionPattern;
-   }
-
    public static void alert() {
       U.log(instance.defaultSlide, instance.currentSlide);
    }
@@ -57,22 +53,25 @@ public class SlideBackgroundThread extends LoopedThread {
    public synchronized void setSlide(Slide slide, boolean animate) {
       if (slide == null) {
          throw new NullPointerException();
-      } else if (!slide.equals(this.currentSlide)) {
-         Image image = slide.getImage();
-         if (image == null) {
-            slide = this.defaultSlide;
-            image = slide.getImage();
+      } else {
+         if (!slide.equals(this.currentSlide)) {
+            Image image = slide.getImage();
+            if (image == null) {
+               slide = this.defaultSlide;
+               image = slide.getImage();
+            }
+
+            this.currentSlide = slide;
+            if (image == null) {
+               this.log("Default image is NULL. Check accessibility to the JAR file of TLauncher.");
+            } else {
+               this.background.holder.cover.makeCover(animate);
+               this.background.setImage(image);
+               U.sleepFor(500L);
+               this.background.holder.cover.removeCover(animate);
+            }
          }
 
-         this.currentSlide = slide;
-         if (image == null) {
-            this.log("Default image is NULL. Check accessibility to the JAR file of TLauncher.");
-         } else {
-            this.background.holder.cover.makeCover(animate);
-            this.background.setImage(image);
-            U.sleepFor(500L);
-            this.background.holder.cover.removeCover(animate);
-         }
       }
    }
 
@@ -115,5 +114,9 @@ public class SlideBackgroundThread extends LoopedThread {
 
    protected void log(Object... w) {
       U.log("[" + this.getClass().getSimpleName() + "]", w);
+   }
+
+   static {
+      extensionPattern = ImageFileFilter.extensionPattern;
    }
 }

@@ -84,8 +84,8 @@ public class Paste {
 
       try {
          this.result = this.doPaste();
-      } catch (Throwable var3) {
-         this.result = new PasteResult.PasteFailed(this, var3);
+      } catch (Throwable var4) {
+         this.result = new PasteResult.PasteFailed(this, var4);
       }
 
       var2 = this.listeners.iterator();
