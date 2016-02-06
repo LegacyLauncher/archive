@@ -25,10 +25,6 @@ public class GameProfile {
       return this.name;
    }
 
-   public boolean isComplete() {
-      return StringUtils.isNotBlank(this.getId()) && StringUtils.isNotBlank(this.getName());
-   }
-
    public boolean equals(Object o) {
       if (this == o) {
          return true;

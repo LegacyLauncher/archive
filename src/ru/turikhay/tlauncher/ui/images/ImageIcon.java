@@ -16,10 +16,6 @@ public class ImageIcon implements ExtendedIcon {
       this.setImage(image, width, height);
    }
 
-   public ImageIcon(Image image) {
-      this(image, 0, 0);
-   }
-
    public void setImage(Image image, int preferredWidth, int preferredHeight) {
       if (image == null) {
          this.image = null;

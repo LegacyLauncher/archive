@@ -9,10 +9,6 @@ public abstract class PasteResult {
       this.paste = paste;
    }
 
-   public final Paste getPaste() {
-      return this.paste;
-   }
-
    public static class PasteUploaded extends PasteResult {
       private final URL url;
 

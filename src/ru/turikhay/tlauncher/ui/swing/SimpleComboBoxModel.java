@@ -6,35 +6,8 @@ import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 
 public class SimpleComboBoxModel extends DefaultComboBoxModel {
-   private static final long serialVersionUID = 5950434966721171811L;
-   protected Vector objects;
+   protected Vector objects = new Vector();
    protected Object selectedObject;
-
-   public SimpleComboBoxModel() {
-      this.objects = new Vector();
-   }
-
-   public SimpleComboBoxModel(Object[] items) {
-      this.objects = new Vector(items.length);
-      int i = 0;
-
-      for(int c = items.length; i < c; ++i) {
-         this.objects.addElement(items[i]);
-      }
-
-      if (this.getSize() > 0) {
-         this.selectedObject = this.getElementAt(0);
-      }
-
-   }
-
-   public SimpleComboBoxModel(Vector v) {
-      this.objects = v;
-      if (this.getSize() > 0) {
-         this.selectedObject = this.getElementAt(0);
-      }
-
-   }
 
    public void setSelectedItem(Object anObject) {
       if (this.selectedObject != null && !this.selectedObject.equals(anObject) || this.selectedObject == null && anObject != null) {

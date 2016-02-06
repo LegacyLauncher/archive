@@ -4,21 +4,17 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.JComponent;
-import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.util.IntegerArray;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class Dragger extends BorderPanel implements LocalizableComponent {
@@ -31,31 +27,7 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
    private final JComponent parent;
    private final String key;
    private final ExtendedLabel label;
-   private final Dragger.DraggerMouseListener listener;
    private String tooltip;
-
-   public Dragger(JComponent parent, String name) {
-      if (parent == null) {
-         throw new NullPointerException("parent");
-      } else if (name == null) {
-         throw new NullPointerException("name");
-      } else if (StringUtils.isEmpty(name)) {
-         throw new IllegalArgumentException("name is empty");
-      } else {
-         this.parent = parent;
-         this.key = "dragger." + name;
-         this.listener = new Dragger.DraggerMouseListener();
-         this.setCursor(SwingUtil.getCursor(13));
-         this.label = new ExtendedLabel();
-         this.label.addMouseListener(this.listener);
-         this.setCenter(this.label);
-         if (!ready) {
-            draggers.add(new SoftReference(this));
-         }
-
-         this.setEnabled(true);
-      }
-   }
 
    public void paint(Graphics g0) {
       Graphics2D g = (Graphics2D)g0;
@@ -160,24 +132,5 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
          }
       }
 
-   }
-
-   public class DraggerMouseListener extends MouseAdapter {
-      private int[] startPoint = new int[2];
-
-      public void mousePressed(MouseEvent e) {
-         if (Dragger.this.isEnabled()) {
-            this.startPoint[0] = e.getX();
-            this.startPoint[1] = e.getY();
-         }
-
-      }
-
-      public void mouseReleased(MouseEvent e) {
-         if (Dragger.this.isEnabled()) {
-            Dragger.this.dragComponent(Dragger.this.parent.getX() + e.getX() - this.startPoint[0], Dragger.this.parent.getY() + e.getY() - this.startPoint[1]);
-         }
-
-      }
    }
 }

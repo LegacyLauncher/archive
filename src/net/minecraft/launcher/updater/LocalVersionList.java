@@ -5,18 +5,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Set;
-import javax.swing.JFrame;
 import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
-import ru.turikhay.util.OS;
 
 public class LocalVersionList extends StreamVersionList {
-   private FileExplorer explorer;
-   private JFrame parent;
    private File baseDirectory;
    private File baseVersionsDir;
 
@@ -26,10 +20,6 @@ public class LocalVersionList extends StreamVersionList {
 
    public File getBaseDirectory() {
       return this.baseDirectory;
-   }
-
-   public File getVersionsDirectory() {
-      return this.baseVersionsDir;
    }
 
    public void setBaseDirectory(File directory) throws IOException {
@@ -114,22 +104,5 @@ public class LocalVersionList extends StreamVersionList {
 
    protected InputStream getInputStream(String uri) throws IOException {
       return new FileInputStream(new File(this.baseDirectory, uri));
-   }
-
-   public boolean hasAllFiles(CompleteVersion version, OS os) {
-      Set files = version.getRequiredFiles(os);
-      Iterator var5 = files.iterator();
-
-      File required;
-      do {
-         if (!var5.hasNext()) {
-            return true;
-         }
-
-         String file = (String)var5.next();
-         required = new File(this.baseDirectory, file);
-      } while(required.isFile() && required.length() != 0L);
-
-      return false;
    }
 }

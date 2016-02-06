@@ -10,14 +10,6 @@ public class Agent {
       this.version = version;
    }
 
-   public String getName() {
-      return this.name;
-   }
-
-   public int getVersion() {
-      return this.version;
-   }
-
    public String toString() {
       return "Agent{name='" + this.name + '\'' + ", version=" + this.version + '}';
    }

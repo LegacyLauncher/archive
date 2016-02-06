@@ -5,8 +5,6 @@ import java.awt.Component;
 import java.awt.LayoutManager;
 
 public class BorderPanel extends ExtendedPanel {
-   private static final long serialVersionUID = -7641580330557833990L;
-
    private BorderPanel(BorderLayout layout, boolean isDoubleBuffered) {
       super(isDoubleBuffered);
       if (layout == null) {
@@ -37,16 +35,8 @@ public class BorderPanel extends ExtendedPanel {
 
    }
 
-   public int getHgap() {
-      return this.getLayout().getHgap();
-   }
-
    public void setHgap(int hgap) {
       this.getLayout().setHgap(hgap);
-   }
-
-   public int getVgap() {
-      return this.getLayout().getVgap();
    }
 
    public void setVgap(int vgap) {
@@ -63,10 +53,6 @@ public class BorderPanel extends ExtendedPanel {
 
    public void setSouth(Component comp) {
       this.add(comp, "South");
-   }
-
-   public void setWest(Component comp) {
-      this.add(comp, "West");
    }
 
    public void setCenter(Component comp) {

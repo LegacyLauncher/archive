@@ -5,7 +5,6 @@ import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 
 public class ScrollPane extends JScrollPane {
-   private static final boolean DEFAULT_BORDER = false;
    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy;
 
    public ScrollPane(Component view, ScrollPane.ScrollBarPolicy vertical, ScrollPane.ScrollBarPolicy horizontal, boolean border) {

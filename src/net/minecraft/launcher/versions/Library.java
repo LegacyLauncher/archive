@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +26,6 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class Library {
-   protected static final String FORGE_LIB_SUFFIX = ".pack.xz";
    protected static final StrSubstitutor SUBSTITUTOR;
    protected String name;
    protected List rules;
@@ -55,10 +53,6 @@ public class Library {
    public String getPlainName() {
       String[] split = this.name.split(":", 3);
       return split[0] + "." + split[1];
-   }
-
-   public List getRules() {
-      return this.rules == null ? null : Collections.unmodifiableList(this.rules);
    }
 
    public boolean appliesToCurrentEnvironment() {
@@ -170,55 +164,51 @@ public class Library {
       XZInputStream in = null;
       JarOutputStream jos = null;
 
-      label65: {
-         try {
-            FileInputStream in1 = new FileInputStream(library);
-            in = new XZInputStream(in1);
-            forgeLibLog("Decompressing...");
-            byte[] e = readFully(in);
-            forgeLibLog("Decompressed successfully");
-            String end = new String(e, e.length - 4, 4);
-            if (!end.equals("SIGN")) {
-               throw new RetryDownloadException("signature missing");
-            }
+      try {
+         FileInputStream in1 = new FileInputStream(library);
+         in = new XZInputStream(in1);
+         forgeLibLog("Decompressing...");
+         byte[] e = readFully(in);
+         forgeLibLog("Decompressed successfully");
+         String end = new String(e, e.length - 4, 4);
+         if (!end.equals("SIGN")) {
+            throw new RetryDownloadException("signature missing");
+         }
 
-            forgeLibLog("Signature matches!");
-            int x = e.length;
-            int len = e[x - 8] & 255 | (e[x - 7] & 255) << 8 | (e[x - 6] & 255) << 16 | (e[x - 5] & 255) << 24;
-            forgeLibLog("Now getting checksums...");
-            byte[] checksums = Arrays.copyOfRange(e, e.length - len - 8, e.length - 8);
-            FileUtil.createFile(output);
-            FileOutputStream jarBytes = new FileOutputStream(output);
-            jos = new JarOutputStream(jarBytes);
-            forgeLibLog("Now unpacking...");
-            Pack200.newUnpacker().unpack(new ByteArrayInputStream(e), jos);
-            forgeLibLog("Unpacked successfully");
-            forgeLibLog("Now trying to write checksums...");
-            jos.putNextEntry(new JarEntry("checksums.sha1"));
-            jos.write(checksums);
-            jos.closeEntry();
-            forgeLibLog("Now finishing...");
-            break label65;
-         } catch (OutOfMemoryError var16) {
-            forgeLibLog("Out of memory, oops", var16);
-            U.gc();
-            if (!retryOnOutOfMemory) {
-               throw var16;
-            }
-
+         forgeLibLog("Signature matches!");
+         int x = e.length;
+         int len = e[x - 8] & 255 | (e[x - 7] & 255) << 8 | (e[x - 6] & 255) << 16 | (e[x - 5] & 255) << 24;
+         forgeLibLog("Now getting checksums...");
+         byte[] checksums = Arrays.copyOfRange(e, e.length - len - 8, e.length - 8);
+         FileUtil.createFile(output);
+         FileOutputStream jarBytes = new FileOutputStream(output);
+         jos = new JarOutputStream(jarBytes);
+         forgeLibLog("Now unpacking...");
+         Pack200.newUnpacker().unpack(new ByteArrayInputStream(e), jos);
+         forgeLibLog("Unpacked successfully");
+         forgeLibLog("Now trying to write checksums...");
+         jos.putNextEntry(new JarEntry("checksums.sha1"));
+         jos.write(checksums);
+         jos.closeEntry();
+         forgeLibLog("Now finishing...");
+      } catch (OutOfMemoryError var16) {
+         forgeLibLog("Out of memory, oops", var16);
+         U.gc();
+         if (retryOnOutOfMemory) {
             forgeLibLog("Retrying...");
             close(in, jos);
             FileUtil.deleteFile(library);
             unpackLibrary(library, output, false);
-         } catch (IOException var17) {
-            output.delete();
-            throw var17;
-         } finally {
-            close(in, jos);
-            FileUtil.deleteFile(library);
+            return;
          }
 
-         return;
+         throw var16;
+      } catch (IOException var17) {
+         output.delete();
+         throw var17;
+      } finally {
+         close(in, jos);
+         FileUtil.deleteFile(library);
       }
 
       forgeLibLog("Done:", output);
@@ -282,8 +272,15 @@ public class Library {
          return Library.this;
       }
 
-      public Library getLibrary() {
-         return Library.this;
+      protected void onComplete() throws RetryDownloadException {
+         Library lib = this.getDownloadableLibrary();
+         if (lib.getChecksum() != null) {
+            String fileHash = FileUtil.getChecksum(this.getDestination(), "sha1");
+            if (fileHash != null && !fileHash.equals(lib.getChecksum())) {
+               throw new RetryDownloadException("illegal library hash. got: " + fileHash + "; expected: " + lib.getChecksum());
+            }
+         }
+
       }
 
       // $FF: synthetic method

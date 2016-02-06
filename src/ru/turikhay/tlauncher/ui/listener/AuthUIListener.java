@@ -5,11 +5,14 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorException;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
+import ru.turikhay.tlauncher.minecraft.auth.InvalidCredentialsException;
 import ru.turikhay.tlauncher.minecraft.auth.ServiceUnavailableException;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 
 public class AuthUIListener implements AuthenticatorListener {
    private final AuthenticatorListener listener;
+   public boolean editorOpened = false;
 
    public AuthUIListener(AuthenticatorListener listener) {
       this.listener = listener;
@@ -23,14 +26,14 @@ public class AuthUIListener implements AuthenticatorListener {
    }
 
    public void onAuthPassingError(Authenticator auth, Throwable e) {
-      this.showError(e);
+      this.showError(auth, e);
       if (this.listener != null) {
          this.listener.onAuthPassingError(auth, e);
       }
 
    }
 
-   private void showError(Throwable e) {
+   private void showError(Authenticator auth, Throwable e) {
       String description = "unknown";
       Object textarea = e;
       if (e instanceof AuthenticatorException) {
@@ -40,13 +43,29 @@ public class AuthUIListener implements AuthenticatorListener {
          }
 
          if (e instanceof ServiceUnavailableException) {
-            textarea = e.getMessage();
+            String var7 = e.getMessage();
+         }
+
+         if (e instanceof InvalidCredentialsException) {
+            if (description != null) {
+               description = description + "." + auth.getAccount().getType().toString().toLowerCase();
+            }
+
+            textarea = null;
          } else {
             textarea = e;
          }
       }
 
-      Alert.showLocError("auth.error.title", "auth.error." + description, textarea);
+      String text = Localizable.get("auth.error." + description + ".editor");
+      if (!this.editorOpened || text == null) {
+         text = Localizable.get("auth.error." + description);
+         if (text == null) {
+            text = "auth.error." + description;
+         }
+      }
+
+      Alert.showError(Localizable.get("auth.error.title"), text, textarea);
    }
 
    public void onAuthPassed(Authenticator auth) {

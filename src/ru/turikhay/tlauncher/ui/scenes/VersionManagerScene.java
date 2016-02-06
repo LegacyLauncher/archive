@@ -4,7 +4,6 @@ import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.versions.VersionHandler;
 
 public class VersionManagerScene extends PseudoScene {
-   private static final long serialVersionUID = 758826812081732720L;
    final VersionHandler handler = new VersionHandler(this);
 
    public VersionManagerScene(MainPane main) {

@@ -3,24 +3,8 @@ package ru.turikhay.util.stream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class MirroredLinkedStringStream extends LinkedStringStream {
+public class MirroredLinkedOutputStringStream extends LinkedOutputStringStream {
    private OutputStream mirror;
-
-   public MirroredLinkedStringStream() {
-   }
-
-   private MirroredLinkedStringStream(Logger logger, OutputStream mirror) {
-      super(logger);
-      this.mirror = mirror;
-   }
-
-   public MirroredLinkedStringStream(Logger logger) {
-      this(logger, (OutputStream)null);
-   }
-
-   public MirroredLinkedStringStream(OutputStream mirror) {
-      this((Logger)null, mirror);
-   }
 
    public OutputStream getMirror() {
       return this.mirror;

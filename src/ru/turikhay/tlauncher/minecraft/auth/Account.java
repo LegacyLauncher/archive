@@ -47,10 +47,6 @@ public class Account {
       this.username = username;
    }
 
-   public String getUserID() {
-      return this.userID;
-   }
-
    public void setUserID(String userID) {
       this.userID = userID;
    }
@@ -109,10 +105,6 @@ public class Account {
 
    public void setDisplayName(String displayName) {
       this.displayName = displayName;
-   }
-
-   public User getUser() {
-      return this.user;
    }
 
    public void setUser(User user) {

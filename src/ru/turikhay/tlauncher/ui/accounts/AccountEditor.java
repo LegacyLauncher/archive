@@ -21,7 +21,6 @@ import ru.turikhay.tlauncher.ui.swing.CheckBoxListener;
 import ru.turikhay.tlauncher.ui.text.ExtendedPasswordField;
 
 public class AccountEditor extends CenterPanel {
-   private static final String passlock = "passlock";
    private final AccountEditorScene scene;
    public final UsernameField username;
    public final AccountEditor.BlockablePasswordField password;
@@ -32,7 +31,6 @@ public class AccountEditor extends CenterPanel {
    public final LinkedHashMap radioMap = new LinkedHashMap();
    public final LocalizableButton save;
    private final ProgressBar progressBar;
-   private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$minecraft$auth$Account$AccountType;
 
    public AccountEditor(AccountEditorScene sc) {
       super(squareInsets);
@@ -180,10 +178,6 @@ public class AccountEditor extends CenterPanel {
                AccountEditor.this.defocus();
             }
          });
-      }
-
-      public Account.AccountType getAccountType() {
-         return this.type;
       }
 
       // $FF: synthetic method

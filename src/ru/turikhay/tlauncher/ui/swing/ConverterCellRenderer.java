@@ -13,8 +13,4 @@ public abstract class ConverterCellRenderer implements ListCellRenderer {
          this.converter = converter;
       }
    }
-
-   public StringConverter getConverter() {
-      return this.converter;
-   }
 }

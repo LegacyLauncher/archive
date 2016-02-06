@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.minecraft.crash;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.io.File;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -13,9 +14,8 @@ import ru.turikhay.util.U;
 
 public class CrashDescriptor {
    private static CrashSignatureContainer container;
-   public static final int goodExitCode = 0;
    private final MinecraftLauncher launcher;
-   private static final String[] phrases = new String[]{"Мы катапультировались. Приятного полёта.", "Сейчас лучше выпить чаю. С бубликами.", "Шаманские бубны. Большой ассортимент. Звоните!", "Тут только звуковая отвёртка поможет. Или большая кувалда."};
+   private static final String[] phrases;
 
    public CrashDescriptor(MinecraftLauncher launcher) {
       if (launcher == null) {
@@ -26,86 +26,133 @@ public class CrashDescriptor {
    }
 
    public Crash scan() {
-      int exitCode = this.launcher.getExitCode();
-      if (exitCode == 0) {
-         return null;
+      Crash crash = new Crash();
+      String output = this.launcher.getOutput();
+      if (output == null) {
+         this.log("Could not get console output.");
+         return crash;
       } else {
-         Crash crash = new Crash();
-         String output = this.launcher.getOutput();
-         if (output == null) {
-            this.log("Could not get console output.");
-            return crash;
-         } else {
-            Scanner scanner = new Scanner(output);
-            Pattern filePattern = container.getPattern("crash");
-            String version = this.launcher.getVersion();
+         Pattern filePattern = container.getPattern("crash");
+         Pattern reportPattern0 = container.getPattern("report0");
+         Pattern reportPattern1 = container.getPattern("report1");
+         String version = this.launcher.getVersion();
+         Scanner scanner = null;
 
-            while(true) {
-               String phrase;
-               label85:
-               while(scanner.hasNextLine()) {
-                  phrase = scanner.nextLine();
-                  if (filePattern.matcher(phrase).matches()) {
-                     Matcher var12 = filePattern.matcher(phrase);
-                     if (var12.matches() && var12.groupCount() == 1) {
-                        crash.setFile(var12.group(1));
-                        this.log("Found crash report file:", crash.getFile());
+         try {
+            scanner = new Scanner(output);
+
+            label201:
+            while(scanner.hasNextLine()) {
+               String line = scanner.nextLine();
+               Matcher matcher;
+               if ((matcher = filePattern.matcher(line)).matches() && matcher.matches() && matcher.groupCount() == 1) {
+                  crash.setFile(matcher.group(1));
+                  this.log("Found crash report file:", crash.getFile());
+               } else {
+                  if (reportPattern0.matcher(line).matches()) {
+                     line = scanner.nextLine();
+                     matcher = reportPattern1.matcher(line);
+                     if (matcher.matches() && matcher.groupCount() == 1) {
+                        crash.setNativeReport(matcher.group(1));
+                        continue;
                      }
-                  } else {
-                     Iterator var9 = container.getSignatures().iterator();
+                  }
 
-                     while(true) {
-                        CrashSignatureContainer.CrashSignature line;
+                  Iterator i$ = container.getSignatures().iterator();
+
+                  while(true) {
+                     CrashSignatureContainer.CrashSignature signature;
+                     do {
                         do {
                            do {
-                              do {
-                                 if (!var9.hasNext()) {
-                                    continue label85;
-                                 }
+                              if (!i$.hasNext()) {
+                                 continue label201;
+                              }
 
-                                 line = (CrashSignatureContainer.CrashSignature)var9.next();
-                              } while(line.hasVersion() && !line.getVersion().matcher(version).matches());
-                           } while(line.getExitCode() != 0 && line.getExitCode() != exitCode);
-                        } while(line.hasPattern() && !line.getPattern().matcher(phrase).matches());
+                              signature = (CrashSignatureContainer.CrashSignature)i$.next();
+                           } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
+                        } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
+                     } while(signature.getExitCode() != 0 && signature.getExitCode() != this.launcher.getExitCode());
 
-                        if (line.isFake()) {
-                           this.log("Minecraft closed with an illegal exit code not due to error. Scanning has been cancelled");
-                           this.log("Fake signature:", line.getName());
-                           scanner.close();
-                           return null;
-                        }
+                     if (signature.isFake()) {
+                        this.log("It's a trap, not crash:", signature.getName());
+                        Object var12 = null;
+                        return (Crash)var12;
+                     }
 
-                        if (!crash.hasSignature(line)) {
-                           this.log("Signature \"" + line.getName() + "\" matches!");
-                           crash.addSignature(line);
-                        }
+                     if (!crash.hasSignature(signature)) {
+                        this.log("Signature matches:", signature.getName());
+                        crash.addSignature(signature);
                      }
                   }
                }
-
-               scanner.close();
-               if (!crash.contains("PermGen error") && !crash.contains("OutOfMemory error") && !crash.contains("Too heavy heap")) {
-                  phrase = (String)U.getRandom(phrases);
-                  String[] var11;
-                  int var10 = (var11 = StringUtils.split(phrase, '\n')).length;
-
-                  for(int var14 = 0; var14 < var10; ++var14) {
-                     String var13 = var11[var14];
-                     U.log("//", var13);
-                  }
-               } else {
-                  U.log("– И это всё потому что у кого-то слишком узкие двери...");
-                  U.log("– Нет! Всё потому что кто-то слишком много ест!");
-               }
-
-               return crash;
             }
+         } finally {
+            U.close(scanner);
          }
+
+         if (!crash.contains("PermGen error") && !crash.contains("OutOfMemory error") && !crash.contains("Too heavy heap")) {
+            String phrase = (String)U.getRandom(phrases);
+            String[] var11;
+            int var10 = (var11 = StringUtils.split(phrase, '\n')).length;
+
+            for(int var14 = 0; var14 < var10; ++var14) {
+               String var13 = var11[var14];
+               U.log("//", var13);
+            }
+         } else {
+            U.log("– И это всё потому что у кого-то слишком узкие двери...");
+            U.log("– Нет! Всё потому что кто-то слишком много ест!");
+         }
+
+         this.readFile(crash.getFile());
+         this.readFile(crash.getNativeReport());
+         return crash;
+      }
+   }
+
+   private void readFile(String path) {
+      if (path != null) {
+         this.log("++++++++++++++++++++++++++++++++++");
+
+         try {
+            File file = new File(path);
+            if (file.isFile()) {
+               this.log("++++++++++++++++++++++++++++++++++");
+               this.log("Reading file:", file);
+               Scanner scanner = null;
+
+               try {
+                  scanner = new Scanner(file);
+
+                  while(scanner.hasNextLine()) {
+                     this.plog("+", scanner.nextLine());
+                  }
+
+                  return;
+               } catch (Exception var13) {
+                  this.log("Could not read file:", file, var13);
+                  return;
+               } finally {
+                  U.close(scanner);
+               }
+            }
+
+            this.log("File doesn't exist:", path);
+         } finally {
+            this.log("++++++++++++++++++++++++++++++++++");
+         }
+
       }
    }
 
    void log(Object... w) {
       this.launcher.log(w);
+   }
+
+   void plog(Object... w) {
+      U.plog(w);
+      this.launcher.plog(w);
    }
 
    static {
@@ -120,5 +167,6 @@ public class CrashDescriptor {
          container = new CrashSignatureContainer();
       }
 
+      phrases = new String[]{"Мы катапультировались. Приятного полёта.", "Сейчас лучше выпить чаю. С бубликами.", "Шаманские бубны. Большой ассортимент. Звоните!", "Тут только звуковая отвёртка поможет. Или большая кувалда."};
    }
 }

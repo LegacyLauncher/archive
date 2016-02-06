@@ -45,13 +45,7 @@ public class AccountHandler {
             AccountHandler.this.registerTemp();
          }
       });
-   }
-
-   public void selectAccount(Account acc) {
-      if (acc != null && !acc.equals((Account)this.list.list.getSelectedValue())) {
-         this.list.list.setSelectedValue(acc, true);
-      }
-
+      this.listener.editorOpened = true;
    }
 
    void refreshEditor(Account account) {

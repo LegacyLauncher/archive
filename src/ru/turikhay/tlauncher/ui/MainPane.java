@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -44,6 +43,7 @@ public class MainPane extends ExtendedLayeredPane {
       this.log("Creating background...");
       this.background = new BackgroundHolder(this);
       this.background.setBackground(this.background.SLIDE_BACKGROUND, false);
+      this.background.SLIDE_BACKGROUND.getThread().asyncRefreshSlide();
       this.add(this.background);
       this.notifier = new SideNotifier();
       this.notifier.setSize(SwingUtil.magnify(new Dimension(32, 32)));
@@ -67,10 +67,6 @@ public class MainPane extends ExtendedLayeredPane {
             MainPane.this.onResize();
          }
       });
-   }
-
-   public PseudoScene getScene() {
-      return this.scene;
    }
 
    public void setScene(PseudoScene scene) {
@@ -125,12 +121,6 @@ public class MainPane extends ExtendedLayeredPane {
    public void onResize() {
       this.progress.setBounds(0, this.getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, this.getWidth(), ProgressBar.DEFAULT_HEIGHT);
       this.revertFont.setBounds(0, 0, this.getWidth(), this.getFontMetrics(this.revertFont.revertButton.getFont()).getHeight() * 3);
-   }
-
-   public Point getLocationOf(Component comp) {
-      Point compLocation = comp.getLocationOnScreen();
-      Point paneLocation = this.getLocationOnScreen();
-      return new Point(compLocation.x - paneLocation.x, compLocation.y - paneLocation.y);
    }
 
    private void log(String... o) {

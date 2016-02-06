@@ -24,12 +24,4 @@ public class Time {
          return current - l;
       }
    }
-
-   public static void start() {
-      start(Thread.currentThread());
-   }
-
-   public static long stop() {
-      return stop(Thread.currentThread());
-   }
 }

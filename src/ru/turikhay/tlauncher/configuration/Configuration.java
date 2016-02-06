@@ -3,8 +3,6 @@ package ru.turikhay.tlauncher.configuration;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.Proxy;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,12 +16,14 @@ import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
+import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 
 public class Configuration extends SimpleConfiguration {
    private ConfigurationDefaults defaults;
@@ -31,11 +31,6 @@ public class Configuration extends SimpleConfiguration {
    private List defaultLocales;
    private List supportedLocales;
    private boolean firstRun;
-
-   private Configuration(URL url, OptionSet set) throws IOException {
-      super(url);
-      this.init(set);
-   }
 
    private Configuration(File file, OptionSet set) {
       super(file);
@@ -68,10 +63,6 @@ public class Configuration extends SimpleConfiguration {
       Configuration config = new Configuration(file, set);
       config.firstRun = doesntExist;
       return config;
-   }
-
-   public static Configuration createConfiguration() throws IOException {
-      return createConfiguration((OptionSet)null);
    }
 
    private void init(OptionSet set) {
@@ -111,19 +102,29 @@ public class Configuration extends SimpleConfiguration {
       this.defaultLocales = getDefaultLocales();
       this.supportedLocales = this.getSupportedLocales();
       Locale selected1 = getLocaleOf(this.get("locale"));
+      if (selected1 == getLocaleOf("uk_UA")) {
+         AsyncThread.execute(new Runnable() {
+            public void run() {
+               Alert.showMessage("Підтримка припинена", "На жаль, підтримка української мови припинена. Це пов'язано з тим, що лише 2% українців користувалися нею. В подальшому Ви можете змінити мову в налаштуваннях.");
+            }
+         });
+         selected1 = null;
+      }
+
       if (selected1 == null) {
-         this.log(new Object[]{"Selected locale is not supported, rolling back to default one"});
+         this.log(new Object[]{"Selected locale is not supported, trying system default"});
          selected1 = Locale.getDefault();
-         if (selected1 == getLocaleOf("uk_UA")) {
+         if (selected1 == getLocaleOf("uk_UA") || selected1 == getLocaleOf("be_BY")) {
             selected1 = getLocaleOf("ru_RU");
          }
       }
 
       if (!this.supportedLocales.contains(selected1)) {
-         this.log(new Object[]{"Default locale is not supported, rolling back to global default one"});
+         this.log(new Object[]{"System default locale is not supported, applying en_US"});
          selected1 = Locale.US;
       }
 
+      this.set("locale", selected1, false);
       oldJavaPath1 = this.get("minecraft.javadir");
       if (oldJavaPath1 != null) {
          this.log(new Object[]{"Migrating Java path into Command:", oldJavaPath1});
@@ -136,7 +137,6 @@ public class Configuration extends SimpleConfiguration {
          this.set("gui.font.old", this.getInteger("gui.font"));
       }
 
-      this.set("locale", selected1, false);
       if (this.isSaveable()) {
          try {
             this.save();
@@ -255,40 +255,22 @@ public class Configuration extends SimpleConfiguration {
       return (Direction)Reflect.parseEnum(Direction.class, this.get(key));
    }
 
-   public Proxy getProxy() {
-      return Proxy.NO_PROXY;
-   }
-
    public UUID getClient() {
       try {
          return UUID.fromString(this.get("client"));
       } catch (Exception var2) {
-         return null;
+         return this.refreshClient();
       }
+   }
+
+   public UUID refreshClient() {
+      UUID newId = UUID.randomUUID();
+      this.set("client", newId);
+      return newId;
    }
 
    public String getDefault(String key) {
       return this.getStringOf(this.defaults.get(key));
-   }
-
-   public int getDefaultInteger(String key) {
-      return this.getIntegerOf(this.defaults.get(key), 0);
-   }
-
-   public double getDefaultDouble(String key) {
-      return this.getDoubleOf(this.defaults.get(key), 0.0D);
-   }
-
-   public float getDefaultFloat(String key) {
-      return this.getFloatOf(this.defaults.get(key), 0.0F);
-   }
-
-   public long getDefaultLong(String key) {
-      return this.getLongOf(this.defaults.get(key), 0L);
-   }
-
-   public boolean getDefaultBoolean(String key) {
-      return this.getBooleanOf(this.defaults.get(key), false);
    }
 
    public void set(String key, Object value, boolean flush) {
@@ -300,10 +282,6 @@ public class Configuration extends SimpleConfiguration {
 
    public void setForcefully(String key, Object value, boolean flush) {
       super.set(key, value, flush);
-   }
-
-   public void setForcefully(String key, Object value) {
-      this.setForcefully(key, value, true);
    }
 
    public void save() throws IOException {
@@ -323,18 +301,15 @@ public class Configuration extends SimpleConfiguration {
       }
    }
 
-   public File getFile() {
-      return !this.isSaveable() ? null : (File)this.input;
-   }
-
    private List getSupportedLocales() {
       return this.defaultLocales;
    }
 
    private static List getDefaultLocales() {
       ArrayList l = new ArrayList();
-      String[] arr$ = Static.getLangList();
-      int len$ = arr$.length;
+      String[] ll = Static.getLangList();
+      String[] arr$ = ll;
+      int len$ = ll.length;
 
       for(int i$ = 0; i$ < len$; ++i$) {
          String locale = arr$[i$];
@@ -461,18 +436,6 @@ public class Configuration extends SimpleConfiguration {
          }
 
          return null;
-      }
-
-      public int[] getConfiguration() {
-         return this.configuration;
-      }
-
-      public int getMinTries() {
-         return this.minTries;
-      }
-
-      public int getMaxTries() {
-         return this.maxTries;
       }
 
       public int getMaxThreads() {

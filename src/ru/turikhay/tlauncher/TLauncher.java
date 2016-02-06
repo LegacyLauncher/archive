@@ -34,6 +34,7 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.console.Console;
 import ru.turikhay.tlauncher.ui.listener.MinecraftUIListener;
 import ru.turikhay.tlauncher.ui.listener.RequiredUpdateListener;
+import ru.turikhay.tlauncher.ui.listener.VersionManagerUIListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Updater;
@@ -43,13 +44,10 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.RunnableThread;
-import ru.turikhay.util.stream.MirroredLinkedStringStream;
+import ru.turikhay.util.stream.MirroredLinkedOutputStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
 public class TLauncher {
-   private static final double VERSION = 1.639D;
-   private static final boolean DEBUG = false;
-   private static final boolean BETA = false;
    private static TLauncher instance;
    private static String[] sargs;
    private static File directory;
@@ -69,6 +67,7 @@ public class TLauncher {
    private MinecraftLauncher launcher;
    private RequiredUpdateListener updateListener;
    private MinecraftUIListener minecraftListener;
+   private VersionManagerUIListener vmListener;
    private boolean ready;
    private static boolean useSystemLookAndFeel = true;
 
@@ -89,7 +88,7 @@ public class TLauncher {
 
       this.settings.set("gui.systemlookandfeel", useSystemLookAndFeel, false);
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONSOLE);
-      console = new Console(this.settings, print, "DevConsole", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
+      console = new Console(this.settings, print, "Logger", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
       console.setCloseAction(Console.CloseAction.KILL);
       Console.updateLocale();
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
@@ -100,14 +99,15 @@ public class TLauncher {
       this.profileManager = (ProfileManager)this.manager.loadComponent(ProfileManager.class);
       this.manager.loadComponent(ComponentManagerListenerHelper.class);
       this.init();
-      U.log("Started! (" + Time.stop(this) + " ms.)");
       this.ready = true;
+      U.log("Started! (" + Time.stop(this) + " ms.)");
       U.setLoadingStep(Bootstrapper.LoadingStep.SUCCESS);
    }
 
    private void init() {
       this.downloader = new Downloader(this);
       this.minecraftListener = new MinecraftUIListener(this);
+      this.vmListener = new VersionManagerUIListener(this);
       this.updater = new Updater();
       this.updateListener = new RequiredUpdateListener(this.updater);
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_WINDOW);
@@ -149,10 +149,6 @@ public class TLauncher {
       return this.updater;
    }
 
-   public OptionSet getArguments() {
-      return this.args;
-   }
-
    public TLauncherFrame getFrame() {
       return this.frame;
    }
@@ -183,14 +179,6 @@ public class TLauncher {
 
    public MinecraftLauncher getLauncher() {
       return this.launcher;
-   }
-
-   public MinecraftUIListener getMinecraftListener() {
-      return this.minecraftListener;
-   }
-
-   public RequiredUpdateListener getUpdateListener() {
-      return this.updateListener;
    }
 
    public boolean isReady() {
@@ -270,7 +258,7 @@ public class TLauncher {
       Thread.setDefaultUncaughtExceptionHandler(handler);
       Thread.currentThread().setUncaughtExceptionHandler(handler);
       U.setPrefix(">>");
-      MirroredLinkedStringStream stream = new MirroredLinkedStringStream() {
+      MirroredLinkedOutputStringStream stream = new MirroredLinkedOutputStringStream() {
          public void flush() {
             if (TLauncher.console == null) {
                try {
@@ -330,13 +318,16 @@ public class TLauncher {
    }
 
    private static void launch(String[] args) throws Exception {
-      U.log("Starting TLauncher", getVersion(), "[" + getBrand() + "]");
-      U.log("Beta:", isBeta(), ", debug:", getDebug());
+      U.log("Starting TLauncher", getVersion(), getBrand());
+      if (isBeta() || getDebug()) {
+         U.log("Beta:", isBeta(), ", debug:", getDebug());
+      }
+
       U.log("Machine info:", OS.getSummary());
       U.log("Startup time:", DateFormat.getDateTimeInstance(3, 1).format(new Date()));
       U.log("---");
       sargs = args;
-      new TLauncher(ArgumentParser.parseArgs(args));
+      new TLauncher(ArgumentParser.parseArgs(args, print));
    }
 
    public static String[] getArgs() {
@@ -360,11 +351,11 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.639D;
+      return 1.7D;
    }
 
    public static boolean isBeta() {
-      return false;
+      return true;
    }
 
    public static boolean getDebug() {

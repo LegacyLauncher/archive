@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.swing.editor;
 
 import java.awt.Font;
 import java.awt.Insets;
-import java.io.IOException;
 import java.net.URL;
 import javax.swing.JEditorPane;
 import javax.swing.event.HyperlinkEvent;
@@ -13,8 +12,6 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.util.OS;
 
 public class EditorPane extends JEditorPane {
-   private static final long serialVersionUID = -2857352867725574106L;
-
    public EditorPane(Font font) {
       if (font != null) {
          this.setFont(font);
@@ -47,16 +44,6 @@ public class EditorPane extends JEditorPane {
 
    public EditorPane() {
       this((new LocalizableLabel()).getFont());
-   }
-
-   public EditorPane(URL initialPage) throws IOException {
-      this();
-      this.setPage(initialPage);
-   }
-
-   public EditorPane(String url) throws IOException {
-      this();
-      this.setPage(url);
    }
 
    public EditorPane(String type, String text) {

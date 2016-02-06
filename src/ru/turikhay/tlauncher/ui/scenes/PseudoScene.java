@@ -1,11 +1,9 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
 import ru.turikhay.tlauncher.ui.MainPane;
-import ru.turikhay.tlauncher.ui.swing.AnimatedVisibility;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
-public abstract class PseudoScene extends ExtendedLayeredPane implements AnimatedVisibility {
-   private static final long serialVersionUID = -1L;
+public abstract class PseudoScene extends ExtendedLayeredPane {
    private final MainPane main;
    private boolean shown = true;
 

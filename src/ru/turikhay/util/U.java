@@ -19,10 +19,6 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class U {
-   public static final String PROGRAM_PACKAGE = "ru.turikhay";
-   public static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
-   private static final int ST_TOTAL = 100;
-   private static final int ST_PROGRAM = 10;
    private static String PREFIX;
    private static final Object lock = new Object();
    private static Random rnd;
@@ -31,19 +27,15 @@ public class U {
       PREFIX = prefix;
    }
 
-   public static String getPrefix() {
-      return PREFIX;
-   }
-
-   public static void linelog(Object what) {
-      Object var1 = lock;
-      synchronized(lock) {
-         System.out.print(what);
-      }
-   }
-
    public static void log(Object... what) {
       hlog(PREFIX, what);
+   }
+
+   public static void debug(Object... what) {
+      if (TLauncher.getDebug()) {
+         hlog(PREFIX, what);
+      }
+
    }
 
    public static void plog(Object... what) {
@@ -305,43 +297,6 @@ public class U {
       }
    }
 
-   public static short shortRandom() {
-      return (short)(new Random(System.currentTimeMillis())).nextInt(32767);
-   }
-
-   public static double doubleRandom() {
-      return (new Random(System.currentTimeMillis())).nextDouble();
-   }
-
-   public static int random(int s, int e) {
-      return (new Random(System.currentTimeMillis())).nextInt(e - s) + s;
-   }
-
-   public static boolean ok(int d) {
-      return (new Random(System.currentTimeMillis())).nextInt(d) == 0;
-   }
-
-   public static double getAverage(double[] d) {
-      double a = 0.0D;
-      int k = 0;
-      double[] var8 = d;
-      int var7 = d.length;
-
-      for(int var6 = 0; var6 < var7; ++var6) {
-         double curd = var8[var6];
-         if (curd != 0.0D) {
-            a += curd;
-            ++k;
-         }
-      }
-
-      if (k == 0) {
-         return 0.0D;
-      } else {
-         return a / (double)k;
-      }
-   }
-
    public static double getAverage(double[] d, int max) {
       double a = 0.0D;
       int k = 0;
@@ -360,71 +315,6 @@ public class U {
       return k == 0 ? 0.0D : a / (double)k;
    }
 
-   public static int getAverage(int[] d) {
-      int a = 0;
-      int k = 0;
-      int[] var6 = d;
-      int var5 = d.length;
-
-      for(int var4 = 0; var4 < var5; ++var4) {
-         int curd = var6[var4];
-         if (curd != 0) {
-            a += curd;
-            ++k;
-         }
-      }
-
-      if (k == 0) {
-         return 0;
-      } else {
-         return Math.round((float)(a / k));
-      }
-   }
-
-   public static int getAverage(int[] d, int max) {
-      int a = 0;
-      int k = 0;
-      int[] var7 = d;
-      int var6 = d.length;
-
-      for(int var5 = 0; var5 < var6; ++var5) {
-         int curd = var7[var5];
-         a += curd;
-         ++k;
-         if (k == max) {
-            break;
-         }
-      }
-
-      return k == 0 ? 0 : Math.round((float)(a / k));
-   }
-
-   public static int getSum(int[] d) {
-      int a = 0;
-      int[] var5 = d;
-      int var4 = d.length;
-
-      for(int var3 = 0; var3 < var4; ++var3) {
-         int curd = var5[var3];
-         a += curd;
-      }
-
-      return a;
-   }
-
-   public static double getSum(double[] d) {
-      double a = 0.0D;
-      double[] var7 = d;
-      int var6 = d.length;
-
-      for(int var5 = 0; var5 < var6; ++var5) {
-         double curd = var7[var5];
-         a += curd;
-      }
-
-      return a;
-   }
-
    public static int getMaxMultiply(int i, int max) {
       if (i <= max) {
          return 1;
@@ -439,53 +329,20 @@ public class U {
       }
    }
 
-   /** @deprecated */
-   @Deprecated
-   public static String r(String string, int max) {
-      if (string == null) {
-         return null;
-      } else {
-         int len = string.length();
-         if (len <= max) {
-            return string;
-         } else {
-            String[] words = string.split(" ");
-            String ret = "";
-            int remaining = max + 1;
-
-            for(int x = 0; x < words.length; ++x) {
-               String curword = words[x];
-               int curlen = curword.length();
-               if (curlen >= remaining) {
-                  if (x == 0) {
-                     ret = ret + " " + curword.substring(0, remaining - 1);
-                  }
-                  break;
-               }
-
-               ret = ret + " " + curword;
-               remaining -= curlen + 1;
-            }
-
-            return ret.length() == 0 ? "" : ret.substring(1) + "...";
-         }
-      }
-   }
-
    public static String setFractional(double d, int fractional) {
       NumberFormat nf = NumberFormat.getInstance();
       nf.setMaximumFractionDigits(fractional);
       return nf.format(d).replace(",", ".");
    }
 
-   private static String stackTrace(Throwable e) {
+   public static StringBuilder stackTrace(Throwable e) {
       StringBuilder trace = rawStackTrace(e);
       ExtendedThread currentAsExtended = (ExtendedThread)getAs(Thread.currentThread(), ExtendedThread.class);
       if (currentAsExtended != null) {
          trace.append("\nThread called by: ").append(rawStackTrace(currentAsExtended.getCaller()));
       }
 
-      return trace.toString();
+      return trace;
    }
 
    private static StringBuilder rawStackTrace(Throwable e) {
@@ -577,24 +434,8 @@ public class U {
       return makeURI(makeURL(p));
    }
 
-   private static boolean interval(int min, int max, int num, boolean including) {
-      return including ? num >= min && num <= max : num > max && num < max;
-   }
-
-   public static boolean interval(int min, int max, int num) {
-      return interval(min, max, num, true);
-   }
-
    public static int fitInterval(int val, int min, int max) {
       return val > max ? max : (val < min ? min : val);
-   }
-
-   public static long m() {
-      return System.currentTimeMillis();
-   }
-
-   public static long n() {
-      return System.nanoTime();
    }
 
    public static int getReadTimeout() {
@@ -653,11 +494,6 @@ public class U {
       }
    }
 
-   public static Color randomColor() {
-      Random random = new Random();
-      return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
-   }
-
    public static Color shiftColor(Color color, int bits) {
       if (color == null) {
          return null;
@@ -692,73 +528,12 @@ public class U {
       return a == b ? true : (a != null ? a.equals(b) : false);
    }
 
-   public static String[] extend(String[] a0, String[] a1) {
-      String[] newArray = new String[a0.length + a1.length];
-      System.arraycopy(a0, 0, newArray, 0, a0.length);
-      System.arraycopy(a1, 0, newArray, a0.length, a1.length);
-      return newArray;
-   }
-
    public static void close(Closeable c) {
       try {
          c.close();
       } catch (Throwable var2) {
-         var2.printStackTrace();
       }
 
-   }
-
-   public static boolean is(Object obj, Object... equal) {
-      if (equal == null) {
-         throw new NullPointerException("comparsion array");
-      } else {
-         Object compare;
-         int var3;
-         int var4;
-         Object[] var5;
-         if (obj == null) {
-            var5 = equal;
-            var4 = equal.length;
-
-            for(var3 = 0; var3 < var4; ++var3) {
-               compare = var5[var3];
-               if (compare == null) {
-                  return true;
-               }
-            }
-         } else {
-            var5 = equal;
-            var4 = equal.length;
-
-            for(var3 = 0; var3 < var4; ++var3) {
-               compare = var5[var3];
-               if (obj.equals(compare)) {
-                  return true;
-               }
-            }
-         }
-
-         return false;
-      }
-   }
-
-   public static int find(Object obj, Object[] array) {
-      int i;
-      if (obj == null) {
-         for(i = 0; i < array.length; ++i) {
-            if (array[i] == null) {
-               return i;
-            }
-         }
-      } else {
-         for(i = 0; i < array.length; ++i) {
-            if (obj.equals(array[i])) {
-               return i;
-            }
-         }
-      }
-
-      return -1;
    }
 
    private static void swap(Object[] arr, int i, int j) {

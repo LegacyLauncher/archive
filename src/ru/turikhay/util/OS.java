@@ -6,6 +6,8 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 public enum OS {
@@ -35,10 +37,6 @@ public enum OS {
       return this.name;
    }
 
-   public boolean isUnsupported() {
-      return this == UNKNOWN;
-   }
-
    public boolean isCurrent() {
       return this == CURRENT;
    }
@@ -65,19 +63,23 @@ public enum OS {
    }
 
    private static double getJavaVersion() {
+      Pattern syntaxNotationPattern = Pattern.compile(".*(\\-.+)");
+      Pattern versionPattern = Pattern.compile("([\\d]+(?:\\.\\d+)?)(?:\\.\\d+)?(?:_\\d+)?");
       String version = System.getProperty("java.version");
-      int count = 0;
-
-      int pos;
-      for(pos = 0; pos < version.length() && count < 2; ++pos) {
-         if (version.charAt(pos) == '.') {
-            ++count;
-         }
+      String _version = version;
+      Matcher syntaxNotationMatcher = syntaxNotationPattern.matcher(version);
+      if (syntaxNotationMatcher.matches()) {
+         version = syntaxNotationMatcher.replaceAll("");
       }
 
-      --pos;
-      String doubleVersion = version.substring(0, pos);
-      return Double.parseDouble(doubleVersion);
+      Matcher versionMatcher = versionPattern.matcher(version);
+      if (versionMatcher.matches()) {
+         return Double.parseDouble(versionMatcher.group(1));
+      } else {
+         U.log("[ERROR] Could not determine Java version:", _version);
+         U.log("I suppose we use at least 1.6");
+         return 1.6D;
+      }
    }
 
    public static boolean is(OS... any) {
@@ -118,7 +120,7 @@ public enum OS {
    }
 
    public static String getSummary() {
-      return NAME + " " + VERSION + " " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + ", " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + OS.Arch.AVAILABLE_PROCESSORS + " cores";
+      return NAME + " (" + VERSION + ") " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + " (" + JAVA_VERSION + "), " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + OS.Arch.AVAILABLE_PROCESSORS + "x CPU";
    }
 
    private static void rawOpenLink(URI uri) throws Throwable {
@@ -263,7 +265,6 @@ public enum OS {
       public static final OS.Arch CURRENT = getCurrent();
       public static final long TOTAL_RAM = getTotalRam();
       public static final long TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
-      public static final int MIN_MEMORY = 512;
       public static final int PREFERRED_MEMORY = getPreferredMemory();
       public static final int MAX_MEMORY = getMaximumMemory();
       public static final int AVAILABLE_PROCESSORS = getAvailableProcessors();
@@ -283,10 +284,6 @@ public enum OS {
 
       public String asString() {
          return this == UNKNOWN ? this.toString() : this.asString;
-      }
-
-      public int asInteger() {
-         return this.asInt;
       }
 
       public boolean isCurrent() {

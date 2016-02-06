@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.regex.Pattern;
+import java.net.URL;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
@@ -13,115 +13,63 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.U;
 
 public class EditorFileField extends BorderPanel implements EditorField {
-   public static final char DEFAULT_DELIMITER = ';';
    private final EditorTextField textField;
    private final LocalizableButton explorerButton;
    private final FileExplorer explorer;
-   private final char delimiterChar;
-   private final Pattern delimiterSplitter;
+   private boolean permitUrl;
 
-   public EditorFileField(String prompt, boolean canBeEmpty, String button, FileExplorer chooser, char delimiter) {
+   public EditorFileField(String prompt, String buttonPath, FileExplorer exp, boolean canBeEmpty, boolean permitUrl) {
+      this.permitUrl = permitUrl;
       this.textField = new EditorTextField(prompt, canBeEmpty);
-      this.explorerButton = new LocalizableButton(button);
-      this.explorer = chooser;
-      this.delimiterChar = delimiter;
-      this.delimiterSplitter = Pattern.compile(String.valueOf(this.delimiterChar), 16);
+      this.explorerButton = new LocalizableButton(buttonPath);
       this.explorerButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             if (EditorFileField.this.explorer != null) {
                EditorFileField.this.explorerButton.setEnabled(false);
-               EditorFileField.this.explorer.setCurrentDirectory(EditorFileField.this.getFirstFile());
+               EditorFileField.this.explorer.setCurrentDirectory(EditorFileField.this.getSelectedFile());
                int result = EditorFileField.this.explorer.showDialog(EditorFileField.this);
                if (result == 0) {
-                  EditorFileField.this.setRawValue(EditorFileField.this.explorer.getSelectedFiles());
+                  File selected = EditorFileField.this.explorer.getSelectedFile();
+                  String path;
+                  if (selected == null) {
+                     path = "";
+                  } else {
+                     try {
+                        path = selected.getCanonicalPath();
+                     } catch (Exception var6) {
+                        path = selected.getAbsolutePath();
+                        EditorFileField.this.log(var6);
+                     }
+                  }
+
+                  EditorFileField.this.setSettingsValue(path);
                }
 
                EditorFileField.this.explorerButton.setEnabled(true);
             }
-
          }
       });
-      this.add(this.textField, "Center");
+      this.explorer = exp;
+      this.setCenter(this.textField);
       if (this.explorer != null) {
-         this.add(this.explorerButton, "East");
+         this.setEast(this.explorerButton);
       }
 
    }
 
-   public EditorFileField(String prompt, boolean canBeEmpty, FileExplorer chooser) {
-      this(prompt, canBeEmpty, "explorer.browse", chooser, ';');
+   public EditorFileField(String prompt, FileExplorer exp, boolean canBeEmpty, boolean permitUrl) {
+      this(prompt, "explorer.browse", exp, canBeEmpty, permitUrl);
    }
 
-   public EditorFileField(String prompt, FileExplorer chooser) {
-      this(prompt, false, chooser);
-   }
-
-   public String getSettingsValue() {
-      return this.getValueFromRaw(this.getRawValues());
-   }
-
-   private File[] getRawValues() {
-      String[] paths = this.getRawSplitValue();
-      if (paths == null) {
-         return null;
-      } else {
-         int len = paths.length;
-         File[] files = new File[len];
-
-         for(int i = 0; i < paths.length; ++i) {
-            files[i] = new File(paths[i]);
-         }
-
-         return files;
+   public File getSelectedFile() {
+      File selected = null;
+      if (this.getSettingsValue() != null && parseUrl(this.getSettingsValue()) == null) {
+         selected = new File(this.getSettingsValue());
+      } else if (this.explorer != null) {
+         selected = this.explorer.getSelectedFile();
       }
-   }
 
-   public void setSettingsValue(String value) {
-      this.textField.setSettingsValue(value);
-   }
-
-   private void setRawValue(File[] fileList) {
-      this.setSettingsValue(this.getValueFromRaw(fileList));
-   }
-
-   private String[] getRawSplitValue() {
-      return this.splitString(this.textField.getValue());
-   }
-
-   private String getValueFromRaw(File[] files) {
-      if (files == null) {
-         return null;
-      } else {
-         StringBuilder builder = new StringBuilder();
-         File[] var6 = files;
-         int var5 = files.length;
-
-         for(int var4 = 0; var4 < var5; ++var4) {
-            File file = var6[var4];
-            String path = file.getAbsolutePath();
-            builder.append(this.delimiterChar).append(path);
-         }
-
-         return builder.substring(1);
-      }
-   }
-
-   private String[] splitString(String s) {
-      if (s == null) {
-         return null;
-      } else {
-         String[] split = this.delimiterSplitter.split(s);
-         return split.length == 0 ? null : split;
-      }
-   }
-
-   private File getFirstFile() {
-      File[] files = this.getRawValues();
-      return files != null && files.length != 0 ? files[0] : TLauncher.getDirectory();
-   }
-
-   public boolean isValueValid() {
-      return this.textField.isValueValid();
+      return selected == null ? TLauncher.getDirectory() : selected;
    }
 
    public void setBackground(Color bg) {
@@ -129,6 +77,27 @@ public class EditorFileField extends BorderPanel implements EditorField {
          this.textField.setBackground(bg);
       }
 
+   }
+
+   public String getSettingsValue() {
+      String value = this.textField.getSettingsValue();
+
+      URL testUrl;
+      try {
+         testUrl = new URL(value);
+      } catch (Exception var4) {
+         return value;
+      }
+
+      return testUrl.toString();
+   }
+
+   public void setSettingsValue(String var) {
+      this.textField.setSettingsValue(var);
+   }
+
+   public boolean isValueValid() {
+      return !this.permitUrl && parseUrl(this.getSettingsValue()) != null ? false : this.textField.isValueValid();
    }
 
    public void block(Object reason) {
@@ -141,5 +110,14 @@ public class EditorFileField extends BorderPanel implements EditorField {
 
    protected void log(Object... w) {
       U.log("[" + this.getClass().getSimpleName() + "]", w);
+   }
+
+   private static URL parseUrl(String s) {
+      try {
+         URL testUrl = new URL(s);
+         return testUrl;
+      } catch (Exception var3) {
+         return null;
+      }
    }
 }

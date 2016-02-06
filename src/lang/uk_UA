@@ -1,6 +1,6 @@
 # TLauncher language file UTF-8
 # Loginform
-loginform.checkbox.autologin=Автоматичний вхід
+loginform.checkbox.autologin=Відкладений запуск
 loginform.checkbox.forceupdate=Оновити клієнт
 loginform.enter=Увійти в гру
 loginform.enter.install=Встановити
@@ -159,6 +159,7 @@ launcher.error.download-assets=Помилка при запиті ресурсі
 launcher.error.save=Помилка при збереженні версії.
 launcher.error.index-file=Помилка читання файлу індексів.\nСпробуйте відключити антивірус і перезапустити гру, зазначивши галочку «Оновити клієнт».
 launcher.error.reconstruct-assets=Помилка при створенні віртуальної теки. Спробуйте ще раз.
+launcher.error.migrate-assets=Помилка при спробі скопіювати старі ресурси. Зверніть увагу: ця помилка може бути викликана, наприклад, раптовим відключенням живлення під час роботи комп'ютера, що стало причиною пошкодження файлової системи. Будь ласка, виконайте сканування на наявність помилок на диску.
 launcher.error.unpack-natives=Сталася помилка при розпакуванні нативних бібліотек.\nВідзначте галочку «Оновити кліент», щоб завантажити їх заново.
 launcher.error.java-exec=Неможливо знайти виконуючий файл Java:
 launcher.error.folder-not-found=Неможливо знайти папку Minecraft:
@@ -445,3 +446,6 @@ browser.hyperlink.popup.show.alert.title=Посилання
 browser.hyperlink.popup.show.alert=
 browser.hyperlink.create.error.title=Помилка при створенні посилання
 browser.hyperlink.create.error=Неможливо створити посилання. Спробуйте відкрити його самі:
+# Args
+args.error.title=Нераспознанный аргумент
+args.error=Не удалось распознать аргумент, переданный в программу.\nПрограмма будет закрыта. Обратитесь к тому, кто сделал эту сборку.

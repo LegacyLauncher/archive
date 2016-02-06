@@ -11,11 +11,6 @@ public class NBTTagShort extends NBTBase {
       super(par1Str);
    }
 
-   public NBTTagShort(String par1Str, short par2) {
-      super(par1Str);
-      this.data = par2;
-   }
-
    void write(DataOutput par1DataOutput) throws IOException {
       par1DataOutput.writeShort(this.data);
    }
@@ -30,10 +25,6 @@ public class NBTTagShort extends NBTBase {
 
    public String toString() {
       return "" + this.data;
-   }
-
-   public NBTBase copy() {
-      return new NBTTagShort(this.getName(), this.data);
    }
 
    public boolean equals(Object par1Obj) {

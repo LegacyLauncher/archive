@@ -5,9 +5,6 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 public class AutoLogin implements LoginForm.LoginProcessListener {
-   public static final int DEFAULT_TIMEOUT = 3;
-   public static final int MIN_TIMEOUT = 2;
-   public static final int MAX_TIMEOUT = 10;
    private boolean enabled;
    private boolean active;
    private int timeout;
@@ -58,10 +55,6 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
          }
       }
 
-   }
-
-   public boolean isActive() {
-      return this.active;
    }
 
    private void startActive() {

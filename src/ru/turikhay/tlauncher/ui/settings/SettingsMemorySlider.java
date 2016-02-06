@@ -21,12 +21,14 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 public class SettingsMemorySlider extends BorderPanel implements EditorField {
+   private final SettingsPanel settings;
    private final JSlider slider = new JSlider();
-   private final EditorIntegerField inputField;
+   private EditorIntegerField inputField;
    private final LocalizableLabel mb;
    private final LocalizableLabel hint;
 
-   SettingsMemorySlider() {
+   SettingsMemorySlider(SettingsPanel s) {
+      this.settings = s;
       this.slider.setOpaque(false);
       this.slider.setMinimum(512);
       this.slider.setMaximum(OS.Arch.MAX_MEMORY);
@@ -42,7 +44,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       });
       this.setCenter(this.slider);
       this.inputField = new EditorIntegerField();
-      this.inputField.setColumns(5);
+      this.inputField.textField.setColumns(5);
       this.mb = new LocalizableLabel("settings.java.memory.mb");
       ExtendedPanel panel = new ExtendedPanel();
       panel.add(this.inputField, this.mb);
@@ -59,7 +61,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
             SettingsMemorySlider.this.onSliderUpdate();
          }
       });
-      this.inputField.getDocument().addDocumentListener(new DocumentListener() {
+      this.inputField.textField.getDocument().addDocumentListener(new DocumentListener() {
          public void insertUpdate(DocumentEvent e) {
             SettingsMemorySlider.this.updateInfo();
          }
@@ -74,7 +76,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
 
    public void setBackground(Color color) {
       if (this.inputField != null) {
-         this.inputField.setBackground(color);
+         this.inputField.textField.setBackground(color);
       }
 
    }
@@ -88,11 +90,11 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
    }
 
    public String getSettingsValue() {
-      return this.inputField.getValue();
+      return this.inputField.textField.getValue();
    }
 
    public void setSettingsValue(String value) {
-      this.inputField.setValue(value);
+      this.inputField.textField.setValue(value);
       this.updateInfo();
    }
 
@@ -101,7 +103,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
    }
 
    private void onSliderUpdate() {
-      this.inputField.setValue(this.slider.getValue());
+      this.inputField.textField.setValue(this.slider.getValue());
       this.updateTip();
    }
 
@@ -114,30 +116,34 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
    }
 
    private void updateTip() {
-      int intVal = this.inputField.getIntegerValue();
       SettingsMemorySlider.ValueType value = null;
-      if (intVal < 512) {
-         value = SettingsMemorySlider.ValueType.DANGER;
-      } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
-         value = SettingsMemorySlider.ValueType.OK;
-      } else {
-         switch(OS.Arch.CURRENT) {
-         case x32:
-            if (OS.Arch.TOTAL_RAM_MB > 0L && (long)intVal > OS.Arch.TOTAL_RAM_MB) {
-               value = SettingsMemorySlider.ValueType.DANGER;
-            } else if (intVal > OS.Arch.MAX_MEMORY) {
-               value = SettingsMemorySlider.ValueType.WARNING;
-            }
-            break;
-         default:
-            if (intVal > OS.Arch.MAX_MEMORY) {
-               value = SettingsMemorySlider.ValueType.DANGER;
+      if (this.settings.cmd.getValue() == null) {
+         int intVal = this.inputField.getIntegerValue();
+         if (intVal < 512) {
+            value = SettingsMemorySlider.ValueType.DANGER;
+         } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
+            value = SettingsMemorySlider.ValueType.OK;
+         } else {
+            switch(OS.Arch.CURRENT) {
+            case x32:
+               if (OS.Arch.TOTAL_RAM_MB > 0L && (long)intVal > OS.Arch.TOTAL_RAM_MB) {
+                  value = SettingsMemorySlider.ValueType.DANGER;
+               } else if (intVal > OS.Arch.MAX_MEMORY) {
+                  value = SettingsMemorySlider.ValueType.WARNING;
+               }
+               break;
+            default:
+               if ((long)intVal > OS.Arch.TOTAL_RAM_MB) {
+                  value = SettingsMemorySlider.ValueType.DANGER;
+               }
             }
          }
+      } else {
+         value = null;
       }
 
-      String path;
       ImageIcon icon;
+      String path;
       if (value == null) {
          path = "";
          icon = null;
@@ -150,7 +156,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       ImageIcon.setup(this.hint, icon);
    }
 
-   private void updateInfo() {
+   public void updateInfo() {
       this.updateSlider();
       this.updateTip();
    }

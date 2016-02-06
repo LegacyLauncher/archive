@@ -22,22 +22,23 @@ public abstract class ServerHyperlinkProcessor extends HyperlinkProcessor implem
    private final JPopupMenu popup = new JPopupMenu();
    private boolean blocked;
 
-   public void process(String link) {
+   public JPopupMenu process(String link) {
       if (link != null && link.startsWith("server:")) {
          if (!this.blocked) {
             try {
-               this.openServer(link);
+               return this.openServer(link);
             } catch (Exception var3) {
                Alert.showLocError("ad.server.error", new RuntimeException("\"" + link + "\"", var3));
             }
          }
-      } else {
-         HyperlinkProcessor.defaultProcessor.process(link);
-      }
 
+         return null;
+      } else {
+         return HyperlinkProcessor.defaultProcessor.process(link);
+      }
    }
 
-   private void openServer(String link) {
+   private JPopupMenu openServer(String link) {
       final ServerList.Server server = ServerList.Server.parseFromString(link.substring("server:".length()));
       this.popup.removeAll();
       LocalizableMenuItem openWith = new LocalizableMenuItem("ad.server.openwith", new Object[]{server.getName()});
@@ -112,10 +113,8 @@ public abstract class ServerHyperlinkProcessor extends HyperlinkProcessor implem
          this.popup.add(var16);
       }
 
-      this.showPopup(this.popup);
+      return this.popup;
    }
-
-   public abstract void showPopup(JPopupMenu var1);
 
    public abstract void open(VersionSyncInfo var1, ServerList.Server var2);
 

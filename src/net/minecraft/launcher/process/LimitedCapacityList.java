@@ -28,33 +28,9 @@ public class LimitedCapacityList {
       return value;
    }
 
-   public int getSize() {
-      this.locks.readLock().lock();
-      int result = this.size;
-      this.locks.readLock().unlock();
-      return result;
-   }
-
    int getMaxSize() {
       this.locks.readLock().lock();
       int result = this.items.length;
-      this.locks.readLock().unlock();
-      return result;
-   }
-
-   public Object[] getItems() {
-      Object[] result = (Object[])((Object[])Array.newInstance(this.clazz, this.size));
-      this.locks.readLock().lock();
-
-      for(int i = 0; i < this.size; ++i) {
-         int pos = (this.head - this.size + i) % this.getMaxSize();
-         if (pos < 0) {
-            pos += this.getMaxSize();
-         }
-
-         result[i] = this.items[pos];
-      }
-
       this.locks.readLock().unlock();
       return result;
    }

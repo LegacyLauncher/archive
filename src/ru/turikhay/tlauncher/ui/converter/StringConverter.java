@@ -6,6 +6,4 @@ public interface StringConverter {
    String toString(Object var1);
 
    String toValue(Object var1);
-
-   Class getObjectClass();
 }

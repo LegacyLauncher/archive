@@ -8,7 +8,7 @@ import ru.turikhay.tlauncher.component.LauncherComponent;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 
-public class ComponentManagerListenerHelper extends LauncherComponent implements Blockable, VersionManagerListener {
+public class ComponentManagerListenerHelper extends LauncherComponent implements VersionManagerListener, Blockable {
    private final List listeners = Collections.synchronizedList(new ArrayList());
 
    public ComponentManagerListenerHelper(ComponentManager manager) throws Exception {

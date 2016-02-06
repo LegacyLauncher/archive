@@ -15,7 +15,6 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 
 public class PlayButton extends LocalizableButton implements Blockable, LoginForm.LoginStateListener {
-   private static final long serialVersionUID = 6944074583143406549L;
    private PlayButton.PlayButtonState state;
    private final LoginForm loginForm;
    private int mouseX;
@@ -60,10 +59,6 @@ public class PlayButton extends LocalizableButton implements Blockable, LoginFor
       });
       this.setFont(this.getFont().deriveFont(1).deriveFont(TLauncherFrame.getFontSize() * 1.5F));
       this.setState(PlayButton.PlayButtonState.PLAY);
-   }
-
-   public PlayButton.PlayButtonState getState() {
-      return this.state;
    }
 
    public void setState(PlayButton.PlayButtonState state) {

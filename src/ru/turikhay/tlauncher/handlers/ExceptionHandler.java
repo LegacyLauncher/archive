@@ -9,6 +9,8 @@ import ru.turikhay.util.U;
 public class ExceptionHandler implements UncaughtExceptionHandler {
    private static ExceptionHandler instance;
    private static long gcLastCall;
+   private static String[] lastMessages = new String[10];
+   private static int lastWrittenMessage = -1;
 
    public static ExceptionHandler getInstance() {
       if (instance == null) {
@@ -21,7 +23,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
    public void uncaughtException(Thread t, Throwable e) {
       OutOfMemoryError asOOM = (OutOfMemoryError)Reflect.cast(e, OutOfMemoryError.class);
       if (asOOM == null || !reduceMemory(asOOM)) {
-         if (scanTrace(e)) {
+         if (scanTrace(e) && toShowError(e.getMessage())) {
             try {
                Alert.showError("Exception in thread " + t.getName(), (Object)e);
             } catch (Exception var5) {
@@ -67,5 +69,17 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
       }
 
       return false;
+   }
+
+   private static synchronized boolean toShowError(String message) {
+      for(int i = 0; i < lastMessages.length; ++i) {
+         if (message.equals(lastMessages[i])) {
+            return false;
+         }
+      }
+
+      lastWrittenMessage = lastWrittenMessage == lastMessages.length - 1 ? 0 : lastWrittenMessage + 1;
+      lastMessages[lastWrittenMessage] = message;
+      return true;
    }
 }

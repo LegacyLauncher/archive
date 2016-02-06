@@ -38,6 +38,7 @@ import javax.swing.text.html.HTML.Attribute;
 import javax.swing.text.html.HTML.Tag;
 import javax.xml.bind.DatatypeConverter;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
@@ -46,18 +47,6 @@ public class ExtendedImageView extends View {
    private static String base64e = ";base64,";
    private static boolean sIsInc = false;
    private static int sIncRate = 100;
-   private static final String PENDING_IMAGE = "html.pendingImage";
-   private static final String MISSING_IMAGE = "html.missingImage";
-   private static final String IMAGE_CACHE_PROPERTY = "imageCache";
-   private static final int DEFAULT_WIDTH = 38;
-   private static final int DEFAULT_HEIGHT = 38;
-   private static final int LOADING_FLAG = 1;
-   private static final int LINK_FLAG = 2;
-   private static final int WIDTH_FLAG = 4;
-   private static final int HEIGHT_FLAG = 8;
-   private static final int RELOAD_FLAG = 16;
-   private static final int RELOAD_IMAGE_FLAG = 32;
-   private static final int SYNC_LOAD_FLAG = 64;
    private AttributeSet attr;
    private Image image;
    private Image disabledImage;
@@ -112,21 +101,6 @@ public class ExtendedImageView extends View {
       }
 
       return img;
-   }
-
-   public void setLoadsSynchronously(boolean newValue) {
-      synchronized(this) {
-         if (newValue) {
-            this.state |= 64;
-         } else {
-            this.state = (this.state | 64) ^ 64;
-         }
-
-      }
-   }
-
-   public boolean getLoadsSynchronously() {
-      return (this.state & 64) != 0;
    }
 
    protected StyleSheet getStyleSheet() {
@@ -450,30 +424,43 @@ public class ExtendedImageView extends View {
       String source = this.getImageSource();
       if (source == null) {
          return null;
-      } else if (!source.startsWith(base64s)) {
-         URL src1 = U.makeURL(source);
-         return src1 == null ? null : Images.loadMagnifiedImage(src1);
       } else {
-         int src = base64s.length();
-         String newImage = source.substring(src, src + 4);
-         if (!newImage.startsWith("png") && !newImage.startsWith("jpg")) {
-            if (!newImage.equals("jpeg")) {
-               return null;
+         byte[] cache;
+         if (source.startsWith("gzip:")) {
+            byte[] gzippedBytes = source.substring("gzip:".length()).getBytes("UTF-8");
+            cache = FileUtil.gzipUncompress(new ByteArrayInputStream(gzippedBytes));
+            U.log(cache);
+            source = new String(cache, "UTF-8");
+            U.log("ungzipped source:", source);
+         }
+
+         if (source.startsWith(base64s)) {
+            int src = base64s.length();
+            String newImage = source.substring(src, src + 4);
+            if (!newImage.startsWith("png") && !newImage.startsWith("jpg")) {
+               if (!newImage.equals("jpeg")) {
+                  return null;
+               }
+
+               src += 4;
+            } else {
+               src += 3;
             }
 
-            src += 4;
+            if (source.substring(src, src + base64e.length()).equals(base64e)) {
+               src += base64e.length();
+               cache = DatatypeConverter.parseBase64Binary(source.substring(src));
+               BufferedImage image = ImageIO.read(new ByteArrayInputStream(cache));
+               return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
+            }
          } else {
-            src += 3;
+            URL src1 = U.makeURL(source);
+            if (src1 != null) {
+               return Images.loadMagnifiedImage(src1);
+            }
          }
 
-         if (!source.substring(src, src + base64e.length()).equals(base64e)) {
-            return null;
-         } else {
-            src += base64e.length();
-            byte[] cache = DatatypeConverter.parseBase64Binary(source.substring(src));
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(cache));
-            return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
-         }
+         return null;
       }
    }
 

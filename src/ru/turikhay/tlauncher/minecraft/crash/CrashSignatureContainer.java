@@ -19,20 +19,11 @@ import java.util.regex.Pattern;
 import ru.turikhay.tlauncher.TLauncher;
 
 public class CrashSignatureContainer {
-   private static final int universalExitCode = 0;
    private Map variables = new LinkedHashMap();
    private List signatures = new ArrayList();
 
-   public Map getVariables() {
-      return this.variables;
-   }
-
    public List getSignatures() {
       return this.signatures;
-   }
-
-   public String getVariable(String key) {
-      return (String)this.variables.get(key);
    }
 
    public Pattern getPattern(String key) {

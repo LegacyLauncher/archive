@@ -19,8 +19,4 @@ public class ActionOnLaunchConverter extends LocalizableStringConverter {
    public String toPath(Configuration.ActionOnLaunch from) {
       return from.toString();
    }
-
-   public Class getObjectClass() {
-      return Configuration.ActionOnLaunch.class;
-   }
 }

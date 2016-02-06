@@ -10,23 +10,23 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.util.U;
 
 public class ArgumentParser {
    private static final Map m = new HashMap();
    private static final OptionParser parser;
 
-   public static OptionParser getParser() {
-      return parser;
-   }
-
-   public static OptionSet parseArgs(String[] args) throws IOException {
+   public static OptionSet parseArgs(String[] args, OutputStream printHelp) throws OptionException, IOException {
       try {
          return parser.parse(args);
-      } catch (OptionException var2) {
-         var2.printStackTrace();
-         parser.printHelpOn((OutputStream)System.out);
-         Alert.showError(var2, false);
-         return null;
+      } catch (OptionException var3) {
+         if (printHelp != null) {
+            U.log("Could not parse argument", var3);
+            parser.printHelpOn(printHelp);
+         }
+
+         Alert.showLocError("args.error", var3);
+         throw var3;
       }
    }
 
@@ -73,7 +73,6 @@ public class ArgumentParser {
       m.put("fullscreen", "minecraft.fullscreen");
       m.put("-block-settings", "gui.settings.blocked");
       parser = new OptionParser();
-      parser.accepts("help", "Shows this help");
       parser.accepts("nogui", "Starts minimal version");
       parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
       parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();

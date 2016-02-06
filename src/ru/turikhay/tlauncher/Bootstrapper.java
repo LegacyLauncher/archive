@@ -18,8 +18,6 @@ import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public final class Bootstrapper {
-   private static final String MAIN_CLASS = "ru.turikhay.tlauncher.TLauncher";
-   private static final int MAX_MEMORY = 176;
    private static final File DIRECTORY = new File(".");
    private final JavaProcessLauncher processLauncher;
    private final LoadingFrame frame;
@@ -94,7 +92,7 @@ public final class Bootstrapper {
       log("I can be terminated now.");
       if (!this.started && this.process.isRunning()) {
          log("...started instance also will be terminated.");
-         log("Ni tebe, ni mne, haha!");
+         log("Poka!");
          this.process.stop();
       }
 
@@ -120,36 +118,30 @@ public final class Bootstrapper {
    }
 
    public static void checkRunningPath() {
-      String path = TLauncher.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-      if (path.contains("!/")) {
-         String message = "Please do not run (any) Java application which path contain folder name that ends with «!»:\n" + path;
+      String path = Bootstrapper.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+      if (path.contains("!")) {
+         String message = "Please do not run (any) Java application which path contains folder name that ends with «!»\nНе запускайте Java-приложения в директориях, чей путь содержит «!»\n\n" + path;
          JOptionPane.showMessageDialog((Component)null, message, "Error", 0);
          throw new TLauncherException(message);
       }
    }
 
    public static enum LoadingStep {
-      INITALIZING(21),
-      LOADING_CONFIGURATION(35),
-      LOADING_LOOKANDFEEL(41),
-      LOADING_CONSOLE(44),
-      LOADING_MANAGERS(51),
+      INITALIZING(11),
+      LOADING_CONFIGURATION(25),
+      LOADING_LOOKANDFEEL(35),
+      LOADING_CONSOLE(40),
+      LOADING_MANAGERS(45),
       LOADING_WINDOW(62),
       PREPARING_MAINPANE(77),
       POSTINIT_GUI(82),
       REFRESHING_INFO(91),
       SUCCESS(100);
 
-      public static final String LOADING_PREFIX = "[Loading]";
-      public static final String LOADING_DELIMITER = " = ";
       private final int percentage;
 
       private LoadingStep(int percentage) {
          this.percentage = percentage;
-      }
-
-      public int getPercentage() {
-         return this.percentage;
       }
    }
 
@@ -187,15 +179,16 @@ public final class Bootstrapper {
       }
 
       public void onJavaProcessEnded(JavaProcess jp) {
-         int exit;
-         if ((exit = jp.getExitCode()) != 0) {
-            Alert.showError("Error starting TLauncher", "TLauncher application was closed with illegal exit code (" + exit + "). See console:", this.buffer.toString());
+         int exit = jp.getExitCode();
+         if (exit != 0) {
+            if ("Error: Could not find or load main class".equals(this.buffer.substring(0, "Error: Could not find or load main class".length()))) {
+               JOptionPane.showMessageDialog((Component)null, "Could not find or load main class. You can try to place executable file into root folder or download launcher once more using link below.\nНе удалось загрузить главный класс Java. Попробуйте положить TLauncher в корневую директорию (например, в C:\\) или загрузить\nлаунчер заново, используя ссылку ниже.\n\nhttp://tlaun.ch/jar", "Error launching TLauncher", 0);
+            } else {
+               Alert.showError("Error starting TLauncher", "TLauncher application was closed with illegal exit code (" + exit + "). See console:", this.buffer.toString());
+            }
          }
 
          Bootstrapper.this.die(exit);
-      }
-
-      public void onJavaProcessError(JavaProcess jp, Throwable e) {
       }
 
       // $FF: synthetic method

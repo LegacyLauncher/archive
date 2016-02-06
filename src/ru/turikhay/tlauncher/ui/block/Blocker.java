@@ -21,22 +21,6 @@ public class Blocker {
       }
    }
 
-   public static void cleanUp(Blockable blockable) {
-      if (blockable == null) {
-         throw new NullPointerException();
-      } else {
-         blockMap.remove(blockable);
-      }
-   }
-
-   public static boolean contains(Blockable blockable) {
-      if (blockable == null) {
-         throw new NullPointerException();
-      } else {
-         return blockMap.containsKey(blockable);
-      }
-   }
-
    public static void block(Blockable blockable, Object reason) {
       if (blockable != null) {
          if (reason == null) {

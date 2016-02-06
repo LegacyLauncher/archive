@@ -87,10 +87,6 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
       this.setTip((AccountTip.Tip)null);
    }
 
-   public AccountTip.Tip getTip() {
-      return this.tip;
-   }
-
    public void setTip(AccountTip.Tip tip) {
       this.tip = tip;
       if (tip == null) {

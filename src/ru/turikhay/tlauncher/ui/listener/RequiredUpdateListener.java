@@ -11,9 +11,6 @@ public class RequiredUpdateListener implements UpdaterListener {
       updater.addListener(this);
    }
 
-   public void onUpdaterRequesting(Updater u) {
-   }
-
    public void onUpdaterErrored(Updater.SearchFailed failed) {
    }
 

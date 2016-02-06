@@ -171,28 +171,12 @@ public class StandardAuthenticator extends Authenticator {
          this.selectedProfile = profile;
       }
 
-      RefreshRequest(String clientToken, String accessToken) {
-         this(clientToken, accessToken, (GameProfile)null);
-      }
-
       private RefreshRequest(Authenticator auth, GameProfile profile) {
          this(Authenticator.getClientToken().toString(), auth.account.getAccessToken(), profile);
       }
 
       RefreshRequest(Authenticator auth) {
-         this((Authenticator)auth, (GameProfile)null);
-      }
-
-      public String getClientToken() {
-         return this.clientToken;
-      }
-
-      public String getAccessToken() {
-         return this.accessToken;
-      }
-
-      public GameProfile getProfile() {
-         return this.selectedProfile;
+         this(auth, (GameProfile)null);
       }
    }
 
@@ -243,26 +227,6 @@ public class StandardAuthenticator extends Authenticator {
 
       protected AuthenticationRequest(Authenticator auth) {
          this(auth.account.getUsername(), auth.account.getPassword(), Authenticator.getClientToken().toString());
-      }
-
-      public Agent getAgent() {
-         return this.agent;
-      }
-
-      public String getUsername() {
-         return this.username;
-      }
-
-      public String getPassword() {
-         return this.password;
-      }
-
-      public String getClientToken() {
-         return this.clientToken;
-      }
-
-      public boolean isRequestingUser() {
-         return true;
       }
    }
 }

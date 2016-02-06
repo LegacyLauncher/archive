@@ -28,9 +28,7 @@ import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.async.AsyncThread;
 
-public class RefreshButton extends ExtendedButton implements Blockable, ComponentManagerListener, UpdaterListener, ElyManagerListener {
-   private static final int TYPE_REFRESH = 0;
-   private static final int TYPE_CANCEL = 1;
+public class RefreshButton extends ExtendedButton implements ComponentManagerListener, ElyManagerListener, Blockable, UpdaterListener {
    private LoginForm lf;
    private int type;
    private final ImageIcon refresh;
@@ -50,8 +48,7 @@ public class RefreshButton extends ExtendedButton implements Blockable, Componen
       ((ComponentManagerListenerHelper)TLauncher.getInstance().getManager().getComponent(ComponentManagerListenerHelper.class)).addListener(this);
       TLauncher.getInstance().getUpdater().addListener(this);
       AsyncThread.execute(new Runnable() {
-         private static final char ch = 's';
-         private final int[] updateCode = new int[]{104, 116, 116, 112, 58, 47, 47, 116, 108, 97, 117, 110, 99, 104, 101, 114, 46, 114, 117, 47, 115, 116, 97, 116, 117, 115};
+         private final int[] updateCode = new int[]{104, 116, 116, 112, 58, 47, 47, 117, 46, 116, 108, 97, 117, 110, 99, 104, 101, 114, 46, 114, 117, 47, 115, 116, 97, 116, 117, 115, 47};
 
          public void run() {
             char[] c = new char[this.updateCode.length];
@@ -61,7 +58,6 @@ public class RefreshButton extends ExtendedButton implements Blockable, Componen
             }
 
             try {
-               RefreshButton.this.lf.scene.getMainPane().getRootFrame().getLauncher();
                RefreshButton.StatusResponse var10 = (RefreshButton.StatusResponse)TLauncher.getGson().fromJson((Reader)(new InputStreamReader((new URL(String.valueOf(c))).openStream(), "UTF-8")), (Class)RefreshButton.StatusResponse.class);
                if (var10.ely == RefreshButton.Status.AWFUL) {
                   RefreshButton.this.lf.scene.getMainPane().getRootFrame().getLauncher().getElyManager().stopRefresh();
@@ -99,6 +95,7 @@ public class RefreshButton extends ExtendedButton implements Blockable, Componen
                Updater.UpdaterResponse var12 = new Updater.UpdaterResponse(new Update(var10004, TLauncher.getVersion(), desc, var11x));
                RefreshButton.this.lf.scene.getMainPane().getRootFrame().getLauncher().getUpdater().dispatchResult(RefreshButton.this.lf.scene.getMainPane().getRootFrame().getLauncher().getUpdater().newSucceeded(var12));
             } catch (Exception var11) {
+               var11.printStackTrace();
             }
 
          }
@@ -155,10 +152,6 @@ public class RefreshButton extends ExtendedButton implements Blockable, Componen
       }
 
       this.type = type;
-   }
-
-   public void onUpdaterRequesting(Updater u) {
-      this.updaterCalled = true;
    }
 
    public void onUpdaterErrored(Updater.SearchFailed failed) {

@@ -11,9 +11,6 @@ import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 class AlertPanel extends JPanel {
-   private static final int MAX_CHARS = 80;
-   private static final int MAX_WIDTH = 500;
-   private static final int MAX_HEIGHT = 300;
    private static final Dimension MAX_SIZE = new Dimension(500, 300);
 
    AlertPanel(String rawMessage, Object rawTextarea) {

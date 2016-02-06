@@ -57,7 +57,7 @@ public class UpdateUIListener implements UpdateListener {
    }
 
    public void onUpdateApplyError(Update u, Throwable e) {
-      if (Alert.showLocQuestion("updater.save-error", (Object)e)) {
+      if (Alert.showLocQuestion("updater.save-error", e)) {
          openUpdateLink(u.getLink());
       }
 

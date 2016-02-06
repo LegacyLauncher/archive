@@ -8,7 +8,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
-import java.net.URL;
 import java.util.Iterator;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -33,8 +32,6 @@ import ru.turikhay.util.async.ExtendedThread;
 public class TLauncherFrame extends JFrame {
    public static final Dimension minSize = new Dimension(530, 550);
    public static final Dimension maxSize = new Dimension(1920, 1080);
-   public static final float minFontSize = 12.0F;
-   public static final float maxFontSize = 22.0F;
    private static float fontSize;
    public static double magnifyDimensions;
    private final TLauncherFrame instance = this;
@@ -148,10 +145,6 @@ public class TLauncherFrame extends JFrame {
       return this.tlauncher;
    }
 
-   public Point getMaxPoint() {
-      return this.maxPoint;
-   }
-
    public Configuration getConfiguration() {
       return this.settings;
    }
@@ -168,6 +161,7 @@ public class TLauncherFrame extends JFrame {
       LocalizableMenuItem.updateLocales();
       this.updateUILocale();
       Localizable.updateContainer(this);
+      this.setWindowTitle();
    }
 
    public void updateTitle() {
@@ -270,10 +264,6 @@ public class TLauncherFrame extends JFrame {
       default:
          return -1;
       }
-   }
-
-   public static URL getRes(String uri) {
-      return TLauncherFrame.class.getResource(uri);
    }
 
    private static void log(Object... o) {

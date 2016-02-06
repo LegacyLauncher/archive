@@ -22,17 +22,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
-public class VersionDownloadButton extends ImageButton implements VersionHandlerListener, Unblockable {
-   private static final String SELECTION_BLOCK = "selection";
-   private static final String PREFIX = "version.manager.downloader.";
-   private static final String WARNING = "version.manager.downloader.warning.";
-   private static final String WARNING_TITLE = "version.manager.downloader.warning.title";
-   private static final String WARNING_FORCE = "version.manager.downloader.warning.force.";
-   private static final String ERROR = "version.manager.downloader.error.";
-   private static final String ERROR_TITLE = "version.manager.downloader.error.title";
-   private static final String INFO = "version.manager.downloader.info.";
-   private static final String INFO_TITLE = "version.manager.downloader.info.title";
-   private static final String MENU = "version.manager.downloader.menu.";
+public class VersionDownloadButton extends ImageButton implements Unblockable, VersionHandlerListener {
    final VersionHandler handler;
    final Blockable blockable;
    private final JPopupMenu menu;

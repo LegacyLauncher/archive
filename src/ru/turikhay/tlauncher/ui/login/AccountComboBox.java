@@ -22,8 +22,7 @@ import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.util.Reflect;
 
-public class AccountComboBox extends ExtendedComboBox implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
-   private static final long serialVersionUID = 6618039863712810645L;
+public class AccountComboBox extends ExtendedComboBox implements ProfileManagerListener, Blockable, LocalizableComponent, LoginForm.LoginProcessListener {
    private static final Account EMPTY;
    private static final Account MANAGE;
    private final ProfileManager manager;
@@ -85,13 +84,6 @@ public class AccountComboBox extends ExtendedComboBox implements Blockable, Logi
    public void setAccount(Account account) {
       if (account != null && !account.equals(this.getAccount())) {
          this.setSelectedItem(account);
-      }
-
-   }
-
-   void setAccount(String username, Account.AccountType type) {
-      if (username != null) {
-         this.setSelectedItem(this.manager.getAuthDatabase().getByUsername(username, type));
       }
 
    }

@@ -1,8 +1,6 @@
 package ru.turikhay.tlauncher.ui.explorer;
 
 public class ImageFileExplorer extends FileExplorer {
-   private static final long serialVersionUID = -5906170445865689621L;
-
    protected ImageFileExplorer() {
       this.setAccessory(new ImageFilePreview(this));
       this.setFileFilter(new ImageFileFilter());

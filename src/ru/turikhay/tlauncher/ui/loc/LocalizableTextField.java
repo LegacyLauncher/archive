@@ -5,7 +5,6 @@ import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.text.ExtendedTextField;
 
 public class LocalizableTextField extends ExtendedTextField implements LocalizableComponent {
-   private static final long serialVersionUID = 359096767189321072L;
    protected String placeholderPath;
    protected String[] variables;
 
@@ -42,10 +41,6 @@ public class LocalizableTextField extends ExtendedTextField implements Localizab
 
    public void setPlaceholder(String placeholderPath) {
       this.setPlaceholder(placeholderPath, Localizable.EMPTY_VARS);
-   }
-
-   public String getPlaceholderPath() {
-      return this.placeholderPath;
    }
 
    public void updateLocale() {

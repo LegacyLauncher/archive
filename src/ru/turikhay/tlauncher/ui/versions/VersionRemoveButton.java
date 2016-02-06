@@ -16,13 +16,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
-public class VersionRemoveButton extends ImageButton implements VersionHandlerListener, Blockable {
-   private static final long serialVersionUID = 427368162418879141L;
-   private static final String ILLEGAL_SELECTION_BLOCK = "illegal-selection";
-   private static final String PREFIX = "version.manager.delete.";
-   private static final String ERROR = "version.manager.delete.error.";
-   private static final String ERROR_TITLE = "version.manager.delete.error.title";
-   private static final String MENU = "version.manager.delete.menu.";
+public class VersionRemoveButton extends ImageButton implements Blockable, VersionHandlerListener {
    private final VersionHandler handler;
    private final JPopupMenu menu;
    private final LocalizableMenuItem onlyJar;

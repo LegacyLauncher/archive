@@ -19,6 +19,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class SupportButton extends ExtendedButton implements Blockable, LocalizableComponent {
@@ -26,9 +27,8 @@ public class SupportButton extends ExtendedButton implements Blockable, Localiza
    SupportButton.SupportMenu menu;
 
    SupportButton(LoginForm loginForm) {
-      this.localeMap.put("ru_RU", (new SupportButton.SupportMenu("vk.png")).add("loginform.button.support.follow", actionURL("http://tlauncher.ru/go/vk?from=menu")).add("loginform.button.support.report", actionURL("http://tlauncher.ru/go/report?from=menu")).add("loginform.button.support.author", actionURL("http://tlauncher.ru/go/support?from=menu")));
-      this.localeMap.put("uk_UA", this.localeMap.get("ru_RU"));
-      this.localeMap.put("en_US", (new SupportButton.SupportMenu("mail.png")).add("loginform.button.support.email", actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))).add("loginform.button.support.developer", actionAlert("loginform.button.support.developer.alert", U.reverse("ur.rehcnualt@repoleved"))));
+      this.localeMap.put("ru_RU", (new SupportButton.SupportMenu("vk.png")).add("loginform.button.support.follow", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu")).addSeparator().add("loginform.button.support.report", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk/support?from=menu")).add("loginform.button.support.email", Images.getIcon("mail.png", SwingUtil.magnify(16)), actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))));
+      this.localeMap.put("en_US", (new SupportButton.SupportMenu("mail.png")).add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu")).add("loginform.button.support.email", actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))).add("loginform.button.support.developer", actionAlert("loginform.button.support.developer.alert", U.reverse("ur.rehcnualt@repoleved"))));
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             if (SupportButton.this.menu != null) {
@@ -121,19 +121,12 @@ public class SupportButton extends ExtendedButton implements Blockable, Localiza
             item.addActionListener(listener);
          }
 
-         this.add((JMenuItem)item);
+         this.add(item);
          return this;
       }
 
       public SupportButton.SupportMenu add(String key, ActionListener listener) {
          return this.add(key, (ImageIcon)null, listener);
-      }
-
-      public SupportButton.SupportMenu add(String key) {
-         LocalizableMenuItem item = new LocalizableMenuItem(key);
-         item.setEnabled(false);
-         this.add((JMenuItem)item);
-         return this;
       }
 
       public SupportButton.SupportMenu addSeparator() {

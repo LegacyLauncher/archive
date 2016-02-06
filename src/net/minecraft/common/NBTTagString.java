@@ -35,10 +35,6 @@ public class NBTTagString extends NBTBase {
       return this.data;
    }
 
-   public NBTBase copy() {
-      return new NBTTagString(this.getName(), this.data);
-   }
-
    public boolean equals(Object par1Obj) {
       if (!super.equals(par1Obj)) {
          return false;

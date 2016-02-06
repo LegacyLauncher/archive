@@ -4,10 +4,6 @@ public class AuthenticatorException extends Exception {
    private StandardAuthenticator.Response response;
    private String langpath;
 
-   AuthenticatorException(String message) {
-      super(message);
-   }
-
    AuthenticatorException(Throwable cause) {
       super(cause);
    }
@@ -30,9 +26,5 @@ public class AuthenticatorException extends Exception {
 
    public String getLangpath() {
       return this.langpath;
-   }
-
-   public StandardAuthenticator.Response getResponse() {
-      return this.response;
    }
 }

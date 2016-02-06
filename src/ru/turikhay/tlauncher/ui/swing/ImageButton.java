@@ -17,7 +17,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.SwingUtil;
 
 public class ImageButton extends ExtendedButton {
-   private static final long serialVersionUID = 1L;
    protected Image image;
    protected ImageButton.ImageRotation rotation;
    private int margin;
@@ -41,49 +40,21 @@ public class ImageButton extends ExtendedButton {
    }
 
    public ImageButton(String label, Image image, ImageButton.ImageRotation rotation) {
-      this(label, (Image)image, rotation, 4);
+      this(label, image, rotation, 4);
    }
 
    public ImageButton(String label, Image image) {
       this(label, image, ImageButton.ImageRotation.CENTER);
    }
 
-   public ImageButton(Image image) {
-      this((String)null, (Image)image);
-   }
-
    public ImageButton(String imagepath) {
-      this((String)null, (Image)loadImage(imagepath));
-   }
-
-   public ImageButton(String label, String imagepath, ImageButton.ImageRotation rotation, int margin) {
-      this(label, loadImage(imagepath), rotation, margin);
-   }
-
-   public ImageButton(String label, String imagepath, ImageButton.ImageRotation rotation) {
-      this(label, loadImage(imagepath), rotation);
-   }
-
-   public ImageButton(String label, String imagepath) {
-      this(label, loadImage(imagepath));
-   }
-
-   public Image getImage() {
-      return this.image;
+      this((String)null, loadImage(imagepath));
    }
 
    public void setImage(Image image) {
       this.image = image;
       this.initImage();
       this.repaint();
-   }
-
-   public ImageButton.ImageRotation getRotation() {
-      return this.rotation;
-   }
-
-   public int getImageMargin() {
-      return this.margin;
    }
 
    public void update(Graphics g) {

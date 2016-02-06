@@ -8,13 +8,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class Downloadable {
-   private static final boolean DEFAULT_FORCE = false;
-   private static final boolean DEFAULT_FAST = false;
    private String path;
    private Repository repo;
    private File destination;
@@ -27,7 +23,7 @@ public class Downloadable {
    private final List handlers;
    private Throwable error;
 
-   private Downloadable() {
+   protected Downloadable() {
       this.additionalDestinations = Collections.synchronizedList(new ArrayList());
       this.handlers = Collections.synchronizedList(new ArrayList());
    }
@@ -38,10 +34,6 @@ public class Downloadable {
       this.setDestination(destination);
       this.forceDownload = forceDownload;
       this.fastDownload = fastDownload;
-   }
-
-   public Downloadable(Repository repo, String path, File destination, boolean forceDownload) {
-      this(repo, path, destination, forceDownload, false);
    }
 
    public Downloadable(Repository repo, String path, File destination) {
@@ -86,18 +78,8 @@ public class Downloadable {
       return this.forceDownload;
    }
 
-   public void setForce(boolean force) {
-      this.checkLocked();
-      this.forceDownload = force;
-   }
-
    public boolean isFast() {
       return this.fastDownload;
-   }
-
-   public void setFast(boolean fast) {
-      this.checkLocked();
-      this.fastDownload = fast;
    }
 
    public String getURL() {
@@ -140,10 +122,6 @@ public class Downloadable {
       return this.destination;
    }
 
-   public String getFilename() {
-      return FileUtil.getFilename(this.path);
-   }
-
    protected void setDestination(File file) {
       if (file == null) {
          throw new NullPointerException();
@@ -168,10 +146,6 @@ public class Downloadable {
 
    public DownloadableContainer getContainer() {
       return this.container;
-   }
-
-   public boolean hasContainer() {
-      return this.container != null;
    }
 
    public boolean hasConsole() {
@@ -284,40 +258,11 @@ public class Downloadable {
          connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
          connection.setRequestProperty("Pragma", "no-cache");
          connection.setRequestProperty("Expires", "0");
-         if (!fake) {
-            return connection;
-         } else {
-            String userAgent;
-            switch(OS.CURRENT) {
-            case WINDOWS:
-               userAgent = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0; .NET4.0C)";
-               break;
-            case OSX:
-               userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8) AppleWebKit/535.18.5 (KHTML, like Gecko) Version/5.2 Safari/535.18.5";
-               break;
-            default:
-               userAgent = "Mozilla/5.0 (Linux; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0";
-            }
-
-            connection.setRequestProperty("User-Agent", userAgent);
-            return connection;
-         }
+         return connection;
       }
-   }
-
-   public static HttpURLConnection setUp(URLConnection connection, int timeout) {
-      return setUp(connection, timeout, false);
    }
 
    public static HttpURLConnection setUp(URLConnection connection, boolean fake) {
       return setUp(connection, U.getConnectionTimeout(), fake);
-   }
-
-   public static HttpURLConnection setUp(URLConnection connection) {
-      return setUp(connection, false);
-   }
-
-   public static String getEtag(String etag) {
-      return etag == null ? "-" : (etag.startsWith("\"") && etag.endsWith("\"") ? etag.substring(1, etag.length() - 1) : etag);
    }
 }

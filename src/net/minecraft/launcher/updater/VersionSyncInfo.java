@@ -37,10 +37,6 @@ public class VersionSyncInfo {
       }
    }
 
-   public VersionSyncInfo(VersionSyncInfo info) {
-      this(info.getLocal(), info.getRemote());
-   }
-
    protected VersionSyncInfo() {
       this.localVersion = null;
       this.remoteVersion = null;
@@ -167,14 +163,6 @@ public class VersionSyncInfo {
 
          return complete;
       }
-   }
-
-   public CompleteVersion getLatestCompleteVersion() throws IOException {
-      return this.getCompleteVersion(true);
-   }
-
-   public CompleteVersion getLocalCompleteVersion() {
-      return this.completeLocal;
    }
 
    Set getRequiredDownloadables(OS os, File targetDirectory, boolean force, boolean ely) throws IOException {

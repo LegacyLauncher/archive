@@ -13,7 +13,6 @@ import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 
 class ConfigurationDefaults {
-   private static final int version = 3;
    private final HashMap d = new HashMap();
 
    ConfigurationDefaults() {

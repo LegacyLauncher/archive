@@ -11,10 +11,7 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
-public class VersionRefreshButton extends ImageButton implements VersionHandlerListener, Blockable {
-   private static final long serialVersionUID = -7148657244927244061L;
-   private static final String PREFIX = "version.manager.refresher.";
-   private static final String MENU = "version.manager.refresher.menu.";
+public class VersionRefreshButton extends ImageButton implements Blockable, VersionHandlerListener {
    final VersionHandler handler;
    private final JPopupMenu menu;
    private final LocalizableMenuItem local;

@@ -16,11 +16,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import net.minecraft.launcher.updater.AssetIndexInfo;
+import net.minecraft.launcher.updater.DownloadInfo;
+import net.minecraft.launcher.updater.DownloadType;
 import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
@@ -30,9 +34,10 @@ import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
-public class CompleteVersion implements Version, Cloneable {
+public class CompleteVersion implements Cloneable, Version {
    String id;
    String jar;
+   String family;
    String inheritsFrom;
    Date time;
    Date releaseTime;
@@ -48,6 +53,9 @@ public class CompleteVersion implements Version, Cloneable {
    List libraries;
    List rules;
    List deleteEntries;
+   Map downloads = new HashMap();
+   AssetIndexInfo assetIndex;
+   protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");
 
    public String getID() {
       return this.id;
@@ -59,6 +67,10 @@ public class CompleteVersion implements Version, Cloneable {
       } else {
          throw new IllegalArgumentException("ID is NULL or empty");
       }
+   }
+
+   public String getFamily() {
+      return this.family;
    }
 
    public ReleaseType getReleaseType() {
@@ -137,10 +149,6 @@ public class CompleteVersion implements Version, Cloneable {
       return this.libraries;
    }
 
-   public List getRules() {
-      return Collections.unmodifiableList(this.rules);
-   }
-
    public List getDeleteEntries() {
       return this.deleteEntries;
    }
@@ -153,8 +161,16 @@ public class CompleteVersion implements Version, Cloneable {
       return this.tlauncherVersion;
    }
 
-   public String getAssets() {
-      return this.assets == null ? "legacy" : this.assets;
+   public AssetIndexInfo getAssetIndex() {
+      if (this.assetIndex == null) {
+         this.assetIndex = new AssetIndexInfo(this.assets == null ? "legacy" : this.assets);
+      }
+
+      return this.assetIndex;
+   }
+
+   public DownloadInfo getDownloadURL(DownloadType type) {
+      return (DownloadInfo)this.downloads.get(type);
    }
 
    public boolean equals(Object o) {
@@ -258,45 +274,6 @@ public class CompleteVersion implements Version, Cloneable {
       return this.getNatives(OS.CURRENT);
    }
 
-   public Set getRequiredFiles(OS os) {
-      HashSet neededFiles = new HashSet();
-      Iterator var4 = this.getRelevantLibraries().iterator();
-
-      while(var4.hasNext()) {
-         Library library = (Library)var4.next();
-         if (library.getNatives() != null) {
-            String natives = (String)library.getNatives().get(os);
-            if (natives != null) {
-               neededFiles.add("libraries/" + library.getArtifactPath(natives));
-            }
-         } else {
-            neededFiles.add("libraries/" + library.getArtifactPath());
-         }
-      }
-
-      return neededFiles;
-   }
-
-   public Collection getExtractFiles(OS os) {
-      Collection libraries = this.getRelevantLibraries();
-      ArrayList result = new ArrayList();
-      Iterator var5 = libraries.iterator();
-
-      while(var5.hasNext()) {
-         Library library = (Library)var5.next();
-         Map natives = library.getNatives();
-         if (natives != null && natives.containsKey(os)) {
-            result.add("libraries/" + library.getArtifactPath((String)natives.get(os)));
-         }
-      }
-
-      return result;
-   }
-
-   public CompleteVersion resolve(VersionManager vm) throws IOException {
-      return this.resolve(vm, false);
-   }
-
    public CompleteVersion resolve(VersionManager vm, boolean useLatest) throws IOException {
       return this.resolve(vm, useLatest, new ArrayList());
    }
@@ -304,25 +281,57 @@ public class CompleteVersion implements Version, Cloneable {
    protected CompleteVersion resolve(VersionManager vm, boolean useLatest, List inheristance) throws IOException {
       if (vm == null) {
          throw new NullPointerException("version manager");
-      } else if (this.inheritsFrom == null) {
-         return this;
-      } else if (inheristance.contains(this.id)) {
-         throw new CompleteVersion.DuplicateInheritanceException();
-      } else {
-         inheristance.add(this.id);
-         VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(this.inheritsFrom);
-         if (parentSyncInfo == null) {
-            throw new CompleteVersion.ParentNotFoundException();
+      } else if (this.inheritsFrom != null) {
+         if (inheristance.contains(this.id)) {
+            throw new CompleteVersion.DuplicateInheritanceException();
          } else {
-            CompleteVersion result;
-            try {
-               result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
-            } catch (CloneNotSupportedException var7) {
-               throw new RuntimeException(var7);
+            inheristance.add(this.id);
+            VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(this.inheritsFrom);
+            if (parentSyncInfo == null) {
+               throw new CompleteVersion.ParentNotFoundException();
+            } else {
+               CompleteVersion result;
+               try {
+                  result = (CompleteVersion)parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
+               } catch (CloneNotSupportedException var7) {
+                  throw new RuntimeException(var7);
+               }
+
+               if (this.id.toLowerCase().contains("forge") && this.family == null && result.family != null && !result.family.startsWith("Forge-")) {
+                  this.family = "Forge-" + result.family;
+               }
+
+               return this.copyInto(result);
+            }
+         }
+      } else {
+         if (this.family == null || this.family.equals("Forge-")) {
+            String family_;
+            switch(this.type) {
+            case UNKNOWN:
+            case OLD_ALPHA:
+            case SNAPSHOT:
+               family_ = this.type.toString();
+               break;
+            default:
+               family_ = getFamilyOf(this.id);
+               if (family_ == null && this.jar != null) {
+                  family_ = getFamilyOf(this.jar);
+               }
+
+               if (family_ == null && this.inheritsFrom != null) {
+                  family_ = getFamilyOf(this.inheritsFrom);
+               }
             }
 
-            return this.copyInto(result);
+            if (family_ == null) {
+               family_ = "unknown";
+            }
+
+            this.family = family_;
          }
+
+         return this;
       }
    }
 
@@ -330,6 +339,10 @@ public class CompleteVersion implements Version, Cloneable {
       result.id = this.id;
       if (this.jar != null) {
          result.jar = this.jar;
+      }
+
+      if (this.family != null) {
+         result.family = this.family;
       }
 
       result.inheritsFrom = null;
@@ -402,8 +415,16 @@ public class CompleteVersion implements Version, Cloneable {
       return result;
    }
 
-   private void log(Object... o) {
-      U.log("[Version:" + this.id + "]", o);
+   private static String getFamilyOf(String id) {
+      Matcher matcher = familyPattern.matcher(id);
+      String family;
+      if (matcher.matches()) {
+         family = matcher.group(1);
+      } else {
+         family = null;
+      }
+
+      return family;
    }
 
    public class ParentNotFoundException extends CompleteVersion.InheritanceException {
@@ -416,18 +437,6 @@ public class CompleteVersion implements Version, Cloneable {
       InheritanceException() {
          super(CompleteVersion.this.id + " should inherit from " + CompleteVersion.this.inheritsFrom);
       }
-
-      public String getID() {
-         return CompleteVersion.this.id;
-      }
-
-      public String getInheritsFrom() {
-         return CompleteVersion.this.inheritsFrom;
-      }
-
-      public CompleteVersion getVersion() {
-         return CompleteVersion.this;
-      }
    }
 
    public class DuplicateInheritanceException extends CompleteVersion.InheritanceException {
@@ -436,7 +445,7 @@ public class CompleteVersion implements Version, Cloneable {
       }
    }
 
-   public static class CompleteVersionSerializer implements JsonSerializer, JsonDeserializer {
+   public static class CompleteVersionSerializer implements JsonDeserializer, JsonSerializer {
       private final Gson defaultContext;
 
       public CompleteVersionSerializer() {

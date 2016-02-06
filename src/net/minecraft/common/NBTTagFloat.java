@@ -11,11 +11,6 @@ public class NBTTagFloat extends NBTBase {
       super(par1Str);
    }
 
-   public NBTTagFloat(String par1Str, float par2) {
-      super(par1Str);
-      this.data = par2;
-   }
-
    void write(DataOutput par1DataOutput) throws IOException {
       par1DataOutput.writeFloat(this.data);
    }
@@ -30,10 +25,6 @@ public class NBTTagFloat extends NBTBase {
 
    public String toString() {
       return "" + this.data;
-   }
-
-   public NBTBase copy() {
-      return new NBTTagFloat(this.getName(), this.data);
    }
 
    public boolean equals(Object par1Obj) {

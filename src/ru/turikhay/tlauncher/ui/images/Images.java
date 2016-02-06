@@ -13,7 +13,6 @@ import ru.turikhay.util.SwingUtil;
 public class Images {
    private static final Map loadedImages = new Hashtable();
    private static final Map magnifiedImages = new Hashtable();
-   private static final boolean THROW_IF_ERROR = true;
 
    public static BufferedImage loadImage(URL url, boolean throwIfError) {
       if (url == null) {
@@ -39,10 +38,6 @@ public class Images {
             return image;
          }
       }
-   }
-
-   public static BufferedImage loadImage(URL url) {
-      return loadImage(url, true);
    }
 
    public static Image loadMagnifiedImage(URL url, boolean throwIfError) {
@@ -82,16 +77,8 @@ public class Images {
       return getIcon(uri, widthNheight, widthNheight, true);
    }
 
-   public static ImageIcon getIcon(String uri, boolean throwIfError) {
-      return new ImageIcon(getImage(uri, throwIfError));
-   }
-
    public static ImageIcon getIcon(String uri) {
       return getIcon(uri, 0, 0);
-   }
-
-   public static ImageIcon getScaledIcon(String uri, int width, int height) {
-      return getIcon(uri, SwingUtil.magnify(width), SwingUtil.magnify(height));
    }
 
    public static ImageIcon getScaledIcon(String uri, int widthNheight) {

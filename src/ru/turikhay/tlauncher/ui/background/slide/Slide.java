@@ -33,10 +33,6 @@ public class Slide {
       }
    }
 
-   public URL getURL() {
-      return this.url;
-   }
-
    public boolean isLocal() {
       return this.url.getProtocol().equals("file");
    }
@@ -53,21 +49,22 @@ public class Slide {
       if (this.image.get() == null) {
          this.log("Loading image...");
          BufferedImage tempImage = null;
+         long startTime = System.currentTimeMillis();
 
          try {
             tempImage = ImageIO.read(this.url);
-         } catch (OutOfMemoryError var3) {
-            this.log("Not enough space to load image, as it's is too big!", var3);
+         } catch (OutOfMemoryError var5) {
+            this.log("Not enough space to load image, as it's is too big!", var5);
             return;
-         } catch (Throwable var4) {
-            this.log("Cannot load slide!", var4);
+         } catch (Throwable var6) {
+            this.log("Cannot load slide!", var6);
             return;
          }
 
          if (tempImage == null) {
             this.log("Image seems to be corrupted:", this.url);
          } else {
-            this.log("Loaded successfully!");
+            this.log("Loaded successfully in", System.currentTimeMillis() - startTime, "ms.");
             this.image = new SoftReference(tempImage);
          }
       }

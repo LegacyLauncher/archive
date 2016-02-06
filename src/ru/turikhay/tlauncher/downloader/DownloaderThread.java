@@ -18,9 +18,6 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class DownloaderThread extends ExtendedThread {
-   private static final double SMOOTHING_FACTOR = 0.005D;
-   private static final String ITERATION_BLOCK = "iteration";
-   private static final int NOTIFY_TIMER = 15000;
    private final int ID;
    private final String LOGGER_PREFIX;
    private final Downloader downloader;
@@ -34,6 +31,7 @@ public class DownloaderThread extends ExtendedThread {
    private boolean launched;
    private final StringBuilder b = new StringBuilder();
    private final Formatter formatter;
+   double curdone;
 
    DownloaderThread(Downloader d, int id) {
       super("DT#" + id);
@@ -259,19 +257,17 @@ public class DownloaderThread extends ExtendedThread {
    }
 
    private void onProgress(double curdone, double curspeed) {
+      this.curdone = curdone;
       this.currentProgress = this.doneProgress + this.eachProgress * curdone;
       this.speed = 0.005D * this.speed + 0.995D * curspeed;
-      if (this.currentProgress - this.lastProgress >= 0.01D) {
-         this.lastProgress = this.currentProgress;
-         this.downloader.onProgress(this, this.currentProgress, this.speed);
-      }
-
+      this.lastProgress = this.currentProgress;
+      this.downloader.onProgress(this, this.currentProgress, curdone, this.speed);
    }
 
    private void onComplete() throws RetryDownloadException {
       this.doneProgress += this.eachProgress;
       this.current.onComplete();
-      this.downloader.onProgress(this, this.doneProgress, this.speed);
+      this.downloader.onProgress(this, this.doneProgress, 1.0D, this.speed);
       this.downloader.onFileComplete(this, this.current);
    }
 

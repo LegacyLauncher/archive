@@ -1,10 +1,8 @@
 package ru.turikhay.util;
 
-import java.awt.Dimension;
 import ru.turikhay.exceptions.ParseException;
 
 public class IntegerArray {
-   public static final char defaultDelimiter = ';';
    private final int[] integers;
    private final char delimiter;
    private final int length;
@@ -23,14 +21,6 @@ public class IntegerArray {
    public int get(int pos) {
       if (pos >= 0 && pos < this.length) {
          return this.integers[pos];
-      } else {
-         throw new ArrayIndexOutOfBoundsException("Invalid position (" + pos + " / " + this.length + ")!");
-      }
-   }
-
-   public void set(int pos, int val) {
-      if (pos >= 0 && pos < this.length) {
-         this.integers[pos] = val;
       } else {
          throw new ArrayIndexOutOfBoundsException("Invalid position (" + pos + " / " + this.length + ")!");
       }
@@ -99,18 +89,5 @@ public class IntegerArray {
 
    public static IntegerArray parseIntegerArray(String val) throws ParseException {
       return parseIntegerArray(val, ';');
-   }
-
-   private static int[] toArray(String val, char del) throws ParseException {
-      IntegerArray arr = parseIntegerArray(val, del);
-      return arr.toArray();
-   }
-
-   public static int[] toArray(String val) throws ParseException {
-      return toArray(val, ';');
-   }
-
-   public static IntegerArray fromDimension(Dimension d) {
-      return new IntegerArray('x', new int[]{d.width, d.height});
    }
 }

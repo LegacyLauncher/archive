@@ -34,9 +34,7 @@ import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.pastebin.Paste;
 import ru.turikhay.util.pastebin.PasteListener;
 
-public class ConsoleFrame extends JFrame implements PasteListener, LocalizableComponent {
-   public static final int MIN_WIDTH = 670;
-   public static final int MIN_HEIGHT = 500;
+public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteListener {
    public final Console console;
    public final JTextArea textarea;
    public final JScrollBar vScrollbar;

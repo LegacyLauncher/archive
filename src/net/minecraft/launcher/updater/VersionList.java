@@ -19,7 +19,6 @@ import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
 
@@ -74,14 +73,6 @@ public abstract class VersionList {
       return version == null ? null : this.getCompleteVersion(version);
    }
 
-   public Version getLatestVersion(ReleaseType type) {
-      if (type == null) {
-         throw new NullPointerException();
-      } else {
-         return (Version)this.latest.get(type);
-      }
-   }
-
    public VersionList.RawVersionList getRawList() throws IOException {
       Object lock = new Object();
       Time.start(lock);
@@ -119,10 +110,10 @@ public abstract class VersionList {
          } else {
             Version version = this.getVersion((String)en1.getValue());
             if (version == null) {
-               throw new NullPointerException("Cannot find version for latest version entry: " + en1);
+               this.log("Cannot find version for latest version entry: " + en1);
+            } else {
+               this.latest.put(releaseType, version);
             }
-
-            this.latest.put(releaseType, version);
          }
       }
 
@@ -145,23 +136,6 @@ public abstract class VersionList {
       }
    }
 
-   void removeVersion(Version version) {
-      if (version == null) {
-         throw new NullPointerException("Version cannot be NULL!");
-      } else {
-         this.versions.remove(version);
-         this.byName.remove(version);
-      }
-   }
-
-   public void removeVersion(String name) {
-      Version version = this.getVersion(name);
-      if (version != null) {
-         this.removeVersion(version);
-      }
-
-   }
-
    public String serializeVersion(CompleteVersion version) {
       if (version == null) {
          throw new NullPointerException("CompleteVersion cannot be NULL!");
@@ -169,8 +143,6 @@ public abstract class VersionList {
          return this.gson.toJson((Object)version);
       }
    }
-
-   public abstract boolean hasAllFiles(CompleteVersion var1, OS var2);
 
    protected abstract String getUrl(String var1) throws IOException;
 
@@ -190,10 +162,6 @@ public abstract class VersionList {
 
       public List getVersions() {
          return this.versions;
-      }
-
-      public Map getLatestVersions() {
-         return this.latest;
       }
    }
 }

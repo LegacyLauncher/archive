@@ -22,8 +22,4 @@ public class NBTTagEnd extends NBTBase {
    public String toString() {
       return "END";
    }
-
-   public NBTBase copy() {
-      return new NBTTagEnd();
-   }
 }

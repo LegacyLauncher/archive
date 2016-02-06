@@ -11,11 +11,6 @@ public class NBTTagInt extends NBTBase {
       super(par1Str);
    }
 
-   public NBTTagInt(String par1Str, int par2) {
-      super(par1Str);
-      this.data = par2;
-   }
-
    void write(DataOutput par1DataOutput) throws IOException {
       par1DataOutput.writeInt(this.data);
    }
@@ -30,10 +25,6 @@ public class NBTTagInt extends NBTBase {
 
    public String toString() {
       return "" + this.data;
-   }
-
-   public NBTBase copy() {
-      return new NBTTagInt(this.getName(), this.data);
    }
 
    public boolean equals(Object par1Obj) {

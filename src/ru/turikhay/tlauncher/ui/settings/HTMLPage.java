@@ -34,48 +34,30 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
       this.setCenter(this.editor);
    }
 
-   public EditorPane getEditor() {
-      return this.editor;
-   }
-
-   public String getSource() {
-      return this.source;
-   }
-
    public void updateLocale() {
       if (this.source != null) {
          StringBuilder string = new StringBuilder();
          TokenReplacingReader replacer = new TokenReplacingReader(new StringReader(this.source), this.resolver);
 
-         label62: {
+         try {
+            int read;
             try {
-               while(true) {
-                  int read;
-                  if ((read = replacer.read()) <= 0) {
-                     break label62;
-                  }
-
+               while((read = replacer.read()) > 0) {
                   string.append((char)read);
                }
             } catch (IOException var7) {
                var7.printStackTrace();
-            } finally {
-               U.close(replacer);
+               return;
             }
-
-            return;
+         } finally {
+            U.close(replacer);
          }
 
          this.editor.setText(string.toString());
       }
-
    }
 
    private class AboutPageTokenResolver implements ITokenResolver {
-      private static final String image = "image:";
-      private static final String loc = "loc:";
-      private static final String color = "color";
-
       private AboutPageTokenResolver() {
       }
 

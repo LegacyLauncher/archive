@@ -33,14 +33,6 @@ public class Notices {
       this.unmodifiable = Collections.unmodifiableMap(this.map);
    }
 
-   public final Map getMap() {
-      return this.unmodifiable;
-   }
-
-   protected final Map map() {
-      return this.map;
-   }
-
    public final Notices.NoticeList getByName(String name) {
       return (Notices.NoticeList)this.map.get(name);
    }
@@ -128,10 +120,6 @@ public class Notices {
          }
       }
 
-      public final String getName() {
-         return this.name;
-      }
-
       public final List getList() {
          return this.unmodifiable;
       }
@@ -182,10 +170,6 @@ public class Notices {
          this.id = id;
       }
 
-      public final int getChance() {
-         return this.chance;
-      }
-
       public final void setChance(int chance) {
          if (chance >= 1 && chance <= 100) {
             this.chance = chance;
@@ -212,10 +196,6 @@ public class Notices {
 
       public final void setType(Notices.NoticeType type) {
          this.type = type;
-      }
-
-      public final int[] getSize() {
-         return (int[])this.size.clone();
       }
 
       public final void setSize(int[] size) {

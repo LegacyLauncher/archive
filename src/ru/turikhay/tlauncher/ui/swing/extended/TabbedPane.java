@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import com.sun.java.swing.plaf.windows.WindowsTabbedPaneUI;
 import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.TabbedPaneUI;
 import ru.turikhay.tlauncher.ui.swing.util.Orientation;
 
@@ -14,14 +16,11 @@ public class TabbedPane extends JTabbedPane {
          this.setUI(new WindowsTabbedPaneExtendedUI());
       }
 
-   }
-
-   public TabbedPane(Orientation tabLocation) {
-      this(tabLocation, (TabbedPane.TabLayout)null);
-   }
-
-   public TabbedPane(TabbedPane.TabLayout layout) {
-      this((Orientation)null, layout);
+      this.addChangeListener(new ChangeListener() {
+         public void stateChanged(ChangeEvent e) {
+            TabbedPane.this.onTabChange(TabbedPane.this.getSelectedIndex());
+         }
+      });
    }
 
    public TabbedPane() {
@@ -33,10 +32,6 @@ public class TabbedPane extends JTabbedPane {
       return ui instanceof ExtendedUI ? (ExtendedUI)ui : null;
    }
 
-   public Orientation getTabLocation() {
-      return Orientation.fromSwingConstant(this.getTabPlacement());
-   }
-
    public void setTabLocation(Orientation direction) {
       if (direction == null) {
          throw new NullPointerException();
@@ -45,16 +40,15 @@ public class TabbedPane extends JTabbedPane {
       }
    }
 
-   public TabbedPane.TabLayout getTabLayout() {
-      return TabbedPane.TabLayout.fromSwingConstant(this.getTabLayoutPolicy());
-   }
-
    public void setTabLayout(TabbedPane.TabLayout layout) {
       if (layout == null) {
          throw new NullPointerException();
       } else {
          this.setTabLayoutPolicy(layout.getSwingAlias());
       }
+   }
+
+   public void onTabChange(int index) {
    }
 
    public static enum TabLayout {
@@ -69,20 +63,6 @@ public class TabbedPane extends JTabbedPane {
 
       public int getSwingAlias() {
          return this.swingAlias;
-      }
-
-      public static TabbedPane.TabLayout fromSwingConstant(int orientation) {
-         TabbedPane.TabLayout[] var4;
-         int var3 = (var4 = values()).length;
-
-         for(int var2 = 0; var2 < var3; ++var2) {
-            TabbedPane.TabLayout current = var4[var2];
-            if (orientation == current.getSwingAlias()) {
-               return current;
-            }
-         }
-
-         return null;
       }
    }
 }

@@ -5,7 +5,6 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
 public class QuickParameterListenerThread extends LoopedThread {
-   public static final int DEFAULT_TICK = 500;
    private final IntegerArrayGetter paramGetter;
    private final Runnable runnable;
    private final int tick;
@@ -25,10 +24,6 @@ public class QuickParameterListenerThread extends LoopedThread {
          this.setPriority(1);
          this.startAndWait();
       }
-   }
-
-   QuickParameterListenerThread(IntegerArrayGetter getter, Runnable run) {
-      this(getter, run, 500);
    }
 
    void startListening() {

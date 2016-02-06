@@ -1,15 +1,17 @@
 package ru.turikhay.tlauncher.ui.editor;
 
 import ru.turikhay.tlauncher.ui.loc.LocalizableTextField;
+import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 
-public class EditorTextField extends LocalizableTextField implements EditorField {
-   private static final long serialVersionUID = 3920711425159165958L;
+public class EditorTextField extends BorderPanel implements EditorField {
    private final boolean canBeEmpty;
+   public final LocalizableTextField textField;
 
    public EditorTextField(String prompt, boolean canBeEmpty) {
-      super(prompt);
       this.canBeEmpty = canBeEmpty;
-      this.setColumns(1);
+      this.textField = new LocalizableTextField(prompt);
+      this.textField.setColumns(1);
+      this.setCenter(this.textField);
    }
 
    public EditorTextField(String prompt) {
@@ -25,24 +27,24 @@ public class EditorTextField extends LocalizableTextField implements EditorField
    }
 
    public String getSettingsValue() {
-      return this.getValue();
+      return this.textField.getValue();
    }
 
    public void setSettingsValue(String value) {
-      this.setText(value);
-      this.setCaretPosition(0);
+      this.textField.setText(value);
+      this.textField.setCaretPosition(0);
    }
 
    public boolean isValueValid() {
-      String text = this.getValue();
+      String text = this.textField.getValue();
       return text != null || this.canBeEmpty;
    }
 
    public void block(Object reason) {
-      this.setEnabled(false);
+      this.textField.setEnabled(false);
    }
 
    public void unblock(Object reason) {
-      this.setEnabled(true);
+      this.textField.setEnabled(true);
    }
 }

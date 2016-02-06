@@ -7,10 +7,6 @@ import ru.turikhay.tlauncher.repository.Repository;
 public interface Version {
    String getID();
 
-   String getJar();
-
-   void setID(String var1);
-
    ReleaseType getReleaseType();
 
    Repository getSource();

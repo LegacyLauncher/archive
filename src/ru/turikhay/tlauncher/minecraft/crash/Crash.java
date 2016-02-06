@@ -7,22 +7,27 @@ import java.util.List;
 
 public class Crash {
    private String file;
+   private String nativeReport;
    private List signatures = new ArrayList();
 
    void addSignature(CrashSignatureContainer.CrashSignature sign) {
       this.signatures.add(sign);
    }
 
-   void removeSignature(CrashSignatureContainer.CrashSignature sign) {
-      this.signatures.remove(sign);
+   public String getFile() {
+      return this.file;
    }
 
    void setFile(String path) {
       this.file = path;
    }
 
-   public String getFile() {
-      return this.file;
+   public String getNativeReport() {
+      return this.nativeReport;
+   }
+
+   void setNativeReport(String path) {
+      this.nativeReport = path;
    }
 
    public List getSignatures() {
@@ -43,7 +48,7 @@ public class Crash {
          }
 
          signature = (CrashSignatureContainer.CrashSignature)var3.next();
-      } while(!signature.getName().equals(name));
+      } while(!signature.getName().equalsIgnoreCase(name));
 
       return true;
    }

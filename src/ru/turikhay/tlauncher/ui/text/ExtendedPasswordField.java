@@ -9,8 +9,6 @@ import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
 
 public class ExtendedPasswordField extends JPasswordField {
-   private static final long serialVersionUID = 3175896797135831502L;
-   private static final String DEFAULT_PLACEHOLDER = "пассворд, лол";
    private CenterPanelTheme theme;
    private String placeholder;
 
@@ -88,35 +86,6 @@ public class ExtendedPasswordField extends JPasswordField {
    private void setEmpty() {
       this.setForeground(this.theme.getFocus());
       super.setText("");
-   }
-
-   void updateStyle() {
-      this.setForeground(this.getValue() == null ? this.theme.getFocusLost() : this.theme.getFocus());
-   }
-
-   public String getPlaceholder() {
-      return this.placeholder;
-   }
-
-   public void setPlaceholder(String placeholder) {
-      this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
-      if (this.getValue() == null) {
-         this.setPlaceholder();
-      }
-
-   }
-
-   public CenterPanelTheme getTheme() {
-      return this.theme;
-   }
-
-   public void setTheme(CenterPanelTheme theme) {
-      if (theme == null) {
-         theme = CenterPanel.defaultTheme;
-      }
-
-      this.theme = theme;
-      this.updateStyle();
    }
 
    protected void onFocusGained() {

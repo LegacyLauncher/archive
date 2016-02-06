@@ -1,11 +1,9 @@
 package ru.turikhay.tlauncher.ui.loc;
 
-import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 
 public class LocalizableCheckbox extends JCheckBox implements LocalizableComponent {
-   private static final long serialVersionUID = 1L;
    private String path;
 
    public LocalizableCheckbox(String path) {
@@ -30,24 +28,8 @@ public class LocalizableCheckbox extends JCheckBox implements LocalizableCompone
       super.setText(Localizable.get() == null ? path : Localizable.get().get(path));
    }
 
-   public String getLangPath() {
-      return this.path;
-   }
-
    public boolean getState() {
       return super.getModel().isSelected();
-   }
-
-   public void setState(boolean state) {
-      super.getModel().setSelected(state);
-   }
-
-   public void addListener(ItemListener l) {
-      super.getModel().addItemListener(l);
-   }
-
-   public void removeListener(ItemListener l) {
-      super.getModel().removeItemListener(l);
    }
 
    public void updateLocale() {

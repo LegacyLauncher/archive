@@ -21,18 +21,6 @@ public class ExtendedLabel extends JLabel {
       this(text, (Icon)null, horizontalAlignment);
    }
 
-   public ExtendedLabel(String text) {
-      this(text, (Icon)null, 10);
-   }
-
-   public ExtendedLabel(Icon image, int horizontalAlignment) {
-      this((String)null, image, horizontalAlignment);
-   }
-
-   public ExtendedLabel(Icon image) {
-      this((String)null, image, 0);
-   }
-
    public ExtendedLabel() {
       this((String)null, (Icon)null, 10);
    }

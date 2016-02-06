@@ -30,9 +30,6 @@ import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.U;
 
 public class ProfileManager extends RefreshableComponent {
-   public static final String DEFAULT_PROFILE_NAME = "TLauncher";
-   public static final String OLD_PROFILE_FILENAME = "launcher_profiles.json";
-   public static final String DEFAULT_PROFILE_FILENAME = "tlauncher_profiles.json";
    private final List listeners;
    private final AccountListener accountListener;
    private final Gson gson;
@@ -144,10 +141,6 @@ public class ProfileManager extends RefreshableComponent {
 
    public AuthenticatorDatabase getAuthDatabase() {
       return this.authDatabase;
-   }
-
-   public File getFile() {
-      return this.file;
    }
 
    public void setFile(File file) {

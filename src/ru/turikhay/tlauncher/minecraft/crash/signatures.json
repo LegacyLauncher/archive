@@ -1,7 +1,9 @@
 {
   variables: {
     "forge": "^(?:[0-9-]+ [0-9:]+ \\[[\\w]+\\]\\ {0,1}\\[{0,1}[\\w]*\\]{0,1}\\ {0,1}){0,1}",
-    "crash": "^.*[\\#\\@\\!\\@\\#][ ]Game[ ]crashed!.+[\\#\\@\\!\\@\\#][ ](.+)$"
+    "crash": "^.*[\\#\\@\\!\\@\\#] Game crashed\\!.+[\\#\\@\\!\\@\\#][ ](.+)$",
+    "report0": "^# An error report file with more information is saved as:$",
+    "report1": "^# (.+)$"
   },
   signatures: [
     {
@@ -57,19 +59,25 @@
       name: "Bad ATI/AMD videocard drivers",
       path: "old-videocard.ati",
       exit: 1,
-      pattern: '^# C  \\[atio(?:gl|[0-9a-z]{2,})xx\\.dll\\+0x[0-9a-z]+\\]$'
+      pattern: '^\\#[ ]+C[ ]+\\[atio(?:gl|[0-9a-z]{2,})xx\\.dll\\+0x[0-9a-z]+\\]$'
     },
     {
       name: "Old Intel videocard",
       path: "old-videocard.intel",
       exit: 1,
-      pattern: '^# C  \\[ig4dev[\\d]{2}\\.dll\\+0x[0-9a-z]+]$'
+      pattern: '^\\#[ ]+C[ ]+\\[ig4icd(?:32|64)\\.dll\\+0x[0-9a-z]+\\]$'
     },
     {
       name: "Too heavy heap",
       path: "reserve-space",
       exit: 1,
-      pattern: '^(?:Could not reserve enough space|Initial heap size set to a larger value than the maximum heap size)$'
+      pattern: '^(?:Could not reserve enough space for [0-9]+KB object heap|Initial heap size set to a larger value than the maximum heap size)$'
+    },
+    {
+      name: "Server resource pack download on startup",
+      path: "server-rp",
+      exit: -1,
+      pattern: '^(.*)\\[Downloader 0/ERROR]: INTERRUPTED$'
     }
   ]
 }

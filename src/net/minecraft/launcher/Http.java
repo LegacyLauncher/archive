@@ -8,7 +8,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Iterator;
@@ -69,16 +68,8 @@ public class Http {
       return response.toString();
    }
 
-   public static String performGet(String url) throws IOException {
-      return performGet(constantURL(url), U.getConnectionTimeout(), U.getReadTimeout());
-   }
-
    public static String performGet(URL url) throws IOException {
       return performGet(url, U.getConnectionTimeout(), U.getReadTimeout());
-   }
-
-   public static URL concatenateURL(URL url, String args) throws MalformedURLException {
-      return url.getQuery() != null && url.getQuery().length() > 0 ? new URL(url.getProtocol(), url.getHost(), url.getFile() + "?" + args) : new URL(url.getProtocol(), url.getHost(), url.getFile() + "&" + args);
    }
 
    public static String performPost(URL url, String parameters, String contentType) throws IOException {
@@ -121,14 +112,6 @@ public class Http {
    public static String encode(String s) {
       try {
          return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20").replaceAll("\\%3A", ":").replaceAll("\\%2F", "/").replaceAll("\\%21", "!").replaceAll("\\%27", "'").replaceAll("\\%28", "(").replaceAll("\\%29", ")").replaceAll("\\%7E", "~");
-      } catch (UnsupportedEncodingException var2) {
-         throw new RuntimeException("UTF-8 is not supported.", var2);
-      }
-   }
-
-   public static String decode(String s) {
-      try {
-         return URLDecoder.decode(s, "UTF-8");
       } catch (UnsupportedEncodingException var2) {
          throw new RuntimeException("UTF-8 is not supported.", var2);
       }

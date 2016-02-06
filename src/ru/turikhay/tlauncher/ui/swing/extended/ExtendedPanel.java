@@ -38,20 +38,6 @@ public class ExtendedPanel extends JPanel {
       this(true);
    }
 
-   public float getOpacity() {
-      return this.opacity;
-   }
-
-   public void setOpacity(float f) {
-      if (f >= 0.0F && f <= 1.0F) {
-         this.opacity = f;
-         this.aComp = AlphaComposite.getInstance(3, f);
-         this.repaint();
-      } else {
-         throw new IllegalArgumentException("opacity must be in [0;1]");
-      }
-   }
-
    public Insets getInsets() {
       return this.insets == null ? super.getInsets() : this.insets;
    }
@@ -140,28 +126,6 @@ public class ExtendedPanel extends JPanel {
          }
       }
 
-   }
-
-   protected synchronized void removeMouseListenerOriginally(MouseListener listener) {
-      super.removeMouseListener(listener);
-   }
-
-   public boolean contains(Component comp) {
-      if (comp == null) {
-         return false;
-      } else {
-         Component[] var5;
-         int var4 = (var5 = this.getComponents()).length;
-
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component c = var5[var3];
-            if (comp.equals(c)) {
-               return true;
-            }
-         }
-
-         return false;
-      }
    }
 
    public Insets setInsets(int top, int left, int bottom, int right) {

@@ -32,8 +32,6 @@ public abstract class ExtendedThread extends Thread {
 
    }
 
-   public abstract void run();
-
    protected void lockThread(String reason) {
       if (reason == null) {
          throw new NullPointerException();
@@ -90,10 +88,6 @@ public abstract class ExtendedThread extends Thread {
       if (!this.isCurrent()) {
          throw new IllegalStateException("Illegal thread!");
       }
-   }
-
-   protected void threadLog(Object... o) {
-      U.log("[" + this.getName() + "]", o);
    }
 
    public class ExtendedThreadCaller extends RuntimeException {

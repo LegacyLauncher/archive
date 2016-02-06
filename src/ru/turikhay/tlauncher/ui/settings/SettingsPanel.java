@@ -18,6 +18,7 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
@@ -50,15 +51,17 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginException;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
+import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
 
-public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
+public class SettingsPanel extends TabbedEditorPanel implements LocalizableComponent, LoginForm.LoginProcessListener {
    private final DefaultScene scene;
    private final TabbedEditorPanel.EditorPanelTab minecraftTab;
    public final EditorFieldHandler directory;
+   public final EditorFieldHandler useSeparateDir;
    public final EditorFieldHandler resolution;
    public final EditorFieldHandler fullscreen;
    public final EditorFieldHandler javaArgs;
@@ -77,6 +80,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
    public final EditorFieldHandler fullCommand;
    public final EditorFieldHandler connQuality;
    public final EditorFieldHandler launchAction;
+   public final EditorGroupHandler alertUpdates;
    public final EditorFieldHandler locale;
    private final TabbedEditorPanel.EditorPanelTab aboutTab;
    public final HTMLPage about;
@@ -90,6 +94,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
    private final LocalizableMenuItem infoItem;
    private final LocalizableMenuItem defaultItem;
    private EditorHandler selectedHandler;
+   private boolean hideUponSave = true;
 
    public SettingsPanel(DefaultScene sc) {
       super(tipTheme, new Insets(5, 10, 10, 10));
@@ -109,7 +114,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       };
       FocusListener restart = new FocusListener() {
          public void focusGained(FocusEvent e) {
-            SettingsPanel.this.setMessage("settings.restart");
+            SettingsPanel.this.setError("settings.restart");
          }
 
          public void focusLost(FocusEvent e) {
@@ -123,11 +128,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          dirExplorer = FileExplorer.newExplorer();
          dirExplorer.setFileSelectionMode(1);
          dirExplorer.setFileHidingEnabled(false);
-      } catch (InternalError var15) {
+      } catch (InternalError var17) {
          dirExplorer = null;
       }
 
-      this.directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", dirExplorer), warning);
+      this.directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", dirExplorer, false, false), warning);
       this.directory.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
@@ -144,7 +149,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
          }
       });
-      this.minecraftTab.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{this.directory}));
+      this.useSeparateDir = new EditorFieldHandler("minecraft.gamedir.separate", new EditorCheckBox("settings.client.gamedir.separate"));
+      this.minecraftTab.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{this.directory, this.useSeparateDir}));
       this.resolution = new EditorFieldHandler("minecraft.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", this.global.getDefaultClientWindowSize(), false));
       this.fullscreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
       this.minecraftTab.add(new EditorPair("settings.client.resolution.label", new EditorHandler[]{this.resolution, this.fullscreen}));
@@ -186,10 +192,19 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          }
       });
       this.minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{this.javaArgs, this.mcArgs, this.improvedArgs}));
-      this.cmd = new EditorFieldHandler("minecraft.cmd", new EditorTextField("settings.java.cmd", true), warning);
+      final SettingsMemorySlider memorySlider = new SettingsMemorySlider(this);
+      this.cmd = new EditorFieldHandler("minecraft.cmd", new EditorTextField("settings.java.cmd", true) {
+         {
+            this.textField.getDocument().addDocumentListener(new DocumentChangeListener() {
+               public void documentChanged(DocumentEvent e) {
+                  memorySlider.updateInfo();
+               }
+            });
+         }
+      }, warning);
       this.minecraftTab.add(new EditorPair("settings.java.cmd.label", new EditorHandler[]{this.cmd}));
       this.minecraftTab.nextPane();
-      this.memory = new EditorFieldHandler("minecraft.memory", new SettingsMemorySlider(), warning);
+      this.memory = new EditorFieldHandler("minecraft.memory", memorySlider, warning);
       this.minecraftTab.add(new EditorPair("settings.java.memory.label", new EditorHandler[]{this.memory}));
       this.add(this.minecraftTab);
       this.tlauncherTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.tlauncher");
@@ -232,11 +247,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       ImageFileExplorer imgExplorer1;
       try {
          imgExplorer1 = ImageFileExplorer.newExplorer();
-      } catch (InternalError var14) {
+      } catch (InternalError var16) {
          imgExplorer1 = null;
       }
 
-      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", true, imgExplorer1));
+      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", imgExplorer1, true, true));
       this.background.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
@@ -280,6 +295,19 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.launchAction = new EditorFieldHandler("minecraft.onlaunch", new EditorComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
       this.tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{this.launchAction}));
       this.tlauncherTab.nextPane();
+      List defReleaseTypeHandlers = new ArrayList();
+      ReleaseType[] arr$ = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.MODIFIED};
+      int len$ = arr$.length;
+
+      for(int i$ = 0; i$ < len$; ++i$) {
+         ReleaseType releaseType = arr$[i$];
+         defReleaseTypeHandlers.add(new EditorFieldHandler("gui.alerton." + releaseType, new EditorCheckBox("settings.alert-on." + releaseType)));
+         defReleaseTypeHandlers.add(EditorPair.NEXT_COLUMN);
+      }
+
+      this.alertUpdates = new EditorGroupHandler(defReleaseTypeHandlers);
+      this.tlauncherTab.add(new EditorPair("settings.alert-on.label", defReleaseTypeHandlers));
+      this.tlauncherTab.nextPane();
       this.locale = new EditorFieldHandler("locale", new EditorComboBox(new LocaleConverter(), this.global.getLocales()));
       this.locale.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldvalue, String newvalue) {
@@ -287,6 +315,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                SettingsPanel.this.tlauncher.getFrame().updateLocales();
             }
 
+            SettingsPanel.this.hideUponSave = false;
          }
       });
       this.tlauncherTab.add(new EditorPair("settings.lang.label", new EditorHandler[]{this.locale}));
@@ -305,6 +334,12 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
       this.saveButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             SettingsPanel.this.saveValues();
+            if (SettingsPanel.this.hideUponSave) {
+               SettingsPanel.this.scene.setSidePanel((DefaultScene.SidePanel)null);
+            } else {
+               SettingsPanel.this.hideUponSave = true;
+            }
+
          }
       });
       this.defaultButton = new LocalizableButton("settings.default");
@@ -445,11 +480,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
          this.log(new Object[]{"Reset!"});
       }
 
-   }
-
-   boolean canReset(EditorHandler handler) {
-      String key = handler.getPath();
-      return this.global.isSaveable(key) && this.global.getDefault(handler.getPath()) != null;
    }
 
    void callPopup(MouseEvent e, EditorHandler handler) {

@@ -4,7 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class NBTTagList extends NBTBase {
@@ -65,30 +64,12 @@ public class NBTTagList extends NBTBase {
       this.tagList.add(par1NBTBase);
    }
 
-   public NBTBase removeTag(int par1) {
-      return (NBTBase)this.tagList.remove(par1);
-   }
-
    public NBTBase tagAt(int par1) {
       return (NBTBase)this.tagList.get(par1);
    }
 
    public int tagCount() {
       return this.tagList.size();
-   }
-
-   public NBTBase copy() {
-      NBTTagList var1 = new NBTTagList(this.getName());
-      var1.tagType = this.tagType;
-      Iterator var2 = this.tagList.iterator();
-
-      while(var2.hasNext()) {
-         NBTBase var3 = (NBTBase)var2.next();
-         NBTBase var4 = var3.copy();
-         var1.tagList.add(var4);
-      }
-
-      return var1;
    }
 
    public boolean equals(Object par1Obj) {

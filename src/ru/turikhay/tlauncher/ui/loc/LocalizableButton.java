@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.loc;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 
 public class LocalizableButton extends ExtendedButton implements LocalizableComponent {
-   private static final long serialVersionUID = 1073130908385613323L;
    private String path;
    private String[] variables;
 

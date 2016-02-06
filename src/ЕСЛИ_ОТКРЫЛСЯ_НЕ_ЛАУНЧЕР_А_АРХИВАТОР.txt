@@ -1,13 +1,13 @@
 Если по умолчанию Вы открыли лаунчер с помощью архиватора (WinRar, 7-Zip и т.п.),
 в данном файле предложены решения данной проблемы.
 
--- Скачайте EXE версию TLauncher (для Windows): http://tlauncher.ru/download/exe
+-- Скачайте EXE версию TLauncher (для Windows): http://tlaun.ch/exe
 -- Попробуйте (пере-)установить Java с сайта: http://java.com
 
 ==================
 
-If you've opened this file with an archive program by default, this may help
+If you try to open launcher and the archive program opens instead, this may help
 you to solve the problem:
 
--- Download the EXE-package of TLauncher (for Windows): http://tlauncher.ru/download/exe
+-- Download the EXE-package of TLauncher (for Windows): http://tlaun.ch/exe
 -- Try to (re)install Java: http://java.com
