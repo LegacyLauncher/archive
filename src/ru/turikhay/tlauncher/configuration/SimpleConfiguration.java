@@ -19,19 +19,13 @@ import java.util.Map.Entry;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
-public class SimpleConfiguration implements AbstractConfiguration {
+public class SimpleConfiguration {
    protected final Properties properties;
    protected Object input;
    protected String comments;
 
    public SimpleConfiguration() {
       this.properties = new Properties();
-   }
-
-   public SimpleConfiguration(InputStream stream) throws IOException {
-      this();
-      loadFromStream(this.properties, stream);
-      this.input = stream;
    }
 
    public SimpleConfiguration(File file) {
@@ -111,10 +105,6 @@ public class SimpleConfiguration implements AbstractConfiguration {
 
    }
 
-   public void set(Map map) {
-      this.set(map, false);
-   }
-
    public Set getKeys() {
       HashSet set = new HashSet();
       Iterator var3 = this.properties.keySet().iterator();
@@ -171,18 +161,6 @@ public class SimpleConfiguration implements AbstractConfiguration {
       }
    }
 
-   public long getLong(String key) {
-      return this.getLongOf(this.get(key), 0L);
-   }
-
-   protected long getLongOf(Object obj, long def) {
-      try {
-         return Long.parseLong(obj.toString());
-      } catch (Exception var5) {
-         return def;
-      }
-   }
-
    public boolean getBoolean(String key) {
       return this.getBooleanOf(this.get(key), false);
    }
@@ -193,26 +171,6 @@ public class SimpleConfiguration implements AbstractConfiguration {
       } catch (Exception var4) {
          return def;
       }
-   }
-
-   public int getDefaultInteger(String key) {
-      return 0;
-   }
-
-   public double getDefaultDouble(String key) {
-      return 0.0D;
-   }
-
-   public float getDefaultFloat(String key) {
-      return 0.0F;
-   }
-
-   public long getDefaultLong(String key) {
-      return 0L;
-   }
-
-   public boolean getDefaultBoolean(String key) {
-      return false;
    }
 
    public void save() throws IOException {
@@ -266,12 +224,6 @@ public class SimpleConfiguration implements AbstractConfiguration {
       }
    }
 
-   protected static Properties loadFromFile(File file) throws IOException {
-      Properties properties = new Properties();
-      loadFromFile(properties, file);
-      return properties;
-   }
-
    private static void loadFromURL(Properties properties, URL url) throws IOException {
       if (url == null) {
          throw new NullPointerException();
@@ -279,12 +231,6 @@ public class SimpleConfiguration implements AbstractConfiguration {
          InputStream connection = url.openStream();
          loadFromStream(properties, connection);
       }
-   }
-
-   protected static Properties loadFromURL(URL url) throws IOException {
-      Properties properties = new Properties();
-      loadFromURL(properties, url);
-      return properties;
    }
 
    protected static void copyProperties(Properties src, Properties dest, boolean wipe) {

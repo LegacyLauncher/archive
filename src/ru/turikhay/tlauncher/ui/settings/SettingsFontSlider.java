@@ -17,7 +17,7 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 
 public class SettingsFontSlider extends BorderPanel implements EditorField {
    private final JSlider slider = new JSlider();
-   private final EditorIntegerField inputField;
+   private EditorIntegerField inputField;
    private final LocalizableLabel pt;
 
    SettingsFontSlider() {
@@ -35,7 +35,7 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
       });
       this.setCenter(this.slider);
       this.inputField = new EditorIntegerField();
-      this.inputField.setColumns(2);
+      this.inputField.textField.setColumns(2);
       this.pt = new LocalizableLabel("settings.fontsize.pt");
       ExtendedPanel panel = new ExtendedPanel();
       panel.add(this.inputField, this.pt);
@@ -50,7 +50,7 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
             SettingsFontSlider.this.onSliderUpdate();
          }
       });
-      this.inputField.getDocument().addDocumentListener(new DocumentListener() {
+      this.inputField.textField.getDocument().addDocumentListener(new DocumentListener() {
          public void insertUpdate(DocumentEvent e) {
             SettingsFontSlider.this.updateInfo();
          }
@@ -79,11 +79,11 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
    }
 
    public String getSettingsValue() {
-      return this.inputField.getValue();
+      return this.inputField.textField.getValue();
    }
 
    public void setSettingsValue(String value) {
-      this.inputField.setValue(value);
+      this.inputField.textField.setValue(value);
       this.updateInfo();
    }
 
@@ -92,7 +92,7 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
    }
 
    private void onSliderUpdate() {
-      this.inputField.setValue(this.slider.getValue());
+      this.inputField.textField.setValue(this.slider.getValue());
    }
 
    private void updateSlider() {

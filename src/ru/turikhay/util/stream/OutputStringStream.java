@@ -1,6 +1,6 @@
 package ru.turikhay.util.stream;
 
-public class StringStream extends SafeOutputStream {
+public class OutputStringStream extends SafeOutputStream {
    protected final StringBuilder buffer = new StringBuilder();
    protected int caret;
 

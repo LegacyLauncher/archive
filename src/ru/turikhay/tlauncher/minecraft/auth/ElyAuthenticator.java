@@ -1,8 +1,6 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
 public class ElyAuthenticator extends StandardAuthenticator {
-   private static final String ELY_URL = "https://authserver.ely.by/auth/";
-
    public ElyAuthenticator(Account account) {
       super(account, "https://authserver.ely.by/auth/authenticate", "https://authserver.ely.by/auth/refresh");
    }

@@ -3,14 +3,8 @@ package ru.turikhay.tlauncher.minecraft.auth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
@@ -123,55 +117,5 @@ class AuthenticatorService {
       }
 
       return var6;
-   }
-
-   public static URL constantURL(String url) {
-      try {
-         return new URL(url);
-      } catch (MalformedURLException var2) {
-         throw new Error("Couldn't create constant for " + url, var2);
-      }
-   }
-
-   public static String buildQuery(Map query) {
-      if (query == null) {
-         return "";
-      } else {
-         StringBuilder builder = new StringBuilder();
-         Iterator var3 = query.entrySet().iterator();
-
-         while(var3.hasNext()) {
-            Entry entry = (Entry)var3.next();
-            if (builder.length() > 0) {
-               builder.append('&');
-            }
-
-            try {
-               builder.append(URLEncoder.encode((String)entry.getKey(), "UTF-8"));
-            } catch (UnsupportedEncodingException var6) {
-               log("Unexpected exception building query", var6);
-            }
-
-            if (entry.getValue() != null) {
-               builder.append('=');
-
-               try {
-                  builder.append(URLEncoder.encode(entry.getValue().toString(), "UTF-8"));
-               } catch (UnsupportedEncodingException var5) {
-                  log("Unexpected exception building query", var5);
-               }
-            }
-         }
-
-         return builder.toString();
-      }
-   }
-
-   public static URL concatenateURL(URL url, String query) {
-      try {
-         return url.getQuery() != null && url.getQuery().length() > 0 ? new URL(url.getProtocol(), url.getHost(), url.getFile() + "&" + query) : new URL(url.getProtocol(), url.getHost(), url.getFile() + "?" + query);
-      } catch (MalformedURLException var3) {
-         throw new IllegalArgumentException("Could not concatenate given URL with GET arguments!", var3);
-      }
    }
 }

@@ -6,7 +6,6 @@ import ru.turikhay.tlauncher.ui.background.slide.SlideBackground;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 
 public class BackgroundHolder extends ExtendedLayeredPane {
-   private static final long serialVersionUID = 8722087129402330131L;
    public final MainPane pane;
    private Background currentBackground;
    public final BackgroundCover cover;
@@ -18,10 +17,6 @@ public class BackgroundHolder extends ExtendedLayeredPane {
       this.cover = new BackgroundCover(this);
       this.SLIDE_BACKGROUND = new SlideBackground(this);
       this.add(this.cover, Integer.MAX_VALUE);
-   }
-
-   public Background getBackgroundPane() {
-      return this.currentBackground;
    }
 
    public void setBackground(Background background, boolean animate) {
@@ -45,14 +40,6 @@ public class BackgroundHolder extends ExtendedLayeredPane {
       }
    }
 
-   public void showBackground() {
-      this.cover.removeCover();
-   }
-
-   public void hideBackground() {
-      this.cover.makeCover();
-   }
-
    public void startBackground() {
       if (this.currentBackground != null && this.currentBackground instanceof AnimatedBackground) {
          ((AnimatedBackground)this.currentBackground).startBackground();
@@ -63,13 +50,6 @@ public class BackgroundHolder extends ExtendedLayeredPane {
    public void suspendBackground() {
       if (this.currentBackground != null && this.currentBackground instanceof AnimatedBackground) {
          ((AnimatedBackground)this.currentBackground).suspendBackground();
-      }
-
-   }
-
-   public void stopBackground() {
-      if (this.currentBackground != null && this.currentBackground instanceof AnimatedBackground) {
-         ((AnimatedBackground)this.currentBackground).stopBackground();
       }
 
    }

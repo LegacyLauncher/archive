@@ -13,11 +13,6 @@ public class LocalizableHTMLLabel extends LocalizableLabel {
       this((String)null);
    }
 
-   public LocalizableHTMLLabel(int horizontalAlignment) {
-      this((String)null);
-      this.setHorizontalAlignment(horizontalAlignment);
-   }
-
    public void setText(String path, Object... vars) {
       this.path = path;
       this.variables = Localizable.checkVariables(vars);

@@ -12,7 +12,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.IntegerArray;
 
 public class EditorResolutionField extends BorderPanel implements EditorField {
-   private static final long serialVersionUID = -5565607141889620750L;
    private EditorIntegerField w;
    private EditorIntegerField h;
    private ExtendedLabel x;
@@ -30,11 +29,11 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
          container.setAlignmentX(0.5F);
          container.setAlignmentY(0.5F);
          this.w = new EditorIntegerField(promptW);
-         this.w.setColumns(4);
-         this.w.setHorizontalAlignment(0);
+         this.w.textField.setColumns(4);
+         this.w.textField.setHorizontalAlignment(0);
          this.h = new EditorIntegerField(promptH);
-         this.h.setColumns(4);
-         this.h.setHorizontalAlignment(0);
+         this.h.textField.setColumns(4);
+         this.h.textField.setHorizontalAlignment(0);
          this.x = new ExtendedLabel("X", 0);
          container.setLayout(new GridBagLayout());
          GridBagConstraints c = new GridBagConstraints();
@@ -94,8 +93,8 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
          height = "";
       }
 
-      this.w.setText(width);
-      this.h.setText(height);
+      this.w.textField.setText(width);
+      this.h.textField.setText(height);
    }
 
    public void setBackground(Color bg) {

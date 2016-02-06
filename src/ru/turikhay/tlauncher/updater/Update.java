@@ -82,36 +82,12 @@ public class Update {
       return this.version;
    }
 
-   public void setVersion(double version) {
-      this.version = version;
-   }
-
-   public double getRequiredAtLeastFor() {
-      return this.requiredAtLeastFor;
-   }
-
-   public void setRequiredAtLeastFor(double version) {
-      this.requiredAtLeastFor = version;
-   }
-
-   public Map getDescriptionMap() {
-      return this.description;
-   }
-
-   public Map getLinks() {
-      return this.links;
-   }
-
    public String getLink(PackageType packageType) {
       return (String)this.links.get(packageType);
    }
 
    public String getLink() {
       return this.getLink(PackageType.CURRENT);
-   }
-
-   public Update.State getState() {
-      return this.state;
    }
 
    protected void setState(Update.State newState) {
@@ -123,16 +99,25 @@ public class Update {
       }
    }
 
-   public Downloader getDownloader() {
-      return this.downloader;
-   }
-
-   public void setDownloader(Downloader downloader) {
-      this.downloader = downloader;
-   }
-
    public boolean isApplicable() {
-      return StringUtils.isNotBlank((CharSequence)this.links.get(PackageType.CURRENT)) && TLauncher.getVersion() < this.version;
+      boolean var10000;
+      label25: {
+         if (StringUtils.isNotBlank((CharSequence)this.links.get(PackageType.CURRENT))) {
+            if (TLauncher.isBeta()) {
+               if (TLauncher.getVersion() <= this.version) {
+                  break label25;
+               }
+            } else if (TLauncher.getVersion() < this.version) {
+               break label25;
+            }
+         }
+
+         var10000 = false;
+         return var10000;
+      }
+
+      var10000 = true;
+      return var10000;
    }
 
    public boolean isRequired() {
@@ -195,14 +180,6 @@ public class Update {
       this.download(PackageType.CURRENT, async);
    }
 
-   public void download() {
-      this.download(false);
-   }
-
-   public void asyncDownload() {
-      this.download(true);
-   }
-
    protected void apply0() throws Throwable {
       this.setState(Update.State.APPLYING);
       File replace = FileUtil.getRunningJar();
@@ -247,10 +224,6 @@ public class Update {
 
    public void addListener(UpdateListener l) {
       this.listeners.add(l);
-   }
-
-   public void removeListener(UpdateListener l) {
-      this.listeners.remove(l);
    }
 
    protected void onUpdateError(Throwable e) {

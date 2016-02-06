@@ -35,25 +35,6 @@ public class DownloadableContainer {
       }
    }
 
-   public void addAll(Downloadable... ds) {
-      if (ds == null) {
-         throw new NullPointerException();
-      } else {
-         for(int i = 0; i < ds.length; ++i) {
-            if (ds[i] == null) {
-               throw new NullPointerException("Downloadable at " + i + " is NULL!");
-            }
-
-            if (!this.list.contains(ds[i])) {
-               this.list.add(ds[i]);
-               ds[i].setContainer(this);
-               this.sum.incrementAndGet();
-            }
-         }
-
-      }
-   }
-
    public void addAll(Collection coll) {
       if (coll == null) {
          throw new NullPointerException();
@@ -73,15 +54,6 @@ public class DownloadableContainer {
             this.sum.incrementAndGet();
          }
 
-      }
-   }
-
-   public void addHandler(DownloadableContainerHandler handler) {
-      if (handler == null) {
-         throw new NullPointerException();
-      } else {
-         this.checkLocked();
-         this.handlers.add(handler);
       }
    }
 
@@ -106,24 +78,10 @@ public class DownloadableContainer {
       return this.aborted;
    }
 
-   void setLocked(boolean locked) {
-      this.locked = locked;
-   }
-
    void checkLocked() {
       if (this.locked) {
          throw new IllegalStateException("Downloadable is locked!");
       }
-   }
-
-   void onStart() {
-      Iterator var2 = this.handlers.iterator();
-
-      while(var2.hasNext()) {
-         DownloadableContainerHandler handler = (DownloadableContainerHandler)var2.next();
-         handler.onStart(this);
-      }
-
    }
 
    void onComplete(Downloadable d) throws RetryDownloadException {
@@ -167,13 +125,6 @@ public class DownloadableContainer {
       while(var4.hasNext()) {
          DownloadableContainerHandler handler = (DownloadableContainerHandler)var4.next();
          handler.onError(this, d, e);
-      }
-
-   }
-
-   void log(Object... o) {
-      if (this.console != null) {
-         this.console.log(o);
       }
 
    }

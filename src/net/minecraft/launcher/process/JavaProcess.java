@@ -3,7 +3,6 @@ package net.minecraft.launcher.process;
 import java.util.List;
 
 public class JavaProcess {
-   private static final int MAX_SYSOUT_LINES = 5;
    private final List commands;
    private final Process process;
    private final LimitedCapacityList sysOutLines = new LimitedCapacityList(String.class, 5);
@@ -18,14 +17,6 @@ public class JavaProcess {
 
    public Process getRawProcess() {
       return this.process;
-   }
-
-   public List getStartupCommands() {
-      return this.commands;
-   }
-
-   public String getStartupCommand() {
-      return this.process.toString();
    }
 
    public LimitedCapacityList getSysOutLines() {

@@ -18,8 +18,7 @@ import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 
-public class VersionComboBox extends ExtendedComboBox implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
-   private static final long serialVersionUID = -9122074452728842733L;
+public class VersionComboBox extends ExtendedComboBox implements VersionManagerListener, Blockable, LocalizableComponent, LoginForm.LoginProcessListener {
    static boolean showElyVersions;
    private static final VersionSyncInfo LOADING;
    private static final VersionSyncInfo EMPTY;

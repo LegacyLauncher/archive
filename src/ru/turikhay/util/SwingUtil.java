@@ -1,6 +1,5 @@
 package ru.turikhay.util;
 
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
@@ -9,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
@@ -101,19 +99,6 @@ public class SwingUtil {
          log("Cannot change font sizes!", var9);
       }
 
-   }
-
-   public static Cursor getCursor(int type) {
-      try {
-         return Cursor.getPredefinedCursor(type);
-      } catch (IllegalArgumentException var2) {
-         var2.printStackTrace();
-         return null;
-      }
-   }
-
-   public static void setFontSize(JComponent comp, float size) {
-      comp.setFont(comp.getFont().deriveFont(size));
    }
 
    public static int magnify(int i) {

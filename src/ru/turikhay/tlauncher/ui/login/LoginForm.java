@@ -30,7 +30,7 @@ import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
-public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener, ElyManagerListener {
+public class LoginForm extends CenterPanel implements DownloaderListener, ElyManagerListener, VersionManagerListener, AuthenticatorListener, MinecraftListener {
    private final List stateListeners = Collections.synchronizedList(new ArrayList());
    private final List processListeners = Collections.synchronizedList(new ArrayList());
    public final DefaultScene scene;
@@ -45,12 +45,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
    private final LoginForm.StopThread stopThread;
    private LoginForm.LoginState state;
    private ServerList.Server server;
-   public static final String LOGIN_BLOCK = "login";
-   public static final String REFRESH_BLOCK = "refresh";
-   public static final String LAUNCH_BLOCK = "launch";
-   public static final String AUTH_BLOCK = "auth";
-   public static final String UPDATER_BLOCK = "update";
-   public static final String DOWNLOADER_BLOCK = "download";
 
    public LoginForm(DefaultScene scene) {
       this.state = LoginForm.LoginState.STOPPED;
@@ -95,11 +89,10 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             listener = (LoginForm.LoginProcessListener)var5.next();
 
             try {
-               this.log(new Object[]{"Listener:", listener});
                listener.logginingIn();
             } catch (LoginWaitException var12) {
                LoginWaitException loginError = var12;
-               this.log(new Object[]{"Catched a wait task from this listener, waiting..."});
+               this.log(new Object[]{"Catched a wait task from listener", listener});
 
                try {
                   loginError.getWaitTask().runTask();
@@ -108,7 +101,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                   error = var11;
                }
             } catch (LoginException var13) {
-               this.log(new Object[]{"Catched an error on a listener"});
+               this.log(new Object[]{"Catched an error on a listener", listener});
                error = var13;
             }
 
@@ -143,9 +136,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
          this.global.setForcefully("login.account.type", this.accounts.getAccount().getType(), false);
          this.global.setForcefully("login.version", this.versions.getVersion().getID(), false);
          this.global.store();
-         this.log(new Object[]{"Login was OK. Trying to launch now."});
          boolean force1 = this.checkbox.forceupdate.isSelected();
          this.changeState(LoginForm.LoginState.LAUNCHING);
+         this.log(new Object[]{"Calling Minecraft Launcher..."});
          this.tlauncher.launch(this, this.server, force1);
          this.checkbox.forceupdate.setSelected(false);
       }
@@ -360,18 +353,5 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
       void loginFailed();
 
       void loginSucceed();
-   }
-
-   public abstract static class LoginListener implements LoginForm.LoginProcessListener {
-      public abstract void logginingIn() throws LoginException;
-
-      public void loginFailed() {
-      }
-
-      public void loginSucceed() {
-      }
-   }
-
-   class LoginAbortedException extends Exception {
    }
 }

@@ -8,7 +8,6 @@ import ru.turikhay.tlauncher.ui.accounts.AccountTip;
 import ru.turikhay.util.SwingUtil;
 
 public class AccountEditorScene extends PseudoScene {
-   private static final long serialVersionUID = -151325577614420989L;
    private final int ELEMENT_WIDTH = SwingUtil.magnify(255);
    private final int ELEMENT_HEIGHT;
    public final AccountEditor editor;

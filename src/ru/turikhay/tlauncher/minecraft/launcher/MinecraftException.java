@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.minecraft.launcher;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 
 public class MinecraftException extends Exception {
-   private static final long serialVersionUID = -2415374288600214879L;
    private final String langPath;
    private final String[] langVars;
 

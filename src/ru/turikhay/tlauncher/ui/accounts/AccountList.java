@@ -25,7 +25,6 @@ import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class AccountList extends CenterPanel {
-   private static final long serialVersionUID = 3280495266368287215L;
    private final AccountEditorScene scene;
    public final DefaultListModel model;
    public final JList list;

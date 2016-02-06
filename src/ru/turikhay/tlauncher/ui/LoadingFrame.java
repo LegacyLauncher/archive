@@ -21,7 +21,7 @@ public class LoadingFrame extends JFrame {
       this.progress.setPreferredSize(new Dimension(250, 0));
       this.add(this.progress, "Center");
       this.add(new JLabel(Images.getIcon("fav32.png")), "West");
-      if (OS.JAVA_VERSION > 1.6D) {
+      if (OS.JAVA_VERSION >= 1.7D) {
          this.setType(Type.UTILITY);
       }
 
@@ -31,13 +31,8 @@ public class LoadingFrame extends JFrame {
       this.setLocationRelativeTo((Component)null);
    }
 
-   public ProgressBar getProgressBar() {
-      return this.progress;
-   }
-
    public void setProgress(int percent) {
       this.progress.setIndeterminate(false);
-      this.progress.setCenterString("kek");
       this.progress.setValue(percent);
    }
 }

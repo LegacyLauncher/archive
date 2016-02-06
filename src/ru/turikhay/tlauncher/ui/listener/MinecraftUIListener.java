@@ -52,7 +52,7 @@ public class MinecraftUIListener implements MinecraftListener {
       String title = Localizable.get(p + "title");
       String report = crash.getFile();
       if (!crash.isRecognized()) {
-         Alert.showLocError(title, p + "unknown", (Object)null);
+         Alert.showLocError(title, p + "unknown" + (crash.getNativeReport() == null ? "" : ".native"), (Object)null);
       } else {
          Iterator var6 = crash.getSignatures().iterator();
 

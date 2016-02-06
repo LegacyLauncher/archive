@@ -19,8 +19,4 @@ public class ConnectionQualityConverter extends LocalizableStringConverter {
    public String toPath(Configuration.ConnectionQuality from) {
       return from.toString();
    }
-
-   public Class getObjectClass() {
-      return Configuration.ConnectionQuality.class;
-   }
 }

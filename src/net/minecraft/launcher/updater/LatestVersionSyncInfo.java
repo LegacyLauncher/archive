@@ -24,10 +24,6 @@ public class LatestVersionSyncInfo extends VersionSyncInfo {
       return this.localVersion != null ? this.localVersion.getID() : (this.remoteVersion != null ? this.remoteVersion.getID() : null);
    }
 
-   public ReleaseType getReleaseType() {
-      return this.type;
-   }
-
    public String toString() {
       return this.getClass().getSimpleName() + "{id='" + this.getID() + "', releaseType=" + this.type + ",\nlocal=" + this.localVersion + ",\nremote=" + this.remoteVersion + ", isInstalled=" + this.isInstalled() + ", hasRemote=" + this.hasRemote() + ", isUpToDate=" + this.isUpToDate() + "}";
    }

@@ -23,10 +23,6 @@ public class Localizable {
       return lang;
    }
 
-   public static boolean exists() {
-      return lang != null;
-   }
-
    public static String get(String path) {
       return lang != null ? lang.get(path) : path;
    }

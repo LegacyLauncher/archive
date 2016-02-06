@@ -15,7 +15,5 @@ public interface MinecraftExtendedListener extends MinecraftListener {
 
    void onMinecraftConstructing();
 
-   void onMinecraftLaunch();
-
    void onMinecraftPostLaunch();
 }

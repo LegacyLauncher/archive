@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BoxLayout;
@@ -20,14 +21,22 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.TabbedPane;
 
 public class TabbedEditorPanel extends AbstractEditorPanel {
+   private static final Point zeroPoint = new Point(0, 0);
    protected final BorderPanel container;
-   protected final TabbedPane tabPane;
-   protected final List tabs;
+   protected final TabbedPane tabPane = new TabbedPane() {
+      public void onTabChange(int index) {
+         super.onTabChange(index);
+         if (index < TabbedEditorPanel.this.tabs.size()) {
+            TabbedEditorPanel.EditorPanelTab tab = (TabbedEditorPanel.EditorPanelTab)TabbedEditorPanel.this.tabs.get(index);
+            tab.onSelected();
+         }
+
+      }
+   };
+   protected final List tabs = new ArrayList();
 
    public TabbedEditorPanel(CenterPanelTheme theme, Insets insets) {
       super(theme, insets);
-      this.tabs = new ArrayList();
-      this.tabPane = new TabbedPane();
       if (this.tabPane.getExtendedUI() != null) {
          this.tabPane.getExtendedUI().setTheme(this.getTheme());
       }
@@ -37,18 +46,6 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
       this.container.setCenter(this.tabPane);
       this.setLayout(new BorderLayout());
       super.add(this.container, "Center");
-   }
-
-   public TabbedEditorPanel(CenterPanelTheme theme) {
-      this(theme, (Insets)null);
-   }
-
-   public TabbedEditorPanel(Insets insets) {
-      this((CenterPanelTheme)null, insets);
-   }
-
-   public TabbedEditorPanel() {
-      this(smallSquareNoTopInsets);
    }
 
    protected void add(TabbedEditorPanel.EditorPanelTab tab) {
@@ -71,10 +68,6 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
          }
 
       }
-   }
-
-   protected int getTabOf(EditorPair pair) {
-      return this.tabPane.indexOfComponent(pair.getPanel());
    }
 
    protected Del del(int aligment) {
@@ -208,6 +201,10 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
             TabbedEditorPanel.this.tabPane.setTitleAt(index, this.getTabName());
             TabbedEditorPanel.this.tabPane.setToolTipTextAt(index, this.getTabTip());
          }
+      }
+
+      protected void onSelected() {
+         this.scroll.getViewport().setViewPosition(TabbedEditorPanel.zeroPoint);
       }
    }
 }

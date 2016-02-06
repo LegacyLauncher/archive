@@ -32,10 +32,6 @@ public enum ReleaseType {
       this.isDefault = isDefault;
    }
 
-   private ReleaseType(String name) {
-      this(name, true, false);
-   }
-
    String getName() {
       return this.name;
    }
@@ -50,10 +46,6 @@ public enum ReleaseType {
 
    public String toString() {
       return super.toString().toLowerCase();
-   }
-
-   public static ReleaseType getByName(String name) {
-      return (ReleaseType)lookup.get(name);
    }
 
    public static Collection valuesCollection() {
@@ -136,10 +128,6 @@ public enum ReleaseType {
 
       public String toString() {
          return super.toString().toLowerCase();
-      }
-
-      public static ReleaseType.SubType getByName(String name) {
-         return (ReleaseType.SubType)lookup.get(name);
       }
 
       public static Collection valuesCollection() {

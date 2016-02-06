@@ -32,19 +32,11 @@ public class DefaultCenterPanelTheme extends CenterPanelTheme {
       return this.focusLostColor;
    }
 
-   public Color getSuccess() {
-      return this.successColor;
-   }
-
    public Color getFailure() {
       return this.failureColor;
    }
 
    public Color getBorder() {
       return this.borderColor;
-   }
-
-   public Color getDelPanel() {
-      return this.delPanelColor;
    }
 }

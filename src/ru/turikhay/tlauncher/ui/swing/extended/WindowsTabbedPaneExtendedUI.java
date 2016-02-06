@@ -11,8 +11,6 @@ import javax.swing.UIManager;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
 
 public class WindowsTabbedPaneExtendedUI extends WindowsTabbedPaneUI implements ExtendedUI {
-   public static final int ARC_SIZE = 16;
-   public static final int Y_PADDING = 5;
    private CenterPanelTheme theme;
 
    public WindowsTabbedPaneExtendedUI(CenterPanelTheme theme) {

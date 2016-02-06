@@ -35,18 +35,6 @@ public class AccountCellRenderer implements ListCellRenderer {
       this(AccountCellRenderer.AccountCellType.PREVIEW);
    }
 
-   public AccountCellRenderer.AccountCellType getType() {
-      return this.type;
-   }
-
-   public void setType(AccountCellRenderer.AccountCellType type) {
-      if (type == null) {
-         throw new NullPointerException("CellType cannot be NULL!");
-      } else {
-         this.type = type;
-      }
-   }
-
    public Component getListCellRendererComponent(JList list, Account value, int index, boolean isSelected, boolean cellHasFocus) {
       JLabel renderer = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
       renderer.setAlignmentY(0.5F);

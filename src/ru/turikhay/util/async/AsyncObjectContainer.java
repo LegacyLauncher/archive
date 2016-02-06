@@ -7,26 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 public class AsyncObjectContainer {
-   private final List objects;
-   private final Map values;
+   private final List objects = new ArrayList();
+   private final Map values = new LinkedHashMap();
    private boolean executionLock;
-
-   public AsyncObjectContainer() {
-      this.objects = new ArrayList();
-      this.values = new LinkedHashMap();
-   }
-
-   public AsyncObjectContainer(AsyncObject[] asyncObjects) {
-      this();
-      AsyncObject[] arr$ = asyncObjects;
-      int len$ = asyncObjects.length;
-
-      for(int i$ = 0; i$ < len$; ++i$) {
-         AsyncObject object = arr$[i$];
-         this.add(object);
-      }
-
-   }
 
    public Map execute() {
       this.executionLock = true;
@@ -76,30 +59,6 @@ public class AsyncObjectContainer {
             } else {
                this.objects.add(object);
             }
-         }
-      }
-   }
-
-   public void remove(AsyncObject object) {
-      if (object == null) {
-         throw new NullPointerException();
-      } else {
-         synchronized(this.objects) {
-            if (this.executionLock) {
-               throw new AsyncContainerLockedException();
-            } else {
-               this.objects.remove(object);
-            }
-         }
-      }
-   }
-
-   public void removeAll() {
-      synchronized(this.objects) {
-         if (this.executionLock) {
-            throw new AsyncContainerLockedException();
-         } else {
-            this.objects.clear();
          }
       }
    }

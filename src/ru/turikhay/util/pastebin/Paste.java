@@ -9,11 +9,9 @@ import net.minecraft.launcher.Http;
 import org.apache.commons.lang3.StringUtils;
 
 public class Paste {
-   private static final String DEV_KEY = "19a886bbdf6e11670d7f0a4e2dace1a5";
    private static final URL POST_URL = Http.constantURL("http://pastebin.com/api/api_post.php");
    private String title;
    private String content;
-   private String format;
    private ExpireDate expires;
    private Visibility visibility;
    private final ArrayList listeners;
@@ -41,36 +39,16 @@ public class Paste {
       this.content = content;
    }
 
-   public final String getFormat() {
-      return this.format;
-   }
-
-   public final void setFormat(String format) {
-      this.format = format;
-   }
-
    public final ExpireDate getExpireDate() {
       return this.expires;
-   }
-
-   public final void setExpireDate(ExpireDate date) {
-      this.expires = date;
    }
 
    public final Visibility getVisibility() {
       return this.visibility;
    }
 
-   public final void setVisibility(Visibility vis) {
-      this.visibility = vis;
-   }
-
    public void addListener(PasteListener listener) {
       this.listeners.add(listener);
-   }
-
-   public void removeListener(PasteListener listener) {
-      this.listeners.remove(listener);
    }
 
    public PasteResult paste() {

@@ -124,8 +124,6 @@ public abstract class NBTBase {
       }
    }
 
-   protected abstract NBTBase copy();
-
    public boolean equals(Object par1Obj) {
       if (!(par1Obj instanceof NBTBase)) {
          return false;

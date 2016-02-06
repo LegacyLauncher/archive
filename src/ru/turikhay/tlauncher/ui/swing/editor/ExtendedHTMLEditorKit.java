@@ -39,13 +39,6 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
       this.hlProc = HyperlinkProcessor.defaultProcessor;
       this.processPopup = true;
       this.popup = new JPopupMenu();
-      LocalizableMenuItem open = new LocalizableMenuItem("browser.hyperlink.popup.open");
-      open.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            ExtendedHTMLEditorKit.this.hlProc.process(ExtendedHTMLEditorKit.this.popupHref);
-         }
-      });
-      this.popup.add(open);
       LocalizableMenuItem copy = new LocalizableMenuItem("browser.hyperlink.popup.copy");
       copy.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -83,20 +76,8 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
 
    }
 
-   public final HyperlinkProcessor getHyperlinkProcessor() {
-      return this.hlProc;
-   }
-
    public final void setHyperlinkProcessor(HyperlinkProcessor processor) {
       this.hlProc = processor == null ? HyperlinkProcessor.defaultProcessor : processor;
-   }
-
-   public final boolean getProcessPopup() {
-      return this.processPopup;
-   }
-
-   public final void setProcessPopup(boolean process) {
-      this.processPopup = process;
    }
 
    private static Tag getTag(Element elem) {
@@ -135,15 +116,20 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
          if (editor.isEnabled() || editor.isDisplayable()) {
             String href = ExtendedHTMLEditorKit.getAnchorHref(e);
             if (href != null) {
+               JPopupMenu menu = null;
                switch(e.getButton()) {
                case 3:
                   if (ExtendedHTMLEditorKit.this.processPopup) {
                      ExtendedHTMLEditorKit.this.popupHref = href;
-                     ExtendedHTMLEditorKit.this.popup.show(editor, e.getX(), e.getY());
+                     menu = ExtendedHTMLEditorKit.this.popup;
                   }
                   break;
                default:
-                  ExtendedHTMLEditorKit.this.hlProc.process(href);
+                  menu = ExtendedHTMLEditorKit.this.hlProc.process(href);
+               }
+
+               if (menu != null) {
+                  menu.show(editor, e.getX(), e.getY());
                }
             }
          }

@@ -36,10 +36,6 @@ public class ServerListManager extends InterruptibleComponent {
       this(manager, Repository.SERVERLIST_REPO);
    }
 
-   public ServerList getList() {
-      return this.serverList;
-   }
-
    protected boolean refresh(int refreshID) {
       this.refreshList[refreshID] = true;
       this.log("Refreshing servers...");

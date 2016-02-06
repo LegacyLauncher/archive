@@ -14,6 +14,4 @@ public abstract class SafeOutputStream extends OutputStream {
 
    public void close() {
    }
-
-   public abstract void write(int var1);
 }

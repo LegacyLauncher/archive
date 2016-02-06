@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui.editor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -57,23 +56,11 @@ public class EditorGroupHandler {
       }
    }
 
-   public EditorGroupHandler(EditorHandler... handlers) {
-      this(Arrays.asList(handlers));
-   }
-
    public boolean addListener(EditorFieldChangeListener listener) {
       if (listener == null) {
          throw new NullPointerException();
       } else {
          return this.listeners.add(listener);
-      }
-   }
-
-   public boolean removeListener(EditorFieldChangeListener listener) {
-      if (listener == null) {
-         throw new NullPointerException();
-      } else {
-         return this.listeners.remove(listener);
       }
    }
 }

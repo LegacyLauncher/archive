@@ -5,27 +5,14 @@ import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import javax.swing.JComponent;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
-import ru.turikhay.tlauncher.ui.images.ImageIcon;
-import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 
 public abstract class AbstractEditorPanel extends CenterPanel {
-   protected final List handlers;
+   protected final List handlers = new ArrayList();
 
    public AbstractEditorPanel(CenterPanelTheme theme, Insets insets) {
       super(theme, insets);
-      this.handlers = new ArrayList();
-   }
-
-   public AbstractEditorPanel(Insets insets) {
-      this((CenterPanelTheme)null, insets);
-   }
-
-   public AbstractEditorPanel() {
-      this((CenterPanelTheme)null, (Insets)null);
    }
 
    protected boolean checkValues() {
@@ -51,14 +38,5 @@ public abstract class AbstractEditorPanel extends CenterPanel {
          handler.getComponent().setBackground(color);
       }
 
-   }
-
-   protected JComponent createTip(String label, boolean warning) {
-      LocalizableLabel tip = new LocalizableLabel(label);
-      if (warning) {
-         ImageIcon.setup(tip, Images.getIcon("warning.png", 16, 16));
-      }
-
-      return tip;
    }
 }

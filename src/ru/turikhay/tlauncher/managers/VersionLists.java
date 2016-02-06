@@ -10,7 +10,7 @@ import ru.turikhay.util.MinecraftUtil;
 
 public class VersionLists extends LauncherComponent {
    private final LocalVersionList localList = new LocalVersionList();
-   private final RemoteVersionList[] remoteLists = new RemoteVersionList[]{new OfficialVersionList(), new ExtraVersionList()};
+   private final RemoteVersionList[] remoteLists = new RemoteVersionList[]{new ExtraVersionList(), new OfficialVersionList()};
 
    public VersionLists(ComponentManager manager) throws Exception {
       super(manager);

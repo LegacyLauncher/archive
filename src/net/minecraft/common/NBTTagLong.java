@@ -11,11 +11,6 @@ public class NBTTagLong extends NBTBase {
       super(par1Str);
    }
 
-   public NBTTagLong(String par1Str, long par2) {
-      super(par1Str);
-      this.data = par2;
-   }
-
    void write(DataOutput par1DataOutput) throws IOException {
       par1DataOutput.writeLong(this.data);
    }
@@ -30,10 +25,6 @@ public class NBTTagLong extends NBTBase {
 
    public String toString() {
       return "" + this.data;
-   }
-
-   public NBTBase copy() {
-      return new NBTTagLong(this.getName(), this.data);
    }
 
    public boolean equals(Object par1Obj) {

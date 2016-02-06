@@ -25,10 +25,6 @@ public class DisabledImageIcon implements Icon {
       this(parent, 0.75F);
    }
 
-   public final float getDisabledOpacity() {
-      return this.disabledOpacity;
-   }
-
    public final void setDisabledOpacity(float f) {
       if ((double)f < 0.0D) {
          throw new IllegalArgumentException();

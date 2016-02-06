@@ -107,12 +107,4 @@ public class MinecraftUtil {
    public static File getDefaultWorkingDirectory() {
       return getSystemRelatedDirectory(TLauncher.getFolder());
    }
-
-   public static File getOptionsFile() {
-      return getFile("options.txt");
-   }
-
-   private static File getFile(String name) {
-      return new File(getWorkingDirectory(), name);
-   }
 }

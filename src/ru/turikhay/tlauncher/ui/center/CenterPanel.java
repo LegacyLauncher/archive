@@ -22,7 +22,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.util.U;
 
 public class CenterPanel extends BlockablePanel {
-   private static final long serialVersionUID = -1975869198322761508L;
    public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
    public static final CenterPanelTheme tipTheme = new TipPanelTheme();
    public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
@@ -32,7 +31,6 @@ public class CenterPanel extends BlockablePanel {
    public static final Insets smallSquareInsets = new MagnifiedInsets(7, 7, 7, 7);
    public static final Insets smallSquareNoTopInsets = new MagnifiedInsets(5, 15, 5, 15);
    public static final Insets noInsets = new MagnifiedInsets(0, 0, 0, 0);
-   protected static final int ARC_SIZE = 24;
    private final Insets insets;
    private final CenterPanelTheme theme;
    protected final ExtendedPanel messagePanel;
@@ -47,10 +45,6 @@ public class CenterPanel extends BlockablePanel {
 
    public CenterPanel(Insets insets) {
       this((CenterPanelTheme)null, insets);
-   }
-
-   public CenterPanel(CenterPanelTheme theme) {
-      this(theme, (Insets)null);
    }
 
    public CenterPanel(CenterPanelTheme theme, Insets insets) {
@@ -124,10 +118,6 @@ public class CenterPanel extends BlockablePanel {
       return new Del(1, aligment, this.theme.getBorder());
    }
 
-   protected Del del(int aligment, int width, int height) {
-      return new Del(1, aligment, width, height, this.theme.getBorder());
-   }
-
    public void defocus() {
       this.requestFocusInWindow();
    }
@@ -150,8 +140,6 @@ public class CenterPanel extends BlockablePanel {
 
    public static BlockablePanel sepPan(LayoutManager manager, Component... components) {
       BlockablePanel panel = new BlockablePanel(manager) {
-         private static final long serialVersionUID = 1L;
-
          public Insets getInsets() {
             return CenterPanel.noInsets;
          }
@@ -166,8 +154,6 @@ public class CenterPanel extends BlockablePanel {
 
    public static UnblockablePanel uSepPan(LayoutManager manager, Component... components) {
       UnblockablePanel panel = new UnblockablePanel(manager) {
-         private static final long serialVersionUID = 1L;
-
          public Insets getInsets() {
             return CenterPanel.noInsets;
          }

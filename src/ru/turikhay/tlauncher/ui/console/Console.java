@@ -10,8 +10,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.io.StringReader;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -25,23 +25,23 @@ import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.pastebin.Paste;
 import ru.turikhay.util.pastebin.PasteResult;
-import ru.turikhay.util.stream.LinkedStringStream;
+import ru.turikhay.util.stream.LinkedOutputStringStream;
 import ru.turikhay.util.stream.Logger;
 import ru.turikhay.util.stream.PrintLogger;
-import ru.turikhay.util.stream.StringStream;
 
 public class Console implements Logger {
    private static List frames = Collections.synchronizedList(new ArrayList());
    public final ConsoleFrame frame;
    private final Configuration global;
    private String name;
-   private LinkedStringStream stream;
+   private LinkedOutputStringStream stream;
    private PrintLogger logger;
    private Console.CloseAction close;
    private boolean killed;
@@ -53,7 +53,7 @@ public class Console implements Logger {
       this.name = name;
       this.frame = new ConsoleFrame(this);
       this.frame.setTitle(name);
-      frames.add(this.frame);
+      frames.add(new WeakReference(this.frame));
       this.update();
       this.frame.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
@@ -100,7 +100,7 @@ public class Console implements Logger {
       });
       if (logger == null) {
          this.logger = null;
-         this.stream = new LinkedStringStream();
+         this.stream = new LinkedOutputStringStream();
          this.stream.setLogger(this);
       } else {
          this.logger = logger;
@@ -116,10 +116,6 @@ public class Console implements Logger {
          logger.setMirror(this);
       }
 
-   }
-
-   public Console(PrintLogger logger, String name) {
-      this((Configuration)null, logger, name, true);
    }
 
    public String getName() {
@@ -140,8 +136,11 @@ public class Console implements Logger {
       this.frame.bottom.folder.setEnabled(true);
       if (launcher != null) {
          this.frame.bottom.kill.setEnabled(true);
-         if (!"DevConsole".equals(this.name)) {
-            this.frame.bottom.openFolder = launcher.getGameDir();
+         this.frame.bottom.openFolder = launcher.getGameDir();
+      } else {
+         this.frame.bottom.kill.setEnabled(false);
+         if ("DevConsole".equals(this.name)) {
+            this.frame.bottom.openFolder = MinecraftUtil.getWorkingDirectory();
          }
       }
 
@@ -169,24 +168,12 @@ public class Console implements Logger {
 
    }
 
-   public void rawlog(Object... o) {
-      this.rawlog(U.toLog(o));
-   }
-
    public void rawlog(char[] c) {
       this.rawlog(new String(c));
    }
 
-   public PrintLogger getLogger() {
-      return this.logger;
-   }
-
    public String getOutput() {
       return this.frame.textarea.getText();
-   }
-
-   StringStream getStream() {
-      return this.stream;
    }
 
    void update() {
@@ -227,15 +214,6 @@ public class Console implements Logger {
       }
    }
 
-   public void setShown(boolean shown) {
-      if (shown) {
-         this.show();
-      } else {
-         this.hide();
-      }
-
-   }
-
    public void show() {
       this.show(true);
    }
@@ -266,7 +244,6 @@ public class Console implements Logger {
       this.save();
       this.frame.dispose();
       this.frame.clear();
-      frames.remove(this.frame);
       this.killed = true;
    }
 
@@ -277,36 +254,38 @@ public class Console implements Logger {
    }
 
    public void sendPaste() {
-      AsyncThread.execute(new Runnable() {
-         public void run() {
-            Paste paste = new Paste();
-            paste.addListener(Console.this.frame);
-            paste.setTitle(Console.this.frame.getTitle());
-            paste.setContent(Console.this.frame.console.getOutput());
-            PasteResult result = paste.paste();
-            if (result instanceof PasteResult.PasteUploaded) {
-               PasteResult.PasteUploaded error = (PasteResult.PasteUploaded)result;
-               if (Alert.showLocQuestion("console.pastebin.sent", (Object)error.getURL())) {
-                  OS.openLink(error.getURL());
+      if (Alert.showLocQuestion("console.pastebin.alert")) {
+         AsyncThread.execute(new Runnable() {
+            public void run() {
+               Paste paste = new Paste();
+               paste.addListener(Console.this.frame);
+               paste.setTitle(Console.this.frame.getTitle());
+               paste.setContent(Console.this.frame.console.getOutput());
+               PasteResult result = paste.paste();
+               if (result instanceof PasteResult.PasteUploaded) {
+                  PasteResult.PasteUploaded error = (PasteResult.PasteUploaded)result;
+                  if (Alert.showLocQuestion("console.pastebin.sent", error.getURL())) {
+                     OS.openLink(error.getURL());
+                  }
+               } else if (result instanceof PasteResult.PasteFailed) {
+                  Throwable error1 = ((PasteResult.PasteFailed)result).getError();
+                  if (error1 instanceof RuntimeException) {
+                     Alert.showLocError("console.pastebin.invalid", error1);
+                  } else if (error1 instanceof IOException) {
+                     Alert.showLocError("console.pastebin.failed", error1);
+                  }
                }
-            } else if (result instanceof PasteResult.PasteFailed) {
-               Throwable error1 = ((PasteResult.PasteFailed)result).getError();
-               if (error1 instanceof RuntimeException) {
-                  Alert.showLocError("console.pastebin.invalid", error1);
-               } else if (error1 instanceof IOException) {
-                  Alert.showLocError("console.pastebin.failed", error1);
-               }
-            }
 
-         }
-      });
+            }
+         });
+      }
    }
 
    public void saveAs() {
       if (this.explorer == null) {
          try {
             this.explorer = FileExplorer.newExplorer();
-         } catch (InternalError var17) {
+         } catch (InternalError var16) {
             Alert.showError(Localizable.get("explorer.unavailable.title"), Localizable.get("explorer.unvailable") + (OS.WINDOWS.isCurrent() ? "\n" + Localizable.get("explorer.unavailable.win") : ""));
             return;
          }
@@ -327,7 +306,7 @@ public class Console implements Logger {
 
             try {
                FileUtil.createFile(file);
-               IOUtils.copy((Reader)(new StringReader(this.getOutput())), (OutputStream)(output = new FileOutputStream(file)));
+               IOUtils.copy(new StringReader(this.getOutput()), (OutputStream)(output = new FileOutputStream(file)));
             } catch (Throwable var15) {
                Alert.showLocError("console.save.error", var15);
             } finally {
@@ -343,15 +322,6 @@ public class Console implements Logger {
          }
       }
 
-   }
-
-   public boolean isKilled() {
-      this.check();
-      return this.killed;
-   }
-
-   boolean isHidden() {
-      return !this.frame.isShowing();
    }
 
    Point getPositionPoint() {
@@ -376,10 +346,6 @@ public class Console implements Logger {
       return new int[]{d.width, d.height};
    }
 
-   public Console.CloseAction getCloseAction() {
-      return this.close;
-   }
-
    public void setCloseAction(Console.CloseAction action) {
       this.close = action;
    }
@@ -397,11 +363,14 @@ public class Console implements Logger {
    }
 
    public static void updateLocale() {
-      Iterator var1 = frames.iterator();
+      Iterator i$ = frames.iterator();
 
-      while(var1.hasNext()) {
-         ConsoleFrame frame = (ConsoleFrame)var1.next();
-         frame.updateLocale();
+      while(i$.hasNext()) {
+         WeakReference ref = (WeakReference)i$.next();
+         ConsoleFrame frame = (ConsoleFrame)ref.get();
+         if (frame != null) {
+            frame.updateLocale();
+         }
       }
 
    }

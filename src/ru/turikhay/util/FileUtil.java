@@ -16,25 +16,12 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 public class FileUtil {
-   public static final String DEFAULT_CHARSET = "UTF-8";
-
-   public static Charset getCharset() {
-      try {
-         return Charset.forName("UTF-8");
-      } catch (Exception var1) {
-         var1.printStackTrace();
-         return null;
-      }
-   }
-
    public static void writeFile(File file, String text) throws IOException {
       createFile(file);
       BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
@@ -68,16 +55,6 @@ public class FileUtil {
       return readFile(file, "UTF-8");
    }
 
-   public static String getFilename(String path) {
-      String[] folders = path.split("/");
-      int size = folders.length;
-      return size == 0 ? "" : folders[size - 1];
-   }
-
-   public static String getFilename(URL url) {
-      return getFilename(url.getPath());
-   }
-
    public static String getDigest(File file, String algorithm, int hashLength) {
       DigestInputStream stream = null;
 
@@ -98,6 +75,10 @@ public class FileUtil {
       }
 
       return null;
+   }
+
+   public static String getSHA(File file) {
+      return getDigest(file, "SHA", 40);
    }
 
    public static String copyAndDigest(InputStream inputStream, OutputStream outputStream, String algorithm, int hashLength) throws IOException {
@@ -226,10 +207,7 @@ public class FileUtil {
    }
 
    public static void deleteFile(File file) {
-      boolean onExit = !file.delete();
-      if (onExit) {
-         file.deleteOnExit();
-      } else {
+      if (file.delete()) {
          File parent = file.getParentFile();
          if (parent != null) {
             File[] list = parent.listFiles();
@@ -237,12 +215,10 @@ public class FileUtil {
                deleteFile(parent);
             }
          }
+      } else {
+         U.log("Could not delete file:", file);
       }
 
-   }
-
-   public static void deleteFile(String path) {
-      deleteFile(new File(path));
    }
 
    public static void deleteDirectory(File dir) {
@@ -275,39 +251,6 @@ public class FileUtil {
       return file;
    }
 
-   public byte[] getFile(File archive, String requestedFile) throws IOException {
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      ZipInputStream in = null;
-
-      try {
-         in = new ZipInputStream(new FileInputStream(archive));
-
-         while(true) {
-            ZipEntry entry;
-            byte[] buf;
-            do {
-               if ((entry = in.getNextEntry()) == null) {
-                  buf = out.toByteArray();
-                  return buf;
-               }
-            } while(!entry.getName().equals(requestedFile));
-
-            buf = new byte[1024];
-
-            int len;
-            while((len = in.read(buf)) > 0) {
-               out.write(buf, 0, len);
-            }
-         }
-      } finally {
-         if (in != null) {
-            in.close();
-         }
-
-         out.close();
-      }
-   }
-
    public static boolean createFolder(File dir) throws IOException {
       if (dir == null) {
          throw new NullPointerException();
@@ -322,28 +265,6 @@ public class FileUtil {
       }
    }
 
-   public static boolean createFolder(String dir) throws IOException {
-      return dir == null ? false : createFolder(new File(dir));
-   }
-
-   public static boolean folderExists(String path) {
-      if (path == null) {
-         return false;
-      } else {
-         File folder = new File(path);
-         return folder.isDirectory();
-      }
-   }
-
-   public static boolean fileExists(String path) {
-      if (path == null) {
-         return false;
-      } else {
-         File file = new File(path);
-         return file.isFile();
-      }
-   }
-
    public static void createFile(File file) throws IOException {
       if (!file.isFile()) {
          if (file.getParentFile() != null) {
@@ -355,42 +276,6 @@ public class FileUtil {
          }
       }
 
-   }
-
-   public static void createFile(String file) throws IOException {
-      createFile(new File(file));
-   }
-
-   public static void unZip(File zip, File folder, boolean replace) throws IOException {
-      createFolder(folder);
-      ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zip)));
-      byte[] buffer = new byte[1024];
-
-      while(true) {
-         ZipEntry ze;
-         while((ze = zis.getNextEntry()) != null) {
-            String fileName = ze.getName();
-            File newFile = new File(folder, fileName);
-            if (!replace && newFile.isFile()) {
-               U.log("[UnZip] File exists:", newFile.getAbsoluteFile());
-            } else {
-               U.log("[UnZip]", newFile.getAbsoluteFile());
-               createFile(newFile);
-               BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(newFile));
-
-               int len;
-               while((len = zis.read(buffer)) > 0) {
-                  fos.write(buffer, 0, len);
-               }
-
-               fos.close();
-            }
-         }
-
-         zis.closeEntry();
-         zis.close();
-         return;
-      }
    }
 
    public static String getResource(URL resource, String charset) throws IOException {
@@ -408,21 +293,6 @@ public class FileUtil {
 
    public static String getResource(URL resource) throws IOException {
       return getResource(resource, "UTF-8");
-   }
-
-   public static String getFolder(URL url, String separator) {
-      String[] folders = url.toString().split(separator);
-      String s = "";
-
-      for(int i = 0; i < folders.length - 1; ++i) {
-         s = s + folders[i] + separator;
-      }
-
-      return s;
-   }
-
-   public static String getFolder(URL url) {
-      return getFolder(url, "/");
    }
 
    private static File getNeighborFile(File file, String filename) {
@@ -451,5 +321,18 @@ public class FileUtil {
 
          return ext;
       }
+   }
+
+   public static byte[] gzipUncompress(InputStream in) throws IOException {
+      GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
+      ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+      byte[] buffer = new byte[2048];
+
+      int read;
+      while((read = gzipIn.read(buffer)) != -1) {
+         bOut.write(buffer, 0, read);
+      }
+
+      return bOut.toByteArray();
    }
 }

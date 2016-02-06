@@ -10,7 +10,6 @@ import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.util.Reflect;
 
 public class ExtendedComboBox extends JComboBox {
-   private static final long serialVersionUID = -4509947341182373649L;
    private StringConverter converter;
 
    public ExtendedComboBox(ListCellRenderer renderer) {
@@ -26,17 +25,8 @@ public class ExtendedComboBox extends JComboBox {
       this.converter = converter;
    }
 
-   public ExtendedComboBox() {
-      this((ListCellRenderer)null);
-   }
-
    public SimpleComboBoxModel getSimpleModel() {
       return (SimpleComboBoxModel)this.getModel();
-   }
-
-   public Object getValueAt(int i) {
-      Object value = this.getItemAt(i);
-      return this.returnAs(value);
    }
 
    public Object getSelectedValue() {
@@ -46,22 +36,6 @@ public class ExtendedComboBox extends JComboBox {
 
    public void setSelectedValue(Object value) {
       this.setSelectedItem(value);
-   }
-
-   public void setSelectedValue(String string) {
-      Object value = this.convert(string);
-      if (value != null) {
-         this.setSelectedValue(value);
-      }
-
-   }
-
-   public StringConverter getConverter() {
-      return this.converter;
-   }
-
-   public void setConverter(StringConverter converter) {
-      this.converter = converter;
    }
 
    protected String convert(Object obj) {

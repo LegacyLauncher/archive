@@ -61,10 +61,6 @@ public class JavaProcessLauncher {
       return full.toString();
    }
 
-   public List getCommands() {
-      return this.commands;
-   }
-
    public void addCommand(Object command) {
       this.commands.add(command.toString());
    }
@@ -92,10 +88,6 @@ public class JavaProcessLauncher {
    public JavaProcessLauncher directory(File directory) {
       this.directory = directory;
       return this;
-   }
-
-   public File getDirectory() {
-      return this.directory;
    }
 
    String getJavaPath() {

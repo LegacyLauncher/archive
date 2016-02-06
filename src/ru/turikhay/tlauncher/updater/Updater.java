@@ -3,11 +3,12 @@ package ru.turikhay.tlauncher.updater;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.SequenceInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -16,28 +17,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import net.minecraft.launcher.Http;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
+import ru.turikhay.util.stream.InputStringStream;
 
 public class Updater {
    private final Gson gson = this.buildGson();
    private boolean refreshed;
-   private Update update;
    private final List listeners = Collections.synchronizedList(new ArrayList());
-
-   public boolean getRefreshed() {
-      return this.refreshed;
-   }
 
    public void setRefreshed(boolean refreshed) {
       this.refreshed = refreshed;
-   }
-
-   public Update getUpdate() {
-      return this.update;
    }
 
    private Updater.SearchResult localTestUpdate() {
@@ -84,9 +78,26 @@ public class Updater {
          try {
             URL e = new URL(updateUrl + get);
             HttpURLConnection connection = Downloadable.setUp(e.openConnection(U.getProxy()), true);
-            connection.setDoOutput(true);
-            String response = IOUtils.toString((Reader)(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8"))));
-            result = new Updater.SearchSucceeded((Updater.UpdaterResponse)this.gson.fromJson(response, Updater.UpdaterResponse.class));
+            connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+            InputStream in = connection.getInputStream();
+            Object in;
+            if ("gzip".equals(connection.getHeaderField("Content-Encoding"))) {
+               this.log("Data is compressed with gzip by the server");
+               in = new GzipCompressorInputStream(in);
+            } else {
+               byte[] gzipMarkerBytes = new byte[5];
+               IOUtils.read(in, gzipMarkerBytes);
+               String firstSymbols = new String(gzipMarkerBytes);
+               if (firstSymbols.equals("gzip:")) {
+                  this.log("Data is compressed with gzip by the script");
+                  in = new GzipCompressorInputStream(in);
+               } else {
+                  this.log("Data is not compressed, I suppose");
+                  in = new SequenceInputStream(new InputStringStream(firstSymbols), in);
+               }
+            }
+
+            result = new Updater.SearchSucceeded((Updater.UpdaterResponse)this.gson.fromJson((Reader)(new InputStreamReader((InputStream)in, "UTF-8")), (Class)Updater.UpdaterResponse.class));
 
             try {
                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
@@ -97,15 +108,15 @@ public class Updater {
                if (refreshTime > 0L && currentTimeGMT > refreshTime) {
                   throw new IOException("refresh time exceeded");
                }
-            } catch (IOException var16) {
-               throw var16;
-            } catch (Exception var17) {
-               this.log(var17);
+            } catch (IOException var17) {
+               throw var17;
+            } catch (Exception var18) {
+               this.log(var18);
             }
-         } catch (Exception var18) {
-            this.log("Failed to request from:", updateUrl, var18);
+         } catch (Exception var19) {
+            this.log("Failed to request from:", updateUrl, var19);
             result = null;
-            errorList.add(var18);
+            errorList.add(var19);
          }
 
          this.log("Request time:", System.currentTimeMillis() - startTime, "ms");
@@ -140,10 +151,6 @@ public class Updater {
       this.listeners.add(l);
    }
 
-   public void removeListener(UpdaterListener l) {
-      this.listeners.remove(l);
-   }
-
    public void dispatchResult(Updater.SearchResult result) {
       requireNotNull(result, "result");
       List var2;
@@ -176,19 +183,6 @@ public class Updater {
          }
       }
 
-   }
-
-   protected void onUpdaterRequests() {
-      List var1 = this.listeners;
-      synchronized(this.listeners) {
-         Iterator var3 = this.listeners.iterator();
-
-         while(var3.hasNext()) {
-            UpdaterListener l = (UpdaterListener)var3.next();
-            l.onUpdaterRequesting(this);
-         }
-
-      }
    }
 
    protected List getUpdateUrlList() {
@@ -263,10 +257,6 @@ public class Updater {
          return this.response;
       }
 
-      public final Updater getUpdater() {
-         return Updater.this;
-      }
-
       public String toString() {
          return this.getClass().getSimpleName() + "{response=" + this.response + "}";
       }
@@ -290,10 +280,6 @@ public class Updater {
          } while(t != null);
 
          throw new NullPointerException();
-      }
-
-      public final List getCauseList() {
-         return this.errorList;
       }
 
       public String toString() {

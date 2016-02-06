@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.downloader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -13,10 +12,6 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class Downloader extends ExtendedThread {
-   public static final int MAX_THREADS = 6;
-   public static final String DOWNLOAD_BLOCK = "download";
-   static final double SMOOTHING_FACTOR = 0.005D;
-   static final String ITERATION_BLOCK = "iteration";
    private final DownloaderThread[] threads;
    private final List list;
    private final List listeners;
@@ -27,6 +22,7 @@ public class Downloader extends ExtendedThread {
    private final double[] progressContainer;
    private double lastAverageProgress;
    private double averageProgress;
+   private double lastProgress;
    private double speed;
    private boolean aborted;
    private final Object workLock;
@@ -56,12 +52,8 @@ public class Downloader extends ExtendedThread {
       return this.remainingObjects.get();
    }
 
-   public double getProgress() {
-      return this.averageProgress;
-   }
-
-   public double getSpeed() {
-      return this.speed;
+   public double getLastProgress() {
+      return this.lastProgress;
    }
 
    public void add(Downloadable d) {
@@ -77,41 +69,6 @@ public class Downloader extends ExtendedThread {
          throw new NullPointerException();
       } else {
          this.list.addAll(c.list);
-      }
-   }
-
-   public void addAll(Downloadable... ds) {
-      if (ds == null) {
-         throw new NullPointerException();
-      } else {
-         for(int i = 0; i < ds.length; ++i) {
-            if (ds[i] == null) {
-               throw new NullPointerException("Downloadable at " + i + " is NULL!");
-            }
-
-            this.list.add(ds[i]);
-         }
-
-      }
-   }
-
-   public void addAll(Collection coll) {
-      if (coll == null) {
-         throw new NullPointerException();
-      } else {
-         int i = -1;
-         Iterator var4 = coll.iterator();
-
-         while(var4.hasNext()) {
-            Downloadable d = (Downloadable)var4.next();
-            ++i;
-            if (d == null) {
-               throw new NullPointerException("Downloadable at" + i + " is NULL!");
-            }
-
-            this.list.add(d);
-         }
-
       }
    }
 
@@ -292,11 +249,12 @@ public class Downloader extends ExtendedThread {
 
    }
 
-   void onProgress(DownloaderThread thread, double curprogress, double curspeed) {
+   void onProgress(DownloaderThread thread, double curprogress, double curdone, double curspeed) {
       int id = thread.getID() - 1;
+      this.lastProgress = curdone;
       this.progressContainer[id] = curprogress;
       this.averageProgress = U.getAverage(this.progressContainer, this.workingThreads);
-      if (this.averageProgress - this.lastAverageProgress >= 0.01D) {
+      if (this.remainingObjects.get() == 1 || this.averageProgress - this.lastAverageProgress >= 0.01D) {
          this.speed = 0.005D * this.speed + 0.995D * curspeed;
          this.lastAverageProgress = this.averageProgress;
          Iterator var8 = this.listeners.iterator();

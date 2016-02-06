@@ -7,7 +7,6 @@ import java.util.List;
 import javax.swing.JMenuItem;
 
 public class LocalizableMenuItem extends JMenuItem implements LocalizableComponent {
-   private static final long serialVersionUID = 1364363532569997394L;
    private static List items = Collections.synchronizedList(new ArrayList());
    private String path;
    private String[] variables;

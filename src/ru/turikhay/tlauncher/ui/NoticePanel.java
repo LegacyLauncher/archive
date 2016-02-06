@@ -11,7 +11,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Iterator;
 import java.util.List;
-import javax.swing.JPopupMenu;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ServerList;
@@ -36,8 +35,7 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
-public class NoticePanel extends CenterPanel implements ResizeableComponent, UpdaterListener, LocalizableComponent {
-   private static final int MARGIN = 10;
+public class NoticePanel extends CenterPanel implements LocalizableComponent, ResizeableComponent, UpdaterListener {
    private static final float FONT_SIZE = SwingUtil.magnify(12.0F);
    private final NoticePanel.InfoPanelAnimator animator = new NoticePanel.InfoPanelAnimator();
    private final EditorPane browser;
@@ -61,10 +59,6 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
       this.browser = new EditorPane(this.getFont().deriveFont(FONT_SIZE));
       if (this.browser.getEditorKit() instanceof ExtendedHTMLEditorKit) {
          ((ExtendedHTMLEditorKit)this.browser.getEditorKit()).setHyperlinkProcessor(new ServerHyperlinkProcessor() {
-            public void showPopup(JPopupMenu menu) {
-               menu.show(NoticePanel.this.browser, NoticePanel.this.mouseX, (int)((float)NoticePanel.this.mouseY + NoticePanel.FONT_SIZE));
-            }
-
             public void open(VersionSyncInfo vs, ServerList.Server server) {
                LoginForm lf = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm;
                if (vs != null) {
@@ -226,7 +220,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
                float selectedOpacity = 1.0F;
                if (animate) {
                   while(this.opacity < selectedOpacity) {
-                     this.opacity += 0.01F;
+                     this.opacity += 0.05F;
                      if (this.opacity > selectedOpacity) {
                         this.opacity = selectedOpacity;
                      }
@@ -260,7 +254,7 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
          synchronized(this.animationLock) {
             if (animate) {
                while(this.opacity > 0.0F) {
-                  this.opacity -= 0.01F;
+                  this.opacity -= 0.05F;
                   if (this.opacity < 0.0F) {
                      this.opacity = 0.0F;
                   }
@@ -303,10 +297,6 @@ public class NoticePanel extends CenterPanel implements ResizeableComponent, Upd
 
    boolean onClick() {
       return this.isEnabled() && this.shown;
-   }
-
-   public void onUpdaterRequesting(Updater u) {
-      this.hide(true);
    }
 
    public void onUpdaterErrored(Updater.SearchFailed failed) {

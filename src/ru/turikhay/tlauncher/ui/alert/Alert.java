@@ -7,10 +7,6 @@ import ru.turikhay.util.U;
 
 public class Alert {
    private static final JFrame frame = new JFrame();
-   private static final String PREFIX = "TLauncher : ";
-   private static final String MISSING_TITLE = "MISSING TITLE";
-   private static final String MISSING_MESSAGE = "MISSING MESSAGE";
-   private static final String MISSING_QUESTION = "MISSING QUESTION";
    private static String DEFAULT_TITLE = "An error occurred";
    private static String DEFAULT_MESSAGE = "An unexpected error occurred";
 
@@ -104,10 +100,6 @@ public class Alert {
 
    public static boolean showLocQuestion(String titlePath, String questionPath, Object textarea) {
       return showQuestion(getLoc(titlePath, "MISSING TITLE"), getLoc(questionPath, "MISSING QUESTION"), textarea);
-   }
-
-   public static boolean showLocQuestion(String titlePath, String questionPath) {
-      return showLocQuestion(titlePath, questionPath, (Object)null);
    }
 
    public static boolean showLocQuestion(String path, Object textarea) {

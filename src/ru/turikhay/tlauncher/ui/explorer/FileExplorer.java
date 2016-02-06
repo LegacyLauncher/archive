@@ -14,11 +14,6 @@ public class FileExplorer extends JFileChooser {
       super.setCurrentDirectory(dir);
    }
 
-   public void setCurrentDirectory(String sDir) {
-      File dir = sDir == null ? null : new File(sDir);
-      this.setCurrentDirectory(dir);
-   }
-
    public int showDialog(Component parent) {
       return this.showDialog(parent, UIManager.getString("FileChooser.directoryOpenButtonText"));
    }

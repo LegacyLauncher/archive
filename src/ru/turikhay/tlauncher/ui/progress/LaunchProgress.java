@@ -6,8 +6,6 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftExtendedListener;
 
 public class LaunchProgress extends DownloaderProgress implements MinecraftExtendedListener {
-   private static final long serialVersionUID = -1003141285749311799L;
-
    public LaunchProgress(Component parentComp) {
       super(parentComp);
    }

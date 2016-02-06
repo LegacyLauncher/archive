@@ -4,7 +4,6 @@ import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 
 public class LocalizableLabel extends ExtendedLabel implements LocalizableComponent {
-   private static final long serialVersionUID = 7628068160047735335L;
    protected String path;
    protected String[] variables;
 
@@ -20,11 +19,6 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
 
    public LocalizableLabel() {
       this((String)null);
-   }
-
-   public LocalizableLabel(int horizontalAlignment) {
-      this((String)null);
-      this.setHorizontalAlignment(horizontalAlignment);
    }
 
    public void setText(String path, Object... vars) {

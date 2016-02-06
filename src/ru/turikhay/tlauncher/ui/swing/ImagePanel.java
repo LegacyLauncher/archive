@@ -3,22 +3,17 @@ package ru.turikhay.tlauncher.ui.swing;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Composite;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.ImageObserver;
-import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.U;
 
 public class ImagePanel extends ExtendedPanel {
-   private static final long serialVersionUID = 1L;
-   public static final float DEFAULT_ACTIVE_OPACITY = 1.0F;
-   public static final float DEFAULT_NON_ACTIVE_OPACITY = 0.75F;
-   protected final Object animationLock;
+   protected final Object animationLock = new Object();
    private Image originalImage;
    private Image image;
    private float activeOpacity;
@@ -30,16 +25,7 @@ public class ImagePanel extends ExtendedPanel {
    private boolean shown;
    private boolean animating;
 
-   public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-      this((Image)Images.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
-   }
-
-   public ImagePanel(String image) {
-      this(image, 1.0F, 0.75F, true, true);
-   }
-
    protected ImagePanel(Image image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-      this.animationLock = new Object();
       this.setImage(image);
       this.setActiveOpacity(activeOpacity);
       this.setNonActiveOpacity(nonActiveOpacity);
@@ -156,13 +142,6 @@ public class ImagePanel extends ExtendedPanel {
             this.setVisible(false);
             this.animating = false;
          }
-      }
-
-   }
-
-   public void setPreferredSize() {
-      if (this.image != null) {
-         this.setPreferredSize(new Dimension(this.image.getWidth((ImageObserver)null), this.image.getHeight((ImageObserver)null)));
       }
 
    }

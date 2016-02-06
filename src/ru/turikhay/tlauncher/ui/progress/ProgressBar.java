@@ -21,7 +21,6 @@ public class ProgressBar extends JProgressBar {
    private static int BORDER_SIZE = SwingUtil.magnify(10);
    private static int EDGE_CHARS = 50;
    private static int CENTER_CHARS = 30;
-   private static final long serialVersionUID = -8095192709934629794L;
    private final Object sync;
    private final Component parent;
    private String wS;

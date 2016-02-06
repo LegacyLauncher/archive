@@ -12,11 +12,6 @@ public class NBTTagIntArray extends NBTBase {
       super(par1Str);
    }
 
-   public NBTTagIntArray(String par1Str, int[] par2ArrayOfInteger) {
-      super(par1Str);
-      this.intArray = par2ArrayOfInteger;
-   }
-
    void write(DataOutput par1DataOutput) throws IOException {
       par1DataOutput.writeInt(this.intArray.length);
 
@@ -42,12 +37,6 @@ public class NBTTagIntArray extends NBTBase {
 
    public String toString() {
       return "[" + this.intArray.length + " bytes]";
-   }
-
-   public NBTBase copy() {
-      int[] var1 = new int[this.intArray.length];
-      System.arraycopy(this.intArray, 0, var1, 0, this.intArray.length);
-      return new NBTTagIntArray(this.getName(), var1);
    }
 
    public boolean equals(Object par1Obj) {

@@ -9,7 +9,6 @@ import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
 
 public class ExtendedTextField extends JTextField {
-   private static final long serialVersionUID = -1963422246993419362L;
    private CenterPanelTheme theme;
    private String placeholder;
    private String oldPlaceholder;
@@ -40,14 +39,6 @@ public class ExtendedTextField extends JTextField {
          }
       });
       this.setValue(value);
-   }
-
-   public ExtendedTextField(String placeholder, String value) {
-      this((CenterPanel)null, placeholder, value);
-   }
-
-   public ExtendedTextField(String placeholder) {
-      this((CenterPanel)null, placeholder, (String)null);
    }
 
    /** @deprecated */
@@ -85,10 +76,6 @@ public class ExtendedTextField extends JTextField {
       this.setRawText("");
    }
 
-   protected void updateStyle() {
-      this.setForeground(this.getValue() == null ? this.theme.getFocusLost() : this.theme.getFocus());
-   }
-
    public void setValue(Object obj) {
       this.setText(obj == null ? null : obj.toString());
    }
@@ -102,10 +89,6 @@ public class ExtendedTextField extends JTextField {
       super.setCaretPosition(0);
    }
 
-   public String getPlaceholder() {
-      return this.placeholder;
-   }
-
    protected void setPlaceholder(String placeholder) {
       this.oldPlaceholder = this.placeholder;
       this.placeholder = placeholder;
@@ -113,19 +96,6 @@ public class ExtendedTextField extends JTextField {
          this.setPlaceholder();
       }
 
-   }
-
-   public CenterPanelTheme getTheme() {
-      return this.theme;
-   }
-
-   protected void setTheme(CenterPanelTheme theme) {
-      if (theme == null) {
-         theme = CenterPanel.defaultTheme;
-      }
-
-      this.theme = theme;
-      this.updateStyle();
    }
 
    protected void onFocusGained() {

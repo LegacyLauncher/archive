@@ -22,13 +22,9 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class Stats {
-   private static final URL STATS_BASE = Http.constantURL("http://tlauncher.ru/stats/");
+   private static final URL STATS_BASE = Http.constantURL("http://u.tlauncher.ru/stats/");
    private static final ExecutorService service = Executors.newCachedThreadPool();
    private static boolean allow = false;
-
-   public static boolean getAllowed() {
-      return allow;
-   }
 
    public static void setAllowed(boolean allowed) {
       allow = allowed;
@@ -58,7 +54,12 @@ public class Stats {
       if (allow) {
          service.submit(new Callable() {
             public Void call() throws Exception {
-               Stats.performGetRequest(Stats.STATS_BASE, Stats.toRequest(args));
+               String result = Stats.performGetRequest(Stats.STATS_BASE, Stats.toRequest(args));
+               if ("refresh".equals(result)) {
+                  Stats.debug("Client UUID will be refreshed.");
+                  TLauncher.getInstance().getSettings().refreshClient();
+               }
+
                return null;
             }
          });

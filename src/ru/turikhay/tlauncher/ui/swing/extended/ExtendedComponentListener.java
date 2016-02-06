@@ -54,10 +54,6 @@ public abstract class ExtendedComponentListener implements ComponentListener {
       this.moveListener.startListening();
    }
 
-   public boolean isListening() {
-      return this.resizeListener.isIterating() || this.moveListener.isIterating();
-   }
-
    public abstract void onComponentResizing(ComponentEvent var1);
 
    public abstract void onComponentResized(ComponentEvent var1);

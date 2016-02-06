@@ -14,7 +14,6 @@ import javax.swing.JFileChooser;
 import ru.turikhay.util.OS;
 
 public class ImageFilePreview extends JComponent {
-   private static final long serialVersionUID = -1465489971097254329L;
    private static final Cursor DEFAULT = Cursor.getDefaultCursor();
    private static final Cursor HAND = Cursor.getPredefinedCursor(12);
    ImageIcon thumbnail = null;

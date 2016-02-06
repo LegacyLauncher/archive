@@ -6,7 +6,6 @@ import ru.turikhay.tlauncher.repository.Repository;
 
 public class PartialVersion implements Version {
    private String id;
-   private String jar;
    private Date time;
    private Date releaseTime;
    private ReleaseType type;
@@ -15,14 +14,6 @@ public class PartialVersion implements Version {
 
    public String getID() {
       return this.id;
-   }
-
-   public String getJar() {
-      return this.jar;
-   }
-
-   public void setID(String id) {
-      this.id = id;
    }
 
    public ReleaseType getReleaseType() {

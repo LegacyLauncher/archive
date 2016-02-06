@@ -5,12 +5,6 @@ import java.awt.LayoutManager;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 
 public class BlockablePanel extends ExtendedPanel implements Blockable {
-   private static final long serialVersionUID = 1L;
-
-   public BlockablePanel(LayoutManager layout, boolean isDoubleBuffered) {
-      super(layout, isDoubleBuffered);
-   }
-
    public BlockablePanel(LayoutManager layout) {
       super(layout);
    }

@@ -26,14 +26,6 @@ public abstract class EditorHandler implements Blockable {
       }
    }
 
-   public boolean removeListener(EditorFieldListener listener) {
-      if (listener == null) {
-         throw new NullPointerException();
-      } else {
-         return this.listeners.remove(listener);
-      }
-   }
-
    public void onChange(String newvalue) {
       if (TLauncher.getInstance().isReady()) {
          Iterator var3 = this.listeners.iterator();

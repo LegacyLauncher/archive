@@ -19,8 +19,4 @@ public class ConsoleTypeConverter extends LocalizableStringConverter {
    public String toPath(Configuration.ConsoleType from) {
       return from == null ? null : from.toString();
    }
-
-   public Class getObjectClass() {
-      return Configuration.ConsoleType.class;
-   }
 }

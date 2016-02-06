@@ -20,7 +20,6 @@ import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 
 public class ElyManager extends InterruptibleComponent {
-   private static final double VERSION = 1.0D;
    private final Gson gson = (new GsonBuilder()).registerTypeAdapter(Pattern.class, new PatternTypeAdapter()).create();
    private List authlib = nl();
    private List asm = nl();
@@ -264,21 +263,8 @@ public class ElyManager extends InterruptibleComponent {
 
    }
 
-   private void clearAll() {
-      List var1 = this.total;
-      synchronized(this.total) {
-         this.authlib.clear();
-         this.asm.clear();
-         this.total.clear();
-      }
-   }
-
    public void addListener(ElyManagerListener listener) {
       this.listeners.add(listener);
-   }
-
-   void removeListener(ElyManagerListener listener) {
-      this.listeners.remove(listener);
    }
 
    private static List nl() {

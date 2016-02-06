@@ -12,17 +12,12 @@ import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.tlauncher.updater.UpdaterListener;
 
 public class SideNotifier extends ImagePanel implements UpdaterListener {
-   private static final String LANG_PREFIX = "notifier.";
    private SideNotifier.NotifierStatus status;
    private Update update;
 
    public SideNotifier() {
       super((Image)null, 1.0F, 0.75F, false, true);
       TLauncher.getInstance().getUpdater().addListener(this);
-   }
-
-   public SideNotifier.NotifierStatus getStatus() {
-      return this.status;
    }
 
    public void setStatus(SideNotifier.NotifierStatus status) {
@@ -82,17 +77,16 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
       }
    }
 
-   public void onUpdaterRequesting(Updater u) {
-      this.setFoundUpdate((Update)null);
-   }
-
    public void onUpdaterErrored(Updater.SearchFailed failed) {
       this.setStatus(SideNotifier.NotifierStatus.FAILED);
    }
 
    public void onUpdaterSucceeded(Updater.SearchSucceeded succeeded) {
       Update update = succeeded.getResponse().getUpdate();
-      this.setFoundUpdate(update.isApplicable() ? update : null);
+      if (!update.isRequired()) {
+         this.setFoundUpdate(update.isApplicable() ? update : null);
+      }
+
    }
 
    private void setFoundUpdate(Update upd) {

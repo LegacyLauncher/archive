@@ -4,7 +4,6 @@ import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 
 public class EditorComboBox extends ExtendedComboBox implements EditorField {
-   private static final long serialVersionUID = -2320340434786516374L;
    private final boolean allowNull;
 
    public EditorComboBox(StringConverter converter, Object[] values, boolean allowNull) {

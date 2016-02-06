@@ -2,15 +2,21 @@ package ru.turikhay.tlauncher.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.U;
 
 public class LangConfiguration extends SimpleConfiguration {
    private final Locale[] locales;
    private final Properties[] prop;
+   private final SortedMap[] numericPatterns;
    private int i;
 
    public LangConfiguration(Locale[] locales, Locale select) throws IOException {
@@ -41,43 +47,94 @@ public class LangConfiguration extends SimpleConfiguration {
          }
 
          defLocale = -1;
+         this.numericPatterns = (TreeMap[])((TreeMap[])Array.newInstance(TreeMap.class, size));
 
          int var8;
+         Iterator var10;
+         Object var9;
          for(var8 = 0; var8 < size; ++var8) {
             if (locales[var8].toString().equals("ru_RU")) {
                defLocale = var8;
-               break;
+            }
+
+            this.numericPatterns[var8] = new TreeMap();
+            var10 = this.prop[var8].keySet().iterator();
+
+            while(var10.hasNext()) {
+               var9 = var10.next();
+               if (var9 instanceof String) {
+                  String key = (String)var9;
+                  if (key.startsWith("numeric.")) {
+                     U.debug(locales[var8], "found numeric:", key);
+                     this.numericPatterns[var8].put(key, Pattern.compile(this.prop[var8].getProperty(key)));
+                  }
+               }
             }
          }
 
+         U.debug(this.numericPatterns);
+         this.setSelected(select);
          if (TLauncher.getDebug() && defLocale != -1) {
-            Iterator var10 = this.prop[defLocale].keySet().iterator();
+            var10 = this.prop[defLocale].keySet().iterator();
 
-            while(var10.hasNext()) {
-               Object var9 = var10.next();
+            label124:
+            while(true) {
+               boolean isNumeric;
+               do {
+                  if (!var10.hasNext()) {
+                     for(var8 = 0; var8 < size; ++var8) {
+                        if (var8 != defLocale) {
+                           Iterator var13 = this.prop[var8].keySet().iterator();
+
+                           while(var13.hasNext()) {
+                              Object var11 = var13.next();
+                              boolean isNumeric = false;
+                              if (var11 instanceof String) {
+                                 String key = (String)var11;
+                                 Iterator i$ = this.numericPatterns[var8].keySet().iterator();
+
+                                 while(i$.hasNext()) {
+                                    String numericKey = (String)i$.next();
+                                    if (key.endsWith('.' + numericKey)) {
+                                       isNumeric = true;
+                                       break;
+                                    }
+                                 }
+                              }
+
+                              if (!isNumeric && !this.prop[defLocale].containsKey(var11)) {
+                                 U.log("Locale", locales[var8], "contains redundant key", var11);
+                              }
+                           }
+                        }
+                     }
+                     break label124;
+                  }
+
+                  var9 = var10.next();
+                  isNumeric = false;
+                  if (var9 instanceof String) {
+                     String key = (String)var9;
+                     Iterator i$ = this.numericPatterns[defLocale].keySet().iterator();
+
+                     while(i$.hasNext()) {
+                        String numericKey = (String)i$.next();
+                        if (key.endsWith('.' + numericKey)) {
+                           isNumeric = true;
+                           break;
+                        }
+                     }
+                  }
+               } while(isNumeric);
 
                for(int var12 = 0; var12 < size; ++var12) {
-                  if (var12 != defLocale && !this.prop[var12].containsKey(var9)) {
+                  if (var12 != defLocale && !this.prop[defLocale].containsKey(var9)) {
                      U.log("Locale", locales[var12], "doesn't contain key", var9);
                   }
                }
             }
-
-            for(var8 = 0; var8 < size; ++var8) {
-               if (var8 != defLocale) {
-                  Iterator var13 = this.prop[var8].keySet().iterator();
-
-                  while(var13.hasNext()) {
-                     Object var11 = var13.next();
-                     if (!this.prop[defLocale].containsKey(var11)) {
-                        U.log("Locale", locales[var8], "contains redundant key", var11);
-                     }
-                  }
-               }
-            }
          }
 
-         this.setSelected(select);
       }
    }
 
@@ -93,24 +150,24 @@ public class LangConfiguration extends SimpleConfiguration {
       if (select == null) {
          throw new NullPointerException();
       } else {
+         boolean found = false;
+
          for(int i = 0; i < this.locales.length; ++i) {
             if (this.locales[i].equals(select)) {
                this.i = i;
-               return;
+               found = true;
+               break;
             }
          }
 
-         throw new IllegalArgumentException("Cannot find Locale:" + select);
+         if (!found) {
+            throw new IllegalArgumentException("Cannot find Locale:" + select);
+         }
       }
    }
 
    public String nget(String key) {
-      if (key == null) {
-         return null;
-      } else {
-         String value = this.prop[this.i].getProperty(key);
-         return value == null ? this.getDefault(key) : value;
-      }
+      return key == null ? null : this.prop[this.i].getProperty(key);
    }
 
    public String get(String key) {
@@ -119,18 +176,46 @@ public class LangConfiguration extends SimpleConfiguration {
    }
 
    public String nget(String key, Object... vars) {
-      String value = this.get(key);
-      if (value == null) {
-         return null;
-      } else {
-         String[] variables = checkVariables(vars);
-
-         for(int i = 0; i < variables.length; ++i) {
-            value = value.replace("%" + i, variables[i]);
+      String value;
+      label41: {
+         value = this.nget(key);
+         if (key == null) {
+            if (value != null) {
+               break label41;
+            }
+         } else if (!key.equals(value)) {
+            break label41;
          }
 
-         return value;
+         return null;
       }
+
+      String[] variables = checkVariables(vars);
+
+      for(int i = 0; i < variables.length; ++i) {
+         boolean patternFound = false;
+         Iterator i$ = this.numericPatterns[this.i].keySet().iterator();
+
+         while(i$.hasNext()) {
+            String patternKey = (String)i$.next();
+            String replacement = this.nget(key + '.' + patternKey);
+            if (replacement != null) {
+               patternFound = true;
+               Pattern pattern = (Pattern)this.numericPatterns[this.i].get(patternKey);
+               this.log(new Object[]{key, patternKey, variables[i], pattern.matcher(variables[i]).matches()});
+               if (pattern.matcher(variables[i]).matches()) {
+                  value = StringUtils.replace(value, "%" + i, StringUtils.replace(replacement, "%n", variables[i]));
+                  break;
+               }
+            }
+         }
+
+         if (!patternFound) {
+            value = StringUtils.replace(value, "%" + i, variables[i]);
+         }
+      }
+
+      return value;
    }
 
    public String get(String key, Object... vars) {
@@ -140,10 +225,6 @@ public class LangConfiguration extends SimpleConfiguration {
 
    public void set(String key, Object value) {
       throw new UnsupportedOperationException();
-   }
-
-   public String getDefault(String key) {
-      return super.get(key);
    }
 
    private static String[] checkVariables(Object[] check) {

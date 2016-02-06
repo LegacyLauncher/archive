@@ -1,8 +1,6 @@
 package ru.turikhay.util.async;
 
 public abstract class LoopedThread extends ExtendedThread {
-   protected static final String LOOPED_BLOCK = "iteration";
-
    public LoopedThread(String name) {
       super(name);
    }
@@ -25,7 +23,7 @@ public abstract class LoopedThread extends ExtendedThread {
       return !this.isThreadLocked();
    }
 
-   public final void iterate() {
+   public void iterate() {
       if (!this.isIterating()) {
          this.unlockThread("iteration");
       }

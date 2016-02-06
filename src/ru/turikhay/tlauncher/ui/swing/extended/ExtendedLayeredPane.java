@@ -8,13 +8,8 @@ import ru.turikhay.tlauncher.ui.block.BlockableLayeredPane;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 
 public abstract class ExtendedLayeredPane extends BlockableLayeredPane implements ResizeableComponent {
-   private static final long serialVersionUID = -1L;
    private Integer LAYER_COUNT = 0;
    protected final JComponent parent;
-
-   protected ExtendedLayeredPane() {
-      this.parent = null;
-   }
 
    protected ExtendedLayeredPane(JComponent parent) {
       this.parent = parent;
@@ -43,21 +38,6 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
       this.LAYER_COUNT = this.LAYER_COUNT + 1;
       super.add(comp, var10002);
       return comp;
-   }
-
-   public void add(Component... components) {
-      if (components == null) {
-         throw new NullPointerException();
-      } else {
-         Component[] var5 = components;
-         int var4 = components.length;
-
-         for(int var3 = 0; var3 < var4; ++var3) {
-            Component comp = var5[var3];
-            this.add(comp);
-         }
-
-      }
    }
 
    public void onResize() {

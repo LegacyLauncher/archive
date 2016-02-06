@@ -15,7 +15,6 @@ import ru.turikhay.util.async.LoopedThread;
 public class SlideBackgroundThread extends LoopedThread {
    private static SlideBackgroundThread instance;
    private static final Pattern extensionPattern;
-   private static final String defaultImageName = "plains.jpg";
    private final SlideBackground background;
    final Slide defaultSlide;
    private Slide currentSlide;
@@ -32,14 +31,6 @@ public class SlideBackgroundThread extends LoopedThread {
       this.startAndWait();
    }
 
-   public SlideBackground getBackground() {
-      return this.background;
-   }
-
-   public Slide getSlide() {
-      return this.currentSlide;
-   }
-
    public synchronized void refreshSlide(boolean animate) {
       URL url = this.getImageURL(TLauncher.getInstance().getSettings().get("gui.background"));
       Slide slide = url == null ? this.defaultSlide : new Slide(url);
@@ -50,24 +41,33 @@ public class SlideBackgroundThread extends LoopedThread {
       this.iterate();
    }
 
-   public synchronized void setSlide(Slide slide, boolean animate) {
+   public synchronized void setSlide(Slide slide, boolean preferAnimating) {
       if (slide == null) {
          throw new NullPointerException();
       } else {
          if (!slide.equals(this.currentSlide)) {
-            Image image = slide.getImage();
-            if (image == null) {
-               slide = this.defaultSlide;
-               image = slide.getImage();
-            }
+            boolean animate = preferAnimating && TLauncher.getInstance().isReady();
+            this.background.holder.cover.makeCover(animate);
 
-            this.currentSlide = slide;
-            if (image == null) {
-               this.log("Default image is NULL. Check accessibility to the JAR file of TLauncher.");
-            } else {
-               this.background.holder.cover.makeCover(animate);
-               this.background.setImage(image);
-               U.sleepFor(500L);
+            try {
+               Image image = slide.getImage();
+               if (image == null) {
+                  slide = this.defaultSlide;
+                  image = slide.getImage();
+               }
+
+               animate = preferAnimating && TLauncher.getInstance().isReady();
+               this.currentSlide = slide;
+               if (image == null) {
+                  this.log("Default image is NULL. Check accessibility to the JAR file of TLauncher.");
+               } else {
+                  this.background.setImage(image);
+                  if (animate) {
+                     U.sleepFor(1000L);
+                  }
+               }
+            } finally {
+               animate = preferAnimating && TLauncher.getInstance().isReady();
                this.background.holder.cover.removeCover(animate);
             }
          }

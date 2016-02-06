@@ -15,11 +15,6 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.scenes.VersionManagerScene;
 
 public class VersionHandler implements Blockable, VersionHandlerListener {
-   public static final String REFRESH_BLOCK = "refresh";
-   public static final String SINGLE_SELECTION_BLOCK = "single-select";
-   public static final String START_DOWNLOAD = "start-download";
-   public static final String STOP_DOWNLOAD = "stop-download";
-   public static final String DELETE_BLOCK = "deleting";
    private final List listeners;
    private final VersionHandler instance = this;
    public final VersionManagerScene scene;
@@ -60,13 +55,6 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
       this.listeners.add(listener);
    }
 
-   void update() {
-      if (this.selected != null) {
-         this.onVersionSelected(this.selected);
-      }
-
-   }
-
    void refresh() {
       this.vm.startRefresh(true);
    }
@@ -82,10 +70,6 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
    void exitEditor() {
       this.list.deselect();
       this.scene.getMainPane().openDefaultScene();
-   }
-
-   VersionSyncInfo getSelected() {
-      return this.selected != null && this.selected.size() == 1 ? (VersionSyncInfo)this.selected.get(0) : null;
    }
 
    List getSelectedList() {

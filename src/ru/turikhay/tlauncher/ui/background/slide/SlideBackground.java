@@ -25,7 +25,6 @@ public class SlideBackground extends Background {
       this.holder = holder;
       this.thread = new SlideBackgroundThread(this);
       this.thread.setSlide(this.thread.defaultSlide, false);
-      this.thread.refreshSlide(false);
       this.listener = new ExtendedComponentAdapter(this, 1000) {
          public void onComponentResized(ComponentEvent e) {
             SlideBackground.this.updateImage();
@@ -37,10 +36,6 @@ public class SlideBackground extends Background {
 
    public SlideBackgroundThread getThread() {
       return this.thread;
-   }
-
-   public Image getImage() {
-      return (Image)this.oImage.get();
    }
 
    public void setImage(Image image) {

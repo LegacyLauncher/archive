@@ -22,7 +22,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
 
 public class VersionList extends CenterPanel implements VersionHandlerListener {
-   private static final long serialVersionUID = -7192156096621636270L;
    final VersionHandler handler;
    public final SimpleListModel model;
    public final JList list;

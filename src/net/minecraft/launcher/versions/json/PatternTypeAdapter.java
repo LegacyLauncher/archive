@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
-public class PatternTypeAdapter implements JsonSerializer, JsonDeserializer {
+public class PatternTypeAdapter implements JsonDeserializer, JsonSerializer {
    public Pattern deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
       String string = json.getAsString();
       return StringUtils.isBlank(string) ? null : Pattern.compile(string);

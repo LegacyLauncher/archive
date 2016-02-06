@@ -30,9 +30,5 @@ public abstract class AsyncObject extends ExtendedThread {
       }
    }
 
-   public AsyncObjectGotErrorException getError() {
-      return this.error;
-   }
-
    protected abstract Object execute() throws AsyncObjectGotErrorException;
 }

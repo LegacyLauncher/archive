@@ -3,25 +3,20 @@ package ru.turikhay.util.stream;
 import java.io.PrintStream;
 import java.util.Formatter;
 import java.util.Locale;
-import ru.turikhay.util.U;
 
 public class PrintLogger extends PrintStream implements Logger {
-   private LinkedStringStream stream;
+   private LinkedOutputStringStream stream;
    private Logger mirror;
    private Formatter formatter;
 
-   private PrintLogger(LinkedStringStream stream, Logger mirror) {
+   private PrintLogger(LinkedOutputStringStream stream, Logger mirror) {
       super(stream);
       this.stream = stream;
       this.mirror = mirror;
    }
 
-   public PrintLogger(LinkedStringStream stream) {
+   public PrintLogger(LinkedOutputStringStream stream) {
       this(stream, (Logger)null);
-   }
-
-   public Logger getMirror() {
-      return this.mirror;
    }
 
    public void setMirror(Logger logger) {
@@ -30,18 +25,6 @@ public class PrintLogger extends PrintStream implements Logger {
       } else {
          this.mirror = logger;
       }
-   }
-
-   public void log(Object... o) {
-      this.log(U.toLog(o));
-   }
-
-   public void log(String s) {
-      this.println(s);
-      if (this.mirror != null) {
-         this.mirror.log(s);
-      }
-
    }
 
    public void rawlog(String s) {
@@ -58,7 +41,7 @@ public class PrintLogger extends PrintStream implements Logger {
 
    }
 
-   public LinkedStringStream getStream() {
+   public LinkedOutputStringStream getStream() {
       return this.stream;
    }
 

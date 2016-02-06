@@ -50,10 +50,6 @@ public class ServerList {
       return this.list.contains(server);
    }
 
-   public boolean isEmpty() {
-      return this.list.isEmpty();
-   }
-
    public List getList() {
       return Collections.unmodifiableList(this.list);
    }
@@ -196,21 +192,9 @@ public class ServerList {
          this.versions.add(version);
       }
 
-      public void removeVersion(String version) {
-         this.versions.remove(version);
-      }
-
-      public String getIp() {
-         return this.ip;
-      }
-
       public void setIp(String ip) {
          this.ip = ip;
          this.updateAddress();
-      }
-
-      public String getPort() {
-         return this.port;
       }
 
       public void setPort(String port) {
@@ -255,30 +239,6 @@ public class ServerList {
          }
 
          Collections.addAll(this.allowedAccounts, types);
-      }
-
-      public void disallowAccountType(Account.AccountType... types) {
-         if (this.allowedAccounts != null) {
-            Objects.requireNonNull(types);
-            Account.AccountType[] var5 = types;
-            int var4 = types.length;
-
-            Account.AccountType type;
-            int var3;
-            for(var3 = 0; var3 < var4; ++var3) {
-               type = var5[var3];
-               Objects.requireNonNull(type);
-            }
-
-            var5 = types;
-            var4 = types.length;
-
-            for(var3 = 0; var3 < var4; ++var3) {
-               type = var5[var3];
-               this.allowedAccounts.remove(type);
-            }
-         }
-
       }
 
       public boolean isAccountTypeAllowed(Account.AccountType type) {

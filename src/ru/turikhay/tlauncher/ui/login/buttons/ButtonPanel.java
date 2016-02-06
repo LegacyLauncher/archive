@@ -8,7 +8,6 @@ import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.util.SwingUtil;
 
 public class ButtonPanel extends BlockablePanel {
-   private static final long serialVersionUID = -2155145867054136409L;
    public final PlayButton play;
    private final JPanel manageButtonsPanel;
    public final SupportButton support;
@@ -43,10 +42,6 @@ public class ButtonPanel extends BlockablePanel {
       }
 
       this.setState(lf.autologin.isEnabled() ? ButtonPanel.ButtonPanelState.AUTOLOGIN_CANCEL : ButtonPanel.ButtonPanelState.MANAGE_BUTTONS);
-   }
-
-   public ButtonPanel.ButtonPanelState getState() {
-      return this.state;
    }
 
    public void setState(ButtonPanel.ButtonPanelState state) {

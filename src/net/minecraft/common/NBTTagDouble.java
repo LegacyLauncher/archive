@@ -11,11 +11,6 @@ public class NBTTagDouble extends NBTBase {
       super(par1Str);
    }
 
-   public NBTTagDouble(String par1Str, double par2) {
-      super(par1Str);
-      this.data = par2;
-   }
-
    void write(DataOutput par1DataOutput) throws IOException {
       par1DataOutput.writeDouble(this.data);
    }
@@ -30,10 +25,6 @@ public class NBTTagDouble extends NBTBase {
 
    public String toString() {
       return "" + this.data;
-   }
-
-   public NBTBase copy() {
-      return new NBTTagDouble(this.getName(), this.data);
    }
 
    public boolean equals(Object par1Obj) {

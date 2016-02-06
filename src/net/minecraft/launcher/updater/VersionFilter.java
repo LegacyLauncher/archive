@@ -1,6 +1,5 @@
 package net.minecraft.launcher.updater;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -11,42 +10,6 @@ import net.minecraft.launcher.versions.Version;
 public class VersionFilter {
    private final Set types = new HashSet(ReleaseType.valuesCollection());
    private final Set subTypes = new HashSet(ReleaseType.SubType.valuesCollection());
-
-   public Set getTypes() {
-      return this.types;
-   }
-
-   public Set getSubTypes() {
-      return this.subTypes;
-   }
-
-   public VersionFilter onlyForType(ReleaseType... types) {
-      this.types.clear();
-      this.include(types);
-      return this;
-   }
-
-   public VersionFilter onlyForType(ReleaseType.SubType... subTypes) {
-      this.subTypes.clear();
-      this.include(subTypes);
-      return this;
-   }
-
-   public VersionFilter include(ReleaseType... types) {
-      if (types != null) {
-         Collections.addAll(this.types, types);
-      }
-
-      return this;
-   }
-
-   public VersionFilter include(ReleaseType.SubType... types) {
-      if (types != null) {
-         Collections.addAll(this.subTypes, types);
-      }
-
-      return this;
-   }
 
    public VersionFilter exclude(ReleaseType... types) {
       if (types != null) {

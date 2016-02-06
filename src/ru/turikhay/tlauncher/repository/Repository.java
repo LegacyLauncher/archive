@@ -18,7 +18,6 @@ public enum Repository {
    LIBRARY_REPO(TLauncher.getLibraryRepo()),
    SERVERLIST_REPO(TLauncher.getServerList());
 
-   private static final int DEFAULT_TIMEOUT = 5000;
    public static final Repository[] VERSION_REPOS = getVersionRepos();
    private final String lowerName;
    private final List repos;
@@ -41,16 +40,8 @@ public enum Repository {
       this(5000, urls);
    }
 
-   private Repository(int timeout) {
-      this(timeout, new String[0]);
-   }
-
    private Repository() {
       this(5000, new String[0]);
-   }
-
-   public int getTimeout() {
-      return this.primaryTimeout;
    }
 
    int getSelected() {
@@ -79,10 +70,6 @@ public enum Repository {
 
    String getRepo(int pos) {
       return (String)this.repos.get(pos);
-   }
-
-   public List getList() {
-      return this.repos;
    }
 
    public int getCount() {
