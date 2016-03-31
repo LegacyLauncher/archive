@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
@@ -277,7 +278,8 @@ public class Notices {
          JsonObject rootObject = root.getAsJsonObject();
          Iterator var5 = rootObject.entrySet().iterator();
 
-         label56:
+         Notices.Notice notice3;
+         label85:
          while(var5.hasNext()) {
             Entry notice = (Entry)var5.next();
             String listName = (String)notice.getKey();
@@ -289,7 +291,7 @@ public class Notices {
                Pattern pattern;
                do {
                   if (!var9.hasNext()) {
-                     continue label56;
+                     continue label85;
                   }
 
                   JsonElement elem = (JsonElement)var9.next();
@@ -302,7 +304,7 @@ public class Notices {
                   pattern = Pattern.compile(notice1);
                } while(!pattern.matcher(String.valueOf(TLauncher.getVersion())).matches());
 
-               Notices.Notice notice3 = new Notices.Notice();
+               notice3 = new Notices.Notice();
                notice3.setContent(ntObj.get("content").getAsString());
                notice3.setSize(IntegerArray.parseIntegerArray(ntObj.get("size").getAsString(), 'x').toArray());
                if (ntObj.has("id")) {
@@ -322,6 +324,24 @@ public class Notices {
                }
 
                notices.add(listName, notice3);
+            }
+         }
+
+         if (!TLauncher.getBrand().equals("Legacy") && notices.getByName(Locale.US.toString()) != null) {
+            List universalList = notices.getByName(Locale.US.toString()).getList();
+            Locale[] var15 = TLauncher.getInstance().getLang().getLocales();
+            int var16 = var15.length;
+
+            for(int var17 = 0; var17 < var16; ++var17) {
+               Locale locale = var15[var17];
+               if (!locale.equals(Locale.US) && notices.getByName(locale.toString()) == null) {
+                  Iterator var19 = universalList.iterator();
+
+                  while(var19.hasNext()) {
+                     notice3 = (Notices.Notice)var19.next();
+                     notices.add(locale.toString(), notice3);
+                  }
+               }
             }
          }
 

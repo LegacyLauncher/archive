@@ -1,5 +1,6 @@
 package ru.turikhay.util;
 
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.exceptions.ParseException;
 
 public class StringUtil {
@@ -173,6 +174,16 @@ public class StringUtil {
 
             return ret.length() == 0 ? "" : ret.substring(1) + "...";
          }
+      }
+   }
+
+   public static String requireNotBlank(String s, String name) {
+      if (s == null) {
+         throw new NullPointerException(name);
+      } else if (StringUtils.isBlank(s)) {
+         throw new IllegalArgumentException(name);
+      } else {
+         return s;
       }
    }
 }

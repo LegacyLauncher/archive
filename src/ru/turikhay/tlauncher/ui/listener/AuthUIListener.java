@@ -5,7 +5,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorException;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
-import ru.turikhay.tlauncher.minecraft.auth.InvalidCredentialsException;
+import ru.turikhay.tlauncher.minecraft.auth.KnownAuthenticatorException;
 import ru.turikhay.tlauncher.minecraft.auth.ServiceUnavailableException;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -34,7 +34,7 @@ public class AuthUIListener implements AuthenticatorListener {
    }
 
    private void showError(Authenticator auth, Throwable e) {
-      String description = "unknown";
+      String description = null;
       Object textarea = e;
       if (e instanceof AuthenticatorException) {
          AuthenticatorException ae = (AuthenticatorException)e;
@@ -42,26 +42,31 @@ public class AuthUIListener implements AuthenticatorListener {
             description = ae.getLangpath();
          }
 
-         if (e instanceof ServiceUnavailableException) {
-            String var7 = e.getMessage();
-         }
-
-         if (e instanceof InvalidCredentialsException) {
-            if (description != null) {
-               description = description + "." + auth.getAccount().getType().toString().toLowerCase();
-            }
-
+         if (e instanceof KnownAuthenticatorException) {
             textarea = null;
-         } else {
-            textarea = e;
+            if (e instanceof ServiceUnavailableException) {
+               textarea = e.getMessage();
+            }
          }
       }
 
-      String text = Localizable.get("auth.error." + description + ".editor");
-      if (!this.editorOpened || text == null) {
-         text = Localizable.get("auth.error." + description);
+      if (description == null) {
+         description = "unknown";
+      }
+
+      String accountType = auth.getAccount().getType().toString().toLowerCase();
+      String text = null;
+      if (this.editorOpened) {
+         text = Localizable.nget("auth.error." + description + "." + accountType + ".editor");
          if (text == null) {
-            text = "auth.error." + description;
+            text = Localizable.nget("auth.error." + description + ".editor");
+         }
+      }
+
+      if (text == null) {
+         text = Localizable.nget("auth.error." + description + "." + accountType);
+         if (text == null) {
+            text = Localizable.nget("auth.error." + description);
          }
       }
 

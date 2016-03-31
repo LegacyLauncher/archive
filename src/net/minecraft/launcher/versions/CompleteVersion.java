@@ -407,6 +407,10 @@ public class CompleteVersion implements Cloneable, Version {
          result.assets = this.assets;
       }
 
+      if (this.downloads != null) {
+         result.downloads = this.downloads;
+      }
+
       if (this.source != null) {
          result.source = this.source;
       }

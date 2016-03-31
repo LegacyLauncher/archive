@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.versions;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -48,18 +47,18 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
       panel.setCenter(new ScrollPane(this.list, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER));
       ExtendedPanel buttons = new ExtendedPanel(new GridLayout(0, 4));
       this.refresh = new VersionRefreshButton(this);
-      buttons.add((Component)this.refresh);
+      buttons.add(this.refresh);
       this.download = new VersionDownloadButton(this);
-      buttons.add((Component)this.download);
+      buttons.add(this.download);
       this.remove = new VersionRemoveButton(this);
-      buttons.add((Component)this.remove);
+      buttons.add(this.remove);
       this.back = new ImageButton("home.png");
       this.back.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             VersionList.this.handler.exitEditor();
          }
       });
-      buttons.add((Component)this.back);
+      buttons.add(this.back);
       panel.setSouth(buttons);
       this.add(panel);
       this.handler.addListener(this);

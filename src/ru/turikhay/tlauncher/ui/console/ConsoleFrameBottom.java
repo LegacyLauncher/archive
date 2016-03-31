@@ -46,7 +46,7 @@ public class ConsoleFrameBottom extends BorderPanel implements LocalizableCompon
             OS.openFolder(ConsoleFrameBottom.this.openFolder == null ? MinecraftUtil.getWorkingDirectory() : ConsoleFrameBottom.this.openFolder);
          }
       });
-      this.folder.setEnabled("DevConsole".equals(this.frame.console.getName()));
+      this.folder.setEnabled("Logger".equals(this.frame.console.getName()));
       this.save = this.newButton("document-save-as.png", new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             ConsoleFrameBottom.this.frame.console.saveAs();

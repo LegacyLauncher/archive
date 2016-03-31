@@ -47,15 +47,15 @@ public class VersionFilter {
          return false;
       } else {
          List subTypeList = ReleaseType.SubType.get(v);
-         Iterator i$ = subTypeList.iterator();
+         Iterator var4 = subTypeList.iterator();
 
          ReleaseType.SubType subType;
          do {
-            if (!i$.hasNext()) {
+            if (!var4.hasNext()) {
                return true;
             }
 
-            subType = (ReleaseType.SubType)i$.next();
+            subType = (ReleaseType.SubType)var4.next();
          } while(this.subTypes.contains(subType));
 
          return false;

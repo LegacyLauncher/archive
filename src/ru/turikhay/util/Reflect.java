@@ -18,11 +18,11 @@ public class Reflect {
          throw new NullPointerException("string is null");
       } else {
          Enum[] constants = (Enum[])enumClass.getEnumConstants();
-         Enum[] arr$ = constants;
-         int len$ = constants.length;
+         Enum[] var3 = constants;
+         int var4 = constants.length;
 
-         for(int i$ = 0; i$ < len$; ++i$) {
-            Enum constant = arr$[i$];
+         for(int var5 = 0; var5 < var4; ++var5) {
+            Enum constant = var3[var5];
             if (string.equalsIgnoreCase(constant.toString())) {
                return constant;
             }

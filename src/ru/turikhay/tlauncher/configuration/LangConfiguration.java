@@ -2,140 +2,121 @@ package ru.turikhay.tlauncher.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.util.U;
 
 public class LangConfiguration extends SimpleConfiguration {
    private final Locale[] locales;
    private final Properties[] prop;
-   private final SortedMap[] numericPatterns;
+   private final Pattern[][] pluralPatterns;
+   private int defI = -1;
    private int i;
 
-   public LangConfiguration(Locale[] locales, Locale select) throws IOException {
-      if (locales == null) {
-         throw new NullPointerException();
-      } else {
-         int size = locales.length;
-         this.locales = locales;
-         this.prop = new Properties[size];
+   public LangConfiguration(Locale[] locales, Locale select) {
+      this.locales = locales;
+      int count = locales.length;
+      this.prop = new Properties[count];
 
-         int defLocale;
-         for(defLocale = 0; defLocale < size; ++defLocale) {
-            Locale i = locales[defLocale];
-            if (i == null) {
-               throw new NullPointerException("Locale at #" + defLocale + " is NULL!");
-            }
-
-            String key = i.toString();
-            InputStream i1 = this.getClass().getResourceAsStream("/lang/" + key);
-            if (i1 == null) {
-               throw new IOException("Cannot find locale file for: " + key);
-            }
-
-            this.prop[defLocale] = loadFromStream(i1);
-            if (key.equals("en_US")) {
-               copyProperties(this.prop[defLocale], this.properties, true);
-            }
+      int keyLocale;
+      for(keyLocale = 0; keyLocale < count; ++keyLocale) {
+         Locale locale = locales[keyLocale];
+         if (locale == null) {
+            throw new NullPointerException("locale at " + keyLocale + " is null");
          }
 
-         defLocale = -1;
-         this.numericPatterns = (TreeMap[])((TreeMap[])Array.newInstance(TreeMap.class, size));
-
-         int var8;
-         Iterator var10;
-         Object var9;
-         for(var8 = 0; var8 < size; ++var8) {
-            if (locales[var8].toString().equals("ru_RU")) {
-               defLocale = var8;
-            }
-
-            this.numericPatterns[var8] = new TreeMap();
-            var10 = this.prop[var8].keySet().iterator();
-
-            while(var10.hasNext()) {
-               var9 = var10.next();
-               if (var9 instanceof String) {
-                  String key = (String)var9;
-                  if (key.startsWith("numeric.")) {
-                     U.debug(locales[var8], "found numeric:", key);
-                     this.numericPatterns[var8].put(key, Pattern.compile(this.prop[var8].getProperty(key)));
-                  }
-               }
-            }
+         InputStream in = this.getClass().getResourceAsStream("/lang/" + locale);
+         if (in == null) {
+            throw new RuntimeException("could not find file for: " + locale);
          }
 
-         U.debug(this.numericPatterns);
-         this.setSelected(select);
-         if (TLauncher.getDebug() && defLocale != -1) {
-            var10 = this.prop[defLocale].keySet().iterator();
-
-            label124:
-            while(true) {
-               boolean isNumeric;
-               do {
-                  if (!var10.hasNext()) {
-                     for(var8 = 0; var8 < size; ++var8) {
-                        if (var8 != defLocale) {
-                           Iterator var13 = this.prop[var8].keySet().iterator();
-
-                           while(var13.hasNext()) {
-                              Object var11 = var13.next();
-                              boolean isNumeric = false;
-                              if (var11 instanceof String) {
-                                 String key = (String)var11;
-                                 Iterator i$ = this.numericPatterns[var8].keySet().iterator();
-
-                                 while(i$.hasNext()) {
-                                    String numericKey = (String)i$.next();
-                                    if (key.endsWith('.' + numericKey)) {
-                                       isNumeric = true;
-                                       break;
-                                    }
-                                 }
-                              }
-
-                              if (!isNumeric && !this.prop[defLocale].containsKey(var11)) {
-                                 U.log("Locale", locales[var8], "contains redundant key", var11);
-                              }
-                           }
-                        }
-                     }
-                     break label124;
-                  }
-
-                  var9 = var10.next();
-                  isNumeric = false;
-                  if (var9 instanceof String) {
-                     String key = (String)var9;
-                     Iterator i$ = this.numericPatterns[defLocale].keySet().iterator();
-
-                     while(i$.hasNext()) {
-                        String numericKey = (String)i$.next();
-                        if (key.endsWith('.' + numericKey)) {
-                           isNumeric = true;
-                           break;
-                        }
-                     }
-                  }
-               } while(isNumeric);
-
-               for(int var12 = 0; var12 < size; ++var12) {
-                  if (var12 != defLocale && !this.prop[defLocale].containsKey(var9)) {
-                     U.log("Locale", locales[var12], "doesn't contain key", var9);
-                  }
-               }
-            }
+         try {
+            this.prop[keyLocale] = loadFromStream(in);
+         } catch (IOException var12) {
+            throw new RuntimeException("could not load file for: " + locale, var12);
          }
 
+         if (locale.toString().equals("en_US")) {
+            copyProperties(this.prop[keyLocale], this.properties, true);
+         }
       }
+
+      this.setSelected(select);
+      this.pluralPatterns = new Pattern[count][0];
+      keyLocale = -1;
+
+      int i;
+      for(i = 0; i < count; ++i) {
+         if (locales[i].toString().equals("en_US")) {
+            this.defI = i;
+         }
+
+         if (locales[i].toString().equals("ru_RU")) {
+            keyLocale = i;
+         }
+
+         String pluralFormsValue = this.prop[i].getProperty("plural");
+         if (pluralFormsValue != null) {
+            String[] pluralForms = StringUtils.split(pluralFormsValue, ';');
+            Pattern[] pluralFormsPatterns = new Pattern[pluralForms.length];
+
+            for(int k = 0; k < pluralForms.length; ++k) {
+               try {
+                  pluralFormsPatterns[k] = Pattern.compile(pluralForms[k]);
+               } catch (PatternSyntaxException var11) {
+                  throw new RuntimeException("could not compile plural form \"" + pluralForms[k] + "\" (index: " + k + ") for " + locales[i]);
+               }
+            }
+
+            this.pluralPatterns[i] = pluralFormsPatterns;
+            this.log(new Object[]{"Plural patterns for " + locales[i] + ":", pluralFormsPatterns});
+         }
+      }
+
+      if (keyLocale != -1 && TLauncher.getDebug()) {
+         Iterator var14 = this.prop[keyLocale].keySet().iterator();
+
+         while(var14.hasNext()) {
+            Object primaryKey = var14.next();
+
+            for(int i = 0; i < count; ++i) {
+               if (i != keyLocale && !this.prop[i].containsKey(primaryKey)) {
+                  this.log(new Object[]{"Missing key in " + locales[i] + ": " + primaryKey});
+               }
+            }
+         }
+
+         for(i = 0; i < count; ++i) {
+            if (i != keyLocale) {
+               Iterator var17 = this.prop[i].keySet().iterator();
+
+               while(var17.hasNext()) {
+                  Object redundantKey = var17.next();
+                  if (!this.prop[keyLocale].containsKey(redundantKey)) {
+                     this.log(new Object[]{"Redundant key in " + locales[i] + ": " + redundantKey});
+                  } else {
+                     String key = redundantKey.toString();
+                     if (key.endsWith(".plural")) {
+                        String pluralValues = this.prop[i].getProperty(key);
+                        if (pluralValues == null) {
+                           throw new NullPointerException("plural key is null: " + key + " in locale " + locales[i]);
+                        }
+
+                        String[] plurals = StringUtils.split(pluralValues, ';');
+                        if (plurals.length != this.pluralPatterns[i].length) {
+                           throw new RuntimeException("incorrect plural forms count: " + key + " in locale " + locales[i]);
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+
    }
 
    public Locale[] getLocales() {
@@ -177,14 +158,14 @@ public class LangConfiguration extends SimpleConfiguration {
 
    public String nget(String key, Object... vars) {
       String value;
-      label41: {
+      label40: {
          value = this.nget(key);
          if (key == null) {
             if (value != null) {
-               break label41;
+               break label40;
             }
-         } else if (!key.equals(value)) {
-            break label41;
+         } else if (!key.equals(value) && !StringUtils.isEmpty(value)) {
+            break label40;
          }
 
          return null;
@@ -192,26 +173,19 @@ public class LangConfiguration extends SimpleConfiguration {
 
       String[] variables = checkVariables(vars);
 
-      for(int i = 0; i < variables.length; ++i) {
-         boolean patternFound = false;
-         Iterator i$ = this.numericPatterns[this.i].keySet().iterator();
+      for(int var = 0; var < variables.length; ++var) {
+         String pluralReplacementValue = this.nget(key + '.' + var + ".plural");
+         if (pluralReplacementValue == null) {
+            value = StringUtils.replace(value, "%" + var, variables[var]);
+         } else {
+            String[] pluralReplacements = StringUtils.split(pluralReplacementValue, ';');
 
-         while(i$.hasNext()) {
-            String patternKey = (String)i$.next();
-            String replacement = this.nget(key + '.' + patternKey);
-            if (replacement != null) {
-               patternFound = true;
-               Pattern pattern = (Pattern)this.numericPatterns[this.i].get(patternKey);
-               this.log(new Object[]{key, patternKey, variables[i], pattern.matcher(variables[i]).matches()});
-               if (pattern.matcher(variables[i]).matches()) {
-                  value = StringUtils.replace(value, "%" + i, StringUtils.replace(replacement, "%n", variables[i]));
+            for(int patternKey = 0; patternKey < this.pluralPatterns[this.i].length; ++patternKey) {
+               if (this.pluralPatterns[this.i][patternKey].matcher(variables[var]).matches()) {
+                  value = StringUtils.replace(value, "%" + var, StringUtils.replace(pluralReplacements[patternKey], "%n", variables[var]));
                   break;
                }
             }
-         }
-
-         if (!patternFound) {
-            value = StringUtils.replace(value, "%" + i, variables[i]);
          }
       }
 
@@ -221,6 +195,10 @@ public class LangConfiguration extends SimpleConfiguration {
    public String get(String key, Object... vars) {
       String value = this.nget(key, vars);
       return value == null ? key : value;
+   }
+
+   public String getDefault(String key) {
+      return this.defI == -1 ? null : this.prop[this.defI].getProperty(key);
    }
 
    public void set(String key, Object value) {

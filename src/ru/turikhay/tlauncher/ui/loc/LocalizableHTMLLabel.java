@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.loc;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class LocalizableHTMLLabel extends LocalizableLabel {
    public LocalizableHTMLLabel(String path, Object... vars) {
       super(path, vars);
@@ -16,15 +18,6 @@ public class LocalizableHTMLLabel extends LocalizableLabel {
    public void setText(String path, Object... vars) {
       this.path = path;
       this.variables = Localizable.checkVariables(vars);
-      String value = Localizable.get(path);
-      if (value != null) {
-         value = "<html>" + value.replace("\n", "<br/>") + "</html>";
-
-         for(int i = 0; i < this.variables.length; ++i) {
-            value = value.replace("%" + i, this.variables[i]);
-         }
-      }
-
-      this.setRawText(value);
+      this.setRawText("<html>" + StringUtils.replaceChars(Localizable.get(path, vars), "\n", "<br/>") + "</html>");
    }
 }

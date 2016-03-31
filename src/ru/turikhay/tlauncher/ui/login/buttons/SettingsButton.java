@@ -8,13 +8,13 @@ import javax.swing.JPopupMenu;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.SwingUtil;
 
-public class SettingsButton extends ExtendedButton implements Blockable {
+public class SettingsButton extends LocalizableButton implements Blockable {
    private final LoginForm lf;
    private final JPopupMenu popup;
    private final LocalizableMenuItem accountManager;
@@ -23,6 +23,7 @@ public class SettingsButton extends ExtendedButton implements Blockable {
 
    SettingsButton(LoginForm loginform) {
       this.lf = loginform;
+      this.setToolTipText("loginform.button.settings");
       this.setIcon(Images.getScaledIcon("settings.png", 16));
       this.popup = new JPopupMenu();
       this.settings = new LocalizableMenuItem("loginform.button.settings.launcher");

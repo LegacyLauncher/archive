@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 public class CrashDescriptor {
@@ -41,7 +42,7 @@ public class CrashDescriptor {
          try {
             scanner = new Scanner(output);
 
-            label201:
+            label210:
             while(scanner.hasNextLine()) {
                String line = scanner.nextLine();
                Matcher matcher;
@@ -58,18 +59,18 @@ public class CrashDescriptor {
                      }
                   }
 
-                  Iterator i$ = container.getSignatures().iterator();
+                  Iterator var10 = container.getSignatures().iterator();
 
                   while(true) {
                      CrashSignatureContainer.CrashSignature signature;
                      do {
                         do {
                            do {
-                              if (!i$.hasNext()) {
-                                 continue label201;
+                              if (!var10.hasNext()) {
+                                 continue label210;
                               }
 
-                              signature = (CrashSignatureContainer.CrashSignature)i$.next();
+                              signature = (CrashSignatureContainer.CrashSignature)var10.next();
                            } while(signature.hasVersion() && !signature.getVersion().matcher(version).matches());
                         } while(signature.hasPattern() && !signature.getPattern().matcher(line).matches());
                      } while(signature.getExitCode() != 0 && signature.getExitCode() != this.launcher.getExitCode());
@@ -107,6 +108,10 @@ public class CrashDescriptor {
 
          this.readFile(crash.getFile());
          this.readFile(crash.getNativeReport());
+         if (OS.WINDOWS.isCurrent()) {
+            OS.Windows.printDxDiag();
+         }
+
          return crash;
       }
    }
@@ -117,28 +122,26 @@ public class CrashDescriptor {
 
          try {
             File file = new File(path);
-            if (file.isFile()) {
-               this.log("++++++++++++++++++++++++++++++++++");
-               this.log("Reading file:", file);
-               Scanner scanner = null;
-
-               try {
-                  scanner = new Scanner(file);
-
-                  while(scanner.hasNextLine()) {
-                     this.plog("+", scanner.nextLine());
-                  }
-
-                  return;
-               } catch (Exception var13) {
-                  this.log("Could not read file:", file, var13);
-                  return;
-               } finally {
-                  U.close(scanner);
-               }
+            if (!file.isFile()) {
+               this.log("File doesn't exist:", path);
+               return;
             }
 
-            this.log("File doesn't exist:", path);
+            this.log("++++++++++++++++++++++++++++++++++");
+            this.log("Reading file:", file);
+            Scanner scanner = null;
+
+            try {
+               scanner = new Scanner(file);
+
+               while(scanner.hasNextLine()) {
+                  this.plog("+", scanner.nextLine());
+               }
+            } catch (Exception var13) {
+               this.log("Could not read file:", file, var13);
+            } finally {
+               U.close(scanner);
+            }
          } finally {
             this.log("++++++++++++++++++++++++++++++++++");
          }

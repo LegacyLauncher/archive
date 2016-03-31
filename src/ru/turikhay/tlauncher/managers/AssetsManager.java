@@ -44,11 +44,11 @@ public class AssetsManager extends LauncherComponent {
    private Set getResourceFiles(CompleteVersion version, File baseDirectory, List list) {
       File objectsFolder = new File(baseDirectory, "assets/objects");
       HashSet result = new HashSet();
-      Iterator i$ = list.iterator();
+      Iterator var6 = list.iterator();
 
       while(true) {
-         while(i$.hasNext()) {
-            AssetIndex.AssetObject object = (AssetIndex.AssetObject)i$.next();
+         while(var6.hasNext()) {
+            AssetIndex.AssetObject object = (AssetIndex.AssetObject)var6.next();
             File destination = new File(objectsFolder, object.getHash());
             if (destination.isFile()) {
                String hash = FileUtil.getDigest(destination, "SHA", 40);
@@ -171,7 +171,7 @@ public class AssetsManager extends LauncherComponent {
       if (local) {
          list = this.getLocalResourceFilesList(version, baseDirectory);
       } else {
-         list = this.getResourceFiles(version, baseDirectory, true);
+         list = this.getResourceFiles(version, baseDirectory, false);
       }
 
       if (list == null) {

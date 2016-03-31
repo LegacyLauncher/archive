@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.configuration;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -10,23 +10,29 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.util.U;
 
 public class ArgumentParser {
    private static final Map m = new HashMap();
    private static final OptionParser parser;
 
-   public static OptionSet parseArgs(String[] args, OutputStream printHelp) throws OptionException, IOException {
+   public static String getHelp() {
+      StringWriter writer = new StringWriter();
+
+      try {
+         parser.printHelpOn(writer);
+      } catch (IOException var2) {
+      }
+
+      writer.flush();
+      return writer.toString();
+   }
+
+   public static OptionSet parseArgs(String[] args) throws OptionException, IOException {
       try {
          return parser.parse(args);
-      } catch (OptionException var3) {
-         if (printHelp != null) {
-            U.log("Could not parse argument", var3);
-            parser.printHelpOn(printHelp);
-         }
-
-         Alert.showLocError("args.error", var3);
-         throw var3;
+      } catch (OptionException var2) {
+         Alert.showLocError("args.error", var2);
+         throw var2;
       }
    }
 
@@ -73,7 +79,8 @@ public class ArgumentParser {
       m.put("fullscreen", "minecraft.fullscreen");
       m.put("-block-settings", "gui.settings.blocked");
       parser = new OptionParser();
-      parser.accepts("nogui", "Starts minimal version");
+      parser.accepts("help", "Prints help");
+      parser.accepts("no-terminate", "Do not terminate Bootstrapper if started with it");
       parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
       parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();
       parser.accepts("version", "Specifies version to run").withRequiredArg();

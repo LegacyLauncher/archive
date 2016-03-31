@@ -16,14 +16,12 @@ import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
-import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
-import ru.turikhay.util.async.AsyncThread;
 
 public class Configuration extends SimpleConfiguration {
    private ConfigurationDefaults defaults;
@@ -102,15 +100,6 @@ public class Configuration extends SimpleConfiguration {
       this.defaultLocales = getDefaultLocales();
       this.supportedLocales = this.getSupportedLocales();
       Locale selected1 = getLocaleOf(this.get("locale"));
-      if (selected1 == getLocaleOf("uk_UA")) {
-         AsyncThread.execute(new Runnable() {
-            public void run() {
-               Alert.showMessage("Підтримка припинена", "На жаль, підтримка української мови припинена. Це пов'язано з тим, що лише 2% українців користувалися нею. В подальшому Ви можете змінити мову в налаштуваннях.");
-            }
-         });
-         selected1 = null;
-      }
-
       if (selected1 == null) {
          this.log(new Object[]{"Selected locale is not supported, trying system default"});
          selected1 = Locale.getDefault();
@@ -308,12 +297,17 @@ public class Configuration extends SimpleConfiguration {
    private static List getDefaultLocales() {
       ArrayList l = new ArrayList();
       String[] ll = Static.getLangList();
-      String[] arr$ = ll;
-      int len$ = ll.length;
+      String[] var2 = ll;
+      int var3 = ll.length;
 
-      for(int i$ = 0; i$ < len$; ++i$) {
-         String locale = arr$[i$];
-         l.add(getLocaleOf(locale));
+      for(int var4 = 0; var4 < var3; ++var4) {
+         String locale = var2[var4];
+         Locale loc = getLocaleOf(locale);
+         if (loc == null) {
+            throw new NullPointerException("unknown locale: " + locale);
+         }
+
+         l.add(loc);
       }
 
       return l;

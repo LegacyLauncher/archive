@@ -11,8 +11,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.Map.Entry;
+import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
@@ -35,6 +37,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
    private boolean firstUpdate = true;
    private File listFile;
    private VersionManagerUIListener.SimpleVersionList list;
+   private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
    public VersionManagerUIListener(TLauncher tl) {
       this.tl = tl;
@@ -44,22 +47,22 @@ public class VersionManagerUIListener implements VersionManagerListener {
    }
 
    public void onVersionsRefreshing(VersionManager vm) {
-      this.listFile = new File(MinecraftUtil.getWorkingDirectory(), "versions/versions.json");
    }
 
    public void onVersionsRefreshingFailed(VersionManager vm) {
    }
 
    public void onVersionsRefreshed(VersionManager vm) {
+      this.listFile = new File(MinecraftUtil.getWorkingDirectory(), "versions/versions.json");
       boolean isFirstUpdate = this.firstUpdate;
       this.firstUpdate = false;
       boolean enabled = false;
       if (this.settings.getBoolean("minecraft.versions.sub.remote")) {
-         ReleaseType[] arr$ = ReleaseType.values();
-         int len$ = arr$.length;
+         ReleaseType[] var4 = ReleaseType.values();
+         int var5 = var4.length;
 
-         for(int i$ = 0; i$ < len$; ++i$) {
-            ReleaseType type = arr$[i$];
+         for(int var6 = 0; var6 < var5; ++var6) {
+            ReleaseType type = var4[var6];
             enabled |= this.settings.getBoolean("gui.alerton." + type);
          }
       }
@@ -85,10 +88,10 @@ public class VersionManagerUIListener implements VersionManagerListener {
             TreeMap newVersions = new TreeMap();
             VersionManagerUIListener.SimpleVersion lastVersion = null;
             int i = 0;
-            Iterator i$ = newList.versions.iterator();
+            Iterator var9 = newList.versions.iterator();
 
-            while(i$.hasNext()) {
-               VersionManagerUIListener.SimpleVersion version = (VersionManagerUIListener.SimpleVersion)i$.next();
+            while(var9.hasNext()) {
+               VersionManagerUIListener.SimpleVersion version = (VersionManagerUIListener.SimpleVersion)var9.next();
                if (!oldList.versions.contains(version)) {
                   ++i;
                   lastVersion = version;
@@ -124,16 +127,16 @@ public class VersionManagerUIListener implements VersionManagerListener {
                } else {
                   text.append(Localizable.get("version.manager.alert.header.multiple")).append("\n");
                   List unknownNew = (List)newVersions.get(ReleaseType.UNKNOWN);
-                  Iterator i$;
+                  Iterator var25;
                   if (newVersions.size() == 1 && unknownNew != null) {
-                     i$ = ((List)newVersions.get(ReleaseType.UNKNOWN)).iterator();
+                     var25 = ((List)newVersions.get(ReleaseType.UNKNOWN)).iterator();
 
-                     while(i$.hasNext()) {
-                        VersionManagerUIListener.SimpleVersion version = (VersionManagerUIListener.SimpleVersion)i$.next();
+                     while(var25.hasNext()) {
+                        VersionManagerUIListener.SimpleVersion version = (VersionManagerUIListener.SimpleVersion)var25.next();
                         this.add(text, version);
                      }
                   } else {
-                     i$ = newVersions.entrySet().iterator();
+                     var25 = newVersions.entrySet().iterator();
 
                      label94:
                      while(true) {
@@ -141,21 +144,21 @@ public class VersionManagerUIListener implements VersionManagerListener {
                            ReleaseType type;
                            List versionList;
                            do {
-                              if (!i$.hasNext()) {
+                              if (!var25.hasNext()) {
                                  break label94;
                               }
 
-                              Entry entry = (Entry)i$.next();
+                              Entry entry = (Entry)var25.next();
                               type = (ReleaseType)entry.getKey();
                               versionList = (List)entry.getValue();
                            } while(versionList.isEmpty());
 
                            text.append('\n').append(Localizable.get("version.manager.alert." + type + "." + (versionList.size() == 1 ? "single" : "multiple"))).append('\n');
                            int k = 0;
-                           Iterator i$ = versionList.iterator();
+                           Iterator var16 = versionList.iterator();
 
-                           while(i$.hasNext()) {
-                              VersionManagerUIListener.SimpleVersion version = (VersionManagerUIListener.SimpleVersion)i$.next();
+                           while(var16.hasNext()) {
+                              VersionManagerUIListener.SimpleVersion version = (VersionManagerUIListener.SimpleVersion)var16.next();
                               this.log("New version:", version);
                               ++k;
                               if (k == 5) {
@@ -184,6 +187,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
 
       boolean var3;
       try {
+         FileUtil.createFile(this.listFile);
          writer = new FileWriter(this.listFile);
          this.gson.toJson((Object)versionList, (Appendable)writer);
          var3 = true;
@@ -218,10 +222,10 @@ public class VersionManagerUIListener implements VersionManagerListener {
    private VersionManagerUIListener.SimpleVersionList fetchListFromManager(VersionManager vm) {
       try {
          VersionManagerUIListener.SimpleVersionList versionList = new VersionManagerUIListener.SimpleVersionList();
-         Iterator i$ = vm.getVersions(false).iterator();
+         Iterator var3 = vm.getVersions(new VersionFilter(), false).iterator();
 
-         while(i$.hasNext()) {
-            VersionSyncInfo syncInfo = (VersionSyncInfo)i$.next();
+         while(var3.hasNext()) {
+            VersionSyncInfo syncInfo = (VersionSyncInfo)var3.next();
             versionList.versions.add(new VersionManagerUIListener.SimpleVersion(syncInfo));
          }
 
@@ -236,15 +240,29 @@ public class VersionManagerUIListener implements VersionManagerListener {
       return b.append("– ").append(version.id).append(" (").append(this.getTimeDifference(version.time)).append(")").append('\n');
    }
 
+   private static Calendar cal() {
+      return Calendar.getInstance(UTC);
+   }
+
+   private static Calendar cal(Date date) {
+      Calendar calendar = cal();
+      calendar.setTime(date);
+      return calendar;
+   }
+
+   private static Calendar cal(long time) {
+      Calendar calendar = cal();
+      calendar.setTimeInMillis(time);
+      return calendar;
+   }
+
    private String getTimeDifference(Date time) {
       if (time == null) {
          return Localizable.get("version.manager.alert.time.unknown");
       } else {
-         Calendar currentTime = Calendar.getInstance();
-         Calendar releaseTime = Calendar.getInstance();
-         releaseTime.setTime(time);
-         Calendar difference = Calendar.getInstance();
-         difference.setTimeInMillis(currentTime.getTimeInMillis() - releaseTime.getTimeInMillis());
+         Calendar currentTime = cal();
+         Calendar releaseTime = cal(time);
+         Calendar difference = cal(currentTime.getTimeInMillis() - releaseTime.getTimeInMillis());
          String path = "version.manager.alert.time.";
          int field = -1;
          if (difference.get(1) > 1970) {
@@ -258,8 +276,11 @@ public class VersionManagerUIListener implements VersionManagerListener {
          } else if (difference.get(11) > 1) {
             path = path + "hour";
             field = difference.get(11);
+         } else if (difference.get(12) > 1) {
+            path = path + "minute";
+            field = difference.get(12);
          } else {
-            path = path + "recently";
+            path = path + "justnow";
          }
 
          return field == -1 ? Localizable.get(path) : Localizable.get(path, field);

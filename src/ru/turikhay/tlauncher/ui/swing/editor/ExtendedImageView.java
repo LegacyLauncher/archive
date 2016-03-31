@@ -38,7 +38,6 @@ import javax.swing.text.html.HTML.Attribute;
 import javax.swing.text.html.HTML.Tag;
 import javax.xml.bind.DatatypeConverter;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
@@ -424,43 +423,28 @@ public class ExtendedImageView extends View {
       String source = this.getImageSource();
       if (source == null) {
          return null;
+      } else if (!source.startsWith(base64s)) {
+         URL src1 = U.makeURL(source);
+         return src1 != null ? Images.loadMagnifiedImage(src1) : null;
       } else {
-         byte[] cache;
-         if (source.startsWith("gzip:")) {
-            byte[] gzippedBytes = source.substring("gzip:".length()).getBytes("UTF-8");
-            cache = FileUtil.gzipUncompress(new ByteArrayInputStream(gzippedBytes));
-            U.log(cache);
-            source = new String(cache, "UTF-8");
-            U.log("ungzipped source:", source);
-         }
-
-         if (source.startsWith(base64s)) {
-            int src = base64s.length();
-            String newImage = source.substring(src, src + 4);
-            if (!newImage.startsWith("png") && !newImage.startsWith("jpg")) {
-               if (!newImage.equals("jpeg")) {
-                  return null;
-               }
-
-               src += 4;
-            } else {
-               src += 3;
+         int offset = base64s.length();
+         if (!source.startsWith("png", offset) && !source.startsWith("jpg", offset)) {
+            if (!source.startsWith("jpeg", offset)) {
+               return null;
             }
 
-            if (source.substring(src, src + base64e.length()).equals(base64e)) {
-               src += base64e.length();
-               cache = DatatypeConverter.parseBase64Binary(source.substring(src));
-               BufferedImage image = ImageIO.read(new ByteArrayInputStream(cache));
-               return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
-            }
+            offset += 4;
          } else {
-            URL src1 = U.makeURL(source);
-            if (src1 != null) {
-               return Images.loadMagnifiedImage(src1);
-            }
+            offset += 3;
          }
 
-         return null;
+         if (!source.substring(offset, offset + base64e.length()).equals(base64e)) {
+            return null;
+         } else {
+            offset += base64e.length();
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(source.substring(offset))));
+            return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
+         }
       }
    }
 

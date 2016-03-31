@@ -30,7 +30,6 @@ import ru.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
 import ru.turikhay.tlauncher.ui.converter.ConnectionQualityConverter;
 import ru.turikhay.tlauncher.ui.converter.ConsoleTypeConverter;
 import ru.turikhay.tlauncher.ui.converter.DirectionConverter;
-import ru.turikhay.tlauncher.ui.converter.LocaleConverter;
 import ru.turikhay.tlauncher.ui.editor.EditorCheckBox;
 import ru.turikhay.tlauncher.ui.editor.EditorComboBox;
 import ru.turikhay.tlauncher.ui.editor.EditorFieldChangeListener;
@@ -98,6 +97,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
 
    public SettingsPanel(DefaultScene sc) {
       super(tipTheme, new Insets(5, 10, 10, 10));
+      this.setMagnifyGaps(false);
       if (this.tabPane.getExtendedUI() != null) {
          this.tabPane.getExtendedUI().setTheme(settingsTheme);
       }
@@ -296,11 +296,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
       this.tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{this.launchAction}));
       this.tlauncherTab.nextPane();
       List defReleaseTypeHandlers = new ArrayList();
-      ReleaseType[] arr$ = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.MODIFIED};
-      int len$ = arr$.length;
+      ReleaseType[] var12 = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.MODIFIED};
+      int var13 = var12.length;
 
-      for(int i$ = 0; i$ < len$; ++i$) {
-         ReleaseType releaseType = arr$[i$];
+      for(int var14 = 0; var14 < var13; ++var14) {
+         ReleaseType releaseType = var12[var14];
          defReleaseTypeHandlers.add(new EditorFieldHandler("gui.alerton." + releaseType, new EditorCheckBox("settings.alert-on." + releaseType)));
          defReleaseTypeHandlers.add(EditorPair.NEXT_COLUMN);
       }
@@ -308,7 +308,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
       this.alertUpdates = new EditorGroupHandler(defReleaseTypeHandlers);
       this.tlauncherTab.add(new EditorPair("settings.alert-on.label", defReleaseTypeHandlers));
       this.tlauncherTab.nextPane();
-      this.locale = new EditorFieldHandler("locale", new EditorComboBox(new LocaleConverter(), this.global.getLocales()));
+      this.locale = new EditorFieldHandler("locale", new SettingsLocaleComboBox(this));
       this.locale.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldvalue, String newvalue) {
             if (SettingsPanel.this.tlauncher.getFrame() != null) {

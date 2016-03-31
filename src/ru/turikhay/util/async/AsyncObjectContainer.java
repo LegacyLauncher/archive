@@ -17,19 +17,19 @@ public class AsyncObjectContainer {
       synchronized(this.objects) {
          int i = 0;
          int size = this.objects.size();
-         Iterator i$ = this.objects.iterator();
+         Iterator var4 = this.objects.iterator();
 
          AsyncObject object;
-         while(i$.hasNext()) {
-            object = (AsyncObject)i$.next();
+         while(var4.hasNext()) {
+            object = (AsyncObject)var4.next();
             object.start();
          }
 
          while(i < size) {
-            i$ = this.objects.iterator();
+            var4 = this.objects.iterator();
 
-            while(i$.hasNext()) {
-               object = (AsyncObject)i$.next();
+            while(var4.hasNext()) {
+               object = (AsyncObject)var4.next();
 
                try {
                   if (!this.values.containsKey(object)) {

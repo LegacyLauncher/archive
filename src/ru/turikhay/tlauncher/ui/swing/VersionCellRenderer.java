@@ -60,12 +60,14 @@ public class VersionCellRenderer implements ListCellRenderer {
       }
 
       label = Localizable.nget(label);
-      switch(type) {
-      case OLD_BETA:
-         id = id.substring(1);
-         break;
-      case OLD_ALPHA:
-         id = id.startsWith("a") ? id.substring(1) : id;
+      if (type != null) {
+         switch(type) {
+         case OLD_BETA:
+            id = id.substring(1);
+            break;
+         case OLD_ALPHA:
+            id = id.startsWith("a") ? id.substring(1) : id;
+         }
       }
 
       String text = label != null ? label + " " + id : id;

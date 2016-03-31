@@ -3,6 +3,7 @@ package ru.turikhay.util;
 import java.awt.Color;
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
@@ -13,14 +14,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.Bootstrapper;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.async.ExtendedThread;
+import ru.turikhay.util.stream.InputStringStream;
 
 public class U {
    private static String PREFIX;
-   private static final Object lock = new Object();
+   public static final Object lock = new Object();
    private static Random rnd;
 
    public static void setPrefix(String prefix) {
@@ -29,13 +33,6 @@ public class U {
 
    public static void log(Object... what) {
       hlog(PREFIX, what);
-   }
-
-   public static void debug(Object... what) {
-      if (TLauncher.getDebug()) {
-         hlog(PREFIX, what);
-      }
-
    }
 
    public static void plog(Object... what) {
@@ -332,7 +329,7 @@ public class U {
    public static String setFractional(double d, int fractional) {
       NumberFormat nf = NumberFormat.getInstance();
       nf.setMaximumFractionDigits(fractional);
-      return nf.format(d).replace(",", ".");
+      return StringUtils.replaceChars(nf.format(d), ',', '.');
    }
 
    public static StringBuilder stackTrace(Throwable e) {
@@ -536,13 +533,32 @@ public class U {
 
    }
 
+   public static int find(Object obj, Object[] array) {
+      int i;
+      if (obj == null) {
+         for(i = 0; i < array.length; ++i) {
+            if (array[i] == null) {
+               return i;
+            }
+         }
+      } else {
+         for(i = 0; i < array.length; ++i) {
+            if (obj.equals(array[i])) {
+               return i;
+            }
+         }
+      }
+
+      return -1;
+   }
+
    private static void swap(Object[] arr, int i, int j) {
       Object tmp = arr[i];
       arr[i] = arr[j];
       arr[j] = tmp;
    }
 
-   public static Object[] shuffle(Object[] arr) {
+   public static Object[] shuffle(Object... arr) {
       if (rnd == null) {
          rnd = new Random();
       }
@@ -561,5 +577,21 @@ public class U {
       b.append(s);
       b.reverse();
       return b.toString();
+   }
+
+   public static byte[] toByteArray(String s) {
+      try {
+         return IOUtils.toByteArray(new InputStringStream(s));
+      } catch (IOException var2) {
+         throw new RuntimeException("i/o exception while reading string", var2);
+      }
+   }
+
+   public static Object requireNotNull(Object obj, String name) {
+      if (obj == null) {
+         throw new NullPointerException(name);
+      } else {
+         return obj;
+      }
    }
 }

@@ -241,7 +241,7 @@ public class DownloaderThread extends ExtendedThread {
                this.dlog("Copying completed.");
             }
 
-            this.dlog("Downloaded " + read / 1024L + " kb in " + downloaded_e + " ms. at " + downloadSpeed + " kb/s");
+            this.dlog("Downloaded " + read / 1024L + " kb in " + downloaded_e + " ms. at " + U.setFractional(downloadSpeed, 2) + " kb/s");
             this.onComplete();
          }
       }
