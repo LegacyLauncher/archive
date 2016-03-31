@@ -3,13 +3,13 @@ package ru.turikhay.tlauncher.ui.console;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -66,36 +66,19 @@ public class Console implements Logger {
       });
       this.frame.addComponentListener(new ExtendedComponentAdapter(this.frame) {
          public void componentShown(ComponentEvent e) {
-            Console.this.save(true);
+            Console.this.delayedSave();
          }
 
          public void componentHidden(ComponentEvent e) {
-            Console.this.save(true);
+            Console.this.delayedSave();
          }
 
          public void onComponentResized(ComponentEvent e) {
-            Console.this.save(true);
+            Console.this.delayedSave();
          }
 
          public void onComponentMoved(ComponentEvent e) {
-            Console.this.save(true);
-         }
-      });
-      this.frame.addComponentListener(new ComponentListener() {
-         public void componentResized(ComponentEvent e) {
-            Console.this.save(false);
-         }
-
-         public void componentMoved(ComponentEvent e) {
-            Console.this.save(false);
-         }
-
-         public void componentShown(ComponentEvent e) {
-            Console.this.save(true);
-         }
-
-         public void componentHidden(ComponentEvent e) {
-            Console.this.save(true);
+            Console.this.delayedSave();
          }
       });
       if (logger == null) {
@@ -191,10 +174,6 @@ public class Console implements Logger {
    }
 
    void save() {
-      this.save(false);
-   }
-
-   void save(boolean flush) {
       this.check();
       if (this.global != null) {
          String prefix = "gui.console.";
@@ -206,6 +185,12 @@ public class Console implements Logger {
          this.global.set(prefix + "y", position[1], false);
       }
 
+   }
+
+   void delayedSave() {
+      if (!this.killed) {
+         this.save();
+      }
    }
 
    private void check() {
@@ -306,7 +291,7 @@ public class Console implements Logger {
 
             try {
                FileUtil.createFile(file);
-               IOUtils.copy(new StringReader(this.getOutput()), (OutputStream)(output = new FileOutputStream(file)));
+               IOUtils.copy((Reader)(new StringReader(this.getOutput())), (OutputStream)(output = new FileOutputStream(file)));
             } catch (Throwable var15) {
                Alert.showLocError("console.save.error", var15);
             } finally {
@@ -363,10 +348,10 @@ public class Console implements Logger {
    }
 
    public static void updateLocale() {
-      Iterator i$ = frames.iterator();
+      Iterator var0 = frames.iterator();
 
-      while(i$.hasNext()) {
-         WeakReference ref = (WeakReference)i$.next();
+      while(var0.hasNext()) {
+         WeakReference ref = (WeakReference)var0.next();
          ConsoleFrame frame = (ConsoleFrame)ref.get();
          if (frame != null) {
             frame.updateLocale();

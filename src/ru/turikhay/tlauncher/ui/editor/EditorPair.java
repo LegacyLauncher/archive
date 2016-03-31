@@ -24,10 +24,10 @@ public class EditorPair {
       c.weightx = 1.0D;
       c.gridy = -1;
       EditorHandler prev = null;
-      Iterator i$ = handlers.iterator();
+      Iterator var5 = handlers.iterator();
 
-      while(i$.hasNext()) {
-         EditorHandler handler = (EditorHandler)i$.next();
+      while(var5.hasNext()) {
+         EditorHandler handler = (EditorHandler)var5.next();
          if (NEXT_COLUMN.equals(handler)) {
             ++c.gridx;
             prev = handler;

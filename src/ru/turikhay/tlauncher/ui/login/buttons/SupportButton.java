@@ -14,21 +14,22 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
-public class SupportButton extends ExtendedButton implements Blockable, LocalizableComponent {
+public class SupportButton extends LocalizableButton implements Blockable {
    private final HashMap localeMap = new HashMap();
    SupportButton.SupportMenu menu;
 
    SupportButton(LoginForm loginForm) {
       this.localeMap.put("ru_RU", (new SupportButton.SupportMenu("vk.png")).add("loginform.button.support.follow", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu")).addSeparator().add("loginform.button.support.report", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk/support?from=menu")).add("loginform.button.support.email", Images.getIcon("mail.png", SwingUtil.magnify(16)), actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))));
-      this.localeMap.put("en_US", (new SupportButton.SupportMenu("mail.png")).add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu")).add("loginform.button.support.email", actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))).add("loginform.button.support.developer", actionAlert("loginform.button.support.developer.alert", U.reverse("ur.rehcnualt@repoleved"))));
+      this.localeMap.put("uk_UA", this.localeMap.get("ru_RU"));
+      this.localeMap.put("en_US", (new SupportButton.SupportMenu("mail.png")).add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu")).addSeparator().add("loginform.button.support.email", actionAlert("loginform.button.support.email.alert", U.reverse("ur.rehcnualt@troppus"))).add("loginform.button.support.developer", actionAlert("loginform.button.support.developer.alert", U.reverse("ur.rehcnualt@repoleved"))));
+      this.setToolTipText("loginform.button.support");
       this.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             if (SupportButton.this.menu != null) {
@@ -63,12 +64,13 @@ public class SupportButton extends ExtendedButton implements Blockable, Localiza
    }
 
    public void updateLocale() {
+      super.updateLocale();
       String selectedLocale = TLauncher.getInstance().getSettings().getLocale().toString();
       String newLocale = "en_US";
-      Iterator i$ = this.localeMap.keySet().iterator();
+      Iterator var3 = this.localeMap.keySet().iterator();
 
-      while(i$.hasNext()) {
-         String locale = (String)i$.next();
+      while(var3.hasNext()) {
+         String locale = (String)var3.next();
          if (locale.equals(selectedLocale)) {
             newLocale = locale;
             break;

@@ -2,7 +2,6 @@ package ru.turikhay.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +18,6 @@ import java.net.URLDecoder;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 public class FileUtil {
    public static void writeFile(File file, String text) throws IOException {
@@ -207,18 +205,20 @@ public class FileUtil {
    }
 
    public static void deleteFile(File file) {
-      if (file.delete()) {
-         File parent = file.getParentFile();
-         if (parent != null) {
-            File[] list = parent.listFiles();
-            if (list != null && list.length <= 0) {
-               deleteFile(parent);
+      if (file.isFile()) {
+         if (file.delete()) {
+            File parent = file.getParentFile();
+            if (parent != null) {
+               File[] list = parent.listFiles();
+               if (list != null && list.length <= 0) {
+                  deleteFile(parent);
+               }
             }
+         } else {
+            U.log("Could not delete file:", file, new RuntimeException());
          }
-      } else {
-         U.log("Could not delete file:", file);
-      }
 
+      }
    }
 
    public static void deleteDirectory(File dir) {
@@ -321,18 +321,5 @@ public class FileUtil {
 
          return ext;
       }
-   }
-
-   public static byte[] gzipUncompress(InputStream in) throws IOException {
-      GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
-      ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-      byte[] buffer = new byte[2048];
-
-      int read;
-      while((read = gzipIn.read(buffer)) != -1) {
-         bOut.write(buffer, 0, read);
-      }
-
-      return bOut.toByteArray();
    }
 }

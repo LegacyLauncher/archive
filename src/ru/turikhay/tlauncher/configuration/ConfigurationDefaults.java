@@ -22,17 +22,17 @@ class ConfigurationDefaults {
       this.d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
       this.d.put("minecraft.size", new IntegerArray(new int[]{925, 530}));
       this.d.put("minecraft.fullscreen", false);
-      Iterator i$ = ReleaseType.getDefault().iterator();
+      Iterator var1 = ReleaseType.getDefault().iterator();
 
-      while(i$.hasNext()) {
-         ReleaseType type = (ReleaseType)i$.next();
+      while(var1.hasNext()) {
+         ReleaseType type = (ReleaseType)var1.next();
          this.d.put("minecraft.versions." + type.name().toLowerCase(), true);
       }
 
-      i$ = ReleaseType.SubType.getDefault().iterator();
+      var1 = ReleaseType.SubType.getDefault().iterator();
 
-      while(i$.hasNext()) {
-         ReleaseType.SubType subType = (ReleaseType.SubType)i$.next();
+      while(var1.hasNext()) {
+         ReleaseType.SubType subType = (ReleaseType.SubType)var1.next();
          this.d.put("minecraft.versions.sub." + subType.name().toLowerCase(), true);
       }
 
@@ -50,7 +50,7 @@ class ConfigurationDefaults {
       this.d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
       this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
       this.d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
-      this.d.put("gui.size", new IntegerArray(new int[]{925, 550}));
+      this.d.put("gui.size", new IntegerArray(new int[]{935, 570}));
       this.d.put("gui.console", Configuration.ConsoleType.getDefault());
       this.d.put("gui.console.width", 720);
       this.d.put("gui.console.height", 500);

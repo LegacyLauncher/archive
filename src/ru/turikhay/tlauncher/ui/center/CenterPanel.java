@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.center;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -12,16 +13,19 @@ import javax.swing.BoxLayout;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
+import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.BlockablePanel;
+import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.Del;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
+import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.U;
 
-public class CenterPanel extends BlockablePanel {
+public class CenterPanel extends VPanel implements Blockable {
    public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
    public static final CenterPanelTheme tipTheme = new TipPanelTheme();
    public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
@@ -73,7 +77,7 @@ public class CenterPanel extends BlockablePanel {
       this.messagePanel.setLayout(new BoxLayout(this.messagePanel, 1));
       this.messagePanel.setAlignmentX(0.5F);
       this.messagePanel.setInsets(new Insets(3, 0, 3, 0));
-      this.messagePanel.add((Component)this.messageLabel);
+      this.messagePanel.add(this.messageLabel);
    }
 
    public void paintComponent(Graphics g0) {
@@ -164,6 +168,16 @@ public class CenterPanel extends BlockablePanel {
 
    public static UnblockablePanel uSepPan(Component... components) {
       return uSepPan(new GridLayout(0, 1), components);
+   }
+
+   public void block(Object reason) {
+      this.setEnabled(false);
+      Blocker.blockComponents((Container)this, (Object)reason);
+   }
+
+   public void unblock(Object reason) {
+      this.setEnabled(true);
+      Blocker.unblockComponents((Container)this, (Object)reason);
    }
 
    protected void log(Object... o) {

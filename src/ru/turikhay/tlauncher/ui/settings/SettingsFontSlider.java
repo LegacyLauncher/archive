@@ -23,7 +23,7 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
    SettingsFontSlider() {
       this.slider.setOpaque(false);
       this.slider.setMinimum(12);
-      this.slider.setMaximum(22);
+      this.slider.setMaximum(18);
       this.slider.setMinorTickSpacing(2);
       this.slider.setMajorTickSpacing(4);
       this.slider.setSnapToTicks(true);

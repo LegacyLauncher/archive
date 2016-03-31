@@ -135,8 +135,8 @@ public class MainPane extends ExtendedLayeredPane {
 
       private RevertFontSize() {
          float size = (float)MainPane.this.rootFrame.getConfiguration().getInteger("gui.font.old");
-         if (size < 12.0F || size > 22.0F) {
-            size = 22.0F;
+         if (size < 12.0F || size > 18.0F) {
+            size = 18.0F;
          }
 
          this.oldSize = size;
@@ -152,6 +152,7 @@ public class MainPane extends ExtendedLayeredPane {
             }
          });
          this.closeButton = new LocalizableButton("revert.font.close");
+         this.closeButton.setToolTipText("revert.font.close.hint");
          this.closeButton.setFont(this.closeButton.getFont().deriveFont(1, size));
          this.closeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -169,7 +170,6 @@ public class MainPane extends ExtendedLayeredPane {
       }
 
       public void updateLocale() {
-         this.closeButton.setToolTipText(Localizable.get("revert.font.close.hint"));
          Localizable.updateContainer(this);
       }
 

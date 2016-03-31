@@ -46,11 +46,11 @@ public class ExtendedPanel extends JPanel {
       this.insets = insets;
    }
 
-   public Component add(Component comp) {
-      super.add(comp);
+   protected void addImpl(Component comp, Object constraints, int index) {
       if (comp == null) {
-         return null;
+         throw new NullPointerException();
       } else {
+         super.addImpl(comp, constraints, index);
          MouseListener[] compareListeners = comp.getMouseListeners();
          Iterator var4 = this.mouseListeners.iterator();
 
@@ -73,7 +73,6 @@ public class ExtendedPanel extends JPanel {
             }
          }
 
-         return comp;
       }
    }
 

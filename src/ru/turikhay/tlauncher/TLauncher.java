@@ -91,6 +91,10 @@ public class TLauncher {
       console = new Console(this.settings, print, "Logger", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
       console.setCloseAction(Console.CloseAction.KILL);
       Console.updateLocale();
+      if (this.args.has("help")) {
+         U.log("Help with arguments:\n", ArgumentParser.getHelp());
+      }
+
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
       this.manager = new ComponentManager(this);
       this.settings.set("minecraft.gamedir", MinecraftUtil.getWorkingDirectory(), false);
@@ -327,7 +331,7 @@ public class TLauncher {
       U.log("Startup time:", DateFormat.getDateTimeInstance(3, 1).format(new Date()));
       U.log("---");
       sargs = args;
-      new TLauncher(ArgumentParser.parseArgs(args, print));
+      new TLauncher(ArgumentParser.parseArgs(args));
    }
 
    public static String[] getArgs() {
@@ -351,11 +355,11 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.7D;
+      return 1.71D;
    }
 
    public static boolean isBeta() {
-      return true;
+      return false;
    }
 
    public static boolean getDebug() {

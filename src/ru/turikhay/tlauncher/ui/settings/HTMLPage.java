@@ -5,9 +5,11 @@ import java.io.StringReader;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
@@ -30,6 +32,10 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
       this.source = tempSource;
       this.resolver = new HTMLPage.AboutPageTokenResolver();
       this.editor = new EditorPane();
+      if (!OS.WINDOWS.isCurrent()) {
+         this.editor.setMargin(new MagnifiedInsets(10, 0, 5, 0));
+      }
+
       this.updateLocale();
       this.setCenter(this.editor);
    }

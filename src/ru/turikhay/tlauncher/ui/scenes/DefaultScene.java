@@ -13,7 +13,7 @@ import ru.turikhay.util.SwingUtil;
 
 public class DefaultScene extends PseudoScene {
    public static final Dimension LOGIN_SIZE = new Dimension(250, 240);
-   public static final Dimension SETTINGS_SIZE = new Dimension(500, 500);
+   public static final Dimension SETTINGS_SIZE = new Dimension(500, 520);
    public final SideNotifier notifier;
    public final LoginForm loginForm;
    public final SettingsPanel settingsForm;

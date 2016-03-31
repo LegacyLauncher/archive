@@ -19,8 +19,8 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.updater.PackageType;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.Updater;
@@ -28,7 +28,7 @@ import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.async.AsyncThread;
 
-public class RefreshButton extends ExtendedButton implements ComponentManagerListener, ElyManagerListener, Blockable, UpdaterListener {
+public class RefreshButton extends LocalizableButton implements ComponentManagerListener, ElyManagerListener, Blockable, UpdaterListener {
    private LoginForm lf;
    private int type;
    private final ImageIcon refresh;
@@ -143,9 +143,11 @@ public class RefreshButton extends ExtendedButton implements ComponentManagerLis
       switch(type) {
       case 0:
          this.setIcon(this.refresh);
+         this.setToolTipText("loginform.button.refresh");
          break;
       case 1:
          this.setIcon(this.cancel);
+         this.setToolTipText("loginform.button.refresh-cancel");
          break;
       default:
          throw new IllegalArgumentException("Unknown type: " + type + ". Use RefreshButton.TYPE_* constants.");

@@ -30,7 +30,7 @@ import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class TLauncherFrame extends JFrame {
-   public static final Dimension minSize = new Dimension(530, 550);
+   public static final Dimension minSize = new Dimension(570, 570);
    public static final Dimension maxSize = new Dimension(1920, 1080);
    private static float fontSize;
    public static double magnifyDimensions;
@@ -50,7 +50,7 @@ public class TLauncherFrame extends JFrame {
 
    public static void setFontSize(float size) {
       fontSize = size;
-      magnifyDimensions = (double)(fontSize / 12.0F);
+      magnifyDimensions = Math.sqrt((double)(fontSize / 12.0F));
    }
 
    public TLauncherFrame(TLauncher t) {

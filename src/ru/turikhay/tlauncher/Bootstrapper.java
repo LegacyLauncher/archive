@@ -23,6 +23,7 @@ public final class Bootstrapper {
    private final LoadingFrame frame;
    private final Bootstrapper.BootstrapperListener listener;
    private JavaProcess process;
+   private boolean terminate = true;
    private boolean started;
 
    public static void main(String[] args) {
@@ -66,6 +67,20 @@ public final class Bootstrapper {
 
    public Bootstrapper(String[] args) {
       this.processLauncher = createLauncher(args);
+      if (args != null && args.length > 0) {
+         String[] var2 = args;
+         int var3 = args.length;
+
+         for(int var4 = 0; var4 < var3; ++var4) {
+            String arg = var2[var4];
+            if (arg != null && arg.startsWith("-") && arg.endsWith("no-terminate")) {
+               log("Will only terminate when launcher is closed.");
+               this.terminate = false;
+               break;
+            }
+         }
+      }
+
       this.frame = new LoadingFrame();
       this.frame.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
@@ -172,7 +187,9 @@ public final class Bootstrapper {
             if (step.percentage == 100) {
                Bootstrapper.this.started = true;
                Bootstrapper.this.frame.dispose();
-               Bootstrapper.this.die(0);
+               if (Bootstrapper.this.terminate) {
+                  Bootstrapper.this.die(0);
+               }
             }
          }
 

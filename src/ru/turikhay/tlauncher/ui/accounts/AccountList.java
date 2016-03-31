@@ -19,18 +19,20 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import ru.turikhay.tlauncher.ui.block.Unblockable;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
-import ru.turikhay.tlauncher.ui.swing.ImageButton;
 
 public class AccountList extends CenterPanel {
    private final AccountEditorScene scene;
    public final DefaultListModel model;
    public final JList list;
-   public final ImageButton add;
-   public final ImageButton remove;
-   public final ImageButton back;
+   public final LocalizableButton add;
+   public final LocalizableButton remove;
+   public final LocalizableButton back;
 
    public AccountList(AccountEditorScene sc) {
       super(squareInsets);
@@ -58,7 +60,7 @@ public class AccountList extends CenterPanel {
       panel.add("Center", scroll);
       JPanel buttons = new JPanel(new GridLayout(0, 3));
       buttons.setOpaque(false);
-      this.add = new ImageButton("plus.png");
+      this.add = new LocalizableButton(Images.getScaledIcon("plus.png", 16), "account.button.add");
       this.add.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             AccountList.this.scene.handler.addAccount();
@@ -66,7 +68,7 @@ public class AccountList extends CenterPanel {
          }
       });
       buttons.add(this.add);
-      this.remove = new ImageButton("minus.png");
+      this.remove = new LocalizableButton(Images.getScaledIcon("minus.png", 16), "account.button.remove");
       this.remove.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             AccountList.this.scene.handler.removeAccount();
@@ -74,7 +76,7 @@ public class AccountList extends CenterPanel {
          }
       });
       buttons.add(this.remove);
-      this.back = new AccountList.UnblockableImageButton("home.png");
+      this.back = new AccountList.UnblockableImageButton(Images.getScaledIcon("home.png", 16), "account.button.home");
       this.back.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             AccountList.this.scene.handler.exitEditor();
@@ -114,9 +116,9 @@ public class AccountList extends CenterPanel {
 
    }
 
-   class UnblockableImageButton extends ImageButton implements Unblockable {
-      public UnblockableImageButton(String imagepath) {
-         super(imagepath);
+   class UnblockableImageButton extends LocalizableButton implements Unblockable {
+      public UnblockableImageButton(ImageIcon icon, String tooltip) {
+         super(icon, tooltip);
       }
    }
 }

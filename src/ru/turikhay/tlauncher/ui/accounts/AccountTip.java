@@ -24,6 +24,7 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
 
    public AccountTip(AccountEditorScene sc) {
       super(smallSquareInsets);
+      this.setMagnifyGaps(false);
       this.scene = sc;
       this.content = new EditorPane(this.getFont().deriveFont(TLauncherFrame.getFontSize()));
       this.content.addMouseListener(new MouseListener() {

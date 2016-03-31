@@ -44,7 +44,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
       });
       this.setCenter(this.slider);
       this.inputField = new EditorIntegerField();
-      this.inputField.textField.setColumns(5);
+      this.inputField.textField.setColumns(4);
       this.mb = new LocalizableLabel("settings.java.memory.mb");
       ExtendedPanel panel = new ExtendedPanel();
       panel.add(this.inputField, this.mb);

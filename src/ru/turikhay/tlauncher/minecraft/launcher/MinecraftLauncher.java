@@ -885,15 +885,19 @@ public class MinecraftLauncher implements JavaProcessListener {
    private String[] getJVMArguments() {
       List args = new ArrayList();
       if (this.settings.getBoolean("minecraft.improvedargs")) {
-         args.add("-Xmn128M");
-         args.add("-XX:+UseConcMarkSweepGC");
-         args.add("-XX:-UseAdaptiveSizePolicy");
-         args.add("-XX:-UseGCOverheadLimit");
-         args.add("-XX:+CMSParallelRemarkEnabled");
-         args.add("-XX:+ParallelRefProcEnabled");
-         args.add("-XX:+CMSClassUnloadingEnabled");
-         args.add("-XX:+UseCMSInitiatingOccupancyOnly");
          args.add("-Xms256M");
+         if (OS.JAVA_VERSION >= 1.7D && this.ramSize >= 3072) {
+            args.add("-XX:+UseG1GC");
+            args.add("-XX:ConcGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
+         } else {
+            args.add("-Xmn128M");
+            args.add("-XX:+UseConcMarkSweepGC");
+            args.add("-XX:-UseAdaptiveSizePolicy");
+            args.add("-XX:+CMSParallelRemarkEnabled");
+            args.add("-XX:+ParallelRefProcEnabled");
+            args.add("-XX:+CMSClassUnloadingEnabled");
+            args.add("-XX:+UseCMSInitiatingOccupancyOnly");
+         }
       }
 
       String rawArgs = this.version.getJVMArguments();
@@ -907,13 +911,20 @@ public class MinecraftLauncher implements JavaProcessListener {
    private List compareAssets() throws MinecraftException {
       try {
          this.migrateOldAssets();
-      } catch (Exception var8) {
-         throw new MinecraftException("Could not migrate old assets", "migrate-assets", var8);
+      } catch (Exception var9) {
+         throw new MinecraftException("Could not migrate old assets", "migrate-assets", var9);
+      }
+
+      boolean fastCompare;
+      if (this.versionSync.isInstalled()) {
+         fastCompare = !this.forceUpdate;
+      } else {
+         fastCompare = false;
       }
 
       this.log("Comparing assets...");
       long start = System.nanoTime();
-      List result = this.am.checkResources(this.version, !this.forceUpdate);
+      List result = this.am.checkResources(this.version, fastCompare);
       long end = System.nanoTime();
       long delta = end - start;
       this.log("Delta time to compare assets: " + delta / 1000000L + " ms.");
@@ -965,11 +976,11 @@ public class MinecraftLauncher implements JavaProcessListener {
    private void fixResourceFolder() throws IOException {
       File serverResourcePacksFolder = new File(this.gameDir, "server-resource-packs");
       if (serverResourcePacksFolder.isDirectory()) {
-         File[] arr$ = serverResourcePacksFolder.listFiles();
-         int len$ = arr$.length;
+         File[] var2 = serverResourcePacksFolder.listFiles();
+         int var3 = var2.length;
 
-         for(int i$ = 0; i$ < len$; ++i$) {
-            File file = arr$[i$];
+         for(int var4 = 0; var4 < var3; ++var4) {
+            File file = var2[var4];
             U.log(file, file.length());
             if (file.length() == 0L) {
                FileUtil.deleteFile(file);
@@ -990,7 +1001,15 @@ public class MinecraftLauncher implements JavaProcessListener {
          e.onMinecraftLaunch();
       }
 
-      this.log("Starting Minecraft " + this.versionName + "...");
+      switch(this.version.getReleaseType()) {
+      case RELEASE:
+      case SNAPSHOT:
+         this.log("Starting Minecraft", this.version.getID());
+         break;
+      default:
+         this.log("Starting", this.version.getID());
+      }
+
       this.log("Launching in:", this.gameDir.getAbsolutePath());
       this.startupTime = System.currentTimeMillis();
       TLauncher.getConsole().setLauncher(this);

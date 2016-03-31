@@ -24,6 +24,7 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit.HTMLFactory;
 import javax.swing.text.html.HTMLEditorKit.LinkController;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 
 public class ExtendedHTMLEditorKit extends HTMLEditorKit {
@@ -49,7 +50,7 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
       LocalizableMenuItem show = new LocalizableMenuItem("browser.hyperlink.popup.show");
       show.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            Alert.showLocMessage("browser.hyperlink.popup.show.alert", ExtendedHTMLEditorKit.this.popupHref);
+            Alert.showMessage(Localizable.get("browser.hyperlink.popup.show.alert.title"), "", ExtendedHTMLEditorKit.this.popupHref);
          }
       });
       this.popup.add(show);

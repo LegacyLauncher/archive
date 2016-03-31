@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.SequenceInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -18,12 +18,11 @@ import java.util.List;
 import java.util.TimeZone;
 import net.minecraft.launcher.Http;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
+import ru.turikhay.util.Compressor;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
-import ru.turikhay.util.stream.InputStringStream;
 
 public class Updater {
    private final Gson gson = this.buildGson();
@@ -79,25 +78,8 @@ public class Updater {
             URL e = new URL(updateUrl + get);
             HttpURLConnection connection = Downloadable.setUp(e.openConnection(U.getProxy()), true);
             connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
-            InputStream in = connection.getInputStream();
-            Object in;
-            if ("gzip".equals(connection.getHeaderField("Content-Encoding"))) {
-               this.log("Data is compressed with gzip by the server");
-               in = new GzipCompressorInputStream(in);
-            } else {
-               byte[] gzipMarkerBytes = new byte[5];
-               IOUtils.read(in, gzipMarkerBytes);
-               String firstSymbols = new String(gzipMarkerBytes);
-               if (firstSymbols.equals("gzip:")) {
-                  this.log("Data is compressed with gzip by the script");
-                  in = new GzipCompressorInputStream(in);
-               } else {
-                  this.log("Data is not compressed, I suppose");
-                  in = new SequenceInputStream(new InputStringStream(firstSymbols), in);
-               }
-            }
-
-            result = new Updater.SearchSucceeded((Updater.UpdaterResponse)this.gson.fromJson((Reader)(new InputStreamReader((InputStream)in, "UTF-8")), (Class)Updater.UpdaterResponse.class));
+            InputStream in = this.uncompress(connection);
+            result = new Updater.SearchSucceeded((Updater.UpdaterResponse)this.gson.fromJson((Reader)(new InputStreamReader(in, "UTF-8")), (Class)Updater.UpdaterResponse.class));
 
             try {
                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
@@ -108,15 +90,15 @@ public class Updater {
                if (refreshTime > 0L && currentTimeGMT > refreshTime) {
                   throw new IOException("refresh time exceeded");
                }
-            } catch (IOException var17) {
-               throw var17;
-            } catch (Exception var18) {
-               this.log(var18);
+            } catch (IOException var16) {
+               throw var16;
+            } catch (Exception var17) {
+               this.log(var17);
             }
-         } catch (Exception var19) {
-            this.log("Failed to request from:", updateUrl, var19);
+         } catch (Exception var18) {
+            this.log("Failed to request from:", updateUrl, var18);
             result = null;
-            errorList.add(var19);
+            errorList.add(var18);
          }
 
          this.log("Request time:", System.currentTimeMillis() - startTime, "ms");
@@ -207,6 +189,24 @@ public class Updater {
       } else {
          return obj;
       }
+   }
+
+   private InputStream uncompress(URLConnection connection) throws IOException {
+      InputStream in = connection.getInputStream();
+      Object in;
+      if ("gzip".equals(connection.getHeaderField("Content-Encoding"))) {
+         this.log("Data is compressed by the server with gzip");
+         in = new GzipCompressorInputStream(in);
+      } else {
+         in = Compressor.uncompressMarked(in);
+         if (in instanceof Compressor.CompressedInputStream) {
+            this.log("Data is compressed by the script with", ((Compressor.CompressedInputStream)in).getCompressor().getName());
+         } else {
+            this.log("Data is not compressed at all");
+         }
+      }
+
+      return (InputStream)in;
    }
 
    public static class UpdaterResponse {

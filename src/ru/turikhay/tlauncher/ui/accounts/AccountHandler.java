@@ -24,7 +24,7 @@ public class AccountHandler {
    private Account lastAccount;
    private Account tempAccount;
    private boolean allowDisallowed = false;
-   private static final String[] DISALLOWED = new String[]{"turikhay", "Darik", "DarikX", "Nik_mmzd", "DarikXPlay"};
+   private static final String[] DISALLOWED = new String[]{"turikhay", "Nik_mmzd", "DarikXPlay"};
 
    public AccountHandler(AccountEditorScene sc) {
       this.scene = sc;
@@ -76,6 +76,10 @@ public class AccountHandler {
          if (acc.getUsername() == null) {
             Alert.showLocError("auth.error.nousername");
          } else {
+            if (this.containDisallowed(acc)) {
+               return;
+            }
+
             this.lastAccount.complete(acc);
             if (!this.lastAccount.isFree()) {
                if (this.lastAccount.getAccessToken() == null && this.lastAccount.getPassword() == null) {
@@ -140,10 +144,6 @@ public class AccountHandler {
    void registerTemp() {
       this.editor.password.setText((String)null);
       if (this.tempAccount != null) {
-         if (this.containDisallowed(this.tempAccount)) {
-            return;
-         }
-
          this.manager.getAuthDatabase().registerAccount(this.tempAccount);
          this.scene.getMainPane().defaultScene.loginForm.accounts.refreshAccounts(this.manager.getAuthDatabase(), this.tempAccount);
          this.list.refreshFrom(this.manager.getAuthDatabase());
@@ -184,11 +184,11 @@ public class AccountHandler {
             });
             return true;
          } else {
-            String[] arr$ = DISALLOWED;
-            int len$ = arr$.length;
+            String[] var3 = DISALLOWED;
+            int var4 = var3.length;
 
-            for(int i$ = 0; i$ < len$; ++i$) {
-               String disallowed = arr$[i$];
+            for(int var5 = 0; var5 < var4; ++var5) {
+               String disallowed = var3[var5];
                if (disallowed.equalsIgnoreCase(username)) {
                   return true;
                }
