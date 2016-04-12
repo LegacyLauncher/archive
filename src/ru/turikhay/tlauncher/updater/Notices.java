@@ -279,7 +279,7 @@ public class Notices {
          Iterator var5 = rootObject.entrySet().iterator();
 
          Notices.Notice notice3;
-         label85:
+         label87:
          while(var5.hasNext()) {
             Entry notice = (Entry)var5.next();
             String listName = (String)notice.getKey();
@@ -291,7 +291,7 @@ public class Notices {
                Pattern pattern;
                do {
                   if (!var9.hasNext()) {
-                     continue label85;
+                     continue label87;
                   }
 
                   JsonElement elem = (JsonElement)var9.next();
@@ -343,9 +343,7 @@ public class Notices {
                   }
                }
             }
-         }
-
-         if (notices.getByName("uk_UA") == null && notices.getByName("ru_RU") != null) {
+         } else if (notices.getByName("uk_UA") == null && notices.getByName("ru_RU") != null) {
             var5 = notices.getByName("ru_RU").getList().iterator();
 
             while(var5.hasNext()) {

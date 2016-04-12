@@ -122,7 +122,7 @@ version.manager.delete.menu.libraries = Entferne Versionsverzeichnis und Bibliot
 version.list.needsupdate = (Update verfügbar)
 version.dir.noaccess.title = Kein Zugriff
 version.dir.noaccess = Konnte auf das Spielverzeichnis nicht zugreifen, wähle ein anderes\:
-version.dir.noexplorer.title = Fehler beim Erstellen des Explorers
+version.dir.noexplorer.title = Fehler beim Erstellen des Explorers 
 version.dir.noexplorer = Bitte gebe ein eigenes Verzeichnis an\:
 version.dir.exit.title = Programm schließt sich
 version.dir.exit = TLauncher kann in diesem Ordner nicht arbeiten, da er keine Zugriffsrechte hat. Programm schließt sich nun.
@@ -158,7 +158,7 @@ auth.error.unknown = Ein unbekannter Fehler ist während des Autorisierungsproze
 auth.error.unreachable = Autorisationsserver ist eventuell nicht erreichbar. Wenn Sie anders denken, prüfen Sie ihre Internetverbindung und ihre Firewall-Einstellungen.
 auth.error.unparseable = Kann Serverantwort nicht erkennen.\nWahrscheinlich untergeht der Server Wartungsarbeiten.
 auth.error.relogin.ely = Konnten Sie nicht im Server autorisieren.\nBitte öffnen Sie die Kontenverwaltung und erstellen Sie ihren Account erneut.
-auth.error.relogin.ely.editor = Unzulässige Anmeldeinformationen oder Token ist abgelaufen. Bitte erstelle den Account erneut\: Sie sollten probieren ihr Passwort in einen Texteditor zu tippen und es dann hier einzufügen, um sicher zu gehen, dass Sie es korrekt schreiben.\nIm Falle, dass Sie ihr Passwort vergessen haben\: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a>
+auth.error.relogin.ely.editor = Unzulässige Anmeldeinformationen oder Token ist abgelaufen. Bitte erstelle den Account erneut\: Sie sollten probieren ihr Passwort in einen Texteditor zu tippen und es dann hier einzufügen, um sicher zu gehen, dass Sie es korrekt schreiben.\nIm Falle, dass Sie ihr Passwort vergessen haben\: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a> 
 auth.error.relogin.mojang = Konnten Sie nicht im Mojang-Server autorisieren.\nBitte öffnen Sie die Kontenverwaltung und erstellen Sie ihren Account erneut.
 auth.error.relogin.mojang.editor = Unzulässige Anmeldeinformationen oder Token ist abgelaufen. Bitte erstelle den Account erneut\: Sie sollten probieren ihr Passwort in einen Texteditor zu tippen und es dann hier einzufügen, um sicher zu gehen, dass Sie es korrekt schreiben.\nIm Falle, dass Sie ihr Passwort vergessen haben\: <a href\="https\://account.mojang.com/password">https\://account.mojang.com/password</a>\n\nAnmerkung\: Wenn dieses Problem zu häufig auftritt sollten Sie ihr Passwort und ihre Geheimfrage ändern, da ihr Account vielleicht kompromittiert wurde.
 auth.error.migrated = Dieser Benutzer ist bereits ein Mojang-Account. Benutzen sie ihre E-Mail Adresse anstelle ihres Nutzernamens.
@@ -172,11 +172,11 @@ auth.error.nopass.title = Passwort erforderlich\!
 auth.error.nopass = Bitte das Account-Passwort eingeben\!
 auth.error.nousername.title = Benutzername erforderlich\!
 auth.error.nousername = Bitte den Nutzernamen (oder E-Mail) eingeben\!
-auth.tip.free = Benutze <b>Gratis Account</b>, wenn Sie keinen Mojang-Account haben. Vergessen sie nicht <a href\="https\://minecraft.net/store/minecraft">Minecraft zu kaufen</a>\!
+auth.tip.free = Benutze <b>Gratis Account</b>, wenn Sie keinen Mojang-Account haben. Vergessen sie nicht <a href\="https\://minecraft.net/store/minecraft">Minecraft zu kaufen</a>\! 
 auth.tip.free.height = 23
 auth.tip.mojang = Ein <b>Mojang-Account</b> ist die beste Lösung für Minecraftspieler\: Sie können Skins sehen und in jeden gewünschten, öffentlichen Server spielen.
 auth.tip.mojang.height = 32
-auth.tip.ely = Ein <b>Ely-Account</b> bringt den Vorteil eines gratis Skin-Systems. Sie sollten sich <a href\="http\://ely.by/?utm_source\=tlauncher&utm_medium\=link&utm_term\=accounts_page&utm_campaign\=TLauncher%20%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F">registrieren</a> um es zu benutzen.
+auth.tip.ely = Ein <b>Ely-Account</b> bringt den Vorteil eines gratis Skin-Systems. Sie sollten sich <a href\="http\://ely.by/?utm_source\=tlauncher&utm_medium\=link&utm_term\=accounts_page&utm_campaign\=TLauncher%20%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F">registrieren</a> um es zu benutzen. 
 auth.tip.ely.height = 23
 forceupdate.local.title = Updaten ist nicht möglich
 forceupdate.local = Diese Version wurde nicht auf dem Server gefunden.
@@ -201,7 +201,7 @@ launcher.error.noArgs = Fehler beim sammeln von Argumenten für diese Version.
 launcher.error.download-jar = Fehler beim erhalten der Bibliotheken vom Server. Überprüfe deine Internetverbindung
 launcher.error.download-assets = Fehler beim sammeln von Spielinhalten von dem Server. Prüfen Sie ihre Internetverbindung.
 launcher.error.save = Fehler beim sichern der Version.
-launcher.error.index-file = Konnte Spielinhalt-Index-Datei nicht parsen.\nVersuchen Sie ihr Antivirusprogramm für eine Weile auszuschalten und dann diese Version erzwungen zu installieren.
+launcher.error.index-file = Konnte Spielinhalt-Index-Datei nicht parsen.\nVersuchen Sie ihr Antivirusprogramm für eine Weile auszuschalten und dann diese Version erzwungen zu installieren. 
 launcher.error.reconstruct-assets = Fehler beim erstellen des virtuellen Ordners. Bitte versuche es erneut...
 launcher.error.migrate-assets = Fehler beim Verschieben von alten Spielinhalten. Bitte scannen Sie das Dateisystem nach Fehlern.
 launcher.error.unpack-natives = Fehler beim Entpacken von Native Libaries. \nMarkiere "Update erzwingen" um sie erneut runterzuladen.
@@ -211,7 +211,7 @@ launcher.error.version-not-found = Startversion ist nicht gefunden\:
 launcher.error.account-invalid = Falscher Kontoname\:
 launcher.error.account-not-found = Konnte Konto nicht finden\:
 launcher.error.start = Fehler ist beim Versuch JVM zu starten aufgetreten.
-launcher.error.download = Fehler beim herunterladen der erforderlichen Dateien. Mögliche Gründe\:\n-Schlechte Internetverbindung\n-Server in Wartung oder inaktiv\n-Firewall blockiert TLauncher\n\nIm letzteren Fall, fügen Sie Java zu der White-List ihrer Firewall oder ihres Antivirusprogrammes hinzu.
+launcher.error.download = Fehler beim herunterladen der erforderlichen Dateien. Mögliche Gründe\:\n-Schlechte Internetverbindung\n-Server in Wartung oder inaktiv\n-Firewall blockiert TLauncher\n\nIm letzteren Fall, fügen Sie Java zu der White-List ihrer Firewall oder ihres Antivirusprogrammes hinzu. 
 launcher.error.classpath = Kann erforderliche Datei nicht finden\!\nWenn Sie es nicht reparieren können, markieren Sie "Update erzwingen".
 launcher.error.version-info = Kann keine Informationen über diese Version finden\!
 launcher.error.incompatible = Laufende Version von TLauncher kann diese Version nicht statren. Bitte, updaten Sie TLauncher.
@@ -226,7 +226,7 @@ launcher.step.deleting-entries = Lösche Einträge...
 launcher.step.constructing = Erschaffe Prozess...
 # Launcher warning
 launcher.warning.title = Warnung\!
-launcher.warning.incompatible.environment = Ausgewählte Version ist inkompatibel mit ihrer Konfiguration, aber TLauncher wird versuchen es zu starten.
+launcher.warning.incompatible.environment = Ausgewählte Version ist inkompatibel mit ihrer Konfiguration, aber TLauncher wird versuchen es zu starten. 
 launcher.warning.incompatible.launcher = Ausgewählte Version ist inkompatibel mit TLauncher, aber der Launcher wird versuchen es zu starten.
 launcher.warning.assets = Ein Fehler ist beim herunterladen der Spielinhalte aufgetreten. Diese Nachricht wird nicht während der Sitzung angezeigt. Vergessen Sie nicht, dass einige Dateien fehlen.
 launcher.warning.assets.kaspersky = Ein Fehler ist beim herunterladen der Spielinhalte aufgetreten. Wenn Sie Kaspersky auf diesen Computer installiert haben, fügen Sie bitte eine Ausnahme zu der White-List von Anti-Banner hinzu.
@@ -239,7 +239,7 @@ crash.invalid-modify = Minecraft muss wegen eines Fehler, der gewöhnlich bei fa
 crash.meta-inf = Java konnte keine Klasse von Minecraft laden. Löschen Sie den Ordner /META-INF/ von der JAR-Datei von der gestarteten Minecraftversion und versuchen Sie es erneut.
 crash.missing-main = Java konnte Minecraft nicht starten, weil die Hauptklasse fehlt. Wenn Sie die JAR-Datei nicht selbst reparieren können, klicken sie auf "Update erzwingen".
 crash.invalid-sys-username = Sie sollten das Symbol «\!» nicht im Minecraft-Verzeichnispfad verwenden.
-crash.permgen-error = PermGen Fehler. Mögliche Lösungen\:\n- «Update erzwingen».\n-Im Minecraft Einstellung-Tab, hinzufügen von JVM-Argumenten\:\n-XX\:MaxPermSize\=256M
+crash.permgen-error = PermGen Fehler. Mögliche Lösungen\:\n- «Update erzwingen».\n-Im Minecraft Einstellung-Tab, hinzufügen von JVM-Argumenten\:\n-XX\:MaxPermSize\=256M 
 crash.outofmemory = Unzureichender-Speicher-Fehler.\nSie können versuchen die Speichermenge im Minecraft Einstellung-Tab zu erhöhen.
 crash.firewall = Firewall blockiert das Erstellen eines Minecraft-Servers. Bitte überprüfen Sie dessen Einstellungen.
 crash.old-videocard.intel = Sie benutzen eine alte Intel Grafikkarte. Keine bekannte Lösung.
@@ -249,14 +249,14 @@ crash.server-rp = Wenn Minecraft beim Herunterladen des Server-resource-packs ab
 # Settings
 settings.warning = Leiten Sie zu einen gesunden Menschenverstand ab, wenn sie es ändern wollen.
 settings.restart = Wird nach Neustart angewendet.
-settings.res.def = Default Größe\: %0x%1
-settings.range = Reichweite\: %0x%1
+settings.res.def = Default Größe\: %0x%1 
+settings.range = Reichweite\: %0x%1 
 settings.tab.minecraft = Minecraft
 settings.tab.tlauncher = TLauncher
 settings.tab.about = Über uns
 settings.client.gamedir.label = Verzeichnis\:
 settings.client.gamedir.invalid = Unzulässiges Verzeichnis\!
-settings.client.gamedir.noaccess.title = Fehler beim Wechseln des Minecraft-Verzeichnisses
+settings.client.gamedir.noaccess.title = Fehler beim Wechseln des Minecraft-Verzeichnisses 
 settings.client.gamedir.noaccess = Kann nicht auf gewähltes Verzeichnis zugreifen\!
 settings.client.gamedir.prompt = Ein Pfad zum Minecraft-Ordner.
 settings.client.gamedir.separate = Benutzen Sie separate Ordner für die Versionen
@@ -275,7 +275,7 @@ settings.versions.sub.remote = Nicht mit Server verbunden
 settings.versions.sub.old_release = Zeige alte Releases (< 1.5.2)
 settings.java.args.label = Argumente\:
 settings.java.args.jvm = JVM Argumente (z.B. -XX\:MaxPermSize\=256M)
-settings.java.args.minecraft = Minecraft Argumente (z.B. --server 127.0.0.1)
+settings.java.args.minecraft = Minecraft Argumente (z.B. --server 127.0.0.1) 
 settings.java.args.improved = Nutze zusätzlich verbesserte Argumente
 settings.java.args.improved.tip = Deaktiviere, wenn das Spiel oft "einfriert".
 settings.java.cmd.label = Kommando\:
@@ -334,7 +334,7 @@ settings.lang.label = Sprache\:
 settings.tab.server = Server erstellen
 settings.default = Auf Standard zurücksetzen.
 settings.default.warning.title = Warnung\!
-settings.default.warning = Sind Sie sicher, dass die Einstellungen zurücksetzen wollen?\nWenn die einzelne Felder zurücksetzen wollen rechtsklicken Sie auf es und wählen Sie «Wert zurücksetzen»
+settings.default.warning = Sind Sie sicher, dass die Einstellungen zurücksetzen wollen?\nWenn die einzelne Felder zurücksetzen wollen rechtsklicken Sie auf es und wählen Sie «Wert zurücksetzen» 
 settings.save = Speichern
 settings.back = Zurück
 # It's about "key = value" in settings.
@@ -351,14 +351,14 @@ updater.error = Ein Fehler ist beim Aufrufen des Updates aufgetreten.
 updater.download-error = Ein Fehler ist beim Herunterladen des Updates aufgetreten. Möchten Sie es selbst runterladen?
 updater.downloaded.title = Bereit zum Update.
 updater.downloaded = TLauncher ist bereit zum Update.\nDie Anwendung wird auf den neusten Stand gebracht und neu geöffnet.
-updater.save-error.title = Ein Fehler ist beim Speichern von dem Update aufgetreten.
+updater.save-error.title = Ein Fehler ist beim Speichern von dem Update aufgetreten. 
 updater.save-error = Ein Fehler ist beim Speichern von dem Update aufgetreten. Möchten Sie es selbst runterladen?
 # Firstrun
 firstrun.title = Willkommen\!
 # "Also please do not use this application in any acceptable way."
 # I am supposed to use it in a bad way?
 # Fuzzy
-firstrun = Hallo\! Danke für das Herunterladen vom TLauncher, wir schätzen das \:)\nWir müssen sagen, dass der TLauncher nicht zu Mojang gehört und Minecraft ihnen gehört. Außerdem, verwenden sie diese Anwendung bitte nicht in irgendeiner inakzeptablen Art.\nUm die Minecraft-Entwickler zu unterstützen solltest <a href\="https\://minecraft.net/store/minecraft">Minecraft kaufen</a>.
+firstrun = Hallo\! Danke für das Herunterladen vom TLauncher, wir schätzen das \:)\nWir müssen sagen, dass der TLauncher nicht zu Mojang gehört und Minecraft ihnen gehört. Außerdem, verwenden sie diese Anwendung bitte nicht in irgendeiner inakzeptablen Art.\nUm die Minecraft-Entwickler zu unterstützen solltest <a href\="https\://minecraft.net/store/minecraft">Minecraft kaufen</a>. 
 # Notifier
 notifier.failed.title = Verbindung ist eventuell blockiert\!
 notifier.failed = TLauncher konnte keine Internetverbindung aufbauen um nach Updates zu suchen. \nWenn dieser Rechner ohnehin nicht verbunden ist, können Sie diese Nachricht ignorieren.\nAnsonsten prüfen Sie ihre Internet und Firewall-Einstellungen.
@@ -400,7 +400,7 @@ console.pastebin.alert.title = Bestätigung
 console.pastebin.alert = Sie sind dabei den Log online in Pastebin zu speichern.\nEs wird nicht veröffentlicht oder öffentlich zugänglich gemacht und wird in 7 Tagen gelöscht. Sie werden ein Captcha lösen müssen, nachdem sie es absenden, ansonsten wird der Log in ein paar Minuten gelöscht.\nMöchten Sie den Log wirklich online via Pastebin speichern?
 console.pastebin.sent.title = Erfolgreich gesendet
 console.pastebin.sent = Konsole wurde erfolgreich online auf <a href\="http\://pastebin.com">Pastebin.com</a> gespeichert.\n\nMöchten Sie es jetzt öffnen?\n
-console.pastebin.failed.title = Konnte keinen Konsolen-Output schicken.
+console.pastebin.failed.title = Konnte keinen Konsolen-Output schicken. 
 console.pastebin.failed = Konnte keinen Konsolen-Output zu <a href\="http\://pastebin.com">Pastebin.com</a> schicken. Gehen Sie sicher, dass ihr Internetzugang und ihr Antivirenprogramm die Verbindung nicht blocken.
 console.pastebin.invalid.title = Etwas ist schief gelaufen.
 console.pastebin.invalid = Konnte Konsolen-Output  nicht schicken.
@@ -475,7 +475,7 @@ explorer.context.newfolder = Neuen Ordner erstellen
 explorer.view.list = Liste
 explorer.view.list.name = Liste von Dateien
 explorer.view.details = Details
-explorer.view.details.name = detaillierte Liste von Dateien
+explorer.view.details.name = detaillierte Liste von Dateien 
 explorer.details.file = Datei
 explorer.details.dir = Verzeichnis
 explorer.error.newfolder = Fehler beim Erstellen von neuen Ordner
@@ -485,7 +485,7 @@ explorer.error.rename = Kann dieses Objekt nicht umbenennen.
 explorer.error.rename-exists = Kann diese Datei nicht umbenennen, weil es eine andere dupliziert.
 explorer.unavailable.title = Explorer ist nicht verfügbar
 # Fuzzy
-explorer.unavailable = Konnte Dateinauswähler nicht initialisieren
+explorer.unavailable = Konnte Dateinauswähler nicht initialisieren 
 explorer.unavailable.win = Vielleicht benutzen Sie ein verändertes Windows Theme, das einen Fehler verursacht.
 # Boot
 boot.loading = Lade Launcher %0...
@@ -522,4 +522,4 @@ args.error = Konnte eingetragene Argumente nicht erkennen. Launcher wird jetzt s
 background.loading = Lade Hintergrund
 # Plural forms patterns
 plural = 1;.*
-settings.lang.contribute =
+settings.lang.contribute = 

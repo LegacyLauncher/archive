@@ -38,6 +38,7 @@ import ru.turikhay.tlauncher.ui.listener.VersionManagerUIListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Updater;
+import ru.turikhay.util.DXDiagScanner;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
@@ -135,6 +136,7 @@ public class TLauncher {
             }
          }
       })).start();
+      DXDiagScanner.scheduleScan();
    }
 
    public Downloader getDownloader() {
@@ -355,7 +357,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.71D;
+      return 1.731D;
    }
 
    public static boolean isBeta() {

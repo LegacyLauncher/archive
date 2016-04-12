@@ -167,7 +167,7 @@ auth.error.nopass.title = ¡contraseña requerida\!
 auth.error.nopass = ¡Por favor coloque la contraseña\!
 auth.error.nousername.title = ¡Nombre de usuario requerido\!
 auth.error.nousername = ¡Por favor ingrese usuario (o e-mail)\!
-auth.tip.free = Use <b>una cuenta libre</b> si no tiene cuenta con Mojang. ¡No olvide  <a href\="https\://minecraft.net/store/minecraft">comprar Minecraft/a>\!
+auth.tip.free = Use <b>una cuenta libre</b> si no tiene cuenta con Mojang. ¡No olvide  <a href\="https\://minecraft.net/store/minecraft">comprar Minecraft/a>\! 
 auth.tip.free.height = 23
 auth.tip.mojang = <b>Cuenta Mojang</b> es la mejor solución para el jugador de Minecraft\: tú podrás ver los skins y jugar en cualquier servidor público que desees.
 auth.tip.mojang.height = 32
@@ -234,7 +234,7 @@ crash.invalid-modify = Minecraft se ha cerrado por errores que pueden deberse a 
 crash.meta-inf = Java no puede cargar las clases de Minecraft. Remueva la carpeta /META-INF/ del archivo JAR de la versión de Minecraft y reintente.
 crash.missing-main = Java no puede correr Minecraft debido a que una clase principal está perdida.\nSi no puede reparar el archivo JAR, haga click en "forzar actualización".
 crash.invalid-sys-username = No debe usar el simbolo «\!» en el directorio de Minecraft.
-crash.permgen-error = PermGen Error. Posibles soluciones\:\n- «Actualización forzada». - En la pestaña config. Minecraft, agregue a argumentos JVM\: -XX\:MaxPermSize\=256M
+crash.permgen-error = PermGen Error. Posibles soluciones\:\n- «Actualización forzada». - En la pestaña config. Minecraft, agregue a argumentos JVM\: -XX\:MaxPermSize\=256M 
 crash.outofmemory = Error fuera de memoria.\nIntente aumentar el tamaño de la memoria en la pesñata config. Minecraft.
 crash.firewall = El cortafuegos está bloqueando la creación del servidor Minecraft. Compruebe la configuración.
 crash.old-videocard.intel = Está usando una tarjeta de video Intel obsoleta. No hay solución conocida.
@@ -499,4 +499,4 @@ args.error = No se puede reconocer el argumento. El Launcher se cerrará.
 background.loading = Cargando fondo...
 # Plural forms patterns
 plural = 1;.*
-settings.lang.contribute =
+settings.lang.contribute = 

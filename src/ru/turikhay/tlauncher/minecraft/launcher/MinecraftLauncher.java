@@ -579,6 +579,12 @@ public class MinecraftLauncher implements JavaProcessListener {
       this.launcher.addCommand("-XX:HeapDumpPath=ThisTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
       this.launcher.addCommand("-Xmx" + this.ramSize + "M");
       this.launcher.addCommand("-Djava.library.path=" + this.nativeDir.getAbsolutePath());
+      if (OS.WINDOWS.isCurrent() && OS.VERSION.startsWith("10.")) {
+         this.log("Win10 hack is being applied.");
+         this.launcher.addCommand("-Dos.name=Windows 10");
+         this.launcher.addCommand("-Dos.version=10.0");
+      }
+
       this.launcher.addCommand("-cp", this.constructClassPath(this.version));
       this.launcher.addCommand("-Dfml.ignoreInvalidMinecraftCertificates=true");
       this.launcher.addCommand("-Dfml.ignorePatchDiscrepancies=true");

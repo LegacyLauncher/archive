@@ -211,7 +211,7 @@ launcher.error.download=При загрузке файлов произошла 
 launcher.error.classpath=Не найден требуемый файл\nЕсли Вы не можете его восстановить, поставьте флажок «Обновить клиент»:
 launcher.error.version-info=Невозможно принять информацию о версии!
 launcher.error.incompatible=Текущая версия TLauncher не сможет запустить эту версию Minecraft. Пожалуйста, обновите TLauncher.
-launcher.error.delete-entries=Ошибка при удалении файлов из JAR-архива версии.
+launcher.error.delete-entries=Ошибка при удалении файлов из JAR-архива версии. Попробуйте переустанвоить версию с помощью «Обновить клиент».
 # Launcher steps
 launcher.step.collecting=Сбор информации об игре...
 launcher.step.comparing-assets=Проверка ресурсов игры...

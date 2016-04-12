@@ -3,16 +3,12 @@ package ru.turikhay.util;
 import com.sun.management.OperatingSystemMXBean;
 import java.awt.Desktop;
 import java.io.File;
-import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.util.async.AsyncThread;
 
 public enum OS {
    LINUX(new String[]{"linux", "unix"}),
@@ -279,129 +275,6 @@ public enum OS {
 
    protected static void log(Object... o) {
       U.log("[OS]", o);
-   }
-
-   static {
-      if (WINDOWS.isCurrent()) {
-         AsyncThread.execute(new Runnable() {
-            public void run() {
-               OS.Windows.retrieveDxDiag();
-            }
-         });
-      }
-
-   }
-
-   public static class Windows {
-      private static int PROCESS_TIMEOUT = 15;
-      private static String[] DXDIAG_SECTIONS = new String[]{"System Information", "Display Devices", "Sound Devices"};
-      private static boolean pending = false;
-      private static boolean errored = false;
-      private static String dxdiagOutput;
-
-      private static void checkIfWindows() {
-         if (OS.CURRENT != OS.WINDOWS) {
-            throw new IllegalStateException();
-         }
-      }
-
-      private static void retrieveDxDiag() {
-         try {
-            dxdiagOutput = readDxDiag().toString();
-         } catch (Exception var1) {
-            errored = true;
-            OS.log("Could not retrieve DxDiag info", var1);
-            return;
-         }
-
-         if (pending) {
-            printDxDiag();
-         }
-
-      }
-
-      private static StringBuilder readDxDiag() throws Exception {
-         checkIfWindows();
-         File outputFile = File.createTempFile("tlauncher-dxdiag", (String)null);
-         outputFile.deleteOnExit();
-         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"cmd.exe", "/c", "dxdiag", "/whql:off", "/t", outputFile.getAbsolutePath()});
-         final Process process = processBuilder.start();
-         int timer = 0;
-
-         while(timer < PROCESS_TIMEOUT) {
-            if (pending) {
-               U.log("Trying to retrieve info from DxDiag:", timer, "s");
-            }
-
-            try {
-               process.exitValue();
-            } catch (IllegalThreadStateException var10) {
-               ++timer;
-               U.sleepFor(1000L);
-               continue;
-            }
-
-            if (pending) {
-               U.log("DxDiag completed in", timer, "s");
-            }
-
-            timer = 0;
-            break;
-         }
-
-         if (timer == PROCESS_TIMEOUT) {
-            AsyncThread.execute(new Runnable() {
-               public void run() {
-                  process.destroy();
-               }
-            });
-            throw new RuntimeException("timeout exception");
-         } else {
-            int exitCode = process.exitValue();
-            if (exitCode != 0) {
-               throw new RuntimeException("could not retrieve dxdiag info:" + exitCode);
-            } else {
-               StringBuilder output = new StringBuilder("\n");
-               Scanner fileScanner = new Scanner(new FileInputStream(outputFile));
-               boolean nextLineIsSectionName = false;
-               boolean skipSection = false;
-
-               while(fileScanner.hasNextLine()) {
-                  String line = fileScanner.nextLine();
-                  if (line.startsWith("------")) {
-                     nextLineIsSectionName = !nextLineIsSectionName;
-                  } else if (nextLineIsSectionName) {
-                     skipSection = U.find(line, DXDIAG_SECTIONS) == -1;
-                     if (!skipSection) {
-                        output.append("------\n").append(line).append("\n------\n");
-                     }
-                  } else if (!skipSection) {
-                     output.append('\t').append(StringUtils.trim(line)).append('\n');
-                  }
-               }
-
-               outputFile.delete();
-               return output;
-            }
-         }
-      }
-
-      public static void printDxDiag() {
-         synchronized(U.lock) {
-            U.log("-- <DxDiag> --");
-            if (errored) {
-               U.log("Could not retrieve DxDiag info.");
-            } else if (dxdiagOutput == null) {
-               pending = true;
-               U.log("No content, waiting...");
-            } else {
-               U.log(dxdiagOutput);
-               pending = false;
-            }
-
-            U.log("-- </DxDiag> --");
-         }
-      }
    }
 
    public static enum Arch {

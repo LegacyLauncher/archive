@@ -68,8 +68,10 @@ public class Updater {
       ArrayList errorList = new ArrayList();
       String get = "?version=" + Http.encode(String.valueOf(TLauncher.getVersion())) + "&brand=" + Http.encode(TLauncher.getBrand()) + "&client=" + Http.encode(TLauncher.getInstance().getSettings().getClient().toString()) + "&beta=" + Http.encode(String.valueOf(TLauncher.isBeta()));
       Iterator var5 = this.getUpdateUrlList().iterator();
+      int attempt = 0;
 
       while(var5.hasNext()) {
+         ++attempt;
          String updateUrl = (String)var5.next();
          long startTime = System.currentTimeMillis();
          this.log("Requesting from:", updateUrl);
@@ -77,6 +79,8 @@ public class Updater {
          try {
             URL e = new URL(updateUrl + get);
             HttpURLConnection connection = Downloadable.setUp(e.openConnection(U.getProxy()), true);
+            connection.setConnectTimeout(3000 * attempt);
+            connection.setReadTimeout(3000 * attempt);
             connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
             InputStream in = this.uncompress(connection);
             result = new Updater.SearchSucceeded((Updater.UpdaterResponse)this.gson.fromJson((Reader)(new InputStreamReader(in, "UTF-8")), (Class)Updater.UpdaterResponse.class));
@@ -90,15 +94,15 @@ public class Updater {
                if (refreshTime > 0L && currentTimeGMT > refreshTime) {
                   throw new IOException("refresh time exceeded");
                }
-            } catch (IOException var16) {
-               throw var16;
-            } catch (Exception var17) {
-               this.log(var17);
+            } catch (IOException var17) {
+               throw var17;
+            } catch (Exception var18) {
+               this.log(var18);
             }
-         } catch (Exception var18) {
-            this.log("Failed to request from:", updateUrl, var18);
+         } catch (Exception var19) {
+            this.log("Failed to request from:", updateUrl, var19);
             result = null;
-            errorList.add(var18);
+            errorList.add(var19);
          }
 
          this.log("Request time:", System.currentTimeMillis() - startTime, "ms");

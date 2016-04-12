@@ -29,16 +29,17 @@ loginform.button.support.email.alert = Kamu dapat Menghubungi kami jika tidak me
 loginform.button.support.developer = Kontak Developer via Email
 loginform.button.support.developer.alert.title = Cara menghubungi pengembang
 loginform.button.support.developer.alert = Jika kamu punya masalah tentang Minecraft, harap hubungi bantuan atau kamu dapat menghubungi Developer / Memberi Feedback
-account.type.free = Gratis (tanpa password)
+account.type.free = Bebas (tanpa password)
 account.type.mojang = Mojang (premium)
 account.type.ely = Ely.by
 account.username = Nama Akun
 account.email = E-mail
-account.auth.free = Gratis (tanpa password)
+# Fuzzy
+account.auth.free = Bebas (tanpa password)
 account.auth.mojang = Password Mojang.com\:
 account.auth.ely = Password Ely.by\:
 account.save = Simpan Akun
-account.list = Akun yang anda telah buat\:
+account.list = Akun yang telah anda buat\:
 account.empty = (Buat minimal satu akun)
 account.manage = Buat dan atur akun
 account.creating = (membuat akun)
@@ -52,7 +53,7 @@ version.description.snapshot = Snapshot
 version.description.modified = Termodifikasi
 version.description.old_alpha = Alpha
 version.description.old_beta = Beta
-versions.loading = Memuat list versi...
+versions.loading = Memuat daftar versi...
 versions.notfound.title = Kesalahan mengambil versi\!
 versions.notfound = Tidak dapat mengambil list versi dari Repositori. Dapat dikarenakan oleh\:\n- Internet Lemah\n- TLauncher diblock Firewall\n- Waktu atau tanggal yang salah
 versions.notfound.tip = (Tidak Terpasang)
@@ -67,12 +68,12 @@ version.latest.release = Rilisan terbaru
 version.latest.snapshot = Snapshot Terbaru
 version.latest.modified = Modifikasi Terbaru
 versions.found-update.title = Ada pembaruan baru\!
-versions.found-update = Pembaruan ditemukan. Direkomendasikan untuk menekan "Yes"\n.\nData akan diunduh dan membutuhkan Koneksi Internet Stabil.\nMau mengupdate Versi ini?
-versions.found-update.error.title = Tidak bisa membatalkan Update\!
+versions.found-update = Pembaruan ditemukan. Direkomendasikan untuk menekan "Yes"\n.\nData yang akan diunduh membutuhkan koneksi internet yang stabil.\nAnda ingin membarui versi ini?
+versions.found-update.error.title = Tidak bisa membatalkan pembaruan\!
 versions.found-update.error = Error saat mencoba menulis ulang file JSON di versi ini. Lain waktu, pesan ini akan tampil lagi.\nMaaf C\:
 versions.manage = Atur versi...
 # Version manager
-version.manager.list = List versi\:
+version.manager.list = Daftar versi\:
 version.manager.editor.select = Pilih versi dari list...
 version.manager.editor.multiselect = Versi %0 Terpilih
 version.manager.editor.label.select = Pilih versi yang mau diedit.
@@ -139,7 +140,7 @@ version.manager.alert.time.justnow = Baru Saja
 version.manager.alert.time.minute = %0 Lalu
 version.manager.alert.time.minute.0.plural = %n Menit;%n Menit
 version.manager.alert.time.hour = %0 Lalu
-version.manager.alert.time.hour.0.plural = %n Jam;%0 Jam
+version.manager.alert.time.hour.0.plural = %0 Jam;%0 Jam
 version.manager.alert.time.day = %0 Lalu
 version.manager.alert.time.day.0.plural = sehari;%n Hari
 version.manager.alert.time.week = %0 Lalu
@@ -152,7 +153,7 @@ auth.error.unknown = Error yang tidak didiga terjadi saat Proses Otorisasi.
 auth.error.unreachable = Otorisasi Server mungkin tidak tersedia sekarang. Jika menurutmu tidak,Harap Check Koneksi Internet dan Pengaturan Settingmu.
 auth.error.unparseable = Tidak mendapat Respon server.\nServer Kemungkinan sedang Maintance
 auth.error.relogin.ely = Tidak dapat mengautorisasi Server denganmu.\nHarap Buka "Pengaturan Akun" dan buat Akunmu lagi.
-auth.error.relogin.ely.editor = Kredensial tidak sah/Token telah Kadaluarsa. Harab buat akun ini sekali lagi.\nkamu dapat mencoba menulis Sandimu di Editor Teks dan Salin Sandimu disini untuk meyakinkanmu bahwa itu tertulis dengan benar.\nJika kamu lupa kata sandimu \: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a>
+auth.error.relogin.ely.editor = Kredensial tidak sah/Token telah Kadaluarsa. Harab buat akun ini sekali lagi.\nkamu dapat mencoba menulis Sandimu di Editor Teks dan Salin Sandimu disini untuk meyakinkanmu bahwa itu tertulis dengan benar.\nJika kamu lupa kata sandimu \: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a> 
 auth.error.relogin.mojang = Tidak bisa mengizinkanmu ke Server Mojang.\nHarap Buka "Manajer Akun" dan buat akunmu lagi.
 auth.error.relogin.mojang.editor = Kredensial tidak sah/Token telah Kadaluarsa. Harab buat akun ini sekali lagi.\nkamu dapat mencoba menulis Sandimu di Editor Teks dan Salin Sandimu disini untuk meyakinkanmu bahwa itu tertulis dengan benar.\nJika kamu lupa kata sandimu \: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a> \n\nNB \: Jika masalah ini berlanjut,kamu harus mengganti Password dan Pertanyaan Rahasia, mungkin akun anda telah terkompromisasi
 auth.error.migrated = Pengguna ini sudah memigrasikan akunnya ke Mojang Account. Gunakanlah E-mail anda sebagai username.
@@ -165,7 +166,7 @@ auth.error.nopass.title = Sandi dibutuhkan\!
 auth.error.nopass = Harap Masukan Sandi Akun\!
 auth.error.nousername.title = Diperlukan username\!
 auth.error.nousername = Tolong masukan username (atau e-mail)\!
-auth.tip.free = Gunakan <b>Akun Gratis</b> jika kamu tidak punya Akun Mojang.\nJangan lupa untuk <a href\="https\://minecraft.net/store/minecraft">Beli Minecraft</a>\!
+auth.tip.free = Gunakan <b>Akun Gratis</b> jika kamu tidak punya Akun Mojang.\nJangan lupa untuk <a href\="https\://minecraft.net/store/minecraft">Beli Minecraft</a>\! 
 auth.tip.free.height = 23
 auth.tip.mojang = <b>Akun Mojang</b> Adalah solusi terbaik untuk Pemain. Kamu dapat melihat Skin dan bermain disemua Server Publik\!
 auth.tip.mojang.height = 32
@@ -211,7 +212,7 @@ launcher.error.incompatible = Versi Tlauncher yang berjalan tidak dapat meluncur
 launcher.error.delete-entries = Gagal menghapus berkas (entri) dari file JAR.
 # Launcher steps
 launcher.step.collecting = Mengambil info...
-launcher.step.comparing-assets = Membandikan aset...
+launcher.step.comparing-assets = Membandingkan aset...
 # Changing "resources" to "file" here. There is no official translation of resources(Computer) in Indonesia.
 launcher.step.downloading = Mengunduh file...
 launcher.step.reconstructing-assets = Merekonstruksi aset...
@@ -226,7 +227,7 @@ launcher.warning.assets = Sebuah galat terjadi saat mengunduh Aset. Pesan ini ti
 launcher.warning.assets.kaspersky = Galat terjadi saat mengunduh aset. Jika kamu punya Kaspersky terpasang di komputer ini, harap tambah Exception ke White-List of Anti-Banner.
 # Crashes
 crash.title = Galat tidak diduga terjadi\!
-crash.unknown = Minecraft telah ditutup karena galat yang tak diduga. Logger telah ditampilakn untuk membantumu untuk menemukan solusinya.
+crash.unknown = Minecraft telah ditutup karena galat yang tak diduga. Logger telah ditampilkan untuk membantumu untuk menemukan solusinya.
 crash.unknown.native = minecraft telah ditutup karena galat natif yang tak diduga. Logger telah ditampilkan utk membantumu mencari Solusi masalahmu
 crash.opengl = Minecraft ditutup dikarenakan driver graphic card lama.\nBarui dan ulangi
 crash.invalid-modify = Minecraft ditutup karena instalasi mod yang salah.\nInstal kembali dan coba lagi.
@@ -343,7 +344,7 @@ updater.save-error.title = Gagal menyimpan pembaruan.
 updater.save-error = Gagal menyimpan pembaruan. Mau unduh sendiri>
 # Firstrun
 firstrun.title = Selamat datang\!
-firstrun = Hai\! Terima kasih telah mengunduh TLauncher, kami mengapresiasi itu \:)\nKami harus bilang bahwa TLauncher tidak berafilasi dengan Mojang dan Minecraft yang dimilikinya. Juga jangan menggunakan aplikasi ini dengan salah.\nUntuk mendukung pengembang Minecraft, kamu dapat <a href\="https\://minecraft.net/store/minecraft">Membeli Minecraft</a>.
+firstrun = Hai\! Terima kasih telah mengunduh TLauncher, kami mengapresiasi itu \:)\nKami harus bilang bahwa TLauncher tidak berafilasi dengan Mojang dan Minecraft yang dimilikinya. Juga jangan menggunakan aplikasi ini dengan salah.\nUntuk mendukung pengembang Minecraft, kamu dapat <a href\="https\://minecraft.net/store/minecraft">Membeli Minecraft</a>. 
 # Notifier
 notifier.failed.title = Koneksi mungkin diblok
 notifier.failed = TLauncher tak dapat terhubung dengan Internet untuk mengecek Update.\nJika mesin tak tersambung sama sekali,kamu dapat membiarkan pesan ini.\nJika tidak,cek Koneksi internetmu dan Pengaturan Firewall
@@ -471,7 +472,7 @@ explorer.unavailable.win = Anda menggunakan theme yang membuat error.
 boot.loading = Memuat TLauncher (%0)
 # About page
 about.text = Salah satu launcher Minecraft yang simpel dan terbaik. Dari Russia dengan kasih &lt;3<br/><b>Misi kami</b> - Menyebar Minecraft ke seluruh dunia. <br/>Jika anda ingin mendapatkan Source Code atau ingin membantu dengan translasi, hubungi developer.
-about.bottom = Tetap bersama kami di <a href\="[http\://tlaun.ch/fb;http\://facebook.com/tlauncher]"><b style\="color\: \#3f5d9a">Facebook</b></a> \:)
+about.bottom = Tetap bersama kami di <a href\="[http\://tlaun.ch/fb;http\://facebook.com/tlauncher]"><b style\="color\: \#3f5d9a">Facebook</b></a> \:) 
 about.partners.mcoffline = Mempersiapkan dan menjalankan server Minecraft secara mudah
 about.partners.ely = Sistem skin <b>gratis</b> yang kita pakai\!
 about.license = Anda bisa mendistribusikan TLauncher yang tidak dimodifikasi. Jangan lupa, aplikasi ini disediakan tanpa garansi. <br/>Gunakanlah dengan benar \:) Terima kasih\!
