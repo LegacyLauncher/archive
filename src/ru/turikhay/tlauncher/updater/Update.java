@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.Bootstrapper;
@@ -24,6 +25,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.DownloadableHandler;
 import ru.turikhay.tlauncher.downloader.Downloader;
+import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
@@ -31,7 +33,7 @@ public class Update {
    protected double version;
    protected double requiredAtLeastFor;
    protected Map description = new HashMap();
-   protected Map links = new HashMap();
+   protected Map downloads = new HashMap();
    @Expose(
       serialize = false,
       deserialize = false
@@ -59,7 +61,7 @@ public class Update {
       this.listeners = Collections.synchronizedList(new ArrayList());
    }
 
-   public Update(double version, double requiredAtLeastFor, Map description, Map links) {
+   public Update(double version, double requiredAtLeastFor, Map description, Map downloads) {
       this.state = Update.State.NONE;
       this.downloader = this.getDefaultDownloader();
       this.listeners = Collections.synchronizedList(new ArrayList());
@@ -67,13 +69,10 @@ public class Update {
       this.requiredAtLeastFor = requiredAtLeastFor;
       if (description != null) {
          this.description.putAll(description);
-         if (description.containsKey("ru_RU") && !description.containsKey("uk_UA")) {
-            this.description.put("uk_UA", description.get("ru_RU"));
-         }
       }
 
-      if (links != null) {
-         this.links.putAll(links);
+      if (downloads != null) {
+         this.downloads.putAll(downloads);
       }
 
    }
@@ -83,7 +82,7 @@ public class Update {
    }
 
    public String getLink(PackageType packageType) {
-      return (String)this.links.get(packageType);
+      return (String)this.downloads.get(packageType);
    }
 
    public String getLink() {
@@ -102,7 +101,7 @@ public class Update {
    public boolean isApplicable() {
       boolean var10000;
       label25: {
-         if (StringUtils.isNotBlank((CharSequence)this.links.get(PackageType.CURRENT))) {
+         if (StringUtils.isNotBlank((CharSequence)this.downloads.get(PackageType.CURRENT))) {
             if (TLauncher.isBeta()) {
                if (TLauncher.getVersion() <= this.version) {
                   break label25;
@@ -134,12 +133,14 @@ public class Update {
 
    protected void download0(PackageType packageType, boolean async) throws Throwable {
       this.setState(Update.State.DOWNLOADING);
-      URL url = new URL(this.getLink(packageType));
-      this.log("url:", url);
       File destination = new File(FileUtil.getRunningJar().getAbsolutePath() + ".update");
-      destination.deleteOnExit();
-      this.log("dest", destination);
-      this.download = new Downloadable(url.toExternalForm(), destination);
+      String link = this.getLink(packageType);
+      if (link.startsWith("/")) {
+         this.download = new Downloadable(Repository.EXTRA_VERSION_REPO, link.substring(1), destination);
+      } else {
+         this.download = new Downloadable((new URL(link)).toExternalForm(), destination);
+      }
+
       this.download.setInsertUA(true);
       this.download.addHandler(new DownloadableHandler() {
          public void onStart(Downloadable d) {
@@ -317,7 +318,7 @@ public class Update {
    }
 
    public String toString() {
-      return "Update{version=" + this.version + "," + "requiredAtLeastFor=" + this.requiredAtLeastFor + "," + "description=" + this.description + "," + "links=" + this.links + "}";
+      return "Update{version=" + this.version + "," + "requiredAtLeastFor=" + this.requiredAtLeastFor + "," + "description=" + this.description + "," + "downloads=" + this.downloads + "}";
    }
 
    public static enum State {
@@ -346,13 +347,28 @@ public class Update {
          Map description = (Map)context.deserialize(object.get("description"), (new TypeToken() {
          }).getType());
          if (description != null) {
+            if (!TLauncher.getBrand().equals("Legacy") && description.containsKey("en_US")) {
+               String universalDescription = (String)description.get("en_US");
+               Locale[] var7 = TLauncher.getInstance().getLang().getLocales();
+               int var8 = var7.length;
+
+               for(int var9 = 0; var9 < var8; ++var9) {
+                  Locale locale = var7[var9];
+                  if (!description.containsKey(locale.toString())) {
+                     description.put(locale.toString(), universalDescription);
+                  }
+               }
+            } else if (description.containsKey("ru_RU") && !description.containsKey("uk_UA")) {
+               description.put("uk_UA", description.get("ru_RU"));
+            }
+
             update.description.putAll(description);
          }
 
-         Map links = (Map)context.deserialize(object.get("links"), (new TypeToken() {
+         Map links = (Map)context.deserialize(object.get("downloads"), (new TypeToken() {
          }).getType());
          if (links != null) {
-            update.links.putAll(links);
+            update.downloads.putAll(links);
          }
 
          return update;

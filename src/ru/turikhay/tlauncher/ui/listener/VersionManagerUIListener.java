@@ -320,11 +320,11 @@ public class VersionManagerUIListener implements VersionManagerListener {
    }
 
    private static class SimpleVersionList {
-      String _;
+      String _notice;
       List versions;
 
       private SimpleVersionList() {
-         this._ = "Pretend that you are not reading this. And this file does not exist. It does not affect anything important. Just for indexing. Hvae fnu!";
+         this._notice = "Pretend that you are not reading this. And this file does not exist. It does not affect anything important. Just for indexing. Hvae fnu!";
          this.versions = new ArrayList();
       }
 

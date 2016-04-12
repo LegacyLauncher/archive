@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
+import ru.turikhay.util.DXDiagScanner;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
@@ -42,7 +43,7 @@ public class CrashDescriptor {
          try {
             scanner = new Scanner(output);
 
-            label210:
+            label242:
             while(scanner.hasNextLine()) {
                String line = scanner.nextLine();
                Matcher matcher;
@@ -67,7 +68,7 @@ public class CrashDescriptor {
                         do {
                            do {
                               if (!var10.hasNext()) {
-                                 continue label210;
+                                 continue label242;
                               }
 
                               signature = (CrashSignatureContainer.CrashSignature)var10.next();
@@ -109,7 +110,23 @@ public class CrashDescriptor {
          this.readFile(crash.getFile());
          this.readFile(crash.getNativeReport());
          if (OS.WINDOWS.isCurrent()) {
-            OS.Windows.printDxDiag();
+            this.log("Trying to retrieve DxDiag report...");
+            this.log("<DXDiag>");
+
+            try {
+               Iterator var21 = DXDiagScanner.getInstance().getResult().iterator();
+
+               while(var21.hasNext()) {
+                  String l = (String)var21.next();
+                  this.log(l);
+               }
+            } catch (DXDiagScanner.DXDiagException var17) {
+               this.log("Could not fetch DXDiag info:", var17);
+            } catch (InterruptedException var18) {
+               this.log("Interrupted", var18);
+            }
+
+            this.log("</DXDiag>");
          }
 
          return crash;

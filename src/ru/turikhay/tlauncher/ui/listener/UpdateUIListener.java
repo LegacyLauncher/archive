@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.listener;
 import java.net.URI;
 import java.net.URISyntaxException;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -31,7 +32,7 @@ public class UpdateUIListener implements UpdateListener {
 
    public void onUpdateError(Update u, Throwable e) {
       if (Alert.showLocQuestion("updater.error.title", "updater.download-error", e)) {
-         openUpdateLink(u.getLink());
+         openUpdateLink(Repository.EXTRA_VERSION_REPO.getSelectedRepo() + u.getLink().substring(1));
       }
 
       this.unblock();
@@ -58,7 +59,7 @@ public class UpdateUIListener implements UpdateListener {
 
    public void onUpdateApplyError(Update u, Throwable e) {
       if (Alert.showLocQuestion("updater.save-error", e)) {
-         openUpdateLink(u.getLink());
+         openUpdateLink(Repository.EXTRA_VERSION_REPO.getSelectedRepo() + u.getLink().substring(1));
       }
 
       this.unblock();

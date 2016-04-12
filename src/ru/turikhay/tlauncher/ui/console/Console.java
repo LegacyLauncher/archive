@@ -270,7 +270,7 @@ public class Console implements Logger {
       if (this.explorer == null) {
          try {
             this.explorer = FileExplorer.newExplorer();
-         } catch (InternalError var16) {
+         } catch (InternalError var17) {
             Alert.showError(Localizable.get("explorer.unavailable.title"), Localizable.get("explorer.unvailable") + (OS.WINDOWS.isCurrent() ? "\n" + Localizable.get("explorer.unavailable.win") : ""));
             return;
          }

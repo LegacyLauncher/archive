@@ -112,7 +112,7 @@ version.manager.downloader.info.title = Information
 version.manager.downloader.info.no-needed = Aucun fichier à charger.
 version.manager.downloader.menu.ordinary = Téléchargement des fichiers manquants.
 version.manager.downloader.menu.force = Forcer la mise à jour
-version.manager.refresher.menu.local = Recharger la liste local des versions
+version.manager.refresher.menu.local = Recharger la liste local des versions 
 version.manager.refresher.menu.remote = Recharger la liste des versions depuis le serveur
 version.manager.delete.error.title = Erreur de suppression de la version
 version.manager.delete.error.single = Une erreur s'est produite lors de la suppression de la version.
@@ -141,10 +141,10 @@ version.manager.alert.snapshot.multiple = Nouvelles snapshots\:
 version.manager.alert.unknown.single = Et aussi\:
 version.manager.alert.unknown.multiple = Et aussi\:
 version.manager.alert.more = ... et %0 plus
-version.manager.alert.more.0.plural = %n;%n versions
+version.manager.alert.more.0.plural = %n;%n versions 
 version.manager.alert.time.justnow = Il y a moins d'une minute
 version.manager.alert.time.minute = %0 auparavant
-version.manager.alert.time.minute.0.plural = %n minute;%n minutes
+version.manager.alert.time.minute.0.plural = %n minute;%n minutes 
 version.manager.alert.time.hour = %0 auparavant
 version.manager.alert.time.hour.0.plural = %n heure;%n heures
 version.manager.alert.time.day = %0 auparavant
@@ -160,9 +160,9 @@ auth.error.unknown = Une erreur inconnue s'est produite lors de la procédure d'
 auth.error.unreachable = Le service d'authentification n'est pas disponible. Si vous pensez que c'est une erreur, veuillez vérifier votre connexion Internet et les paramètres de vos Pares-Feux.
 auth.error.unparseable = Impossible de reconnaître la réponse du serveur. Le serveur est probablement en maintenance.
 auth.error.relogin.ely = Il est impossible de vous autoriser l'accès au serveur. Veuillez ouvrir le gestionnaire de compte et recréer votre compte.
-auth.error.relogin.ely.editor = Invalid credentials or token has expired. Please create this account once again\: you may try typing your password in a text editor and then paste your password here to be sure that you write it correctly.\nIn case you forgot your password\: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a>
+auth.error.relogin.ely.editor = Invalid credentials or token has expired. Please create this account once again\: you may try typing your password in a text editor and then paste your password here to be sure that you write it correctly.\nIn case you forgot your password\: <a href\="http\://ely.by/authorization/recoverPass">http\://ely.by/authorization/recoverPass</a> 
 auth.error.relogin.mojang = Impossible d'autoriser l'accès aux serveurs Mojang. Veuillez ouvrir le gestionnaire de compte et recréer votre compte.
-auth.error.relogin.mojang.editor = Invalid credentials or token has expired. Please create this account once again\: you may try typing your password in a text editor and then paste your password here to be sure that you write it correctly.\nIn case you forgot your password\: <a href\="https\://account.mojang.com/password">https\://account.mojang.com/password</a>\n\nNote\: if this problem occurs way too often, you should change your password and secret questions, as your account might have been compromised.
+auth.error.relogin.mojang.editor = Invalid credentials or token has expired. Please create this account once again\: you may try typing your password in a text editor and then paste your password here to be sure that you write it correctly.\nIn case you forgot your password\: <a href\="https\://account.mojang.com/password">https\://account.mojang.com/password</a>\n\nNote\: if this problem occurs way too often, you should change your password and secret questions, as your account might have been compromised. 
 auth.error.migrated = Cet utilisateur a déjà migré vers un compte Mojang. Utilisez votre mail à la place de votre pseudo.
 auth.error.internal = Une erreur interne s'est produite. Veuillez contacter le développeur.
 auth.error.unavailable = Le service est temporairement indisponible.
@@ -173,11 +173,11 @@ auth.error.nopass.title = Mot de passe requis\!
 auth.error.nopass = Veuillez rentrer votre mot de passe.
 auth.error.nousername.title = Pseudonyme requis\!
 auth.error.nousername = Entrez votre pseudo (ou votre mail)\!
-auth.tip.free = Utilisez <b>un compte gratuit</b> si vous n'avez pas de compte Mojang. n'oubliez d' <a href\="https\://minecraft.net/store/minecraft">acheter Minecraft</a>\!
+auth.tip.free = Utilisez <b>un compte gratuit</b> si vous n'avez pas de compte Mojang. n'oubliez d' <a href\="https\://minecraft.net/store/minecraft">acheter Minecraft</a>\! 
 auth.tip.free.height = 23
 auth.tip.mojang = <b>Le compte Mojang</b> est la meilleur solution\: vous pourrez posséder un skin et jouer sur n'importe qu'elle serveur\!
 auth.tip.mojang.height = 32
-auth.tip.ely = <b>Le compte Ely</b> offre l'avantage d'un système de skin gratuit. Vous devriez <a href\="http\://ely.by/?utm_source\=tlauncher&utm_medium\=link&utm_term\=accounts_page&utm_campaign\=TLauncher%20%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F">register</a> pour l'utiliser.
+auth.tip.ely = <b>Le compte Ely</b> offre l'avantage d'un système de skin gratuit. Vous devriez <a href\="http\://ely.by/?utm_source\=tlauncher&utm_medium\=link&utm_term\=accounts_page&utm_campaign\=TLauncher%20%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F">register</a> pour l'utiliser. 
 auth.tip.ely.height = 23
 forceupdate.local.title = Mise à jour impossible
 forceupdate.local = Cette version est introuvable sur le serveur et ne peut pas être mise à jour.
@@ -236,12 +236,12 @@ crash.title = Une erreur imprévue s'est produite\!
 crash.unknown = Minecraft s'est arrêté à cause une erreur imprévue. Une fenêtre d'entrée du jeu s'est ouverte pour vous aider à trouver la solution.
 crash.unknown.native = Minecraft s'est arrêté à cause une erreur imprévue des natives. Une fenêtre d'entrée de jeu s'est ouverte pour vous aider à trouver la solution.
 crash.opengl = Minecraft s'est arrêté car votre carte graphique est obsolète. Mettez le à jour et réessayez.
-crash.invalid-modify = Minecraft s'est arrêté car une erreur s'est produite due à l'installation incorrecte d'un mod. Veuillez le réeinstaller et réessayer.
+crash.invalid-modify = Minecraft s'est arrêté car une erreur s'est produite due à l'installation incorrecte d'un mod. Veuillez le réeinstaller et réessayer. 
 crash.meta-inf = Java n'arrive pas à charger les fichiers Minecraft. Supprimez le fichier /META-INF/ depuis le fichier JAR de la version de Minecraft et réessayez.
 # Fuzzy
 crash.missing-main = Java n'arrive pas à faire tourner Minecraft car un fichier est maquant. Si vous ne pouvez pas réparer cela par vous même, cocher "Forcer la mise à jour".
 crash.invalid-sys-username = N'utilisez pas le caractère «\!» dans le chemin du dossier Minecraft.
-crash.permgen-error = PermGen error. Possible solutions\:\n- «Force update».\n- In Minecraft settings tab, append to JVM arguments\:\n-XX\:MaxPermSize\=256M
+crash.permgen-error = PermGen error. Possible solutions\:\n- «Force update».\n- In Minecraft settings tab, append to JVM arguments\:\n-XX\:MaxPermSize\=256M 
 crash.outofmemory = Mémoire insuffisante. Vous pouvez augmenter la quantité de mémoire dédié à Minecraft dans les paramètres.
 crash.firewall = Les Pares-Feux bloquent la création du serveur Minecraft. Veuillez vérifier ses paramètres.
 crash.old-videocard.intel = Vous utilisez une vieille carte vidéo Intel. Aucune solution trouvée.
@@ -250,7 +250,7 @@ crash.reserve-space = Impossible de réservé autant de mémoire. Diminuer le da
 crash.server-rp = Si Minecraft crash durant le téléchargement des ressources du serveur, revenez à nouveau dans ce serveur depuis le menu Multijoueur de Minecraft.
 # Settings
 settings.warning = Référez vous à un sens commun, si vous voulez le changer.
-settings.restart = Sera appliqué après un redémarrage.
+settings.restart = Sera appliqué après un redémarrage. 
 settings.res.def = Résolution par défaut\: %0x%1
 settings.range = Porté\: %0-%1
 settings.tab.minecraft = Minecraft
@@ -336,7 +336,7 @@ settings.default.warning = Êtes vous sûr de vouloir remettre les valeurs par d
 settings.save = Sauvegarder
 settings.back = Retour
 settings.popup.info = Clé\: %0
-settings.popup.default = Réinitialiser les valeurs
+settings.popup.default = Réinitialiser les valeurs 
 # Updater
 updater.required.found.title = Une mise à jour importante à été trouvée\!
 updater.required.found.message = Attention\! Une importante mise à jour est sortie.\nTLauncher sera mise à jour vers la version %0\nSi l'application ne fonctionne pas après la mise à jour, télécharger la dernière version manuellement.
@@ -346,7 +346,7 @@ updater.error.title = Une erreur s'est produite lors de la demande de mise à jo
 updater.error = Une erreur s'est produite lors de la demande de mise à jour
 updater.download-error = Une erreur s'est produite lors de la demande de mise à jour. Voulez vous la télécharger manuellement?
 updater.downloaded.title = Prêt pour une mise à jour
-updater.downloaded = TLauncher est prêt à être mise à jour. L'application redémarrera après la mise à jour.
+updater.downloaded = TLauncher est prêt à être mise à jour. L'application redémarrera après la mise à jour. 
 updater.save-error.title = Erreur lors de la sauvegarde de la mise à jour.
 updater.save-error = Erreur lors de la sauvegarde de la mise à jour. Voulez vous l'installer manuellement?
 # Firstrun
@@ -469,7 +469,7 @@ explorer.details.dir = Accès
 explorer.error.newfolder = Erreur de création d'un nouveau dossier
 explorer.error.newfolder-nopath = Impossible de créer un nouveau dossier à cet emplacement.
 explorer.error.rename.title = Erreur de renom {0}
-explorer.error.rename = Impossible de renommer cet objet.
+explorer.error.rename = Impossible de renommer cet objet. 
 explorer.error.rename-exists = Impossible de renommer ce fichier car ce nom existe déjà.
 explorer.unavailable.title = Navigateur indisponnible
 explorer.unavailable = Impossible d'initialiser le sélecteur de fichier.
@@ -478,7 +478,7 @@ explorer.unavailable.win = Vous utilisez peut-être un thème Windows qui cause 
 boot.loading = Chargement de TLauncher %0...
 # About page
 about.text = L'un des meilleurs Minecraft launchers de Russie. Fait avec amour &lt;3<br/><b>Notre mission</b> — répandre Minecraft partout sur terre<br/>Si vous voulez obtenir le code source ou aider aux traductions contactez le développeur.
-about.bottom = Garder contact avec nous sur <a href\="[http\://tlaun.ch/fb;http\://facebook.com/tlauncher]"><b style\="color\: \#3f5d9a">Facebook</b></a> \:)
+about.bottom = Garder contact avec nous sur <a href\="[http\://tlaun.ch/fb;http\://facebook.com/tlauncher]"><b style\="color\: \#3f5d9a">Facebook</b></a> \:) 
 about.partners.mcoffline = configurez et gérer un serveur MC facilement\!
 about.partners.ely = Le système <b>gratuit</b> de skin que nous utilisons\!
 about.license = Vous pouvez redistribuer des versions non modifiée de TLauncher. À noter que cette application est conditionner par sur une base libre, sans conditions ni garanties.<br/>Utilisez le judicieusement \:) Merci\!
@@ -507,4 +507,4 @@ args.error = Impossible de reconnaître les termes. Le launcher se  fermera.
 background.loading = Chargement du fond...
 # Plural forms patterns
 plural = 1;.*
-settings.lang.contribute =
+settings.lang.contribute = 

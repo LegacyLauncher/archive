@@ -45,22 +45,28 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
          StringBuilder string = new StringBuilder();
          TokenReplacingReader replacer = new TokenReplacingReader(new StringReader(this.source), this.resolver);
 
-         try {
-            int read;
+         label62: {
             try {
-               while((read = replacer.read()) > 0) {
+               while(true) {
+                  int read;
+                  if ((read = replacer.read()) <= 0) {
+                     break label62;
+                  }
+
                   string.append((char)read);
                }
             } catch (IOException var7) {
                var7.printStackTrace();
-               return;
+            } finally {
+               U.close(replacer);
             }
-         } finally {
-            U.close(replacer);
+
+            return;
          }
 
          this.editor.setText(string.toString());
       }
+
    }
 
    private class AboutPageTokenResolver implements ITokenResolver {

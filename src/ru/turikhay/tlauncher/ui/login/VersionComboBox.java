@@ -1,10 +1,12 @@
 package ru.turikhay.tlauncher.ui.login;
 
+import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
@@ -17,6 +19,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
+import ru.turikhay.util.SwingUtil;
 
 public class VersionComboBox extends ExtendedComboBox implements VersionManagerListener, Blockable, LocalizableComponent, LoginForm.LoginProcessListener {
    static boolean showElyVersions;
@@ -29,6 +32,11 @@ public class VersionComboBox extends ExtendedComboBox implements VersionManagerL
 
    VersionComboBox(LoginForm lf) {
       super((ListCellRenderer)(new VersionCellRenderer() {
+         public Component getListCellRendererComponent(JList list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
+            list.setFixedCellWidth(SwingUtil.magnify(180));
+            return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+         }
+
          public boolean getShowElyVersions() {
             return VersionComboBox.showElyVersions;
          }
