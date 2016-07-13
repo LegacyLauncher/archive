@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -27,6 +30,7 @@ public abstract class VersionList {
    protected final Map byName = new Hashtable();
    protected final List versions = Collections.synchronizedList(new ArrayList());
    protected final Map latest = new Hashtable();
+   private final List dependencies = new ArrayList();
 
    VersionList() {
       GsonBuilder builder = new GsonBuilder();
@@ -60,7 +64,7 @@ public abstract class VersionList {
       } else if (version == null) {
          throw new NullPointerException("Version cannot be NULL!");
       } else {
-         CompleteVersion complete = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + version.getID() + "/" + version.getID() + ".json"), CompleteVersion.class);
+         CompleteVersion complete = (CompleteVersion)this.gson.fromJson((Reader)(version.getUrl() == null ? this.getUrl("versions/" + version.getID() + "/" + version.getID() + ".json") : new InputStreamReader((new URL(version.getUrl())).openConnection(U.getProxy()).getInputStream(), "UTF-8")), (Class)CompleteVersion.class);
          complete.setID(version.getID());
          complete.setVersionList(this);
          Collections.replaceAll(this.versions, version, complete);
@@ -76,7 +80,7 @@ public abstract class VersionList {
    public VersionList.RawVersionList getRawList() throws IOException {
       Object lock = new Object();
       Time.start(lock);
-      VersionList.RawVersionList list = (VersionList.RawVersionList)this.gson.fromJson(this.getUrl("versions/versions.json"), VersionList.RawVersionList.class);
+      VersionList.RawVersionList list = (VersionList.RawVersionList)this.gson.fromJson((Reader)this.getUrl("versions/versions.json"), (Class)VersionList.RawVersionList.class);
       Iterator var4 = list.versions.iterator();
 
       while(var4.hasNext()) {
@@ -144,12 +148,26 @@ public abstract class VersionList {
       }
    }
 
-   protected abstract String getUrl(String var1) throws IOException;
+   protected abstract InputStreamReader getUrl(String var1) throws IOException;
 
    void clearCache() {
       this.byName.clear();
       this.versions.clear();
       this.latest.clear();
+   }
+
+   public final List getDependencies() {
+      return Collections.unmodifiableList(this.dependencies);
+   }
+
+   public final void addDependancy(VersionList list) {
+      if (U.requireNotNull(list) == this) {
+         throw new IllegalArgumentException("cannot be itself");
+      } else if (list.getDependencies().contains(this)) {
+         throw new IllegalArgumentException("invalid nesting");
+      } else {
+         this.dependencies.add(list);
+      }
    }
 
    void log(Object... obj) {

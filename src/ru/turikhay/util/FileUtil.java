@@ -205,17 +205,18 @@ public class FileUtil {
    }
 
    public static void deleteFile(File file) {
-      if (file.isFile()) {
+      if (file.isFile() || file.isDirectory()) {
+         String path = file.getAbsolutePath();
          if (file.delete()) {
             File parent = file.getParentFile();
-            if (parent != null) {
+            if (parent != null && !parent.equals(file)) {
                File[] list = parent.listFiles();
                if (list != null && list.length <= 0) {
                   deleteFile(parent);
                }
             }
-         } else {
-            U.log("Could not delete file:", file, new RuntimeException());
+         } else if (fileExists(file)) {
+            log("Could not delete file:", path, new RuntimeException());
          }
 
       }
@@ -225,57 +226,62 @@ public class FileUtil {
       if (!dir.isDirectory()) {
          throw new IllegalArgumentException("Specified path is not a directory: " + dir.getAbsolutePath());
       } else {
-         File[] var4 = dir.listFiles();
-         if (var4 == null) {
+         File[] list = dir.listFiles();
+         if (list == null) {
             throw new RuntimeException("Folder is corrupted: " + dir.getAbsolutePath());
          } else {
-            int var3 = var4.length;
+            File[] var2 = list;
+            int var3 = list.length;
 
-            for(int var2 = 0; var2 < var3; ++var2) {
-               File file = var4[var2];
-               if (file.isDirectory()) {
-                  deleteDirectory(file);
-               } else {
-                  deleteFile(file);
+            for(int var4 = 0; var4 < var3; ++var4) {
+               File file = var2[var4];
+               if (!file.equals(dir)) {
+                  if (file.isDirectory()) {
+                     deleteDirectory(file);
+                  }
+
+                  if (file.isFile()) {
+                     deleteFile(file);
+                  }
                }
             }
 
+            String path = dir.getAbsolutePath();
             deleteFile(dir);
          }
       }
    }
 
-   public static File makeTemp(File file) throws IOException {
-      createFile(file);
-      file.deleteOnExit();
-      return file;
-   }
-
    public static boolean createFolder(File dir) throws IOException {
       if (dir == null) {
          throw new NullPointerException();
-      } else if (dir.isDirectory()) {
+      } else if (dir.isDirectory() && dir.exists()) {
          return false;
       } else if (!dir.mkdirs()) {
          throw new IOException("Cannot create folders: " + dir.getAbsolutePath());
       } else if (!dir.canWrite()) {
-         throw new IOException("Ceated directory is not accessible: " + dir.getAbsolutePath());
+         throw new IOException("Created directory is not accessible: " + dir.getAbsolutePath());
       } else {
          return true;
       }
    }
 
-   public static void createFile(File file) throws IOException {
-      if (!file.isFile()) {
-         if (file.getParentFile() != null) {
-            file.getParentFile().mkdirs();
-         }
+   public static boolean folderExists(File folder) {
+      return folder != null && folder.isDirectory() && folder.exists();
+   }
 
-         if (!file.createNewFile()) {
-            throw new IOException("Cannot create file, or it was created during runtime: " + file.getAbsolutePath());
+   public static boolean fileExists(File file) {
+      return file != null && file.isFile() && file.exists();
+   }
+
+   public static void createFile(File file) throws IOException {
+      if (!fileExists(file)) {
+         if (file.getParentFile() != null && !folderExists(file.getParentFile()) && !file.getParentFile().mkdirs()) {
+            throw new IOException("Could not create parent:" + file.getAbsolutePath());
+         } else if (!file.createNewFile() && !fileExists(file)) {
+            throw new IOException("Could not create file, or it was created/deleted simultaneously: " + file.getAbsolutePath());
          }
       }
-
    }
 
    public static String getResource(URL resource, String charset) throws IOException {
@@ -321,5 +327,9 @@ public class FileUtil {
 
          return ext;
       }
+   }
+
+   private static void log(Object... o) {
+      U.log("[Files]", o);
    }
 }

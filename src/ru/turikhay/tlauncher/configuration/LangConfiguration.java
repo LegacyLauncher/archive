@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.util.U;
 
 public class LangConfiguration extends SimpleConfiguration {
    private final Locale[] locales;
@@ -73,7 +74,7 @@ public class LangConfiguration extends SimpleConfiguration {
             }
 
             this.pluralPatterns[i] = pluralFormsPatterns;
-            this.log(new Object[]{"Plural patterns for " + locales[i] + ":", pluralFormsPatterns});
+            log("Plural patterns for " + locales[i] + ":", pluralFormsPatterns);
          }
       }
 
@@ -85,7 +86,7 @@ public class LangConfiguration extends SimpleConfiguration {
 
             for(int i = 0; i < count; ++i) {
                if (i != keyLocale && !this.prop[i].containsKey(primaryKey)) {
-                  this.log(new Object[]{"Missing key in " + locales[i] + ": " + primaryKey});
+                  log("Missing key in " + locales[i] + ": " + primaryKey);
                }
             }
          }
@@ -97,7 +98,7 @@ public class LangConfiguration extends SimpleConfiguration {
                while(var17.hasNext()) {
                   Object redundantKey = var17.next();
                   if (!this.prop[keyLocale].containsKey(redundantKey)) {
-                     this.log(new Object[]{"Redundant key in " + locales[i] + ": " + redundantKey});
+                     log("Redundant key in " + locales[i] + ": " + redundantKey);
                   } else {
                      String key = redundantKey.toString();
                      if (key.endsWith(".plural")) {
@@ -223,5 +224,9 @@ public class LangConfiguration extends SimpleConfiguration {
 
          return string;
       }
+   }
+
+   private static void log(Object... o) {
+      U.log("[Lang]", o);
    }
 }

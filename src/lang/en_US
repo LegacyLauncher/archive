@@ -1,3 +1,5 @@
+# TLauncher language file UTF-8
+# Loginform
 loginform.checkbox.autologin = Delayed start
 loginform.checkbox.forceupdate = Force update
 loginform.enter = Enter the game
@@ -28,7 +30,8 @@ loginform.button.support.email.alert.title = How to contact support
 loginform.button.support.email.alert = You may contact us if you can't find the solution to the problem by yourself\:
 loginform.button.support.developer = Contact developer via e-mail
 loginform.button.support.developer.alert.title = How to contact developer
-loginform.button.support.developer.alert = If you have a problem with Minecraft, please contact the support instead or you may contact the developer for leaving feedback or sharing your expirience.
+loginform.button.support.developer.alert = If you have a problem with Minecraft, please contact the support instead or you may contact the developer for leaving feedback or sharing your experience.
+# Account
 account.type.free = Free (without password)
 account.type.mojang = Mojang (premium)
 account.type.ely = Ely.by
@@ -149,6 +152,7 @@ version.manager.alert.time.unknown = unknown
 # Loginform.errors
 auth.error.title = Authorization error
 auth.error.unknown = An unknown error occurred during the authorization process.
+# Fuzzy
 auth.error.unreachable = Authorization server may be not available by now. If you don't think so, please check your Internet connection and firewall settings.
 auth.error.unparseable = Cannot recognise server response.\nProbably the server is undergoing maintenance.
 auth.error.relogin.ely = Could not authorize you against server.\nPlease open "Account Manager" and create your account again.
@@ -204,15 +208,17 @@ launcher.error.version-not-found = Launching version is not found\:
 launcher.error.account-invalid = Incorrect account name\:
 launcher.error.account-not-found = Couldn't find account\:
 launcher.error.start = Error occurred while trying to start JVM\:
-launcher.error.download = Error downloading required files. Possible causes\:\n- Bad Internet connection\n- Servers are under construction or are down\n- Firewall is blocking TLauncher\n\nIn the last case, add Java in the white-list of your firewall or antivirus.
+launcher.error.download = Error downloading required files. Possible causes\:\n- Bad Internet connection\n- Adware called "RelevantKnowledge" is installed on your PC. If you find it, please uninstall.\n- Firewall is blocking TLauncher\n\nIn the last case, add Java in the white-list of your firewall or antivirus.
 launcher.error.classpath = Cannot find required file\!\nif you can't repair it, tick "Force update".
 launcher.error.version-info = Cannot get information about this version\!
 launcher.error.incompatible = Running version of TLauncher can't launch this version. Please, update TLauncher.
+# Fuzzy
 launcher.error.delete-entries = Error deleting files (entries) from JAR file.
 # Launcher steps
 launcher.step.collecting = Collecting info...
 launcher.step.comparing-assets = Comparing assets...
 launcher.step.downloading = Downloading resources...
+# Fuzzy
 launcher.step.reconstructing-assets = Reconstructing assets...
 launcher.step.unpacking-natives = Unpacking natives...
 launcher.step.deleting-entries = Deleting entires...
@@ -235,7 +241,7 @@ crash.invalid-sys-username = You shouldn't use symbol «\!» in Minecraft direct
 crash.permgen-error = PermGen error. Possible solutions\:\n- «Force update».\n- In Minecraft settings tab, append to JVM arguments\:\n-XX\:MaxPermSize\=256M
 crash.outofmemory = Out of memory error.\nYou can try to increase amount of memory in Minecraft settings tab.
 crash.firewall = Firewall blocks creating Minecraft server. Please check its preferences.
-crash.old-videocard.intel = You're using old Intel videocard. No known solution.
+crash.old-videocard.intel = You're using old Intel videocard. Solution is unknown.
 crash.old-videocard.ati = Your system uses old ATI videocard driver. Please, update it.
 crash.reserve-space = Could not reserve enough heap space. Decrease it in Minecraft settings tab.
 crash.server-rp = If Minecraft crashed during downloading server resource pack, just enter this server again through Multiplayer menu in Minecraft.
@@ -288,12 +294,12 @@ settings.fontsize.label = Font size\:
 settings.fontsize.pt = pt
 settings.slide.list.label = Background image\:
 settings.slide.list.prompt = Enter the path to the image
-settings.console.label = Show logger\:
-settings.console.global = Always
-settings.console.minecraft = When Minecraft is launched
-settings.console.none = Never
-settings.console.fullcommand.label = Full command\:
-settings.console.fullcommand = Show start command including sensitive arguments
+settings.logger.label = Show logger\:
+settings.logger.global = Always
+settings.logger.minecraft = When Minecraft is launched
+settings.logger.none = Never
+settings.logger.fullcommand.label = Full command\:
+settings.logger.fullcommand = Show start command including sensitive arguments
 settings.connection.label = Connection quality\:
 settings.connection.good = Fast and reliable
 settings.connection.normal = May be laggy sometimes
@@ -340,10 +346,16 @@ updater.downloaded = TLauncher is ready to be updated.\nApplication will be upda
 updater.save-error.title = Error occurred while saving an update.
 updater.save-error = Error occurred while saving an update. Do you want to download the update yourself?
 # Firstrun
-firstrun.title = Welcome\!
-firstrun = Hi there\! Thanks for downloading TLauncher, we appreciate that \:)\nWe must say that TLauncher is not affiliated with Mojang and Minecraft is owned by them. Also please do not use this application in any unacceptable way.\nTo support Minecraft developers you may <a href\="https\://minecraft.net/store/minecraft">purchase Minecraft</a>.
+firstrun.title=TLauncher :: Welcome!
+firstrun.notice.welcome=Welcome!
+firstrun.notice.body=Hey! Thank you for downloading TLauncher! We really appreciate that &lt;3<br/>But before you start, you should read and agree with following sentences:
+firstrun.notice.body.0=– We must say that TLauncher is not affiliated with Mojang — the real Minecraft developers; they own Minecraft and everything that they make
+firstrun.notice.body.1=– Please don't blame us if you notice that something went wrong with TL; we're trying our best, but sometimes bad things happen
+firstrun.notice.body.2=– Also don't forget that Minecraft is not a free game (yup); using this app means that you intend to buy it... someday ¯\\_(ツ)_/¯
+firstrun.notice.answer.yes=Alright, I got it!
 # Notifier
 notifier.failed.title = Connection may be blocked\!
+# Fuzzy
 notifier.failed = TLauncher couldn't connect to the Internet to check for updates.\nIf this machine is not connected at all, you can ignore this message.\nOtherwise, check your Internet connection and firewall settings.
 notifier.found.title = An update is available\!
 notifier.found.question = TLauncher %0 has been released. Do you want to update?
@@ -368,24 +380,24 @@ popup.selectall = Select all
 popup.copy = Copy
 popup.paste = Paste
 popup.copyall = Copy all
-# Console
-console = Logger
-console.kill = Kill Minecraft process
-console.close.cancel = Logger will close in %0 s
-console.save = Save as...
-console.save.popup = Save as...
-console.save.exists = File already exists\!
-console.save.error = Couln't save file\!
-console.clear.popup = Clear
-console.pastebin = Save online at Pastebin...
-console.pastebin.alert.title = Confirmation
-console.pastebin.alert = You are going to save the log online on Pastebin.\nIt will not be published and accessible publicly and will be deleted upon 7 days. You will have to enter the captcha after sending, otherwise log will be deleted in a few minutes.\nDo you really want to save log online using Pastebin?
-console.pastebin.sent.title = Sent successfully
-console.pastebin.sent = Console was successfully saved online on <a href\="http\://pastebin.com">Pastebin.com</a>.\n\nDo you want to open it now?
-console.pastebin.failed.title = Could not send console output
-console.pastebin.failed = Could not send console output to <a href\="http\://pastebin.com">Pastebin.com</a>. Make sure you have Internet access and antivirus software doesn't block the connection.
-console.pastebin.invalid.title = Something went wrong...
-console.pastebin.invalid = Could not send console output.
+# Logger
+logger = Logger
+logger.kill = Kill Minecraft process
+logger.close.cancel = Logger will close in %0 s
+logger.save = Save as...
+logger.save.popup = Save as...
+logger.save.exists = File already exists\!
+logger.save.error = Couln't save file\!
+logger.clear.popup = Clear
+logger.pastebin = Save online at Pastebin...
+logger.pastebin.alert.title = Confirmation
+logger.pastebin.alert = You are going to save the log online on Pastebin.\nIt will not be published and accessible publicly and will be deleted upon 7 days. You will have to enter the captcha after sending, otherwise log will be deleted in a few minutes.\nDo you really want to save log online using Pastebin?
+logger.pastebin.sent.title = Sent successfully
+logger.pastebin.sent = Logger was successfully saved online on <a href\="http\://pastebin.com">Pastebin.com</a>.\n\nDo you want to open it now?
+logger.pastebin.failed.title = Could not send logger output
+logger.pastebin.failed = Could not send logger output to <a href\="http\://pastebin.com">Pastebin.com</a>. Make sure you have Internet access and antivirus software doesn't block the connection.
+logger.pastebin.invalid.title = Something went wrong...
+logger.pastebin.invalid = Could not send logger output.
 # Link
 link.error.title = Could not open the link
 link.error = Could not open the link. Please, do it yourself\:
@@ -402,9 +414,9 @@ ui.yes = Yes
 ui.no = No
 ui.cancel = Cancel
 ui.error.openfile.title = Error opening file
-ui.error.openfile = An error occurred while trying to open file. Open developer console to see more information. You can try to open this file yourself\:
+ui.error.openfile = An error occurred while trying to open file. Open developer logger to see more information. You can try to open this file yourself\:
 ui.error.openfolder.title = Error opening folder
-ui.error.openfolder = An error occurred while trying to open folder. Open developer console to see more information. You can try to open this folder yourself\:
+ui.error.openfolder = An error occurred while trying to open folder. Open developer logger to see more information. You can try to open this folder yourself\:
 ui.error.openlink.title = Error opening link
 ui.error.openlink = An error occurred while trying to open link in external browser. You can try to open it yourself\:
 # Explorer
@@ -498,3 +510,4 @@ background.loading = Loading background...
 # Plural forms patterns
 plural = 1;.*
 settings.lang.contribute = Help us to improve these translations\! <u>Read more »</u>
+launcher.step.comparing-assets-long = Comparing assets (may take a while)...

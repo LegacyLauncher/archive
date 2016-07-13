@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.managers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -102,66 +103,81 @@ public class ElyManager extends InterruptibleComponent {
    }
 
    public CompleteVersion elyficate(CompleteVersion original) {
-      this.log(new Object[]{"Trying to elyficate version:", original.getID()});
-      List libList = this.getLibraries(original);
-      CompleteVersion complete = original.copyInto(new CompleteVersion());
+      this.log(new Object[]{"Processing version:", original.getID()});
+      if (original.isElyfied()) {
+         this.log(new Object[]{"... already Elyfied"});
+         return original;
+      } else {
+         CompleteVersion modified = original.copyInto(new CompleteVersion());
+         modified.setElyfied(true);
+         List libraries = this.getLibraries(original);
+         Iterator var4 = libraries.iterator();
 
-      ElyManager.ElyLib lib;
-      for(Iterator var5 = libList.iterator(); var5.hasNext(); complete.getLibraries().add(lib)) {
-         lib = (ElyManager.ElyLib)var5.next();
-         this.log(new Object[]{"Processing Ely library:", lib.getName()});
-         Iterator current3;
-         Library current2;
-         if (lib.getPattern() != null) {
-            Pattern add = lib.getPattern();
-            current3 = complete.getLibraries().iterator();
+         while(true) {
+            while(var4.hasNext()) {
+               ElyManager.ElyLib lib = (ElyManager.ElyLib)var4.next();
+               this.log(new Object[]{"Now processing:", lib.getName()});
+               if (modified.getLibraries().contains(lib)) {
+                  this.log(new Object[]{"... already contains"});
+               } else {
+                  Iterator i;
+                  Library required;
+                  if (lib.getPattern() != null) {
+                     Pattern pattern = lib.getPattern();
+                     i = modified.getLibraries().iterator();
 
-            while(current3.hasNext()) {
-               current2 = (Library)current3.next();
-               if (add.matcher(current2.getName()).matches()) {
-                  this.log(new Object[]{"Remove", current2.getName()});
-                  current3.remove();
-               }
-            }
-         }
-
-         if (StringUtils.isNotBlank(lib.getArgs())) {
-            String add1 = complete.getMinecraftArguments();
-            if (StringUtils.isBlank(add1)) {
-               add1 = lib.getArgs();
-            } else {
-               add1 = add1 + ' ' + lib.getArgs();
-            }
-
-            complete.setMinecraftArguments(add1);
-         }
-
-         if (StringUtils.isNotBlank(lib.getMainClass())) {
-            complete.setMainClass(lib.getMainClass());
-         }
-
-         if (lib.getRequirementList() != null) {
-            ArrayList add2 = new ArrayList(lib.getRequirementList());
-            current3 = add2.iterator();
-
-            while(current3.hasNext()) {
-               current2 = (Library)current3.next();
-               Iterator it = complete.getLibraries().iterator();
-
-               while(it.hasNext()) {
-                  Library compare = (Library)it.next();
-                  if (current2.getPlainName().equals(compare.getPlainName())) {
-                     this.log(new Object[]{"Version library list already contains:", compare.getName()});
-                     it.remove();
+                     while(i.hasNext()) {
+                        required = (Library)i.next();
+                        if (pattern.matcher(required.getName()).matches()) {
+                           this.log(new Object[]{"... replacing", required.getName()});
+                           i.remove();
+                        }
+                     }
                   }
+
+                  if (lib.getRequirementList() != null) {
+                     ArrayList requiredList = new ArrayList(lib.getRequirementList());
+                     i = requiredList.iterator();
+
+                     while(i.hasNext()) {
+                        required = (Library)i.next();
+                        String plainName = required.getPlainName();
+                        Iterator var10 = modified.getLibraries().iterator();
+
+                        while(var10.hasNext()) {
+                           Library compare = (Library)var10.next();
+                           if (plainName.equals(compare.getPlainName())) {
+                              this.log(new Object[]{"... required library", plainName, "already exists"});
+                              i.remove();
+                           }
+                        }
+                     }
+
+                     modified.getLibraries().addAll(requiredList);
+                  }
+
+                  if (StringUtils.isNotBlank(lib.getArgs())) {
+                     String args = modified.getMinecraftArguments();
+                     if (StringUtils.isBlank(args)) {
+                        args = lib.getArgs();
+                     } else {
+                        args = args + ' ' + lib.getArgs();
+                     }
+
+                     modified.setMinecraftArguments(args);
+                  }
+
+                  if (StringUtils.isNotBlank(lib.getMainClass())) {
+                     modified.setMainClass(lib.getMainClass());
+                  }
+
+                  modified.getLibraries().add(lib);
                }
             }
 
-            complete.getLibraries().addAll(add2);
+            return modified;
          }
       }
-
-      return complete;
    }
 
    public boolean refreshComponent() {
@@ -224,8 +240,7 @@ public class ElyManager extends InterruptibleComponent {
    }
 
    private void refreshDirectly() throws Exception {
-      String content = Repository.EXTRA_VERSION_REPO.getUrl("libraries/by/ely/libraries.json");
-      ElyManager.RawResponse response = (ElyManager.RawResponse)this.gson.fromJson(content, ElyManager.RawResponse.class);
+      ElyManager.RawResponse response = (ElyManager.RawResponse)this.gson.fromJson((Reader)Repository.EXTRA_VERSION_REPO.read("libraries/by/ely/libraries.json"), (Class)ElyManager.RawResponse.class);
       if (response.version != 1.0D) {
          throw new RuntimeException("incompatible ely summary info version. required: " + response.version + "; have: " + 1.0D);
       } else if (response.authlib == null) {

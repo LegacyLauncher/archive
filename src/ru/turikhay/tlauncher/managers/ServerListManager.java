@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -121,7 +122,7 @@ public class ServerListManager extends InterruptibleComponent {
    private ServerList loadFromList() throws JsonSyntaxException, IOException {
       Object lock = new Object();
       Time.start(lock);
-      ServerList list = (ServerList)this.gson.fromJson(this.repository.getUrl(), ServerList.class);
+      ServerList list = (ServerList)this.gson.fromJson((Reader)this.repository.read(""), (Class)ServerList.class);
       this.log("Got in", Time.stop(lock), "ms");
       return list;
    }

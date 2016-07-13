@@ -34,7 +34,7 @@ public class SimpleConfiguration {
       try {
          loadFromFile(this.properties, file);
       } catch (Exception var3) {
-         this.log("Error loading config from file:", var3);
+         U.log("Error loading config from file:", var3);
       }
 
       this.input = file;
@@ -186,7 +186,7 @@ public class SimpleConfiguration {
       try {
          this.save();
       } catch (IOException var2) {
-         this.log("Cannot store values!", var2);
+         U.log(var2);
       }
 
    }
@@ -259,9 +259,5 @@ public class SimpleConfiguration {
       Properties properties = new Properties();
       copyProperties(src, properties, false);
       return properties;
-   }
-
-   void log(Object... o) {
-      U.log("[" + this.getClass().getSimpleName() + "]", o);
    }
 }

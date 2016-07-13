@@ -125,18 +125,17 @@ public class VersionManager extends InterruptibleComponent {
 
             Map latestVersions_ = new LinkedHashMap();
             if (result1 != null) {
-               Object e0 = this.versionFlushLock;
                synchronized(this.versionFlushLock) {
-                  var8 = result1.keySet().iterator();
+                  Set entrySet = result1.entrySet();
+                  Iterator var12 = entrySet.iterator();
 
-                  while(var8.hasNext()) {
-                     AsyncObject listener = (AsyncObject)var8.next();
-                     VersionList.RawVersionList rawList = (VersionList.RawVersionList)result1.get(listener);
-                     if (rawList != null) {
-                        VersionManager.AsyncRawVersionListObject listObject = (VersionManager.AsyncRawVersionListObject)listener;
-                        RemoteVersionList versionList = listObject.getVersionList();
-                        versionList.refreshVersions(rawList);
-                        latestVersions_.putAll(versionList.getLatestVersions());
+                  while(var12.hasNext()) {
+                     Entry entry = (Entry)var12.next();
+                     if (this.checkConsistency(entrySet, entry)) {
+                        VersionManager.AsyncRawVersionListObject object = (VersionManager.AsyncRawVersionListObject)entry.getKey();
+                        VersionList.RawVersionList list = (VersionList.RawVersionList)entry.getValue();
+                        object.getVersionList().refreshVersions(list);
+                        latestVersions_.putAll(object.getVersionList().getLatestVersions());
                      }
                   }
                }
@@ -162,6 +161,37 @@ public class VersionManager extends InterruptibleComponent {
 
                return true;
             }
+         }
+      }
+   }
+
+   private boolean checkConsistency(Set set, Entry entry) {
+      VersionList.RawVersionList list = (VersionList.RawVersionList)entry.getValue();
+      if (list == null) {
+         return false;
+      } else {
+         VersionManager.AsyncRawVersionListObject object = (VersionManager.AsyncRawVersionListObject)entry.getKey();
+         if (object.getVersionList().getDependencies().isEmpty()) {
+            return true;
+         } else {
+            Iterator var5 = set.iterator();
+
+            Entry checkEntry;
+            VersionManager.AsyncRawVersionListObject checkObject;
+            do {
+               do {
+                  if (!var5.hasNext()) {
+                     return true;
+                  }
+
+                  checkEntry = (Entry)var5.next();
+               } while(checkEntry.getValue() == list && checkEntry.getKey() == object);
+
+               checkObject = (VersionManager.AsyncRawVersionListObject)checkEntry.getKey();
+            } while(!object.getVersionList().getDependencies().contains(checkObject.getVersionList()) || this.checkConsistency(set, checkEntry));
+
+            this.log(new Object[]{object.getVersionList(), "depends on unavailable", checkObject.getVersionList()});
+            return false;
          }
       }
    }
@@ -380,20 +410,20 @@ public class VersionManager extends InterruptibleComponent {
       VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
       CompleteVersion completeVersion = syncInfo.getCompleteVersion(force);
       if (ely) {
-         CompleteVersion baseDirectory = ((ElyManager)this.manager.getComponent(ElyManager.class)).elyficate(completeVersion);
-         if (syncInfo.getLocal() == completeVersion) {
-            syncInfo.setLocal(baseDirectory);
-         } else {
-            syncInfo.setRemote(baseDirectory);
-         }
-
-         completeVersion = baseDirectory;
+         completeVersion = ((ElyManager)this.manager.getComponent(ElyManager.class)).elyficate(completeVersion);
       }
 
       File baseDirectory = this.localList.getBaseDirectory();
-      Set required = syncInfo.getRequiredDownloadables(baseDirectory, force, ely);
-      container.addAll(required);
-      this.log(new Object[]{"Required for version " + syncInfo.getID() + ':', required});
+      container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, ely));
+      if (ely) {
+         try {
+            container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, false));
+         } catch (IOException var9) {
+            this.log(new Object[]{"Could not get optional downloadables for", syncInfo.getID(), var9});
+         }
+      }
+
+      this.log(new Object[]{"Required for version " + syncInfo.getID() + ':', container.getList()});
       File destination = new File(baseDirectory, "versions/" + completeVersion.getID() + "/" + completeVersion.getID() + ".jar");
       if (!force && destination.isFile()) {
          return container;
@@ -405,7 +435,7 @@ public class VersionManager extends InterruptibleComponent {
       }
    }
 
-   class AsyncRawVersionListObject extends AsyncObject {
+   private class AsyncRawVersionListObject extends AsyncObject {
       private final RemoteVersionList remoteList;
 
       AsyncRawVersionListObject(RemoteVersionList remoteList) {
@@ -420,7 +450,7 @@ public class VersionManager extends InterruptibleComponent {
          try {
             return this.remoteList.getRawList();
          } catch (Exception var2) {
-            VersionManager.this.log(new Object[]{"Error refreshing version list:", var2});
+            VersionManager.this.log(new Object[]{"Error refreshing", this.remoteList, var2});
             throw new AsyncObjectGotErrorException(this, var2);
          }
       }

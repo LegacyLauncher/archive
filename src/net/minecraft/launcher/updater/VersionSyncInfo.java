@@ -57,24 +57,8 @@ public class VersionSyncInfo {
       return this.localVersion;
    }
 
-   public void setLocal(Version version) {
-      this.localVersion = version;
-      if (version instanceof CompleteVersion) {
-         this.completeLocal = (CompleteVersion)version;
-      }
-
-   }
-
    public Version getRemote() {
       return this.remoteVersion;
-   }
-
-   public void setRemote(Version version) {
-      this.remoteVersion = version;
-      if (version instanceof CompleteVersion) {
-         this.completeRemote = (CompleteVersion)version;
-      }
-
    }
 
    public String getID() {
@@ -168,12 +152,12 @@ public class VersionSyncInfo {
    Set getRequiredDownloadables(OS os, File targetDirectory, boolean force, boolean ely) throws IOException {
       HashSet neededFiles = new HashSet();
       CompleteVersion version = this.getCompleteVersion(force);
-      if (ely) {
+      if (ely && !version.isElyfied()) {
          version = TLauncher.getInstance().getElyManager().elyficate(version);
       }
 
-      Repository source = this.hasRemote() ? this.remoteVersion.getSource() : Repository.OFFICIAL_VERSION_REPO;
-      if (!source.isSelectable()) {
+      Repository source = this.hasRemote() ? this.remoteVersion.getSource() : null;
+      if (source != null && !source.isRemote()) {
          return neededFiles;
       } else {
          Iterator var9 = version.getRelevantLibraries().iterator();

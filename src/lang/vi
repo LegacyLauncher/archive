@@ -289,12 +289,12 @@ settings.fontsize.label = Cỡ chữ\:
 settings.fontsize.pt = pt
 settings.slide.list.label = Hình nền\:
 settings.slide.list.prompt = Nhập đường dẫn đến hình ảnh
-settings.console.label = Hiện tên đăng nhập\:
-settings.console.global = Luôn Luôn
-settings.console.minecraft = Khi Minecraft được đưa ra
-settings.console.none = Không bao giờ
-settings.console.fullcommand.label = Toàn bộ lệnh\:
-settings.console.fullcommand = Hiện lệnh bắt đầu bao gồm cả đối số nhạy cảm
+settings.logger.label = Hiện tên đăng nhập\:
+settings.logger.global = Luôn Luôn
+settings.logger.minecraft = Khi Minecraft được đưa ra
+settings.logger.none = Không bao giờ
+settings.logger.fullcommand.label = Toàn bộ lệnh\:
+settings.logger.fullcommand = Hiện lệnh bắt đầu bao gồm cả đối số nhạy cảm
 settings.connection.label = Chất lượng kết nối\:
 settings.connection.good = Nhanh chóng và đáng tin cậy
 settings.connection.normal = Có thể gây lag
@@ -369,24 +369,24 @@ popup.selectall = Chọn tất cả
 popup.copy = Sao chép
 popup.paste = Dán
 popup.copyall = Sao chép tất cả
-# Console
-console = Nhật ký
-console.kill = Huỷ trình Minecraft
-console.close.cancel = Nhật ký sẽ đóng trong %0 s
-console.save = Lưu thành...
-console.save.popup = Lưu thành...
-console.save.exists = Tập tin đã tồn tại\!
-console.save.error = Không thể lưu tập tin\!
-console.clear.popup = Làm sạch
-console.pastebin = Lưu online tại Pastebin...
-console.pastebin.alert.title = Xác nhận
-console.pastebin.alert = Bạn sẽ lưu nhật ký online trên Pastebin.\nNó sẽ không được công bố công khai và dễ tiếp cận và sẽ bị xóa sau 7 ngày. Bạn sẽ phải nhập captcha sau khi gửi, nếu không đăng nhập sẽ bị xóa trong một vài phút.\nBạn có thực sự muốn lưu nhật ký online bằng Pastebin?
-console.pastebin.sent.title = Gửi thành công
-console.pastebin.sent = Bảng điều khiển đã được lưu online thành công trên <a href\="http\://pastebin.com">Pastebin.com</a>.\n\nBạn có muốn mở nó ngay bây giờ?
-console.pastebin.failed.title = Không thể gửi đầu ra
-console.pastebin.failed = Không thể gửi đầu ra console để <a href\="http\://pastebin.com">Pastebin.com</a>. Hãy chắc chắn rằng bạn có thể truy cập vào Internet và các phần mềm chống virus không chặn kết nối.
-console.pastebin.invalid.title = Có cái gì đó sai sai ở đây ...
-console.pastebin.invalid = Không thể gửi đầu ra console.
+# Logger
+logger = Nhật ký
+logger.kill = Huỷ trình Minecraft
+logger.close.cancel = Nhật ký sẽ đóng trong %0 s
+logger.save = Lưu thành...
+logger.save.popup = Lưu thành...
+logger.save.exists = Tập tin đã tồn tại\!
+logger.save.error = Không thể lưu tập tin\!
+logger.clear.popup = Làm sạch
+logger.pastebin = Lưu online tại Pastebin...
+logger.pastebin.alert.title = Xác nhận
+logger.pastebin.alert = Bạn sẽ lưu nhật ký online trên Pastebin.\nNó sẽ không được công bố công khai và dễ tiếp cận và sẽ bị xóa sau 7 ngày. Bạn sẽ phải nhập captcha sau khi gửi, nếu không đăng nhập sẽ bị xóa trong một vài phút.\nBạn có thực sự muốn lưu nhật ký online bằng Pastebin?
+logger.pastebin.sent.title = Gửi thành công
+logger.pastebin.sent = Bảng điều khiển đã được lưu online thành công trên <a href\="http\://pastebin.com">Pastebin.com</a>.\n\nBạn có muốn mở nó ngay bây giờ?
+logger.pastebin.failed.title = Không thể gửi đầu ra
+logger.pastebin.failed = Không thể gửi đầu ra logger để <a href\="http\://pastebin.com">Pastebin.com</a>. Hãy chắc chắn rằng bạn có thể truy cập vào Internet và các phần mềm chống virus không chặn kết nối.
+logger.pastebin.invalid.title = Có cái gì đó sai sai ở đây ...
+logger.pastebin.invalid = Không thể gửi đầu ra logger.
 # Link
 link.error.title = Không thể mở liên kết
 link.error = Không thể mở liên kết . Làm ơn hãy tự mở nó

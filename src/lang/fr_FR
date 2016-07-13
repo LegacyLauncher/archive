@@ -298,12 +298,12 @@ settings.fontsize.label = Taille de police\:
 settings.fontsize.pt = pt\:
 settings.slide.list.label = Image de fond\:
 settings.slide.list.prompt = Entrez le chemin de l'image
-settings.console.label = Montrer l'entrée du jeu\:
-settings.console.global = Toujours
-settings.console.minecraft = Quand Minecraft est lancé
-settings.console.none = Jamais
-settings.console.fullcommand.label = Commande entière\:
-settings.console.fullcommand = Affichage de la commande (terme inclue)
+settings.logger.label = Montrer l'entrée du jeu\:
+settings.logger.global = Toujours
+settings.logger.minecraft = Quand Minecraft est lancé
+settings.logger.none = Jamais
+settings.logger.fullcommand.label = Commande entière\:
+settings.logger.fullcommand = Affichage de la commande (terme inclue)
 settings.connection.label = Qualité de connection\:
 settings.connection.good = Rapide et fiable
 settings.connection.normal = Un peu beugger
@@ -378,24 +378,24 @@ popup.selectall = Tout sélectionner
 popup.copy = Copier
 popup.paste = Coller
 popup.copyall = Tout copier
-# Console
-console = Entrée du jeu
-console.kill = Procédure d'arrêt du jeu
-console.close.cancel = L'entrée du jeu se fermera dans %0 s
-console.save = Enregistrer sous...
-console.save.popup = Enregistrer sous...
-console.save.exists = Ce fichier existe déjà\!
-console.save.error = Impossible de sauvegarder ce fichier\!
-console.clear.popup = Nettoyer
-console.pastebin = Enregistrer en ligne sur Pastebin
-console.pastebin.alert.title = Confirmation
-console.pastebin.alert = Vous allez enregistrer l'entrée du jeu e ligne sur Pastebin. Il ne sera pas publié et accessible au public et sera supprimer au bout de 7 jours. Vous devez saisir le captcha après l'envoie. En d'autre cas l'entrée sera supprimer après quelques minutes.\nVoulez vous enregistrer l'entrée vers Pastebin?
-console.pastebin.sent.title = Envoyer avec succès
-console.pastebin.sent = L'entrée à été sauvegarder en ligne avec succès sur <a href\="http\://pastebin.com">Pastebin.com</a>.\nVoulez vous l'ouvrir?
-console.pastebin.failed.title = Échec de l'envoie.
-console.pastebin.failed = L'entrée n'a été sauvegarder vers <a href\="http\://pastebin.com">Pastebin.com</a>. Vérifiez que vous avez accès à Internet et que votre antivirus ne bloque pas votre connexion.
-console.pastebin.invalid.title = Quelque chose s'est mal passé...
-console.pastebin.invalid = Échec de l'envoie de l'entrée.
+# Logger
+logger = Entrée du jeu
+logger.kill = Procédure d'arrêt du jeu
+logger.close.cancel = L'entrée du jeu se fermera dans %0 s
+logger.save = Enregistrer sous...
+logger.save.popup = Enregistrer sous...
+logger.save.exists = Ce fichier existe déjà\!
+logger.save.error = Impossible de sauvegarder ce fichier\!
+logger.clear.popup = Nettoyer
+logger.pastebin = Enregistrer en ligne sur Pastebin
+logger.pastebin.alert.title = Confirmation
+logger.pastebin.alert = Vous allez enregistrer l'entrée du jeu e ligne sur Pastebin. Il ne sera pas publié et accessible au public et sera supprimer au bout de 7 jours. Vous devez saisir le captcha après l'envoie. En d'autre cas l'entrée sera supprimer après quelques minutes.\nVoulez vous enregistrer l'entrée vers Pastebin?
+logger.pastebin.sent.title = Envoyer avec succès
+logger.pastebin.sent = L'entrée à été sauvegarder en ligne avec succès sur <a href\="http\://pastebin.com">Pastebin.com</a>.\nVoulez vous l'ouvrir?
+logger.pastebin.failed.title = Échec de l'envoie.
+logger.pastebin.failed = L'entrée n'a été sauvegarder vers <a href\="http\://pastebin.com">Pastebin.com</a>. Vérifiez que vous avez accès à Internet et que votre antivirus ne bloque pas votre connexion.
+logger.pastebin.invalid.title = Quelque chose s'est mal passé...
+logger.pastebin.invalid = Échec de l'envoie de l'entrée.
 # Link
 link.error.title = Échec d'ouverture du lien
 link.error = Échec d'ouverture du lien. Veuillez l'ouvrir manuellement\:

@@ -82,6 +82,7 @@ public class ArgumentParser {
       parser.accepts("help", "Prints help");
       parser.accepts("no-terminate", "Do not terminate Bootstrapper if started with it");
       parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
+      parser.accepts("profiles", "Specifies profile file").withRequiredArg();
       parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();
       parser.accepts("version", "Specifies version to run").withRequiredArg();
       parser.accepts("username", "Specifies username").withRequiredArg();

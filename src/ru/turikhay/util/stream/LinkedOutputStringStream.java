@@ -1,9 +1,9 @@
 package ru.turikhay.util.stream;
 
 public class LinkedOutputStringStream extends BufferedOutputStringStream {
-   private Logger logger;
+   private StreamLogger logger;
 
-   public void setLogger(Logger logger) {
+   public void setLogger(StreamLogger logger) {
       this.logger = logger;
    }
 

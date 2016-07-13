@@ -7,6 +7,8 @@ import ru.turikhay.tlauncher.repository.Repository;
 public interface Version {
    String getID();
 
+   String getUrl();
+
    ReleaseType getReleaseType();
 
    Repository getSource();

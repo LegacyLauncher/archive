@@ -1,12 +1,15 @@
 package ru.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,7 +26,9 @@ import ru.turikhay.tlauncher.component.LauncherComponent;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.ExtendedThread;
 
 @ComponentDependence({VersionManager.class, VersionLists.class})
 public class AssetsManager extends LauncherComponent {
@@ -96,36 +101,32 @@ public class AssetsManager extends LauncherComponent {
       File indexesFolder = new File(baseDirectory, "assets/indexes/");
       File indexFile = new File(indexesFolder, indexName + ".json");
       this.log(new Object[]{"Reading indexes from file", indexFile});
-
-      String json;
-      try {
-         json = FileUtil.readFile(indexFile);
-      } catch (Exception var12) {
-         this.log(new Object[]{"Cannot read local resource files list for index:", indexName, var12});
-         return null;
-      }
-
+      FileReader reader = null;
       AssetIndex index = null;
 
-      try {
-         index = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
-      } catch (JsonSyntaxException var11) {
-         this.log(new Object[]{"JSON file is invalid", var11});
-      }
-
-      if (index == null) {
-         this.log(new Object[]{"Cannot read data from JSON file."});
-         return null;
-      } else {
-         Iterator var10 = index.getUniqueObjects().iterator();
-
-         while(var10.hasNext()) {
-            AssetIndex.AssetObject object = (AssetIndex.AssetObject)var10.next();
-            result.add(object);
+      AssetIndex.AssetObject object;
+      label55: {
+         try {
+            index = (AssetIndex)this.gson.fromJson((Reader)(reader = new FileReader(indexFile)), (Class)AssetIndex.class);
+            break label55;
+         } catch (Exception var14) {
+            this.log(new Object[]{"could not read index file", var14});
+            object = null;
+         } finally {
+            U.close(reader);
          }
 
-         return result;
+         return object;
       }
+
+      Iterator var10 = index.getUniqueObjects().iterator();
+
+      while(var10.hasNext()) {
+         object = (AssetIndex.AssetObject)var10.next();
+         result.add(object);
+      }
+
+      return result;
    }
 
    private List getRemoteResourceFilesList(CompleteVersion version, File baseDirectory, boolean save) throws IOException {
@@ -138,35 +139,60 @@ public class AssetsManager extends LauncherComponent {
       File assets = new File(baseDirectory, "assets");
       File indexesFolder = new File(assets, "indexes");
       File indexFile = new File(indexesFolder, indexName + ".json");
-      String json;
+      Object json;
       if (version.getAssetIndex().getUrl() == null) {
          this.log(new Object[]{"Reading from repository..."});
-         json = Repository.OFFICIAL_VERSION_REPO.getUrl("indexes/" + indexName + ".json");
+         json = Repository.OFFICIAL_VERSION_REPO.read("indexes/" + indexName + ".json");
       } else {
          this.log(new Object[]{"Reading from index:", version.getAssetIndex().getUrl()});
-         json = IOUtils.toString(version.getAssetIndex().getUrl());
+         json = IOUtils.toBufferedReader(new InputStreamReader(version.getAssetIndex().getUrl().openStream(), "UTF-8"));
       }
 
+      File tempIndexFile = null;
       if (save) {
-         synchronized(this.assetsFlushLock) {
-            FileUtil.writeFile(indexFile, json);
+         FileOutputStream out = null;
+         tempIndexFile = File.createTempFile("tlauncher-assets", (String)null);
+         tempIndexFile.deleteOnExit();
+
+         try {
+            IOUtils.copy((Reader)json, (OutputStream)(out = new FileOutputStream(tempIndexFile)));
+         } finally {
+            U.close(out);
          }
+
+         json = new FileReader(tempIndexFile);
       }
 
-      AssetIndex index1 = (AssetIndex)this.gson.fromJson(json, AssetIndex.class);
-      Iterator var12 = index1.getUniqueObjects().iterator();
+      AssetIndex index = (AssetIndex)this.gson.fromJson((Reader)json, (Class)AssetIndex.class);
+      Iterator var12 = index.getUniqueObjects().iterator();
 
       while(var12.hasNext()) {
          AssetIndex.AssetObject object = (AssetIndex.AssetObject)var12.next();
          result.add(object);
       }
 
+      if (save) {
+         synchronized(this.assetsFlushLock) {
+            FileInputStream in = null;
+            FileOutputStream out = null;
+
+            try {
+               IOUtils.copy((InputStream)(in = new FileInputStream(tempIndexFile)), (OutputStream)(out = new FileOutputStream(indexFile)));
+            } finally {
+               U.close(in, out);
+               tempIndexFile.delete();
+            }
+         }
+
+         this.log(new Object[]{"Assets index has been saved into file:", indexFile});
+      }
+
       return result;
    }
 
-   List checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
+   public AssetsManager.ResourceChecker checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
       this.log(new Object[]{"Checking resources..."});
-      ArrayList r = new ArrayList();
+      new ArrayList();
       List list;
       if (local) {
          list = this.getLocalResourceFilesList(version, baseDirectory);
@@ -176,23 +202,14 @@ public class AssetsManager extends LauncherComponent {
 
       if (list == null) {
          this.log(new Object[]{"Cannot get assets list. Aborting."});
-         return r;
+         return null;
       } else {
          this.log(new Object[]{"Fast comparing:", fast});
-         Iterator var8 = list.iterator();
-
-         while(var8.hasNext()) {
-            AssetIndex.AssetObject resource = (AssetIndex.AssetObject)var8.next();
-            if (!checkResource(baseDirectory, resource, fast)) {
-               r.add(resource);
-            }
-         }
-
-         return r;
+         return new AssetsManager.ResourceChecker(baseDirectory, list, fast);
       }
    }
 
-   public List checkResources(CompleteVersion version, boolean fast) {
+   public AssetsManager.ResourceChecker checkResources(CompleteVersion version, boolean fast) {
       return this.checkResources(version, ((VersionLists)this.manager.getComponent(VersionLists.class)).getLocal().getBaseDirectory(), false, fast);
    }
 
@@ -245,6 +262,82 @@ public class AssetsManager extends LauncherComponent {
 
       if (!expectHash.equals(hash)) {
          throw new IOException("could not decompress asset got: " + hash + ", expected: " + expectHash);
+      }
+   }
+
+   public final class ResourceChecker extends ExtendedThread {
+      final File baseDirectory;
+      final boolean fast;
+      final List objectList;
+      private volatile List result;
+      private volatile AssetIndex.AssetObject current;
+      private long delta;
+      private Exception e;
+
+      ResourceChecker(File baseDirectory, List objectList, boolean fast) {
+         this.baseDirectory = baseDirectory;
+         this.objectList = objectList;
+         this.fast = fast;
+         this.startAndWait();
+         this.unlockThread("start");
+      }
+
+      public boolean checkWorking() throws InterruptedException {
+         if (this.isInterrupted()) {
+            throw new InterruptedException();
+         } else {
+            return this.result == null && this.isAlive();
+         }
+      }
+
+      public AssetIndex.AssetObject getCurrent() {
+         return this.current;
+      }
+
+      public List getAssetList() {
+         return this.result;
+      }
+
+      public long getDelta() {
+         return this.delta;
+      }
+
+      public Exception getError() {
+         return this.e;
+      }
+
+      public void run() {
+         this.checkCurrent();
+         this.lockThread("start");
+
+         try {
+            this.check();
+         } catch (Exception var2) {
+            this.e = var2;
+         }
+
+      }
+
+      private void check() {
+         List result = new ArrayList();
+         Time.start();
+         Iterator var2 = this.objectList.iterator();
+
+         while(var2.hasNext()) {
+            AssetIndex.AssetObject object = (AssetIndex.AssetObject)var2.next();
+            this.current = object;
+            if (!AssetsManager.checkResource(this.baseDirectory, object, this.fast)) {
+               if (Thread.interrupted()) {
+                  throw new RuntimeException("interrupted");
+               }
+
+               result.add(object);
+            }
+         }
+
+         this.current = null;
+         this.delta = Time.stop();
+         this.result = result;
       }
    }
 }

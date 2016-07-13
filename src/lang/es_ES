@@ -290,12 +290,12 @@ settings.fontsize.label = Tamaño de letra\:
 settings.fontsize.pt = pt
 settings.slide.list.label = Imagen de fondo\:
 settings.slide.list.prompt = Ingrese dirección de imagen
-settings.console.label = Mostrar log
-settings.console.global = Siempre
-settings.console.minecraft = Cuando Minecraft ha iniciado
-settings.console.none = Nunca
-settings.console.fullcommand.label = Comando completo\:
-settings.console.fullcommand = Muestre el comando al iniciar
+settings.logger.label = Mostrar log
+settings.logger.global = Siempre
+settings.logger.minecraft = Cuando Minecraft ha iniciado
+settings.logger.none = Nunca
+settings.logger.fullcommand.label = Comando completo\:
+settings.logger.fullcommand = Muestre el comando al iniciar
 settings.connection.label = Calidad de conexión\:
 settings.connection.good = Rápida y fluida
 settings.connection.normal = Un poco de lag a veces
@@ -370,24 +370,24 @@ popup.selectall = Seleccionar todo
 popup.copy = Copiar
 popup.paste = Pegar
 popup.copyall = Copiar todo
-# Console
-console = Historial
-console.kill = Cierre forzado de Minecraft
-console.close.cancel = El historial se cerrará en %0 s
-console.save = Guardar como...
-console.save.popup = Guardar como...
-console.save.exists = ¡El archivo ya existe\!
-console.save.error = ¡No se puede guardar el archivo\!
-console.clear.popup = Limpiar
-console.pastebin = Guardar en linea en Pastebin...
-console.pastebin.alert.title = Confirmación
-console.pastebin.alert = Usted guardará el log en linea en Pastebin. Esto no será público ni accesible publicamente y será borrado en 7 días. Debes ingresar el codigo captcha antes de enviar, de otra forma el log será borrado en pocos minutos.\n¿Desea realmente guardar el log usando Pastebin?
-console.pastebin.sent.title = Envio satisfactorio
-console.pastebin.sent = La consola fue guardada en <a href\="http\://pastebin.com">Pastebin.com</a>.\n\n¿Desea abrirlo ahora?
-console.pastebin.failed.title = No se puede enviar salida de consola
-console.pastebin.failed = No se puede enviar el registro  <a href\="http\://pastebin.com">Pastebin.com</a>. Asegúrate que tienes acceso a Internet y que el antivirus no bloquea la conexión.
-console.pastebin.invalid.title = Algo está yendo mal...
-console.pastebin.invalid = No se puede enviar el registro.
+# Logger
+logger = Historial
+logger.kill = Cierre forzado de Minecraft
+logger.close.cancel = El historial se cerrará en %0 s
+logger.save = Guardar como...
+logger.save.popup = Guardar como...
+logger.save.exists = ¡El archivo ya existe\!
+logger.save.error = ¡No se puede guardar el archivo\!
+logger.clear.popup = Limpiar
+logger.pastebin = Guardar en linea en Pastebin...
+logger.pastebin.alert.title = Confirmación
+logger.pastebin.alert = Usted guardará el log en linea en Pastebin. Esto no será público ni accesible publicamente y será borrado en 7 días. Debes ingresar el codigo captcha antes de enviar, de otra forma el log será borrado en pocos minutos.\n¿Desea realmente guardar el log usando Pastebin?
+logger.pastebin.sent.title = Envio satisfactorio
+logger.pastebin.sent = La consola fue guardada en <a href\="http\://pastebin.com">Pastebin.com</a>.\n\n¿Desea abrirlo ahora?
+logger.pastebin.failed.title = No se puede enviar salida de consola
+logger.pastebin.failed = No se puede enviar el registro  <a href\="http\://pastebin.com">Pastebin.com</a>. Asegúrate que tienes acceso a Internet y que el antivirus no bloquea la conexión.
+logger.pastebin.invalid.title = Algo está yendo mal...
+logger.pastebin.invalid = No se puede enviar el registro.
 # Link
 link.error.title = No se puede abrir el link
 link.error = No se puede abrir el link, ábralo manualmente

@@ -11,7 +11,39 @@ public class MinecraftUtil {
    private static FileExplorer explorer;
    private static JFrame parent;
 
-   public static File getWorkingDirectory() {
+   private static File chooseWorkingDir(String path) {
+      File defaultDirectory = getDefaultWorkingDirectory();
+      File directory = new File(path);
+
+      do {
+         try {
+            FileUtil.createFolder(directory);
+         } catch (IOException var7) {
+            Alert.showLocError("version.dir.noaccess", directory);
+            File preferred = new File("/");
+            if (!directory.equals(defaultDirectory)) {
+               try {
+                  FileUtil.createFolder(defaultDirectory);
+                  preferred = defaultDirectory;
+               } catch (IOException var6) {
+                  U.log("Can't even create default folder. AM I IN HELL? AAAAAAAAAA!", var6);
+               }
+            }
+
+            directory = showExplorer(preferred);
+         }
+
+         if (directory == null) {
+            Alert.showLocWarning("version.dir.exit");
+            TLauncher.kill();
+            return null;
+         }
+      } while(!directory.isDirectory() || !directory.canWrite());
+
+      return directory;
+   }
+
+   public static File getWorkingDirectory(boolean choose) {
       File defaultDirectory = getDefaultWorkingDirectory();
       if (TLauncher.getInstance() == null) {
          return defaultDirectory;
@@ -20,36 +52,13 @@ public class MinecraftUtil {
          if (path == null) {
             return defaultDirectory;
          } else {
-            File directory = new File(path);
-
-            do {
-               try {
-                  FileUtil.createFolder(directory);
-               } catch (IOException var7) {
-                  Alert.showLocError("version.dir.noaccess", directory);
-                  File preferred = new File("/");
-                  if (!directory.equals(defaultDirectory)) {
-                     try {
-                        FileUtil.createFolder(defaultDirectory);
-                        preferred = defaultDirectory;
-                     } catch (IOException var6) {
-                        U.log("Can't even create default folder. Am I in Hell? TELL ME THE TRUTH!", var6);
-                     }
-                  }
-
-                  directory = showExplorer(preferred);
-               }
-
-               if (directory == null) {
-                  Alert.showLocWarning("version.dir.exit");
-                  TLauncher.kill();
-                  return null;
-               }
-            } while(!directory.isDirectory() || !directory.canWrite());
-
-            return directory;
+            return choose ? chooseWorkingDir(path) : new File(path);
          }
       }
+   }
+
+   public static File getWorkingDirectory() {
+      return getWorkingDirectory(true);
    }
 
    private static File showExplorer(File preferred) {
@@ -96,12 +105,16 @@ public class MinecraftUtil {
       return file;
    }
 
-   public static File getSystemRelatedDirectory(String path) {
-      if (!OS.is(OS.OSX, OS.UNKNOWN)) {
+   public static File getSystemRelatedDirectory(String path, boolean hide) {
+      if (hide && !OS.is(OS.OSX, OS.UNKNOWN)) {
          path = '.' + path;
       }
 
       return getSystemRelatedFile(path);
+   }
+
+   public static File getSystemRelatedDirectory(String path) {
+      return getSystemRelatedDirectory(path, true);
    }
 
    public static File getDefaultWorkingDirectory() {

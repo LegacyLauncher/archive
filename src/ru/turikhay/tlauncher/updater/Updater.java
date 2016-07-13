@@ -107,7 +107,7 @@ public class Updater {
 
          this.log("Request time:", System.currentTimeMillis() - startTime, "ms");
          if (result != null) {
-            this.log("Successed!");
+            this.log("Succeed!");
             break;
          }
       }
@@ -215,6 +215,8 @@ public class Updater {
 
    public static class UpdaterResponse {
       private Update update;
+      private Update beta;
+      private Notices notices;
       private Notices ads;
       private boolean allowStats;
       private long refreshTime;
@@ -224,11 +226,11 @@ public class Updater {
       }
 
       public final Update getUpdate() {
-         return this.update;
+         return TLauncher.isBeta() && this.beta != null ? this.beta : this.update;
       }
 
       public final Notices getNotices() {
-         return this.ads;
+         return this.notices == null ? this.ads : this.notices;
       }
 
       public final boolean getStatsAllowed() {
@@ -240,7 +242,7 @@ public class Updater {
       }
 
       public String toString() {
-         return "UpdaterResponse{update=" + this.update + ", notices=" + this.ads + "}";
+         return "UpdaterResponse{update=" + this.getUpdate() + ", notices=" + this.getNotices() + "}";
       }
    }
 

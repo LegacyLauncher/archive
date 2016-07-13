@@ -31,14 +31,17 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.console.Console;
+import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
+import ru.turikhay.tlauncher.ui.frames.NewFolderFrame;
 import ru.turikhay.tlauncher.ui.listener.MinecraftUIListener;
 import ru.turikhay.tlauncher.ui.listener.RequiredUpdateListener;
 import ru.turikhay.tlauncher.ui.listener.VersionManagerUIListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.util.DXDiagScanner;
+import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
@@ -53,7 +56,7 @@ public class TLauncher {
    private static String[] sargs;
    private static File directory;
    private static PrintLogger print;
-   private static Console console;
+   private static Logger logger;
    private static Gson gson;
    private LangConfiguration lang;
    private Configuration settings;
@@ -88,12 +91,26 @@ public class TLauncher {
       }
 
       this.settings.set("gui.systemlookandfeel", useSystemLookAndFeel, false);
-      U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_CONSOLE);
-      console = new Console(this.settings, print, "Logger", this.settings.getConsoleType() == Configuration.ConsoleType.GLOBAL);
-      console.setCloseAction(Console.CloseAction.KILL);
-      Console.updateLocale();
+      U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_LOGGER);
+      logger = new Logger(this.settings, print, this.lang.get("logger"), this.settings.getLoggerType() == Configuration.LoggerType.GLOBAL);
+      logger.setCloseAction(Logger.CloseAction.KILL);
+      logger.frame.bottom.folder.setEnabled(true);
+      Logger.updateLocale();
       if (this.args.has("help")) {
          U.log("Help with arguments:\n", ArgumentParser.getHelp());
+      }
+
+      if (this.settings.isFirstRun()) {
+         U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_FIRSTRUN);
+         (new FirstRunNotice()).showAndWait();
+         File currentDir = MinecraftUtil.getWorkingDirectory(false);
+         U.log("Current dir:", currentDir);
+         if (NewFolderFrame.shouldWeMoveFrom(currentDir)) {
+            currentDir = NewFolderFrame.selectDestination();
+            if (currentDir != null) {
+               (new NewFolderFrame(this, currentDir)).showAndWait();
+            }
+         }
       }
 
       U.setLoadingStep(Bootstrapper.LoadingStep.LOADING_MANAGERS);
@@ -105,7 +122,7 @@ public class TLauncher {
       this.manager.loadComponent(ComponentManagerListenerHelper.class);
       this.init();
       this.ready = true;
-      U.log("Started! (" + Time.stop(this) + " ms.)");
+      U.log("Started! (" + Time.stop((Object)this) + " ms.)");
       U.setLoadingStep(Bootstrapper.LoadingStep.SUCCESS);
    }
 
@@ -136,7 +153,10 @@ public class TLauncher {
             }
          }
       })).start();
-      DXDiagScanner.scheduleScan();
+      if (this.settings.getBoolean("windows.dxdiag")) {
+         DXDiagScanner.scheduleScan();
+      }
+
    }
 
    public Downloader getDownloader() {
@@ -159,8 +179,8 @@ public class TLauncher {
       return this.frame;
    }
 
-   public static Console getConsole() {
-      return console;
+   public static Logger getLogger() {
+      return logger;
    }
 
    public static Gson getGson() {
@@ -202,8 +222,8 @@ public class TLauncher {
 
       Localizable.setLang(this.lang);
       Alert.prepareLocal();
-      if (console != null) {
-         console.setName(this.lang.get("console"));
+      if (logger != null) {
+         logger.setName(this.lang.get("logger"));
       }
 
    }
@@ -266,7 +286,7 @@ public class TLauncher {
       U.setPrefix(">>");
       MirroredLinkedOutputStringStream stream = new MirroredLinkedOutputStringStream() {
          public void flush() {
-            if (TLauncher.console == null) {
+            if (TLauncher.logger == null) {
                try {
                   this.getMirror().flush();
                } catch (IOException var2) {
@@ -331,6 +351,8 @@ public class TLauncher {
 
       U.log("Machine info:", OS.getSummary());
       U.log("Startup time:", DateFormat.getDateTimeInstance(3, 1).format(new Date()));
+      U.log("Directory:", new File(""));
+      U.log("Executable location:", FileUtil.getRunningJar());
       U.log("---");
       sargs = args;
       new TLauncher(ArgumentParser.parseArgs(args));
@@ -357,11 +379,11 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.731D;
+      return 1.761D;
    }
 
    public static boolean isBeta() {
-      return false;
+      return true;
    }
 
    public static boolean getDebug() {

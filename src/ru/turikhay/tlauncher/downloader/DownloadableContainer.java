@@ -6,13 +6,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import ru.turikhay.tlauncher.ui.console.Console;
+import ru.turikhay.tlauncher.ui.logger.Logger;
 
 public class DownloadableContainer {
    private final List handlers = Collections.synchronizedList(new ArrayList());
    private final List errors = Collections.synchronizedList(new ArrayList());
    final List list = Collections.synchronizedList(new ArrayList());
-   private Console console;
+   private Logger logger;
    private final AtomicInteger sum = new AtomicInteger();
    private boolean locked;
    private boolean aborted;
@@ -49,9 +49,11 @@ public class DownloadableContainer {
                throw new NullPointerException("Downloadable at" + i + " is NULL!");
             }
 
-            this.list.add(d);
-            d.setContainer(this);
-            this.sum.incrementAndGet();
+            if (!this.list.contains(d)) {
+               this.list.add(d);
+               d.setContainer(this);
+               this.sum.incrementAndGet();
+            }
          }
 
       }
@@ -61,17 +63,17 @@ public class DownloadableContainer {
       return Collections.unmodifiableList(this.errors);
    }
 
-   public Console getConsole() {
-      return this.console;
+   public Logger getLogger() {
+      return this.logger;
    }
 
-   public boolean hasConsole() {
-      return this.console != null;
+   public boolean hasLogger() {
+      return this.logger != null;
    }
 
-   public void setConsole(Console console) {
+   public void setLogger(Logger logger) {
       this.checkLocked();
-      this.console = console;
+      this.logger = logger;
    }
 
    public boolean isAborted() {

@@ -19,10 +19,6 @@ public class SlideBackgroundThread extends LoopedThread {
    final Slide defaultSlide;
    private Slide currentSlide;
 
-   public static void alert() {
-      U.log(instance.defaultSlide, instance.currentSlide);
-   }
-
    SlideBackgroundThread(SlideBackground background) {
       super("SlideBackgroundThread");
       instance = this;

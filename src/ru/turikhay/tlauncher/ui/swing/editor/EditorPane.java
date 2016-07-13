@@ -21,7 +21,7 @@ public class EditorPane extends JEditorPane {
 
       StyleSheet css = new StyleSheet();
       css.importStyleSheet(this.getClass().getResource("styles.css"));
-      css.addRule("body { font-family: " + font.getFamily() + "; font-size: " + font.getSize() + "pt; } " + "a { text-decoration: underline; }");
+      css.addRule("body { font-family: " + font.getFamily() + "; font-size: " + font.getSize() + "pt; } a { text-decoration: underline; }");
       ExtendedHTMLEditorKit html = new ExtendedHTMLEditorKit();
       html.setStyleSheet(css);
       this.getDocument().putProperty("IgnoreCharsetDirective", Boolean.TRUE);

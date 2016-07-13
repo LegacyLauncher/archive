@@ -16,7 +16,7 @@ public class RequiredUpdateListener implements UpdaterListener {
 
    public void onUpdaterSucceeded(Updater.SearchSucceeded succeeded) {
       Update update = succeeded.getResponse().getUpdate();
-      if (update.isRequired()) {
+      if (update.isApplicable() && update.isRequired()) {
          String prefix = "updater.required.found.";
          String title = prefix + "title";
          String message = prefix + "message";

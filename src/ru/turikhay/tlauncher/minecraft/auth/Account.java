@@ -237,6 +237,11 @@ public class Account {
 
    public String toDebugString() {
       Map map = this.createMap();
+      if (map.containsKey("userProperties")) {
+         map.remove("userProperties");
+         map.put("userProperties", "(not null)");
+      }
+
       if (map.containsKey("accessToken")) {
          map.remove("accessToken");
          map.put("accessToken", "(not null)");

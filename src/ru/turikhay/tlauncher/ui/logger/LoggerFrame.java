@@ -1,4 +1,4 @@
-package ru.turikhay.tlauncher.ui.console;
+package ru.turikhay.tlauncher.ui.logger;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -34,20 +34,20 @@ import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.pastebin.Paste;
 import ru.turikhay.util.pastebin.PasteListener;
 
-public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteListener {
-   public final Console console;
+public class LoggerFrame extends JFrame implements LocalizableComponent, PasteListener {
+   public final Logger logger;
    public final JTextArea textarea;
    public final JScrollBar vScrollbar;
-   public final ConsoleFrameBottom bottom;
-   public final ConsoleFrame.ConsoleTextPopup popup;
+   public final LoggerFrameBottom bottom;
+   public final LoggerFrame.LoggerTextPopup popup;
    private int lastWindowWidth;
    private int scrollBarValue;
    private boolean scrollDown;
    private final Object busy = new Object();
    boolean hiding;
 
-   ConsoleFrame(Console console) {
-      this.console = console;
+   LoggerFrame(Logger logger) {
+      this.logger = logger;
       this.textarea = new JTextArea();
       this.textarea.setLineWrap(true);
       this.textarea.setEditable(false);
@@ -59,7 +59,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteL
       this.textarea.setBackground(Color.black);
       this.textarea.setSelectionColor(Color.gray);
       ((DefaultCaret)this.textarea.getCaret()).setUpdatePolicy(2);
-      this.popup = new ConsoleFrame.ConsoleTextPopup();
+      this.popup = new LoggerFrame.LoggerTextPopup();
       this.textarea.addMouseListener(this.popup);
       ScrollPane scrollPane = new ScrollPane(this.textarea);
       scrollPane.setBorder((Border)null);
@@ -68,27 +68,27 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteL
       final BoundedRangeModel vsbModel = this.vScrollbar.getModel();
       this.vScrollbar.addAdjustmentListener(new AdjustmentListener() {
          public void adjustmentValueChanged(AdjustmentEvent e) {
-            if (ConsoleFrame.this.getWidth() == ConsoleFrame.this.lastWindowWidth) {
+            if (LoggerFrame.this.getWidth() == LoggerFrame.this.lastWindowWidth) {
                int nv = e.getValue();
-               if (nv < ConsoleFrame.this.scrollBarValue) {
-                  ConsoleFrame.this.scrollDown = false;
+               if (nv < LoggerFrame.this.scrollBarValue) {
+                  LoggerFrame.this.scrollDown = false;
                } else if (nv == vsbModel.getMaximum() - vsbModel.getExtent()) {
-                  ConsoleFrame.this.scrollDown = true;
+                  LoggerFrame.this.scrollDown = true;
                }
 
-               ConsoleFrame.this.scrollBarValue = nv;
+               LoggerFrame.this.scrollBarValue = nv;
             }
 
          }
       });
       this.addComponentListener(new ComponentAdapter() {
          public void componentResized(ComponentEvent e) {
-            ConsoleFrame.this.lastWindowWidth = ConsoleFrame.this.getWidth();
+            LoggerFrame.this.lastWindowWidth = LoggerFrame.this.getWidth();
          }
       });
       this.getContentPane().setLayout(new BorderLayout());
       this.getContentPane().add(scrollPane, "Center");
-      this.getContentPane().add(this.bottom = new ConsoleFrameBottom(this), "South");
+      this.getContentPane().add(this.bottom = new LoggerFrameBottom(this), "South");
       SwingUtil.setFavicons(this);
    }
 
@@ -120,7 +120,7 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteL
    public void scrollDown() {
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {
-            ConsoleFrame.this.vScrollbar.setValue(ConsoleFrame.this.vScrollbar.getMaximum());
+            LoggerFrame.this.vScrollbar.setValue(LoggerFrame.this.vScrollbar.getMaximum());
          }
       });
    }
@@ -142,41 +142,41 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteL
    void hideIn(final long millis) {
       this.hiding = true;
       this.bottom.closeCancelButton.setVisible(true);
-      this.bottom.closeCancelButton.setText("console.close.cancel", millis / 1000L);
+      this.bottom.closeCancelButton.setText("logger.close.cancel", millis / 1000L);
       AsyncThread.execute(new Runnable() {
          long remaining = millis;
 
          public void run() {
-            ConsoleFrame.this.bottom.closeCancelButton.setText("console.close.cancel", this.remaining / 1000L);
+            LoggerFrame.this.bottom.closeCancelButton.setText("logger.close.cancel", this.remaining / 1000L);
 
-            while(ConsoleFrame.this.hiding && this.remaining > 1999L) {
+            while(LoggerFrame.this.hiding && this.remaining > 1999L) {
                this.remaining -= 1000L;
-               ConsoleFrame.this.bottom.closeCancelButton.setText("console.close.cancel", this.remaining / 1000L);
+               LoggerFrame.this.bottom.closeCancelButton.setText("logger.close.cancel", this.remaining / 1000L);
                U.sleepFor(1000L);
             }
 
-            if (ConsoleFrame.this.hiding) {
-               ConsoleFrame.this.dispose();
+            if (LoggerFrame.this.hiding) {
+               LoggerFrame.this.dispose();
             }
 
          }
       });
    }
 
-   public class ConsoleTextPopup extends TextPopup {
+   public class LoggerTextPopup extends TextPopup {
       private final Action saveAllAction = new EmptyAction() {
          public void actionPerformed(ActionEvent e) {
-            ConsoleFrame.this.console.saveAs();
+            LoggerFrame.this.logger.saveAs();
          }
       };
       private final Action pastebinAction = new EmptyAction() {
          public void actionPerformed(ActionEvent e) {
-            ConsoleFrame.this.console.sendPaste();
+            LoggerFrame.this.logger.sendPaste();
          }
       };
       private final Action clearAllAction = new EmptyAction() {
          public void actionPerformed(ActionEvent e) {
-            ConsoleTextPopup.this.onClearCalled();
+            LoggerTextPopup.this.onClearCalled();
          }
       };
 
@@ -186,16 +186,16 @@ public class ConsoleFrame extends JFrame implements LocalizableComponent, PasteL
             return null;
          } else {
             menu.addSeparator();
-            menu.add(this.saveAllAction).setText(Localizable.get("console.save.popup"));
-            menu.add(this.pastebinAction).setText(Localizable.get("console.pastebin"));
+            menu.add(this.saveAllAction).setText(Localizable.get("logger.save.popup"));
+            menu.add(this.pastebinAction).setText(Localizable.get("logger.pastebin"));
             menu.addSeparator();
-            menu.add(this.clearAllAction).setText(Localizable.get("console.clear.popup"));
+            menu.add(this.clearAllAction).setText(Localizable.get("logger.clear.popup"));
             return menu;
          }
       }
 
       protected void onClearCalled() {
-         ConsoleFrame.this.console.clear();
+         LoggerFrame.this.logger.clear();
       }
    }
 }

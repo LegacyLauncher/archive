@@ -1,4 +1,4 @@
-package ru.turikhay.tlauncher.ui.console;
+package ru.turikhay.tlauncher.ui.logger;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -16,8 +16,8 @@ import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
-public class ConsoleFrameBottom extends BorderPanel implements LocalizableComponent {
-   private final ConsoleFrame frame;
+public class LoggerFrameBottom extends BorderPanel implements LocalizableComponent {
+   private final LoggerFrame frame;
    public final LocalizableButton closeCancelButton;
    public final ExtendedButton folder;
    public final ExtendedButton save;
@@ -25,17 +25,17 @@ public class ConsoleFrameBottom extends BorderPanel implements LocalizableCompon
    public final ExtendedButton kill;
    File openFolder;
 
-   ConsoleFrameBottom(ConsoleFrame fr) {
+   LoggerFrameBottom(LoggerFrame fr) {
       this.frame = fr;
       this.setOpaque(true);
       this.setBackground(Color.darkGray);
-      this.closeCancelButton = new LocalizableButton("console.close.cancel");
+      this.closeCancelButton = new LocalizableButton("logger.close.cancel");
       this.closeCancelButton.setVisible(false);
       this.closeCancelButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            if (ConsoleFrameBottom.this.closeCancelButton.isVisible()) {
-               ConsoleFrameBottom.this.frame.hiding = false;
-               ConsoleFrameBottom.this.closeCancelButton.setVisible(false);
+            if (LoggerFrameBottom.this.closeCancelButton.isVisible()) {
+               LoggerFrameBottom.this.frame.hiding = false;
+               LoggerFrameBottom.this.closeCancelButton.setVisible(false);
             }
 
          }
@@ -43,24 +43,23 @@ public class ConsoleFrameBottom extends BorderPanel implements LocalizableCompon
       this.setCenter(this.closeCancelButton);
       this.folder = this.newButton("folder.png", new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            OS.openFolder(ConsoleFrameBottom.this.openFolder == null ? MinecraftUtil.getWorkingDirectory() : ConsoleFrameBottom.this.openFolder);
+            OS.openFolder(LoggerFrameBottom.this.openFolder == null ? MinecraftUtil.getWorkingDirectory() : LoggerFrameBottom.this.openFolder);
          }
       });
-      this.folder.setEnabled("Logger".equals(this.frame.console.getName()));
       this.save = this.newButton("document-save-as.png", new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            ConsoleFrameBottom.this.frame.console.saveAs();
+            LoggerFrameBottom.this.frame.logger.saveAs();
          }
       });
       this.pastebin = this.newButton("mail-attachment.png", new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            ConsoleFrameBottom.this.frame.console.sendPaste();
+            LoggerFrameBottom.this.frame.logger.sendPaste();
          }
       });
       this.kill = this.newButton("process-stop.png", new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            ConsoleFrameBottom.this.frame.console.launcher.killProcess();
-            ConsoleFrameBottom.this.kill.setEnabled(false);
+            LoggerFrameBottom.this.frame.logger.launcher.killProcess();
+            LoggerFrameBottom.this.kill.setEnabled(false);
          }
       });
       this.kill.setEnabled(false);
@@ -79,8 +78,8 @@ public class ConsoleFrameBottom extends BorderPanel implements LocalizableCompon
    }
 
    public void updateLocale() {
-      this.save.setToolTipText(Localizable.get("console.save"));
-      this.pastebin.setToolTipText(Localizable.get("console.pastebin"));
-      this.kill.setToolTipText(Localizable.get("console.kill"));
+      this.save.setToolTipText(Localizable.get("logger.save"));
+      this.pastebin.setToolTipText(Localizable.get("logger.pastebin"));
+      this.kill.setToolTipText(Localizable.get("logger.kill"));
    }
 }

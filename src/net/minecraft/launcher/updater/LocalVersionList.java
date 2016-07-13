@@ -1,11 +1,15 @@
 package net.minecraft.launcher.updater;
 
+import com.google.gson.JsonSyntaxException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.util.Collections;
 import java.util.Iterator;
 import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
@@ -48,7 +52,7 @@ public class LocalVersionList extends StreamVersionList {
             File jsonFile = new File(directory, id + ".json");
             if (directory.isDirectory() && jsonFile.isFile()) {
                try {
-                  CompleteVersion ex = (CompleteVersion)this.gson.fromJson(this.getUrl("versions/" + id + "/" + id + ".json"), CompleteVersion.class);
+                  CompleteVersion ex = (CompleteVersion)this.gson.fromJson((Reader)this.getUrl("versions/" + id + "/" + id + ".json"), (Class)CompleteVersion.class);
                   if (ex == null) {
                      this.log(new Object[]{"JSON descriptor of version \"" + id + "\" in NULL, it won't be added in list as local."});
                   } else {
@@ -104,5 +108,19 @@ public class LocalVersionList extends StreamVersionList {
 
    protected InputStream getInputStream(String uri) throws IOException {
       return new FileInputStream(new File(this.baseDirectory, uri));
+   }
+
+   public CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
+      if (version instanceof CompleteVersion) {
+         return (CompleteVersion)version;
+      } else if (version == null) {
+         throw new NullPointerException("Version cannot be NULL!");
+      } else {
+         CompleteVersion complete = (CompleteVersion)this.gson.fromJson((Reader)this.getUrl("versions/" + version.getID() + "/" + version.getID() + ".json"), (Class)CompleteVersion.class);
+         complete.setID(version.getID());
+         complete.setVersionList(this);
+         Collections.replaceAll(this.versions, version, complete);
+         return complete;
+      }
    }
 }

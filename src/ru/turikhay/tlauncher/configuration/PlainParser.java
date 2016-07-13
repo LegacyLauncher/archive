@@ -29,9 +29,9 @@ class PlainParser {
                if (!Configuration.ActionOnLaunch.parse(value)) {
                   throw new ParseException("Cannot parse ActionOnLaunch");
                }
-            } else if (defaultValue instanceof Configuration.ConsoleType) {
-               if (!Configuration.ConsoleType.parse(value)) {
-                  throw new ParseException("Cannot parse ConsoleType");
+            } else if (defaultValue instanceof Configuration.LoggerType) {
+               if (!Configuration.LoggerType.parse(value)) {
+                  throw new ParseException("Cannot parse LoggerType");
                }
             } else if (defaultValue instanceof Configuration.ConnectionQuality) {
                if (!Configuration.ConnectionQuality.parse(value)) {

@@ -31,7 +31,7 @@ public class CrashDescriptor {
       Crash crash = new Crash();
       String output = this.launcher.getOutput();
       if (output == null) {
-         this.log("Could not get console output.");
+         this.log("Could not get logger output.");
          return crash;
       } else {
          Pattern filePattern = container.getPattern("crash");
@@ -43,7 +43,7 @@ public class CrashDescriptor {
          try {
             scanner = new Scanner(output);
 
-            label242:
+            label247:
             while(scanner.hasNextLine()) {
                String line = scanner.nextLine();
                Matcher matcher;
@@ -68,7 +68,7 @@ public class CrashDescriptor {
                         do {
                            do {
                               if (!var10.hasNext()) {
-                                 continue label242;
+                                 continue label247;
                               }
 
                               signature = (CrashSignatureContainer.CrashSignature)var10.next();
@@ -109,12 +109,12 @@ public class CrashDescriptor {
 
          this.readFile(crash.getFile());
          this.readFile(crash.getNativeReport());
-         if (OS.WINDOWS.isCurrent()) {
+         if (OS.WINDOWS.isCurrent() && this.launcher.getConfiguration().getBoolean("windows.dxdiag")) {
             this.log("Trying to retrieve DxDiag report...");
             this.log("<DXDiag>");
 
             try {
-               Iterator var21 = DXDiagScanner.getInstance().getResult().iterator();
+               Iterator var21 = DXDiagScanner.getInstance().getResult().getLines().iterator();
 
                while(var21.hasNext()) {
                   String l = (String)var21.next();
@@ -139,26 +139,28 @@ public class CrashDescriptor {
 
          try {
             File file = new File(path);
-            if (!file.isFile()) {
-               this.log("File doesn't exist:", path);
-               return;
-            }
+            if (file.isFile()) {
+               this.log("++++++++++++++++++++++++++++++++++");
+               this.log("Reading file:", file);
+               Scanner scanner = null;
 
-            this.log("++++++++++++++++++++++++++++++++++");
-            this.log("Reading file:", file);
-            Scanner scanner = null;
+               try {
+                  scanner = new Scanner(file);
 
-            try {
-               scanner = new Scanner(file);
+                  while(scanner.hasNextLine()) {
+                     this.plog("+", scanner.nextLine());
+                  }
 
-               while(scanner.hasNextLine()) {
-                  this.plog("+", scanner.nextLine());
+                  return;
+               } catch (Exception var13) {
+                  this.log("Could not read file:", file, var13);
+                  return;
+               } finally {
+                  U.close(scanner);
                }
-            } catch (Exception var13) {
-               this.log("Could not read file:", file, var13);
-            } finally {
-               U.close(scanner);
             }
+
+            this.log("File doesn't exist:", path);
          } finally {
             this.log("++++++++++++++++++++++++++++++++++");
          }
