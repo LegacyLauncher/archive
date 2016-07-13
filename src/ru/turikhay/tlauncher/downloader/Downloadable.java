@@ -148,8 +148,8 @@ public class Downloadable {
       return this.container;
    }
 
-   public boolean hasConsole() {
-      return this.container != null && this.container.hasConsole();
+   public boolean hasLogger() {
+      return this.container != null && this.container.hasLogger();
    }
 
    public void addHandler(DownloadableHandler handler) {
@@ -241,7 +241,7 @@ public class Downloadable {
    }
 
    public String toString() {
-      return this.getClass().getSimpleName() + "{path='" + this.path + "'; " + "repo=" + this.repo + "; " + "destinations=" + this.destination + "," + this.additionalDestinations + "; " + "force=" + this.forceDownload + "; " + "fast=" + this.fastDownload + "; " + "locked=" + this.locked + "; " + "container=" + this.container + "; " + "handlers=" + this.handlers + "; " + "error=" + this.error + ";" + "}";
+      return this.getClass().getSimpleName() + "{path='" + this.path + "'; repo=" + this.repo + "; destinations=" + this.destination + "," + this.additionalDestinations + "; force=" + this.forceDownload + "; fast=" + this.fastDownload + "; locked=" + this.locked + "; container=" + this.container + "; handlers=" + this.handlers + "; error=" + this.error + ";}";
    }
 
    public static HttpURLConnection setUp(URLConnection connection0, int timeout, boolean fake) {

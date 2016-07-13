@@ -24,7 +24,7 @@ public class VersionDownloadable extends Downloadable {
             repo = repository;
             id = version.getID();
          } else {
-            repo = Repository.OFFICIAL_VERSION_REPO;
+            repo = null;
             id = version.getJar();
          }
 

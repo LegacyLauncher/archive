@@ -16,17 +16,15 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
-import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
-import ru.turikhay.tlauncher.ui.console.Console;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
+import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.swing.Dragger;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
-import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.ExtendedThread;
 
 public class TLauncherFrame extends JFrame {
@@ -131,14 +129,6 @@ public class TLauncherFrame extends JFrame {
          this.setExtendedState(windowState);
       }
 
-      if (this.settings.isFirstRun()) {
-         AsyncThread.execute(new Runnable() {
-            public void run() {
-               Alert.showLocWarning("firstrun");
-            }
-         });
-      }
-
    }
 
    public TLauncher getLauncher() {
@@ -157,7 +147,7 @@ public class TLauncherFrame extends JFrame {
          return;
       }
 
-      Console.updateLocale();
+      Logger.updateLocale();
       LocalizableMenuItem.updateLocales();
       this.updateUILocale();
       Localizable.updateContainer(this);

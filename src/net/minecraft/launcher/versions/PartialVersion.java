@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.repository.Repository;
 
 public class PartialVersion implements Version {
    private String id;
+   private String url;
    private Date time;
    private Date releaseTime;
    private ReleaseType type;
@@ -14,6 +15,10 @@ public class PartialVersion implements Version {
 
    public String getID() {
       return this.id;
+   }
+
+   public String getUrl() {
+      return this.url;
    }
 
    public ReleaseType getReleaseType() {
@@ -68,6 +73,6 @@ public class PartialVersion implements Version {
    }
 
    public String toString() {
-      return this.getClass().getSimpleName() + "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", source=" + this.source + ", list=" + this.list + "}";
+      return this.getClass().getSimpleName() + "{id='" + this.id + "', time=" + this.time + ", url='" + this.url + "',release=" + this.releaseTime + ", type=" + this.type + ", source=" + this.source + ", list=" + this.list + "}";
    }
 }

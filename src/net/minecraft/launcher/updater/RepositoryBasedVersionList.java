@@ -2,6 +2,7 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Version;
@@ -36,7 +37,7 @@ public class RepositoryBasedVersionList extends RemoteVersionList {
       return complete;
    }
 
-   protected String getUrl(String uri) throws IOException {
-      return this.repository.getUrl(uri);
+   protected InputStreamReader getUrl(String uri) throws IOException {
+      return this.repository.read(uri);
    }
 }

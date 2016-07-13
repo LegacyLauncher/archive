@@ -9,40 +9,53 @@ import java.util.Map;
 public class AsyncObjectContainer {
    private final List objects = new ArrayList();
    private final Map values = new LinkedHashMap();
+   private final Object waitLock = new Object();
    private boolean executionLock;
 
    public Map execute() {
       this.executionLock = true;
       this.values.clear();
       synchronized(this.objects) {
-         int i = 0;
-         int size = this.objects.size();
-         Iterator var4 = this.objects.iterator();
+         Iterator var2 = this.objects.iterator();
 
-         AsyncObject object;
-         while(var4.hasNext()) {
-            object = (AsyncObject)var4.next();
+         while(var2.hasNext()) {
+            AsyncObject object = (AsyncObject)var2.next();
             object.start();
          }
 
-         while(i < size) {
-            var4 = this.objects.iterator();
+         boolean hasRemaining;
+         do {
+            hasRemaining = false;
+            Iterator var14 = this.objects.iterator();
 
-            while(var4.hasNext()) {
-               object = (AsyncObject)var4.next();
+            while(var14.hasNext()) {
+               AsyncObject object = (AsyncObject)var14.next();
 
                try {
                   if (!this.values.containsKey(object)) {
                      this.values.put(object, object.getValue());
-                     ++i;
                   }
                } catch (AsyncObjectNotReadyException var8) {
+                  hasRemaining = true;
                } catch (AsyncObjectGotErrorException var9) {
                   this.values.put(object, (Object)null);
-                  ++i;
                }
             }
-         }
+
+            if (hasRemaining) {
+               Object var10000;
+               synchronized(this.waitLock) {
+                  try {
+                     this.waitLock.wait();
+                     continue;
+                  } catch (InterruptedException var10) {
+                     var10000 = null;
+                  }
+               }
+
+               return (Map)var10000;
+            }
+         } while(hasRemaining);
       }
 
       this.executionLock = false;
@@ -52,14 +65,23 @@ public class AsyncObjectContainer {
    public void add(AsyncObject object) {
       if (object == null) {
          throw new NullPointerException();
+      } else if (object.getContainer() != null) {
+         throw new IllegalArgumentException();
       } else {
          synchronized(this.objects) {
             if (this.executionLock) {
                throw new AsyncContainerLockedException();
             } else {
                this.objects.add(object);
+               object.setContainer(this);
             }
          }
+      }
+   }
+
+   void release() {
+      synchronized(this.waitLock) {
+         this.waitLock.notifyAll();
       }
    }
 }

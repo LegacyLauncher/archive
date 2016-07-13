@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.util.FileUtil;
 
 public class AssetIndex {
@@ -96,6 +98,10 @@ public class AssetIndex {
          result = 31 * result + (this.compressedHash != null ? this.compressedHash.hashCode() : 0);
          result = 31 * result + (int)(this.compressedSize ^ this.compressedSize >>> 32);
          return result;
+      }
+
+      public String toString() {
+         return (new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)).append("compressed", this.isCompressed()).append("hash", this.isCompressed() ? this.compressedHash : this.hash).append("size", this.isCompressed() ? this.compressedSize : this.size).append("reconstruct", this.reconstruct).build();
       }
    }
 }

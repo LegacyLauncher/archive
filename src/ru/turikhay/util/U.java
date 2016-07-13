@@ -525,12 +525,21 @@ public class U {
       return a == b ? true : (a != null ? a.equals(b) : false);
    }
 
-   public static void close(Closeable c) {
-      try {
-         c.close();
-      } catch (Throwable var2) {
-      }
+   public static void close(Closeable... c) {
+      if (c != null) {
+         Closeable[] var1 = c;
+         int var2 = c.length;
 
+         for(int var3 = 0; var3 < var2; ++var3) {
+            Closeable close = var1[var3];
+
+            try {
+               close.close();
+            } catch (Throwable var6) {
+            }
+         }
+
+      }
    }
 
    public static int find(Object obj, Object[] array) {
@@ -593,5 +602,9 @@ public class U {
       } else {
          return obj;
       }
+   }
+
+   public static Object requireNotNull(Object obj) {
+      return requireNotNull(obj, (String)null);
    }
 }

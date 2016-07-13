@@ -8,10 +8,11 @@ import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 class AlertPanel extends JPanel {
-   private static final Dimension MAX_SIZE = new Dimension(500, 300);
+   private static final Dimension MAX_SIZE = SwingUtil.magnify(new Dimension(500, 300));
 
    AlertPanel(String rawMessage, Object rawTextarea) {
       this.setLayout(new BoxLayout(this, 1));
@@ -33,10 +34,11 @@ class AlertPanel extends JPanel {
          area.setFont(this.getFont());
          area.setEditable(false);
          ScrollPane scroll = new ScrollPane(area, true);
+         scroll.setMaximumSize(MAX_SIZE);
          scroll.setAlignmentX(0.0F);
          scroll.setVBPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
          int textAreaHeight = StringUtil.countLines(textarea) * this.getFontMetrics(this.getFont()).getHeight();
-         if (textAreaHeight > 300) {
+         if (textAreaHeight > MAX_SIZE.height) {
             scroll.setPreferredSize(MAX_SIZE);
          }
 

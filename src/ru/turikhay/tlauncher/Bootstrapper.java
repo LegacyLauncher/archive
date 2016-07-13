@@ -14,6 +14,7 @@ import ru.turikhay.tlauncher.exceptions.TLauncherException;
 import ru.turikhay.tlauncher.ui.LoadingFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
@@ -49,7 +50,11 @@ public final class Bootstrapper {
       }
 
       if (loadAdditionalArgs) {
-         File argsFile = new File(DIRECTORY, "tlauncher.args");
+         File argsFile = new File(DIRECTORY, "tlauncher-" + OS.CURRENT.toString().toLowerCase() + "-" + OS.Arch.CURRENT.toString().toLowerCase() + ".args");
+         if (!argsFile.isFile()) {
+            argsFile = new File(DIRECTORY, "tlauncher.args");
+         }
+
          if (argsFile.isFile()) {
             String[] extraArgs = loadArgsFromFile(argsFile);
             if (extraArgs != null) {
@@ -145,8 +150,9 @@ public final class Bootstrapper {
       INITALIZING(11),
       LOADING_CONFIGURATION(25),
       LOADING_LOOKANDFEEL(35),
-      LOADING_CONSOLE(40),
-      LOADING_MANAGERS(45),
+      LOADING_LOGGER(40),
+      LOADING_FIRSTRUN(45),
+      LOADING_MANAGERS(50),
       LOADING_WINDOW(62),
       PREPARING_MAINPANE(77),
       POSTINIT_GUI(82),
@@ -183,6 +189,12 @@ public final class Bootstrapper {
                return;
             }
 
+            if (step == Bootstrapper.LoadingStep.LOADING_FIRSTRUN) {
+               Bootstrapper.this.frame.setExtendedState(1);
+            } else if (Bootstrapper.this.frame.getExtendedState() != 1) {
+               Bootstrapper.this.frame.setExtendedState(0);
+            }
+
             Bootstrapper.this.frame.setProgress(step.percentage);
             if (step.percentage == 100) {
                Bootstrapper.this.started = true;
@@ -196,12 +208,16 @@ public final class Bootstrapper {
       }
 
       public void onJavaProcessEnded(JavaProcess jp) {
+         if (!Bootstrapper.this.frame.isVisible()) {
+            Bootstrapper.this.frame.setVisible(true);
+         }
+
          int exit = jp.getExitCode();
          if (exit != 0) {
             if ("Error: Could not find or load main class".equals(this.buffer.substring(0, "Error: Could not find or load main class".length()))) {
                JOptionPane.showMessageDialog((Component)null, "Could not find or load main class. You can try to place executable file into root folder or download launcher once more using link below.\nНе удалось загрузить главный класс Java. Попробуйте положить TLauncher в корневую директорию (например, в C:\\) или загрузить\nлаунчер заново, используя ссылку ниже.\n\nhttp://tlaun.ch/jar", "Error launching TLauncher", 0);
             } else {
-               Alert.showError("Error starting TLauncher", "TLauncher application was closed with illegal exit code (" + exit + "). See console:", this.buffer.toString());
+               Alert.showError("Error starting TLauncher", "TLauncher application was closed with illegal exit code (" + exit + "). See logger:", this.buffer.toString());
             }
          }
 

@@ -164,51 +164,55 @@ public class Library {
       XZInputStream in = null;
       JarOutputStream jos = null;
 
-      try {
-         FileInputStream in1 = new FileInputStream(library);
-         in = new XZInputStream(in1);
-         forgeLibLog("Decompressing...");
-         byte[] e = readFully(in);
-         forgeLibLog("Decompressed successfully");
-         String end = new String(e, e.length - 4, 4);
-         if (!end.equals("SIGN")) {
-            throw new RetryDownloadException("signature missing");
-         }
+      label64: {
+         try {
+            FileInputStream in1 = new FileInputStream(library);
+            in = new XZInputStream(in1);
+            forgeLibLog("Decompressing...");
+            byte[] e = readFully(in);
+            forgeLibLog("Decompressed successfully");
+            String end = new String(e, e.length - 4, 4);
+            if (!end.equals("SIGN")) {
+               throw new RetryDownloadException("signature missing");
+            }
 
-         forgeLibLog("Signature matches!");
-         int x = e.length;
-         int len = e[x - 8] & 255 | (e[x - 7] & 255) << 8 | (e[x - 6] & 255) << 16 | (e[x - 5] & 255) << 24;
-         forgeLibLog("Now getting checksums...");
-         byte[] checksums = Arrays.copyOfRange(e, e.length - len - 8, e.length - 8);
-         FileUtil.createFile(output);
-         FileOutputStream jarBytes = new FileOutputStream(output);
-         jos = new JarOutputStream(jarBytes);
-         forgeLibLog("Now unpacking...");
-         Pack200.newUnpacker().unpack(new ByteArrayInputStream(e), jos);
-         forgeLibLog("Unpacked successfully");
-         forgeLibLog("Now trying to write checksums...");
-         jos.putNextEntry(new JarEntry("checksums.sha1"));
-         jos.write(checksums);
-         jos.closeEntry();
-         forgeLibLog("Now finishing...");
-      } catch (OutOfMemoryError var16) {
-         forgeLibLog("Out of memory, oops", var16);
-         U.gc();
-         if (retryOnOutOfMemory) {
+            forgeLibLog("Signature matches!");
+            int x = e.length;
+            int len = e[x - 8] & 255 | (e[x - 7] & 255) << 8 | (e[x - 6] & 255) << 16 | (e[x - 5] & 255) << 24;
+            forgeLibLog("Now getting checksums...");
+            byte[] checksums = Arrays.copyOfRange(e, e.length - len - 8, e.length - 8);
+            FileUtil.createFile(output);
+            FileOutputStream jarBytes = new FileOutputStream(output);
+            jos = new JarOutputStream(jarBytes);
+            forgeLibLog("Now unpacking...");
+            Pack200.newUnpacker().unpack(new ByteArrayInputStream(e), jos);
+            forgeLibLog("Unpacked successfully");
+            forgeLibLog("Now trying to write checksums...");
+            jos.putNextEntry(new JarEntry("checksums.sha1"));
+            jos.write(checksums);
+            jos.closeEntry();
+            forgeLibLog("Now finishing...");
+            break label64;
+         } catch (OutOfMemoryError var16) {
+            forgeLibLog("Out of memory, oops", var16);
+            U.gc();
+            if (!retryOnOutOfMemory) {
+               throw var16;
+            }
+
             forgeLibLog("Retrying...");
             close(in, jos);
             FileUtil.deleteFile(library);
             unpackLibrary(library, output, false);
-            return;
+         } catch (IOException var17) {
+            output.delete();
+            throw var17;
+         } finally {
+            close(in, jos);
+            FileUtil.deleteFile(library);
          }
 
-         throw var16;
-      } catch (IOException var17) {
-         output.delete();
-         throw var17;
-      } finally {
-         close(in, jos);
-         FileUtil.deleteFile(library);
+         return;
       }
 
       forgeLibLog("Done:", output);

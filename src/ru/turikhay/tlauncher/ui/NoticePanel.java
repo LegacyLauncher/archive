@@ -35,7 +35,7 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
-public class NoticePanel extends CenterPanel implements LocalizableComponent, ResizeableComponent, UpdaterListener {
+public class NoticePanel extends CenterPanel implements LocalizableComponent, ResizeableComponent, Stats.StatsListener, UpdaterListener {
    private static final float FONT_SIZE = SwingUtil.magnify(12.0F);
    private final NoticePanel.InfoPanelAnimator animator = new NoticePanel.InfoPanelAnimator();
    private final EditorPane browser;
@@ -52,6 +52,7 @@ public class NoticePanel extends CenterPanel implements LocalizableComponent, Re
    private int mouseX;
    private int mouseY;
    private Notices.Notice notice;
+   private boolean allowAlways = false;
 
    public NoticePanel(DefaultScene p) {
       super(CenterPanel.tipTheme, new MagnifiedInsets(5, 10, 5, 10));
@@ -138,6 +139,7 @@ public class NoticePanel extends CenterPanel implements LocalizableComponent, Re
       this.shown = false;
       this.setVisible(false);
       TLauncher.getInstance().getUpdater().addListener(this);
+      Stats.addListener(this);
    }
 
    void setContent(String text, int width, int height) {
@@ -328,8 +330,9 @@ public class NoticePanel extends CenterPanel implements LocalizableComponent, Re
             if (this.notice == null) {
                return false;
             } else {
-               boolean isAllowed = !this.notice.getType().isAdvert() || this.tlauncher.getSettings().getBoolean("gui.notice." + this.notice.getType().name().toLowerCase());
+               boolean isAllowed = this.allowAlways || !this.notice.getType().isAdvert() || this.tlauncher.getSettings().getBoolean("gui.notice." + this.notice.getType().name().toLowerCase());
                if (!isAllowed) {
+                  this.notice = null;
                   return false;
                } else {
                   StringBuilder builder = new StringBuilder();
@@ -361,6 +364,25 @@ public class NoticePanel extends CenterPanel implements LocalizableComponent, Re
 
    public void updateLocale() {
       this.updateNotice(false);
+   }
+
+   public void onInvalidSubmit(String message) {
+      if ("multiple".equals(message)) {
+         this.allowAlways = true;
+         Notices.NoticeType[] var2 = Notices.NoticeType.values();
+         int var3 = var2.length;
+
+         for(int var4 = 0; var4 < var3; ++var4) {
+            Notices.NoticeType type = var2[var4];
+            this.tlauncher.getSettings().set("gui.notice." + type.name().toLowerCase(), true, false);
+         }
+
+         this.tlauncher.getSettings().store();
+         if (this.notice == null) {
+            this.updateNotice(TLauncher.getInstance().isReady());
+         }
+      }
+
    }
 
    private class InfoPanelAnimator extends ExtendedThread {

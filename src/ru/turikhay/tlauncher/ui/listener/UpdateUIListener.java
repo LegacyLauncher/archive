@@ -1,7 +1,9 @@
 package ru.turikhay.tlauncher.ui.listener;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLConnection;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -10,6 +12,7 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.updater.Update;
 import ru.turikhay.tlauncher.updater.UpdateListener;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.U;
 
 public class UpdateUIListener implements UpdateListener {
    private final TLauncher t;
@@ -32,7 +35,15 @@ public class UpdateUIListener implements UpdateListener {
 
    public void onUpdateError(Update u, Throwable e) {
       if (Alert.showLocQuestion("updater.error.title", "updater.download-error", e)) {
-         openUpdateLink(Repository.EXTRA_VERSION_REPO.getSelectedRepo() + u.getLink().substring(1));
+         URLConnection connection;
+         try {
+            connection = Repository.EXTRA_VERSION_REPO.getRelevant().getFirst().get(u.getLink().substring(1), U.getReadTimeout(), U.getProxy());
+         } catch (IOException var5) {
+            U.log(var5);
+            return;
+         }
+
+         openUpdateLink(connection.getURL().toString());
       }
 
       this.unblock();
@@ -59,7 +70,15 @@ public class UpdateUIListener implements UpdateListener {
 
    public void onUpdateApplyError(Update u, Throwable e) {
       if (Alert.showLocQuestion("updater.save-error", e)) {
-         openUpdateLink(Repository.EXTRA_VERSION_REPO.getSelectedRepo() + u.getLink().substring(1));
+         URLConnection connection;
+         try {
+            connection = Repository.EXTRA_VERSION_REPO.getRelevant().getFirst().get(u.getLink().substring(1), U.getReadTimeout(), U.getProxy());
+         } catch (IOException var5) {
+            U.log(var5);
+            return;
+         }
+
+         openUpdateLink(connection.getURL().toString());
       }
 
       this.unblock();

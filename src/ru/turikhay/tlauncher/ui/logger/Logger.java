@@ -1,4 +1,4 @@
-package ru.turikhay.tlauncher.ui.console;
+package ru.turikhay.tlauncher.ui.logger;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -33,52 +33,52 @@ import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.pastebin.Paste;
 import ru.turikhay.util.pastebin.PasteResult;
 import ru.turikhay.util.stream.LinkedOutputStringStream;
-import ru.turikhay.util.stream.Logger;
 import ru.turikhay.util.stream.PrintLogger;
+import ru.turikhay.util.stream.StreamLogger;
 
-public class Console implements Logger {
+public class Logger implements StreamLogger {
    private static List frames = Collections.synchronizedList(new ArrayList());
-   public final ConsoleFrame frame;
+   public final LoggerFrame frame;
    private final Configuration global;
    private String name;
    private LinkedOutputStringStream stream;
    private PrintLogger logger;
-   private Console.CloseAction close;
+   private Logger.CloseAction close;
    private boolean killed;
    MinecraftLauncher launcher;
    private FileExplorer explorer;
 
-   public Console(Configuration global, PrintLogger logger, String name, boolean show) {
+   public Logger(Configuration global, PrintLogger logger, String name, boolean show) {
       this.global = global;
       this.name = name;
-      this.frame = new ConsoleFrame(this);
+      this.frame = new LoggerFrame(this);
       this.frame.setTitle(name);
       frames.add(new WeakReference(this.frame));
       this.update();
       this.frame.addWindowListener(new WindowAdapter() {
          public void windowClosing(WindowEvent e) {
-            Console.this.onClose();
+            Logger.this.onClose();
          }
 
          public void windowClosed(WindowEvent e) {
-            U.log("Console", Console.this.name, "has been disposed.");
+            U.log("Logger", Logger.this.name, "has been disposed.");
          }
       });
       this.frame.addComponentListener(new ExtendedComponentAdapter(this.frame) {
          public void componentShown(ComponentEvent e) {
-            Console.this.delayedSave();
+            Logger.this.delayedSave();
          }
 
          public void componentHidden(ComponentEvent e) {
-            Console.this.delayedSave();
+            Logger.this.delayedSave();
          }
 
          public void onComponentResized(ComponentEvent e) {
-            Console.this.delayedSave();
+            Logger.this.delayedSave();
          }
 
          public void onComponentMoved(ComponentEvent e) {
-            Console.this.delayedSave();
+            Logger.this.delayedSave();
          }
       });
       if (logger == null) {
@@ -122,7 +122,7 @@ public class Console implements Logger {
          this.frame.bottom.openFolder = launcher.getGameDir();
       } else {
          this.frame.bottom.kill.setEnabled(false);
-         if ("DevConsole".equals(this.name)) {
+         if (this.global.get("logger").equals(this.name)) {
             this.frame.bottom.openFolder = MinecraftUtil.getWorkingDirectory();
          }
       }
@@ -162,7 +162,7 @@ public class Console implements Logger {
    void update() {
       this.check();
       if (this.global != null) {
-         String prefix = "gui.console.";
+         String prefix = "gui.logger.";
          int width = this.global.getInteger(prefix + "width", 670);
          int height = this.global.getInteger(prefix + "height", 500);
          int x = this.global.getInteger(prefix + "x", 0);
@@ -176,7 +176,7 @@ public class Console implements Logger {
    void save() {
       this.check();
       if (this.global != null) {
-         String prefix = "gui.console.";
+         String prefix = "gui.logger.";
          int[] size = this.getSize();
          int[] position = this.getPosition();
          this.global.set(prefix + "width", size[0], false);
@@ -195,7 +195,7 @@ public class Console implements Logger {
 
    private void check() {
       if (this.killed) {
-         throw new IllegalStateException("Console is already killed!");
+         throw new IllegalStateException("Logger is already killed!");
       }
    }
 
@@ -239,25 +239,25 @@ public class Console implements Logger {
    }
 
    public void sendPaste() {
-      if (Alert.showLocQuestion("console.pastebin.alert")) {
+      if (Alert.showLocQuestion("logger.pastebin.alert")) {
          AsyncThread.execute(new Runnable() {
             public void run() {
                Paste paste = new Paste();
-               paste.addListener(Console.this.frame);
-               paste.setTitle(Console.this.frame.getTitle());
-               paste.setContent(Console.this.frame.console.getOutput());
+               paste.addListener(Logger.this.frame);
+               paste.setTitle(Logger.this.frame.getTitle());
+               paste.setContent(Logger.this.frame.logger.getOutput());
                PasteResult result = paste.paste();
                if (result instanceof PasteResult.PasteUploaded) {
                   PasteResult.PasteUploaded error = (PasteResult.PasteUploaded)result;
-                  if (Alert.showLocQuestion("console.pastebin.sent", error.getURL())) {
+                  if (Alert.showLocQuestion("logger.pastebin.sent", error.getURL())) {
                      OS.openLink(error.getURL());
                   }
                } else if (result instanceof PasteResult.PasteFailed) {
                   Throwable error1 = ((PasteResult.PasteFailed)result).getError();
                   if (error1 instanceof RuntimeException) {
-                     Alert.showLocError("console.pastebin.invalid", error1);
+                     Alert.showLocError("logger.pastebin.invalid", error1);
                   } else if (error1 instanceof IOException) {
-                     Alert.showLocError("console.pastebin.failed", error1);
+                     Alert.showLocError("logger.pastebin.failed", error1);
                   }
                }
 
@@ -270,7 +270,7 @@ public class Console implements Logger {
       if (this.explorer == null) {
          try {
             this.explorer = FileExplorer.newExplorer();
-         } catch (InternalError var17) {
+         } catch (InternalError var16) {
             Alert.showError(Localizable.get("explorer.unavailable.title"), Localizable.get("explorer.unvailable") + (OS.WINDOWS.isCurrent() ? "\n" + Localizable.get("explorer.unavailable.win") : ""));
             return;
          }
@@ -293,7 +293,7 @@ public class Console implements Logger {
                FileUtil.createFile(file);
                IOUtils.copy((Reader)(new StringReader(this.getOutput())), (OutputStream)(output = new FileOutputStream(file)));
             } catch (Throwable var15) {
-               Alert.showLocError("console.save.error", var15);
+               Alert.showLocError("logger.save.error", var15);
             } finally {
                if (output != null) {
                   try {
@@ -331,7 +331,7 @@ public class Console implements Logger {
       return new int[]{d.width, d.height};
    }
 
-   public void setCloseAction(Console.CloseAction action) {
+   public void setCloseAction(Logger.CloseAction action) {
       this.close = action;
    }
 
@@ -352,9 +352,22 @@ public class Console implements Logger {
 
       while(var0.hasNext()) {
          WeakReference ref = (WeakReference)var0.next();
-         ConsoleFrame frame = (ConsoleFrame)ref.get();
+         LoggerFrame frame = (LoggerFrame)ref.get();
          if (frame != null) {
             frame.updateLocale();
+         }
+      }
+
+   }
+
+   public static void wipeAll() {
+      Iterator var0 = frames.iterator();
+
+      while(var0.hasNext()) {
+         WeakReference ref = (WeakReference)var0.next();
+         LoggerFrame frame = (LoggerFrame)ref.get();
+         if (frame != null) {
+            frame.clear();
          }
       }
 

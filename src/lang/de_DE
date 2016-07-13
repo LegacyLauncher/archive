@@ -295,12 +295,12 @@ settings.fontsize.label = Schriftgröße\:
 settings.fontsize.pt = pt
 settings.slide.list.label = Hintergrundbild\:
 settings.slide.list.prompt = Geben Sie den Pfad zum Bild ein
-settings.console.label = Zeige Logger
-settings.console.global = Immer
-settings.console.minecraft = Wenn Minecraft gestartet wird
-settings.console.none = Nie
-settings.console.fullcommand.label = Volles Kommando\:
-settings.console.fullcommand = Zeige Startkommando inklusive sensitive Argumente
+settings.logger.label = Zeige Logger
+settings.logger.global = Immer
+settings.logger.minecraft = Wenn Minecraft gestartet wird
+settings.logger.none = Nie
+settings.logger.fullcommand.label = Volles Kommando\:
+settings.logger.fullcommand = Zeige Startkommando inklusive sensitive Argumente
 settings.connection.label = Verbindungsqualität\:
 settings.connection.good = Schnell und zuverlässig
 settings.connection.normal = Vielleicht etwas Latenz
@@ -386,24 +386,24 @@ popup.selectall = Alles auswählen
 popup.copy = Kopieren
 popup.paste = Einfügen
 popup.copyall = Kopiere Alles
-# Console
-console = Logger
-console.kill = Minecraft-Prozess terminieren
-console.close.cancel = Logger wird in %0 s schließen
-console.save = Speichern als...
-console.save.popup = Speichern als...
-console.save.exists = Datei existiert bereits\!
-console.save.error = Konnte Datei nicht speichern\!
-console.clear.popup = Löschen
-console.pastebin = Online in Pastebin speichern...
-console.pastebin.alert.title = Bestätigung
-console.pastebin.alert = Sie sind dabei den Log online in Pastebin zu speichern.\nEs wird nicht veröffentlicht oder öffentlich zugänglich gemacht und wird in 7 Tagen gelöscht. Sie werden ein Captcha lösen müssen, nachdem sie es absenden, ansonsten wird der Log in ein paar Minuten gelöscht.\nMöchten Sie den Log wirklich online via Pastebin speichern?
-console.pastebin.sent.title = Erfolgreich gesendet
-console.pastebin.sent = Konsole wurde erfolgreich online auf <a href\="http\://pastebin.com">Pastebin.com</a> gespeichert.\n\nMöchten Sie es jetzt öffnen?\n
-console.pastebin.failed.title = Konnte keinen Konsolen-Output schicken. 
-console.pastebin.failed = Konnte keinen Konsolen-Output zu <a href\="http\://pastebin.com">Pastebin.com</a> schicken. Gehen Sie sicher, dass ihr Internetzugang und ihr Antivirenprogramm die Verbindung nicht blocken.
-console.pastebin.invalid.title = Etwas ist schief gelaufen.
-console.pastebin.invalid = Konnte Konsolen-Output  nicht schicken.
+# Logger
+logger = Logger
+logger.kill = Minecraft-Prozess terminieren
+logger.close.cancel = Logger wird in %0 s schließen
+logger.save = Speichern als...
+logger.save.popup = Speichern als...
+logger.save.exists = Datei existiert bereits\!
+logger.save.error = Konnte Datei nicht speichern\!
+logger.clear.popup = Löschen
+logger.pastebin = Online in Pastebin speichern...
+logger.pastebin.alert.title = Bestätigung
+logger.pastebin.alert = Sie sind dabei den Log online in Pastebin zu speichern.\nEs wird nicht veröffentlicht oder öffentlich zugänglich gemacht und wird in 7 Tagen gelöscht. Sie werden ein Captcha lösen müssen, nachdem sie es absenden, ansonsten wird der Log in ein paar Minuten gelöscht.\nMöchten Sie den Log wirklich online via Pastebin speichern?
+logger.pastebin.sent.title = Erfolgreich gesendet
+logger.pastebin.sent = Konsole wurde erfolgreich online auf <a href\="http\://pastebin.com">Pastebin.com</a> gespeichert.\n\nMöchten Sie es jetzt öffnen?\n
+logger.pastebin.failed.title = Konnte keinen Konsolen-Output schicken.
+logger.pastebin.failed = Konnte keinen Konsolen-Output zu <a href\="http\://pastebin.com">Pastebin.com</a> schicken. Gehen Sie sicher, dass ihr Internetzugang und ihr Antivirenprogramm die Verbindung nicht blocken.
+logger.pastebin.invalid.title = Etwas ist schief gelaufen.
+logger.pastebin.invalid = Konnte Konsolen-Output  nicht schicken.
 # Link
 link.error.title = Konnte Link nicht öffnen
 link.error = Konnte Link nicht öffnen. Bitten öffnen Sie ihn selbst.

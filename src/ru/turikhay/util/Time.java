@@ -25,8 +25,7 @@ public final class Time {
       }
    }
 
-   public static long stop(Object object) {
-      long currentTime = System.currentTimeMillis();
+   private static long stop(Object object, long currentTime) {
       synchronized(holders) {
          Iterator i = holders.iterator();
 
@@ -45,12 +44,28 @@ public final class Time {
       }
    }
 
+   public static long stop(Object object) {
+      return stop(object, System.currentTimeMillis());
+   }
+
+   public static long[] stop(Object... object) {
+      long currentTime = System.currentTimeMillis();
+      long[] deltas = new long[object.length];
+      synchronized(holders) {
+         for(int i = 0; i < object.length; ++i) {
+            deltas[i] = stop(object[i], currentTime);
+         }
+
+         return deltas;
+      }
+   }
+
    public static void start() {
       start(Thread.currentThread());
    }
 
    public static long stop() {
-      return stop(Thread.currentThread());
+      return stop((Object)Thread.currentThread());
    }
 
    static enum NotBoolean {

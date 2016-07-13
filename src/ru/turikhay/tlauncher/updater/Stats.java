@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -14,6 +17,7 @@ import net.minecraft.launcher.Http;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ServerList;
@@ -25,6 +29,8 @@ public class Stats {
    private static final URL STATS_BASE = Http.constantURL("http://u.tlauncher.ru/stats/");
    private static final ExecutorService service = Executors.newCachedThreadPool();
    private static boolean allow = false;
+   private static String lastResult;
+   private static final List listeners = Collections.synchronizedList(new ArrayList());
 
    public static void setAllowed(boolean allowed) {
       allow = allowed;
@@ -55,9 +61,14 @@ public class Stats {
          service.submit(new Callable() {
             public Void call() throws Exception {
                String result = Stats.performGetRequest(Stats.STATS_BASE, Stats.toRequest(args));
-               if ("refresh".equals(result)) {
-                  Stats.debug("Client UUID will be refreshed.");
-                  TLauncher.getInstance().getSettings().refreshClient();
+               if (StringUtils.isNotEmpty(result)) {
+                  Stats.lastResult = result;
+                  Iterator var2 = Stats.listeners.iterator();
+
+                  while(var2.hasNext()) {
+                     Stats.StatsListener l = (Stats.StatsListener)var2.next();
+                     l.onInvalidSubmit(result);
+                  }
                }
 
                return null;
@@ -133,6 +144,18 @@ public class Stats {
          U.log("[Stats]", o);
       }
 
+   }
+
+   public static void addListener(Stats.StatsListener listener) {
+      listeners.add(listener);
+      if (lastResult != null) {
+         listener.onInvalidSubmit(lastResult);
+      }
+
+   }
+
+   public interface StatsListener {
+      void onInvalidSubmit(String var1);
    }
 
    private static class Args {

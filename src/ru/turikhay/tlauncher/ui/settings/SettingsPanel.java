@@ -28,8 +28,8 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
 import ru.turikhay.tlauncher.ui.converter.ConnectionQualityConverter;
-import ru.turikhay.tlauncher.ui.converter.ConsoleTypeConverter;
 import ru.turikhay.tlauncher.ui.converter.DirectionConverter;
+import ru.turikhay.tlauncher.ui.converter.LoggerTypeConverter;
 import ru.turikhay.tlauncher.ui.editor.EditorCheckBox;
 import ru.turikhay.tlauncher.ui.editor.EditorComboBox;
 import ru.turikhay.tlauncher.ui.editor.EditorFieldChangeListener;
@@ -75,7 +75,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
    public final EditorFieldHandler font;
    public final EditorFieldHandler background;
    public final EditorFieldHandler loginFormDirection;
-   public final EditorFieldHandler console;
+   public final EditorFieldHandler logger;
    public final EditorFieldHandler fullCommand;
    public final EditorFieldHandler connQuality;
    public final EditorFieldHandler launchAction;
@@ -262,28 +262,28 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
       });
       this.tlauncherTab.add(new EditorPair("settings.slide.list.label", new EditorHandler[]{this.background}));
       this.tlauncherTab.nextPane();
-      this.console = new EditorFieldHandler("gui.console", new EditorComboBox(new ConsoleTypeConverter(), Configuration.ConsoleType.values()));
-      this.console.addListener(new EditorFieldChangeListener() {
+      this.logger = new EditorFieldHandler("gui.logger", new EditorComboBox(new LoggerTypeConverter(), Configuration.LoggerType.values()));
+      this.logger.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldvalue, String newvalue) {
             if (newvalue != null) {
-               switch(Configuration.ConsoleType.get(newvalue)) {
+               switch(Configuration.LoggerType.get(newvalue)) {
                case GLOBAL:
-                  TLauncher.getConsole().show(false);
+                  TLauncher.getLogger().show(false);
                   break;
                case MINECRAFT:
                case NONE:
-                  TLauncher.getConsole().hide();
+                  TLauncher.getLogger().hide();
                   break;
                default:
-                  throw new IllegalArgumentException("Unknown console type!");
+                  throw new IllegalArgumentException("Unknown logger type!");
                }
             }
 
          }
       });
-      this.tlauncherTab.add(new EditorPair("settings.console.label", new EditorHandler[]{this.console}));
-      this.fullCommand = new EditorFieldHandler("gui.console.fullcommand", new EditorCheckBox("settings.console.fullcommand"));
-      this.tlauncherTab.add(new EditorPair("settings.console.fullcommand.label", new EditorHandler[]{this.fullCommand}));
+      this.tlauncherTab.add(new EditorPair("settings.logger.label", new EditorHandler[]{this.logger}));
+      this.fullCommand = new EditorFieldHandler("gui.logger.fullcommand", new EditorCheckBox("settings.logger.fullcommand"));
+      this.tlauncherTab.add(new EditorPair("settings.logger.fullcommand.label", new EditorHandler[]{this.fullCommand}));
       this.tlauncherTab.nextPane();
       this.connQuality = new EditorFieldHandler("connection", new EditorComboBox(new ConnectionQualityConverter(), Configuration.ConnectionQuality.values()));
       this.connQuality.addListener(new EditorFieldChangeListener() {

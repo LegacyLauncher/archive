@@ -25,6 +25,10 @@ public class ExtendedComboBox extends JComboBox {
       this.converter = converter;
    }
 
+   public ExtendedComboBox() {
+      this((ListCellRenderer)null);
+   }
+
    public SimpleComboBoxModel getSimpleModel() {
       return (SimpleComboBoxModel)this.getModel();
    }

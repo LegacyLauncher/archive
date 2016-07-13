@@ -291,12 +291,12 @@ settings.fontsize.label = Besar font\:
 settings.fontsize.pt = pt
 settings.slide.list.label = Gambar background
 settings.slide.list.prompt = Jalur ke gambar
-settings.console.label = Munculkan konsol
-settings.console.global = Selalu
-settings.console.minecraft = Ketika Minecraft dijalankan
-settings.console.none = Tidak pernah
-settings.console.fullcommand.label = Perintah penuh\:
-settings.console.fullcommand = Munculkan perintah start (termasuk argumen sensitif)
+settings.logger.label = Munculkan konsol
+settings.logger.global = Selalu
+settings.logger.minecraft = Ketika Minecraft dijalankan
+settings.logger.none = Tidak pernah
+settings.logger.fullcommand.label = Perintah penuh\:
+settings.logger.fullcommand = Munculkan perintah start (termasuk argumen sensitif)
 settings.connection.label = Kualitas koneksi
 settings.connection.good = Cepat dan bagus
 settings.connection.normal = Mungkin sedikit Laggy.
@@ -371,25 +371,25 @@ popup.selectall = Pilih semua
 popup.copy = Salin
 popup.paste = Tempel
 popup.copyall = Salin semua
-# Console
-console = Konsol
-console.kill = Tutup Minecraft
-console.close.cancel = Konsol ditutup dalam %0 detik
-console.save = Simpan sebagai...
-console.save.popup = Simpan sebagai...
-console.save.exists = File sudah ada\!
-console.save.error = Gagal menyimpan file\!
+# Logger
+logger = Konsol
+logger.kill = Tutup Minecraft
+logger.close.cancel = Konsol ditutup dalam %0 detik
+logger.save = Simpan sebagai...
+logger.save.popup = Simpan sebagai...
+logger.save.exists = File sudah ada\!
+logger.save.error = Gagal menyimpan file\!
 # In what context? Clearing the text or Clearing the selection?
-console.clear.popup = Hapus
-console.pastebin = Simpan di Pastebin...
-console.pastebin.alert.title = Confirmasi
-console.pastebin.alert = Kamu akan menyimpan Log online di Pastebin.\nIni tidak akan di publikasikan dan diakses publik dan akan dihapus dalam 7 Hari. Kamu harus memasukkan captcha setelah mengirim,jika tidak log akan terhapus dalam beberapa menit.\napa kamu yakin mau menyimpan Log Online dengan pastebin?
-console.pastebin.sent.title = Sukses dikirim
-console.pastebin.sent = Konsol berhasil menyimpan daring di <a href\="http\://pastebin.com">Pastebin.com</a>\n\nApa kamu mau membukanya?
-console.pastebin.failed.title = Gagal mengirim output console
-console.pastebin.failed = Tidak bisa mengirim Output Konsol ke <a href\="http\://pastebin.com">Pastebin.com</a>. Pastikan ada Akses internet dan Program Antivirus tidak memblokir koneksi
-console.pastebin.invalid.title = Ada yang salah...
-console.pastebin.invalid = Gagal mengirim output console.
+logger.clear.popup = Hapus
+logger.pastebin = Simpan di Pastebin...
+logger.pastebin.alert.title = Confirmasi
+logger.pastebin.alert = Kamu akan menyimpan Log online di Pastebin.\nIni tidak akan di publikasikan dan diakses publik dan akan dihapus dalam 7 Hari. Kamu harus memasukkan captcha setelah mengirim,jika tidak log akan terhapus dalam beberapa menit.\napa kamu yakin mau menyimpan Log Online dengan pastebin?
+logger.pastebin.sent.title = Sukses dikirim
+logger.pastebin.sent = Konsol berhasil menyimpan daring di <a href\="http\://pastebin.com">Pastebin.com</a>\n\nApa kamu mau membukanya?
+logger.pastebin.failed.title = Gagal mengirim output logger
+logger.pastebin.failed = Tidak bisa mengirim Output Konsol ke <a href\="http\://pastebin.com">Pastebin.com</a>. Pastikan ada Akses internet dan Program Antivirus tidak memblokir koneksi
+logger.pastebin.invalid.title = Ada yang salah...
+logger.pastebin.invalid = Gagal mengirim output logger.
 # Link
 link.error.title = Gagal membuka link
 link.error = Gagal membuka link. Bukalah sendiri\:

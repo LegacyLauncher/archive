@@ -24,10 +24,9 @@ import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 public class Configuration extends SimpleConfiguration {
+   private static final List DEFAULT_LOCALES = getDefaultLocales();
    private ConfigurationDefaults defaults;
    private Map constants;
-   private List defaultLocales;
-   private List supportedLocales;
    private boolean firstRun;
 
    private Configuration(File file, OptionSet set) {
@@ -48,89 +47,80 @@ public class Configuration extends SimpleConfiguration {
             file = MinecraftUtil.getSystemRelatedDirectory(TLauncher.getSettingsFile());
          }
       } else {
+         log("Fetching configuration from argument:", path);
          file = new File(path.toString());
       }
 
       boolean doesntExist = !file.isFile();
       if (doesntExist) {
-         U.log("Creating configuration file...");
+         log("Creating file:", file);
          FileUtil.createFile(file);
       }
 
-      U.log("Loading configuration from file:", file);
+      log("File:", file);
       Configuration config = new Configuration(file, set);
       config.firstRun = doesntExist;
       return config;
    }
 
    private void init(OptionSet set) {
-      this.comments = " TLauncher configuration file\n Created in " + TLauncher.getBrand() + " " + TLauncher.getVersion();
+      this.comments = " TLauncher " + TLauncher.getBrand() + " properties\n Created in " + TLauncher.getVersion() + (TLauncher.isBeta() ? " BETA" : "");
       this.defaults = new ConfigurationDefaults();
       this.constants = ArgumentParser.parse(set);
-      this.set(this.constants, false);
-      this.log(new Object[]{"Constant values:", this.constants});
-      int version = ConfigurationDefaults.getVersion();
-      if (this.getDouble("settings.version") != (double)version) {
+      if (this.getDouble("settings.version") != (double)ConfigurationDefaults.getVersion()) {
+         log("Configuration is being wiped due to version incapability");
+         this.set("settings.version", ConfigurationDefaults.getVersion(), false);
          this.clear();
       }
 
-      this.set("settings.version", version, false);
-      Iterator oldJavaPath = this.defaults.getMap().entrySet().iterator();
+      log("Constants:", this.constants);
+      this.set(this.constants, false);
+      Iterator var2 = this.defaults.getMap().entrySet().iterator();
 
-      String oldJavaPath1;
-      while(oldJavaPath.hasNext()) {
-         Entry selected = (Entry)oldJavaPath.next();
-         oldJavaPath1 = (String)selected.getKey();
-         if (this.constants.containsKey(oldJavaPath1)) {
-            this.log(new Object[]{"Key \"" + oldJavaPath1 + "\" is unsaveable!"});
-         } else {
-            String value = this.get(oldJavaPath1);
-            Object defvalue = selected.getValue();
-            if (defvalue != null) {
-               try {
-                  PlainParser.parse(value, defvalue);
-               } catch (Exception var10) {
-                  this.log(new Object[]{"Key \"" + oldJavaPath1 + "\" is invalid!", var10});
-                  this.set(oldJavaPath1, defvalue, false);
-               }
+      while(var2.hasNext()) {
+         Entry defEntry = (Entry)var2.next();
+         if (!this.constants.containsKey(defEntry.getKey())) {
+            String value = this.get((String)defEntry.getKey());
+
+            try {
+               PlainParser.parse(this.get((String)defEntry.getKey()), defEntry.getValue());
+            } catch (RuntimeException var7) {
+               log("Could not parse", defEntry.getKey(), "; got:", value);
+               this.set((String)defEntry.getKey(), defEntry.getValue(), false);
             }
          }
       }
 
-      this.defaultLocales = getDefaultLocales();
-      this.supportedLocales = this.getSupportedLocales();
-      Locale selected1 = getLocaleOf(this.get("locale"));
-      if (selected1 == null) {
-         this.log(new Object[]{"Selected locale is not supported, trying system default"});
-         selected1 = Locale.getDefault();
-         if (selected1 == getLocaleOf("uk_UA") || selected1 == getLocaleOf("be_BY")) {
-            selected1 = getLocaleOf("ru_RU");
+      Locale locale = getLocaleOf(this.get("locale"));
+      if (locale == null) {
+         log("Presented locale is not supported by Java:", this.get("locale"));
+         log("May be system default?");
+         locale = Locale.getDefault();
+      }
+
+      if (!DEFAULT_LOCALES.contains(locale)) {
+         log("We don't have localization for", locale);
+         if (locale != getLocaleOf("uk_UA") && locale != getLocaleOf("be_BY")) {
+            locale = Locale.US;
+         } else {
+            locale = getLocaleOf("ru_RU");
          }
+
+         log("Selecting", locale);
       }
 
-      if (!this.supportedLocales.contains(selected1)) {
-         this.log(new Object[]{"System default locale is not supported, applying en_US"});
-         selected1 = Locale.US;
-      }
-
-      this.set("locale", selected1, false);
-      oldJavaPath1 = this.get("minecraft.javadir");
-      if (oldJavaPath1 != null) {
-         this.log(new Object[]{"Migrating Java path into Command:", oldJavaPath1});
-         this.set("minecraft.cmd", oldJavaPath1);
-         this.set("minecraft.javadir", (Object)null);
-      }
-
+      this.set("locale", locale);
       int oldFontSize = this.getInteger("gui.font.old");
       if (oldFontSize == 0) {
          this.set("gui.font.old", this.getInteger("gui.font"));
       }
 
+      log(this.properties.entrySet());
       if (this.isSaveable()) {
          try {
             this.save();
-         } catch (IOException var9) {
-            this.log(new Object[]{"Cannot save value!", var9});
+         } catch (IOException var6) {
+            log("Couldn't save config", var6);
          }
       }
 
@@ -154,16 +144,15 @@ public class Configuration extends SimpleConfiguration {
    }
 
    public Locale[] getLocales() {
-      Locale[] locales = new Locale[this.supportedLocales.size()];
-      return (Locale[])this.supportedLocales.toArray(locales);
+      return (Locale[])DEFAULT_LOCALES.toArray(new Locale[DEFAULT_LOCALES.size()]);
    }
 
    public Configuration.ActionOnLaunch getActionOnLaunch() {
       return Configuration.ActionOnLaunch.get(this.get("minecraft.onlaunch"));
    }
 
-   public Configuration.ConsoleType getConsoleType() {
-      return Configuration.ConsoleType.get(this.get("gui.console"));
+   public Configuration.LoggerType getLoggerType() {
+      return Configuration.LoggerType.get(this.get("gui.logger"));
    }
 
    public Configuration.ConnectionQuality getConnectionQuality() {
@@ -290,10 +279,6 @@ public class Configuration extends SimpleConfiguration {
       }
    }
 
-   private List getSupportedLocales() {
-      return this.defaultLocales;
-   }
-
    private static List getDefaultLocales() {
       ArrayList l = new ArrayList();
       String[] ll = Static.getLangList();
@@ -331,7 +316,11 @@ public class Configuration extends SimpleConfiguration {
       }
    }
 
-   public static enum ConsoleType {
+   private static void log(Object... o) {
+      U.log("[Config]", o);
+   }
+
+   public static enum LoggerType {
       GLOBAL,
       MINECRAFT,
       NONE;
@@ -340,11 +329,11 @@ public class Configuration extends SimpleConfiguration {
          if (val == null) {
             return false;
          } else {
-            Configuration.ConsoleType[] var4;
+            Configuration.LoggerType[] var4;
             int var3 = (var4 = values()).length;
 
             for(int var2 = 0; var2 < var3; ++var2) {
-               Configuration.ConsoleType cur = var4[var2];
+               Configuration.LoggerType cur = var4[var2];
                if (cur.toString().equalsIgnoreCase(val)) {
                   return true;
                }
@@ -354,12 +343,12 @@ public class Configuration extends SimpleConfiguration {
          }
       }
 
-      public static Configuration.ConsoleType get(String val) {
-         Configuration.ConsoleType[] var4;
+      public static Configuration.LoggerType get(String val) {
+         Configuration.LoggerType[] var4;
          int var3 = (var4 = values()).length;
 
          for(int var2 = 0; var2 < var3; ++var2) {
-            Configuration.ConsoleType cur = var4[var2];
+            Configuration.LoggerType cur = var4[var2];
             if (cur.toString().equalsIgnoreCase(val)) {
                return cur;
             }
@@ -368,15 +357,15 @@ public class Configuration extends SimpleConfiguration {
          return null;
       }
 
-      public MinecraftLauncher.ConsoleVisibility getVisibility() {
-         return this == GLOBAL ? MinecraftLauncher.ConsoleVisibility.NONE : (this == MINECRAFT ? MinecraftLauncher.ConsoleVisibility.ALWAYS : MinecraftLauncher.ConsoleVisibility.ON_CRASH);
+      public MinecraftLauncher.LoggerVisibility getVisibility() {
+         return this == GLOBAL ? MinecraftLauncher.LoggerVisibility.NONE : (this == MINECRAFT ? MinecraftLauncher.LoggerVisibility.ALWAYS : MinecraftLauncher.LoggerVisibility.ON_CRASH);
       }
 
       public String toString() {
          return super.toString().toLowerCase();
       }
 
-      public static Configuration.ConsoleType getDefault() {
+      public static Configuration.LoggerType getDefault() {
          return NONE;
       }
    }
@@ -430,6 +419,10 @@ public class Configuration extends SimpleConfiguration {
          }
 
          return null;
+      }
+
+      public int getMaxTries() {
+         return this.maxTries;
       }
 
       public int getMaxThreads() {

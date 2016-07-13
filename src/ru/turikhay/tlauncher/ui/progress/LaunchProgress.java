@@ -30,8 +30,8 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
       this.setWestString("launcher.step.collecting");
    }
 
-   public void onMinecraftComparingAssets() {
-      this.setWestString("launcher.step.comparing-assets");
+   public void onMinecraftComparingAssets(boolean fastCompare) {
+      this.setWestString("launcher.step.comparing-assets" + (fastCompare ? "" : "-long"));
    }
 
    public void onMinecraftDownloading() {

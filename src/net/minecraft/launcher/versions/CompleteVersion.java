@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.google.gson.annotations.Expose;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -29,6 +30,8 @@ import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
@@ -37,6 +40,7 @@ import ru.turikhay.util.U;
 public class CompleteVersion implements Cloneable, Version {
    String id;
    String jar;
+   String url;
    String family;
    String inheritsFrom;
    Date time;
@@ -47,7 +51,6 @@ public class CompleteVersion implements Cloneable, Version {
    String mainClass;
    Integer minimumLauncherVersion = 0;
    Integer tlauncherVersion = 0;
-   String assets;
    Repository source;
    VersionList list;
    List libraries;
@@ -55,6 +58,8 @@ public class CompleteVersion implements Cloneable, Version {
    List deleteEntries;
    Map downloads = new HashMap();
    AssetIndexInfo assetIndex;
+   @Expose
+   boolean elyfied;
    protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");
 
    public String getID() {
@@ -67,6 +72,10 @@ public class CompleteVersion implements Cloneable, Version {
       } else {
          throw new IllegalArgumentException("ID is NULL or empty");
       }
+   }
+
+   public String getUrl() {
+      return this.url;
    }
 
    public String getFamily() {
@@ -163,7 +172,7 @@ public class CompleteVersion implements Cloneable, Version {
 
    public AssetIndexInfo getAssetIndex() {
       if (this.assetIndex == null) {
-         this.assetIndex = new AssetIndexInfo(this.assets == null ? "legacy" : this.assets);
+         this.assetIndex = new AssetIndexInfo("legacy");
       }
 
       return this.assetIndex;
@@ -171,6 +180,14 @@ public class CompleteVersion implements Cloneable, Version {
 
    public DownloadInfo getDownloadURL(DownloadType type) {
       return (DownloadInfo)this.downloads.get(type);
+   }
+
+   public boolean isElyfied() {
+      return this.elyfied;
+   }
+
+   public void setElyfied(boolean elyfied) {
+      this.elyfied = elyfied;
    }
 
    public boolean equals(Object o) {
@@ -193,7 +210,7 @@ public class CompleteVersion implements Cloneable, Version {
    }
 
    public String debugString() {
-      return "{id='" + this.id + "', time=" + this.time + ", release=" + this.releaseTime + ", type=" + this.type + ", class=" + this.mainClass + ", minimumVersion=" + this.minimumLauncherVersion + ", assets='" + this.assets + "', source=" + this.source + ", list=" + this.list + ", libraries=" + this.libraries + "}";
+      return (new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)).append("id", this.id).append("jar", this.jar).append("inheritsFrom", this.inheritsFrom).append("url", this.url).append("time", this.time).append("releaseTime", this.releaseTime).append("downloads", this.downloads).append("assetIndex", this.assetIndex).append("source", this.source).append("list", this.list).append("libraries", this.libraries == null ? null : "(" + this.libraries.size() + " items)").build();
    }
 
    public File getFile(File base) {
@@ -297,6 +314,8 @@ public class CompleteVersion implements Cloneable, Version {
                   throw new RuntimeException(var7);
                }
 
+               this.log(result);
+               this.log(this.copyInto(result));
                if (this.id.toLowerCase().contains("forge") && this.family == null && result.family != null && !result.family.startsWith("Forge-")) {
                   this.family = "Forge-" + result.family;
                }
@@ -403,11 +422,11 @@ public class CompleteVersion implements Cloneable, Version {
          result.tlauncherVersion = this.tlauncherVersion;
       }
 
-      if (this.assets != null && !this.assets.equals("legacy")) {
-         result.assets = this.assets;
+      if (this.assetIndex != null) {
+         result.assetIndex = this.assetIndex;
       }
 
-      if (this.downloads != null) {
+      if (this.downloads != null && this.downloads.size() > 0) {
          result.downloads = this.downloads;
       }
 
@@ -417,6 +436,10 @@ public class CompleteVersion implements Cloneable, Version {
 
       result.list = this.list;
       return result;
+   }
+
+   private void log(Object... o) {
+      U.log("[Version:" + this.id + "]", o);
    }
 
    private static String getFamilyOf(String id) {
@@ -490,10 +513,6 @@ public class CompleteVersion implements Cloneable, Version {
 
             if (version.time == null) {
                version.time = new Date(0L);
-            }
-
-            if (version.assets == null) {
-               version.assets = "legacy";
             }
 
             return version;

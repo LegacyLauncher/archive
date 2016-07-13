@@ -5,18 +5,22 @@ import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.configuration.Configuration;
 
 public class LocaleConverter implements StringConverter {
-   public String toString(Locale from) {
+   public String toString(Locale from, Locale format) {
       String displayLang;
       try {
-         displayLang = from.getDisplayLanguage(from);
+         displayLang = from.getDisplayLanguage(format);
          if (StringUtils.isEmpty(displayLang)) {
             throw new IllegalArgumentException();
          }
-      } catch (Exception var4) {
+      } catch (Exception var5) {
          displayLang = from.getDisplayLanguage(Locale.US);
       }
 
       return from == null ? null : displayLang + " (" + from + ")";
+   }
+
+   public String toString(Locale from) {
+      return this.toString(from, from);
    }
 
    public Locale fromString(String from) {

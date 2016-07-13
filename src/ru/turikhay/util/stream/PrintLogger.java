@@ -4,22 +4,22 @@ import java.io.PrintStream;
 import java.util.Formatter;
 import java.util.Locale;
 
-public class PrintLogger extends PrintStream implements Logger {
+public class PrintLogger extends PrintStream implements StreamLogger {
    private LinkedOutputStringStream stream;
-   private Logger mirror;
+   private StreamLogger mirror;
    private Formatter formatter;
 
-   private PrintLogger(LinkedOutputStringStream stream, Logger mirror) {
+   private PrintLogger(LinkedOutputStringStream stream, StreamLogger mirror) {
       super(stream);
       this.stream = stream;
       this.mirror = mirror;
    }
 
    public PrintLogger(LinkedOutputStringStream stream) {
-      this(stream, (Logger)null);
+      this(stream, (StreamLogger)null);
    }
 
-   public void setMirror(Logger logger) {
+   public void setMirror(StreamLogger logger) {
       if (this == logger) {
          throw new IllegalArgumentException();
       } else {

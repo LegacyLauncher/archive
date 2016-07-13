@@ -1,6 +1,7 @@
 package ru.turikhay.util.async;
 
 public abstract class AsyncObject extends ExtendedThread {
+   private AsyncObjectContainer container;
    private boolean gotValue;
    private Object value;
    private AsyncObjectGotErrorException error;
@@ -9,15 +10,26 @@ public abstract class AsyncObject extends ExtendedThread {
       super("AsyncObject");
    }
 
+   public final AsyncObjectContainer getContainer() {
+      return this.container;
+   }
+
+   void setContainer(AsyncObjectContainer container) {
+      this.container = container;
+   }
+
    public void run() {
       try {
          this.value = this.execute();
       } catch (Throwable var2) {
          this.error = new AsyncObjectGotErrorException(this, var2);
-         return;
       }
 
       this.gotValue = true;
+      if (this.container != null) {
+         this.container.release();
+      }
+
    }
 
    public Object getValue() throws AsyncObjectNotReadyException, AsyncObjectGotErrorException {

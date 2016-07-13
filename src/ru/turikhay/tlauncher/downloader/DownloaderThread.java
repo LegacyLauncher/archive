@@ -13,6 +13,8 @@ import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import ru.turikhay.tlauncher.exceptions.IOExceptionList;
+import ru.turikhay.tlauncher.repository.IRepo;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
@@ -97,7 +99,7 @@ public class DownloaderThread extends ExtendedThread {
                         FileUtil.deleteFile(downloadable);
                      }
 
-                     this.dlog("Gave up trying to download this file.", var10);
+                     this.dlog("Gave up trying to download this file.");
                      this.onError(var10);
                   }
                } catch (AbortedDownloadException var11) {
@@ -130,41 +132,63 @@ public class DownloaderThread extends ExtendedThread {
    }
 
    private void download(int timeout) throws GaveUpDownloadException, AbortedDownloadException {
-      boolean hasRepo = this.current.hasRepository();
-      int attempt = 0;
-      int max = hasRepo ? this.current.getRepository().getCount() : 1;
-      Object cause = null;
+      List exL = new ArrayList();
+      Throwable cause = null;
+      List list;
+      if (this.current.hasRepository()) {
+         list = this.current.getRepository().getRelevant().getList();
+         int attempt = 0;
 
-      while(attempt < max) {
-         ++attempt;
-         String url = hasRepo ? this.current.getRepository().getSelectedRepo() + this.current.getURL() : this.current.getURL();
-         this.dlog("Downloading: " + url);
+         for(int max = list.size(); attempt < max; ++attempt) {
+            cause = null;
+            Iterator var7 = list.iterator();
+
+            while(var7.hasNext()) {
+               IRepo repo = (IRepo)var7.next();
+               URLConnection connection = null;
+
+               try {
+                  connection = repo.get(this.current.getURL(), attempt * this.downloader.getConfiguration().getTimeout(), U.getProxy());
+                  this.dlog("Downloading:", connection);
+                  this.downloadURL(connection, timeout);
+                  return;
+               } catch (IOException var11) {
+                  this.dlog("Failed:", connection.getURL(), this.current.getURL(), var11.getMessage());
+                  this.current.getRepository().getList().markInvalid(repo);
+                  exL.add(var11);
+               } catch (AbortedDownloadException var12) {
+                  throw var12;
+               } catch (Throwable var13) {
+                  this.dlog("Unknown error occurred:", var13);
+                  cause = var13;
+               }
+            }
+         }
+      } else {
+         list = null;
 
          try {
-            this.downloadURL(url, timeout);
+            URLConnection connection = (new URL(this.current.getURL())).openConnection();
+            this.dlog("Downloading:", connection);
+            this.downloadURL(connection, timeout);
             return;
-         } catch (IOException var8) {
-            this.dlog("Failed: " + url, var8);
-            cause = var8;
-            if (hasRepo) {
-               this.current.getRepository().selectNext();
-            }
-         } catch (AbortedDownloadException var9) {
-            throw var9;
-         } catch (Throwable var10) {
-            this.dlog("Unknown error occurred:", var10);
-            cause = var10;
+         } catch (IOException var14) {
+            this.dlog("Failed:", list.getURL(), this.current.getURL(), var14.getMessage());
+            exL.add(var14);
+         } catch (AbortedDownloadException var15) {
+            throw var15;
+         } catch (Throwable var16) {
+            this.dlog("Unknown error occurred:", var16);
+            cause = var16;
          }
       }
 
-      throw new GaveUpDownloadException(this.current, (Throwable)cause);
+      throw new GaveUpDownloadException(this.current, (Throwable)(cause == null ? new IOExceptionList(exL) : cause));
    }
 
-   private void downloadURL(String path, int timeout) throws IOException, AbortedDownloadException {
-      URL url = new URL(path);
-      URLConnection urlConnection = url.openConnection(U.getProxy());
+   private void downloadURL(URLConnection urlConnection, int timeout) throws IOException, AbortedDownloadException {
       if (!(urlConnection instanceof HttpURLConnection)) {
-         throw new IOException("Invalid protocol: " + url.getProtocol());
+         throw new IOException("invalid protocol");
       } else {
          HttpURLConnection connection = (HttpURLConnection)urlConnection;
          Downloadable.setUp(connection, timeout, this.current.getInsertUA());
@@ -177,7 +201,13 @@ public class DownloaderThread extends ExtendedThread {
             this.dlog("Replied in " + reply + " ms.");
             BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
             File file = this.current.getDestination();
-            File temp = FileUtil.makeTemp(new File(file.getAbsolutePath() + ".tlauncherdownload"));
+            File temp = new File(file.getAbsoluteFile() + ".download");
+            if (temp.isFile()) {
+               FileUtil.deleteFile(temp);
+            } else {
+               FileUtil.createFile(temp);
+            }
+
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
             long read = 0L;
             long length = (long)connection.getContentLength();
@@ -277,8 +307,8 @@ public class DownloaderThread extends ExtendedThread {
 
    private void dlog(Object... o) {
       U.plog(this.LOGGER_PREFIX, "> " + this.current.getURL() + "\n ", o);
-      if (this.current.hasConsole()) {
-         this.current.getContainer().getConsole().log("> " + this.current.getURL() + "\n  ", o);
+      if (this.current.hasLogger()) {
+         this.current.getContainer().getLogger().log("> " + this.current.getURL() + "\n  ", o);
       }
 
    }

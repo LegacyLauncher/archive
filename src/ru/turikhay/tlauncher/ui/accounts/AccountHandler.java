@@ -24,7 +24,7 @@ public class AccountHandler {
    private Account lastAccount;
    private Account tempAccount;
    private boolean allowDisallowed = false;
-   private static final String[] DISALLOWED = new String[]{"turikhay", "Nik_mmzd", "DarikXPlay"};
+   private static final String[] DISALLOWED = new String[]{"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay"};
 
    public AccountHandler(AccountEditorScene sc) {
       this.scene = sc;

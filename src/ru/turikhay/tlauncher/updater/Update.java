@@ -99,28 +99,11 @@ public class Update {
    }
 
    public boolean isApplicable() {
-      boolean var10000;
-      label25: {
-         if (StringUtils.isNotBlank((CharSequence)this.downloads.get(PackageType.CURRENT))) {
-            if (TLauncher.isBeta()) {
-               if (TLauncher.getVersion() <= this.version) {
-                  break label25;
-               }
-            } else if (TLauncher.getVersion() < this.version) {
-               break label25;
-            }
-         }
-
-         var10000 = false;
-         return var10000;
-      }
-
-      var10000 = true;
-      return var10000;
+      return StringUtils.isNotBlank((CharSequence)this.downloads.get(PackageType.CURRENT)) && TLauncher.getVersion() < this.version;
    }
 
    public boolean isRequired() {
-      return this.requiredAtLeastFor != 0.0D && TLauncher.getVersion() <= this.requiredAtLeastFor;
+      return TLauncher.isBeta() || this.requiredAtLeastFor != 0.0D && TLauncher.getVersion() <= this.requiredAtLeastFor;
    }
 
    public String getDescription(String key) {
@@ -186,7 +169,7 @@ public class Update {
       File replace = FileUtil.getRunningJar();
       File replaceWith = this.download.getDestination();
       String[] args = TLauncher.getInstance() != null ? TLauncher.getArgs() : new String[0];
-      ProcessBuilder builder = Bootstrapper.createLauncher(args).createProcess();
+      ProcessBuilder builder = Bootstrapper.createLauncher(args, false).createProcess();
       this.onUpdateApplying();
       FileInputStream in = new FileInputStream(replaceWith);
       FileOutputStream out = new FileOutputStream(replace);
@@ -318,7 +301,7 @@ public class Update {
    }
 
    public String toString() {
-      return "Update{version=" + this.version + "," + "requiredAtLeastFor=" + this.requiredAtLeastFor + "," + "description=" + this.description + "," + "downloads=" + this.downloads + "}";
+      return "Update{version=" + this.version + ",requiredAtLeastFor=" + this.requiredAtLeastFor + ",description=" + this.description + ",downloads=" + this.downloads + "}";
    }
 
    public static enum State {

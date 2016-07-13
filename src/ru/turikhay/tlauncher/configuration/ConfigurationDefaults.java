@@ -51,15 +51,19 @@ class ConfigurationDefaults {
       this.d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.getDefault());
       this.d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
       this.d.put("gui.size", new IntegerArray(new int[]{935, 570}));
-      this.d.put("gui.console", Configuration.ConsoleType.getDefault());
-      this.d.put("gui.console.width", 720);
-      this.d.put("gui.console.height", 500);
-      this.d.put("gui.console.x", 30);
-      this.d.put("gui.console.y", 30);
+      this.d.put("gui.logger", Configuration.LoggerType.getDefault());
+      this.d.put("gui.logger.width", 720);
+      this.d.put("gui.logger.height", 500);
+      this.d.put("gui.logger.x", 30);
+      this.d.put("gui.logger.y", 30);
       this.d.put("gui.direction.loginform", Direction.CENTER);
       this.d.put("gui.systemlookandfeel", true);
       this.d.put("connection", Configuration.ConnectionQuality.getDefault());
       this.d.put("client", UUID.randomUUID());
+      if (OS.WINDOWS.isCurrent()) {
+         this.d.put("windows.dxdiag", true);
+      }
+
    }
 
    public static int getVersion() {

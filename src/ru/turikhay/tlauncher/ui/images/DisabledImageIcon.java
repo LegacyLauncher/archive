@@ -22,7 +22,7 @@ public class DisabledImageIcon implements Icon {
    }
 
    public DisabledImageIcon(Icon parent) {
-      this(parent, 0.75F);
+      this(parent, 0.3F);
    }
 
    public final void setDisabledOpacity(float f) {
