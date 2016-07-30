@@ -18,19 +18,21 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.SwingUtil;
 
-public class FirstRunNotice extends ActionFrame {
+public class FirstRunNotice extends VActionFrame {
    private final TLauncher t = TLauncher.getInstance();
 
    public FirstRunNotice() {
-      super(new Dimension(500, 335));
-      this.setTitlePath("firstrun.title");
+      super(SwingUtil.magnify(500));
+      this.setTitlePath("firstrun.title", new Object[0]);
       this.setDefaultCloseOperation(3);
       this.getHead().setText("firstrun.notice.welcome");
       VPanel list = new VPanel();
       list.setInsets(new MagnifiedInsets(0, 10, 0, 0));
 
       for(int i = 0; i < 3; ++i) {
-         list.add(new LocalizableHTMLLabel("firstrun.notice.body." + i));
+         LocalizableHTMLLabel label = new LocalizableHTMLLabel("firstrun.notice.body." + i);
+         label.setLabelWidth(this.getBodyText().getLabelWidth());
+         list.add(label);
       }
 
       this.getBodyText().setText("firstrun.notice.body");
@@ -84,5 +86,6 @@ public class FirstRunNotice extends ActionFrame {
       });
       this.getFooter().add(yesButton, c);
       this.updateLocale();
+      this.pack();
    }
 }

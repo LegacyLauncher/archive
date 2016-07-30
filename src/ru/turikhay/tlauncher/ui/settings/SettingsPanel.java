@@ -128,7 +128,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
          dirExplorer = FileExplorer.newExplorer();
          dirExplorer.setFileSelectionMode(1);
          dirExplorer.setFileHidingEnabled(false);
-      } catch (InternalError var17) {
+      } catch (Exception var17) {
          dirExplorer = null;
       }
 
@@ -414,7 +414,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
       this.updateLocale();
    }
 
-   void updateValues() {
+   public void updateValues() {
       boolean globalUnSaveable = !this.global.isSaveable();
       Iterator var3 = this.handlers.iterator();
 

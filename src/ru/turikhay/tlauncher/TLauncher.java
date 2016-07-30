@@ -40,7 +40,6 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Updater;
-import ru.turikhay.util.DXDiagScanner;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
@@ -153,10 +152,6 @@ public class TLauncher {
             }
          }
       })).start();
-      if (this.settings.getBoolean("windows.dxdiag")) {
-         DXDiagScanner.scheduleScan();
-      }
-
    }
 
    public Downloader getDownloader() {
@@ -207,6 +202,10 @@ public class TLauncher {
       return this.launcher;
    }
 
+   public MinecraftUIListener getMinecraftListener() {
+      return this.minecraftListener;
+   }
+
    public boolean isReady() {
       return this.ready;
    }
@@ -222,6 +221,10 @@ public class TLauncher {
 
       Localizable.setLang(this.lang);
       Alert.prepareLocal();
+      if (this.minecraftListener != null) {
+         this.minecraftListener.updateLocale();
+      }
+
       if (logger != null) {
          logger.setName(this.lang.get("logger"));
       }
@@ -379,7 +382,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.761D;
+      return 1.77D;
    }
 
    public static boolean isBeta() {

@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.ui.progress;
 
 import java.awt.Component;
-import ru.turikhay.tlauncher.minecraft.crash.Crash;
+import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftExtendedListener;
 
@@ -78,6 +78,6 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
       this.stopProgress();
    }
 
-   public void onMinecraftCrash(Crash crash) {
+   public void onCrashManagerInit(CrashManager manager) {
    }
 }

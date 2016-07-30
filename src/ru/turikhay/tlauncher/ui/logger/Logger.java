@@ -10,13 +10,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.text.Document;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.CharSequenceReader;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
@@ -24,6 +25,7 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedTextArea;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
@@ -122,7 +124,7 @@ public class Logger implements StreamLogger {
          this.frame.bottom.openFolder = launcher.getGameDir();
       } else {
          this.frame.bottom.kill.setEnabled(false);
-         if (this.global.get("logger").equals(this.name)) {
+         if (Localizable.get("logger").equals(this.name)) {
             this.frame.bottom.openFolder = MinecraftUtil.getWorkingDirectory();
          }
       }
@@ -155,8 +157,9 @@ public class Logger implements StreamLogger {
       this.rawlog(new String(c));
    }
 
-   public String getOutput() {
-      return this.frame.textarea.getText();
+   public CharSequence getOutput() {
+      Document d = this.frame.textarea.getDocument();
+      return d instanceof ExtendedTextArea.ContentDocument ? ((ExtendedTextArea.ContentDocument)d).accessContent() : null;
    }
 
    void update() {
@@ -270,7 +273,7 @@ public class Logger implements StreamLogger {
       if (this.explorer == null) {
          try {
             this.explorer = FileExplorer.newExplorer();
-         } catch (InternalError var16) {
+         } catch (Exception var16) {
             Alert.showError(Localizable.get("explorer.unavailable.title"), Localizable.get("explorer.unvailable") + (OS.WINDOWS.isCurrent() ? "\n" + Localizable.get("explorer.unavailable.win") : ""));
             return;
          }
@@ -291,7 +294,7 @@ public class Logger implements StreamLogger {
 
             try {
                FileUtil.createFile(file);
-               IOUtils.copy((Reader)(new StringReader(this.getOutput())), (OutputStream)(output = new FileOutputStream(file)));
+               IOUtils.copy((Reader)(new CharSequenceReader(this.getOutput())), (OutputStream)(output = new FileOutputStream(file)));
             } catch (Throwable var15) {
                Alert.showLocError("logger.save.error", var15);
             } finally {
@@ -307,6 +310,11 @@ public class Logger implements StreamLogger {
          }
       }
 
+   }
+
+   public boolean isKilled() {
+      this.check();
+      return this.killed;
    }
 
    Point getPositionPoint() {

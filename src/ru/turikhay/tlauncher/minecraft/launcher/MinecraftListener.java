@@ -1,6 +1,6 @@
 package ru.turikhay.tlauncher.minecraft.launcher;
 
-import ru.turikhay.tlauncher.minecraft.crash.Crash;
+import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 
 public interface MinecraftListener {
    void onMinecraftPrepare();
@@ -15,5 +15,5 @@ public interface MinecraftListener {
 
    void onMinecraftKnownError(MinecraftException var1);
 
-   void onMinecraftCrash(Crash var1);
+   void onCrashManagerInit(CrashManager var1);
 }

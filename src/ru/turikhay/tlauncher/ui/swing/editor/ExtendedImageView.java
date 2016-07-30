@@ -7,11 +7,7 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
-import java.io.ByteArrayInputStream;
-import java.net.URL;
-import javax.imageio.ImageIO;
 import javax.swing.GrayFilter;
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
@@ -36,14 +32,9 @@ import javax.swing.text.html.InlineView;
 import javax.swing.text.html.StyleSheet;
 import javax.swing.text.html.HTML.Attribute;
 import javax.swing.text.html.HTML.Tag;
-import javax.xml.bind.DatatypeConverter;
-import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 public class ExtendedImageView extends View {
-   private static String base64s = "data:image/";
-   private static String base64e = ";base64,";
    private static boolean sIsInc = false;
    private static int sIncRate = 100;
    private AttributeSet attr;
@@ -421,31 +412,7 @@ public class ExtendedImageView extends View {
 
    private Image loadNewImage() throws Exception {
       String source = this.getImageSource();
-      if (source == null) {
-         return null;
-      } else if (!source.startsWith(base64s)) {
-         URL src1 = U.makeURL(source);
-         return src1 != null ? Images.loadMagnifiedImage(src1) : null;
-      } else {
-         int offset = base64s.length();
-         if (!source.startsWith("png", offset) && !source.startsWith("jpg", offset)) {
-            if (!source.startsWith("jpeg", offset)) {
-               return null;
-            }
-
-            offset += 4;
-         } else {
-            offset += 3;
-         }
-
-         if (!source.substring(offset, offset + base64e.length()).equals(base64e)) {
-            return null;
-         } else {
-            offset += base64e.length();
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(source.substring(offset))));
-            return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), 4);
-         }
-      }
+      return source == null ? null : SwingUtil.loadImage(source);
    }
 
    private void updateImageSize() {

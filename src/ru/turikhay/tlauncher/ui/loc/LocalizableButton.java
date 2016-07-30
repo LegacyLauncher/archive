@@ -9,7 +9,7 @@ public class LocalizableButton extends ExtendedButton implements LocalizableComp
    private String hint;
    private String[] hintVars;
 
-   protected LocalizableButton() {
+   public LocalizableButton() {
       this.variables = Localizable.checkVariables(Localizable.EMPTY_VARS);
       this.hintVars = Localizable.checkVariables(Localizable.EMPTY_VARS);
    }

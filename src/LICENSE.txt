@@ -1,6 +1,6 @@
 You can redistribute unmodified versions of TLauncher.
-You use this application at your own risk: developers are not responsible for results
-this application may produce.
+You use this application at your own risk: developers are not responsible
+for results this application may produce.
 
 This software includes projects licensed under a Apache License 2.0:
 - Apache Commons IO (© 2002-2012 The Apache Software Foundation)
@@ -14,3 +14,7 @@ which legal code can be found at: http://opensource.org/licenses/mit-license.php
 This software includes content made by Mojang and licensed under Minecraft EULA,
 which can be found at: https://account.mojang.com/documents/minecraft_eula
 It was modified to be compatible with extra features that TLauncher includes.
+
+This software uses Hamburg Icon pack by pc.de Team under
+CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/deed.en
+Icon pack could be found at: http://pc.de/ico/

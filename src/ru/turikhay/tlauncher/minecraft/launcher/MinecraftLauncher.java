@@ -58,8 +58,7 @@ import ru.turikhay.tlauncher.managers.ServerListManager;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionSyncInfoContainer;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.minecraft.crash.Crash;
-import ru.turikhay.tlauncher.minecraft.crash.CrashDescriptor;
+import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.updater.Stats;
@@ -89,7 +88,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    private final PrintLogger printLogger;
    private Logger logger;
    private final MinecraftLauncher.LoggerVisibility loggerVis;
-   private CrashDescriptor descriptor;
+   private CrashManager crashManager;
    private final List listeners;
    private final List extListeners;
    private final List assistants;
@@ -123,16 +122,16 @@ public class MinecraftLauncher implements JavaProcessListener {
    private JavaProcess process;
    private boolean firstLine;
 
-   public Configuration getConfiguration() {
-      return this.settings;
-   }
-
    public boolean isLaunchAssist() {
       return this.assistLaunch;
    }
 
-   public String getOutput() {
-      return this.logger != null ? this.logger.getOutput() : (this.output != null ? this.output.toString() : null);
+   public CharSequence getOutput() {
+      return (CharSequence)(this.logger != null ? this.logger.getOutput() : this.output);
+   }
+
+   public Logger getLogger() {
+      return this.logger;
    }
 
    public boolean isWorking() {
@@ -163,7 +162,7 @@ public class MinecraftLauncher implements JavaProcessListener {
          this.assistLaunch = !exit;
          this.loggerVis = visibility;
          this.printLogger = this.loggerVis.equals(MinecraftLauncher.LoggerVisibility.NONE) ? null : new PrintLogger(new LinkedOutputStringStream());
-         this.logger = this.logger == null ? null : new Logger(this.settings, this.printLogger, "Minecraft", this.loggerVis.equals(MinecraftLauncher.LoggerVisibility.ALWAYS) && this.assistLaunch);
+         this.logger = this.printLogger == null ? null : new Logger(this.settings, this.printLogger, "Minecraft", this.loggerVis.equals(MinecraftLauncher.LoggerVisibility.ALWAYS) && this.assistLaunch);
          this.output = this.logger == null ? new StringBuffer() : null;
          if (this.logger != null) {
             this.logger.frame.addWindowListener(new WindowAdapter() {
@@ -175,7 +174,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             });
          }
 
-         this.descriptor = new CrashDescriptor(this);
          this.listeners = Collections.synchronizedList(new ArrayList());
          this.extListeners = Collections.synchronizedList(new ArrayList());
          this.step = MinecraftLauncher.MinecraftLauncherStep.NONE;
@@ -907,7 +905,7 @@ public class MinecraftLauncher implements JavaProcessListener {
       List args = new ArrayList();
       if (this.settings.getBoolean("minecraft.improvedargs")) {
          args.add("-Xms256M");
-         if (OS.JAVA_VERSION >= 1.7D && this.ramSize >= 3072) {
+         if (OS.JAVA_VERSION.getDouble() >= 1.7D && this.ramSize >= 3072) {
             args.add("-XX:+UseG1GC");
             args.add("-XX:ConcGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
          } else {
@@ -1133,7 +1131,7 @@ public class MinecraftLauncher implements JavaProcessListener {
    }
 
    public void log(Object... o) {
-      U.log("[Launcher]", o);
+      U.log("[L]", o);
       this.plog("[L]", o);
    }
 
@@ -1193,32 +1191,27 @@ public class MinecraftLauncher implements JavaProcessListener {
       int exit = jp.getExitCode();
       this.log("Minecraft closed with exit code: " + exit);
       this.exitCode = exit;
-      Crash crash;
-      if (this.killed || System.currentTimeMillis() - this.startupTime >= 5000L && exit == 0) {
-         crash = null;
-      } else {
-         crash = this.descriptor.scan();
+      if (!this.killed && (System.currentTimeMillis() - this.startupTime < 5000L || exit != 0)) {
+         this.crashManager = new CrashManager(this);
+         Iterator var3 = this.listeners.iterator();
+
+         while(var3.hasNext()) {
+            MinecraftListener listener = (MinecraftListener)var3.next();
+            listener.onCrashManagerInit(this.crashManager);
+         }
+
+         this.crashManager.startAndJoin();
+         if (this.crashManager.getCrash().getEntry() == null || !this.crashManager.getCrash().getEntry().isFake()) {
+            return;
+         }
       }
 
-      if (crash == null) {
-         if (!this.assistLaunch) {
-            TLauncher.kill();
-         }
+      if (!this.assistLaunch) {
+         TLauncher.kill();
+      }
 
-         if (this.logger != null) {
-            this.logger.killIn(7000L);
-         }
-      } else {
-         if (this.logger != null) {
-            this.logger.show();
-         }
-
-         Iterator var5 = this.listeners.iterator();
-
-         while(var5.hasNext()) {
-            MinecraftListener listener = (MinecraftListener)var5.next();
-            listener.onMinecraftCrash(crash);
-         }
+      if (this.logger != null) {
+         this.logger.killIn(7000L);
       }
 
    }

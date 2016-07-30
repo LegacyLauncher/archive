@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.ExtendedThread;
 
@@ -25,6 +27,7 @@ public final class DXDiagScanner {
    private DXDiagScanner.DXDiagException threadException;
    private DXDiagScanner.DXDiagScannerResult result;
    private boolean pending;
+   private boolean cancelled;
    private static final Pattern keyValuePattern = Pattern.compile("[\\s]*(.+): (.+)");
 
    public static DXDiagScanner getInstance() throws DXDiagScanner.DXDiagException {
@@ -46,12 +49,16 @@ public final class DXDiagScanner {
       }
    }
 
-   public static void scheduleScan() {
+   public static void cancelScan() {
       try {
-         getInstance().tryResult();
+         getInstance().cancelled = true;
       } catch (DXDiagScanner.DXDiagException var1) {
       }
 
+   }
+
+   public static boolean isScannable() {
+      return OS.WINDOWS.isCurrent() && (TLauncher.getInstance() == null || TLauncher.getInstance().getSettings().getBoolean("windows.dxdiag"));
    }
 
    private DXDiagScanner() throws DXDiagScanner.DXDiagException {
@@ -73,16 +80,6 @@ public final class DXDiagScanner {
       }
    }
 
-   public DXDiagScanner.DXDiagScannerResult tryResult() throws DXDiagScanner.DXDiagException {
-      if (this.threadException != null) {
-         throw this.threadException;
-      } else if (this.thread != null && this.thread.isAlive()) {
-         throw new DXDiagScanner.DXDiagResultPendingException();
-      } else {
-         return this.result;
-      }
-   }
-
    public DXDiagScanner.DXDiagScannerResult getResult() throws DXDiagScanner.DXDiagException, InterruptedException {
       this.pending = true;
       if (this.threadException != null) {
@@ -96,11 +93,27 @@ public final class DXDiagScanner {
       }
    }
 
+   private static void log(Object... o) {
+      U.log("[DxDiagScanner]", o);
+   }
+
    private void llog(Object... o) {
       if (this.pending) {
          U.log("[DxDiagScanner]", o);
       }
 
+   }
+
+   public static class DXDiagScanCancelledException extends DXDiagScanner.DXDiagException {
+      private DXDiagScanCancelledException() {
+         super((<undefinedtype>)null);
+         DXDiagScanner.log("Scanning cancelled.");
+      }
+
+      // $FF: synthetic method
+      DXDiagScanCancelledException(Object x0) {
+         this();
+      }
    }
 
    public static class DXDiagResultException extends DXDiagScanner.DXDiagException {
@@ -111,17 +124,6 @@ public final class DXDiagScanner {
       // $FF: synthetic method
       DXDiagResultException(String x0, Object x1) {
          this(x0);
-      }
-   }
-
-   public static class DXDiagResultPendingException extends DXDiagScanner.DXDiagException {
-      private DXDiagResultPendingException() {
-         super((<undefinedtype>)null);
-      }
-
-      // $FF: synthetic method
-      DXDiagResultPendingException(Object x0) {
-         this();
       }
    }
 
@@ -188,104 +190,106 @@ public final class DXDiagScanner {
          final Process process = processBuilder.start();
          int timer = 0;
 
-         while(timer < 60) {
-            DXDiagScanner.this.llog("DXDiagScanner is waiting for result...", timer);
+         while(true) {
+            if (timer < 60) {
+               if (DXDiagScanner.this.cancelled) {
+                  throw new DXDiagScanner.DXDiagScanCancelledException();
+               }
 
-            try {
-               process.exitValue();
-            } catch (IllegalThreadStateException var21) {
-               ++timer;
-               U.sleepFor(1000L);
-               continue;
+               DXDiagScanner.this.llog("DXDiagScanner is waiting for result...", timer);
+
+               try {
+                  process.exitValue();
+               } catch (IllegalThreadStateException var21) {
+                  ++timer;
+                  U.sleepFor(1000L);
+                  continue;
+               }
+
+               timer = 0;
             }
 
-            timer = 0;
-            break;
-         }
+            if (timer == 60) {
+               DXDiagScanner.this.llog("Timeout is exceeded");
+               AsyncThread.execute(new Runnable() {
+                  public void run() {
+                     process.destroy();
+                  }
+               });
+               throw new DXDiagScanner.DXDiagResultException("timeout");
+            }
 
-         if (timer == 60) {
-            DXDiagScanner.this.llog("Timeout is exceeded");
-            AsyncThread.execute(new Runnable() {
-               public void run() {
-                  process.destroy();
-               }
-            });
-            throw new DXDiagScanner.DXDiagResultException("timeout");
-         } else {
             int exitCode = process.exitValue();
             if (exitCode != 0) {
                throw new DXDiagScanner.DXDiagResultException("invalid exit code: " + exitCode);
-            } else {
-               Scanner fileScanner = null;
+            }
 
-               try {
-                  fileScanner = new Scanner(new FileInputStream(outputFile));
-                  DXDiagScanner.DXDiagScannerResult result = DXDiagScanner.this.new DXDiagScannerResult();
-                  StringBuilder b = new StringBuilder();
-                  String sectionName = null;
-                  boolean nextLineIsSectionName = false;
-                  boolean skipSection = false;
-                  int firstColumnWidth = 0;
+            Scanner fileScanner = null;
 
-                  while(true) {
-                     while(fileScanner.hasNextLine()) {
-                        String line = fileScanner.nextLine();
-                        if (line.startsWith("------")) {
-                           firstColumnWidth = 0;
-                           nextLineIsSectionName = !nextLineIsSectionName;
-                        } else if (nextLineIsSectionName) {
-                           sectionName = line;
-                           skipSection = U.find(line, DXDiagScanner.DXDIAG_SECTIONS) == -1;
-                           if (!skipSection) {
-                              result.passLine("------");
-                              result.passLine(line);
-                              result.passLine("------");
-                           }
-                        } else if (!skipSection) {
-                           Matcher matcher = DXDiagScanner.keyValuePattern.matcher(line);
-                           if (matcher.matches()) {
-                              if (firstColumnWidth == 0) {
-                                 firstColumnWidth = StringUtils.indexOf(line, ":") + 1;
-                              }
+            try {
+               fileScanner = new Scanner(new FileInputStream(outputFile));
+               DXDiagScanner.DXDiagScannerResult result = DXDiagScanner.this.new DXDiagScannerResult();
+               StringBuilder b = new StringBuilder();
+               String sectionName = null;
+               boolean nextLineIsSectionName = false;
+               boolean skipSection = false;
+               int firstColumnWidth = 0;
 
-                              if (line.length() >= firstColumnWidth) {
-                                 boolean lineIsKeyValue = false;
+               while(fileScanner.hasNextLine()) {
+                  String line = fileScanner.nextLine();
+                  if (line.startsWith("------")) {
+                     firstColumnWidth = 0;
+                     nextLineIsSectionName = !nextLineIsSectionName;
+                  } else if (nextLineIsSectionName) {
+                     sectionName = line;
+                     skipSection = U.find(line, DXDiagScanner.DXDIAG_SECTIONS) == -1;
+                     if (!skipSection) {
+                        result.passLine("------");
+                        result.passLine(line);
+                        result.passLine("------");
+                     }
+                  } else if (!skipSection) {
+                     Matcher matcher = DXDiagScanner.keyValuePattern.matcher(line);
+                     if (matcher.matches()) {
+                        if (firstColumnWidth == 0) {
+                           firstColumnWidth = StringUtils.indexOf(line, ":") + 1;
+                        }
 
-                                 for(int i = 0; i < firstColumnWidth; ++i) {
-                                    if (line.charAt(i) != ' ') {
-                                       lineIsKeyValue = true;
-                                    }
-                                 }
+                        if (line.length() >= firstColumnWidth) {
+                           boolean lineIsKeyValue = false;
 
-                                 if (lineIsKeyValue) {
-                                    result.passKeyValue(sectionName, matcher.group(1), matcher.group(2));
-                                    continue;
-                                 }
+                           for(int i = 0; i < firstColumnWidth; ++i) {
+                              if (line.charAt(i) != ' ') {
+                                 lineIsKeyValue = true;
                               }
                            }
 
-                           b.setLength(0);
-                           b.append('\t').append(StringUtils.trim(line));
-                           result.passLine(line);
+                           if (lineIsKeyValue) {
+                              result.passKeyValue(sectionName, matcher.group(1), matcher.group(2));
+                           }
                         }
                      }
 
-                     DXDiagScanner.this.llog("Done in", Time.stop(), "ms");
-                     DXDiagScanner.DXDiagSection.Device system = result.getDevice("System Information");
-                     if (system != null) {
-                        String operatingSystem = system.get("Operating System");
-                        if (operatingSystem != null) {
-                           result.is64Bit = operatingSystem.contains("64-bit");
-                        }
-                     }
-
-                     DXDiagScanner.DXDiagScannerResult var24 = result;
-                     return var24;
+                     b.setLength(0);
+                     b.append('\t').append(StringUtils.trim(line));
+                     result.passLine(line);
                   }
-               } finally {
-                  U.close(fileScanner);
-                  outputFile.delete();
                }
+
+               DXDiagScanner.this.llog("Done in", Time.stop(), "ms");
+               DXDiagScanner.DXDiagSection.Device system = result.getDevice("System Information");
+               if (system != null) {
+                  String operatingSystem = system.get("Operating System");
+                  if (operatingSystem != null) {
+                     result.is64Bit = operatingSystem.contains("64-bit");
+                  }
+               }
+
+               DXDiagScanner.DXDiagScannerResult var24 = result;
+               return var24;
+            } finally {
+               U.close(fileScanner);
+               outputFile.delete();
             }
          }
       }
@@ -302,6 +306,8 @@ public final class DXDiagScanner {
       private DXDiagScanner.DXDiagSection currentSection;
       private String currentSectionName;
       private final Map sectionMap;
+      private DXDiagScanner.DXDiagScannerResult.DXDiagSystemInfo systemInfo;
+      private List displayDevices;
       private boolean is64Bit;
 
       private DXDiagScannerResult() {
@@ -328,6 +334,68 @@ public final class DXDiagScanner {
          return deviceList != null && deviceList.size() == 1 ? (DXDiagScanner.DXDiagSection.Device)deviceList.get(0) : null;
       }
 
+      public DXDiagScanner.DXDiagScannerResult.DXDiagSystemInfo getSystemInfo() {
+         if (this.systemInfo == null) {
+            DXDiagScanner.DXDiagSection.Device systemInfoDevice = this.getDevice("System Information");
+            if (systemInfoDevice == null) {
+               return null;
+            }
+
+            this.systemInfo = new DXDiagScanner.DXDiagScannerResult.DXDiagSystemInfo(systemInfoDevice);
+         }
+
+         return this.systemInfo;
+      }
+
+      public List getDisplayDevices() {
+         if (this.displayDevices == null) {
+            List deviceList = this.getDeviceList("Display Devices");
+            if (deviceList == null) {
+               return null;
+            }
+
+            List displayDevices = new ArrayList(deviceList.size());
+            Iterator var3 = deviceList.iterator();
+
+            while(var3.hasNext()) {
+               DXDiagScanner.DXDiagSection.Device device = (DXDiagScanner.DXDiagSection.Device)var3.next();
+               DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice wrapped = new DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice(device);
+               if (StringUtils.isNotEmpty(wrapped.getCardName())) {
+                  displayDevices.add(wrapped);
+               }
+            }
+
+            this.displayDevices = displayDevices;
+         }
+
+         return this.displayDevices;
+      }
+
+      public DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice getDisplayDevice(String name) {
+         name = StringUtil.requireNotBlank(name, "name").toLowerCase();
+         List deviceList = this.getDisplayDevices();
+         if (deviceList != null && !deviceList.isEmpty()) {
+            Iterator var3 = deviceList.iterator();
+
+            DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice device;
+            do {
+               if (!var3.hasNext()) {
+                  return null;
+               }
+
+               device = (DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice)var3.next();
+            } while(!device.getCardName().toLowerCase().contains(name));
+
+            return device;
+         } else {
+            return null;
+         }
+      }
+
+      public boolean is64Bit() {
+         return this.is64Bit;
+      }
+
       void passLine(String line) {
          this.lines.add(line);
       }
@@ -344,6 +412,72 @@ public final class DXDiagScanner {
       // $FF: synthetic method
       DXDiagScannerResult(Object x1) {
          this();
+      }
+
+      public final class DXDiagDisplayDevice {
+         private final DXDiagScanner.DXDiagSection.Device device;
+
+         private DXDiagDisplayDevice(DXDiagScanner.DXDiagSection.Device device) {
+            this.device = (DXDiagScanner.DXDiagSection.Device)U.requireNotNull(device, "device");
+         }
+
+         public String getCardName() {
+            return this.device.get("Card name");
+         }
+
+         public String getDACType() {
+            return this.device.get("DAC type");
+         }
+
+         public String getDeviceType() {
+            return this.device.get("Device Type");
+         }
+
+         public String getDriverInfo() {
+            return this.device.get("Driver Version") + " (" + this.device.get("Driver Date/Size") + ")";
+         }
+
+         public String toString() {
+            return (new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)).append("card", this.getCardName()).append("dac", this.getDACType()).append("type", this.getDeviceType()).append("driver", this.getDriverInfo()).build();
+         }
+
+         // $FF: synthetic method
+         DXDiagDisplayDevice(DXDiagScanner.DXDiagSection.Device x1, Object x2) {
+            this(x1);
+         }
+      }
+
+      public final class DXDiagSystemInfo {
+         private final DXDiagScanner.DXDiagSection.Device systemInfoDevice;
+
+         private DXDiagSystemInfo(DXDiagScanner.DXDiagSection.Device device) {
+            this.systemInfoDevice = device;
+         }
+
+         public String getOS() {
+            return this.systemInfoDevice.get("Operating System");
+         }
+
+         public String getProcessor() {
+            return this.systemInfoDevice.get("Processor");
+         }
+
+         public String getMemory() {
+            return this.systemInfoDevice.get("Memory");
+         }
+
+         public String getDirectXVersion() {
+            return this.systemInfoDevice.get("DirectX Version");
+         }
+
+         public String toString() {
+            return (new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)).append("os", this.getOS()).append("processor", this.getProcessor()).append("memory", this.getMemory()).append("directx", this.getDirectXVersion()).build();
+         }
+
+         // $FF: synthetic method
+         DXDiagSystemInfo(DXDiagScanner.DXDiagSection.Device x1, Object x2) {
+            this(x1);
+         }
       }
    }
 

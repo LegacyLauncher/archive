@@ -21,17 +21,21 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
    }
 
    public void uncaughtException(Thread t, Throwable e) {
-      OutOfMemoryError asOOM = (OutOfMemoryError)Reflect.cast(e, OutOfMemoryError.class);
-      if (asOOM == null || !reduceMemory(asOOM)) {
-         if (scanTrace(e) && toShowError(e.getMessage())) {
-            try {
-               Alert.showError("Exception in thread " + t.getName(), (Object)e);
-            } catch (Exception var5) {
-               var5.printStackTrace();
+      try {
+         OutOfMemoryError asOOM = (OutOfMemoryError)Reflect.cast(e, OutOfMemoryError.class);
+         if (asOOM == null || !reduceMemory(asOOM)) {
+            if (scanTrace(e) && toShowError(e)) {
+               try {
+                  Alert.showError("Exception in thread " + t.getName(), (Object)e);
+               } catch (Exception var5) {
+                  var5.printStackTrace();
+               }
+            } else {
+               U.log("Hidden exception in thread " + t.getName(), e);
             }
-         } else {
-            U.log("Hidden exception in thread " + t.getName(), e);
          }
+      } catch (Throwable var6) {
+         var6.printStackTrace();
       }
 
    }
@@ -70,15 +74,21 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
       return false;
    }
 
-   private static synchronized boolean toShowError(String message) {
-      for(int i = 0; i < lastMessages.length; ++i) {
-         if (message.equals(lastMessages[i])) {
-            return false;
-         }
-      }
+   private static synchronized boolean toShowError(Throwable t) {
+      if (t == null) {
+         return false;
+      } else {
+         String message = t.toString();
 
-      lastWrittenMessage = lastWrittenMessage == lastMessages.length - 1 ? 0 : lastWrittenMessage + 1;
-      lastMessages[lastWrittenMessage] = message;
-      return true;
+         for(int i = 0; i < lastMessages.length; ++i) {
+            if (message.equals(lastMessages[i])) {
+               return false;
+            }
+         }
+
+         lastWrittenMessage = lastWrittenMessage == lastMessages.length - 1 ? 0 : lastWrittenMessage + 1;
+         lastMessages[lastWrittenMessage] = message;
+         return true;
+      }
    }
 }

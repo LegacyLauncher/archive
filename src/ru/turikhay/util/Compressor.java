@@ -17,27 +17,25 @@ public abstract class Compressor {
    final String name;
    final byte[] marker;
 
-   public static final InputStream uncompressMarked(InputStream in, boolean failIfNoMarker) throws IOException {
+   public static InputStream uncompressMarked(InputStream in, boolean failIfNoMarker) throws IOException {
       byte[] markerBytes = new byte[5];
       if (in.read(markerBytes) < 5) {
          if (failIfNoMarker) {
             throw new Compressor.MarkerNotFoundException();
-         } else {
-            return new SequenceInputStream(new ByteInputStream(markerBytes, markerBytes.length), in);
          }
       } else {
          String marker = new String(markerBytes);
          Compressor compressor = (Compressor)compressorByMarker.get(marker);
-         if (compressor == null) {
-            if (failIfNoMarker) {
-               throw new Compressor.UnknownMarkerException(marker);
-            } else {
-               return new SequenceInputStream(new ByteInputStream(markerBytes, markerBytes.length), in);
-            }
-         } else {
+         if (compressor != null) {
             return compressor.uncompress(in);
          }
+
+         if (failIfNoMarker) {
+            throw new Compressor.UnknownMarkerException(marker);
+         }
       }
+
+      return new SequenceInputStream(new ByteInputStream(markerBytes, markerBytes.length), in);
    }
 
    public static InputStream uncompressMarked(InputStream in) throws IOException {

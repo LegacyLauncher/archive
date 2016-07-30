@@ -5,8 +5,9 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.ImageObserver;
 import javax.swing.JLabel;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 
-public class ImageIcon implements ExtendedIcon {
+public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
    private transient Image image;
    private int width;
    private int height;
@@ -16,12 +17,29 @@ public class ImageIcon implements ExtendedIcon {
       this.setImage(image, width, height);
    }
 
+   public ImageIcon(Image image, int size, boolean ifTrueWidthElseHeight) {
+      if (image == null) {
+         this.setImage((Image)null, 0, 0);
+         this.setIconSize(this.width, this.width);
+      } else {
+         double ratio = (double)image.getWidth((ImageObserver)null) / (double)image.getHeight((ImageObserver)null);
+         if (ifTrueWidthElseHeight) {
+            this.setImage(image, size, (int)((double)size / ratio));
+         } else {
+            this.setImage(image, (int)((double)size * ratio), size);
+         }
+
+      }
+   }
+
    public void setImage(Image image, int preferredWidth, int preferredHeight) {
       if (image == null) {
          this.image = null;
+         this.setIcon((ImageIcon)null);
       } else {
          this.image = image;
          this.setIconSize(preferredWidth, preferredHeight);
+         this.setIcon(this);
       }
 
    }
