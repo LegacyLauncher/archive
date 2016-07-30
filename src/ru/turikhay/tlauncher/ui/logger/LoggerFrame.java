@@ -28,6 +28,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.EmptyAction;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedTextArea;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
@@ -48,7 +49,7 @@ public class LoggerFrame extends JFrame implements LocalizableComponent, PasteLi
 
    LoggerFrame(Logger logger) {
       this.logger = logger;
-      this.textarea = new JTextArea();
+      this.textarea = new ExtendedTextArea();
       this.textarea.setLineWrap(true);
       this.textarea.setEditable(false);
       this.textarea.setAutoscrolls(true);

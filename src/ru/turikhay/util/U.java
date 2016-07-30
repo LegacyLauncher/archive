@@ -5,9 +5,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.Proxy;
-import java.net.URI;
 import java.net.URL;
 import java.text.NumberFormat;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -411,24 +411,20 @@ public class U {
       }
    }
 
-   public static URL makeURL(String p) {
+   public static URL makeURL(String p, boolean assertValid) {
       try {
          return new URL(p);
-      } catch (Exception var2) {
-         return null;
+      } catch (Exception var3) {
+         if (assertValid) {
+            throw new RuntimeException(var3);
+         } else {
+            return null;
+         }
       }
    }
 
-   public static URI makeURI(URL url) {
-      try {
-         return url.toURI();
-      } catch (Exception var2) {
-         return null;
-      }
-   }
-
-   public static URI makeURI(String p) {
-      return makeURI(makeURL(p));
+   public static URL makeURL(String p) {
+      return makeURL(p, false);
    }
 
    public static int fitInterval(int val, int min, int max) {
@@ -581,13 +577,6 @@ public class U {
       return arr;
    }
 
-   public static String reverse(String s) {
-      StringBuilder b = new StringBuilder();
-      b.append(s);
-      b.reverse();
-      return b.toString();
-   }
-
    public static byte[] toByteArray(String s) {
       try {
          return IOUtils.toByteArray(new InputStringStream(s));
@@ -606,5 +595,20 @@ public class U {
 
    public static Object requireNotNull(Object obj) {
       return requireNotNull(obj, (String)null);
+   }
+
+   public static Collection requireNotContainNull(Collection collection, String name) {
+      Iterator var2 = ((Collection)requireNotNull(collection, name)).iterator();
+
+      Object o;
+      do {
+         if (!var2.hasNext()) {
+            return collection;
+         }
+
+         o = var2.next();
+      } while(o != null);
+
+      throw new NullPointerException(name);
    }
 }

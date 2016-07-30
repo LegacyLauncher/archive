@@ -1,59 +1,48 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.io.File;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class Crash {
-   private String file;
-   private String nativeReport;
-   private List signatures = new ArrayList();
+public final class Crash {
+   private final CrashManager manager;
+   private CrashEntry entry;
+   private File crashFile;
+   private File nativeCrashFile;
 
-   void addSignature(CrashSignatureContainer.CrashSignature sign) {
-      this.signatures.add(sign);
+   Crash(CrashManager manager) {
+      this.manager = manager;
    }
 
-   public String getFile() {
-      return this.file;
+   public CrashManager getManager() {
+      return this.manager;
    }
 
-   void setFile(String path) {
-      this.file = path;
+   public CrashEntry getEntry() {
+      return this.entry;
    }
 
-   public String getNativeReport() {
-      return this.nativeReport;
+   void setEntry(CrashEntry entry) {
+      this.entry = entry;
    }
 
-   void setNativeReport(String path) {
-      this.nativeReport = path;
+   public File getCrashFile() {
+      return this.crashFile;
    }
 
-   public List getSignatures() {
-      return Collections.unmodifiableList(this.signatures);
+   void setCrashFile(String path) {
+      this.crashFile = new File(path);
    }
 
-   public boolean hasSignature(CrashSignatureContainer.CrashSignature s) {
-      return this.signatures.contains(s);
+   public File getNativeCrashFile() {
+      return this.nativeCrashFile;
    }
 
-   public boolean contains(String name) {
-      Iterator var3 = this.signatures.iterator();
-
-      CrashSignatureContainer.CrashSignature signature;
-      do {
-         if (!var3.hasNext()) {
-            return false;
-         }
-
-         signature = (CrashSignatureContainer.CrashSignature)var3.next();
-      } while(!signature.getName().equalsIgnoreCase(name));
-
-      return true;
+   void setNativeCrashFile(String path) {
+      this.nativeCrashFile = new File(path);
    }
 
-   public boolean isRecognized() {
-      return !this.signatures.isEmpty();
+   public String toString() {
+      return (new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)).append("entry", this.entry).append("crashFile", this.crashFile).append("nativeCrashFile", this.nativeCrashFile).build();
    }
 }

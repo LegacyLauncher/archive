@@ -69,7 +69,7 @@ public class MinecraftUtil {
             explorer = FileExplorer.newExplorer();
             explorer.setSelectedFile(preferred);
             explorer.setFileSelectionMode(1);
-         } catch (InternalError var3) {
+         } catch (Exception var3) {
             String answer = Alert.showLocInputQuestion("version.dir.noexplorer");
             if (answer == null) {
                return null;

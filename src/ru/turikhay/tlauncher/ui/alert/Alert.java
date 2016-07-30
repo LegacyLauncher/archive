@@ -58,10 +58,6 @@ public class Alert {
       showMessage(title, message, (Object)null);
    }
 
-   public static void showLocMessage(String titlePath, String messagePath, Object textarea) {
-      showMessage(getLoc(titlePath, "MISSING TITLE"), getLoc(messagePath, "MISSING MESSAGE"), textarea);
-   }
-
    public static void showLocMessage(String path, Object textarea) {
       showMessage(getLoc(path + ".title", "MISSING TITLE"), getLoc(path, "MISSING MESSAGE"), textarea);
    }

@@ -28,11 +28,11 @@ public class FileExplorer extends JFileChooser {
       }
    }
 
-   public static FileExplorer newExplorer() throws InternalError {
+   public static FileExplorer newExplorer() throws Exception {
       try {
          return new FileExplorer();
       } catch (Throwable var1) {
-         throw new InternalError("couldn't create explorer");
+         throw new Exception("couldn't create explorer");
       }
    }
 }

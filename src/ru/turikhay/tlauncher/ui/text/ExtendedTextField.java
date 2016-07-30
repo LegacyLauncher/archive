@@ -41,6 +41,10 @@ public class ExtendedTextField extends JTextField {
       this.setValue(value);
    }
 
+   public ExtendedTextField() {
+      this((CenterPanel)null, (String)null, (String)null);
+   }
+
    /** @deprecated */
    @Deprecated
    public String getText() {

@@ -65,7 +65,7 @@ public class Configuration extends SimpleConfiguration {
 
    private void init(OptionSet set) {
       this.comments = " TLauncher " + TLauncher.getBrand() + " properties\n Created in " + TLauncher.getVersion() + (TLauncher.isBeta() ? " BETA" : "");
-      this.defaults = new ConfigurationDefaults();
+      this.defaults = ConfigurationDefaults.getInstance();
       this.constants = ArgumentParser.parse(set);
       if (this.getDouble("settings.version") != (double)ConfigurationDefaults.getVersion()) {
          log("Configuration is being wiped due to version incapability");
@@ -139,8 +139,7 @@ public class Configuration extends SimpleConfiguration {
    }
 
    public boolean isUSSRLocale() {
-      String locale = this.get("locale");
-      return "ru_RU".equals(locale) || "uk_UA".equals(locale);
+      return isUSSRLocale(this.getLocale().toString());
    }
 
    public Locale[] getLocales() {
@@ -296,6 +295,10 @@ public class Configuration extends SimpleConfiguration {
       }
 
       return l;
+   }
+
+   public static boolean isUSSRLocale(String l) {
+      return "ru_RU".equals(l) || "uk_UA".equals(l);
    }
 
    public static Locale getLocaleOf(String locale) {
@@ -485,10 +488,6 @@ public class Configuration extends SimpleConfiguration {
 
       public String toString() {
          return super.toString().toLowerCase();
-      }
-
-      public static Configuration.ActionOnLaunch getDefault() {
-         return HIDE;
       }
    }
 }

@@ -134,10 +134,6 @@ public enum ReleaseType {
          return lookup.values();
       }
 
-      public static List getDefault() {
-         return defaultSubTypes;
-      }
-
       public static List get(Version version) {
          ArrayList result = new ArrayList();
          ReleaseType.SubType[] var4;

@@ -24,14 +24,14 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
-public class NewFolderFrame extends ActionFrame {
+public class NewFolderFrame extends VActionFrame {
    private final TLauncher t;
 
    public NewFolderFrame(TLauncher t, File file) {
-      super(new Dimension(500, 300));
+      super(SwingUtil.magnify(500));
       this.t = t;
       this.setDefaultCloseOperation(2);
-      this.setTitlePath("newfolder.title");
+      this.setTitlePath("newfolder.title", new Object[0]);
       this.getHead().setText("newfolder.head");
       this.getBodyText().setText("newfolder.body");
 
@@ -40,7 +40,7 @@ public class NewFolderFrame extends ActionFrame {
          dirExplorer = FileExplorer.newExplorer();
          dirExplorer.setFileSelectionMode(1);
          dirExplorer.setFileHidingEnabled(false);
-      } catch (InternalError var9) {
+      } catch (Exception var9) {
          dirExplorer = null;
       }
 
@@ -90,6 +90,7 @@ public class NewFolderFrame extends ActionFrame {
             okButton.requestFocus();
          }
       });
+      this.pack();
    }
 
    private void changeFolder(File folder) {

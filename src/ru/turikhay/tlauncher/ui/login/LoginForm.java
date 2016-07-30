@@ -17,6 +17,8 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
+import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.minecraft.crash.CrashManagerListener;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.ui.MainPane;
@@ -30,7 +32,7 @@ import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
-public class LoginForm extends CenterPanel implements DownloaderListener, ElyManagerListener, VersionManagerListener, AuthenticatorListener, MinecraftListener {
+public class LoginForm extends CenterPanel implements DownloaderListener, ElyManagerListener, VersionManagerListener, AuthenticatorListener, CrashManagerListener, MinecraftListener {
    private final List stateListeners = Collections.synchronizedList(new ArrayList());
    private final List processListeners = Collections.synchronizedList(new ArrayList());
    public final DefaultScene scene;
@@ -301,9 +303,26 @@ public class LoginForm extends CenterPanel implements DownloaderListener, ElyMan
       this.changeState(LoginForm.LoginState.STOPPED);
    }
 
-   public void onMinecraftCrash(Crash crash) {
+   public void onCrashManagerInit(CrashManager manager) {
       Blocker.unblock((Blockable)this, (Object)"launch");
       this.changeState(LoginForm.LoginState.STOPPED);
+      manager.addListener(this);
+   }
+
+   public void onCrashManagerProcessing(CrashManager manager) {
+      Blocker.block((Blockable)this, (Object)"crash");
+   }
+
+   public void onCrashManagerComplete(CrashManager manager, Crash crash) {
+      Blocker.unblock((Blockable)this, (Object)"crash");
+   }
+
+   public void onCrashManagerCancelled(CrashManager manager) {
+      Blocker.unblock((Blockable)this, (Object)"crash");
+   }
+
+   public void onCrashManagerFailed(CrashManager manager, Exception e) {
+      Blocker.unblock((Blockable)this, (Object)"crash");
    }
 
    class StopThread extends LoopedThread {

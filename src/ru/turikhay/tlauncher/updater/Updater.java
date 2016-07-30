@@ -108,6 +108,7 @@ public class Updater {
          this.log("Request time:", System.currentTimeMillis() - startTime, "ms");
          if (result != null) {
             this.log("Succeed!");
+            this.log("Latest version:", ((Updater.SearchResult)result).getResponse().getUpdate().getVersion() + (((Updater.SearchResult)result).getResponse().getUpdate() == ((Updater.SearchResult)result).getResponse().beta ? " (beta)" : ""));
             break;
          }
       }

@@ -3,6 +3,7 @@ package ru.turikhay.util.git;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.CharBuffer;
 
 public class TokenReplacingReader extends Reader {
@@ -11,6 +12,7 @@ public class TokenReplacingReader extends Reader {
    protected StringBuilder tokenNameBuffer = new StringBuilder();
    protected String tokenValue = null;
    protected int tokenValueIndex = 0;
+   boolean unreadOnDollar;
 
    public TokenReplacingReader(Reader source, ITokenResolver resolver) {
       this.pushbackReader = new PushbackReader(source, 2);
@@ -34,11 +36,19 @@ public class TokenReplacingReader extends Reader {
       }
 
       int data = this.pushbackReader.read();
-      if (data != 36) {
+      if (this.unreadOnDollar) {
+         if (data == 65535) {
+            data = -1;
+         }
+
+         this.unreadOnDollar = false;
+         return data;
+      } else if (data != 36) {
          return data;
       } else {
          data = this.pushbackReader.read();
          if (data != 123) {
+            this.unreadOnDollar = true;
             this.pushbackReader.unread(data);
             return 36;
          } else {
@@ -103,5 +113,25 @@ public class TokenReplacingReader extends Reader {
 
    public void reset() throws IOException {
       throw new RuntimeException("Operation Not Supported");
+   }
+
+   public static String resolveVars(String str, ITokenResolver tokenResolver) {
+      if (str == null) {
+         return null;
+      } else {
+         StringBuilder builder = new StringBuilder();
+         TokenReplacingReader reader = new TokenReplacingReader(new StringReader(str), tokenResolver);
+
+         int read;
+         try {
+            while((read = reader.read()) != -1) {
+               builder.append((char)read);
+            }
+         } catch (IOException var6) {
+            throw new Error(var6);
+         }
+
+         return builder.toString();
+      }
    }
 }

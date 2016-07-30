@@ -48,6 +48,10 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
       super.add(this.container, "Center");
    }
 
+   public TabbedPane getTabPane() {
+      return this.tabPane;
+   }
+
    protected void add(TabbedEditorPanel.EditorPanelTab tab) {
       if (tab == null) {
          throw new NullPointerException("tab is null");

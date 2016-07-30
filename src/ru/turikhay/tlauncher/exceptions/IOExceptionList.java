@@ -22,6 +22,11 @@ public class IOExceptionList extends IOException {
 
          for(Iterator var2 = list.iterator(); var2.hasNext(); b.append("; ")) {
             IOException ioE = (IOException)var2.next();
+            if (b.length() > 200) {
+               b.append(".....");
+               break;
+            }
+
             b.append(ioE.getMessage());
             if (ioE.getCause() != null) {
                b.append(" (cause: ").append(ioE.getCause()).append(")");

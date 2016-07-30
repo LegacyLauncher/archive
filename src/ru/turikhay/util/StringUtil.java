@@ -186,4 +186,8 @@ public class StringUtil {
          return s;
       }
    }
+
+   public static String requireNotBlank(String s) {
+      return requireNotBlank(s, (String)null);
+   }
 }

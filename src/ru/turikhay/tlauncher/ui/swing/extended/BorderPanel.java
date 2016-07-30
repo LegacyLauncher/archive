@@ -55,6 +55,10 @@ public class BorderPanel extends ExtendedPanel {
       this.add(comp, "South");
    }
 
+   public void setWest(Component comp) {
+      this.add(comp, "West");
+   }
+
    public void setCenter(Component comp) {
       this.add(comp, "Center");
    }

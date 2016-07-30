@@ -92,7 +92,7 @@ public class TextPopup extends MouseAdapter {
       }
    }
 
-   protected static Action selectAction(JTextComponent comp, String general, String fallback) {
+   public static Action selectAction(JTextComponent comp, String general, String fallback) {
       Action action = comp.getActionMap().get(general);
       if (action == null) {
          action = comp.getActionMap().get(fallback);

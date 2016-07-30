@@ -6,8 +6,6 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 public enum OS {
@@ -19,7 +17,7 @@ public enum OS {
 
    public static final String NAME = System.getProperty("os.name");
    public static final String VERSION = System.getProperty("os.version");
-   public static final double JAVA_VERSION = getJavaVersion();
+   public static final JavaVersion JAVA_VERSION = getJavaVersion();
    public static final OS CURRENT = getCurrent();
    private final String name;
    private final String[] aliases;
@@ -62,24 +60,17 @@ public enum OS {
       return UNKNOWN;
    }
 
-   private static double getJavaVersion() {
-      Pattern syntaxNotationPattern = Pattern.compile("(.*)(\\-.+)");
-      Pattern versionPattern = Pattern.compile("([\\d]+(?:\\.\\d+)?)(?:\\.\\d+)?(?:_\\d+)?");
-      String version = System.getProperty("java.version");
-      String _version = version;
-      Matcher syntaxNotationMatcher = syntaxNotationPattern.matcher(version);
-      if (syntaxNotationMatcher.matches()) {
-         version = syntaxNotationMatcher.group(1);
+   private static JavaVersion getJavaVersion() {
+      JavaVersion version;
+      try {
+         version = JavaVersion.parse(System.getProperty("java.version"));
+      } catch (Exception var2) {
+         version = JavaVersion.create(1, 6, 0, 45);
+         log("Could not determine Java version:", System.getProperty("java.version"));
+         log("Assuming it is 1.6.0_45");
       }
 
-      Matcher versionMatcher = versionPattern.matcher(version);
-      if (versionMatcher.matches()) {
-         return Double.parseDouble(versionMatcher.group(1));
-      } else {
-         U.log("[ERROR] Could not determine Java version:", _version);
-         U.log("I suppose we use at least 1.6");
-         return 1.6D;
-      }
+      return version;
    }
 
    public static boolean is(OS... any) {

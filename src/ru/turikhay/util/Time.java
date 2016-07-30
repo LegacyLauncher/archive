@@ -7,7 +7,7 @@ import java.util.Iterator;
 public final class Time {
    private static final ArrayList holders = new ArrayList();
 
-   public static void start(Object object) {
+   public static Object start(Object object) {
       synchronized(holders) {
          Iterator i = holders.iterator();
 
@@ -22,6 +22,7 @@ public final class Time {
          }
 
          holders.add(new Time.TimeHolder(object));
+         return object;
       }
    }
 

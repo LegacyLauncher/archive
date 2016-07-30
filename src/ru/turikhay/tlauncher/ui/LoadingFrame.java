@@ -21,7 +21,7 @@ public class LoadingFrame extends JFrame {
       this.progress.setPreferredSize(new Dimension(250, 0));
       this.add(this.progress, "Center");
       this.add(new JLabel(Images.getIcon("fav32.png")), "West");
-      if (OS.JAVA_VERSION >= 1.7D) {
+      if (OS.JAVA_VERSION.getDouble() > 1.6D) {
          this.setType(Type.UTILITY);
       }
 

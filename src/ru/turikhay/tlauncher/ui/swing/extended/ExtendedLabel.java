@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
 
 public class ExtendedLabel extends JLabel {
    private static final AlphaComposite disabledAlphaComposite = AlphaComposite.getInstance(3, 0.5F);
@@ -23,6 +24,11 @@ public class ExtendedLabel extends JLabel {
 
    public ExtendedLabel() {
       this((String)null, (Icon)null, 10);
+   }
+
+   public void setIcon(ImageIcon icon) {
+      super.setIcon(icon);
+      super.setDisabledIcon(icon == null ? null : icon.getDisabledInstance());
    }
 
    public void paintComponent(Graphics g0) {

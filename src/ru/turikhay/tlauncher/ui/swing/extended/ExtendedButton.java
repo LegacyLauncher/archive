@@ -13,7 +13,7 @@ public class ExtendedButton extends JButton {
       this.init();
    }
 
-   protected ExtendedButton(String text) {
+   public ExtendedButton(String text) {
       super(text);
       this.init();
    }
