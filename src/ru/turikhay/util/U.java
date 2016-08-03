@@ -487,28 +487,36 @@ public class U {
       }
    }
 
-   public static Color shiftColor(Color color, int bits) {
+   public static Color shiftColor(Color color, int bits, int min, int max) {
       if (color == null) {
          return null;
       } else if (bits == 0) {
          return color;
       } else {
-         int newRed = fitInterval(color.getRed() + bits, 0, 255);
-         int newGreen = fitInterval(color.getGreen() + bits, 0, 255);
-         int newBlue = fitInterval(color.getBlue() + bits, 0, 255);
+         int newRed = fitInterval(color.getRed() + bits, min, max);
+         int newGreen = fitInterval(color.getGreen() + bits, min, max);
+         int newBlue = fitInterval(color.getBlue() + bits, min, max);
          return new Color(newRed, newGreen, newBlue, color.getAlpha());
       }
    }
 
-   public static Color shiftAlpha(Color color, int bits) {
+   public static Color shiftColor(Color color, int bits) {
+      return shiftColor(color, bits, 0, 255);
+   }
+
+   public static Color shiftAlpha(Color color, int bits, int min, int max) {
       if (color == null) {
          return null;
       } else if (bits == 0) {
          return color;
       } else {
-         int newAlpha = fitInterval(color.getAlpha() + bits, 0, 255);
+         int newAlpha = fitInterval(color.getAlpha() + bits, min, max);
          return new Color(color.getRed(), color.getGreen(), color.getBlue(), newAlpha);
       }
+   }
+
+   public static Color shiftAlpha(Color color, int bits) {
+      return shiftAlpha(color, bits, 0, 255);
    }
 
    /** @deprecated */
@@ -610,5 +618,19 @@ public class U {
       } while(o != null);
 
       throw new NullPointerException(name);
+   }
+
+   public static Object[] requireNotContainNull(Object[] array, String name) {
+      Object[] var2 = (Object[])requireNotNull(array, name);
+      int var3 = var2.length;
+
+      for(int var4 = 0; var4 < var3; ++var4) {
+         Object o = var2[var4];
+         if (o == null) {
+            throw new NullPointerException(name);
+         }
+      }
+
+      return array;
    }
 }

@@ -382,7 +382,7 @@ public class TLauncher {
    }
 
    public static double getVersion() {
-      return 1.77D;
+      return 1.78D;
    }
 
    public static boolean isBeta() {

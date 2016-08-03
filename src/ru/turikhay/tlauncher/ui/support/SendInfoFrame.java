@@ -55,17 +55,20 @@ public class SendInfoFrame extends ProcessFrame {
       U.log("Error sending diagnostic data", e);
       if (Alert.showLocQuestion("support.sending.error")) {
          Exception error;
-         label71: {
+         label82: {
             FileExplorer explorer;
             try {
                explorer = FileExplorer.newExplorer();
             } catch (Exception var14) {
                error = var14;
-               break label71;
+               break label82;
             }
 
             explorer.setSelectedFile(new File("diagnostic.log"));
-            explorer.showSaveDialog(this);
+            if (explorer.showSaveDialog(this) != 0) {
+               return;
+            }
+
             if (explorer.getSelectedFile() != null) {
                File file = explorer.getSelectedFile();
                FileOutputStream out = null;
@@ -74,7 +77,7 @@ public class SendInfoFrame extends ProcessFrame {
                   IOUtils.copy((InputStream)(new CharSequenceInputStream(TLauncher.getLogger().getOutput(), "UTF-8")), (OutputStream)(out = new FileOutputStream(file)));
                } catch (Exception var12) {
                   error = var12;
-                  break label71;
+                  break label82;
                } finally {
                   U.close(out);
                }

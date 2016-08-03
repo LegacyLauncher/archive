@@ -11,6 +11,10 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
    private Integer LAYER_COUNT = 0;
    protected final JComponent parent;
 
+   protected ExtendedLayeredPane() {
+      this.parent = null;
+   }
+
    protected ExtendedLayeredPane(JComponent parent) {
       this.parent = parent;
       if (parent != null) {

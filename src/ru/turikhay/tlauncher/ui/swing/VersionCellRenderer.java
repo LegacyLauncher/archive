@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.swing;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import javax.swing.DefaultListCellRenderer;
@@ -22,7 +21,7 @@ public class VersionCellRenderer implements ListCellRenderer {
    public static final VersionSyncInfo LOADING = VersionSyncInfo.createEmpty();
    public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
    private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
-   private final int averageColor = (new Color(128, 128, 128, 255)).getRGB();
+   private final int averageColor = U.shiftColor((new JLabel()).getForeground(), -128, 64, 128).getRGB();
    private static final ImageIcon ELY_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
 
    public Component getListCellRendererComponent(JList list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
