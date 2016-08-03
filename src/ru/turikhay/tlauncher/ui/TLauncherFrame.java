@@ -70,6 +70,23 @@ public class TLauncherFrame extends JFrame {
          }
       });
       this.setDefaultCloseOperation(3);
+      this.addWindowListener(new WindowAdapter() {
+         public void windowIconified(WindowEvent e) {
+            TLauncherFrame.this.mp.background.pauseBackground();
+         }
+
+         public void windowDeiconified(WindowEvent e) {
+            TLauncherFrame.this.mp.background.startBackground();
+         }
+
+         public void windowActivated(WindowEvent e) {
+            TLauncherFrame.this.mp.background.startBackground();
+         }
+
+         public void windowDeactivated(WindowEvent e) {
+            TLauncherFrame.this.mp.background.pauseBackground();
+         }
+      });
       this.addComponentListener(new ExtendedComponentAdapter(this) {
          public void onComponentResized(ComponentEvent e) {
             TLauncherFrame.this.updateMaxPoint();
@@ -92,7 +109,7 @@ public class TLauncherFrame extends JFrame {
          }
 
          public void componentHidden(ComponentEvent e) {
-            TLauncherFrame.this.mp.background.suspendBackground();
+            TLauncherFrame.this.mp.background.pauseBackground();
          }
       });
       this.addWindowStateListener(new WindowStateListener() {
@@ -112,7 +129,7 @@ public class TLauncherFrame extends JFrame {
       this.pack();
       log("Resizing main pane...");
       this.mp.onResize();
-      this.mp.background.startBackground();
+      this.mp.background.loadBackground();
       this.updateMaxPoint();
       Dragger.ready(this.settings, this.maxPoint);
       if (TLauncher.getDebug()) {
@@ -198,7 +215,7 @@ public class TLauncherFrame extends JFrame {
    private void updateUILocale() {
       if (this.uiConfig == null) {
          try {
-            this.uiConfig = new SimpleConfiguration(this.getClass().getResource("/lang/_ui"));
+            this.uiConfig = new SimpleConfiguration(this.getClass().getResource("/lang/_ui.properties"));
          } catch (Exception var4) {
             return;
          }

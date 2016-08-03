@@ -1,7 +1,9 @@
 package ru.turikhay.tlauncher.ui.settings;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.io.StringReader;
+import javax.swing.JLabel;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -16,11 +18,16 @@ import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 public class HTMLPage extends BorderPanel implements LocalizableComponent {
+   private final String textColor;
    private final HTMLPage.AboutPageTokenResolver resolver;
    private final String source;
    private final EditorPane editor;
 
    HTMLPage(String resourceName) {
+      Color color = (new JLabel()).getForeground();
+      this.textColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+      color = null;
+
       String tempSource;
       try {
          tempSource = FileUtil.getResource(this.getClass().getResource(resourceName));
@@ -77,7 +84,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
          if (token.equals("width")) {
             return String.valueOf(SwingUtil.magnify(425));
          } else {
-            return token.startsWith("image:") ? Images.getRes(token.substring("image:".length())).toExternalForm() : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? "black" : token));
+            return token.startsWith("image:") ? Images.getRes(token.substring("image:".length())).toExternalForm() : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? HTMLPage.this.textColor : token));
          }
       }
 

@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -56,7 +57,7 @@ public class Button {
 
    void setActions(List actions) {
       this.actions.clear();
-      this.actions.addAll(U.requireNotContainNull(actions, "actions"));
+      this.actions.addAll(U.requireNotContainNull((Collection)actions, "actions"));
    }
 
    public final boolean isBlockAfter() {

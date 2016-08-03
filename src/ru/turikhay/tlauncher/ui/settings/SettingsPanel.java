@@ -44,6 +44,7 @@ import ru.turikhay.tlauncher.ui.editor.EditorTextField;
 import ru.turikhay.tlauncher.ui.editor.TabbedEditorPanel;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
+import ru.turikhay.tlauncher.ui.explorer.MediaFileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
@@ -128,7 +129,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
          dirExplorer = FileExplorer.newExplorer();
          dirExplorer.setFileSelectionMode(1);
          dirExplorer.setFileHidingEnabled(false);
-      } catch (Exception var17) {
+      } catch (Exception var18) {
          dirExplorer = null;
       }
 
@@ -243,19 +244,20 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
       });
       this.tlauncherTab.add(new EditorPair("settings.direction.label", new EditorHandler[]{this.loginFormDirection}));
       this.tlauncherTab.nextPane();
+      boolean mediaFxAvailable = sc.getMainPane().background.getMediaFxBackground() != null;
+      Object backgroundExplorer = null;
 
-      ImageFileExplorer imgExplorer1;
       try {
-         imgExplorer1 = ImageFileExplorer.newExplorer();
-      } catch (InternalError var16) {
-         imgExplorer1 = null;
+         backgroundExplorer = mediaFxAvailable ? MediaFileExplorer.newExplorer() : ImageFileExplorer.newExplorer();
+      } catch (Exception var17) {
+         this.log(new Object[]{"could not load explorer", var17});
       }
 
-      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt", imgExplorer1, true, true));
+      this.background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt." + (mediaFxAvailable ? "media" : "image"), (FileExplorer)backgroundExplorer, true, true));
       this.background.addListener(new EditorFieldChangeListener() {
          protected void onChange(String oldValue, String newValue) {
             if (SettingsPanel.this.tlauncher.isReady()) {
-               SettingsPanel.this.tlauncher.getFrame().mp.background.SLIDE_BACKGROUND.getThread().asyncRefreshSlide();
+               SettingsPanel.this.tlauncher.getFrame().mp.background.loadBackground();
             }
 
          }
@@ -296,11 +298,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LocalizableCompo
       this.tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{this.launchAction}));
       this.tlauncherTab.nextPane();
       List defReleaseTypeHandlers = new ArrayList();
-      ReleaseType[] var12 = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.MODIFIED};
-      int var13 = var12.length;
+      ReleaseType[] var13 = new ReleaseType[]{ReleaseType.RELEASE, ReleaseType.SNAPSHOT, ReleaseType.MODIFIED};
+      int var14 = var13.length;
 
-      for(int var14 = 0; var14 < var13; ++var14) {
-         ReleaseType releaseType = var12[var14];
+      for(int var15 = 0; var15 < var14; ++var15) {
+         ReleaseType releaseType = var13[var15];
          defReleaseTypeHandlers.add(new EditorFieldHandler("gui.alerton." + releaseType, new EditorCheckBox("settings.alert-on." + releaseType)));
          defReleaseTypeHandlers.add(EditorPair.NEXT_COLUMN);
       }

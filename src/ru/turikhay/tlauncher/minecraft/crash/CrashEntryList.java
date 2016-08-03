@@ -93,7 +93,7 @@ public final class CrashEntryList {
          this.globalVars.put("os", OS.CURRENT.toString());
          this.globalVars.put("arch", OS.Arch.CURRENT.toString());
          this.globalVars.put("locale", TLauncher.getInstance().getSettings().getLocale().toString());
-         this.vars = new LinkedHashMap(this.globalVars);
+         this.vars = new LinkedHashMap();
          this.varsResolver = new MapTokenResolver(this.vars);
          this.buttonDeserializer = new Button.Deserializer(manager, this.varsResolver);
       }
@@ -125,6 +125,8 @@ public final class CrashEntryList {
                this.log("Processing var:", entry.getKey(), value);
             }
 
+            this.vars.clear();
+            this.vars.putAll(this.globalVars);
             this.vars.putAll(loadedVars);
             Map buttonsMap = new HashMap();
             JsonArray buttons = root.get("buttons").getAsJsonArray();

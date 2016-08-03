@@ -15,11 +15,20 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class FileUtil {
+   public static Charset getCharset() {
+      try {
+         return Charset.forName("UTF-8");
+      } catch (Exception var1) {
+         throw new Error("UTF-8 is not supported", var1);
+      }
+   }
+
    public static void writeFile(File file, String text) throws IOException {
       createFile(file);
       BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
@@ -272,6 +281,10 @@ public class FileUtil {
 
    public static boolean fileExists(File file) {
       return file != null && file.isFile() && file.exists();
+   }
+
+   public static boolean fileExists(String path) {
+      return path != null && fileExists(new File(path));
    }
 
    public static void createFile(File file) throws IOException {

@@ -1,8 +1,9 @@
 {
-  "revision": 1,
-  "required": 1.7,
+  "revision": 2,
+  "required": 1.77,
   "variables": {
-    "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$"
+    "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
+    "forge-pattern": ".*(?i:forge).*"
   },
   "buttons": [
     {
@@ -37,12 +38,12 @@
     {
       "name": "incorrent-mods-version",
       "pattern": "^java\\.lang\\.NoClassDefFoundError\\: net/minecraftforge/fml/relauncher/IFMLLoadingPlugin$",
-      "version": "^(?i:forge).+"
+      "version": "${forge-pattern}"
     },
     {
       "name": "codechicken-core-missing",
       "pattern": "^java\\.lang\\.NoClassDefFoundError: codechicken/lib/",
-      "version": "^(?i:forge).+",
+      "version": "${forge-pattern}",
       "buttons": [
         {
           "text": "download",

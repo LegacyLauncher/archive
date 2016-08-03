@@ -30,7 +30,7 @@ public class LangConfiguration extends SimpleConfiguration {
             throw new NullPointerException("locale at " + keyLocale + " is null");
          }
 
-         InputStream in = this.getClass().getResourceAsStream("/lang/" + locale);
+         InputStream in = this.getClass().getResourceAsStream("/lang/" + locale + ".properties");
          if (in == null) {
             throw new RuntimeException("could not find file for: " + locale);
          }

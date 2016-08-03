@@ -378,28 +378,26 @@ public final class CrashManager {
             this.plog("<File", file, ">");
 
             try {
-               if (file.isFile()) {
-                  this.plog("Reading file:", file);
-                  this.plog();
-                  Scanner scanner = null;
-
-                  try {
-                     scanner = new Scanner(file);
-
-                     while(scanner.hasNextLine()) {
-                        this.plog(scanner.nextLine());
-                     }
-
-                     return;
-                  } catch (Exception var12) {
-                     this.log(new Object[]{"Could not read file:", file, var12});
-                     return;
-                  } finally {
-                     U.close(scanner);
-                  }
+               if (!file.isFile()) {
+                  this.log(new Object[]{"File doesn't exist:", file});
+                  return;
                }
 
-               this.log(new Object[]{"File doesn't exist:", file});
+               this.plog("Reading file:", file);
+               this.plog();
+               Scanner scanner = null;
+
+               try {
+                  scanner = new Scanner(file);
+
+                  while(scanner.hasNextLine()) {
+                     this.plog(scanner.nextLine());
+                  }
+               } catch (Exception var12) {
+                  this.log(new Object[]{"Could not read file:", file, var12});
+               } finally {
+                  U.close(scanner);
+               }
             } finally {
                this.plog("</File", file, ">");
                this.writeDelimiter();

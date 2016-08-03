@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.util.StringUtil;
@@ -17,6 +18,7 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 public class ProgressBar extends JProgressBar {
+   private final Color textColor;
    public static int DEFAULT_HEIGHT = SwingUtil.magnify(20);
    private static int BORDER_SIZE = SwingUtil.magnify(10);
    private static int EDGE_CHARS = 50;
@@ -35,6 +37,7 @@ public class ProgressBar extends JProgressBar {
    private int oldWidth;
 
    public ProgressBar(Component parentComp) {
+      this.textColor = (new JLabel()).getForeground();
       this.sync = new Object();
       this.parent = parentComp;
       if (this.parent != null) {
@@ -177,7 +180,7 @@ public class ProgressBar extends JProgressBar {
          }
 
          Graphics2D g2D = (Graphics2D)g;
-         g.setColor(Color.black);
+         g.setColor(this.textColor);
          g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
          g.setFont(font);
          this.drawString(g, this.wS, this.wS_x);

@@ -164,7 +164,7 @@ public class Library {
       XZInputStream in = null;
       JarOutputStream jos = null;
 
-      label64: {
+      label65: {
          try {
             FileInputStream in1 = new FileInputStream(library);
             in = new XZInputStream(in1);
@@ -192,7 +192,7 @@ public class Library {
             jos.write(checksums);
             jos.closeEntry();
             forgeLibLog("Now finishing...");
-            break label64;
+            break label65;
          } catch (OutOfMemoryError var16) {
             forgeLibLog("Out of memory, oops", var16);
             U.gc();

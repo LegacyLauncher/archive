@@ -16,29 +16,6 @@ public class StringUtil {
       }
    }
 
-   public static int countLines(String str) {
-      if (str != null && str.length() != 0) {
-         int lines = 1;
-         int len = str.length();
-
-         for(int pos = 0; pos < len; ++pos) {
-            char c = str.charAt(pos);
-            if (c == '\r') {
-               ++lines;
-               if (pos + 1 < len && str.charAt(pos + 1) == '\n') {
-                  ++pos;
-               }
-            } else if (c == '\n') {
-               ++lines;
-            }
-         }
-
-         return lines;
-      } else {
-         return 0;
-      }
-   }
-
    public static char lastChar(String str) {
       if (str == null) {
          throw new NullPointerException();
@@ -46,104 +23,6 @@ public class StringUtil {
          int len = str.length();
          return len == 0 ? '\u0000' : (len == 1 ? str.charAt(0) : str.charAt(len - 1));
       }
-   }
-
-   public static boolean isHTML(char[] s) {
-      if (s != null && s.length >= 6 && s[0] == '<' && s[5] == '>') {
-         String tag = new String(s, 1, 4);
-         return tag.equalsIgnoreCase("html");
-      } else {
-         return false;
-      }
-   }
-
-   public static String wrap(char[] s, int maxChars, boolean rudeBreaking, boolean detectHTML) {
-      if (s == null) {
-         throw new NullPointerException("sequence");
-      } else if (maxChars < 1) {
-         throw new IllegalArgumentException("maxChars < 1");
-      } else {
-         detectHTML = detectHTML && isHTML(s);
-         String lineBreak = detectHTML ? "<br />" : "\n";
-         StringBuilder builder = new StringBuilder();
-         int len = s.length;
-         int remaining = maxChars;
-         boolean tagDetecting = false;
-         boolean ignoreCurrent = false;
-
-         for(int x = 0; x < len; ++x) {
-            char current = s[x];
-            if (current == '<' && detectHTML) {
-               tagDetecting = true;
-               ignoreCurrent = true;
-            } else if (tagDetecting) {
-               if (current == '>') {
-                  tagDetecting = false;
-               }
-
-               ignoreCurrent = true;
-            }
-
-            if (ignoreCurrent) {
-               ignoreCurrent = false;
-               builder.append(current);
-            } else {
-               --remaining;
-               if (s[x] == '\n' || remaining < 1 && current == ' ') {
-                  remaining = maxChars;
-                  builder.append(lineBreak);
-               } else {
-                  if (lookForward(s, x, lineBreak)) {
-                     remaining = maxChars;
-                  }
-
-                  builder.append(current);
-                  if (remaining <= 0 && rudeBreaking) {
-                     remaining = maxChars;
-                     builder.append(lineBreak);
-                  }
-               }
-            }
-         }
-
-         return builder.toString();
-      }
-   }
-
-   private static boolean lookForward(char[] c, int caret, CharSequence search) {
-      if (c == null) {
-         throw new NullPointerException("char array");
-      } else if (caret < 0) {
-         throw new IllegalArgumentException("caret < 0");
-      } else if (caret >= c.length) {
-         return false;
-      } else {
-         int length = search.length();
-         int available = c.length - caret;
-         if (length < available) {
-            return false;
-         } else {
-            for(int i = 0; i < length; ++i) {
-               if (c[caret + i] != search.charAt(i)) {
-                  return false;
-               }
-            }
-
-            return true;
-         }
-      }
-   }
-
-   public static String wrap(char[] s, int maxChars, boolean rudeBreaking) {
-      return wrap(s, maxChars, rudeBreaking, true);
-   }
-
-   public static String wrap(char[] s, int maxChars) {
-      return wrap(s, maxChars, false);
-   }
-
-   public static String wrap(String s, int maxChars) {
-      return wrap(s.toCharArray(), maxChars);
    }
 
    public static String cut(String string, int max) {
