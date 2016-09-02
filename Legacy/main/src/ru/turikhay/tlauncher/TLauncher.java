@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class TLauncher {
-    private static final String VERSION_STRING = "1.79.8";
+    private static final String VERSION_STRING = "1.79.9";
 
     private static TLauncher instance;
     private static String[] sargs;
