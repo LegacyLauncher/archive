@@ -323,8 +323,8 @@ public enum OS {
             }
         }
 
-        public String asString() {
-            return sArch;
+        public String getBit() {
+            return sBit;
         }
 
         public boolean isCurrent() {

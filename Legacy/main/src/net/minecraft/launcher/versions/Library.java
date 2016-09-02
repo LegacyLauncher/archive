@@ -31,7 +31,7 @@ public class Library {
     static {
         HashMap map = new HashMap();
         map.put("platform", OS.CURRENT.getName());
-        map.put("arch", OS.Arch.CURRENT.asString());
+        map.put("arch", OS.Arch.CURRENT.getBit());
         SUBSTITUTOR = new StrSubstitutor(map);
     }
 
