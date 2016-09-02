@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class TLauncher {
-    private static final String VERSION_STRING = "1.79.5";
+    private static final String VERSION_STRING = "1.79.6";
 
     private static TLauncher instance;
     private static String[] sargs;
@@ -449,6 +449,7 @@ public class TLauncher {
 
     private static void launch(String[] args) throws Exception {
         U.log("Starting TLauncher", getBrand(), getVersion());
+        U.log("Beta:", isBeta());
         U.log("Machine info:", OS.getSummary());
         U.log("Startup time:", DateFormat.getDateTimeInstance(3, 1).format(new Date()));
         U.log("Directory:", new File(""));
@@ -478,8 +479,8 @@ public class TLauncher {
             throw new Error("could not verify version");
         }
 
-        VERSION = genVersion;
-        BETA = VERSION.getBuildMetadata().contains("beta");
+        VERSION = version;
+        BETA = !VERSION.getBuildMetadata().startsWith("master");
     }
 
     public static String[] getArgs() {

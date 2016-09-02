@@ -175,7 +175,7 @@ public class TLauncherFrame extends JFrame {
 
     public void updateTitle() {
         StringBuilder brandBuilder = new StringBuilder()
-                .append(TLauncher.getVersion())
+                .append(TLauncher.getVersion().getNormalVersion())
                 .append(" [").append(TLauncher.getBrand()).append("]");
 
         if (TLauncher.getInstance().getDebug()) {
