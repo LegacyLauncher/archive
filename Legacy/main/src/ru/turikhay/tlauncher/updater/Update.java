@@ -354,7 +354,7 @@ public class Update {
         private Update deserialize0(JsonElement json, JsonDeserializationContext context) {
             JsonObject object = json.getAsJsonObject();
             Update update = new Update();
-            update.version = versionSerializer.deserialize(object.get("version"), Version.class, context);
+            update.version = versionSerializer.deserialize(object.get("semver"), Version.class, context);
             Map<String, String> description = context.deserialize(object.get("description"), (new TypeToken<Map<String, String>>() {
             }).getType());
 
