@@ -8,7 +8,7 @@
     <property name="tlauncher.base.build" value="${basedir}/build" />
     <property name="tlauncher.base.lib" value="${basedir}/lib" />
 
-    <!--loadproperties srcfile="${tlauncher.base.config}/default.properties" /-->
+    <loadproperties srcfile="${tlauncher.base.config}/default.properties" />
 
     <property name="tlauncher.file.build" value="${basedir}/${tlauncher.project}/build.properties" />
     <property name="tlauncher.file.meta" value="${basedir}/${tlauncher.project.meta}/main/res/meta.json" />
@@ -20,19 +20,19 @@
 
     <loadproperties srcFile="${tlauncher.file.build}"/>
     <echo>Version: ${build.version}</echo>
-    <echo>Build: ${build.number}</echo>
 
     <echo>Short brand name: ${tlauncher.brand}</echo>
     <echo>Long brand name: ${tlauncher.brand.long}</echo>
 
     <property name="build.version.full" value="${build.version}+${git.branch}" />
+    <echo>Build metadata: ${build.version.full}</echo>
 
     <target name="pre-build">
         <script language="javascript">
             <![CDATA[
                 project.setProperty('jsonResult',
                     JSON.stringify({
-                        "version": project.getProperty('build.version.full').replace(/[^a-zA-Z0-9.\-\+]/gi, ''),
+                        "version": project.getProperty('build.version.full').replace(/\//gi, '-').replace(/[^a-zA-Z0-9.\-\+]/gi, ''),
                         "shortBrand": project.getProperty('tlauncher.brand'),
                         "brand": project.getProperty('tlauncher.brand.long'),
                         "buildDate": new Date().toUTCString()
@@ -46,6 +46,7 @@
     <target name="proguard">
         <property name="tlauncher.in.jar" value="${artifact.output.path}/${tlauncher.brand}_unopt.jar" />
         <property name="tlauncher.out" value="${artifact.output.path}/${tlauncher.brand}" />
+        <delete file="${tlauncher.out}.jar" />
         <java classname="proguard.ProGuard" failonerror="true">
             <arg value="-include ${tlauncher.base.config}/proguard.pro"/>
             <arg value="-libraryjars ${java.home}/lib/rt.jar"/>
