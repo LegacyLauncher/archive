@@ -1,0 +1,4 @@
+If you can't run TLauncher and the archive program opens instead, then you should try the following:
+
+-- For Windows – try to download EXE-version: http://tlaun.ch/dl/mcl/jar
+-- Try to reinstall Java: http://java.com/

@@ -1,0 +1,35 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Legacy:jar">
+    <output-path>$PROJECT_DIR$/build/tlauncher</output-path>
+    <properties id="ant-postprocessing">
+      <options enabled="true">
+        <file>file://$PROJECT_DIR$/config/general.xml</file>
+        <target>post-build</target>
+        <build-properties>
+          <build-property name="tlauncher.name" value="tlauncher" />
+          <build-property name="tlauncher.project" value="Legacy" />
+          <build-property name="tlauncher.brand" value="legacy" />
+          <build-property name="tlauncher.brand.long" value="Legacy" />
+          <build-property name="tlauncher.project.meta" value="Legacy" />
+        </build-properties>
+      </options>
+    </properties>
+    <properties id="ant-preprocessing">
+      <options enabled="true">
+        <file>file://$PROJECT_DIR$/config/general.xml</file>
+        <target>pre-build</target>
+        <build-properties>
+          <build-property name="tlauncher.name" value="tlauncher" />
+          <build-property name="tlauncher.project" value="Legacy" />
+          <build-property name="tlauncher.brand" value="legacy" />
+          <build-property name="tlauncher.brand.long" value="Legacy" />
+          <build-property name="tlauncher.project.meta" value="Legacy" />
+        </build-properties>
+      </options>
+    </properties>
+    <root id="archive" name="legacy_unopt.jar">
+      <element id="module-output" name="Legacy" />
+      <element id="artifact" artifact-name="lib" />
+    </root>
+  </artifact>
+</component>

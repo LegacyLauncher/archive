@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Bootstrap/Bootstrap.iml" filepath="$PROJECT_DIR$/Bootstrap/Bootstrap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Legacy/Legacy.iml" filepath="$PROJECT_DIR$/Legacy/Legacy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Legacy-mcl/Legacy-mcl.iml" filepath="$PROJECT_DIR$/Legacy-mcl/Legacy-mcl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TLauncher.iml" filepath="$PROJECT_DIR$/TLauncher.iml" />
+    </modules>
+  </component>
+</project>
