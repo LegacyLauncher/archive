@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="tlauncher" basedir="..">
+    <!-- property name="tlauncher.name" value="tlauncher" / -->
+    <!-- property name="tlauncher.base.project" value="${basedir}/Legacy" / -->
+
+    <property name="tlauncher.base.config" value="${basedir}/config" />
+    <property name="tlauncher.base.build" value="${basedir}/build" />
+    <property name="tlauncher.base.lib" value="${basedir}/lib" />
+
+    <!--loadproperties srcfile="${tlauncher.base.config}/default.properties" /-->
+
+    <property name="tlauncher.file.build" value="${basedir}/${tlauncher.project}/build.properties" />
+    <property name="tlauncher.file.meta" value="${basedir}/${tlauncher.project.meta}/main/res/meta.json" />
+
+    <exec executable="git" outputproperty="git.branch">
+        <arg line="rev-parse --abbrev-ref HEAD"/>
+    </exec>
+    <echo>Current branch: ${git.branch}</echo>
+
+    <loadproperties srcFile="${tlauncher.file.build}"/>
+    <echo>Version: ${build.version}</echo>
+    <echo>Build: ${build.number}</echo>
+
+    <echo>Short brand name: ${tlauncher.brand}</echo>
+    <echo>Long brand name: ${tlauncher.brand.long}</echo>
+
+    <property name="build.version.full" value="${build.version}+${git.branch}" />
+
+    <target name="pre-build">
+        <script language="javascript">
+            <![CDATA[
+                project.setProperty('jsonResult',
+                    JSON.stringify({
+                        "version": project.getProperty('build.version.full').replace(/[^a-zA-Z0-9.\-\+]/gi, ''),
+                        "shortBrand": project.getProperty('tlauncher.brand'),
+                        "brand": project.getProperty('tlauncher.brand.long'),
+                        "buildDate": new Date().toUTCString()
+                    })
+                );
+                ]]>
+        </script>
+        <echo file="${tlauncher.file.meta}" append="false" message="${jsonResult}" />
+    </target>
+
+    <target name="proguard">
+        <property name="tlauncher.in.jar" value="${artifact.output.path}/${tlauncher.brand}_unopt.jar" />
+        <property name="tlauncher.out" value="${artifact.output.path}/${tlauncher.brand}" />
+        <java classname="proguard.ProGuard" failonerror="true">
+            <arg value="-include ${tlauncher.base.config}/proguard.pro"/>
+            <arg value="-libraryjars ${java.home}/lib/rt.jar"/>
+            <arg value="-libraryjars ${java.home}/lib/ext/jfxrt.jar"/>
+            <arg value="-injars ${tlauncher.in.jar}" />
+            <arg value="-outjars ${tlauncher.out}.jar" />
+            <classpath>
+                <pathelement location="${tlauncher.base.lib}/proguard.jar"/>
+            </classpath>
+        </java>
+        <delete file="${tlauncher.in.jar}" />
+    </target>
+
+    <target name="launch4j" if="launch4j.execute">
+        <echo>In: ${tlauncher.in.jar}</echo>
+        <echo>Out: ${tlauncher.out}.(jar|exe)</echo>
+        <property name="launch4j.base" value="${tlauncher.base.lib}/launch4j" />
+        <taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask" classpath="${launch4j.base}/launch4j.jar:${launch4j.base}/lib/xstream.jar" />
+        <echo>${build.version}</echo>
+        <launch4j
+            configFile="${tlauncher.base.config}/launch4j-${tlauncher.brand}.xml"
+            jar="${tlauncher.out}.jar"
+            outfile="${tlauncher.out}.exe"
+            fileversion="${build.version}.0"
+            txtfileversion="${build.version.full}"
+            productversion="${build.version}.0"
+            txtproductversion="${build.version.full}"
+        />
+    </target>
+
+    <target name="post-build">
+        <antcall target="proguard" />
+        <antcall target="launch4j" />
+    </target>
+</project>
