@@ -122,7 +122,7 @@ public class Update {
     }
 
     public boolean isRequired() {
-        return version.greaterThan(TLauncher.getVersion()) && version.getMinorVersion() > TLauncher.getVersion().getMinorVersion();
+        return TLauncher.isBeta() || (version.greaterThan(TLauncher.getVersion()) && version.getMinorVersion() > TLauncher.getVersion().getMinorVersion());
     }
 
     public String getDescription(String key) {
