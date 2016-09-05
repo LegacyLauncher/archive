@@ -5,6 +5,10 @@ import com.google.gson.GsonBuilder;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
@@ -147,7 +151,7 @@ public final class CrashManager {
         if (crashEntries.containsKey(entry.getName())) {
             log("Removing", crashEntries.get(entry.getName()));
         }
-        log("Adding", entry.getName());
+        //log("Adding", entry.getName());
         crashEntries.put(entry.getName(), entry);
         return entry;
     }
@@ -168,7 +172,7 @@ public final class CrashManager {
 
     private void addAllEntries(CrashEntryList entryList, String type) {
         for (CrashEntry entry : entryList.getSignatures()) {
-            log("Processing", type, "entry:", entry);
+            //log("Processing", type, "entry:", entry);
             addEntry(entry);
         }
     }
@@ -399,15 +403,6 @@ public final class CrashManager {
             super(CrashManager.this, "generated files searcher");
         }
 
-        private String find(String s) {
-            try {
-                return FileUtil.findFile(null, s).getAbsolutePath();
-            } catch (Exception e) {
-                log("Could not find file:", s, e);
-            }
-            return s;
-        }
-
         @Override
         protected void execute() throws Exception {
             Scanner scanner = PatternEntry.getScanner(getOutput());
@@ -417,14 +412,14 @@ public final class CrashManager {
 
                 String crashFile = get(Pattern.compile("^.*#@!@# Game crashed!.+@!@# (.+)$"), line);
                 if (crashFile != null) {
-                    crash.setCrashFile(find(crashFile));
+                    crash.setCrashFile(crashFile);
                     continue;
                 }
 
                 if (line.equals("# An error report file with more information is saved as:") && scanner.hasNextLine()) {
                     String nativeCrashFile = get(Pattern.compile("# (.+)$"), line = scanner.nextLine());
                     if (nativeCrashFile != null) {
-                        crash.setNativeCrashFile(find(nativeCrashFile));
+                        crash.setNativeCrashFile(nativeCrashFile);
                     }
                 }
             }
@@ -454,18 +449,29 @@ public final class CrashManager {
     }
 
     private class LogFlusherEntry extends Entry {
+        private String[] skipFolderList;
+
         public LogFlusherEntry() {
             super(CrashManager.this, "log flusher");
         }
 
         @Override
         protected void execute() throws Exception {
+            String skipFolderListStr = getVar("skip-folders");
+
+            if(StringUtils.isBlank(skipFolderListStr)) {
+                skipFolderList = null;
+            } else {
+                log("Skip folder list:", skipFolderListStr);
+                skipFolderList = StringUtils.split(skipFolderListStr, ';');
+            }
+
             synchronized (U.lock) {
                 readFile(getCrash().getCrashFile());
                 readFile(getCrash().getNativeCrashFile());
 
                 if (getLauncher() != null && getVersion().toLowerCase().contains("forge")) {
-                    readDirectory(new File(getLauncher().getGameDir(), "mods"));
+                    treeDir(new File(getLauncher().getGameDir(), "mods"), 2);
                     writeDelimiter();
                 }
 
@@ -480,7 +486,7 @@ public final class CrashManager {
         }
 
         private void writeDelimiter() {
-            plog("++++++++++++++++++++++++++++++++++");
+            nlog("++++++++++++++++++++++++++++++++++");
         }
 
         private void readFile(File file) {
@@ -488,21 +494,21 @@ public final class CrashManager {
                 return;
             }
 
-            plog("<File", file, ">");
+            nlog("<File", file, ">");
             try {
                 if (!file.isFile()) {
                     log("File doesn't exist:", file);
                     return;
                 }
 
-                plog("Reading file:", file);
-                plog();
+                nlog("Reading file:", file);
+                nlog();
 
                 Scanner scanner = null;
                 try {
                     scanner = new Scanner(file);
                     while (scanner.hasNextLine()) {
-                        plog(scanner.nextLine());
+                        nlog(scanner.nextLine());
                     }
                 } catch (Exception e) {
                     log("Could not read file:", file, e);
@@ -510,33 +516,145 @@ public final class CrashManager {
                     U.close(scanner);
                 }
             } finally {
-                plog("</File", file, ">");
+                nlog("</File", file, ">");
                 writeDelimiter();
             }
         }
 
-        private void readDirectory(File dir) {
-            if (!dir.isDirectory()) {
+        private void treeDir(File dir, int limit) {
+            treeDir(dir, 0, limit, new StringBuilder());
+        }
+
+        private void treeDir(File dir, int current, int limit, StringBuilder buffer) {
+            if(!dir.isDirectory()) {
+                plog(dir, " (not a dir)");
                 return;
             }
 
-            plog("<Dir", dir, ">");
-            try {
-                for (File file : dir.listFiles()) {
-                    plog(file, file.isDirectory() ? "<DIR>" : file.length());
-                    if (file.isDirectory()) {
-                        readDirectory(file);
+            File[] list = U.requireNotNull(dir.listFiles(), "dir listing: " + dir.getAbsolutePath());
+
+            if(current == 0) {
+                plog(dir);
+            } else if(list == null || list.length == 0) {
+                plog(buffer, "└ [empty]");
+            }
+
+            StringBuilder dirBuffer = null;
+            File file; String name; boolean skipDir;
+            File[] subList;
+
+            for (int i = 0; i < list.length; i++) {
+                file = list[i];
+                name = file.getName();
+
+                subList = null;
+                skipDir = false;
+
+                if(file.isDirectory()) {
+                    subList = file.listFiles();
+
+                    skipIt:
+                    {
+                        if (skipFolderList != null) {
+                            for (String skipFolder : skipFolderList) {
+                                if (name.equalsIgnoreCase(skipFolder)) {
+                                    skipDir = true;
+                                    name += " [skipped]";
+                                    break skipIt;
+                                }
+                            }
+                        }
+
+                        if (subList == null || subList.length == 0) {
+                            name += " [empty dir]";
+                            skipDir = true;
+                        }
+                    }
+                } else {
+                    long length = file.length();
+                    if(length == 0L) {
+                        name += " [empty file]";
+                    } else {
+                        name += " ["+ length / 1024L +" kbytes]";
                     }
                 }
-            } catch (Exception e) {
-                log("Could not read file list from", dir);
-            } finally {
-                plog("</Dir", dir, ">");
+
+                plog(buffer, i == list.length - 1? "└ " : "├ ", name);
+
+                if(file.isDirectory() && !skipDir) {
+                    if(dirBuffer == null || i == list.length - 1) {
+                        dirBuffer = new StringBuilder().append(buffer).append(i == list.length - 1? "  " : "│ ").append(' ');
+                    }
+
+                    if(current == limit) {
+                        String str;
+
+                        if(subList != null && subList.length > 0) {
+                            StringBuilder s = new StringBuilder();
+
+                            int files = 0, directories = 0;
+                            for(File subFile : subList) {
+                                if(subFile.isFile()) {
+                                    files++;
+                                }
+                                if(subFile.isDirectory()) {
+                                    directories++;
+                                }
+                            }
+
+                            s.append("[");
+
+                            switch (files) {
+                                case 0:
+                                    s.append("no files");
+                                    break;
+                                case 1:
+                                    s.append("1 file");
+                                    break;
+                                default:
+                                    s.append(files).append(" files");
+                            }
+
+                            s.append("; ");
+
+                            switch(directories) {
+                                case 0:
+                                    s.append("no dirs");
+                                    break;
+                                case 1:
+                                    s.append("1 dir");
+                                    break;
+                                default:
+                                    s.append(directories).append(" dirs");
+                            }
+
+                            s.append(']');
+
+                            str = s.toString();
+                        } else {
+                            str = "[empty dir]";
+                        }
+                        plog(dirBuffer, "└ ", str);
+                        continue;
+                    }
+
+                    treeDir(file, current + 1, limit, dirBuffer);
+                }
             }
         }
 
-        private void plog(Object... o) {
+        private void nlog(Object... o) {
             U.plog("+", o);
+        }
+
+        private void plog(Object... objs) {
+            StringBuilder b = new StringBuilder();
+
+            for(Object o : objs) {
+                b.append(o);
+            }
+
+            nlog(b);
         }
     }
 

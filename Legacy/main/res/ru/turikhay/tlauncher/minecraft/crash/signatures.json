@@ -2,6 +2,7 @@
   "revision": 5,
   "required": 1.79,
   "variables": {
+    "skip-folders": "millenaire",
     "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
     "oom-pattern": "^java.lang.OutOfMemoryError: .+",
     "forge-pattern": ".*(?i:forge).*"

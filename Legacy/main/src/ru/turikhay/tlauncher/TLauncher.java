@@ -19,6 +19,7 @@ import ru.turikhay.tlauncher.ui.listener.VersionManagerUIListener;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.tlauncher.updater.Stats;
 import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.RunnableThread;
@@ -36,9 +37,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class TLauncher {
-    private static final String VERSION_STRING = "1.79.9";
+    private static final String VERSION_STRING = "1.79.10";
 
     private static TLauncher instance;
     private static String[] sargs;
@@ -135,17 +137,22 @@ public class TLauncher {
             lf.autologin.setActive(true);
         } else {
             versionManager.asyncRefresh();
-            updater.asyncFindUpdate();
         }
 
         profileManager.refresh();
 
-        new RunnableThread("UpdaterWatchdog", new Runnable() {
+        new RunnableThread("Beacon", new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    U.sleepFor(1800000); // 30 mins
+                    Stats.beacon();
                     updater.asyncFindUpdate();
+
+                    try {
+                        TimeUnit.MINUTES.sleep(30);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }).start();

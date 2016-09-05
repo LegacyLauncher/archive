@@ -99,16 +99,18 @@ public final class CrashEntryList {
             for (int i = 0; i < buttons.size(); i++) {
                 Button button = buttonDeserializer.deserialize(buttons.get(i), Button.class, context, true);
                 buttonMap.put(button.getName(), button);
-                log("Added button:", button);
+                //log("Added button:", button);
             }
 
             EntryDeserializer entryDeserializer = new EntryDeserializer(buttonMap, buttonDeserializer);
             JsonArray signatures = root.get("signatures").getAsJsonArray();
             for (int i = 0; i < signatures.size(); i++) {
                 CrashEntry entry = entryDeserializer.deserialize(signatures.get(i), EntryDeserializer.class, context);
-                log("Entry parsed:", entry.getName());
+                //log("Entry parsed:", entry.getName());
                 entryList.signatures.add(entry);
             }
+
+            log(entryList.signatures.size(), "crash entries were parsed");
 
             return entryList;
         }
