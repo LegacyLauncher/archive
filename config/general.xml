@@ -27,7 +27,7 @@
     <property name="build.version.full" value="${build.version}+${git.branch}" />
     <echo>Build metadata: ${build.version.full}</echo>
 
-    <target name="pre-build">
+    <target name="update-build">
         <script language="javascript">
             <![CDATA[
                 project.setProperty('jsonResult',
@@ -75,6 +75,10 @@
             productversion="${build.version}.0"
             txtproductversion="${build.version.full}"
         />
+    </target>
+
+    <target name="pre-build">
+        <antcall target="update-build" />
     </target>
 
     <target name="post-build">

@@ -22,18 +22,18 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Stats {
+public final class Stats {
     private static final URL STATS_BASE = Http.constantURL("http://u.tlauncher.ru/stats/");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
     private static String lastResult;
 
-    public static boolean getAllowed() {
-        return allow;
-    }
-
     public static void setAllowed(boolean allowed) {
         allow = allowed;
+    }
+
+    public static void beacon() {
+        submitDenunciation(newAction("beacon"));
     }
 
     public static void minecraftLaunched(Account account, CompleteVersion version, ServerList.Server server) {
@@ -144,7 +144,6 @@ public class Stats {
         if (TLauncher.getInstance() == null || TLauncher.getInstance().getDebug()) {
             U.log("[Stats]", o);
         }
-
     }
 
     private static class Args {
@@ -176,5 +175,8 @@ public class Stats {
 
     public interface StatsListener {
         void onInvalidSubmit(String message);
+    }
+
+    private Stats() {
     }
 }

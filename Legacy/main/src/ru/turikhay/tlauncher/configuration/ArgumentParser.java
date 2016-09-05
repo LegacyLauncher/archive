@@ -33,6 +33,7 @@ public class ArgumentParser {
         parser = new OptionParser();
 
         parser.accepts("help", "Prints help");
+        parser.accepts("debug", "Runs in debug mode");
         parser.accepts("no-terminate", "Do not terminate Bootstrapper if started with it");
         parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
         parser.accepts("profiles", "Specifies profile file").withRequiredArg();

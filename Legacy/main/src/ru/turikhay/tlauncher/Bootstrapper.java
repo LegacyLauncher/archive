@@ -46,6 +46,7 @@ public final class Bootstrapper {
         JavaProcessLauncher processLauncher = new JavaProcessLauncher(null, new String[0]);
         processLauncher.directory(DIRECTORY);
         processLauncher.addCommand("-Xmx" + MAX_MEMORY + "m");
+        processLauncher.addCommand("-Dfile.encoding=UTF-8");
         processLauncher.addCommand("-cp", FileUtil.getRunningJar());
         processLauncher.addCommand(MAIN_CLASS);
         if (args != null && args.length > 0) {
