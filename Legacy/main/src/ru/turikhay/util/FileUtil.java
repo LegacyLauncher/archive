@@ -461,6 +461,36 @@ public class FileUtil {
         return bOut.toByteArray();
     }
 
+    private static final MessageDigest SHA256;
+
+    static {
+        try {
+            SHA256 = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException nsaE) {
+            throw new Error(nsaE);
+        }
+    }
+
+    public static String getSHA256(File file) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
+
+        byte[] dataBytes = new byte[1024];
+        int nread;
+        while ((nread = fis.read(dataBytes)) != -1) {
+            SHA256.update(dataBytes, 0, nread);
+        }
+
+        byte[] mdbytes = SHA256.digest();
+
+        StringBuilder hexString = new StringBuilder();
+
+        for (byte mdbyte : mdbytes) {
+            hexString.append(Integer.toHexString(0xFF & mdbyte));
+        }
+
+        return hexString.toString();
+    }
+
     private static void log(Object... o) {
         U.log("[Files]", o);
     }

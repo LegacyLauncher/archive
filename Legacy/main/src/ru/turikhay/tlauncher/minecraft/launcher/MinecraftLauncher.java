@@ -11,9 +11,7 @@ import net.minecraft.launcher.versions.ExtractRules;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import ru.turikhay.tlauncher.TLauncher;
@@ -569,6 +567,12 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new MinecraftException("Cannot delete library entries!", "delete-entries", var5);
         }
 
+        try {
+            showDebugLines();
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+
         checkAborted();
         log("Constructing process...");
         address = extListeners.iterator();
@@ -602,7 +606,6 @@ public class MinecraftLauncher implements JavaProcessListener {
         launcher.addCommand("-Djava.library.path=" + nativeDir.getAbsolutePath());
 
         if (OS.WINDOWS.isCurrent() && OS.VERSION.startsWith("10.")) {
-            log("Win10 hack is being applied.");
             launcher.addCommand("-Dos.name=Windows 10");
             launcher.addCommand("-Dos.version=10.0");
         }
@@ -692,6 +695,41 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         launchMinecraft();
+    }
+
+    private void showDebugLines() throws Exception {
+        log("--- VAZHNOE --- ");
+
+        File jarFile = new File(rootDir, "versions/" + version.getID() + "/" + version.getID() + ".jar");
+        if(!jarFile.isFile()) {
+            throw new Exception("jarfile is not found: " + jarFile.getAbsolutePath());
+        }
+
+        log("Jar file hash:", FileUtil.getSHA256(jarFile));
+
+        File indexFile = new File(assetsIndexesDir, version.getAssetIndex().getId() + ".json");
+        if(!indexFile.isFile()) {
+            throw new Exception("WARNING: Index file doesn't exist: "+ indexFile);
+        }
+
+        log("Index file hash:", FileUtil.getSHA256(indexFile));
+        readFirstBytes(indexFile);
+
+        log("--- YA VSE --- ");
+    }
+
+    private void readFirstBytes(File file) throws IOException {
+        FileInputStream in = null;
+        byte[] buffer = new byte[256];
+
+        try {
+            IOUtils.read(in = new FileInputStream(file), buffer);
+        } finally {
+            U.close(in);
+        }
+
+        log("First bytes of", file);
+        log(new String(buffer, "UTF-8"));
     }
 
     private File reconstructAssets() throws IOException, MinecraftException {
@@ -942,13 +980,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) throws MinecraftException {
-        try {
-            migrateOldAssets();
-        } catch (Exception e) {
-            log("Could not migrate old assets", e);
-            //throw new MinecraftException("Could not migrate old assets", "migrate-assets", e);
-        }
-
         log("Comparing assets...");
 
         AssetsManager.ResourceChecker checker = am.checkResources(version, fastCompare);
@@ -1000,56 +1031,14 @@ public class MinecraftLauncher implements JavaProcessListener {
         return result;
     }
 
-    private void migrateOldAssets() {
-        if (globalAssetsDir.isDirectory()) {
-            File skinsDir = new File(globalAssetsDir, "skins");
-            if (skinsDir.isDirectory()) {
-                FileUtil.deleteDirectory(skinsDir);
-            }
-
-            IOFileFilter migratableFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("indexes"), FileFilterUtils.nameFileFilter("objects"), FileFilterUtils.nameFileFilter("virtual")));
-
-            File assets;
-            for (Iterator file = (new TreeSet(FileUtils.listFiles(globalAssetsDir, TrueFileFilter.TRUE, migratableFilter))).iterator(); file.hasNext(); FileUtils.deleteQuietly(assets)) {
-                assets = (File) file.next();
-                String hash = FileUtil.getDigest(assets, "SHA-1", 40);
-                File destinationFile = new File(assetsObjectsDir, hash.substring(0, 2) + "/" + hash);
-                if (!destinationFile.exists()) {
-                    log("Migrated old asset", assets, "into", destinationFile);
-
-                    try {
-                        FileUtils.copyFile(assets, destinationFile);
-                    } catch (IOException var8) {
-                        log("Couldn\'t migrate old asset", var8);
-                    }
-                }
-            }
-
-            File[] var9 = globalAssetsDir.listFiles();
-            if (var9 != null) {
-                File[] e = var9;
-                int var12 = var9.length;
-
-                for (int var11 = 0; var11 < var12; ++var11) {
-                    File var10 = e[var11];
-                    if (!var10.getName().equals("indexes") && !var10.getName().equals("objects") && !var10.getName().equals("virtual")) {
-                        log("Cleaning up old assets directory", var10, "after migration");
-                        FileUtils.deleteQuietly(var10);
-                    }
-                }
-            }
-
-        }
-    }
-
     private void fixResourceFolder() throws Exception {
         File serverResourcePacksFolder = new File(gameDir, "server-resource-packs");
         if (serverResourcePacksFolder.isDirectory()) {
             File[] files = U.requireNotNull(serverResourcePacksFolder.listFiles(), "files of " + serverResourcePacksFolder.getAbsolutePath());
             for (File file : files) {
-                U.log(file, file.length());
-                if (file.length() == 0)
+                if (file.length() == 0) {
                     FileUtil.deleteFile(file);
+                }
             }
         }
         FileUtil.createFolder(serverResourcePacksFolder);
