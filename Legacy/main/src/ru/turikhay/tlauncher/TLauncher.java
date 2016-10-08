@@ -40,7 +40,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class TLauncher {
-    private static final String VERSION_STRING = "1.79.11";
+    private static final String VERSION_STRING = "1.79.12";
 
     private static TLauncher instance;
     private static String[] sargs;
