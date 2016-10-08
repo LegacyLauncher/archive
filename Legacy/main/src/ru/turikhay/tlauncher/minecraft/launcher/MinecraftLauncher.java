@@ -705,14 +705,14 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new Exception("jarfile is not found: " + jarFile.getAbsolutePath());
         }
 
-        log("Jar file hash:", FileUtil.getSHA256(jarFile));
+        log("Jar file hash:", FileUtil.getSHA(jarFile));
 
         File indexFile = new File(assetsIndexesDir, version.getAssetIndex().getId() + ".json");
         if(!indexFile.isFile()) {
             throw new Exception("WARNING: Index file doesn't exist: "+ indexFile);
         }
 
-        log("Index file hash:", FileUtil.getSHA256(indexFile));
+        log("Index file hash:", FileUtil.getSHA(indexFile));
         readFirstBytes(indexFile);
 
         log("--- YA VSE --- ");
