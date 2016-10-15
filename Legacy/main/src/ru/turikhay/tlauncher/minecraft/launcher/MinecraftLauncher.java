@@ -614,7 +614,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         launcher.addCommand("-Dfml.ignoreInvalidMinecraftCertificates=true");
         launcher.addCommand("-Dfml.ignorePatchDiscrepancies=true");
         launcher.addCommand("-Djava.net.useSystemProxies=true");
-        launcher.addCommand("-Dfile.encoding=UTF-8");
+
+        if(!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
+            launcher.addCommand("-Dfile.encoding=UTF-8");
+        }
 
         launcher.addCommands(getJVMArguments());
         if (javaArgs != null) {
