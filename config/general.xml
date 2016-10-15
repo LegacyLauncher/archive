@@ -26,6 +26,10 @@
 
     <property name="build.version.full" value="${build.version}+${git.branch}" />
     <echo>Build metadata: ${build.version.full}</echo>
+    <property name="launch4j.base" value="${tlauncher.base.lib}/launch4j" />
+
+    <property name="tlauncher.in.jar" value="${artifact.output.path}/${tlauncher.brand}_unopt.jar" />
+    <property name="tlauncher.out" value="${artifact.output.path}/${tlauncher.brand}" />
 
     <target name="update-build">
         <script language="javascript">
@@ -44,9 +48,8 @@
     </target>
 
     <target name="proguard">
-        <property name="tlauncher.in.jar" value="${artifact.output.path}/${tlauncher.brand}_unopt.jar" />
-        <property name="tlauncher.out" value="${artifact.output.path}/${tlauncher.brand}" />
         <delete file="${tlauncher.out}.jar" />
+        <delete file="${tlauncher.out}.exe" />
         <java classname="proguard.ProGuard" failonerror="true">
             <arg value="-include ${tlauncher.base.config}/proguard.pro"/>
             <arg value="-libraryjars ${java.home}/lib/rt.jar"/>
@@ -61,11 +64,9 @@
     </target>
 
     <target name="launch4j" if="launch4j.execute">
-        <echo>In: ${tlauncher.in.jar}</echo>
-        <echo>Out: ${tlauncher.out}.(jar|exe)</echo>
-        <property name="launch4j.base" value="${tlauncher.base.lib}/launch4j" />
+        <delete file="${tlauncher.out}.exe" />
         <taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask" classpath="${launch4j.base}/launch4j.jar:${launch4j.base}/lib/xstream.jar" />
-        <echo>${build.version}</echo>
+        <echo>${tlauncher.out}.jar</echo>
         <launch4j
             configFile="${tlauncher.base.config}/launch4j-${tlauncher.brand}.xml"
             jar="${tlauncher.out}.jar"
