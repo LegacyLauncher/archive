@@ -1,5 +1,6 @@
 package net.minecraft.launcher.versions;
 
+import net.minecraft.launcher.updater.DownloadInfo;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.tukaani.xz.XZInputStream;
 import ru.turikhay.tlauncher.downloader.Downloadable;
@@ -10,6 +11,7 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -27,9 +29,10 @@ public class Library {
     protected String packed;
     protected String checksum;
     protected List<String> deleteEntries;
+    protected LibraryDownloadInfo downloads;
 
     static {
-        HashMap map = new HashMap();
+        HashMap<String, String> map = new HashMap<String, String>();
         map.put("platform", OS.CURRENT.getName());
         map.put("arch", OS.Arch.CURRENT.getBit());
         SUBSTITUTOR = new StrSubstitutor(map);
@@ -134,30 +137,41 @@ public class Library {
     }
 
     public Downloadable getDownloadable(Repository versionSource, File file, OS os) {
-        Repository repo = null;
-        boolean isForge = "forge".equals(packed);
+        String classifier = natives != null && appliesToCurrentEnvironment() ? natives.get(os) : null;
+
+        if (downloads != null) {
+            DownloadInfo info = this.downloads.getDownloadInfo(SUBSTITUTOR.replace(classifier));
+            if (info != null) {
+                return new LibraryDownloadable(info, file);
+            }
+        }
+
+        Repository repo;
         String path;
+        boolean forgePacked = "forge".equals(packed);
+
         if (exact_url == null) {
-            String tempFile = natives != null && appliesToCurrentEnvironment() ? natives.get(os) : null;
-            path = getArtifactPath(tempFile) + (isForge ? ".pack.xz" : "");
+            path = getArtifactPath(classifier) + (forgePacked ? FORGE_LIB_SUFFIX : "");
             if (url == null) {
                 repo = Repository.LIBRARY_REPO;
             } else if (url.startsWith("/")) {
                 repo = versionSource;
                 path = url.substring(1) + path;
             } else {
+                repo = null;
                 path = url + path;
             }
         } else {
+            repo = null;
             path = exact_url;
         }
 
-        if (isForge) {
-            File tempFile1 = new File(file.getAbsolutePath() + ".pack.xz");
-            return new Library.ForgeLibDownloadable(path, tempFile1, file);
-        } else {
-            return repo == null ? new Library.LibraryDownloadable(path, file) : new Library.LibraryDownloadable(repo, path, file);
+        if (forgePacked) {
+            File tempFile = new File(file.getAbsolutePath() + FORGE_LIB_SUFFIX);
+            return new Library.ForgeLibDownloadable(path, tempFile, file);
         }
+
+        return repo == null ? new Library.LibraryDownloadable(path, file) : new Library.LibraryDownloadable(repo, path, file);
     }
 
     private static synchronized void unpackLibrary(File library, File output, boolean retryOnOutOfMemory) throws IOException {
@@ -274,12 +288,21 @@ public class Library {
     }
 
     public class LibraryDownloadable extends Downloadable {
+        private final String checksum;
+
         private LibraryDownloadable(Repository repo, String path, File file) {
             super(repo, path, file);
+            this.checksum = Library.this.getChecksum();
         }
 
         private LibraryDownloadable(String path, File file) {
             super(path, file);
+            this.checksum = Library.this.getChecksum();
+        }
+
+        private LibraryDownloadable(DownloadInfo info, File file) {
+            super(info.getUrl().toString(), file);
+            this.checksum = info.getSha1();
         }
 
         public Library getDownloadableLibrary() {
@@ -292,12 +315,10 @@ public class Library {
 
         @Override
         protected void onComplete() throws RetryDownloadException {
-            Library lib = getDownloadableLibrary();
-
-            if (lib.getChecksum() != null) {
-                String fileHash = FileUtil.getChecksum(getDestination(), "sha1");
-                if (fileHash != null && !fileHash.equals(lib.getChecksum())) {
-                    throw new RetryDownloadException("illegal library hash. got: " + fileHash + "; expected: " + lib.getChecksum());
+            if (checksum != null) {
+                String fileHash = FileUtil.getSHA(getDestination()); //FileUtil.getChecksum(getDestination(), "sha1");
+                if (fileHash != null && !fileHash.equals(checksum)) {
+                    throw new RetryDownloadException("illegal library hash. got: " + fileHash + "; expected: " + checksum);
                 }
             }
         }

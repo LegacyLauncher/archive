@@ -158,16 +158,16 @@ public class NewFolderFrame extends VActionFrame {
     public static File selectDestination() {
         ArrayList<File> suggestions = new ArrayList<File>();
 
-        suggestions.addAll(Arrays.asList(
-                MinecraftUtil.getSystemRelatedDirectory("minecraft")
-        ));
-
         if (OS.WINDOWS.isCurrent()) {
             suggestions.addAll(Arrays.asList(
                     new File("D:\\Games\\Minecraft"),
                     new File("C:\\Games\\Minecraft")
             ));
         }
+
+        suggestions.addAll(Arrays.asList(
+                MinecraftUtil.getSystemRelatedDirectory("minecraft")
+        ));
 
         suggestions.addAll(Arrays.asList(
                 MinecraftUtil.getSystemRelatedDirectory("Minecraft", false),
