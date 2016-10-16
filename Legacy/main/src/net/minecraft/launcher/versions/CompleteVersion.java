@@ -11,6 +11,7 @@ import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
+import ru.turikhay.util.json.ExposeExclusion;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,17 +34,17 @@ public class CompleteVersion implements Version, Cloneable {
     String mainClass;
     Integer minimumLauncherVersion = Integer.valueOf(0);
     Integer tlauncherVersion = Integer.valueOf(0);
-    Repository source;
-    VersionList list;
     List<Library> libraries;
     List<Rule> rules;
     List<String> deleteEntries;
 
     Map<DownloadType, DownloadInfo> downloads = new HashMap<DownloadType, DownloadInfo>();
     AssetIndexInfo assetIndex;
+    String assets;
 
-    @Expose
-    boolean elyfied;
+    @Expose Repository source;
+    @Expose boolean elyfied;
+    @Expose VersionList list;
 
     public String getID() {
         return id;
@@ -163,7 +164,11 @@ public class CompleteVersion implements Version, Cloneable {
 
     public AssetIndexInfo getAssetIndex() {
         if (assetIndex == null) {
-            assetIndex = new AssetIndexInfo("legacy");
+            if(assets == null) {
+                assetIndex = new AssetIndexInfo("legacy");
+            } else {
+                assetIndex = new AssetIndexInfo(assets);
+            }
         }
         return assetIndex;
     }
@@ -502,6 +507,7 @@ public class CompleteVersion implements Version, Cloneable {
 
         public CompleteVersionSerializer() {
             GsonBuilder builder = new GsonBuilder();
+            ExposeExclusion.setup(builder);
             builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
             builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
             builder.enableComplexMapKeySerialization();
@@ -553,7 +559,6 @@ public class CompleteVersion implements Version, Cloneable {
                 return defaultContext.toJsonTree(version0, type);
             }
 
-            version.list = null;
             JsonObject object = (JsonObject) defaultContext.toJsonTree(version, type);
             JsonElement jar = object.get("jar");
             if (jar == null) {

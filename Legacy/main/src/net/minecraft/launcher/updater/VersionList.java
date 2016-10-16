@@ -1,8 +1,7 @@
 package net.minecraft.launcher.updater;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
+import com.google.gson.annotations.Expose;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -13,6 +12,7 @@ import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
+import ru.turikhay.util.json.ExposeExclusion;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,6 +30,7 @@ public abstract class VersionList {
 
     VersionList() {
         GsonBuilder builder = new GsonBuilder();
+        ExposeExclusion.setup(builder);
         builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
         builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
         builder.registerTypeAdapter(CompleteVersion.class, new CompleteVersion.CompleteVersionSerializer());
