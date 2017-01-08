@@ -1,0 +1,34 @@
+{
+  "update": {
+    "bootstrap": {
+      "version": "1.0.0",
+      "shortBrand": "legacy",
+      "downloads": {
+        "JAR": {
+          "url": "http://repo.tlauncher.ru/legacy/bootstrap.jar",
+          "checksum": ""
+        },
+        "EXE": {
+          "url": "http://repo.tlauncher.ru/legacy/bootstrap.exe",
+          "checksum": ""
+        }
+      }
+    },
+    "launcher": {
+      "version": "1.79.14",
+      "shortBrand": "legacy",
+      "checksum": "",
+      "downloads": []
+    }
+  },
+  "support": {
+    "ru_RU": "http://tlaun.ch/support/ru",
+    "en_US": "http://tlaun.ch/support/en"
+  },
+  "options": {
+    "stats": true,
+    "ely": true,
+    "repositories": [],
+    "notices": []
+  }
+}

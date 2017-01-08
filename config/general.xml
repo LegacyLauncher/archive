@@ -4,78 +4,112 @@
     <!-- property name="tlauncher.name" value="tlauncher" / -->
     <!-- property name="tlauncher.base.project" value="${basedir}/Legacy" / -->
 
+    <property name="tlauncher.config" value="default" />
+
     <property name="tlauncher.base.config" value="${basedir}/config" />
     <property name="tlauncher.base.build" value="${basedir}/build" />
     <property name="tlauncher.base.lib" value="${basedir}/lib" />
 
-    <loadproperties srcfile="${tlauncher.base.config}/default.properties" />
+    <loadproperties srcfile="${tlauncher.base.config}/build-${tlauncher.config}.properties" />
+    <loadproperties srcfile="${tlauncher.base.config}/build-default.properties" />
 
-    <property name="tlauncher.file.build" value="${basedir}/${tlauncher.project}/build.properties" />
-    <property name="tlauncher.file.meta" value="${basedir}/${tlauncher.project.meta}/main/res/meta.json" />
+    <loadproperties srcfile="${tlauncher.base.config}/brand-${tlauncher.brand}.properties" />
+
+    <property name="tlauncher.final_name" value="${tlauncher.project}" />
+    <property name="tlauncher.project.meta.input.project-name" value="${tlauncher.project}" />
+    <property name="tlauncher.project.meta.input" value="${basedir}/${tlauncher.project.meta.input.project-name}/${tlauncher.meta.outputname}" />
+    <property name="tlauncher.project.meta.output" value="${basedir}/${tlauncher.project}/main/res/${tlauncher.meta.package}/${tlauncher.meta.outputname}" />
+    <property name="tlauncher.project.meta.output.production" value="${basedir}/out/production/${tlauncher.project}/${tlauncher.meta.package}/${tlauncher.meta.outputname}" />
 
     <exec executable="git" outputproperty="git.branch">
         <arg line="rev-parse --abbrev-ref HEAD"/>
     </exec>
     <echo>Current branch: ${git.branch}</echo>
 
-    <loadproperties srcFile="${tlauncher.file.build}"/>
-    <echo>Version: ${build.version}</echo>
+    <loadfile property="meta-input" srcFile="${tlauncher.project.meta.input}"/>
 
     <echo>Short brand name: ${tlauncher.brand}</echo>
     <echo>Long brand name: ${tlauncher.brand.long}</echo>
+    <echo>Build: ${build.version}</echo>
+    <echo>Build: ${build.version.full}</echo>
 
-    <property name="build.version.full" value="${build.version}+${git.branch}" />
-    <echo>Build metadata: ${build.version.full}</echo>
-    <property name="launch4j.base" value="${tlauncher.base.lib}/launch4j" />
+    <script language="javascript">
+        <![CDATA[
+                load(project.getProperty('tlauncher.base.config') + '/util.js');
 
-    <property name="tlauncher.in.jar" value="${artifact.output.path}/${tlauncher.brand}_unopt.jar" />
-    <property name="tlauncher.out" value="${artifact.output.path}/${tlauncher.brand}" />
+                var parsed = JSON.parse(project.getProperty('meta-input'));
+                var brand = project.getProperty('tlauncher.brand');
+                if(project.getProperty('git.branch') != 'master') {
+                    brand += '_beta';
+                }
 
-    <target name="update-build">
-        <script language="javascript">
-            <![CDATA[
-                project.setProperty('jsonResult',
-                    JSON.stringify({
-                        "version": project.getProperty('build.version.full').replace(/\//gi, '-').replace(/[^a-zA-Z0-9.\-\+]/gi, ''),
-                        "shortBrand": project.getProperty('tlauncher.brand'),
+                project.setProperty('build.version', parsed.version);
+                project.setProperty('meta-output', JSON.stringify(
+                    Object.assign(parsed, {
+                        "version": parsed.version + "+" + project.getProperty('git.branch').replace(/\//gi, '-').replace(/[^a-zA-Z0-9.\-\+]/gi, ''),
+                        "shortBrand": brand,
                         "brand": project.getProperty('tlauncher.brand.long'),
                         "buildDate": new Date().toUTCString()
                     })
-                );
-                ]]>
-        </script>
-        <echo file="${tlauncher.file.meta}" append="false" message="${jsonResult}" />
+                ));
+                project.setProperty('build.version.full', parsed.version);
+
+            ]]>
+    </script>
+
+    <target name="update-build">
+        <echo file="${tlauncher.project.meta.output}" append="false" message="${meta-output}" />
+        <echo file="${tlauncher.project.meta.output.production}" append="false" message="${meta-output}" />
     </target>
 
-    <target name="proguard">
-        <delete file="${tlauncher.out}.jar" />
-        <delete file="${tlauncher.out}.exe" />
-        <java classname="proguard.ProGuard" failonerror="true">
+    <target name="proguard" if="proguard.execute">
+        <property name="tlauncher.in.source" value="${artifact.output.path}/${tlauncher.final_name}.jar" />
+        <property name="tlauncher.in.jar" value="${artifact.output.path}/${tlauncher.final_name}_source.jar" />
+
+        <rename src="${tlauncher.in.source}" dest="${tlauncher.in.jar}"/>
+        <delete file="${tlauncher.in.source}" />
+
+        <java classname="proguard.ProGuard" error="proguard.log" failonerror="true">
             <arg value="-include ${tlauncher.base.config}/proguard.pro"/>
             <arg value="-libraryjars ${java.home}/lib/rt.jar"/>
             <arg value="-libraryjars ${java.home}/lib/ext/jfxrt.jar"/>
+            <arg value="-libraryjars ${tlauncher.base.lib}/target/tlauncher-dependencies-1.0.jar"/>
             <arg value="-injars ${tlauncher.in.jar}" />
-            <arg value="-outjars ${tlauncher.out}.jar" />
+            <arg value="-outjars ${tlauncher.in.source}" />
             <classpath>
                 <pathelement location="${tlauncher.base.lib}/proguard.jar"/>
             </classpath>
         </java>
         <delete file="${tlauncher.in.jar}" />
+
+        <checksum file="${tlauncher.in.source}" algorithm="sha-256" property="checksum"/>
+        <propertyfile file="${artifact.output.path}/checksum.properties">
+            <entry key="${tlauncher.final_name}.jar" value="${checksum}" />
+        </propertyfile>
     </target>
 
     <target name="launch4j" if="launch4j.execute">
-        <delete file="${tlauncher.out}.exe" />
+        <property name="tlauncher.in.source" value="${artifact.output.path}/${tlauncher.final_name}.jar" />
+        <property name="tlauncher.out" value="${artifact.output.path}/${tlauncher.final_name}" />
+
+        <echo>In: ${tlauncher.out}.jar</echo>
+        <echo>Out: ${tlauncher.out}.(jar|exe)</echo>
+        <property name="launch4j.base" value="${tlauncher.base.lib}/launch4j" />
         <taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask" classpath="${launch4j.base}/launch4j.jar:${launch4j.base}/lib/xstream.jar" />
-        <echo>${tlauncher.out}.jar</echo>
         <launch4j
             configFile="${tlauncher.base.config}/launch4j-${tlauncher.brand}.xml"
-            jar="${tlauncher.out}.jar"
+            jar="${tlauncher.in.source}"
             outfile="${tlauncher.out}.exe"
             fileversion="${build.version}.0"
             txtfileversion="${build.version.full}"
             productversion="${build.version}.0"
             txtproductversion="${build.version.full}"
         />
+
+        <checksum file="${tlauncher.out}.exe" algorithm="sha-256" property="checksum"/>
+        <propertyfile file="${artifact.output.path}/checksum.properties">
+            <entry key="${tlauncher.final_name}.exe" value="${checksum}" />
+        </propertyfile>
     </target>
 
     <target name="pre-build">
@@ -85,5 +119,11 @@
     <target name="post-build">
         <antcall target="proguard" />
         <antcall target="launch4j" />
+
+        <property name="tlauncher.in.source" value="${artifact.output.path}/${tlauncher.final_name}.jar" />
+        <checksum file="${tlauncher.in.source}" algorithm="sha-256" property="checksum"/>
+        <propertyfile file="${artifact.output.path}/checksum.properties">
+            <entry key="${tlauncher.final_name}.jar" value="${checksum}" />
+        </propertyfile>
     </target>
 </project>
