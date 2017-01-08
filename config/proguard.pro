@@ -6,10 +6,20 @@
 -verbose
 -dontwarn
 
+# Keeps bridge classes
+-keep class ru.turikhay.bootstrap.bridge.** {
+    public static ** <methods>(...);
+    public ** <methods>();
+}
 
 # Keeps components that are only called from reflection
 -keep class ru.turikhay.tlauncher.managers.* {
     <init>(...);
+}
+
+# Keeps components that are only called from reflection
+-keep class ru.turikhay.tlauncher.bootstrap.bridge.* {
+    *;
 }
 
 # Keep - Applications. Keep all application classes, along with their 'main'
