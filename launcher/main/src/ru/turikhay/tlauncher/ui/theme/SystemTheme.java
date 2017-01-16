@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.theme;
 
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
@@ -12,6 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class SystemTheme extends Theme {
+    static {
+        SwingUtil.initLookAndFeel();
+    }
+
     static final int MAX_ARC = 64, MAX_BORDER = 24;
 
     private static final SystemTheme instance = new SystemTheme();
