@@ -7,10 +7,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.progress.LaunchProgress;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
-import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
-import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
-import ru.turikhay.tlauncher.ui.scenes.PseudoScene;
-import ru.turikhay.tlauncher.ui.scenes.VersionManagerScene;
+import ru.turikhay.tlauncher.ui.scenes.*;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
@@ -32,6 +29,7 @@ public class MainPane extends ExtendedLayeredPane {
     public final DefaultScene defaultScene;
     public final AccountEditorScene accountEditor;
     public final VersionManagerScene versionManager;
+    public final NoticeScene noticeScene;
     public final SideNotifier notifier;
     public final RevertFontSize revertFont;
     //final ServicePanel service;
@@ -56,7 +54,10 @@ public class MainPane extends ExtendedLayeredPane {
         log("Init Version manager scene...");
         versionManager = new VersionManagerScene(this);
         add(versionManager);
+        noticeScene = new NoticeScene(this);
+        add(noticeScene);
         progress = new LaunchProgress(frame);
+        frame.getLauncher().getUIListeners().registerMinecraftLauncherListener(progress);
         add(progress);
         revertFont = new RevertFontSize();
         if (revertFont.shouldShow())
@@ -110,6 +111,10 @@ public class MainPane extends ExtendedLayeredPane {
 
     public void openVersionManager() {
         setScene(versionManager);
+    }
+
+    public void openNoticeScene() {
+        setScene(noticeScene);
     }
 
     public TLauncherFrame getRootFrame() {

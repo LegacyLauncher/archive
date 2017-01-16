@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
@@ -133,11 +134,14 @@ public class Images {
                 return null;
             }
         } else {
-            URL url = Images.class.getResource(uri);
-            if (url == null && throwIfNull) {
-                throw new RuntimeException("cannot find resource: \"" + uri + "\"");
-            } else {
-                return url;
+            try {
+                return Theme.getTheme().loadAsset(uri);
+            } catch (IOException e) {
+                if(throwIfNull) {
+                    throw new RuntimeException("cannot find resource: \""+ uri +"\"");
+                } else {
+                    return null;
+                }
             }
         }
     }

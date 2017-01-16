@@ -4,9 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.tlauncher.Bootstrapper;
-import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.stream.InputStringStream;
 

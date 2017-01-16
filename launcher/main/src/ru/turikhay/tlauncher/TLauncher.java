@@ -6,17 +6,15 @@ import com.google.gson.JsonParser;
 import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
-import ru.turikhay.tlauncher.configuration.ArgumentParser;
-import ru.turikhay.tlauncher.configuration.Configuration;
-import ru.turikhay.tlauncher.configuration.LangConfiguration;
-import ru.turikhay.tlauncher.configuration.Static;
+import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.managers.*;
+import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
-import ru.turikhay.tlauncher.sentry.Breadcrumb;
-import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
@@ -26,7 +24,6 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.updater.Stats;
-import ru.turikhay.tlauncher.updater.Updater;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.RunnableThread;
 import ru.turikhay.util.stream.MirroredLinkedOutputStringStream;
@@ -44,12 +41,13 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
-    private static final String VERSION = "1.79.20";
+    private static final String VERSION = "1.79.30";
 
     private final boolean debug, ready;
 
-    private final BootBridge options;
+    private final BootBridge bridge;
     private final BootEventDispatcher dispatcher;
+    private final BootConfiguration bootConfig;
 
     private final Configuration config;
     private final LangConfiguration lang;
@@ -62,21 +60,29 @@ public final class TLauncher {
     private final ProfileManager profileManager;
 
     private final Downloader downloader;
-    private final Updater updater;
 
     private final UIListeners uiListeners;
 
     private final TLauncherFrame frame;
 
-    private TLauncher(BootBridge options, BootEventDispatcher dispatcher) throws Exception {
-        U.requireNotNull(options, "options");
+    private TLauncher(BootBridge bridge, BootEventDispatcher dispatcher) throws Exception {
+        U.requireNotNull(bridge, "bridge");
         checkNotRunning();
         instance = this;
 
-        this.options = options;
-        this.dispatcher = dispatcher;
+        Object timer = new Object();
+        Time.start(timer);
 
-        OptionSet optionSet = ArgumentParser.parseArgs(options.getArgs());
+        this.bridge = bridge;
+        this.dispatcher = dispatcher;
+        U.log("Options:", bridge.getOptions());
+
+        this.bootConfig = BootConfiguration.parse(bridge);
+
+        Repository.updateList(bootConfig.getRepositories());
+        Stats.setAllowed(bootConfig.isStatsAllowed());
+
+        OptionSet optionSet = ArgumentParser.parseArgs(bridge.getArgs());
         debug = optionSet.has("debug");
 
         dispatcher.onBootStateChanged("Loading configuration", 0.1);
@@ -109,9 +115,6 @@ public final class TLauncher {
         dispatcher.onBootStateChanged("Loading Downloader", 0.4);
         downloader = new Downloader();
 
-        dispatcher.onBootStateChanged("Loading Updater", 0.45);
-        updater = new Updater(options.getUpdateInfo());
-
         dispatcher.onBootStateChanged("Loading UI Listeners", 0.5);
         uiListeners = new UIListeners(this);
 
@@ -124,12 +127,11 @@ public final class TLauncher {
         ready = true;
 
         dispatcher.onBootSucceeded();
-
-        Breadcrumb.info(TLauncher.class, "started").push();
+        SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
     }
 
-    public BootBridge getOptions() {
-        return options;
+    public BootConfiguration getBootConfig() {
+        return bootConfig;
     }
 
     public boolean isDebug() {
@@ -172,10 +174,6 @@ public final class TLauncher {
         return downloader;
     }
 
-    public Updater getUpdater() {
-        return updater;
-    }
-
     public UIListeners getUIListeners() {
         return uiListeners;
     }
@@ -194,16 +192,20 @@ public final class TLauncher {
         return launcher != null && launcher.isWorking();
     }
 
-    public MinecraftLauncher newMinecraftLauncher(MinecraftListener listener, ServerList.Server server, boolean forceUpdate) {
+    public MinecraftLauncher newMinecraftLauncher(String versionName, Server server, boolean forceUpdate) {
         if(isMinecraftLauncherWorking()) {
             throw new IllegalStateException("launcher is working");
         }
 
         launcher = new MinecraftLauncher(this, forceUpdate);
-        launcher.addListener(uiListeners.getMinecraftUIListener());
-        launcher.addListener(listener);
-        launcher.addListener(frame.mp.getProgress());
+
+        for(MinecraftListener l : uiListeners.getMinecraftListeners()) {
+            launcher.addListener(l);
+        }
+
+        launcher.setVersion(versionName);
         launcher.setServer(server);
+
         launcher.start();
 
         return launcher;
@@ -275,7 +277,6 @@ public final class TLauncher {
             public void run() {
                 while (true) {
                     Stats.beacon();
-                    updater.asyncFindUpdate();
 
                     try {
                         TimeUnit.MINUTES.sleep(30);
@@ -297,7 +298,7 @@ public final class TLauncher {
         Alert.prepareLocal();
 
         if(uiListeners != null) {
-            uiListeners.getMinecraftUIListener().updateLocale();
+            uiListeners.updateLocale();
         }
 
         if (logger != null) {
@@ -360,10 +361,6 @@ public final class TLauncher {
         return Static.getFolder();
     }
 
-    public static String[] getUpdateRepos() {
-        return Static.getUpdateRepo();
-    }
-
     public static String getSettingsFile() {
         return Static.getSettings();
     }
@@ -422,7 +419,6 @@ public final class TLauncher {
 
                 dispatcher.onBootErrored(t);
 
-                //System.exit(-1);
                 return;
             }
             break;

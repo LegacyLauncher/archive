@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.handlers;
 
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.util.Reflect;
@@ -25,6 +26,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             if (asOOM == null || !reduceMemory(asOOM)) {
                 if (scanTrace(e) && toShowError(e)) {
                     try {
+                        Sentry.sendError(ExceptionHandler.class, "uncaughtException", e, null);
                         Alert.showError("Exception in thread " + t.getName(), e);
                     } catch (Exception var5) {
                         var5.printStackTrace();
@@ -32,7 +34,6 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
                 } else {
                     U.log("Hidden exception in thread " + t.getName(), e);
                 }
-
             }
         } catch (Throwable t0) {
             t0.printStackTrace();

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.swing;
 
+import ru.turikhay.tlauncher.ui.theme.Theme;
+
 import javax.swing.*;
 import java.awt.*;
 

@@ -2,20 +2,22 @@ package ru.turikhay.tlauncher.ui.center;
 
 import java.awt.*;
 
-public abstract class CenterPanelTheme {
-    public abstract Color getBackground();
+public interface CenterPanelTheme {
+    Color getBackground();
 
-    public abstract Color getPanelBackground();
+    Color getPanelBackground();
 
-    public abstract Color getFocus();
+    Color getFocus();
 
-    public abstract Color getFocusLost();
+    Color getFocusLost();
 
-    public abstract Color getSuccess();
+    Color getSuccess();
 
-    public abstract Color getFailure();
+    Color getFailure();
 
-    public abstract Color getBorder();
+    Color getBorder();
 
-    public abstract Color getDelPanel();
+    Color getShadow();
+
+    int getArc();
 }

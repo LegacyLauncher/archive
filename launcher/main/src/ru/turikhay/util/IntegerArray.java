@@ -42,9 +42,7 @@ public class IntegerArray {
     }
 
     public int[] toArray() {
-        int[] r = new int[length];
-        System.arraycopy(integers, 0, r, 0, length);
-        return r;
+        return integers.clone();
     }
 
     public String toString() {

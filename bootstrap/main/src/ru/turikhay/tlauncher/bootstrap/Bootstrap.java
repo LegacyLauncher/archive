@@ -12,7 +12,6 @@ import shaded.com.getsentry.raven.event.BreadcrumbBuilder;
 import shaded.com.getsentry.raven.event.Event;
 import shaded.com.getsentry.raven.event.EventBuilder;
 import shaded.com.getsentry.raven.event.interfaces.ExceptionInterface;
-import ru.turikhay.tlauncher.bootstrap.bridge.BootListener;
 import ru.turikhay.tlauncher.bootstrap.launcher.*;
 import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import shaded.joptsimple.ArgumentAcceptingOptionSpec;
@@ -88,6 +87,7 @@ public final class Bootstrap {
             if(value != null) {
                 jvmArgs.add("--" + key);
                 jvmArgs.add(value);
+                log("Found JVM arg: ", key, " ", value);
             }
         }
 
@@ -254,14 +254,10 @@ public final class Bootstrap {
         return bridge;
     }
 
-    Task<BootBridge> bootLauncher(final UpdateMeta updateMeta, final String[] args) {
-        U.requireNotNull(args, "args");
-
-        return new Task<BootBridge>("bootLauncher") {
+    Task<LocalLauncher> prepareLauncher(final UpdateMeta updateMeta) {
+        return new Task<LocalLauncher>("prepareLauncher") {
             @Override
-            protected BootBridge execute() throws Exception {
-                final double start = .75, end = 1., delta = end - start;
-
+            protected LocalLauncher execute() throws Exception {
                 RemoteLauncher remoteLauncher = updateMeta == null? null : new RemoteLauncher(updateMeta.getLauncher());
                 log("Remote launcher: " + remoteLauncher);
                 recordBreadcrumb("remoteLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
@@ -272,21 +268,29 @@ public final class Bootstrap {
                 recordBreadcrumb("localLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
 
                 log("Downloading libraries...");
-                bindTo(downloadLibraries(localLauncherMeta), .25, start);
+                bindTo(downloadLibraries(localLauncherMeta), .25, 1.);
 
-                BootBridge bridge = createBridge(args, updateMeta == null? null : updateMeta.getOptions());
+                return localLauncher;
+            }
+        };
+    }
 
+    Task<Void> startLauncher(final LocalLauncher localLauncher, final BootBridge bridge) {
+        return new Task<Void>("startLauncher") {
+            @Override
+            protected Void execute() throws Exception {
                 log("Starting launcher...");
                 recordBreadcrumb("startingLauncher", null);
+
                 bridge.addListener(new BootListenerAdapter() {
                     @Override
                     public void onBootStateChanged(String stepName, double percentage) {
-                        updateProgress(start + delta * percentage);
+                        updateProgress(percentage);
                     }
                 });
-                bindTo(meta.getLaunchType().getStarter().start(localLauncher, bridge), start, end);
 
-                return bridge;
+                bindTo(meta.getLaunchType().getStarter().start(localLauncher, bridge), 0., 1.);
+                return null;
             }
         };
     }
@@ -307,6 +311,8 @@ public final class Bootstrap {
                     updateMeta = bindTo(UpdateMeta.fetchFor(meta.getShortBrand()), .0, .25);
                 } catch(ExceptionList list) {
                     log("Could not retrieve update meta:", list);
+                    sendError(Event.Level.ERROR, list, null);
+
                     updateMeta = null;
                 }
 
@@ -319,7 +325,10 @@ public final class Bootstrap {
                     }
                 }
 
-                BootBridge bridge = bindTo(bootLauncher(updateMeta, args), .25, 1.);
+
+                LocalLauncher localLauncher = bindTo(prepareLauncher(updateMeta), .25, .75);
+                BootBridge bridge = createBridge(args, updateMeta == null? null : updateMeta.getOptions());
+                bindTo(startLauncher(localLauncher, bridge), 0.75, 1.);
 
                 checkInterrupted();
 
@@ -420,6 +429,20 @@ public final class Bootstrap {
 
     private static void recordBreadcrumb(String name, DataBuilder data) {
         recordBreadcrumb(name, "info", "general", data);
+    }
+
+    private void sendError(Event.Level level, Throwable t, DataBuilder b) {
+        EventBuilder builder = new EventBuilder()
+                .withEnvironment(System.getProperty("os.name"))
+                .withLevel(level)
+                .withSentryInterface(new ExceptionInterface(t))
+                .withRelease(String.valueOf(getMeta().getVersion()));
+        if(b != null) {
+            for(Map.Entry<String, String> entry : b.build().entrySet()) {
+                builder.withExtra(entry.getKey(), entry.getValue());
+            }
+        }
+        raven.sendEvent(builder.build());
     }
 
     private static void recordBreadcrumb(String name, String level, String category, DataBuilder data) {

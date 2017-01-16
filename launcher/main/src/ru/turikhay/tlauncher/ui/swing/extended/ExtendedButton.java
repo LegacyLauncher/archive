@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,6 +45,8 @@ public class ExtendedButton extends JButton {
     }
 
     private void init() {
+        setForeground(Theme.getTheme().getForeground());
+        setBackground(Theme.getTheme().getBackground());
         setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
         setOpaque(false);
         addActionListener(new ActionListener() {

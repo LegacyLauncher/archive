@@ -68,7 +68,7 @@ public class UpdateMeta {
     }
 
     private static Gson createGson() {
-        return Json.build().registerTypeAdapter(UpdateDeserializer.class, new UpdateDeserializer()).create();
+        return Json.build().registerTypeAdapter(UpdateMeta.class, new UpdateDeserializer()).create();
     }
 
     private static UpdateMeta fetchFrom(Gson gson, InputStream in) throws Exception {

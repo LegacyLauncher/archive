@@ -5,6 +5,7 @@ import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 public class AppenderRepo extends Repo {
     private final String prefix, suffix;
@@ -38,17 +39,5 @@ public class AppenderRepo extends Repo {
         }
 
         return new URL(url);
-    }
-
-    static AppenderRepo[] fromString(String... arr) {
-        if (U.requireNotNull(arr).length == 0) {
-            return new AppenderRepo[0];
-        }
-
-        AppenderRepo[] result = new AppenderRepo[U.requireNotNull(arr).length];
-        for (int i = 0; i < arr.length; i++) {
-            result[i] = new AppenderRepo(arr[i]);
-        }
-        return result;
     }
 }

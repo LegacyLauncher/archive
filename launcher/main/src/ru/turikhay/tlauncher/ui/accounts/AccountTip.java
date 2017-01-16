@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.AccountEditorScene;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
@@ -25,7 +26,7 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
     private final EditorPane content;
 
     public AccountTip(AccountEditorScene sc) {
-        super(smallSquareInsets);
+        super(CenterPanel.tipTheme, smallSquareInsets);
         setMagnifyGaps(false);
         scene = sc;
         content = new EditorPane(getFont().deriveFont(TLauncherFrame.getFontSize()));
@@ -102,11 +103,13 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
             setVisible(true);
 
             String localized = Localizable.get(tip.path), htmlized = "<html>" + localized + "</html>";
+            ExtendedLabel l = new ExtendedLabel();
+            l.setText(htmlized);
 
-            int width = WIDTH, height = height = SwingUtil.getPreferredSize(htmlized, width).height, imageWidth = 0, imageHeight = 0;
+            int width = WIDTH, height = height = SwingUtil.getPrefHeight(l, width), imageWidth = 0, imageHeight = 0;
             if (tip.image != null) {
                 imageWidth = (int) ((double) height * tip.image.getWidth(null) / tip.image.getHeight(null));
-                height = SwingUtil.getPreferredSize(htmlized, width - imageWidth).height;
+                height = SwingUtil.getPrefHeight(l, width - imageWidth);
                 imageHeight = height;
             }
 

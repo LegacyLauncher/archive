@@ -1,16 +1,18 @@
 package ru.turikhay.tlauncher.ui;
 
-import ru.turikhay.tlauncher.Bootstrapper;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
+import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.logger.Logger;
+import ru.turikhay.tlauncher.ui.notice.NoticeManager;
 import ru.turikhay.tlauncher.ui.swing.Dragger;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -22,6 +24,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
 
@@ -29,8 +34,8 @@ public class TLauncherFrame extends JFrame {
     public static final Dimension minSize = new Dimension(570, 570);
     public static final Dimension maxSize = new Dimension(1920, 1080);
     public static final float minFontSize = 12, maxFontSize = 18;
-    private static float fontSize;
-    public static double magnifyDimensions;
+    private static float fontSize = 12f;
+    public static double magnifyDimensions = 1.;
     private final TLauncherFrame instance = this;
     private final TLauncher tlauncher;
     private final Configuration settings;
@@ -40,6 +45,7 @@ public class TLauncherFrame extends JFrame {
     public final MainPane mp;
     private String brand;
     private SimpleConfiguration proofr, uiConfig;
+    private final NoticeManager notices;
 
     public static float getFontSize() {
         return fontSize;
@@ -56,6 +62,7 @@ public class TLauncherFrame extends JFrame {
         lang = t.getLang();
         windowSize = settings.getLauncherWindowSize();
         maxPoint = new Point();
+        notices = new NoticeManager(this, t.getBootConfig());
         SwingUtil.initFontSize((int) getFontSize());
         SwingUtil.setFavicons(this);
         setupUI();
@@ -148,6 +155,10 @@ public class TLauncherFrame extends JFrame {
         return tlauncher;
     }
 
+    public NoticeManager getNotices() {
+        return notices;
+    }
+
     public Point getMaxPoint() {
         return maxPoint;
     }
@@ -167,6 +178,7 @@ public class TLauncherFrame extends JFrame {
         Logger.updateLocale();
         LocalizableMenuItem.updateLocales();
         updateUILocale();
+        notices.updateLocale();
         Localizable.updateContainer(this);
         setWindowTitle();
     }
@@ -213,6 +225,24 @@ public class TLauncherFrame extends JFrame {
         UIManager.put("TabbedPane.contentOpaque", Boolean.valueOf(false));
         UIManager.put("TabbedPane.contentBorderInsets", new Insets(0, 0, 0, 0));
         UIManager.put("TabbedPane.tabInsets", new Insets(0, 8, 6, 8));
+
+        String themeFile = settings.get("gui.theme");
+        String name = null;
+        InputStream in;
+
+        try {
+            if (themeFile != null && new File(themeFile).isFile()) {
+                name = themeFile;
+                in = new FileInputStream(themeFile);
+            } else {
+                name = "modern";
+                in = Theme.class.getResourceAsStream("theme.properties");
+            }
+
+            Theme.loadTheme(name, in);
+        } catch (Exception e) {
+            Alert.showError("Could not load theme: " + name, e);
+        }
     }
 
     private void updateUILocale() {

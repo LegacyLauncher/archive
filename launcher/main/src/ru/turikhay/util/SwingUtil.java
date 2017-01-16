@@ -6,6 +6,8 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
+import javax.swing.plaf.basic.BasicHTML;
+import javax.swing.plaf.basic.BasicTextUI;
 import javax.swing.text.View;
 import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
@@ -155,24 +157,35 @@ public class SwingUtil {
         U.log("[Swing]", o);
     }
 
-    private static JLabel resizer;
+    public static Dimension getPrefSize(JComponent component, int width, int height) {
+        U.requireNotNull(component, "component");
+        View view;
 
-    public static Dimension getPreferredSize(String html, boolean width, int prefSize) {
-        if (resizer == null) {
-            resizer = new JLabel();
+        if(component instanceof JLabel) {
+            view = (View) component.getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey);
+        } else if(component instanceof JEditorPane) {
+            view = ((JEditorPane) component).getUI().getRootView((JEditorPane) component);
+        } else {
+            throw new IllegalArgumentException();
         }
-        resizer.setText(html);
 
-        View view = (View) resizer.getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey);
-        view.setSize(width ? prefSize : 0, width ? 0 : prefSize);
-
-        float w = view.getPreferredSpan(View.X_AXIS);
-        float h = view.getPreferredSpan(View.Y_AXIS);
-        return new Dimension((int) Math.ceil(w), (int) Math.ceil(h));
+        view.setSize(width, height);
+        return new Dimension((int) Math.ceil(view.getPreferredSpan(View.X_AXIS)), (int) Math.ceil(view.getPreferredSpan(View.Y_AXIS)));
     }
 
-    public static Dimension getPreferredSize(String html, int prefSize) {
-        return getPreferredSize(html, true, prefSize);
+    // when determining for indefinite height - use 0
+    public static int getPrefWidth(JComponent component, int height) {
+        int minHeight = getPrefHeight(component, Integer.MAX_VALUE), curHeight, width = 0;
+        do {
+            curHeight = getPrefHeight(component, width += 1);
+        } while(curHeight >= height && curHeight != minHeight);
+
+        return width;
+    }
+
+    // when determining for indefinite width - use Integer.MAX_VALUE
+    public static int getPrefHeight(JComponent component, int width) {
+        return getPrefSize(component, width, 0).height;
     }
 
     public static void setClipboard(String text) {
@@ -217,7 +230,6 @@ public class SwingUtil {
         offset += base64e.length();
 
         return ImageIO.read(new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(source.substring(offset))));
-        //return image.getScaledInstance(SwingUtil.magnify(image.getWidth()), SwingUtil.magnify(image.getHeight()), Image.SCALE_SMOOTH);
     }
 
     public static Image loadImage(String source) throws IOException {

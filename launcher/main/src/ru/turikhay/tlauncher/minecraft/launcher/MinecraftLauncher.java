@@ -20,8 +20,13 @@ import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.managers.*;
+import ru.turikhay.tlauncher.minecraft.NBTServer;
+import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
+import ru.turikhay.tlauncher.sentry.SentryBreadcrumbContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.updater.Stats;
@@ -43,6 +48,7 @@ import java.util.zip.ZipOutputStream;
 
 public class MinecraftLauncher implements JavaProcessListener {
     private static final int OFFICIAL_VERSION = 18, ALTERNATIVE_VERSION = 8, MIN_WORK_TIME = 5000;
+    private SentryBreadcrumbContext sentryContext = SentryBreadcrumbContext.createWithName("minecraftLauncher");
     private boolean working;
     private boolean killed;
     private final Thread parentThread;
@@ -90,7 +96,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private boolean minecraftWorking;
     private long startupTime;
     private int exitCode;
-    private ServerList.Server server;
+    private Server server;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
     private boolean firstLine;
@@ -220,6 +226,8 @@ public class MinecraftLauncher implements JavaProcessListener {
                         listener.onMinecraftAbort();
                     }
                 } else {
+                    sentryContext.sendError(null, "unknownError", e, null);
+
                     listener1 = listeners.iterator();
 
                     while (listener1.hasNext()) {
@@ -251,15 +259,20 @@ public class MinecraftLauncher implements JavaProcessListener {
         return version.getID();
     }
 
+    public void setVersion(String name) {
+        checkWorking();
+        this.versionName = name;
+    }
+
     public int getExitCode() {
         return exitCode;
     }
 
-    public ServerList.Server getServer() {
+    public Server getServer() {
         return server;
     }
 
-    public void setServer(ServerList.Server server) {
+    public void setServer(Server server) {
         checkWorking();
         this.server = server;
     }
@@ -282,9 +295,11 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         log("Force update:", Boolean.valueOf(forceUpdate));
+        recordValue("forceUpdate", forceUpdate);
         versionName = settings.get("login.version");
         if (versionName != null && !versionName.isEmpty()) {
             log("Selected version:", versionName);
+            recordValue("versionName", versionName);
             accountName = settings.get("login.account");
             if (accountName != null && !accountName.isEmpty()) {
                 Account.AccountType type2 = Reflect.parseEnum(Account.AccountType.class, settings.get("login.account.type"));
@@ -294,11 +309,14 @@ public class MinecraftLauncher implements JavaProcessListener {
                 }
 
                 log("Selected account:", account.toDebugString());
+                recordValue("account", account);
+
                 versionSync = vm.getVersionSyncInfo(versionName);
                 if (versionSync == null) {
                     throw new IllegalArgumentException("Cannot find version " + version);
                 } else {
                     log("Version sync info:", versionSync);
+                    recordValue("version", versionSync);
 
                     try {
                         deJureVersion = versionSync.resolveCompleteVersion(vm, forceUpdate);
@@ -309,7 +327,10 @@ public class MinecraftLauncher implements JavaProcessListener {
                     if (deJureVersion == null) {
                         throw new NullPointerException("Could not get complete version");
                     } else {
+                        recordValue("resolvedVersion", deJureVersion);
+
                         elyficate = account.getType() != Account.AccountType.MOJANG && (account.getType() == Account.AccountType.ELY || TLauncher.getInstance().getElyManager().isUsingGlobally());
+                        recordValue("elyficate", elyficate);
 
                         if (elyficate) {
                             TLauncher.getInstance().getElyManager().refreshOnce();
@@ -317,6 +338,8 @@ public class MinecraftLauncher implements JavaProcessListener {
                         } else {
                             version = deJureVersion;
                         }
+
+                        recordValue("finalVersion", version);
 
                         if (logger != null) {
                             logger.setName(version.getID());
@@ -329,25 +352,28 @@ public class MinecraftLauncher implements JavaProcessListener {
                         String command1 = settings.get("minecraft.cmd");
                         cmd = command1 == null ? OS.getJavaPath() : command1;
                         log("Command:", cmd);
+                        recordValue("command", cmd);
 
                         rootDir = new File(settings.get("minecraft.gamedir"));
+                        recordValue("rootDir", rootDir);
 
                         if (settings.getBoolean("minecraft.gamedir.separate")) {
                             gameDir = new File(rootDir, "home/" + family);
                         } else {
                             gameDir = rootDir;
                         }
+                        recordValue("gameDir", gameDir);
 
                         try {
                             FileUtil.createFolder(rootDir);
                         } catch (Exception var9) {
-                            throw new MinecraftException("Cannot create working directory!", "folder-not-found", var9);
+                            throw new MinecraftException(true, "Cannot create working directory!", "folder-not-found", var9);
                         }
 
                         try {
                             FileUtil.createFolder(gameDir);
                         } catch (Exception var9) {
-                            throw new MinecraftException("Cannot create game directory!", "folder-not-found", var9);
+                            throw new MinecraftException(true, "Cannot create game directory!", "folder-not-found", var9);
                         }
 
                         log("Root directory:", rootDir);
@@ -389,11 +415,13 @@ public class MinecraftLauncher implements JavaProcessListener {
                         if (javaArgs != null && javaArgs.isEmpty()) {
                             javaArgs = null;
                         }
+                        recordValue("javaArgs", javaArgs);
 
                         programArgs = settings.get("minecraft.args");
                         if (programArgs != null && programArgs.isEmpty()) {
                             programArgs = null;
                         }
+                        recordValue("appArgs", programArgs);
 
                         windowSize = settings.getClientWindowSize();
                         if (windowSize[0] < 1) {
@@ -402,11 +430,17 @@ public class MinecraftLauncher implements JavaProcessListener {
                             throw new IllegalArgumentException("Invalid window height!");
                         } else {
                             fullScreen = settings.getBoolean("minecraft.fullscreen");
+                            recordValue("fullScreen", fullScreen);
+
                             ramSize = settings.getInteger("minecraft.memory");
                             if (ramSize < 512) {
                                 throw new IllegalArgumentException("Invalid RAM size!");
                             }
+                            recordValue("memoryAmount", ramSize);
+
                             fullCommand = settings.getBoolean("gui.logger.fullcommand");
+                            recordValue("fullCommand", fullCommand);
+
                             Iterator var4 = assistants.iterator();
 
                             while (var4.hasNext()) {
@@ -416,9 +450,12 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                             log("Checking conditions...");
                             if (version.getMinimumCustomLauncherVersion() > ALTERNATIVE_VERSION) {
-                                throw new MinecraftException("Alternative launcher is incompatible with launching version!", "incompatible");
+                                throw new MinecraftException(false, "Alternative launcher is incompatible with launching version!", "incompatible");
                             } else {
                                 if (version.getMinimumCustomLauncherVersion() == 0 && version.getMinimumLauncherVersion() > OFFICIAL_VERSION) {
+                                    sentryContext.sendWarning(null, "minimumLauncherVersion",
+                                            DataBuilder.create("expectedLauncherVersion", version.getMinimumLauncherVersion()).add("currentLauncherVersion", OFFICIAL_VERSION)
+                                    );
                                     Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.launcher", null);
                                 }
 
@@ -475,7 +512,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             versionContainer = vm.downloadVersion(versionSync, elyficate, forceUpdate);
         } catch (IOException var8) {
-            throw new MinecraftException("Cannot download version!", "download-jar", var8);
+            throw new MinecraftException(false, "Cannot download version!", "download-jar", var8);
         }
 
         checkAborted();
@@ -507,7 +544,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 message1.append(" Cause is the first of them.");
             }
 
-            throw new MinecraftException(message1.toString(), "download", versionContainer.getErrors().get(0));
+            throw new MinecraftException(false, message1.toString(), "download", versionContainer.getErrors().get(0));
         } else {
             try {
                 vm.getLocalList().saveVersion(deJureVersion);
@@ -531,7 +568,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             localAssetsDir = reconstructAssets();
         } catch (IOException var8) {
-            throw new MinecraftException("Cannot reconstruct assets!", "reconstruct-assets", var8);
+            throw new MinecraftException(false, "Cannot reconstruct assets!", "reconstruct-assets", var8);
         }
 
         address = extListeners.iterator();
@@ -544,7 +581,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             unpackNatives(forceUpdate);
         } catch (IOException var7) {
-            throw new MinecraftException("Cannot unpack natives!", "unpack-natives", var7);
+            throw new MinecraftException(false, "Cannot unpack natives!", "unpack-natives", var7);
         }
 
         checkAborted();
@@ -558,13 +595,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             deleteEntries();
         } catch (IOException var6) {
-            throw new MinecraftException("Cannot delete entries!", "delete-entries", var6);
+            throw new MinecraftException(false, "Cannot delete entries!", "delete-entries", var6);
         }
 
         try {
             deleteLibraryEntries();
         } catch (Exception var5) {
-            throw new MinecraftException("Cannot delete library entries!", "delete-entries", var5);
+            throw new MinecraftException(false, "Cannot delete library entries!", "delete-entries", var5);
         }
 
         checkAborted();
@@ -655,25 +692,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         if (server != null) {
-            ServerList assistant3 = new ServerList();
-            assistant3.add(server);
-
             try {
-                ServerListManager.reconstructList(assistant3, new File(gameDir, "servers.dat"));
-            } catch (Exception var3) {
-                log("Couldn\'t reconstruct server list.", var3);
+                NBTServer.reconstructList(new HashSet<Server>(){{ add(server); }}, new File(gameDir, "servers.dat"));
+            } catch(IOException ioE) {
+                log("Couldn't reconstruct server list", ioE);
             }
-
-            String[] address1 = StringUtils.split(server.getAddress(), ':');
-            switch (address1.length) {
-                case 2:
-                    launcher.addCommand("--port", address1[1]);
-                case 1:
-                    launcher.addCommand("--server", address1[0]);
-                    break;
-                default:
-                    log("Cannot recognize server:", server);
-            }
+            launcher.addCommand("--server", server.getAddress());
+            launcher.addCommand("--port", server.getPort());
         }
 
         if (programArgs != null) {
@@ -720,7 +745,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             try {
                 index = (AssetIndex) gson.fromJson(new FileReader(indexFile), (Class) AssetIndex.class);
             } catch (Exception var9) {
-                throw new MinecraftException("Cannot read index file!", "index-file", var9);
+                throw new MinecraftException(false, "Cannot read index file!", "index-file", var9);
             }
 
             if (index.isVirtual()) {
@@ -874,7 +899,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         for (Iterator var6 = classPath.iterator(); var6.hasNext(); result.append(file.getAbsolutePath())) {
             file = (File) var6.next();
             if (!file.isFile()) {
-                throw new MinecraftException("Classpath is not found: " + file, "classpath", file);
+                throw new MinecraftException(true, "Classpath is not found: " + file, "classpath", file);
             }
 
             if (result.length() > 0) {
@@ -888,7 +913,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private String[] getMinecraftArguments() throws MinecraftException {
         log("Getting Minecraft arguments...");
         if (version.getMinecraftArguments() == null) {
-            throw new MinecraftException("Can\'t run version, missing minecraftArguments", "noArgs");
+            throw new MinecraftException(true, "Can\'t run version, missing minecraftArguments", "noArgs");
         } else {
             HashMap map = new HashMap();
             StrSubstitutor substitutor = new StrSubstitutor(map);
@@ -1055,9 +1080,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         } catch (Exception var3) {
             notifyClose();
             if(var3.getMessage().contains("CreateProcess error=2,")) {
-                throw new MinecraftException("Executable is not found: \"" + var3.getMessage() + "\"", "exec-not-found");
+                throw new MinecraftException(false, "Executable is not found: \"" + var3.getMessage() + "\"", "exec-not-found");
             }
-            throw new MinecraftException("Cannot start the game!", "start", var3);
+            throw new MinecraftException(true, "Cannot start the game!", "start", var3);
         }
 
         postLaunch();
@@ -1129,6 +1154,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             } else {
                 checkThread();
                 step = currentStep;
+                SentryBreadcrumb.info(null, "step:" + currentStep).push(sentryContext);
             }
         } else {
             throw new NullPointerException("NULL: " + prevStep + " " + currentStep);
@@ -1267,6 +1293,14 @@ public class MinecraftLauncher implements JavaProcessListener {
             zout.close();
             tempFile.delete();
         }
+    }
+
+    private void recordBreadcumb(String message, DataBuilder data) {
+        SentryBreadcrumb.info(null, message).data(data).push(sentryContext);
+    }
+
+    private void recordValue(String key, Object value) {
+        recordBreadcumb("valueSet", DataBuilder.create(key, value));
     }
 
     public enum LoggerVisibility {

@@ -1,26 +1,16 @@
 package ru.turikhay.tlauncher.ui;
 
-import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.listener.UpdateUIListener;
-import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.swing.ImagePanel;
-import ru.turikhay.tlauncher.updater.Update;
-import ru.turikhay.tlauncher.updater.Updater;
-import ru.turikhay.tlauncher.updater.UpdaterListener;
-import ru.turikhay.util.U;
 
 import java.awt.*;
 
-public class SideNotifier extends ImagePanel implements UpdaterListener {
+public class SideNotifier extends ImagePanel {
     private static final String LANG_PREFIX = "notifier.";
     private SideNotifier.NotifierStatus status;
-    private Update update;
 
     public SideNotifier() {
         super((Image) null, 1.0F, 0.75F, false, true);
-        TLauncher.getInstance().getUpdater().addListener(this);
     }
 
     public SideNotifier.NotifierStatus getStatus() {
@@ -43,15 +33,16 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
     }
 
     protected boolean onClick() {
-        boolean result = processClick();
+        return false;
+        /*boolean result = processClick();
         if (result) {
             hide();
         }
 
-        return result;
+        return result;*/
     }
 
-    private boolean processClick() {
+    /*private boolean processClick() {
         if (!super.onClick()) {
             return false;
         } else {
@@ -110,7 +101,7 @@ public class SideNotifier extends ImagePanel implements UpdaterListener {
 
             TLauncher.getInstance().getSettings().set("update.asked", upd.getVersion());
         }
-    }
+    }*/
 
     public enum NotifierStatus {
         FAILED("warning.png"),

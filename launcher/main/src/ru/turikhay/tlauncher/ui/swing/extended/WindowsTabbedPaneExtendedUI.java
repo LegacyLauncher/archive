@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import com.sun.java.swing.plaf.windows.WindowsTabbedPaneUI;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -71,11 +72,20 @@ public class WindowsTabbedPaneExtendedUI extends WindowsTabbedPaneUI implements 
         }
 
         var14.setColor(background);
-        var14.fillRoundRect(x, y - 5, w, h + 5, 16, 16);
+
+        if(theme.getArc() > 0) {
+            var14.fillRoundRect(x, y - 5, w, h + 5, theme.getArc(), theme.getArc());
+        } else {
+            var14.fillRect(x, y - 5, w,h + 5);
+        }
         var14.setColor(border);
 
-        for (int i = 1; i < 2; ++i) {
-            var14.drawRoundRect(x + i - 1, y + i - 5 - 1, w - 2 * i + 1, h - 2 * i + 1 + 5, 16, 16);
+        for (int i = 1; i < Theme.getTheme().getBorderSize(); ++i) {
+            if(theme.getArc() > 0) {
+                var14.drawRoundRect(x + i - 1, y + i - 5 - 1, w - 2 * i + 1, h - 2 * i + 1 + 5, 16, 16);
+            } else {
+                var14.drawRect(x + i - 1, y + i - 5 - 1, w - 2 * i + 1, h - 2 * i + 1 + 5);
+            }
         }
 
     }

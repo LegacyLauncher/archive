@@ -6,8 +6,6 @@ public final class Static {
     private static final String SETTINGS = "tlauncher/legacy.properties";
     private static final String BRAND = "Legacy";
     private static final String FOLDER = "minecraft";
-    private static final String[] UPDATE_REPO = {"http://cdn.turikhay.ru/tlauncher/update/legacy.json.gzip", "http://u.tlauncher.ru/update/legacy.json", "http://repo.tlauncher.ru/update/legacy.json", "http://turikhay.ru/tlauncher/update/legacy.json", "http://tlaun.ch/update/legacy.json"};
-    private static final String[] BETA_UPDATE_REPO = {};
     private static final String[] OFFICIAL_REPO = {"http://s3.amazonaws.com/Minecraft.Download/"};
     private static final String[] EXTRA_REPO = U.shuffle("http://u.tlauncher.ru/repo/", "http://repo.tlauncher.ru/repo/", "http://turikhay.ru/tlauncher/repo/");
     private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/"};
@@ -25,14 +23,6 @@ public final class Static {
 
     public static String getFolder() {
         return FOLDER;
-    }
-
-    public static String[] getUpdateRepo() {
-        return UPDATE_REPO;
-    }
-
-    public static String[] getBetaUpdateRepo() {
-        return BETA_UPDATE_REPO;
     }
 
     public static String[] getOfficialRepo() {

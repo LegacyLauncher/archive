@@ -258,9 +258,19 @@ public class Account {
     }
 
     public enum AccountType {
-        ELY,
-        MOJANG,
-        FREE;
+        ELY("ely-big.png"),
+        MOJANG("mojang-user.png"),
+        FREE(null);
+
+        private final String icon;
+
+        AccountType(String icon) {
+            this.icon = icon;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
 
         public String toString() {
             return super.toString().toLowerCase();

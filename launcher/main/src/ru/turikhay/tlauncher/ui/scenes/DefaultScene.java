@@ -2,9 +2,11 @@ package ru.turikhay.tlauncher.ui.scenes;
 
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.MainPane;
-import ru.turikhay.tlauncher.ui.NoticePanel;
 import ru.turikhay.tlauncher.ui.SideNotifier;
+import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.tlauncher.ui.notice.MainNoticePanel;
+import ru.turikhay.tlauncher.ui.notice.NoticePanel;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.Direction;
@@ -28,7 +30,8 @@ public class DefaultScene extends PseudoScene {
     private DefaultScene.SidePanel sidePanel;
     private ExtendedPanel sidePanelComp;
     private Direction lfDirection;
-    public final NoticePanel infoPanel;
+    //public final NoticePanel infoPanel;
+    public final MainNoticePanel noticePanel;
 
     // $FF: synthetic field
     private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
@@ -45,9 +48,21 @@ public class DefaultScene extends PseudoScene {
         loginForm = new LoginForm(this);
         loginForm.setSize(SwingUtil.magnify(LOGIN_SIZE));
         add(loginForm);
-        infoPanel = new NoticePanel(this);
-        add(infoPanel);
+        noticePanel = new MainNoticePanel(this);
+        add(noticePanel);
+        //infoPanel = new NoticePanel(this);
+        //add(infoPanel);
         updateDirection();
+    }
+
+    public void setShown(boolean shown, boolean animate) {
+        super.setShown(shown, animate);
+        if(shown) {
+            if(getMainPane().getRootFrame().getNotices().isHidden(noticePanel.getNotice())) {
+                getMainPane().getRootFrame().getNotices().selectRandom();
+            }
+            noticePanel.redraw();
+        }
     }
 
     public void onResize() {
@@ -187,7 +202,7 @@ public class DefaultScene extends PseudoScene {
 
         notifier.setLocation(n_x, n_y1);
         loginForm.setLocation(lf_x, lf_y);
-        infoPanel.onResize();
+        noticePanel.onResize();
     }
 
     public DefaultScene.SidePanel getSidePanel() {
@@ -207,7 +222,8 @@ public class DefaultScene extends PseudoScene {
                 sidePanelComp.setVisible(true);
             }
 
-            infoPanel.setShown(noSidePanel, noSidePanel);
+            noticePanel.setVisible(noSidePanel);
+            //noticePanel.setVisible(noSidePanel);
             updateCoords();
         }
     }

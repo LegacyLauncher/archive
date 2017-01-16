@@ -489,7 +489,7 @@ public class CompleteVersion implements Version, Cloneable {
 
     protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");
 
-    private static String getFamilyOf(String id) {
+    public static String getFamilyOf(String id) {
         String family;
 
         Matcher matcher = familyPattern.matcher(id);

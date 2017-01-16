@@ -1,55 +1,53 @@
 package ru.turikhay.tlauncher.ui.center;
 
+import ru.turikhay.tlauncher.ui.theme.Theme;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class DefaultCenterPanelTheme extends CenterPanelTheme {
-    private final JLabel label = new JLabel();
-
-    protected Color backgroundColor = label.getBackground(); //new Color(255, 255, 255, 255);
-    protected Color panelBackgroundColor = U.shiftAlpha(backgroundColor, -128, 64, 192); //new Color(255, 255, 255, 128);
-    protected Color focusColor = label.getForeground(); //new Color(0, 0, 0, 255);
-    protected Color focusLostColor = U.shiftColor(focusColor, 96, 64, 192); //new Color(128, 128, 128, 255);
-    protected Color successColor = new Color(78, 196, 78, 255);
-    protected Color failureColor = Color.getHSBColor(0.0F, 1.0F, 0.7F);
-    protected Color borderColor = new Color(28, 128, 28, 255);
-    protected Color delPanelColor;
-
+public class DefaultCenterPanelTheme implements CenterPanelTheme {
     public DefaultCenterPanelTheme() {
-        delPanelColor = successColor;
     }
 
     public Color getBackground() {
-        return backgroundColor;
+        return Theme.getTheme().getBackground();
     }
 
     public Color getPanelBackground() {
-        return panelBackgroundColor;
+        return Theme.getTheme().getPanelBackground();
     }
 
     public Color getFocus() {
-        return focusColor;
+        return Theme.getTheme().getForeground();
     }
 
     public Color getFocusLost() {
-        return focusLostColor;
+        return Theme.getTheme().getSemiForeground();
     }
 
     public Color getSuccess() {
-        return successColor;
+        return Theme.getTheme().getSuccess();
     }
 
     public Color getFailure() {
-        return failureColor;
+        return Theme.getTheme().getFailure();
     }
 
     public Color getBorder() {
-        return borderColor;
+        return Theme.getTheme().getBorder(getBorderType());
     }
 
-    public Color getDelPanel() {
-        return delPanelColor;
+    public Color getShadow() {
+        return Theme.getTheme().getShadow(getBorderType());
+    }
+
+    public int getArc() {
+        return Theme.getTheme().getArc(getBorderType());
+    }
+
+    protected Theme.Border getBorderType() {
+        return Theme.Border.MAIN_PANEL;
     }
 }

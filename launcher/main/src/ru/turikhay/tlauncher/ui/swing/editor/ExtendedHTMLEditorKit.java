@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.swing.editor;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -50,18 +51,16 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
 
     public void install(JEditorPane pane) {
         super.install(pane);
-        MouseListener[] var5;
-        int var4 = (var5 = pane.getMouseListeners()).length;
 
-        for (int var3 = 0; var3 < var4; ++var3) {
-            MouseListener listener = var5[var3];
-            if (listener instanceof LinkController) {
+        for(MouseListener listener : pane.getMouseListeners()) {
+            if (listener instanceof LinkController || listener instanceof ExtendedLinkController) {
                 pane.removeMouseListener(listener);
                 pane.removeMouseMotionListener((MouseMotionListener) listener);
-                pane.addMouseListener(linkController);
-                pane.addMouseMotionListener(linkController);
             }
         }
+
+        pane.addMouseListener(linkController);
+        pane.addMouseMotionListener(linkController);
     }
 
     public final HyperlinkProcessor getHyperlinkProcessor() {

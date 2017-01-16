@@ -4,6 +4,7 @@ import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
 import ru.turikhay.tlauncher.managers.*;
+import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
@@ -42,7 +43,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     private final LoginForm.StartThread startThread;
     private final LoginForm.StopThread stopThread;
     private LoginForm.LoginState state;
-    private ServerList.Server server;
+    private Server server;
     public static final String LOGIN_BLOCK = "login";
     public static final String REFRESH_BLOCK = "refresh";
     public static final String LAUNCH_BLOCK = "launch";
@@ -79,6 +80,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         tlauncher.getElyManager().addListener(this);
         tlauncher.getVersionManager().addListener(this);
         tlauncher.getDownloader().addListener(this);
+        tlauncher.getUIListeners().registerMinecraftLauncherListener(this);
     }
 
     private void runProcess() {
@@ -141,11 +143,12 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             global.setForcefully("login.account.type", accounts.getAccount().getType(), false);
             global.setForcefully("login.version", versions.getVersion().getID(), false);
             global.store();
-            boolean force1 = checkbox.forceupdate.isSelected();
+
             changeState(LoginForm.LoginState.LAUNCHING);
 
             log("Calling Minecraft Launcher...");
-            tlauncher.newMinecraftLauncher(this, server, force1);
+            tlauncher.newMinecraftLauncher(versions.getVersion().getID(), server, checkbox.forceupdate.isSelected());
+            //tlauncher.newMinecraftLauncher(server, force1);
             checkbox.forceupdate.setSelected(false);
         }
     }
@@ -163,7 +166,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         startLauncher(null);
     }
 
-    public void startLauncher(ServerList.Server server) {
+    public void startLauncher(Server server) {
         if (!Blocker.isBlocked(this)) {
             while (accounts.getAccount() != null && accounts.getAccount().getType() == Account.AccountType.ELY && tlauncher.getElyManager().isRefreshing()) {
                 U.sleepFor(500L);
@@ -199,11 +202,11 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             Blocker.block(accounts, reason);
         }
 
-        Blocker.block(reason, settings, versions, checkbox, buttons);
+        Blocker.block(reason, settings, versions, checkbox, buttons, scene.noticePanel);
     }
 
     public synchronized void unblock(Object reason) {
-        Blocker.unblock(reason, settings, accounts, versions, checkbox, buttons);
+        Blocker.unblock(reason, settings, accounts, versions, checkbox, buttons, scene.noticePanel);
     }
 
     public void onDownloaderStart(Downloader d, int files) {
@@ -283,7 +286,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         changeState(LoginForm.LoginState.STOPPED);
         if (autologin.isEnabled()) {
             tlauncher.getVersionManager().asyncRefresh();
-            tlauncher.getUpdater().asyncFindUpdate();
         } else {
             tlauncher.getVersionManager().asyncRefresh(true);
         }

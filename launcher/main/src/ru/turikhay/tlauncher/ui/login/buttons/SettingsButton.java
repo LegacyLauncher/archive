@@ -6,6 +6,8 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.tlauncher.ui.notice.Notice;
+import ru.turikhay.tlauncher.ui.notice.NoticeManagerListener;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
@@ -16,12 +18,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class SettingsButton extends LocalizableButton implements Blockable {
+public class SettingsButton extends LocalizableButton implements Blockable, NoticeManagerListener {
     private final LoginForm lf;
     private final JPopupMenu popup;
     private final LocalizableMenuItem accountManager;
     private final LocalizableMenuItem versionManager;
     private final LocalizableMenuItem settings;
+    private final LocalizableMenuItem notices;
 
     SettingsButton(LoginForm loginform) {
         lf = loginform;
@@ -49,12 +52,19 @@ public class SettingsButton extends LocalizableButton implements Blockable {
             }
         });
         popup.add(accountManager);
+        notices = LocalizableMenuItem.newItem("loginform.button.settings.notices", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                lf.scene.getMainPane().openNoticeScene();
+            }
+        });
         setPreferredSize(new Dimension(30, getHeight()));
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 callPopup();
             }
         });
+        lf.scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
     }
 
     public Insets getInsets() {
@@ -75,5 +85,14 @@ public class SettingsButton extends LocalizableButton implements Blockable {
 
     public void unblock(Object reason) {
         Blocker.unblockComponents(reason, accountManager, versionManager);
+    }
+
+    @Override
+    public void onNoticeSelected(Notice notice) {
+        if(notice == null  && lf.scene.getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+            popup.add(notices);
+        } else {
+            popup.remove(notices);
+        }
     }
 }
