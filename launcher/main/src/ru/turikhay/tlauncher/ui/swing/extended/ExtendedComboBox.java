@@ -4,6 +4,7 @@ import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.swing.DefaultConverterCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.Reflect;
 
 import javax.swing.*;
@@ -13,6 +14,7 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
     private StringConverter<T> converter;
 
     public ExtendedComboBox(ListCellRenderer<T> renderer) {
+        Theme.setup(this);
         setModel(new SimpleComboBoxModel());
         setRenderer(renderer);
         setOpaque(false);

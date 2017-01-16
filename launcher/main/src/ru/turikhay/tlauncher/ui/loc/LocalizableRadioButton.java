@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.loc;
 
+import ru.turikhay.tlauncher.ui.theme.Theme;
+
 import javax.swing.*;
 import java.awt.event.ItemListener;
 
@@ -46,6 +48,7 @@ public class LocalizableRadioButton extends JRadioButton implements LocalizableC
     }
 
     private void init() {
+        Theme.setup(this);
         setOpaque(false);
     }
 }

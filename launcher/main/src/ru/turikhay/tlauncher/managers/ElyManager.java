@@ -11,8 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.updater.Updater;
-import ru.turikhay.tlauncher.updater.UpdaterListener;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
@@ -23,7 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class ElyManager extends InterruptibleComponent implements UpdaterListener {
+public class ElyManager extends InterruptibleComponent {
     private static final double VERSION = 1.0;
 
     private final List<ElyManagerListener> listeners = Collections.synchronizedList(new ArrayList<ElyManagerListener>());
@@ -41,6 +39,7 @@ public class ElyManager extends InterruptibleComponent implements UpdaterListene
 
     public ElyManager(ComponentManager manager) throws Exception {
         super(manager);
+        allowedGlobally = manager.getLauncher().getBootConfig().isElyAllowed();
     }
 
     public boolean isAllowedGlobally() {
@@ -254,23 +253,6 @@ public class ElyManager extends InterruptibleComponent implements UpdaterListene
 
     private static List<ElyLib> nl() {
         return Collections.synchronizedList(new ArrayList<ElyLib>());
-    }
-
-    @Override
-    public void onUpdaterRequesting(Updater u) {
-    }
-
-    @Override
-    public void onUpdaterErrored(Updater.SearchFailed search) {
-        allowedGlobally = false;
-    }
-
-    @Override
-    public void onUpdaterSucceeded(Updater.SearchSucceeded search) {
-        allowedGlobally = search.getResponse().isElyAllowedGlobally();
-
-        log("Ely is allowed globally:", allowedGlobally);
-        log("... will we use it?", isUsingGlobally());
     }
 
     public static class ElyLib extends Library {

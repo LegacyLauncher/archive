@@ -160,7 +160,7 @@ public abstract class Task<T> implements Callable<T> {
             throw new IllegalArgumentException("illegal percentage on " + getName());
         }
 
-        if(percentage < progress) {
+        if(percentage < progress && percentage != -1.) {
             log("went back: " + progress + " " + percentage, new RuntimeException());
         }
 

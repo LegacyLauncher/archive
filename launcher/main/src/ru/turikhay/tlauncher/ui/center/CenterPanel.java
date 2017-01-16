@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
@@ -20,10 +21,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class CenterPanel extends VPanel implements Blockable {
-    private static final long serialVersionUID = -1975869198322761508L;
     public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
     public static final CenterPanelTheme tipTheme = new TipPanelTheme();
-    public static final CenterPanelTheme loadingTheme = new LoadingPanelTheme();
     public static final CenterPanelTheme settingsTheme = new SettingsPanelTheme();
     public static final Insets defaultInsets = new MagnifiedInsets(5, 24, 18, 24);
     public static final Insets squareInsets = new MagnifiedInsets(15, 15, 15, 15);
@@ -78,29 +77,41 @@ public class CenterPanel extends VPanel implements Blockable {
         byte x = 0;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(getBackground());
-        //g.fillRect(x, x, getWidth(), getHeight());
-        g.fillRoundRect(x, x, getWidth(), getHeight(), 24, 24);
+
+        if(theme.getArc() > 0) {
+            g.fillRoundRect(x, x, getWidth(), getHeight(), theme.getArc(), theme.getArc());
+        } else {
+            g.fillRect(x, x, getWidth(), getHeight());
+        }
         g.setColor(theme.getBorder());
 
         int var5;
-        for (var5 = 1; var5 < 3; ++var5) {
-            //g.drawRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1);
-            g.drawRoundRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1, 24 - 2 * var5 + 1, 24 - 2 * var5 + 1);
+        for (var5 = 1; var5 <= Theme.getTheme().getBorderSize(); ++var5) {
+            if(theme.getArc() > 0) {
+                g.drawRoundRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1);
+            } else {
+                g.drawRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1);
+            }
         }
 
-        Color shadow = U.shiftAlpha(Color.gray, -155);
-        var5 = 3;
+        if(theme.getShadow() != null) {
+            Color shadow = theme.getShadow();
+            var5 = Theme.getTheme().getBorderSize();
 
-        while (true) {
-            shadow = U.shiftAlpha(shadow, -10);
-            if (shadow.getAlpha() == 0) {
-                break;
+            while (true) {
+                shadow = U.shiftAlpha(shadow, -10);
+                if (shadow.getAlpha() == 0) {
+                    break;
+                }
+
+                g.setColor(shadow);
+                if (theme.getArc() > 0) {
+                    g.drawRoundRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1);
+                } else {
+                    g.drawRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1);
+                }
+                ++var5;
             }
-
-            g.setColor(shadow);
-            //g.drawRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1);
-            g.drawRoundRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1, 24 - 2 * var5 + 1, 24 - 2 * var5 + 1);
-            ++var5;
         }
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);

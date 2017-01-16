@@ -5,12 +5,13 @@ import java.awt.*;
 public class BorderPanel extends ExtendedPanel {
     private static final long serialVersionUID = -7641580330557833990L;
 
+    private Component north, east, south, west, center;
+
     private BorderPanel(BorderLayout layout, boolean isDoubleBuffered) {
         super(isDoubleBuffered);
         if (layout == null) {
             layout = new BorderLayout();
         }
-
         setLayout(layout);
     }
 
@@ -51,23 +52,37 @@ public class BorderPanel extends ExtendedPanel {
         getLayout().setVgap(vgap);
     }
 
+    private Component set(Component oldComp, Component comp, String location) {
+        if(comp == null) {
+            if(oldComp != null) {
+                remove(oldComp);
+            }
+            return null;
+        }
+        if(oldComp == comp) {
+            return comp;
+        }
+        add(comp, location);
+        return comp;
+    }
+
     public void setNorth(Component comp) {
-        add(comp, "North");
+        north = set(north, comp, "North");
     }
 
     public void setEast(Component comp) {
-        add(comp, "East");
+        east = set(east, comp, "East");
     }
 
     public void setSouth(Component comp) {
-        add(comp, "South");
+        south = set(south, comp, "South");
     }
 
     public void setWest(Component comp) {
-        add(comp, "West");
+        west = set(west, comp, "West");
     }
 
     public void setCenter(Component comp) {
-        add(comp, "Center");
+        center = set(center, comp, "Center");
     }
 }

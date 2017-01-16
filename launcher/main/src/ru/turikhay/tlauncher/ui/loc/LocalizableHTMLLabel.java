@@ -68,7 +68,7 @@ public class LocalizableHTMLLabel extends LocalizableLabel {
 
     public void updateSize() {
         if (getLabelWidth() > 0) {
-            Dimension d = SwingUtil.getPreferredSize(getText(), true, getLabelWidth());
+            Dimension d = SwingUtil.getPrefSize(this, getLabelWidth(), 0);
             setMinimumSize(d);
             setPreferredSize(d);
         }

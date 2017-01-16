@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
@@ -14,15 +15,17 @@ import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 import javax.swing.*;
+import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Method;
 
 public class HTMLPage extends BorderPanel implements LocalizableComponent {
     private final String textColor;
 
     {
-        Color color = new JLabel().getForeground();
+        Color color = Theme.getTheme().getForeground();
         textColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 

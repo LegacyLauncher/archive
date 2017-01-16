@@ -28,6 +28,7 @@ public class ArgumentParser {
         m.put("window", "minecraft.size");
         m.put("background", "gui.background");
         m.put("fullscreen", "minecraft.fullscreen");
+        m.put("theme", "gui.theme");
         m.put("-block-settings", "gui.settings.blocked");
 
         parser = new OptionParser();
@@ -47,6 +48,7 @@ public class ArgumentParser {
         parser.accepts("settings", "Specifies path to settings file").withRequiredArg();
         parser.accepts("background", "Specifies background image. URL links, JPEG and PNG formats are supported.").withRequiredArg();
         parser.accepts("fullscreen", "Specifies whether fullscreen mode enabled or not").withRequiredArg();
+        parser.accepts("theme", "Specifies theme file").withRequiredArg();
         parser.accepts("block-settings", "Disables settings and folder buttons");
     }
 

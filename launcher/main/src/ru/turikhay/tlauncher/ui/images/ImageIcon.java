@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.images;
 
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,14 +22,7 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
             setIconSize(width, width);
             return;
         }
-
-        double ratio = (double) image.getWidth(null) / image.getHeight(null);
-
-        if (ifTrueWidthElseHeight) {
-            setImage(image, size, (int) (size / ratio));
-        } else {
-            setImage(image, (int) (size * ratio), size);
-        }
+        setImage(image, size, ifTrueWidthElseHeight);
     }
 
     public ImageIcon(Image image) {
@@ -43,6 +37,15 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
             this.image = image;
             setIconSize(preferredWidth, preferredHeight);
             setIcon(this);
+        }
+    }
+
+    public void setImage(Image image, int size, boolean ifTrueWidthElseHeight) {
+        double ratio = (double) image.getWidth(null) / image.getHeight(null);
+        if (ifTrueWidthElseHeight) {
+            setImage(image, size, (int) (size / ratio));
+        } else {
+            setImage(image, (int) (size * ratio), size);
         }
     }
 
@@ -77,16 +80,25 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
         return disabledInstance;
     }
 
-    public static ImageIcon setup(JLabel label, ImageIcon icon) {
-        if (label == null) {
-            return null;
-        } else {
-            label.setIcon(icon);
-            if (icon != null) {
-                label.setDisabledIcon(icon.getDisabledInstance());
-            }
+    public void setup(JComponent comp) {
+        setup(comp, this);
+    }
 
-            return icon;
+    public static ImageIcon setup(JComponent component, ImageIcon icon) {
+        if(component == null) {
+            return null;
         }
+
+        if(component instanceof JLabel) {
+            ((JLabel) component).setIcon(icon);
+            ((JLabel) component).setDisabledIcon(icon == null?  null : icon.getDisabledInstance());
+        } else if(component instanceof AbstractButton) {
+            ((AbstractButton) component).setIcon(icon);
+            ((AbstractButton) component).setDisabledIcon(icon == null? null : icon.getDisabledInstance());
+        } else {
+            throw new IllegalArgumentException();
+        }
+
+        return icon;
     }
 }

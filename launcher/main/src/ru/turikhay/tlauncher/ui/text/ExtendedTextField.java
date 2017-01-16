@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.text;
 
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -41,6 +42,7 @@ public class ExtendedTextField extends JTextField {
             }
         });
         setValue(value);
+        updateStyle();
     }
 
     public ExtendedTextField(String placeholder, String value) {
@@ -94,6 +96,7 @@ public class ExtendedTextField extends JTextField {
 
     protected void updateStyle() {
         setForeground(getValue() == null ? theme.getFocusLost() : theme.getFocus());
+        setBackground(theme.getBackground());
     }
 
     public void setValue(Object obj) {

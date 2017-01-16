@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +12,7 @@ public class ExtendedLabel extends JLabel {
 
     public ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
         super(text, icon, horizontalAlignment);
+        Theme.setup(this);
         setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
         setOpaque(false);
     }

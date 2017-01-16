@@ -1,8 +1,6 @@
 package ru.turikhay.util.async;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 public class AsyncThread {
     private static ExecutorService service = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -13,5 +11,13 @@ public class AsyncThread {
 
     public static void execute(Runnable r) {
         service.execute(r);
+    }
+
+    public static Future future(Runnable r) {
+        return service.submit(r);
+    }
+
+    public static <V> Future<V> future(Callable<V> c) {
+        return service.submit(c);
     }
 }

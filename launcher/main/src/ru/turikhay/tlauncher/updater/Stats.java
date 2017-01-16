@@ -7,8 +7,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.managers.ServerList;
+import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
@@ -36,19 +37,25 @@ public final class Stats {
         submitDenunciation(newAction("beacon"));
     }
 
-    public static void minecraftLaunched(Account account, CompleteVersion version, ServerList.Server server) {
+    public static void minecraftLaunched(Account account, CompleteVersion version, Server server) {
         Stats.Args args = newAction("mc_launched").add("mc_version", version.getID()).add("account_type", account.getType().toString());
         if (server != null) {
-            args.add("server", server.getAddress());
+            args.add("server", server.getFullAddress());
         }
 
         submitDenunciation(args);
     }
 
-    public static void noticeViewed(Notices.Notice notice) {
-        if (notice.getId() != 0) {
-            submitDenunciation(newAction("notice_viewed").add("notice_id", String.valueOf(notice.getId())));
-        }
+    public static void noticeViewed(Notice notice) {
+        submitDenunciation(newAction("notice_viewed").add("notice_id", String.valueOf(notice.getId())));
+    }
+
+    public static void noticeHiddenByUser(Notice notice) {
+        submitDenunciation(newAction("notice_act_hidden").add("notice_id", String.valueOf(notice.getId())));
+    }
+
+    public static void noticeShownByUser(Notice notice) {
+        submitDenunciation(newAction("notice_act_shown").add("notice_id", String.valueOf(notice.getId())));
     }
 
     private static Stats.Args newAction(String name) {

@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.loc;
 
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import javax.swing.*;
 import java.awt.event.ItemListener;
@@ -67,6 +68,8 @@ public class LocalizableCheckbox extends JCheckBox implements LocalizableCompone
     }
 
     private void init() {
+        setForeground(Theme.getTheme().getForeground());
+        setBackground(Theme.getTheme().getBackground());
         setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
         setOpaque(false);
     }

@@ -21,6 +21,17 @@ public final class BootstrapStarter {
         jvmArgs.add("-Xmx128m");
         jvmArgs.add("-Dfile.encoding=UTF-8");
 
+        for(String propKey : System.getProperties().stringPropertyNames()) {
+            if(propKey.startsWith("tlauncher.bootstrap.")) {
+                String value = U.requireNotNull(System.getProperty(propKey), "property \""+ propKey +"\"");
+
+                String arg = "-D" + propKey + "=\"" + value + "\"";
+                jvmArgs.add(arg);
+
+                log("Transferring property: ", arg);
+            }
+        }
+
         List<String> appArgs = new ArrayList<String>();
         Collections.addAll(appArgs, args);
 

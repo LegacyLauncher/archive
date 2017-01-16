@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.configuration;
 
 import net.minecraft.launcher.versions.ReleaseType;
-import ru.turikhay.tlauncher.updater.Notices;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
@@ -65,10 +64,6 @@ public final class ConfigurationDefaults {
         d.put("gui.logger.height", 500);
         d.put("gui.logger.x", 30);
         d.put("gui.logger.y", 30);
-
-        for (Notices.NoticeType type : Notices.NoticeType.values()) {
-            d.put("gui.notice." + type.name().toLowerCase(), true);
-        }
 
         d.put("gui.direction.loginform", Direction.CENTER);
 

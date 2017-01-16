@@ -10,16 +10,16 @@ public final class BootBridge {
 
     private final String bootstrapVersion;
     private final String[] args;
-    private final String updateInfo;
+    private final String options;
 
-    private BootBridge(String bootstrapVersion, String[] args, String updateInfo) {
+    private BootBridge(String bootstrapVersion, String[] args, String options) {
         if(args == null) {
             args = new String[0];
         }
 
         this.bootstrapVersion = bootstrapVersion;
         this.args = args;
-        this.updateInfo = updateInfo;
+        this.options = options;
     }
 
     public String getBootstrapVersion() {
@@ -30,8 +30,8 @@ public final class BootBridge {
         return args;
     }
 
-    public String getUpdateInfo() {
-        return updateInfo;
+    public String getOptions() {
+        return options;
     }
 
     public synchronized void addListener(BootListener listener) {
@@ -55,8 +55,8 @@ public final class BootBridge {
         this.dispatcher.waitUntilClose();
     }
 
-    public static BootBridge create(String bootstrapVersion, String[] args, String updateInfo) {
-        return new BootBridge(bootstrapVersion, args, updateInfo);
+    public static BootBridge create(String bootstrapVersion, String[] args, String options) {
+        return new BootBridge(bootstrapVersion, args, options);
     }
 
     public static BootBridge create(String[] args) {
