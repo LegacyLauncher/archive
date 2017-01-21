@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.U;
 
 import java.awt.*;
@@ -36,9 +38,10 @@ class NoticeTextSize {
         Dimension d;
 
         try {
-            d = future.get(10, TimeUnit.SECONDS);
+            d = future.get(3, TimeUnit.SECONDS);
         } catch(TimeoutException timeout) {
-            throw new RuntimeException("text size is computing for too long", timeout);
+            Sentry.sendError(NoticeTextSize.class, "text size is computing for too long", timeout, DataBuilder.create("notice", notice));
+            d = new Dimension(0, 0);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -94,16 +94,53 @@ public enum OS {
     }
 
     private final String[] aliases;
+    private final String lowerCase;
 
     OS(String... aliases) {
         this.aliases = aliases;
+        this.lowerCase = name().toLowerCase();
     }
 
     public boolean isCurrent() {
         return this == CURRENT;
     }
 
+    public String nameLowerCase() {
+        return lowerCase;
+    }
+
     private static void log(Object... o) {
         U.log("[OS]", o);
+    }
+
+    public enum Arch {
+        x86("32"), x64("64"), UNKNOWN(null);
+
+        public static final Arch CURRENT;
+
+        static {
+            String dataModel = System.getProperty("sun.arch.data.model");
+            Arch current = UNKNOWN;
+            if(dataModel != null) {
+                for(Arch arch : values()) {
+                    if(dataModel.equals(arch.determiner)) {
+                        current = arch;
+                        break;
+                    }
+                }
+            }
+            CURRENT = current;
+        }
+
+        private final String determiner, lowerCase;
+
+        Arch(String determiner) {
+            this.determiner = determiner;
+            this.lowerCase = name().toLowerCase();
+        }
+
+        public String nameLowerCase() {
+            return lowerCase;
+        }
     }
 }

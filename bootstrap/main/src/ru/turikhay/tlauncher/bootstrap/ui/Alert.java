@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 
 class Alert {
-    private static final String TITLE = "TLauncher";
+    private static final String TITLE = "Error";
 
     public static void showError(String message, Object textarea) {
         JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), TITLE, JOptionPane.ERROR_MESSAGE);

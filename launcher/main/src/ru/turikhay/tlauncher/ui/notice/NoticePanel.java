@@ -70,12 +70,16 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
             return;
         }
 
-
         noticeWrapper.editorPane.setNotice(notice, fontSize);
 
         Dimension
                 insets = new Dimension(getInsets().left + getInsets().right, getInsets().top + getInsets().bottom),
                 noticeSize = noticeWrapper.updateSize();
+
+        if(noticeSize == null) {
+            setSize(0, 0);
+            return;
+        }
 
         log("noticeSize", noticeSize);
 
@@ -141,6 +145,10 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         Dimension updateSize() {
             Dimension size = calcNoticeSize(notice);
             log("notice size:", size);
+
+            if(size.width == 0 && size.height == 0) {
+                return null;
+            }
 
             NoticeImage image = notice.getImage();
             iconLabel.setImage(image.getTask(), image.getWidth(), image.getHeight(), 0, size.height);
