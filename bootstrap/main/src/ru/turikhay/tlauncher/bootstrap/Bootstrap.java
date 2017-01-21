@@ -2,8 +2,10 @@ package ru.turikhay.tlauncher.bootstrap;
 
 import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
+import ru.turikhay.tlauncher.bootstrap.exception.InternetConnectionException;
 import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
+import ru.turikhay.tlauncher.bootstrap.util.OS;
 import shaded.com.getsentry.raven.DefaultRavenFactory;
 import shaded.com.getsentry.raven.Raven;
 import shaded.com.getsentry.raven.dsn.Dsn;
@@ -117,7 +119,7 @@ public final class Bootstrap {
                     new EventBuilder()
                             .withEnvironment(System.getProperty("os.name"))
                             .withLevel(Event.Level.FATAL)
-                            .withSentryInterface(new ExceptionInterface(e))
+                            .withSentryInterface(new ExceptionInterface(InternetConnectionException.returnIf(e)))
                             .withRelease(localBootstrapMeta == null? null : String.valueOf(localBootstrapMeta.getVersion()))
             );
 
@@ -125,7 +127,21 @@ public final class Bootstrap {
                 bootstrap.getUserInterface().getFrame().dispose();
             }
 
-            UserInterface.showError("Could not start TLauncher!", RedirectPrintStream.getBuffer().toString());
+            final String supportLink = "You can always contact us, we'll try to help you: <a href=\"http://tlaun.ch/support\">tlaun.ch/support</a>";
+            if(InternetConnectionException.checkIf(e)) {
+                StringBuilder message = new StringBuilder("Could not start application due to Internet connection problem. ");
+                if(OS.WINDOWS.isCurrent()) {
+                    message.append("Please try the following:\n");
+                    message.append("– Check your machine with antivirus software, as this might be caused by malware installed on your PC\n");
+                    message.append("– Run this application with administrator rights, as this might caused by insufficient rights\n");
+                    message.append("\n");
+                    message.append(supportLink);
+                }
+                UserInterface.showError(message.toString(), U.toString(e));
+            } else {
+                UserInterface.showError("Could not start application!\n" + supportLink, RedirectPrintStream.getBuffer().toString());
+            }
+
             System.exit(-1);
         }
 

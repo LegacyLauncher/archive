@@ -156,12 +156,8 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     protected final void updateProgress(double percentage) {
-        if(percentage < 0. && percentage != -1. || percentage > 1.) {
-            throw new IllegalArgumentException("illegal percentage on " + getName());
-        }
-
-        if(percentage < progress && percentage != -1.) {
-            log("went back: " + progress + " " + percentage, new RuntimeException());
+        if(percentage < 0. || percentage > 1.) {
+            percentage = -1.;
         }
 
         progress = percentage;

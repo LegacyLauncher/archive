@@ -12,8 +12,10 @@ public enum PackageType {
         PackageType current = PackageType.JAR;
         File jar = U.getJar(PackageType.class);
         if(jar.exists()) {
-            if(jar.isFile() && jar.getName().endsWith(".exe")) {
-                current = PackageType.EXE;
+            if(jar.isFile()) {
+                if(jar.getName().endsWith(".exe")) {
+                    current = PackageType.EXE;
+                }
             } else {
                 log("Are we packed into... directory?");
             }
