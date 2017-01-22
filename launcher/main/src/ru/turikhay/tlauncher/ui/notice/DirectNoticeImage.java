@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.ui.images.ExtendedIcon;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.util.U;
@@ -29,5 +30,9 @@ public class DirectNoticeImage extends NoticeImage {
     @Override
     public Future<Image> getTask() {
         return new EmptyFuture<Image>(image);
+    }
+
+    protected ToStringBuilder toStringBuilder() {
+        return super.toStringBuilder().append("image", image).append("width", getWidth()).append("height", getHeight());
     }
 }

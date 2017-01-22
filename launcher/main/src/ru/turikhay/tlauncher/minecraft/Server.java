@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.minecraft;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
@@ -141,5 +143,14 @@ public class Server {
     @Override
     public int hashCode() {
         return getFullAddress().toLowerCase().hashCode();
+    }
+
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("name", name)
+                .append("address", address)
+                .append("port", port)
+                .append("family", family)
+                .build();
     }
 }

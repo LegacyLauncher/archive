@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
@@ -31,6 +32,10 @@ public class ServerNoticeAction extends NoticeAction {
         this.server = U.requireNotNull(server, "server");
 
         installedVersion = Images.getScaledIcon("check.png", 16);
+    }
+
+    protected ToStringBuilder toStringBuilder() {
+        return super.toStringBuilder().append("server", server);
     }
 
     @Override
