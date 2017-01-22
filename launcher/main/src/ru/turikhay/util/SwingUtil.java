@@ -174,10 +174,10 @@ public class SwingUtil {
     }
 
     // when determining for indefinite height - use 0
-    public static int getPrefWidth(JComponent component, int height) {
+    public static int getPrefWidth(JComponent component, int height, int step) {
         int minHeight = getPrefHeight(component, Integer.MAX_VALUE), curHeight, width = 0;
         do {
-            curHeight = getPrefHeight(component, width += 1);
+            curHeight = getPrefHeight(component, width += step);
         } while(curHeight >= height && curHeight != minHeight);
 
         return width;

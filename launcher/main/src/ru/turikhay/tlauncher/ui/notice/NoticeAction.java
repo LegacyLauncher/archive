@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import javax.swing.*;
 import java.util.List;
@@ -15,4 +17,12 @@ public abstract class NoticeAction {
     }
 
     abstract List<? extends JMenuItem> getMenuItemList();
+
+    protected ToStringBuilder toStringBuilder() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
+    }
+
+    public final String toString() {
+        return toStringBuilder().build();
+    }
 }

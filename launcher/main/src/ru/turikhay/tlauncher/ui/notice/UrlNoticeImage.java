@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.util.async.AsyncThread;
 
 import javax.imageio.ImageIO;
@@ -53,5 +54,12 @@ public class UrlNoticeImage extends NoticeImage {
         } else {
             return future;
         }
+    }
+
+    protected ToStringBuilder toStringBuilder() {
+        return super.toStringBuilder()
+                .append("url", url)
+                .append("width", width)
+                .append("height", height);
     }
 }

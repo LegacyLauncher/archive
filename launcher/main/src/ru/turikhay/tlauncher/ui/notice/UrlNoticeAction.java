@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.StringUtil;
@@ -37,5 +38,9 @@ public class UrlNoticeAction extends NoticeAction {
         list.add(item);
 
         return list;
+    }
+
+    protected ToStringBuilder toStringBuilder() {
+        return super.toStringBuilder().append("name", name).append("url", url);
     }
 }
