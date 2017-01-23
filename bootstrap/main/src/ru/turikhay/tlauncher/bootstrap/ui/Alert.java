@@ -7,10 +7,18 @@ import javax.swing.*;
 import java.awt.*;
 
 class Alert {
-    private static final String TITLE = "Error";
+    private static final String TITLE = "Alert";
 
-    public static void showError(String message, Object textarea) {
-        JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), TITLE, JOptionPane.ERROR_MESSAGE);
+    static void showError(String message, Object textarea) {
+        showOkay(JOptionPane.ERROR_MESSAGE, message, textarea);
+    }
+
+    static void showWarning(String message, Object textarea) {
+        showOkay(JOptionPane.WARNING_MESSAGE, message, textarea);
+    }
+
+    private static void showOkay(int messageType, String message, Object textarea) {
+        JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), TITLE, messageType);
     }
 
     private static class AlertPanel extends JPanel {

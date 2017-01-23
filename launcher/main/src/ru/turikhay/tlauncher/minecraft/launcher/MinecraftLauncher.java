@@ -24,9 +24,8 @@ import ru.turikhay.tlauncher.minecraft.NBTServer;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
-import ru.turikhay.tlauncher.sentry.SentryBreadcrumbContext;
+import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.updater.Stats;
@@ -48,7 +47,7 @@ import java.util.zip.ZipOutputStream;
 
 public class MinecraftLauncher implements JavaProcessListener {
     private static final int OFFICIAL_VERSION = 18, ALTERNATIVE_VERSION = 8, MIN_WORK_TIME = 5000;
-    private SentryBreadcrumbContext sentryContext = SentryBreadcrumbContext.createWithName("minecraftLauncher");
+    private SentryContext sentryContext = SentryContext.createWithName("minecraftLauncher");
     private boolean working;
     private boolean killed;
     private final Thread parentThread;

@@ -12,7 +12,7 @@ public final class Sentry {
     }
 
     public static void sendError(Class clazz, String message, Throwable t, DataBuilder data) {
-        SentryBreadcrumbContext.GLOBAL_CONTEXT.sendError(clazz, message, t, data);
+        SentryContext.GLOBAL_CONTEXT.sendError(clazz, message, t, data);
     }
 
     private Sentry() {

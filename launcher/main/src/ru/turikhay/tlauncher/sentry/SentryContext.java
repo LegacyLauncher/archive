@@ -4,22 +4,24 @@ import com.getsentry.raven.event.Breadcrumb;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
+import com.getsentry.raven.event.interfaces.UserInterface;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.windows.WMIProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class SentryBreadcrumbContext {
-    static final SentryBreadcrumbContext GLOBAL_CONTEXT = new SentryBreadcrumbContext(null, "global");
+public final class SentryContext {
+    static final SentryContext GLOBAL_CONTEXT = new SentryContext(null, "global");
 
-    private final SentryBreadcrumbContext parent;
+    private final SentryContext parent;
     private final String name;
     private final List<Breadcrumb> breadcrumbList = new ArrayList<Breadcrumb>();
 
-    SentryBreadcrumbContext(SentryBreadcrumbContext parentContext, String name) {
+    private SentryContext(SentryContext parentContext, String name) {
         this.parent = parentContext;
         this.name = name;
     }
@@ -52,15 +54,21 @@ public final class SentryBreadcrumbContext {
                 .withLevel(level)
                 .withCulprit(clazz == null ? null : clazz.toString())
                 .withMessage(message == null ? "(null message)" : message)
-                .withPlatform(OS.NAME)
-                .withEnvironment(OS.JAVA_VERSION.getVersion())
+                .withServerName(OS.NAME)
+                .withPlatform(OS.JAVA_VERSION.getVersion())
                 .withRelease(String.valueOf(TLauncher.getVersion()));
 
         b.withTag("brand", TLauncher.getBrand());
+        addAv(b);
 
         if(TLauncher.getInstance() != null) {
             TLauncher tl = TLauncher.getInstance();
-            b.withTag("locale", tl.getLang() == null? null : String.valueOf(tl.getLang().getLocale()));
+            if(tl.getSettings() != null) {
+                b.withSentryInterface(new UserInterface(tl.getSettings().getClient().toString(), null, null, null));
+            }
+            if(tl.getLang() != null) {
+                b.withTag("locale", tl.getLang() == null ? null : String.valueOf(tl.getLang().getLocale()));
+            }
         }
 
         if (data != null) {
@@ -79,7 +87,32 @@ public final class SentryBreadcrumbContext {
         return b;
     }
 
-    public static SentryBreadcrumbContext createWithName(String name) {
-        return new SentryBreadcrumbContext(GLOBAL_CONTEXT, name);
+    private void addAv(EventBuilder b) {
+        if(!OS.WINDOWS.isCurrent()) {
+            return;
+        }
+
+        List<String> avList = WMIProvider.getAvSoftwareList();
+        int count = 0;
+
+        for(String av : avList) {
+            if("Windows Defender".equals(av)) {
+                continue;
+            }
+
+            if(count > 1) {
+                b.withTag("av" + String.valueOf(count), av);
+            } else {
+                b.withTag("av", av);
+                count++;
+            }
+        }
+    }
+
+    public static SentryContext createWithName(String name) {
+        if(GLOBAL_CONTEXT.getName().equals(name)) {
+            throw new IllegalArgumentException(GLOBAL_CONTEXT.getName() + "cannot be created twice");
+        }
+        return new SentryContext(GLOBAL_CONTEXT, name);
     }
 }

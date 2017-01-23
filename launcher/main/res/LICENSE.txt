@@ -1,6 +1,10 @@
-You can redistribute unmodified versions of TLauncher.
-You use this application at your own risk: developers are not responsible
-for results this application may produce.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS, OWNERS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+    OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
 
 This software includes projects licensed under a Apache License 2.0:
 - Apache Commons IO (© 2002-2012 The Apache Software Foundation)
@@ -17,3 +21,6 @@ It was modified to be compatible with extra features that TLauncher includes.
 
 This software uses Hamburg icon pack (by former pc.de Team) and WPZOOM Developer
 icon pack under CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/deed.en
+
+This software uses modified jWMI. Copyright Henry Ranch LLC 2009-2010.  All rights reserved.
+http://www.henryranch.net

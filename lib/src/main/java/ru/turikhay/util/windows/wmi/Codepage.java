@@ -1,14 +1,8 @@
-package ru.turikhay.util.windows;
+package ru.turikhay.util.windows.wmi;
 
-import net.minecraft.launcher.process.JavaProcess;
-import net.minecraft.launcher.process.JavaProcessListener;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import ru.turikhay.tlauncher.exceptions.UnsupportedEnvirnomentException;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.U;
-import ru.turikhay.util.async.ExtendedThread;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -22,9 +16,12 @@ public final class Codepage {
     private final Charset charset;
 
     private Codepage(int codepage, Charset charset) {
+        if (charset == null) {
+            throw new NullPointerException("charset");
+        }
+
         this.codepage = codepage;
-        this.charset = U.requireNotNull(charset, "charset");
-        logPrefix = "[Charset][" + charset + "]";
+        this.charset = charset;
     }
 
     public int getCodepage() {
@@ -42,19 +39,11 @@ public final class Codepage {
                 .build();
     }
 
-    private final String logPrefix;
-
-    private void ilog(Object... o) {
-        U.log(logPrefix, o);
-    }
-
     private static final List<Codepage> pages = new ArrayList<Codepage>();
     private static Codepage detectedCodepage;
     private static CodepageDetectorThread thread = new CodepageDetectorThread();
 
-    public static Codepage get() throws UnsupportedEnvirnomentException {
-        UnsupportedEnvirnomentException.ensureUnder(OS.WINDOWS);
-
+    public static Codepage get() throws InterruptedException {
         if (thread == null || Thread.currentThread() == thread) {
             return detectedCodepage;
         }
@@ -63,16 +52,12 @@ public final class Codepage {
             thread.start();
         }
 
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            //
-        }
+        thread.join();
 
         return detectedCodepage;
     }
 
-    public static Codepage get(int cp) {
+    private static Codepage get(int cp) {
         for (Codepage codepage : pages) {
             if (codepage.codepage == cp) {
                 return codepage;
@@ -87,15 +72,10 @@ public final class Codepage {
         try {
             charset = Charset.forName(charsetName);
         } catch (RuntimeException rE) {
-            log("Charset", charsetName, codepage, "is not supported");
             return;
         }
 
         pages.add(new Codepage(codepage, charset));
-    }
-
-    private static void log(Object... o) {
-        U.log("[Charset]", o);
     }
 
     static {
@@ -116,7 +96,7 @@ public final class Codepage {
         add(863, "IBM863");
         add(864, "IBM864");
         add(865, "IBM865");
-        add(866, "CP1251");
+        add(866, "CP866");
         add(869, "ibm869");
         add(870, "IBM870");
         add(874, "windows-874");
@@ -200,30 +180,22 @@ public final class Codepage {
         add(65001, "utf-8");
     }
 
-    private static class CodepageDetectorThread extends ExtendedThread implements JavaProcessListener {
+    private static class CodepageDetectorThread extends Thread {
         @Override
         public void run() {
             try {
                 detect();
             } catch (Exception e) {
-                log("could not detect code page", e);
+                e.printStackTrace();
             }
             thread = null;
         }
 
         private void detect() throws Exception {
             String system32 = System.getenv("WINDIR") + "\\system32\\";
-            JavaProcess process = new JavaProcess(new ProcessBuilder(system32 + "chcp.com").start());
-            process.safeSetExitRunnable(this);
 
-            int timer = 0;
-            while (process.isRunning()) {
-                if (++timer > 15) {
-                    log("Oops, we're taking too long");
-                    throw new RuntimeException("timeout");
-                }
-                U.sleepFor(250);
-            }
+            List<String> result = WMI.execute(new String[]{system32 + "chcp.com"}, Charset.forName("ASCII"));
+            String lastLine = result.isEmpty()? null : result.get(result.size() - 1);
 
             if (StringUtils.isBlank(lastLine)) {
                 throw new RuntimeException("last line is blank");
@@ -237,32 +209,14 @@ public final class Codepage {
                 } catch (Exception e) {
                     throw new RuntimeException("could not parse chcp: \"" + matcher.group(1) + "\"", e);
                 }
-                log("System code page detected:", cp);
 
                 Codepage codepage = get(cp);
                 if (codepage == null) {
                     throw new UnsupportedCharsetException(String.valueOf(cp));
                 }
 
-                log("Code page selected", codepage);
                 detectedCodepage = codepage;
             }
-        }
-
-        private String lastLine;
-
-        @Override
-        public void onJavaProcessLog(JavaProcess var1, String var2) {
-            log(var1.getRawProcess(), var2);
-            lastLine = var2;
-        }
-
-        @Override
-        public void onJavaProcessEnded(JavaProcess var1) {
-        }
-
-        @Override
-        public void onJavaProcessError(JavaProcess var1, Throwable var2) {
         }
     }
 }

@@ -9,6 +9,7 @@ import ru.turikhay.tlauncher.bootstrap.task.TaskList;
 import shaded.com.github.zafarkhaja.semver.Version;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -76,6 +77,12 @@ public class BootstrapTest {
         } finally {
             setupJvmProperties(propMap, true);
         }
+    }
+
+    @Test
+    public void testHandleFatalError() throws Exception {
+        Bootstrap bootstrap = Bootstrap.createBootstrap();
+        Bootstrap.handleFatalError(bootstrap, new ClassNotFoundException(), false);
     }
 
     private static final String jvmArgPrefix = "tlauncher.bootstrap.";

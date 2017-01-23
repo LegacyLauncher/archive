@@ -2,10 +2,10 @@ package ru.turikhay.tlauncher.bootstrap;
 
 import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
-import ru.turikhay.tlauncher.bootstrap.exception.InternetConnectionException;
+import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
 import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
-import ru.turikhay.tlauncher.bootstrap.util.OS;
+import ru.turikhay.tlauncher.bootstrap.util.*;
 import shaded.com.getsentry.raven.DefaultRavenFactory;
 import shaded.com.getsentry.raven.Raven;
 import shaded.com.getsentry.raven.dsn.Dsn;
@@ -28,6 +28,7 @@ import ru.turikhay.tlauncher.bootstrap.task.TaskList;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
 import ru.turikhay.tlauncher.bootstrap.util.FileValueConverter;
+import shaded.ru.turikhay.util.windows.wmi.WMI;
 
 import java.io.File;
 import java.io.IOException;
@@ -113,39 +114,86 @@ public final class Bootstrap {
             log("Default task was interrupted");
         } catch (Exception e) {
             e.printStackTrace();
-
-            LocalBootstrapMeta localBootstrapMeta = bootstrap == null? null : bootstrap.getMeta();
-            raven.sendEvent(
-                    new EventBuilder()
-                            .withEnvironment(System.getProperty("os.name"))
-                            .withLevel(Event.Level.FATAL)
-                            .withSentryInterface(new ExceptionInterface(InternetConnectionException.returnIf(e)))
-                            .withRelease(localBootstrapMeta == null? null : String.valueOf(localBootstrapMeta.getVersion()))
-            );
-
-            if(bootstrap != null && bootstrap.getUserInterface() != null) {
-                bootstrap.getUserInterface().getFrame().dispose();
-            }
-
-            final String supportLink = "You can always contact us, we'll try to help you: <a href=\"http://tlaun.ch/support\">tlaun.ch/support</a>";
-            if(InternetConnectionException.checkIf(e)) {
-                StringBuilder message = new StringBuilder("Could not start application due to Internet connection problem. ");
-                if(OS.WINDOWS.isCurrent()) {
-                    message.append("Please try the following:\n");
-                    message.append("– Check your machine with antivirus software, as this might be caused by malware installed on your PC\n");
-                    message.append("– Run this application with administrator rights, as this might caused by insufficient rights\n");
-                    message.append("\n");
-                    message.append(supportLink);
-                }
-                UserInterface.showError(message.toString(), U.toString(e));
-            } else {
-                UserInterface.showError("Could not start application!\n" + supportLink, RedirectPrintStream.getBuffer().toString());
-            }
-
+            handleFatalError(bootstrap, e, true);
             System.exit(-1);
         }
 
         System.exit(0);
+    }
+
+    static void handleFatalError(Bootstrap bootstrap, Throwable e, boolean sendSentry) {
+        FatalExceptionType exceptionType = FatalExceptionType.getType(e);
+
+        if(sendSentry) {
+            LocalBootstrapMeta localBootstrapMeta = bootstrap == null? null : bootstrap.getMeta();
+            EventBuilder b = new EventBuilder()
+                    .withEnvironment(System.getProperty("os.name"))
+                    .withLevel(Event.Level.FATAL)
+                    .withSentryInterface(new ExceptionInterface(e))
+                    .withRelease(localBootstrapMeta == null ? null : String.valueOf(localBootstrapMeta.getVersion()));
+
+            if (exceptionType != null) {
+                b.withTag("type", exceptionType.name());
+            }
+
+            avList:
+            {
+                if(!OS.WINDOWS.isCurrent()) {
+                    break avList;
+                }
+
+                List<String> avList;
+                try {
+                    avList = WMI.getAVSoftwareList();
+                } catch (Exception e0) {
+                    log("Could not get AV list", e0);
+                    break avList;
+                }
+
+                int count = 0;
+                for(String av : avList) {
+                    if("Windows Defender".equals(av)) {
+                        continue;
+                    }
+
+                    if(count > 1) {
+                        b.withTag("av" + String.valueOf(count), av);
+                    } else {
+                        b.withTag("av", av);
+                    }
+
+                    count++;
+                }
+            }
+
+            raven.sendEvent(b);
+        }
+
+        if(bootstrap != null && bootstrap.getUserInterface() != null) {
+            bootstrap.getUserInterface().getFrame().dispose();
+        }
+
+        if(UserInterface.getResourceBundle() != null) {
+            ResourceBundle resourceBundle = UserInterface.getResourceBundle();
+
+            final String supportLink = resourceBundle.getString("support");
+
+            if (exceptionType == null) {
+                UserInterface.showError(resourceBundle.getString("error.fatal") + "\n" + supportLink, RedirectPrintStream.getBuffer().toString());
+            } else {
+                StringBuilder message = new StringBuilder();
+                message.append(resourceBundle.getString("error." + exceptionType.nameLowerCase()));
+
+                if (resourceBundle.containsKey("error." + exceptionType.nameLowerCase() + "." + OS.WINDOWS.nameLowerCase())) {
+                    message.append(' ').append(resourceBundle.getString("error." + exceptionType.nameLowerCase() + "." + OS.WINDOWS.nameLowerCase()));
+                }
+
+                message.append("\n\n");
+                message.append(supportLink);
+
+                UserInterface.showError(message.toString(), U.toString(e));
+            }
+        }
     }
 
     private final UserInterface ui;
