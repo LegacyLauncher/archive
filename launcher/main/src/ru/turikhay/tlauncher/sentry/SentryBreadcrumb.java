@@ -8,9 +8,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.U;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 public final class SentryBreadcrumb {
     private final Event.Level level;
     private final String clazz;
@@ -38,22 +35,22 @@ public final class SentryBreadcrumb {
     }
 
     public void push() {
-        push(SentryBreadcrumbContext.GLOBAL_CONTEXT);
+        push(SentryContext.GLOBAL_CONTEXT);
     }
 
-    public void push(SentryBreadcrumbContext context) {
+    public void push(SentryContext context) {
         U.requireNotNull(context, "context");
 
-        if(context == SentryBreadcrumbContext.GLOBAL_CONTEXT) {
+        if(context == SentryContext.GLOBAL_CONTEXT) {
             U.log("[Breadcrumb]", this);
-            context = SentryBreadcrumbContext.GLOBAL_CONTEXT;
+            context = SentryContext.GLOBAL_CONTEXT;
         } else {
             U.log("[Breadcrumb:"+ context.getName() +"]", this);
         }
-        SentryBreadcrumbContext.GLOBAL_CONTEXT.record(build(context));
+        context.record(build(context));
     }
 
-    private Breadcrumb build(SentryBreadcrumbContext context) {
+    private Breadcrumb build(SentryContext context) {
         return new BreadcrumbBuilder()
                 .setLevel(level.name())
                 .setCategory(context.getName())

@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.bootstrap;
 
 import ru.turikhay.tlauncher.bootstrap.meta.DownloadEntry;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
+import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.*;
@@ -28,6 +29,8 @@ public class Updater extends Task<Void> {
 
     @Override
     protected Void execute() throws Exception {
+        UserInterface.showWarning(UserInterface.getResourceBundle().getString("update"), null);
+
         final boolean exitOnFinish = this.exitOnFinish;
 
         File tempFile = File.createTempFile("updater", null);

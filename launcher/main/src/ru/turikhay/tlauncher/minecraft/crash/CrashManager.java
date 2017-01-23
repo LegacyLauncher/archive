@@ -5,9 +5,6 @@ import com.google.gson.GsonBuilder;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
@@ -17,6 +14,7 @@ import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.windows.DxDiag;
+import ru.turikhay.util.windows.WMIProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -481,6 +479,11 @@ public final class CrashManager {
                     } catch (Exception e) {
                         U.log("Could not retrieve DxDiag", e);
                     }
+                }
+
+
+                if(OS.WINDOWS.isCurrent()) {
+                    log("AV Software list:", WMIProvider.getAvSoftwareList());
                 }
             }
         }

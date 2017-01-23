@@ -32,6 +32,10 @@
                   <pattern>joptsimple</pattern>
                   <shadedPattern>shaded.joptsimple</shadedPattern>
                 </relocation>
+                <relocation>
+                  <pattern>ru</pattern>
+                  <shadedPattern>shaded.ru</shadedPattern>
+                </relocation>
               </relocations>
             </configuration>
           </execution>

@@ -4,6 +4,7 @@ import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListener;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import ru.turikhay.tlauncher.bootstrap.util.UTF8Control;
 import shaded.org.apache.commons.lang3.builder.ToStringBuilder;
 import shaded.org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -11,8 +12,24 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ResourceBundle;
 
 public final class UserInterface {
+    private static final ResourceBundle resourceBundle;
+    static {
+        ResourceBundle b = null;
+
+        if(isHeaded()) {
+            try {
+                b = ResourceBundle.getBundle("bootstrap", new UTF8Control());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        resourceBundle = b;
+    }
+
     private final JFrame frame;
     private final JLabel iconLabel;
     private final JProgressBar progressBar;
@@ -123,13 +140,23 @@ public final class UserInterface {
                 .build();
     }
 
+    public static ResourceBundle getResourceBundle() {
+        return resourceBundle;
+    }
+
     public static void showError(String message, Object textarea) {
         if(isHeaded()) {
             Alert.showError(message, textarea);
         }
     }
 
-    private static boolean isHeaded() {
+    public static void showWarning(String message, Object textarea) {
+        if(isHeaded()) {
+            Alert.showWarning(message, textarea);
+        }
+    }
+
+    public static boolean isHeaded() {
         return !GraphicsEnvironment.isHeadless();
     }
 

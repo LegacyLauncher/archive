@@ -105,6 +105,8 @@ public class Configuration extends SimpleConfiguration {
             set("client", UUID.randomUUID(), false);
         }
 
+        log("UUID:", getClient());
+
         for (Entry<String, Object> defEntry : defaults.getMap().entrySet()) {
             if (constants.containsKey(defEntry.getKey())) {
                 continue;

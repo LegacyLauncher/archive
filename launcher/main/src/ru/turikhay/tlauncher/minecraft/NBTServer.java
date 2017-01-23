@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.minecraft;
 import net.minecraft.common.CompressedStreamTools;
 import net.minecraft.common.NBTTagCompound;
 import net.minecraft.common.NBTTagList;
+import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,16 @@ public class NBTServer extends Server {
 
         NBTTagList servers = compound.getTagList("servers");
         for (int i = 0; i < servers.tagCount(); ++i) {
-            set.add(getNBTServer((NBTTagCompound) servers.tagAt(i)));
+            NBTServer nbtServer;
+
+            try {
+                nbtServer = getNBTServer((NBTTagCompound) servers.tagAt(i));
+            } catch(RuntimeException rE) {
+                U.log("Could not parse server from NBT", rE);
+                continue;
+            }
+
+            set.add(nbtServer);
         }
 
         return set;
