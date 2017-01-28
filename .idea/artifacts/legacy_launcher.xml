@@ -23,6 +23,7 @@
     </properties>
     <root id="archive" name="launcher.jar">
       <element id="module-output" name="launcher" />
+      <element id="module-output" name="lib" />
     </root>
   </artifact>
 </component>

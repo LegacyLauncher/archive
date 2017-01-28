@@ -56,6 +56,7 @@ public final class DxDiag {
             log("+++++++++++++");
             log(this);
             log("+++++++++++++");
+            log("AV list:", WMIProvider.getAvSoftwareList());
         }
     }
 

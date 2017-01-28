@@ -480,11 +480,6 @@ public final class CrashManager {
                         U.log("Could not retrieve DxDiag", e);
                     }
                 }
-
-
-                if(OS.WINDOWS.isCurrent()) {
-                    log("AV Software list:", WMIProvider.getAvSoftwareList());
-                }
             }
         }
 
