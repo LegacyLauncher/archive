@@ -41,11 +41,14 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
+        <option value="$PROJECT_DIR$/bootstrap/pom.xml" />
         <option value="$PROJECT_DIR$/lib/pom.xml" />
+        <option value="$PROJECT_DIR$/launcher/pom.xml" />
+        <option value="$PROJECT_DIR$/bridge/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" default="false" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_7" default="false" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

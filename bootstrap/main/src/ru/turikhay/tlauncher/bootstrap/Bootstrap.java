@@ -100,28 +100,29 @@ public final class Bootstrap {
     }
 
     public static void main(String[] args) {
-        checkRunningPath();
+        checkRunningConditions();
 
         System.setOut(out = RedirectPrintStream.newRedirectorFor(System.out));
         System.setErr(err = RedirectPrintStream.newRedirectorFor(System.err));
 
         Bootstrap bootstrap = null;
+        Ref<BootBridge> bootBridgeRef = new Ref<BootBridge>();
 
         try {
             bootstrap = createBootstrap();
-            bootstrap.defTask(args).call();
+            bootstrap.defTask(args, bootBridgeRef).call();
         } catch(TaskInterruptedException interrupted) {
             log("Default task was interrupted");
         } catch (Exception e) {
             e.printStackTrace();
-            handleFatalError(bootstrap, e, true);
+            handleFatalError(bootstrap, bootBridgeRef.getObject(), e, true);
             System.exit(-1);
         }
 
         System.exit(0);
     }
 
-    static void handleFatalError(Bootstrap bootstrap, Throwable e, boolean sendSentry) {
+    static void handleFatalError(Bootstrap bootstrap, BootBridge bridge, Throwable e, boolean sendSentry) {
         FatalExceptionType exceptionType = FatalExceptionType.getType(e);
 
         if(sendSentry) {
@@ -134,6 +135,12 @@ public final class Bootstrap {
 
             if (exceptionType != null) {
                 b.withTag("type", exceptionType.name());
+            }
+
+            if(bridge != null && bridge.getClient() != null) {
+                b.withSentryInterface(new shaded.com.getsentry.raven.event.interfaces.UserInterface(
+                        bridge.getClient().toString(), null, null, null
+                ));
             }
 
             avList:
@@ -359,7 +366,7 @@ public final class Bootstrap {
         };
     }
 
-    private Task<Void> defTask(final String[] args) {
+    private Task<Void> defTask(final String[] args, final Ref<BootBridge> bootBridgeRef) {
         return new Task<Void>("defTask") {
             {
                 if(ui != null) {
@@ -392,6 +399,8 @@ public final class Bootstrap {
 
                 LocalLauncher localLauncher = bindTo(prepareLauncher(updateMeta), .25, .75);
                 BootBridge bridge = createBridge(args, updateMeta == null? null : updateMeta.getOptions());
+                bootBridgeRef.setObject(bridge);
+
                 bindTo(startLauncher(localLauncher, bridge), 0.75, 1.);
 
                 checkInterrupted();
@@ -506,7 +515,17 @@ public final class Bootstrap {
                 builder.withExtra(entry.getKey(), entry.getValue());
             }
         }
-        raven.sendEvent(builder.build());
+
+        Event event = builder.build();
+        raven.sendEvent(event);
+
+        log("Error sent:", DataBuilder.create("error", event)
+            .add("environment", event.getEnvironment())
+            .add("level", event.getLevel())
+            .add("exception", t)
+            .add("extra", b == null? null : b.build())
+            .build()
+        );
     }
 
     private static void recordBreadcrumb(String name, String level, String category, DataBuilder data) {
@@ -519,8 +538,15 @@ public final class Bootstrap {
         }
 
         Breadcrumb breadcrumb = b.build();
-        log("Added breadcrumb:", breadcrumb);
         raven.getContext().recordBreadcrumb(breadcrumb);
+
+        log("Breadcrumb recorded:", DataBuilder.create("breadcrumb", breadcrumb)
+            .add("level", level)
+            .add("category", category)
+            .add("message", name)
+            .add("data", data == null? null : data.build())
+            .build()
+        );
     }
 
     private static RedirectPrintStream.Redirector out, err;
@@ -535,8 +561,9 @@ public final class Bootstrap {
         recordBreadcrumb("disableRedirectRecording", null);
     }
 
-    private static void checkRunningPath() {
-        String path = U.getJar(Bootstrap.class).getAbsolutePath();
+    private static void checkRunningConditions() {
+        File jar = U.getJar(Bootstrap.class);
+        String path = jar.getAbsolutePath();
 
         if (path.contains("!")) {
             String message =
@@ -546,6 +573,24 @@ public final class Bootstrap {
                             "\n\n" + path;
             UserInterface.showError(message, null);
             throw new Error(message);
+        }
+
+        try {
+            checkFreeSpace(jar);
+            checkFreeSpace(File.createTempFile("bootstrap", null));
+        } catch(Exception e) {
+            String message =
+                    "Insufficient disk space on partition storing execution path or temporary folder.\n" +
+                    "\n" +
+                    "Недостаточно места на системном диске или на диске, с которого запускается приложение.";
+            UserInterface.showError(message, null);
+            throw new Error(message, e);
+        }
+    }
+
+    private static void checkFreeSpace(File file) throws IOException {
+        if(file.getFreeSpace() < 1024) {
+            throw new IOException("insufficient free space: " + file.getAbsolutePath());
         }
     }
 

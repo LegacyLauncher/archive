@@ -6,6 +6,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="bootstrap" />
+        <module name="bridge" />
+        <module name="launcher" />
         <module name="lib" />
       </profile>
     </annotationProcessing>

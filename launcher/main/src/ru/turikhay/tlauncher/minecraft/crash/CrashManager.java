@@ -10,16 +10,13 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.windows.DxDiag;
-import ru.turikhay.util.windows.WMIProvider;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,6 +56,7 @@ public final class CrashManager {
         crashEntries.clear();
 
         addEntry(generatedFilesSearcherEntry);
+        addEntry(new CrashReportAnalyzer());
 
         loadLocal:
         {
@@ -114,7 +112,7 @@ public final class CrashManager {
     }
 
     public CrashManager(MinecraftLauncher launcher) {
-        this(launcher, launcher.getVersion(), launcher.getOutput(), launcher.getExitCode());
+        this(launcher, launcher.getVersion(), launcher.getLogOutput(), launcher.getExitCode());
     }
 
     public CrashManager(String version, CharSequence output, int exitCode) {
@@ -395,7 +393,146 @@ public final class CrashManager {
         }
     }
 
+    private static class ErroredMod {
+        private final String name, fileName;
+
+        ErroredMod(String name, String fileName) {
+            this.name = name;
+            this.fileName = fileName;
+        }
+
+        ErroredMod(Matcher matcher) {
+            this(matcher.group(2), matcher.group(3));
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        void append(StringBuilder b) {
+            b.append(name).append(" (").append(fileName).append(")");
+        }
+    }
+
+    private class CrashReportAnalyzer extends CrashEntry {
+        private final Pattern modPattern;
+        private final ArrayList<Pattern> patterns = new ArrayList<Pattern>();
+
+        public CrashReportAnalyzer() {
+            super(CrashManager.this, "analyzer");
+            modPattern = Pattern.compile("^[\\W]+[ULCHIJAD]*([ULCHIJADE])[\\W]+.+\\{.+\\}[\\W]+\\[(.+)\\][\\W]+\\((.+)\\).*");
+
+            patterns.add(Pattern.compile("^-- System Details --$"));
+            patterns.add(Pattern.compile("^[\\t]+FML: MCP .+$"));
+
+            // last pattern should always be before mod list
+            patterns.add(Pattern.compile("^[\\t]States: .+$"));
+        }
+
+        protected boolean checkCapability() throws Exception {
+            Scanner scanner;
+
+            File crashFile = crash.getCrashFile();
+            if(crashFile == null || !crashFile.isFile()) {
+                log("Crash report file doesn't exist. May be looking into logs?");
+                scanner = PatternEntry.getScanner(getOutput());
+            } else {
+                log("Crash report file exist. We'll scan it.");
+                scanner = new Scanner(new InputStreamReader(new FileInputStream(crashFile), FileUtil.getCharset()));
+            }
+
+            Pattern expectedPattern; int expectedPatternIndex = 0;
+
+            while(scanner.hasNextLine()) {
+                expectedPattern = patterns.get(expectedPatternIndex);
+                String line = scanner.nextLine();
+
+                if(expectedPattern.matcher(line).matches()) {
+                    log("Pattern matches:", expectedPattern);
+                    if(++expectedPatternIndex == patterns.size()) {
+                        log("All patterns are met. Working on a mod list");
+                        break;
+                    }
+                }
+            }
+
+            if(expectedPatternIndex != patterns.size()) {
+                log("Not all patterns are met. Skipping.");
+                return false;
+            }
+
+            final List<ErroredMod> errorModList = new ArrayList<ErroredMod>();
+
+            while(scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                Matcher matcher = modPattern.matcher(line);
+
+                // check if the last state is "E"
+                if(matcher.matches() && "e".equalsIgnoreCase(matcher.group(1))) {
+                    // add its name to the list
+                    ErroredMod mod = new ErroredMod(matcher);
+                    errorModList.add(mod);
+                    log("Added:", mod);
+                }
+            }
+
+            if(errorModList.isEmpty()) {
+                return false;
+            }
+
+            boolean multiple = errorModList.size() > 1;
+
+            setTitle("crash.analyzer.errored-mod.title", (multiple? StringUtils.join(errorModList, ", ") : errorModList.get(0)));
+
+            StringBuilder body = new StringBuilder();
+            if(multiple) {
+                for(ErroredMod mod : errorModList) {
+                    body.append("– ");
+                    mod.append(body);
+                    body.append("\n");
+                }
+            } else {
+                body.append(errorModList.get(0).name);
+            }
+            setBody("crash.analyzer.errored-mod.body." + (multiple? "multiple" : "single"), body.toString(), errorModList.get(0).fileName);
+            addButton(getButton("logs"));
+            if(getLauncher() != null) {
+                newButton("errored-mod-delete." + (multiple ? "multiple" : "single"), new Action() {
+                    @Override
+                    public void execute() throws Exception {
+                        final String prefix = "crash.analyzer.buttons.errored-mod-delete.";
+
+                        File modsDir = new File(getLauncher().getGameDir(), "mods");
+                        if(!modsDir.isDirectory()) {
+                            Alert.showLocError(prefix + "error.title", prefix + "error.no-mods-folder");
+                            return;
+                        }
+
+                        boolean success = true;
+
+                        for (ErroredMod mod : errorModList) {
+                            File modFile = new File(modsDir, mod.fileName);
+                            if(!modFile.delete() && modFile.isFile()) {
+                                Alert.showLocError(prefix + "error.title", prefix + "error.could-not-delete", modFile);
+                                success = false;
+                            }
+                        }
+
+                        if(success) {
+                            Alert.showLocMessage(prefix + "success.title", prefix + "success." + (errorModList.size() > 1 ? "multiple" : "single"), null);
+                        }
+                        getAction("exit").execute("");
+                    }
+                });
+            }
+            return true;
+        }
+    }
+
     private class GeneratedFilesSearcher extends Entry {
+        final Pattern
+                crashFilePattern = Pattern.compile("^.*#@!@# Game crashed!.+@!@# (.+)$"),
+                nativeCrashFilePattern = Pattern.compile("# (.+)$");
 
         GeneratedFilesSearcher() {
             super(CrashManager.this, "generated files searcher");
@@ -406,18 +543,19 @@ public final class CrashManager {
             Scanner scanner = PatternEntry.getScanner(getOutput());
 
             while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
+                String line;
 
-                String crashFile = get(Pattern.compile("^.*#@!@# Game crashed!.+@!@# (.+)$"), line);
+                String crashFile = get(crashFilePattern, line = scanner.nextLine());
                 if (crashFile != null) {
                     crash.setCrashFile(crashFile);
                     continue;
                 }
 
                 if (line.equals("# An error report file with more information is saved as:") && scanner.hasNextLine()) {
-                    String nativeCrashFile = get(Pattern.compile("# (.+)$"), line = scanner.nextLine());
+                    String nativeCrashFile = get(nativeCrashFilePattern, line = scanner.nextLine());
                     if (nativeCrashFile != null) {
                         crash.setNativeCrashFile(nativeCrashFile);
+                        continue;
                     }
                 }
             }
@@ -519,11 +657,11 @@ public final class CrashManager {
             }
         }
 
-        private void treeDir(File dir, int limit) {
-            treeDir(dir, 0, limit, new StringBuilder());
+        private void treeDir(File dir, int levelLimit) {
+            treeDir(dir, 0, levelLimit, new StringBuilder());
         }
 
-        private void treeDir(File dir, int current, int limit, StringBuilder buffer) {
+        private void treeDir(File dir, int currentLevel, int levelLimit, StringBuilder buffer) {
             if(!dir.isDirectory()) {
                 plog(dir, " (not a dir)");
                 return;
@@ -531,19 +669,19 @@ public final class CrashManager {
 
             File[] list = U.requireNotNull(dir.listFiles(), "dir listing: " + dir.getAbsolutePath());
 
-            if(current == 0) {
+            if(currentLevel == 0) {
                 plog(dir);
             } else if(list == null || list.length == 0) {
                 plog(buffer, "└ [empty]");
             }
 
             StringBuilder dirBuffer = null;
-            File file; String name; boolean skipDir;
+            File file; StringBuilder name; boolean skipDir;
             File[] subList;
 
             for (int i = 0; i < list.length; i++) {
                 file = list[i];
-                name = file.getName();
+                name = new StringBuilder(file.getName());
 
                 subList = null;
                 skipDir = false;
@@ -555,36 +693,37 @@ public final class CrashManager {
                     {
                         if (skipFolderList != null) {
                             for (String skipFolder : skipFolderList) {
-                                if (name.equalsIgnoreCase(skipFolder)) {
+                                if (file.getName().equalsIgnoreCase(skipFolder)) {
                                     skipDir = true;
-                                    name += " [skipped]";
+                                    name.append(" [skipped]");
                                     break skipIt;
                                 }
                             }
                         }
 
                         if (subList == null || subList.length == 0) {
-                            name += " [empty dir]";
+                            name.append(" [empty dir]");
                             skipDir = true;
                         }
                     }
                 } else {
                     long length = file.length();
                     if(length == 0L) {
-                        name += " [empty file]";
+                        name.append(" [empty file]");
                     } else {
-                        name += " ["+ length / 1024L +" kbytes]";
+                        name.append("[").append(length < 2048L ? length + " B" : (length / 1024L) + " KiB").append("]");
                     }
                 }
 
-                plog(buffer, i == list.length - 1? "└ " : "├ ", name);
+                boolean currentlyLatestLevel = i == list.length - 1;
+                plog(buffer, currentlyLatestLevel? "└ " : "├ ", name.toString());
 
                 if(file.isDirectory() && !skipDir) {
-                    if(dirBuffer == null || i == list.length - 1) {
-                        dirBuffer = new StringBuilder().append(buffer).append(i == list.length - 1? "  " : "│ ").append(' ');
+                    if(dirBuffer == null || currentlyLatestLevel) {
+                        dirBuffer = new StringBuilder().append(buffer).append(currentlyLatestLevel? "  " : "│ ").append(' ');
                     }
 
-                    if(current == limit) {
+                    if(currentLevel == levelLimit) {
                         String str;
 
                         if(subList != null && subList.length > 0) {
@@ -636,7 +775,7 @@ public final class CrashManager {
                         continue;
                     }
 
-                    treeDir(file, current + 1, limit, dirBuffer);
+                    treeDir(file, currentLevel + 1, levelLimit, dirBuffer);
                 }
             }
         }
@@ -726,6 +865,15 @@ public final class CrashManager {
 
         @Override
         public void execute(String args) throws Exception {
+            if(args.equals("logs")) {
+                if (getLauncher() != null && getLauncher().getLogger() != null && !getLauncher().getLogger().isKilled()) {
+                    getLauncher().getLogger().show(true);
+                } else {
+                    TLauncher.getInstance().getLogger().show(true);
+                }
+                return;
+            }
+
             if (args.startsWith("settings")) {
                 TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.defaultScene);
                 TLauncher.getInstance().getFrame().mp.defaultScene.setSidePanel(DefaultScene.SidePanel.SETTINGS);

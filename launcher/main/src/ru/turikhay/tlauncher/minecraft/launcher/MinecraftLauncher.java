@@ -96,9 +96,12 @@ public class MinecraftLauncher implements JavaProcessListener {
     private long startupTime;
     private int exitCode;
     private Server server;
+    private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
+
     private boolean firstLine;
+    private int logStart, logEnd;
 
     public Downloader getDownloader() {
         return downloader;
@@ -118,6 +121,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     public CharSequence getOutput() {
         return logger != null ? logger.getOutput() : output;
+    }
+
+    public CharSequence getLogOutput() {
+        return logStart > 0 && logEnd > 0? getOutput().subSequence(logStart, logEnd) : getOutput();
     }
 
     public LoggerVisibility getLoggerVisibility() {
@@ -271,9 +278,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         return server;
     }
 
-    public void setServer(Server server) {
+    public void setServer(Server server, int id) {
         checkWorking();
         this.server = server;
+        this.serverId = id;
     }
 
     private void collectInfo() throws MinecraftException {
@@ -1097,7 +1105,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             listener.onMinecraftPostLaunch();
         }
 
-        Stats.minecraftLaunched(account, version, server);
+        Stats.minecraftLaunched(account, version, server, serverId);
         if (assistLaunch) {
             waitForClose();
         } else {
@@ -1177,6 +1185,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             firstLine = false;
             U.plog("===============================================================================================");
             plog("===============================================================================================");
+            logStart = getOutput().length();
         }
 
         U.plog(">", line);
@@ -1184,6 +1193,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public void onJavaProcessEnded(JavaProcess jp) {
+        logEnd = getOutput().length();
         notifyClose();
 
         if (TLauncher.getInstance().getLogger().getLauncher() == this) {
@@ -1196,7 +1206,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         int exit = jp.getExitCode();
 
-        log("Minecraft closed with exit code: " + exit);
+        log("Minecraft closed with exit code: " + exit + " (0x"+ Integer.toHexString(exit) +")");
         exitCode = exit;
 
 

@@ -5,7 +5,6 @@ import ru.turikhay.tlauncher.bootstrap.json.UpdateDeserializer;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import shaded.com.google.gson.Gson;
-import shaded.com.google.gson.JsonIOException;
 import shaded.com.google.gson.annotations.Expose;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
@@ -15,6 +14,7 @@ import shaded.org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 
 public class UpdateMeta {
@@ -25,6 +25,7 @@ public class UpdateMeta {
             "http://turikhay.ru/tlauncher/%s/bootstrap.json",
             "http://tlaun.ch/%s/bootstrap.json"
     );
+    private static final int INITIAL_TIMEOUT = 2500, MAX_ATTEMPTS = 3;
 
     public static Task<UpdateMeta> fetchFor(final String brand) throws ExceptionList {
         U.requireNotNull(brand,  "brand");
@@ -36,32 +37,44 @@ public class UpdateMeta {
 
                 Gson gson = createGson();
                 List<Exception> eList = new ArrayList<Exception>();
-                for (int i = 0; i < UPDATE_URL_LIST.size(); i++) {
-                    checkInterrupted();
-                    updateProgress((i+1) / UPDATE_URL_LIST.size());
 
-                    String _url = null;
-                    long time = System.currentTimeMillis();
+                for(int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                    for (int i = 0; i < UPDATE_URL_LIST.size(); i++) {
+                        checkInterrupted();
+                        updateProgress((i+1) / UPDATE_URL_LIST.size());
 
-                    try {
-                        _url = String.format(UPDATE_URL_LIST.get(i), brand);
-                        URL url = new URL(_url);
-                        log("URL: ", url);
+                        String _url = null;
+                        long time = System.currentTimeMillis();
 
-                        UpdateMeta meta = fetchFrom(gson, url.openStream());
-                        long delta = System.currentTimeMillis() - time;
+                        try {
+                            _url = String.format(UPDATE_URL_LIST.get(i), brand);
+                            URL url = new URL(_url);
+                            log("URL: ", url);
 
-                        updateProgress(1.);
-                        log("Success!");
-                        Bootstrap.recordBreadcrumb(UpdateMeta.class, "fetch_success", DataBuilder.create("url", url).add("delta_ms", delta));
+                            UpdateMeta meta = fetchFrom(gson, setupConnection(url, attempt));
 
-                        return meta;
-                    } catch (Exception e) {
-                        Bootstrap.recordBreadcrumbError(UpdateMeta.class, "fetch_failed", e, DataBuilder.create("url", _url));
-                        e.printStackTrace();
-                        eList.add(e);
+                            updateProgress(1.);
+                            log("Success!");
+
+                            Bootstrap.recordBreadcrumb(UpdateMeta.class, "fetch_success",
+                                    DataBuilder.create("url", url)
+                                            .add("delta_ms", System.currentTimeMillis() - time)
+                                            .add("attempt", attempt)
+                            );
+
+                            return meta;
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            eList.add(e);
+
+                            Bootstrap.recordBreadcrumbError(UpdateMeta.class, "fetch_failed", e, DataBuilder.create("url", _url)
+                                    .add("delta_ms", System.currentTimeMillis() - time)
+                                    .add("attempt", attempt)
+                            );
+                        }
                     }
                 }
+
                 throw new ExceptionList(eList);
             }
         };
@@ -100,6 +113,20 @@ public class UpdateMeta {
 
     public static UpdateMeta fetchFrom(InputStream in) throws Exception {
         return fetchFrom(createGson(), in);
+    }
+
+    private static InputStream setupConnection(URL url, int attempt) throws IOException {
+        int timeout = attempt * INITIAL_TIMEOUT;
+
+        if(attempt > 1) {
+            timeout *= 2;
+        }
+
+        URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(timeout);
+        connection.setReadTimeout(timeout);
+
+        return connection.getInputStream();
     }
 
     protected UpdateEntry update;

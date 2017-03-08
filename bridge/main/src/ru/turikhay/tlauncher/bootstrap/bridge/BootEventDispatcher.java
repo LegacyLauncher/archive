@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.bridge;
 
+import java.util.UUID;
+
 public final class BootEventDispatcher implements BootListener {
     private final BootBridge bridge;
 
@@ -13,6 +15,10 @@ public final class BootEventDispatcher implements BootListener {
             throw new NullPointerException("bridge");
         }
         this.bridge = bridge;
+    }
+
+    public void passClient(UUID client) {
+        bridge.setClient(client);
     }
 
     public Throwable getError() {
@@ -82,8 +88,8 @@ public final class BootEventDispatcher implements BootListener {
     }
 
     void waitUntilClose() throws InterruptedException, BootException {
-        synchronized(this) {
-            while(booting || working) {
+        while(booting || working) {
+            synchronized (this) {
                 wait();
             }
         }

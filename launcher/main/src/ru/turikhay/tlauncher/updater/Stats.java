@@ -37,10 +37,13 @@ public final class Stats {
         submitDenunciation(newAction("beacon"));
     }
 
-    public static void minecraftLaunched(Account account, CompleteVersion version, Server server) {
+    public static void minecraftLaunched(Account account, CompleteVersion version, Server server, int serverId) {
         Stats.Args args = newAction("mc_launched").add("mc_version", version.getID()).add("account_type", account.getType().toString());
         if (server != null) {
             args.add("server", server.getFullAddress());
+        }
+        if(serverId > 0) {
+            args.add("server_id", String.valueOf(serverId));
         }
 
         submitDenunciation(args);
