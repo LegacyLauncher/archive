@@ -18,8 +18,10 @@
     <property name="tlauncher.final_name" value="${tlauncher.project}" />
     <property name="tlauncher.project.meta.input.project-name" value="${tlauncher.project}" />
     <property name="tlauncher.project.meta.input" value="${basedir}/${tlauncher.project.meta.input.project-name}/${tlauncher.meta.outputname}" />
+
+    <!-- D:\dev\java\idea\tlauncher-legacy\launcher\target\classes -->
     <property name="tlauncher.project.meta.output" value="${basedir}/${tlauncher.project}/main/res/${tlauncher.meta.package}/${tlauncher.meta.outputname}" />
-    <property name="tlauncher.project.meta.output.production" value="${basedir}/out/production/${tlauncher.project}/${tlauncher.meta.package}/${tlauncher.meta.outputname}" />
+    <property name="tlauncher.project.meta.output.production" value="${basedir}/${tlauncher.project}/target/classes/${tlauncher.meta.package}/${tlauncher.meta.outputname}" />
 
     <exec executable="git" outputproperty="git.branch">
         <arg line="rev-parse --abbrev-ref HEAD"/>

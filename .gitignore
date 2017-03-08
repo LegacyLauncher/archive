@@ -3,6 +3,7 @@
 /.idea/vcs.xml
 
 build/
-out/
+*/target/
 
 */main/res/**/meta.json
+proguard.log

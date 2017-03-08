@@ -1,8 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.bridge;
 
-import javax.swing.*;
-import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public final class BootBridge {
     final ArrayList<BootListener> listenerList = new ArrayList<BootListener>();
@@ -11,6 +10,7 @@ public final class BootBridge {
     private final String bootstrapVersion;
     private final String[] args;
     private final String options;
+    private UUID client;
 
     private BootBridge(String bootstrapVersion, String[] args, String options) {
         if(args == null) {
@@ -32,6 +32,14 @@ public final class BootBridge {
 
     public String getOptions() {
         return options;
+    }
+
+    public UUID getClient() {
+        return client;
+    }
+
+    void setClient(UUID client) {
+        this.client = client;
     }
 
     public synchronized void addListener(BootListener listener) {

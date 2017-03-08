@@ -82,7 +82,7 @@ public class BootstrapTest {
     @Test
     public void testHandleFatalError() throws Exception {
         Bootstrap bootstrap = Bootstrap.createBootstrap();
-        Bootstrap.handleFatalError(bootstrap, new ClassNotFoundException(), false);
+        Bootstrap.handleFatalError(bootstrap, null, new ClassNotFoundException(), false);
     }
 
     private static final String jvmArgPrefix = "tlauncher.bootstrap.";

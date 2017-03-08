@@ -25,11 +25,13 @@ public class ServerNoticeAction extends NoticeAction {
     private static final int MAX_FAMILY_MEMBERS = 2;
 
     private final Server server;
+    private final int serverId;
     private final ImageIcon installedVersion;
 
-    ServerNoticeAction(Server server) {
+    ServerNoticeAction(Server server, int serverId) {
         super("server");
         this.server = U.requireNotNull(server, "server");
+        this.serverId = serverId;
 
         installedVersion = Images.getScaledIcon("check.png", 16);
     }
@@ -148,7 +150,7 @@ public class ServerNoticeAction extends NoticeAction {
 
         TLauncher.getInstance().getFrame().mp.openDefaultScene();
         lf.versions.setSelectedValue(syncInfo);
-        lf.startLauncher(server);
+        lf.startLauncher(server, serverId);
     }
 
     static List<VersionSyncInfo> getFamilyMembers(String family, List<VersionSyncInfo> syncInfoList) {

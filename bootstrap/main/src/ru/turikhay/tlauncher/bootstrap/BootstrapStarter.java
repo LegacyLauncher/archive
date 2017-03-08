@@ -16,10 +16,13 @@ import java.util.List;
 
 public final class BootstrapStarter {
     public static void main(String[] args) throws Exception {
-        start(args, false);
+        int exitCode = start(args, false);
+        if(exitCode != 0) {
+            System.exit(exitCode);
+        }
     }
 
-    static void start(String[] args, boolean waitForClose) throws Exception {
+    static int start(String[] args, boolean waitForClose) throws Exception {
         File currentDir = new File(".");
         log("Current dir: ", currentDir.getAbsolutePath());
 
@@ -36,7 +39,7 @@ public final class BootstrapStarter {
         log("Inherit process started");
 
         if (!waitForClose) {
-            return;
+            return 0;
         }
 
         InputStreamCopier
@@ -46,10 +49,12 @@ public final class BootstrapStarter {
         input.start();
         error.start();
 
-        process.waitFor();
+        int exitCode = process.waitFor();
 
         input.interrupt();
         error.interrupt();
+
+        return exitCode;
     }
 
     private static List<String> loadJvmArgs() {

@@ -18,7 +18,7 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         int id = root.get("id").getAsInt();
         String text = root.get("text").getAsString();
         NoticeImage image = parseImage(root, context);
-        NoticeAction action = parseAction(root, context);
+        NoticeAction action = parseAction(id, root, context);
 
         return new Notice(id, text, image, action);
     }
@@ -78,7 +78,7 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         return new UrlNoticeImage(url, width, height);
     }
 
-    private NoticeAction parseAction(JsonObject root, JsonDeserializationContext context) {
+    private NoticeAction parseAction(int noticeId, JsonObject root, JsonDeserializationContext context) {
         JsonObject actionObject = root.getAsJsonObject("action");
         if(actionObject == null) {
             return null;
@@ -91,7 +91,7 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         }
 
         if("server".equals(type)) {
-            return new ServerNoticeAction((Server) context.deserialize(actionObject.getAsJsonObject("server"), Server.class));
+            return new ServerNoticeAction((Server) context.deserialize(actionObject.getAsJsonObject("server"), Server.class), noticeId);
         }
 
         throw new IllegalArgumentException("unknown action type: " + type);

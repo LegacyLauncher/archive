@@ -10,7 +10,6 @@ import java.util.concurrent.*;
 
 public final class WMIProvider {
     private static final Future<List<String>> AV_LIST = AsyncThread.future(new Callable<List<String>>() {
-        @Override
         public List<String> call() throws Exception {
             return WMI.getAVSoftwareList();
         }

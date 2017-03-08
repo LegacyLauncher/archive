@@ -41,7 +41,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
-    private static final String VERSION = "1.79.43";
+    private static final String VERSION = "1.80.1";
 
     private final boolean debug, ready;
 
@@ -87,6 +87,7 @@ public final class TLauncher {
 
         dispatcher.onBootStateChanged("Loading configuration", 0.1);
         this.config = Configuration.createConfiguration(optionSet);
+        dispatcher.passClient(config.getClient());
         this.lang = new LangConfiguration();
         initConfig();
 
@@ -192,7 +193,7 @@ public final class TLauncher {
         return launcher != null && launcher.isWorking();
     }
 
-    public MinecraftLauncher newMinecraftLauncher(String versionName, Server server, boolean forceUpdate) {
+    public MinecraftLauncher newMinecraftLauncher(String versionName, Server server, int serverId, boolean forceUpdate) {
         if(isMinecraftLauncherWorking()) {
             throw new IllegalStateException("launcher is working");
         }
@@ -204,7 +205,7 @@ public final class TLauncher {
         }
 
         launcher.setVersion(versionName);
-        launcher.setServer(server);
+        launcher.setServer(server, serverId);
 
         launcher.start();
 

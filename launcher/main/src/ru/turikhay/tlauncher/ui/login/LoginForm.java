@@ -44,6 +44,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     private final LoginForm.StopThread stopThread;
     private LoginForm.LoginState state;
     private Server server;
+    private int serverId;
     public static final String LOGIN_BLOCK = "login";
     public static final String REFRESH_BLOCK = "refresh";
     public static final String LAUNCH_BLOCK = "launch";
@@ -147,7 +148,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             changeState(LoginForm.LoginState.LAUNCHING);
 
             log("Calling Minecraft Launcher...");
-            tlauncher.newMinecraftLauncher(versions.getVersion().getID(), server, checkbox.forceupdate.isSelected());
+            tlauncher.newMinecraftLauncher(versions.getVersion().getID(), server, serverId, checkbox.forceupdate.isSelected());
             //tlauncher.newMinecraftLauncher(server, force1);
             checkbox.forceupdate.setSelected(false);
         }
@@ -163,16 +164,17 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     public void startLauncher() {
-        startLauncher(null);
+        startLauncher(null, 0);
     }
 
-    public void startLauncher(Server server) {
+    public void startLauncher(Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
             while (accounts.getAccount() != null && accounts.getAccount().getType() == Account.AccountType.ELY && tlauncher.getElyManager().isRefreshing()) {
                 U.sleepFor(500L);
             }
 
             this.server = server;
+            this.serverId = serverId;
             autologin.setActive(false);
             startThread.iterate();
         }
