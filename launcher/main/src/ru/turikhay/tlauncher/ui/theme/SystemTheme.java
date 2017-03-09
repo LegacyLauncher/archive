@@ -118,21 +118,18 @@ public final class SystemTheme extends Theme {
                     }
                     break selectSubFolder;
                 }
-
-                if(background.getRed() > WHITE_MAX && background.getGreen() > WHITE_MAX && background.getBlue() > WHITE_MAX) {
-                    subFolder = "colorized";
-                    break selectSubFolder;
-                }
+                subFolder = "colorized";
             }
 
-            if(subFolder != null) {
-                resource = Images.class.getResource(subFolder + "/" + name);
-                if(resource != null) {
-                    break selectResouce;
-                }
+            resource = Images.class.getResource(subFolder + "/" + name);
+            if(resource != null) {
+                break selectResouce;
             }
 
             resource = Images.class.getResource(name);
+        }
+        if(resource == null) {
+            throw new IOException("can't find resource: " + name);
         }
         return resource;
     }

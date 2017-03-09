@@ -191,8 +191,8 @@ public final class Bootstrap {
                 StringBuilder message = new StringBuilder();
                 message.append(resourceBundle.getString("error." + exceptionType.nameLowerCase()));
 
-                if (resourceBundle.containsKey("error." + exceptionType.nameLowerCase() + "." + OS.WINDOWS.nameLowerCase())) {
-                    message.append(' ').append(resourceBundle.getString("error." + exceptionType.nameLowerCase() + "." + OS.WINDOWS.nameLowerCase()));
+                if (resourceBundle.containsKey("error." + exceptionType.nameLowerCase() + "." + OS.CURRENT.nameLowerCase())) {
+                    message.append(' ').append(resourceBundle.getString("error." + exceptionType.nameLowerCase() + "." + OS.CURRENT.nameLowerCase()));
                 }
 
                 message.append("\n\n");
