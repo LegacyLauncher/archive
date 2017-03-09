@@ -1,5 +1,5 @@
 {
-  "revision": 5,
+  "revision": 6,
   "required": 1.79,
   "variables": {
     "skip-folders": "millenaire",
@@ -46,7 +46,7 @@
     {
       "name": "direct-close",
       "pattern": "Someone is closing me!",
-      "version": ".*1\\.5\\.2$",
+      "version": ".*1\\.5\\.[\\d]$",
       "fake": true
     },
     {
