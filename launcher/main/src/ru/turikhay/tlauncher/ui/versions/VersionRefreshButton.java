@@ -99,7 +99,7 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
 
     enum ButtonState {
         REFRESH("refresh.png"),
-        CANCEL("cancel.png");
+        CANCEL("stop-circle-o.png");
 
         final Image image;
 

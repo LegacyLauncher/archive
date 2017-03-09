@@ -19,7 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public final class CrashFrame extends VActionFrame {
-    private final ImageIcon crashIcon = Images.getIcon("graphic-design.png");
+    private final ImageIcon crashIcon = Images.getIcon("bug.png");
 
     private final PreSupportFrame supportFrame = new PreSupportFrame() {
         protected void onSupportFrameSelected(SupportFrame frame) {
@@ -101,7 +101,7 @@ public final class CrashFrame extends VActionFrame {
 
         setTitlePath("crash.unknown.title");
         getHead().setText("crash.unknown.title");
-        getHead().setIcon(Images.getIcon("graphic-design.png", 32));
+        getHead().setIcon(Images.getIcon("bug.png", 32));
         getBodyText().setText("crash.unknown.body");
         setButtons(true, openLogs);
     }

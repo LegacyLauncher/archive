@@ -7,3 +7,5 @@ build/
 
 */main/res/**/meta.json
 proguard.log
+
+**/Thumbs.db

@@ -208,14 +208,18 @@ public final class Bootstrap {
     private final LocalBootstrapMeta meta;
     private File targetJar, targetLibFolder;
 
-    Bootstrap(File targetJar, File targetLibFolder) {
-        UserInterface userInterface;
-        try {
-            userInterface = new UserInterface();
-        } catch(RuntimeException rE) {
-            log("User interface is not loaded:", rE);
-            userInterface = null;
+    Bootstrap(File targetJar, File targetLibFolder, boolean uiEnabled) {
+        UserInterface userInterface = null;
+
+        if(uiEnabled) {
+            try {
+                userInterface = new UserInterface();
+            } catch (RuntimeException rE) {
+                log("User interface is not loaded:", rE);
+                userInterface = null;
+            }
         }
+
         this.ui = userInterface;
 
         final String resourceName = "meta.json";
@@ -241,7 +245,7 @@ public final class Bootstrap {
     }
 
     public Bootstrap() {
-        this(null, null);
+        this(null, null, true);
     }
 
     UserInterface getUserInterface() {
@@ -360,8 +364,7 @@ public final class Bootstrap {
                     }
                 });
 
-                bindTo(meta.getLaunchType().getStarter().start(localLauncher, bridge), 0., 1.);
-                return null;
+                return bindTo(meta.getLaunchType().getStarter().start(localLauncher, bridge), 0., 1.);
             }
         };
     }

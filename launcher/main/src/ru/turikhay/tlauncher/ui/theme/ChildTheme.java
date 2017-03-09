@@ -4,7 +4,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 
-public class ChildTheme extends Theme {
+public abstract class ChildTheme extends Theme {
     private final SystemTheme system = SystemTheme.getSystemTheme();
 
     ChildTheme(String name) {

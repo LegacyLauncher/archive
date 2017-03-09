@@ -40,6 +40,10 @@ public abstract class Task<T> implements Callable<T> {
         listenerList.add(listener);
     }
 
+    public final Task getBindingTask() {
+        return bindingTask;
+    }
+
     public final void interrupt() {
         log("interrupted");
         this.interrupted = true;

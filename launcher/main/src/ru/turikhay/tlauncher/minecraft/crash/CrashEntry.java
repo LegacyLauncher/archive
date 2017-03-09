@@ -180,6 +180,10 @@ public class CrashEntry extends IEntry {
         return button;
     }
 
+    protected boolean requiresDxDiag() {
+        return isCompatibleWith(OS.WINDOWS) && (getGraphicsCardPattern() != null || isArchIssue());
+    }
+
     protected boolean checkCapability() throws Exception {
         if (getVersionPattern() != null && !getVersionPattern().matcher(getManager().getVersion()).matches()) {
             log("is not capable because of Minecraft version");

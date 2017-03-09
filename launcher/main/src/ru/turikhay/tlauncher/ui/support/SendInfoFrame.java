@@ -35,7 +35,7 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
     public SendInfoFrame() {
         setTitlePath("support.sending.title");
         getHead().setText("support.sending.head");
-        setIcon("communication.png");
+        setIcon("compress.png");
         pack();
     }
 

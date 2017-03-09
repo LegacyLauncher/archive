@@ -68,8 +68,8 @@ public class AccountTip extends CenterPanel implements LocalizableComponent {
         });
         add(content);
         freeTip = new AccountTip.Tip(Account.AccountType.FREE, null);
-        mojangTip = new AccountTip.Tip(Account.AccountType.MOJANG, Images.getImage("mojang-user.png"));
-        elyTip = new AccountTip.Tip(Account.AccountType.ELY, Images.getImage("ely-big.png"));
+        mojangTip = new AccountTip.Tip(Account.AccountType.MOJANG, Images.getImage("star.png"));
+        elyTip = new AccountTip.Tip(Account.AccountType.ELY, Images.getImage("ely.png"));
         setTip(null);
     }
 

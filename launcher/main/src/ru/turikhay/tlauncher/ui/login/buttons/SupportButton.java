@@ -56,15 +56,15 @@ public class SupportButton extends LocalizableButton implements Blockable {
         localeMap.put("ru_RU", new SupportMenu("vk.png")
                 .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu"))
                 .addSeparator()
-                .add("loginform.button.support", Images.getIcon("consulting.png", SwingUtil.magnify(16)), showSupportFrame)
+                .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
         );
 
         localeMap.put("uk_UA", localeMap.get("ru_RU"));
 
-        localeMap.put("en_US", new SupportMenu("mail.png")
-                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu"))
+        localeMap.put("en_US", new SupportMenu("comments-o.png")
+                .add("loginform.button.support.fb", Images.getIcon("facebook-square.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu"))
                 .addSeparator()
-                .add("loginform.button.support", Images.getIcon("consulting.png", SwingUtil.magnify(16)), showSupportFrame)
+                .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
         );
     }
 
@@ -112,7 +112,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
             {
                 setTitlePath("loginform.button.support.processing.title");
                 getHead().setText("loginform.button.support.processing.head");
-                setIcon("consulting.png");
+                setIcon("comments-o.png");
                 pack();
             }
 
@@ -152,7 +152,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
         final JPopupMenu popup = new JPopupMenu();
 
         SupportMenu(String icon) {
-            this.icon = Images.getScaledIcon(icon, 16);
+            this.icon = Images.getScaledIcon(icon, 20);
         }
 
         SupportMenu add(JMenuItem item) {

@@ -33,6 +33,11 @@ public class GraphicsEntry extends PatternContainerEntry {
     }
 
     @Override
+    protected boolean requiresDxDiag() {
+        return true;
+    }
+
+    @Override
     protected boolean checkCapability(List<PatternEntry> capablePatterns) {
         if (!OS.WINDOWS.isCurrent()) {
             setPath("general-linux");
