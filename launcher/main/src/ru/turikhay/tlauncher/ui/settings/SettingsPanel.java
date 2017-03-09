@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.ui.editor.*;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.MediaFileExplorer;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
@@ -23,8 +24,10 @@ import ru.turikhay.tlauncher.ui.support.ContributorsAlert;
 import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -57,6 +60,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler background;
     public final EditorFieldHandler loginFormDirection;
     public final EditorFieldHandler logger;
+    public final EditorFieldHandler crashManager;
     public final EditorFieldHandler fullCommand;
     public final EditorFieldHandler launchAction;
     public final EditorGroupHandler alertUpdates;
@@ -68,7 +72,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     private final BorderPanel buttonPanel;
     private final LocalizableButton saveButton;
     private final LocalizableButton defaultButton;
-    private final ImageButton homeButton;
+    private final ExtendedButton homeButton;
     private final JPopupMenu popup;
     private final LocalizableMenuItem infoItem;
     private final LocalizableMenuItem defaultItem;
@@ -266,6 +270,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         tlauncherTab.nextPane();
         launchAction = new EditorFieldHandler("minecraft.onlaunch", new EditorComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
         tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{launchAction}));
+        crashManager = new EditorFieldHandler("minecraft.crash", new EditorCheckBox("settings.crash.enable"));
+        tlauncherTab.add(new EditorPair("settings.crash.label", crashManager));
         tlauncherTab.nextPane();
 
         List<EditorHandler> defReleaseTypeHandlers = new ArrayList<EditorHandler>();
@@ -321,7 +327,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
             }
         });
-        homeButton = new ImageButton("home.png");
+        homeButton = new ExtendedButton();
+        homeButton.setIcon(Images.getIcon("home.png", SwingUtil.magnify(20)));
         homeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateValues();
@@ -330,7 +337,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         });
         Dimension size1 = homeButton.getPreferredSize();
         if (size1 != null) {
-            homeButton.setPreferredSize(new Dimension(size1.width * 2, size1.height));
+            homeButton.setPreferredSize(new Dimension(SwingUtil.magnify(40), size1.height));
         }
 
         buttonPanel = new BorderPanel();

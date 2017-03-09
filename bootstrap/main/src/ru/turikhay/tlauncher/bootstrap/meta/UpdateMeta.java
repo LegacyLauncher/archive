@@ -30,7 +30,7 @@ public class UpdateMeta {
     public static Task<UpdateMeta> fetchFor(final String brand) throws ExceptionList {
         U.requireNotNull(brand,  "brand");
 
-        return new Task<UpdateMeta>("update:" + brand) {
+        return new Task<UpdateMeta>("fetchUpdate") {
             @Override
             protected UpdateMeta execute() throws Exception {
                 log("Requesting update for: " + brand);

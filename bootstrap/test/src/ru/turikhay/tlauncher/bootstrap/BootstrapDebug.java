@@ -12,7 +12,7 @@ import java.io.FileNotFoundException;
 public class BootstrapDebug {
 
     public static void main(String[] args) throws Exception {
-        File launcherFile = new File("out/production/launcher");
+        File launcherFile = new File("launcher/target/classes");
         if(!launcherFile.isDirectory()) {
             throw new FileNotFoundException("launcher: " + launcherFile.getAbsolutePath());
         }
@@ -22,7 +22,7 @@ public class BootstrapDebug {
             throw new FileNotFoundException("libDir: " + libDir.getAbsolutePath());
         }
 
-        Bootstrap bootstrap = new Bootstrap(launcherFile, libDir);
+        Bootstrap bootstrap = new Bootstrap(launcherFile, libDir, false);
         Task<LocalLauncher> localLauncherTask = bootstrap.prepareLauncher(null);
 
         BootBridge bootBridge = BootBridge.create(
@@ -32,7 +32,9 @@ public class BootstrapDebug {
         );
 
         Task<Void> startLauncherTask = bootstrap.startLauncher(localLauncherTask.call(), bootBridge);
-        bootstrap.getUserInterface().bindToTask(startLauncherTask);
+        if(bootstrap.getUserInterface() != null) {
+            bootstrap.getUserInterface().bindToTask(startLauncherTask);
+        }
 
         startLauncherTask.call();
         bootBridge.waitUntilClose();

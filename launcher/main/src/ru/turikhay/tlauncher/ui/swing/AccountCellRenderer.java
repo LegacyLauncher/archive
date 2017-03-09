@@ -14,7 +14,7 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
     public static final Account EMPTY = Account.randomAccount();
     public static final Account MANAGE = Account.randomAccount();
     private static final ImageIcon MANAGE_ICON = Images.getIcon("gear.png", SwingUtil.magnify(16));
-    private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("mojang-user.png", SwingUtil.magnify(16));
+    private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("star.png", SwingUtil.magnify(16));
     private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
     private final DefaultListCellRenderer defaultRenderer;
     private AccountCellRenderer.AccountCellType type;

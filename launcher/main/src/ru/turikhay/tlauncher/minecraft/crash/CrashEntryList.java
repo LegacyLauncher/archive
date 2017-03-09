@@ -112,6 +112,18 @@ public final class CrashEntryList {
 
             log(entryList.signatures.size(), "crash entries were parsed");
 
+
+            Collections.sort(entryList.signatures, new Comparator<CrashEntry>() {
+                @Override
+                public int compare(CrashEntry entry1, CrashEntry entry2) {
+                    boolean r1 = entry1.requiresDxDiag(), r2 = entry2.requiresDxDiag();
+                    if(r1 == r2) {
+                        return 0;
+                    }
+                    return r1? 1 : -1;
+                }
+            });
+
             return entryList;
         }
 

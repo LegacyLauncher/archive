@@ -165,7 +165,7 @@ public class Logger implements StreamLogger {
         if (d instanceof ExtendedTextArea.ContentDocument) {
             return ((ExtendedTextArea.ContentDocument) d).accessContent();
         }
-        return null;
+        throw new IllegalArgumentException("document is not tweaked");
     }
 
     BufferedOutputStringStream getStream() {

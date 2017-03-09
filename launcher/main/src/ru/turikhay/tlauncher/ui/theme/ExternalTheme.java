@@ -150,6 +150,7 @@ public final class ExternalTheme extends ChildTheme {
     @Override
     public URL loadAsset(String name) throws IOException {
         String path = properties.getProperty("images");
+
         if(path != null) {
             File dir = new File(path);
             if(dir.isDirectory()) {
@@ -160,6 +161,16 @@ public final class ExternalTheme extends ChildTheme {
             }
             throw new FileNotFoundException("not a directory: " + dir.getAbsolutePath());
         }
+
+        String subFolder = properties.getProperty("images.subFolder");
+        if(subFolder != null) {
+            try {
+                return U.requireNotNull(super.loadAsset(subFolder + "/" + name));
+            } catch(Exception e) {
+                // ignore
+            }
+        }
+
         return super.loadAsset(name);
     }
 }

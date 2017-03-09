@@ -17,7 +17,7 @@ public final class SystemTheme extends Theme {
         SwingUtil.initLookAndFeel();
     }
 
-    static final int MAX_ARC = 64, MAX_BORDER = 24;
+    static final int MAX_ARC = 64, MAX_BORDER = 24, BLACK_MIN = 64, WHITE_MAX = 192;
 
     private static final SystemTheme instance = new SystemTheme();
 
@@ -101,6 +101,39 @@ public final class SystemTheme extends Theme {
 
     @Override
     public URL loadAsset(String name) throws IOException {
-        return Images.class.getResource(name);
+        URL resource;
+        selectResouce:
+        {
+            Color background = getBackground();
+            String subFolder = null;
+
+            selectSubFolder:
+            {
+                if (background.getRed() < BLACK_MIN && background.getGreen() < BLACK_MIN && background.getBlue() < BLACK_MIN) {
+                    Color foreground = getForeground();
+                    if(foreground.equals(Color.WHITE)) {
+                        subFolder = "white";
+                    } else {
+                        subFolder = "gray";
+                    }
+                    break selectSubFolder;
+                }
+
+                if(background.getRed() > WHITE_MAX && background.getGreen() > WHITE_MAX && background.getBlue() > WHITE_MAX) {
+                    subFolder = "colorized";
+                    break selectSubFolder;
+                }
+            }
+
+            if(subFolder != null) {
+                resource = Images.class.getResource(subFolder + "/" + name);
+                if(resource != null) {
+                    break selectResouce;
+                }
+            }
+
+            resource = Images.class.getResource(name);
+        }
+        return resource;
     }
 }

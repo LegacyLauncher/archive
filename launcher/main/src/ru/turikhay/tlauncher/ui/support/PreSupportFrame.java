@@ -23,7 +23,7 @@ public class PreSupportFrame extends VActionFrame {
                 OS.openLink(Localizable.get("support.pre.diag.url"));
             }
         });
-        whatIsDiagnosticLabel.setIcon(Images.getIcon("lightbulb.png", SwingUtil.magnify(16)));
+        whatIsDiagnosticLabel.setIcon(Images.getIcon("lightbulb.png", SwingUtil.magnify(24)));
         whatIsDiagnosticLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
@@ -72,7 +72,7 @@ public class PreSupportFrame extends VActionFrame {
             final SupportFrame frame = supportFrames[i];
 
             LocalizableButton button = (supportFramesButtons[i] = new LocalizableButton("support.pre.buttons." + frame.name));
-            button.setIcon(Images.getIcon(frame.getImage(), SwingUtil.magnify(16)));
+            button.setIcon(Images.getIcon(frame.getImage(), SwingUtil.magnify(24)));
             button.setPreferredSize(new Dimension(1, SwingUtil.magnify(50)));
             button.addActionListener(new ActionListener() {
                 @Override
@@ -92,7 +92,7 @@ public class PreSupportFrame extends VActionFrame {
         });
 
         setTitlePath("support.pre.title");
-        getHead().setIcon(Images.getIcon("consulting.png", SwingUtil.magnify(32)));
+        getHead().setIcon(Images.getIcon("comments-o.png", SwingUtil.magnify(32)));
         getHead().setText("support.pre.title");
 
         getBodyText().setText("support.pre.body");

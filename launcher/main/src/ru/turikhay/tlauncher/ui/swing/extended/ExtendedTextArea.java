@@ -6,11 +6,21 @@ import javax.swing.text.GapContent;
 import javax.swing.text.PlainDocument;
 
 public class ExtendedTextArea extends JTextArea {
+
+    public ExtendedTextArea(Document doc, String text, int rows, int columns) {
+        super(null, text, rows, columns);
+    }
+
+    public ExtendedTextArea() {
+        this(null, null, 0, 0);
+    }
+
+    @Override
     protected Document createDefaultModel() {
         return new ContentDocument();
     }
 
-    public class ContentDocument extends PlainDocument {
+    public static class ContentDocument extends PlainDocument {
         public ContentDocument() {
             super(new SequenceGapContent());
         }
@@ -20,7 +30,7 @@ public class ExtendedTextArea extends JTextArea {
         }
     }
 
-    public class SequenceGapContent extends GapContent implements CharSequence {
+    public static class SequenceGapContent extends GapContent implements CharSequence {
         private int checkIndex(int index, String s) {
             if (index < 0) {
                 throw new IndexOutOfBoundsException(s + " is too small: " + index);

@@ -33,7 +33,7 @@ public class ServerNoticeAction extends NoticeAction {
         this.server = U.requireNotNull(server, "server");
         this.serverId = serverId;
 
-        installedVersion = Images.getScaledIcon("check.png", 16);
+        installedVersion = Images.getScaledIcon("check-square.png", 16);
     }
 
     protected ToStringBuilder toStringBuilder() {

@@ -38,14 +38,14 @@ public class LoggerFrameBottom extends BorderPanel implements LocalizableCompone
             }
         });
         setCenter(closeCancelButton);
-        folder = newButton("folder.png", new ActionListener() {
+        folder = newButton("folder-open.png", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 OS.openFolder(openFolder == null ? MinecraftUtil.getWorkingDirectory() : openFolder);
             }
         });
         //folder.setEnabled(TLauncher.getInstance().getSettings().get("logger").equals(frame.logger.getName()));
-        save = newButton("document-save-as.png", new ActionListener() {
+        save = newButton("save.png", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 frame.logger.saveAs();
             }
@@ -55,7 +55,7 @@ public class LoggerFrameBottom extends BorderPanel implements LocalizableCompone
                 frame.logger.sendPaste();
             }
         });
-        kill = newButton("process-stop.png", new ActionListener() {
+        kill = newButton("stop-circle-o.png", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 frame.logger.launcher.killProcess();
                 kill.setEnabled(false);

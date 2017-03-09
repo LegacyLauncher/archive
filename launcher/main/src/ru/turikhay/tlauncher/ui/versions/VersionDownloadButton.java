@@ -270,8 +270,8 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
     }
 
     public enum ButtonState {
-        DOWNLOAD("down.png"),
-        STOP("cancel.png");
+        DOWNLOAD("download.png"),
+        STOP("stop-circle-o.png");
 
         final Image image;
 

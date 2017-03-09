@@ -48,7 +48,7 @@ public class FolderButton extends LocalizableButton implements Unblockable {
     FolderButton(LoginForm loginform) {
         lf = loginform;
         setToolTipText("loginform.button.folder");
-        setIcon(Images.getIcon("folder.png", SwingUtil.magnify(16), SwingUtil.magnify(16)));
+        setIcon(Images.getIcon("folder-open.png", SwingUtil.magnify(20), SwingUtil.magnify(20)));
 
         addActionListener(new ActionListener() {
             @Override

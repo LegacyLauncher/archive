@@ -19,7 +19,7 @@ class ClassLoaderStarter implements IStarter {
     public Task<Void> start(final LocalLauncher launcher, final BootBridge bridge) {
         U.requireNotNull(launcher, "LocalLauncher");
 
-        return new Task<Void>("ClassLoaderStarter") {
+        return new Task<Void>("startLauncher") {
             @Override
             protected Void execute() throws Exception {
                 List<URL> jarUrlList = new ArrayList<URL>();

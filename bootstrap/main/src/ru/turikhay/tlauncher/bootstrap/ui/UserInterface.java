@@ -12,9 +12,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public final class UserInterface {
+    private static final int BORDER_SIZE = 5, TASK_DEPTH = 2;
+
     private static final ResourceBundle resourceBundle;
     static {
         ResourceBundle b = null;
@@ -28,6 +31,14 @@ public final class UserInterface {
         }
 
         resourceBundle = b;
+    }
+
+    static {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            log("Can't set system look and feel.", e);
+        }
     }
 
     private final JFrame frame;
@@ -48,16 +59,25 @@ public final class UserInterface {
             // ignore
         }
 
-        frame.getContentPane().setLayout(new BorderLayout());
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        frame.getContentPane().add(panel);
+
+        BorderLayout layout = new BorderLayout();
+        layout.setHgap(BORDER_SIZE / 2);
+        layout.setVgap(BORDER_SIZE / 2);
+        panel.setLayout(layout);
+        panel.setBorder(BorderFactory.createEmptyBorder(BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE));
 
         this.iconLabel = new JLabel();
         iconLabel.setIcon(new ImageIcon(getClass().getResource("icon.png")));
         iconLabel.setOpaque(false);
-        frame.getContentPane().add(iconLabel, BorderLayout.WEST);
+        panel.add(iconLabel, BorderLayout.WEST);
 
         this.progressBar = new JProgressBar();
+        progressBar.setPreferredSize(new Dimension(300, 0));
         progressBar.setOpaque(false);
-        frame.getContentPane().add(progressBar, BorderLayout.CENTER);
+        panel.add(progressBar, BorderLayout.CENTER);
 
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -75,7 +95,7 @@ public final class UserInterface {
 
                 if(frame.isDisplayable()) {
                     frame.setLocationRelativeTo(null);
-                    frame.setAlwaysOnTop(true);
+                    //frame.setAlwaysOnTop(true);
                     frame.setVisible(true);
 
                     progressBar.setValue(-1);
@@ -89,6 +109,17 @@ public final class UserInterface {
                     if (progressBar.getValue() - newValue != 0) {
                         log("Task updated:", percentage);
                         progressBar.setValue(newValue);
+
+                        StringBuilder title = new StringBuilder();
+                        title.append(getLString("appname", "Bootstrap")).append(" :: ");
+                        String taskName = getChildTask(task, TASK_DEPTH).getName();
+                        title.append(newValue == -1? "..." : newValue + "%").append(" :: ");
+                        try {
+                            title.append(resourceBundle.getString("loading.task." + taskName));
+                        } catch(MissingResourceException missing) {
+                            title.append(taskName);
+                        }
+                        frame.setTitle(title.toString());
                     }
                     if (percentage == 1.) {
                         onTaskSucceeded(task);
@@ -114,6 +145,7 @@ public final class UserInterface {
             }
         };
 
+        frame.setTitle(getLString("appname", "Bootstrap"));
         frame.pack();
     }
 
@@ -144,6 +176,10 @@ public final class UserInterface {
         return resourceBundle;
     }
 
+    public static String getLString(String key, String defaultValue) {
+        return resourceBundle == null? defaultValue : resourceBundle.getString(key);
+    }
+
     public static void showError(String message, Object textarea) {
         if(isHeaded()) {
             Alert.showError(message, textarea);
@@ -158,6 +194,14 @@ public final class UserInterface {
 
     public static boolean isHeaded() {
         return !GraphicsEnvironment.isHeadless();
+    }
+
+    private Task getChildTask(Task task, int depth) {
+        Task child = task.getBindingTask();
+        if(child == null || depth == 0) {
+            return task;
+        }
+        return getChildTask(child, depth - 1);
     }
 
     private static void log(Object...o) {
