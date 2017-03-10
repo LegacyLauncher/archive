@@ -83,11 +83,6 @@
             </classpath>
         </java>
         <delete file="${tlauncher.in.jar}" />
-
-        <checksum file="${tlauncher.in.source}" algorithm="sha-256" property="checksum"/>
-        <propertyfile file="${artifact.output.path}/checksum.properties">
-            <entry key="${tlauncher.final_name}.jar" value="${checksum}" />
-        </propertyfile>
     </target>
 
     <target name="launch4j" if="launch4j.execute">
@@ -108,10 +103,20 @@
             txtproductversion="${build.version.full}"
         />
 
-        <checksum file="${tlauncher.out}.exe" algorithm="sha-256" property="checksum"/>
+        <checksum file="${tlauncher.out}.exe" algorithm="sha-256" property="checksum_exe"/>
         <propertyfile file="${artifact.output.path}/checksum.properties">
-            <entry key="${tlauncher.final_name}.exe" value="${checksum}" />
+            <entry key="${tlauncher.final_name}.exe" value="${checksum_exe}" />
         </propertyfile>
+
+        <mkdir dir="${artifact.output.path}/${tlauncher.final_name}/" />
+        <delete>
+            <fileset dir="${artifact.output.path}/${tlauncher.final_name}/">
+                <include name="*.exe"/>
+            </fileset>
+        </delete>
+        <copy file="${tlauncher.out}.exe" tofile="${artifact.output.path}/${tlauncher.final_name}/${checksum_exe}.exe" />
+        <!--mkdir dir="${artifact.output.path}/${tlauncher.final_name}" />
+        <move file="${tlauncher.out}.exe" todir="${artifact.output.path}/${tlauncher.final_name}_${checksum}.exe" /-->
     </target>
 
     <target name="pre-build">
@@ -123,9 +128,51 @@
         <antcall target="launch4j" />
 
         <property name="tlauncher.in.source" value="${artifact.output.path}/${tlauncher.final_name}.jar" />
-        <checksum file="${tlauncher.in.source}" algorithm="sha-256" property="checksum"/>
+        <checksum file="${tlauncher.in.source}" algorithm="sha-256" property="checksum_jar"/>
         <propertyfile file="${artifact.output.path}/checksum.properties">
-            <entry key="${tlauncher.final_name}.jar" value="${checksum}" />
+            <entry key="${tlauncher.final_name}.jar" value="${checksum_jar}" />
         </propertyfile>
+        <!--delete dir="${artifact.output.path}/${tlauncher.final_name}/" /-->
+        <mkdir dir="${artifact.output.path}/${tlauncher.final_name}/" />
+        <delete>
+            <fileset dir="${artifact.output.path}/${tlauncher.final_name}/">
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
+        <copy file="${tlauncher.in.source}" tofile="${artifact.output.path}/${tlauncher.final_name}/${checksum_jar}.jar" />
+        <property file="${artifact.output.path}/checksum.properties" prefix="checksum"/>
+
+        <copy file="${basedir}/update.json" tofile="${artifact.output.path}/update.json" />
+        <loadfile property="update-input" srcFile="${artifact.output.path}/update.json" />
+
+        <script language="javascript">
+            var repos = ["http://repo.tlauncher.ru/", "http://u.tlauncher.ru/", "http://turikhay.ru/tlauncher/"];
+            var brand = project.getProperty('tlauncher.brand');
+            var project_name = project.getProperty('tlauncher.final_name');
+            var parsed = JSON.parse(project.getProperty('update-input'));
+            var section = parsed["update"][project_name];
+            var checksum_jar = project.getProperty('checksum_jar'), checksum_exe = project.getProperty('checksum.' + project_name + '.exe');
+            section['version'] = project.getProperty('build.version');
+            if(project_name == 'launcher') {
+                arr = []
+                repos.forEach(function(item) {
+                    arr.push(item + brand + '/' + project_name + '/' + checksum_jar + '.jar');
+                })
+                section['downloads'] = arr;
+                section['checksum'] = checksum_jar;
+            } else {
+                jars = []; exes = [];
+                repos.forEach(function(item) {
+                    jars.push(item + brand + '/' + project_name + '/' + checksum_jar + '.jar');
+                    exes.push(item + brand + '/' + project_name + '/' + checksum_exe + '.exe');
+                })
+                var downloads = section['downloads'];
+                downloads['JAR'] = {url: jars, checksum: checksum_jar}
+                downloads['EXE'] = {url: exes, checksum: checksum_exe}
+            }
+
+            project.setProperty('update-output', JSON.stringify(parsed));
+        </script>
+        <echo file="${artifact.output.path}/update.json" append="false" message="${update-output}" />
     </target>
 </project>

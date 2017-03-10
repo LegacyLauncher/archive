@@ -1,0 +1,37 @@
+{
+  "update": {
+    "bootstrap": {
+      "version": "",
+      "shortBrand": "legacy",
+      "downloads": {
+        "JAR": {
+          "url": [
+          ],
+          "checksum": ""
+        },
+        "EXE": {
+          "url": [
+          ],
+          "checksum": ""
+        }
+      }
+    },
+    "launcher": {
+      "version": "",
+      "shortBrand": "legacy",
+      "checksum": "",
+      "downloads": [
+      ]
+    }
+  },
+  "support": {
+    "ru_RU": "http://tlaun.ch/support/ru",
+    "en_US": "http://tlaun.ch/support/en"
+  },
+  "options": {
+    "stats": true,
+    "ely": true,
+    "repositories": {},
+    "notices": {}
+  }
+}

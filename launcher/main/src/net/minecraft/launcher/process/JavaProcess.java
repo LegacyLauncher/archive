@@ -6,11 +6,16 @@ public class JavaProcess {
     private final LimitedCapacityList<String> sysOutLines = new LimitedCapacityList<String>(String.class, MAX_SYSOUT_LINES);
     private JavaProcessListener listener;
     private final Process process;
+    private final ProcessMonitorThread monitor;
 
     public JavaProcess(Process process) {
         this.process = process;
-        ProcessMonitorThread monitor = new ProcessMonitorThread(this);
+        monitor = new ProcessMonitorThread(this);
         monitor.start();
+    }
+
+    public ProcessMonitorThread getMonitor() {
+        return monitor;
     }
 
     public Process getRawProcess() {

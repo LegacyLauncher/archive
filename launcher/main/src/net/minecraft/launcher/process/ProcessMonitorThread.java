@@ -8,10 +8,10 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class ProcessMonitorThread extends Thread {
+public class ProcessMonitorThread extends Thread {
     private final JavaProcess process;
 
-    public ProcessMonitorThread(JavaProcess process) {
+    ProcessMonitorThread(JavaProcess process) {
         this.process = process;
     }
 

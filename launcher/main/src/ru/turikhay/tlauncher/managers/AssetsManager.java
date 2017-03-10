@@ -92,7 +92,7 @@ public class AssetsManager extends LauncherComponent {
         FileReader reader = null;
         AssetIndex index = null;
         try {
-            index = gson.fromJson(reader = new FileReader(indexFile), AssetIndex.class);
+            index = U.requireNotNull(gson.fromJson(reader = new FileReader(indexFile), AssetIndex.class));
         } catch (Exception e) {
             log("could not read index file", e);
             return null;
