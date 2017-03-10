@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessListener;
+import net.minecraft.launcher.process.ProcessMonitorThread;
 import net.minecraft.launcher.updater.AssetIndex;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
@@ -165,19 +166,23 @@ public class MinecraftLauncher implements JavaProcessListener {
             pm = manager.getComponent(ProfileManager.class);
             this.forceUpdate = forceUpdate;
             assistLaunch = !exit;
+            recordValue("assistLaunch", assistLaunch);
             loggerVis = visibility;
             printLogger = loggerVis.equals(LoggerVisibility.NONE) ? null : new PrintLogger(new LinkedOutputStringStream());
             logger = printLogger == null ? null : new Logger(settings, printLogger, "Minecraft", loggerVis.equals(LoggerVisibility.ALWAYS) && assistLaunch);
             output = logger == null ? new StringBuffer() : null;
             if (logger != null) {
+                final Logger l = logger;
                 logger.frame.addWindowListener(new WindowAdapter() {
                     public void windowClosing(WindowEvent e) {
-                        Logger con = logger;
-                        logger = null;
-                        con.kill();
+                        l.kill();
                     }
                 });
             }
+
+            recordValue("loggerVisibility", loggerVis);
+            recordValue("logger", logger);
+            recordValue("output", output != null);
 
             listeners = Collections.synchronizedList(new ArrayList());
             extListeners = Collections.synchronizedList(new ArrayList());
@@ -1062,6 +1067,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             e.onMinecraftLaunch();
         }
 
+        if(version.getReleaseType() != null)
         switch (version.getReleaseType()) {
             case RELEASE:
             case SNAPSHOT:
@@ -1072,6 +1078,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
         log("Launching in:", gameDir.getAbsolutePath());
         startupTime = System.currentTimeMillis();
+        recordValue("startupTime", startupTime);
         TLauncher.getInstance().getLogger().setLauncher(this);
         if (logger != null) {
             Calendar e1 = Calendar.getInstance();
@@ -1082,6 +1089,12 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         try {
             process = launcher.start();
+            process.getMonitor().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread t, Throwable e) {
+                    sentryContext.sendError(ProcessMonitorThread.class, "monitorError", e, null);
+                }
+            });
             process.safeSetExitRunnable(this);
             minecraftWorking = true;
         } catch (Exception var3) {
