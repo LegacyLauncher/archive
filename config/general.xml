@@ -142,15 +142,16 @@
         <copy file="${tlauncher.in.source}" tofile="${artifact.output.path}/${tlauncher.final_name}/${checksum_jar}.jar" />
         <property file="${artifact.output.path}/checksum.properties" prefix="checksum"/>
 
-        <copy file="${basedir}/update.json" tofile="${artifact.output.path}/update.json" />
-        <loadfile property="update-input" srcFile="${artifact.output.path}/update.json" />
-
         <script language="javascript">
             var repos = ["http://repo.tlauncher.ru/", "http://u.tlauncher.ru/", "http://turikhay.ru/tlauncher/"];
             var brand = project.getProperty('tlauncher.brand');
+            if(project.getProperty('git.branch') != 'master') {
+                brand += '_beta';
+            }
             var project_name = project.getProperty('tlauncher.final_name');
-            var parsed = JSON.parse(project.getProperty('update-input'));
-            var section = parsed["update"][project_name];
+
+            var parsed = {}; var section = parsed;
+            section['shortBrand'] = brand;
             var checksum_jar = project.getProperty('checksum_jar'), checksum_exe = project.getProperty('checksum.' + project_name + '.exe');
             section['version'] = project.getProperty('build.version');
             if(project_name == 'launcher') {
@@ -173,6 +174,6 @@
 
             project.setProperty('update-output', JSON.stringify(parsed));
         </script>
-        <echo file="${artifact.output.path}/update.json" append="false" message="${update-output}" />
+        <echo file="${artifact.output.path}/${tlauncher.final_name}.json" append="false" message="${update-output}" />
     </target>
 </project>

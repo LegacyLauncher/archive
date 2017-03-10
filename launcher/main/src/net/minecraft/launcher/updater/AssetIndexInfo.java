@@ -1,5 +1,7 @@
 package net.minecraft.launcher.updater;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.util.U;
 
 public class AssetIndexInfo extends DownloadInfo {
@@ -26,5 +28,17 @@ public class AssetIndexInfo extends DownloadInfo {
 
     public boolean sizeAndHashKnown() {
         return known;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("id", id)
+                .append("url", url)
+                .append("sha1", sha1)
+                .append("size", size)
+                .append("totalSize", totalSize)
+                .append("known", known)
+                .build();
     }
 }

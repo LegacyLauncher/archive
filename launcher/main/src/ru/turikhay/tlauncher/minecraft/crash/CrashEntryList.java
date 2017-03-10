@@ -54,7 +54,7 @@ public final class CrashEntryList {
             vars = new LinkedHashMap<String, String>();
             vars.put("os", OS.CURRENT.toString());
             vars.put("arch", OS.Arch.CURRENT.toString());
-            vars.put("locale", TLauncher.getInstance().getSettings().getLocale().toString());
+            vars.put("locale", TLauncher.getInstance() == null? Locale.getDefault().toString() : TLauncher.getInstance().getSettings().getLocale().toString());
 
             varsResolver = new MapTokenResolver(vars);
 

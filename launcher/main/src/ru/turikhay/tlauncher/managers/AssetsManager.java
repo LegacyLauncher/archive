@@ -171,10 +171,9 @@ public class AssetsManager extends LauncherComponent {
         return result;
     }
 
-    public ResourceChecker checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) {
+    public ResourceChecker checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) throws AssetsNotFoundException {
         log("Checking resources...");
 
-        ArrayList r = new ArrayList();
         List<AssetIndex.AssetObject> list;
         if (local) {
             list = getLocalResourceFilesList(version, baseDirectory);
@@ -184,14 +183,14 @@ public class AssetsManager extends LauncherComponent {
 
         if (list == null) {
             log("Cannot get assets list. Aborting.");
-            return null;
+            throw new AssetsNotFoundException();
         } else {
             log("Fast comparing:", fast);
             return new ResourceChecker(baseDirectory, list, fast);
         }
     }
 
-    public ResourceChecker checkResources(CompleteVersion version, boolean fast) {
+    public ResourceChecker checkResources(CompleteVersion version, boolean fast) throws AssetsNotFoundException {
         return checkResources(version, manager.getComponent(VersionLists.class).getLocal().getBaseDirectory(), false, fast);
     }
 

@@ -20,6 +20,7 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
+import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.NBTServer;
 import ru.turikhay.tlauncher.minecraft.Server;
@@ -121,7 +122,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public CharSequence getOutput() {
-        return logger != null ? logger.getOutput() : output;
+        return logger != null ? U.requireNotNull(logger.getOutput(), "logger output") : U.requireNotNull(output, "output");
     }
 
     public CharSequence getLogOutput() {
@@ -995,10 +996,13 @@ public class MinecraftLauncher implements JavaProcessListener {
     private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) throws MinecraftException {
         log("Comparing assets...");
 
-        AssetsManager.ResourceChecker checker = am.checkResources(version, fastCompare);
-
-        if (checker == null) {
-            return null;
+        AssetsManager.ResourceChecker checker = null;
+        try {
+            checker = am.checkResources(version, fastCompare);
+        } catch (AssetsNotFoundException e) {
+            sentryContext.sendWarning(null, "assetsNotFound", DataBuilder.create("fastCompare", fastCompare)
+                    .add("assetIndex", version.getAssetIndex())
+            );
         }
 
         try {
@@ -1092,7 +1096,28 @@ public class MinecraftLauncher implements JavaProcessListener {
             process.getMonitor().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                 @Override
                 public void uncaughtException(Thread t, Throwable e) {
-                    sentryContext.sendError(ProcessMonitorThread.class, "monitorError", e, null);
+                    boolean sendError = true;
+
+                    if (e instanceof OutOfMemoryError) {
+                        int size = -1;
+                        if (output != null) {
+                            size = output.length();
+                            output.setLength(0);
+                        }
+                        if (logger != null) {
+                            size = logger.getOutput().length();
+                            logger.clear();
+                        }
+
+                        sentryContext.sendWarning(ProcessMonitorThread.class, "oom", DataBuilder.create("size", size));
+                        sendError = false;
+                    }
+
+                    ExceptionHandler.getInstance().uncaughtException(t, e);
+
+                    if (sendError) {
+                        sentryContext.sendError(ProcessMonitorThread.class, "monitorError", e, null);
+                    }
                 }
             });
             process.safeSetExitRunnable(this);
@@ -1206,7 +1231,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public void onJavaProcessEnded(JavaProcess jp) {
-        logEnd = getOutput().length();
+        logEnd = getOutput().length() - 1;
         notifyClose();
 
         if (TLauncher.getInstance().getLogger().getLauncher() == this) {

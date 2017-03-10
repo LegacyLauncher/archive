@@ -2,7 +2,7 @@
   "update": {
     "bootstrap": {
       "version": "",
-      "shortBrand": "legacy",
+      "shortBrand": "",
       "downloads": {
         "JAR": {
           "url": [
@@ -18,7 +18,7 @@
     },
     "launcher": {
       "version": "",
-      "shortBrand": "legacy",
+      "shortBrand": "",
       "checksum": "",
       "downloads": [
       ]
