@@ -423,10 +423,10 @@ public final class CrashManager {
             modPattern = Pattern.compile("^[\\W]+[ULCHIJAD]*([ULCHIJADE])[\\W]+.+\\{.+\\}[\\W]+\\[(.+)\\][\\W]+\\((.+)\\).*");
 
             patterns.add(Pattern.compile("^-- System Details --$"));
-            patterns.add(Pattern.compile("^[\\t]+FML: MCP .+$"));
+            patterns.add(Pattern.compile("^[\\W]+FML: MCP .+$"));
 
             // last pattern should always be before mod list
-            patterns.add(Pattern.compile("^[\\t]States: .+$"));
+            patterns.add(Pattern.compile("^[\\W]+States: .+$"));
         }
 
         protected boolean checkCapability() throws Exception {
@@ -450,7 +450,6 @@ public final class CrashManager {
                 if(expectedPattern.matcher(line).matches()) {
                     log("Pattern matches:", expectedPattern);
                     if(++expectedPatternIndex == patterns.size()) {
-                        log("All patterns are met. Working on a mod list");
                         break;
                     }
                 }
@@ -461,11 +460,13 @@ public final class CrashManager {
                 return false;
             }
 
+            log("All patterns are met. Working on a mod list");
             final List<ErroredMod> errorModList = new ArrayList<ErroredMod>();
 
             while(scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 Matcher matcher = modPattern.matcher(line);
+
 
                 // check if the last state is "E"
                 if(matcher.matches() && "e".equalsIgnoreCase(matcher.group(1))) {
@@ -477,6 +478,7 @@ public final class CrashManager {
             }
 
             if(errorModList.isEmpty()) {
+                log("Could not find any errored mods. Well, okay...");
                 return false;
             }
 

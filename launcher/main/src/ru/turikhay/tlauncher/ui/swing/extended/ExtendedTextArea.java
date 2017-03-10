@@ -36,7 +36,7 @@ public class ExtendedTextArea extends JTextArea {
                 throw new IndexOutOfBoundsException(s + " is too small: " + index);
             }
             if (index >= length()) {
-                throw new IndexOutOfBoundsException(s + " equals or above length: " + index + "(" + length() + ")");
+                throw new IndexOutOfBoundsException(s + " equals or above length: " + index + " (" + length() + ")");
             }
             return index;
         }

@@ -246,7 +246,10 @@ public class Logger implements StreamLogger {
     }
 
     public void kill() {
-        check();
+        if(killed) {
+            return;
+        }
+
         save();
 
         frame.dispose();
@@ -256,6 +259,10 @@ public class Logger implements StreamLogger {
     }
 
     public void killIn(long millis) {
+        if(killed) {
+            return;
+        }
+
         check();
         save();
         frame.hideIn(millis);
