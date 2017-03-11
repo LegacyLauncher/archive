@@ -65,6 +65,7 @@ public final class BootEventDispatcher implements BootListener {
         for (BootListener l : bridge.listenerList) {
             l.onBootSucceeded();
         }
+        booting = false;
         working = true;
         log("Boot finished");
     }

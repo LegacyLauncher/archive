@@ -103,8 +103,8 @@ public class UpdateMeta {
                 throw e;
             }
 
-            if(read.length() > 100) {
-                read = read.substring(0, 99) + "...";
+            if(read.length() > 1000) {
+                read = read.substring(0, 997) + "...";
             }
 
             throw new IOException("could not read: \""+ read +"\"", cause);

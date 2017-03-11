@@ -167,7 +167,7 @@
                     jars.push(item + brand + '/' + project_name + '/' + checksum_jar + '.jar');
                     exes.push(item + brand + '/' + project_name + '/' + checksum_exe + '.exe');
                 })
-                var downloads = section['downloads'];
+                var downloads = section['downloads'] = {};
                 downloads['JAR'] = {url: jars, checksum: checksum_jar}
                 downloads['EXE'] = {url: exes, checksum: checksum_exe}
             }
