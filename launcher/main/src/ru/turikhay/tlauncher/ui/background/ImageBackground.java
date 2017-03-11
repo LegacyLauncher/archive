@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.background;
 
+import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.U;
@@ -55,7 +56,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 throw new Error("could not load default image", e);
             }
 
-            defaultImage = new SoftReference<Image>(image);
+            defaultImage = new SoftReference<>(image);
         }
 
         renderImage = null;
@@ -92,7 +93,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 return;
             }
 
-            currentImage = new SoftReference<Image>(image);
+            currentImage = new SoftReference<>(image);
         }
 
         updateRender();
@@ -106,13 +107,13 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             return;
         }
 
-        renderImage = new SoftReference<Image>(image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH));
+        renderImage = new SoftReference<>(image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH));
         repaint();
     }
 
     @Override
     public void paint(Graphics g) {
-        final Image original, render;
+        Image original, render;
 
         if (currentImage == null || (original = currentImage.get()) == null || renderImage == null || (render = renderImage.get()) == null) {
             return;
@@ -125,7 +126,15 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 x = (getWidth() - width) / 2.,
                 y = (getHeight() - height) / 2.;
 
-        g.drawImage(render, (int) x, (int) y, (int) width, (int) height, null);
+        try {
+            g.drawImage(render, (int) x, (int) y, (int) width, (int) height, null);
+        } catch(OutOfMemoryError oom) {
+            original = null;
+            render = null;
+            currentImage = null;
+            renderImage = null;
+            ExceptionHandler.reduceMemory(oom);
+        }
     }
 
     private void log(Object... o) {

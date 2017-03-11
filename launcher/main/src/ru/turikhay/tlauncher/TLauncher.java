@@ -41,7 +41,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
-    private static final String VERSION = "1.80.7";
+    private static final String VERSION = "1.80.10";
 
     private final boolean debug, ready;
 

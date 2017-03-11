@@ -126,7 +126,8 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public CharSequence getLogOutput() {
-        return logStart > 0 && logEnd > 0? getOutput().subSequence(logStart, logEnd) : getOutput();
+        CharSequence output = getOutput();
+        return logStart > 0 && logEnd > logStart && output.length() > logStart ? output.subSequence(logStart, logEnd) : output;
     }
 
     public LoggerVisibility getLoggerVisibility() {

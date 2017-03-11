@@ -45,17 +45,19 @@ public enum FatalExceptionType {
                 case 1:
                     return exceptionList.get(0) == null ? null : getType(exceptionList.get(0));
                 default:
-                    Exception selectedException = exceptionList.get(0);
-                    if(selectedException == null) {
+                    FatalExceptionType selectedType = null, currentType;
+                    for (int i = 0; i < exceptionList.size(); i++) {
+                        if (selectedType == null) {
+                            selectedType = getType(exceptionList.get(i));
+                            continue;
+                        }
+                        currentType = getType(exceptionList.get(i));
+                        if(currentType == null || selectedType == currentType) {
+                            continue;
+                        }
                         return null;
                     }
-                    Class selectedType = selectedException.getClass();
-                    for (int i = 1; i < exceptionList.size(); i++) {
-                        if (!selectedType.equals(exceptionList.get(i).getClass())) {
-                            return null;
-                        }
-                    }
-                    return getType(selectedException);
+                    return selectedType;
             }
         }
 

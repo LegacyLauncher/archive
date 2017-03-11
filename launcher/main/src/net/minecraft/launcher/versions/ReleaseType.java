@@ -1,5 +1,6 @@
 package net.minecraft.launcher.versions;
 
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.repository.Repository;
 
 import java.util.*;
@@ -49,10 +50,6 @@ public enum ReleaseType {
         this.isDefault = isDefault;
     }
 
-    ReleaseType(String name) {
-        this(name, true, false);
-    }
-
     String getName() {
         return name;
     }
@@ -96,7 +93,21 @@ public enum ReleaseType {
             }
 
             public boolean isSubType(Version version) {
-                return !version.getReleaseType().toString().startsWith("old") && version.getReleaseTime().getTime() >= 0L && version.getReleaseTime().before(marker);
+                if(version.getReleaseType().toString().startsWith("old")) {
+                    return false;
+                }
+
+                Date date = version.getReleaseTime();
+
+                if(version.getReleaseTime().getTime() == 0) {
+                    if(StringUtils.containsIgnoreCase(version.getID(), "forge")) {
+                        date = version.getUpdatedTime();
+                    } else {
+                        return false;
+                    }
+                }
+
+                return date.before(marker);
             }
         },
         REMOTE("remote") {

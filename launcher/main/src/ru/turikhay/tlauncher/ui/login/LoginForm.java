@@ -1,5 +1,8 @@
 package ru.turikhay.tlauncher.ui.login;
 
+import net.minecraft.launcher.updater.VersionSyncInfo;
+import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
@@ -69,6 +72,31 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         processListeners.add(checkbox);
         processListeners.add(versions);
         processListeners.add(accounts);
+        processListeners.add(new LoginListener() {
+            @Override
+            public void logginingIn() throws LoginException {
+                VersionSyncInfo sync = versions.getVersion();
+                if(!sync.isInstalled() || !sync.hasRemote()) {
+                    return;
+                }
+                if(ReleaseType.SubType.get(sync.getLocal()).contains(ReleaseType.SubType.OLD_RELEASE)) {
+                    return;
+                }
+
+                CompleteVersion local;
+                try {
+                    local = sync.resolveCompleteVersion(tlauncher.getVersionManager(), false);
+                } catch (Exception e) {
+                    throw new RuntimeException("could not resolve local version", e);
+                }
+
+                if(local.getAssetIndex().getId().equals("legacy")) {
+                    if(Alert.showLocQuestion("versions.damaged-json")) {
+                        checkbox.forceupdate.setSelected(true);
+                    }
+                }
+            }
+        });
         stateListeners.add(buttons.play);
         add(messagePanel);
         add(del(0));

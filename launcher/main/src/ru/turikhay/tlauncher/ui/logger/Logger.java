@@ -341,7 +341,6 @@ public class Logger implements StreamLogger {
     }
 
     public boolean isKilled() {
-        check();
         return killed;
     }
 
