@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.util.*;
@@ -279,6 +280,8 @@ public final class CrashManager {
                     for (CrashManagerListener listener : listeners) {
                         listener.onCrashManagerFailed(CrashManager.this, e);
                     }
+                    SentryContext.getContextOrGlobal(MinecraftLauncher.SENTRY_CONTEXT_NAME)
+                            .sendError(CrashManager.class, "crashmanager fatal error", e, null);
                     break executor;
                 }
                 for (CrashManagerListener listener : listeners) {

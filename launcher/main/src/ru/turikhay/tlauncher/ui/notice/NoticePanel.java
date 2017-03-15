@@ -41,14 +41,6 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         add(noticeWrapper);
 
         this.popupMenu = new Popup();
-
-        Server server = new Server("MaxCraft", "mc.maxcraft.ru", 25565) {
-            {
-                setFamily("1.10");
-                getAccountTypeSet().clear();
-                getAccountTypeSet().add(Account.AccountType.ELY);
-            }
-        };
     }
 
     public NoticePanel(NoticeManager manager) {
@@ -158,25 +150,25 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
 
             int width = 0;
             width += getInsets().left + getInsets().right;
-            log("width", width);
+            //log("width", width);
             width += iconLabel.getInsets().left + iconLabel.getInsets().right + iconWidth;
-            log("width", width);
+            //log("width", width);
             width += getHgap();
-            log("width", width);
+            //log("width", width);
             width += size.width + editorPane.getInsets().left + editorPane.getInsets().right;
-            log("width", width);
+            //log("width", width);
             width += getHgap();
-            log("width", width);
+            //log("width", width);
             width += buttonSize.width;
-            log("width", width);
+            //log("width", width);
             width += getHgap();
-            log("width", width);
+            //log("width", width);
 
             int height = 0;
             height += getInsets().top + getInsets().bottom;
-            log("height", height);
+            //log("height", height);
             height += size.height;
-            log("height", height);
+            //log("height", height);
 
 
             log("noticewrapper:", new Dimension(width, height));
@@ -196,7 +188,7 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         private final ImageIcon icon;
 
         ActionButton() {
-            setIcon(icon = new ImageIcon(Images.getImage("go.png"), BUTTON_ICON_WIDTH, true));
+            setIcon(icon = new ImageIcon(Images.getImage("ellipsis-v.png"), BUTTON_ICON_WIDTH, true));
             addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
