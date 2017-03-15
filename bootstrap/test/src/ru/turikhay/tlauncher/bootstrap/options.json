@@ -2,5 +2,8 @@
   "stats": true,
   "ely": true,
   "repositories": {},
-  "notices": {}
+  "notices": {
+    "ru_RU": [
+    ]
+  }
 }

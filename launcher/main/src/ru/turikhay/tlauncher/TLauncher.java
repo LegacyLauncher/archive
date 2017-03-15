@@ -41,8 +41,6 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
-    private static final String VERSION = "1.80.10";
-
     private final boolean debug, ready;
 
     private final BootBridge bridge;
@@ -339,14 +337,7 @@ public final class TLauncher {
             throw new Error("could not load meta", ioE);
         }
 
-        Version genVersion = Version.valueOf(VERSION),
-                version = Version.valueOf(meta.get("version").getAsString());
-
-        if (!genVersion.equals(version)) {
-            throw new Error("could not verify version; expected: " + genVersion + ", got: " + version);
-        }
-
-        SEMVER = version;
+        SEMVER = U.requireNotNull(Version.valueOf(meta.get("version").getAsString()), "semver");
         BETA = SEMVER.getBuildMetadata() != null && !SEMVER.getBuildMetadata().startsWith("master");
     }
 

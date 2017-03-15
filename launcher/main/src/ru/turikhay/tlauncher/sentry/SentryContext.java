@@ -10,7 +10,9 @@ import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.windows.WMIProvider;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +26,10 @@ public final class SentryContext {
     private SentryContext(SentryContext parentContext, String name) {
         this.parent = parentContext;
         this.name = name;
+
+        if(parentContext != null) {
+            SentryBreadcrumb.info(null, "context created: " + name).push(parentContext);
+        }
     }
 
     public String getName() {
@@ -101,7 +107,7 @@ public final class SentryContext {
             }
 
             if(count > 1) {
-                b.withTag("av" + String.valueOf(count), av);
+                b.withExtra("av" + count, av);
             } else {
                 b.withTag("av", av);
                 count++;
@@ -113,6 +119,36 @@ public final class SentryContext {
         if(GLOBAL_CONTEXT.getName().equals(name)) {
             throw new IllegalArgumentException(GLOBAL_CONTEXT.getName() + "cannot be created twice");
         }
-        return new SentryContext(GLOBAL_CONTEXT, name);
+        SentryContext context;
+        synchronized (contextMap) {
+            if(getContext(name) != null) {
+                throw new IllegalArgumentException("context exists: " + name);
+            }
+            context = new SentryContext(GLOBAL_CONTEXT, name);
+            contextMap.put(name, new WeakReference<>(context));
+        }
+        return context;
+    }
+
+    private static final Hashtable<String, WeakReference<SentryContext>> contextMap = new Hashtable<>();
+
+    private static SentryContext getContext(String name) {
+        synchronized (contextMap) {
+            WeakReference<SentryContext> contextRef = contextMap.get(name);
+            if(contextRef == null) {
+                return null;
+            }
+            final SentryContext context = contextRef.get();
+            if(context == null) {
+                contextMap.remove(name);
+                return null;
+            }
+            return context;
+        }
+    }
+
+    public static SentryContext getContextOrGlobal(String tryWithName) {
+        SentryContext context = getContext(tryWithName);
+        return context == null? GLOBAL_CONTEXT : context;
     }
 }

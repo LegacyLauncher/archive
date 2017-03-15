@@ -61,7 +61,7 @@ public class ServerNoticeAction extends NoticeAction {
         }
 
         LocalizableMenuItem selectItem = new LocalizableMenuItem(L10N_PREFIX + "choose-version", server.getName());
-        selectItem.setDisabledIcon(Images.getScaledIcon("info.png", 16));
+        selectItem.setDisabledIcon(Images.getScaledIcon("go.png", 16));
         selectItem.setEnabled(false);
         list.add(selectItem);
 

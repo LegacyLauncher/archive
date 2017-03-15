@@ -176,7 +176,7 @@ public class AccountHandler {
         Blocker.unblock("auth", (Blockable[]) (new Blockable[]{editor, list}));
     }
 
-    private static final String[] DISALLOWED = {"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay"};
+    private static final String[] DISALLOWED = {"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay", "magic_kitten51"};
 
     private boolean containDisallowed(Account acc) {
         if (allowDisallowed || acc == null || StringUtils.isEmpty(acc.getUsername()))
