@@ -72,6 +72,11 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
         }
     }
 
+    public void setIconHeight(int height) {
+        double ratio = (double) this.width / this.height;
+        setIconSize((int) (ratio * height), height);
+    }
+
     public DisabledImageIcon getDisabledInstance() {
         if (disabledInstance == null) {
             disabledInstance = new DisabledImageIcon(this);

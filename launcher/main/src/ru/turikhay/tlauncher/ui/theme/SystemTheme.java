@@ -13,10 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class SystemTheme extends Theme {
-    static {
-        SwingUtil.initLookAndFeel();
-    }
-
     static final int MAX_ARC = 64, MAX_BORDER = 24, BLACK_MIN = 64, WHITE_MAX = 192;
 
     private static final SystemTheme instance = new SystemTheme();

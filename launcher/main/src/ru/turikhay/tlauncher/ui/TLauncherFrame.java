@@ -31,7 +31,7 @@ import java.net.URL;
 import java.util.Iterator;
 
 public class TLauncherFrame extends JFrame {
-    public static final Dimension minSize = new Dimension(570, 570);
+    public static final Dimension minSize = new Dimension(700, 570);
     public static final Dimension maxSize = new Dimension(1920, 1080);
     public static final float minFontSize = 12, maxFontSize = 18;
     private static float fontSize = 12f;

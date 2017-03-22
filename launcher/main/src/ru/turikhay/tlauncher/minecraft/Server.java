@@ -94,10 +94,7 @@ public class Server {
     }
 
     protected void setFullAddress(String fullAddress) {
-        U.log("Setting full address:", fullAddress);
-
         if (fullAddress.startsWith("[") && fullAddress.contains("]:")) {
-            U.log("this is ipv6 with port");
             // ipv6 with port
             String address;
             int port;

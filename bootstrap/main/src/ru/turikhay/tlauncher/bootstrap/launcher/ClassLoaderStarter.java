@@ -46,6 +46,11 @@ class ClassLoaderStarter implements IStarter {
 
                 return null;
             }
+
+            @Override
+            protected void interrupted() {
+                bridge.setInterrupted();
+            }
         };
     }
 }

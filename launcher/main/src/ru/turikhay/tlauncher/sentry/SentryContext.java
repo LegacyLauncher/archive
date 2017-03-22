@@ -122,7 +122,8 @@ public final class SentryContext {
         SentryContext context;
         synchronized (contextMap) {
             if(getContext(name) != null) {
-                throw new IllegalArgumentException("context exists: " + name);
+                contextMap.remove(name);
+                //throw new IllegalArgumentException("context exists: " + name);
             }
             context = new SentryContext(GLOBAL_CONTEXT, name);
             contextMap.put(name, new WeakReference<>(context));

@@ -565,10 +565,21 @@ public final class Bootstrap {
     }
 
     private static void checkRunningConditions() {
+        JavaVersion supported = JavaVersion.create(1, 7, 0, 25);
+
+        if(JavaVersion.getCurrent().compareTo(supported) == -1) {
+            String message =
+                    "Your Java version is not supported. Please install at least " + supported.getVersion() + " from Java.com" +
+                    "\n" +
+                    "Ваша версия Java не поддерживается. Пожалуйста установите как минимум " + supported.getVersion() + " с сайта Java.com";
+            UserInterface.showError(message, null);
+            throw new Error(message);
+        }
+
         File jar = U.getJar(Bootstrap.class);
         String path = jar.getAbsolutePath();
 
-        if (path.contains("!")) {
+        if (path.contains("!" + File.separatorChar)) {
             String message =
                     "Please do not run (any) Java application which path contains folder name that ends with «!»" +
                             "\n" +
@@ -592,7 +603,7 @@ public final class Bootstrap {
     }
 
     private static void checkFreeSpace(File file) throws IOException {
-        if(file.getFreeSpace() < 1024) {
+        if(file.getFreeSpace() < 1024L * 64L) {
             throw new IOException("insufficient free space: " + file.getAbsolutePath());
         }
     }

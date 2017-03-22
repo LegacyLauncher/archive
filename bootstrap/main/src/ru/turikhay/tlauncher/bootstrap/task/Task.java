@@ -46,10 +46,16 @@ public abstract class Task<T> implements Callable<T> {
 
     public final void interrupt() {
         log("interrupted");
+
         this.interrupted = true;
+        interrupted();
+
         if(bindingTask != null) {
             bindingTask.interrupt();
         }
+    }
+
+    protected void interrupted() {
     }
 
     @Override

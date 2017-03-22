@@ -135,7 +135,7 @@ public final class LangConfiguration extends SimpleConfiguration {
         if (translations == null) {
             InputStream in = null;
             try {
-                in = LangConfiguration.class.getResourceAsStream("/lang/" + locale + ".properties");
+                in = LangConfiguration.class.getResourceAsStream("/lang/lang_" + locale + ".properties");
                 if (in == null) {
                     throw new NullPointerException("could not find translations for " + locale);
                 }

@@ -26,10 +26,11 @@ public final class BootEventDispatcher implements BootListener {
     }
 
     @Override
-    public void onBootStarted() {
+    public void onBootStarted() throws InterruptedException {
         if(booting || working) {
             throw new IllegalStateException("booting: " + booting + "; working:" + working);
         }
+        checkInterrupted();
         for (BootListener l : bridge.listenerList) {
             l.onBootStarted();
         }
@@ -38,18 +39,17 @@ public final class BootEventDispatcher implements BootListener {
     }
 
     @Override
-    public void onBootStateChanged(String stepName, double percentage) {
+    public void onBootStateChanged(String stepName, double percentage) throws InterruptedException {
         if(!booting || working) {
             throw new IllegalStateException("booting: " + booting + "; working:" + working);
         }
-
         if(percentage < this.percentage) {
             throw new IllegalArgumentException("percentage is lower than prevoius value: " + percentage + " (expecting bigger than " + this.percentage + ")");
         }
         if(percentage > 1.0) {
             throw new IllegalArgumentException("percentage is above 1.0");
         }
-
+        checkInterrupted();
         for (BootListener l : bridge.listenerList) {
             l.onBootStateChanged(stepName, percentage);
         }
@@ -58,10 +58,11 @@ public final class BootEventDispatcher implements BootListener {
     }
 
     @Override
-    public void onBootSucceeded() {
+    public void onBootSucceeded() throws InterruptedException {
         if(!booting || working) {
             throw new IllegalStateException("booting: " + booting + "; working:" + working);
         }
+        checkInterrupted();
         for (BootListener l : bridge.listenerList) {
             l.onBootSucceeded();
         }
@@ -71,7 +72,7 @@ public final class BootEventDispatcher implements BootListener {
     }
 
     @Override
-    public void onBootErrored(Throwable t) {
+    public void onBootErrored(Throwable t) throws InterruptedException {
         for (BootListener l : bridge.listenerList) {
             l.onBootErrored(t);
         }
@@ -89,6 +90,8 @@ public final class BootEventDispatcher implements BootListener {
     }
 
     void waitUntilClose() throws InterruptedException, BootException {
+        checkInterrupted();
+
         while(booting || working) {
             synchronized (this) {
                 wait();
@@ -106,6 +109,25 @@ public final class BootEventDispatcher implements BootListener {
         working = false;
         synchronized(this) {
             notifyAll();
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                log("Closing forcefully!");
+                System.exit(-1);
+            }
+        }).start();
+    }
+
+    private void checkInterrupted() throws InterruptedException {
+        if(bridge.interrupted) {
+            throw new InterruptedException("external interrupt");
         }
     }
 

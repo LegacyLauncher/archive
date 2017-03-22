@@ -33,14 +33,6 @@ public final class UserInterface {
         resourceBundle = b;
     }
 
-    static {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            log("Can't set system look and feel.", e);
-        }
-    }
-
     private final JFrame frame;
     private final JLabel iconLabel;
     private final JProgressBar progressBar;

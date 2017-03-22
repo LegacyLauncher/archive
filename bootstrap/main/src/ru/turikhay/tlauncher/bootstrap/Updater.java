@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.*;
+import java.util.Random;
 
 public class Updater extends Task<Void> {
 
@@ -29,7 +30,10 @@ public class Updater extends Task<Void> {
 
     @Override
     protected Void execute() throws Exception {
-        UserInterface.showWarning(UserInterface.getResourceBundle().getString("update"), null);
+        UserInterface.showWarning(
+                UserInterface.getResourceBundle().getString("update"),
+                entry.getUrl().get(new Random().nextInt(entry.getUrl().size()))
+        );
 
         final boolean exitOnFinish = this.exitOnFinish;
 

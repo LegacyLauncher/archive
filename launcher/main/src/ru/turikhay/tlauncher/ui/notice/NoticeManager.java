@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.tlauncher.configuration.BootConfiguration;
 import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.NoticeScene;
@@ -68,10 +69,19 @@ public final class NoticeManager implements LocalizableComponent {
                 if(ruRU != null && ukUA != null && byLocaleMap.get(ruRU) != null && byLocaleMap.get(ukUA) == null) {
                     byLocaleMap.put(ukUA, byLocaleMap.get(ruRU));
                 }
-                Locale current = frame.getLauncher().getLang().getLocale(), enUS = Locale.US;
+
+                List<Notice> globalNoticeList = byLocaleMap.get(Locale.US);
+                if(globalNoticeList != null) {
+                    for(Locale locale : LangConfiguration.getAvailableLocales()) {
+                        if(byLocaleMap.get(locale) == null) {
+                            byLocaleMap.put(locale, globalNoticeList);
+                        }
+                    }
+                }
+                /*Locale current = frame.getLauncher().getLang().getLocale(), enUS = Locale.US;
                 if(byLocaleMap.get(current) == null && enUS != null) {
                     byLocaleMap.put(current, byLocaleMap.get(enUS));
-                }
+                }*/
             }
 
             selectRandom();
@@ -138,17 +148,35 @@ public final class NoticeManager implements LocalizableComponent {
         }
         long expiryDate = frame.getLauncher().getSettings().getLong("notice.id." + notice.getId());
         if(System.currentTimeMillis() > expiryDate) {
-            setHidden(notice, false);
+            setHidden(notice, false, false);
             return false;
         }
         return true;
     }
 
-    public void setHidden(Notice notice, boolean hidden) {
-        if(hidden) {
-            Stats.noticeHiddenByUser(notice);
+    private void setHidden(Notice notice, boolean hidden, boolean notify) {
+        if(notify) {
+            if (hidden) {
+                Stats.noticeHiddenByUser(notice);
+            } else {
+                Stats.noticeShownByUser(notice);
+            }
         }
         frame.getLauncher().getSettings().set("notice.id." + notice.getId(), hidden? System.currentTimeMillis() + HIDDEN_DELAY : null);
+    }
+
+    public void setHidden(Notice notice, boolean hidden) {
+        setHidden(notice, hidden, true);
+    }
+
+    public void setAllHidden() {
+        List<Notice> noticeList = getForCurrentLocale();
+        if(noticeList == null || noticeList.isEmpty()) {
+            return;
+        }
+        for(Notice notice : noticeList) {
+            setHidden(notice, true, false);
+        }
     }
 
     @Override
