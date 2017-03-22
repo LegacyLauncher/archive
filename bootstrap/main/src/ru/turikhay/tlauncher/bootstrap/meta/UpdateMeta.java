@@ -20,8 +20,8 @@ import java.util.*;
 public class UpdateMeta {
     private static final List<String> UPDATE_URL_LIST = Arrays.asList(
             "http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json",
+            "http://tlauncherrepo.com/%s/bootstrap.json",
             "http://u.tlauncher.ru/%s/bootstrap.json",
-            "http://repo.tlauncher.ru/%s/bootstrap.json",
             "http://turikhay.ru/tlauncher/%s/bootstrap.json",
             "http://tlaun.ch/%s/bootstrap.json"
     );

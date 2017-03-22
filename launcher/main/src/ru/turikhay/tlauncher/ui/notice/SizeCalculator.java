@@ -10,7 +10,7 @@ import java.awt.*;
 import java.util.concurrent.Callable;
 
 class SizeCalculator implements Callable<Dimension> {
-    private static final int MIN_WIDTH = 300, MIN_HEIGHT = 48, MAX_WIDTH = 500;
+    private static final int MIN_WIDTH = 300, MIN_HEIGHT = 48, MAX_WIDTH = 450;
     private static final WeakObjectPool<NoticeEditorPane> editorPanePool = new WeakObjectPool<NoticeEditorPane>(new Factory<NoticeEditorPane>() {
         @Override
         public NoticeEditorPane createNew() {

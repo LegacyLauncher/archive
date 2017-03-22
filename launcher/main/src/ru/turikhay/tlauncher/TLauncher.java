@@ -73,12 +73,7 @@ public final class TLauncher {
 
         this.bridge = bridge;
         this.dispatcher = dispatcher;
-        U.log("Options:", bridge.getOptions());
-
-        this.bootConfig = BootConfiguration.parse(bridge);
-
-        Repository.updateList(bootConfig.getRepositories());
-        Stats.setAllowed(bootConfig.isStatsAllowed());
+        U.log("Options:", bridge.getOptions() == null? null : bridge.getOptions().length());
 
         OptionSet optionSet = ArgumentParser.parseArgs(bridge.getArgs());
         debug = optionSet.has("debug");
@@ -88,6 +83,11 @@ public final class TLauncher {
         dispatcher.passClient(config.getClient());
         this.lang = new LangConfiguration();
         initConfig();
+
+        this.bootConfig = BootConfiguration.parse(bridge);
+
+        Repository.updateList(bootConfig.getRepositories());
+        Stats.setAllowed(bootConfig.isStatsAllowed());
 
         dispatcher.onBootStateChanged("Loading logger", 0.15);
         this.logger = new Logger(config, printLogger, "Logger", config.getLoggerType() == Configuration.LoggerType.GLOBAL);
@@ -377,7 +377,7 @@ public final class TLauncher {
         return Static.getServerList();
     }
 
-    public static void launch(BootBridge bridge) {
+    public static void launch(BootBridge bridge) throws InterruptedException {
         checkNotRunning();
 
         setupErrorHandler();
@@ -417,7 +417,7 @@ public final class TLauncher {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         launch(BootBridge.create(args));
     }
 

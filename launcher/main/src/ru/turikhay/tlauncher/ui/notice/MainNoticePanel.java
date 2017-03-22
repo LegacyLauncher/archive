@@ -17,6 +17,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
 
     private final LocalizableMenuItem hideNotice = new LocalizableMenuItem("notice.action.hide");
     {
+        Images.getScaledIcon("eye-slash.png", 16).setup(hideNotice);
         hideNotice.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -24,6 +25,18 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
                     manager.setHidden(getNotice(), true);
                     manager.selectRandom();
                 }
+            }
+        });
+    }
+
+    private final LocalizableMenuItem hideAllNotices = new LocalizableMenuItem("notice.action.hide-all");
+    {
+        Images.getScaledIcon("remove.png", 16).setup(hideAllNotices);
+        hideAllNotices.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                manager.setAllHidden();
+                manager.selectNotice(null);
             }
         });
     }
@@ -43,9 +56,17 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         super(scene.getMainPane().getRootFrame().getNotices());
         this.defaultScene = scene;
 
-        popupMenu.registerItem(hideNotice);
-        popupMenu.registerItem(openNoticeScene);
-
+        /*if(TLauncher.isBeta()) {
+            registerExtraItems(openNoticeScene, null, hideNotice, hideAllNotices);
+        } else {
+            registerExtraItems(openNoticeScene, null, hideNotice);
+        }*/
+        registerExtraAction("expand.png", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                defaultScene.getMainPane().openNoticeScene();
+            }
+        });
         scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
     }
 

@@ -12,6 +12,8 @@ public final class BootBridge {
     private final String options;
     private UUID client;
 
+    volatile boolean interrupted;
+
     private BootBridge(String bootstrapVersion, String[] args, String options) {
         if(args == null) {
             args = new String[0];
@@ -36,6 +38,10 @@ public final class BootBridge {
 
     public UUID getClient() {
         return client;
+    }
+
+    public void setInterrupted() {
+        interrupted = true;
     }
 
     void setClient(UUID client) {

@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/launcher/launcher.iml" filepath="$PROJECT_DIR$/launcher/launcher.iml" />
       <module fileurl="file://$PROJECT_DIR$/launcher-mcl/launcher-mcl.iml" filepath="$PROJECT_DIR$/launcher-mcl/launcher-mcl.iml" />
       <module fileurl="file://$PROJECT_DIR$/lib/lib.iml" filepath="$PROJECT_DIR$/lib/lib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loc-tool/loc-tool.iml" filepath="$PROJECT_DIR$/loc-tool/loc-tool.iml" />
     </modules>
   </component>
 </project>
