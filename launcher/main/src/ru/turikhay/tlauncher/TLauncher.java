@@ -14,6 +14,7 @@ import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -36,8 +37,10 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
@@ -126,7 +129,19 @@ public final class TLauncher {
         ready = true;
 
         dispatcher.onBootSucceeded();
+
         SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
+
+        if(config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
+            Sentry.sendWarning(TLauncher.class, "bubble client",
+                    DataBuilder.create("uuid", config.getClient())
+                            .add("new", UUID.randomUUID())
+                            .add("path", new File(""))
+                            .add("home", MinecraftUtil.getWorkingDirectory())
+                            .add("time", Calendar.getInstance().toString())
+                            .add("configLocation", config.getFile())
+            );
+        }
     }
 
     public BootConfiguration getBootConfig() {

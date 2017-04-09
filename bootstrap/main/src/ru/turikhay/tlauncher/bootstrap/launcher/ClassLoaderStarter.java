@@ -8,11 +8,13 @@ import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 class ClassLoaderStarter implements IStarter {
     @Override
@@ -42,7 +44,15 @@ class ClassLoaderStarter implements IStarter {
                 Class<?> clazz = Class.forName(launcher.getMeta().getMainClass(), true, childCl);
 
                 Method method = clazz.getMethod("launch", BootBridge.class);
-                method.invoke(null, bridge);
+
+                try {
+                    method.invoke(null, bridge);
+                } catch(InvocationTargetException invokeException) {
+                    if(invokeException.getCause() != null && invokeException.getCause() instanceof Exception) {
+                        throw (Exception) invokeException.getCause();
+                    }
+                    throw invokeException;
+                }
 
                 return null;
             }

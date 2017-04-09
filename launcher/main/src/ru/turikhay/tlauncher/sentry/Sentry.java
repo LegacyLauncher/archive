@@ -15,6 +15,10 @@ public final class Sentry {
         SentryContext.GLOBAL_CONTEXT.sendError(clazz, message, t, data);
     }
 
+    public static void sendWarning(Class clazz, String message, DataBuilder data) {
+        SentryContext.GLOBAL_CONTEXT.sendWarning(clazz, message, data);
+    }
+
     private Sentry() {
     }
 }

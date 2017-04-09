@@ -104,6 +104,9 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             wrapper.setNotice(notice);
 
             Dimension size = wrapper.updateSize();
+            if(size == null) {
+                continue;
+            }
             wrapper.setMaximumSize(size);
 
             Del del = del(Del.CENTER);

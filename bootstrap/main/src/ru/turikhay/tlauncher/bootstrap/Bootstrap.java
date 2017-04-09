@@ -80,13 +80,13 @@ public final class Bootstrap {
         log("Target lib folder:", bootstrap.getTargetLibFolder());
 
         try {
-            checkAccessible(bootstrap.getTargetJar());
+            checkAccessible(bootstrap.getTargetJar(), false);
         } catch (IOException e) {
             throw new RuntimeException("error checking target jar: " + bootstrap.getTargetJar().getAbsolutePath(), e);
         }
 
         try {
-            checkAccessible(bootstrap.getTargetLibFolder());
+            checkAccessible(bootstrap.getTargetLibFolder(), false);
         } catch (IOException e) {
             throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
         }
@@ -611,7 +611,7 @@ public final class Bootstrap {
             }
 
             try {
-                checkAccessible(jar);
+                checkAccessible(jar, false);
             } catch (IOException jarException) {
                 file = jar;
 
@@ -638,7 +638,7 @@ public final class Bootstrap {
             File tempFile;
             try {
                 tempFile = File.createTempFile("bootstrap", null);
-                checkAccessible(tempFile);
+                checkAccessible(tempFile, true);
             } catch (IOException tempFileException) {
                 if (tempFileException instanceof UnknownFreeSpaceException) {
                     message =
@@ -671,17 +671,17 @@ public final class Bootstrap {
         }
     }
 
-    private static void checkAccessible(File file) throws IOException {
+    private static void checkAccessible(File file, boolean requireExistance) throws IOException {
         if(!file.exists()) {
-            throw new FileNotFoundException(file.getAbsolutePath());
+            if(requireExistance) {
+                throw new FileNotFoundException(file.getAbsolutePath());
+            }
+        } else {
+            NoFileAccessException.throwIfNoAccess(file);
         }
 
-        NoFileAccessException.throwIfNoAccess(file);
-
         long freeSpace = file.getFreeSpace();
-        if(freeSpace == 0L) {
-            throw new UnknownFreeSpaceException();
-        } else if(freeSpace < 1024L * 64L) {
+        if(freeSpace != 0L && freeSpace < 1024L * 64L) {
             throw new InsufficientFreeSpace();
         }
     }
