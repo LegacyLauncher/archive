@@ -1,8 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap;
 
 import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
-import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
-import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
+import ru.turikhay.tlauncher.bootstrap.exception.*;
 import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.*;
@@ -30,7 +29,9 @@ import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
 import ru.turikhay.tlauncher.bootstrap.util.FileValueConverter;
 import shaded.ru.turikhay.util.windows.wmi.WMI;
 
+import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -78,6 +79,18 @@ public final class Bootstrap {
         bootstrap.setTargetLibFolder(targetLibFolderParser.value(parsed));
         log("Target lib folder:", bootstrap.getTargetLibFolder());
 
+        try {
+            checkAccessible(bootstrap.getTargetJar());
+        } catch (IOException e) {
+            throw new RuntimeException("error checking target jar: " + bootstrap.getTargetJar().getAbsolutePath(), e);
+        }
+
+        try {
+            checkAccessible(bootstrap.getTargetLibFolder());
+        } catch (IOException e) {
+            throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
+        }
+
         recordBreadcrumb("createBootstrap", DataBuilder.create("localBootstrapMeta", localBootstrapMeta).add("targetJar", bootstrap.getTargetJar()).add("targetLibFolder", bootstrap.getTargetLibFolder()));
         return bootstrap;
     }
@@ -113,6 +126,8 @@ public final class Bootstrap {
             bootstrap.defTask(args, bootBridgeRef).call();
         } catch(TaskInterruptedException interrupted) {
             log("Default task was interrupted");
+        } catch(InterruptedException interrupted) {
+            log("Interrupted");
         } catch (Exception e) {
             e.printStackTrace();
             handleFatalError(bootstrap, bootBridgeRef.getObject(), e, true);
@@ -233,7 +248,7 @@ public final class Bootstrap {
         try {
             internal = new InternalLauncher();
         } catch (LauncherNotFoundException e) {
-            log("Could not locate internal launcher", e);
+            log("Internal launcher is not located in the classpath");
             internal = null;
         }
         this.internal = internal;
@@ -241,7 +256,7 @@ public final class Bootstrap {
         setTargetJar(targetJar);
         setTargetLibFolder(targetLibFolder);
 
-        recordBreadcrumb("initBootstrap", new DataBuilder().add("ui", ui).add("internalLauncher", internal == null? null : internal.toString()).add("targetJar", targetJar).add("targetLibFolder", targetLibFolder));
+        recordBreadcrumb("initBootstrap", new DataBuilder().add("ui", ui).add("internalLauncher", String.valueOf(internal)).add("targetJar", targetJar).add("targetLibFolder", targetLibFolder));
     }
 
     public Bootstrap() {
@@ -385,7 +400,7 @@ public final class Bootstrap {
                     updateMeta = bindTo(UpdateMeta.fetchFor(meta.getShortBrand()), .0, .25);
                 } catch(ExceptionList list) {
                     log("Could not retrieve update meta:", list);
-                    sendError(Event.Level.ERROR, list, null);
+                    sendError(Event.Level.ERROR, list, DataBuilder.create("type", FatalExceptionType.getType(list)));
 
                     updateMeta = null;
                 }
@@ -512,7 +527,8 @@ public final class Bootstrap {
                 .withEnvironment(System.getProperty("os.name"))
                 .withLevel(level)
                 .withSentryInterface(new ExceptionInterface(t))
-                .withRelease(String.valueOf(getMeta().getVersion()));
+                .withRelease(String.valueOf(getMeta().getVersion()))
+                .withServerName(JavaVersion.getCurrent().toString());
         if(b != null) {
             for(Map.Entry<String, String> entry : b.build().entrySet()) {
                 builder.withExtra(entry.getKey(), entry.getValue());
@@ -576,35 +592,97 @@ public final class Bootstrap {
             throw new Error(message);
         }
 
-        File jar = U.getJar(Bootstrap.class);
-        String path = jar.getAbsolutePath();
+        String message = null;
+        IOException ioE = null;
+        File file = null;
 
-        if (path.contains("!" + File.separatorChar)) {
-            String message =
-                    "Please do not run (any) Java application which path contains folder name that ends with «!»" +
-                            "\n" +
-                            "Не запускайте Java-приложения в директориях, чей путь содержит «!». Переместите TLauncher в другую папку." +
-                            "\n\n" + path;
-            UserInterface.showError(message, null);
-            throw new Error(message);
+        findProblem:
+        {
+            File jar = U.getJar(Bootstrap.class);
+            String path = jar.getAbsolutePath();
+
+            if (path.contains("!" + File.separatorChar)) {
+                message =
+                        "Please do not run (any) Java application which path contains folder name that ends with «!»" +
+                                "\n" +
+                                "Не запускайте Java-приложения в директориях, чей путь содержит «!». Переместите TLauncher в другую папку." +
+                                "\n\n" + path;
+                break findProblem;
+            }
+
+            try {
+                checkAccessible(jar);
+            } catch (IOException jarException) {
+                file = jar;
+
+                if (jarException instanceof UnknownFreeSpaceException) {
+                    message =
+                            "Could not determine free space on partition storing Bootstrap. Please check your hard drive.\n" +
+                                    "\n" +
+                                    "Не удалось определить свободное место. Проверьте диск на наличие ошибок.";
+                } else if (jarException instanceof InsufficientFreeSpace) {
+                    message =
+                            "Insufficient disk space on partition storing JAR file.\n" +
+                                    "\n" +
+                                    "Недостаточно места на диске. с которого запускается JAR-файл. Пожалуйста, освбодите место и попробуйте снова.";
+                } else {
+                    message =
+                            "Could not access JAR file.\n" +
+                                    "\n" +
+                                    "Не удалось получить доступ к JAR-файлу.";
+                }
+                ioE = jarException;
+                break findProblem;
+            }
+
+            File tempFile;
+            try {
+                tempFile = File.createTempFile("bootstrap", null);
+                checkAccessible(tempFile);
+            } catch (IOException tempFileException) {
+                if (tempFileException instanceof UnknownFreeSpaceException) {
+                    message =
+                            "Could not determine free space on partition storing temporary folder. Please check your hard drive.\n" +
+                                    "\n" +
+                                    "Не удалось определить свободное место на системном диске. Либо он полон, либо содержит ошибки.";
+                } else if (tempFileException instanceof InsufficientFreeSpace) {
+                    message =
+                            "Insufficient disk space on partition storing temporary folder.\n" +
+                                    "\n" +
+                                    "Недостаточно места на системном диске. Пожалуйста, освободите место и попробуйте снова.";
+                } else {
+                    message =
+                            "Could not access temporary folder. Please check your hard drive.\n" +
+                                    "\n" +
+                                    "Не удалось создать временный файл. Проверьте диск на наличие ошибок.";
+                }
+                ioE = tempFileException;
+                break findProblem;
+            }
+
+            if(tempFile.getParentFile() != null && tempFile.isDirectory()) {
+                ImageIO.setCacheDirectory(tempFile.getParentFile());
+            }
         }
 
-        try {
-            checkFreeSpace(jar);
-            checkFreeSpace(File.createTempFile("bootstrap", null));
-        } catch(Exception e) {
-            String message =
-                    "Insufficient disk space on partition storing execution path or temporary folder.\n" +
-                    "\n" +
-                    "Недостаточно места на системном диске или на диске, с которого запускается приложение.";
-            UserInterface.showError(message, null);
-            throw new Error(message, e);
+        if(message != null) {
+            UserInterface.showError(message, file == null? null : file.getAbsolutePath());
+            throw new Error(message, ioE);
         }
     }
 
-    private static void checkFreeSpace(File file) throws IOException {
-        if(file.getFreeSpace() < 1024L * 64L) {
-            throw new IOException("insufficient free space: " + file.getAbsolutePath());
+    private static void checkAccessible(File file) throws IOException {
+        if(!file.exists()) {
+            throw new FileNotFoundException(file.getAbsolutePath());
+        }
+
+        NoFileAccessException.throwIfNoAccess(file);
+
+        long freeSpace = file.getFreeSpace();
+        if(freeSpace == 0L) {
+            throw new UnknownFreeSpaceException();
+        } else if(freeSpace < 1024L * 64L) {
+            throw new InsufficientFreeSpace();
         }
     }
 

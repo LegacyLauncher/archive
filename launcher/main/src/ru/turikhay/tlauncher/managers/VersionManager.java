@@ -78,7 +78,7 @@ public class VersionManager extends InterruptibleComponent {
 
         Object lock1 = new Object();
         Time.start(lock1);
-        Map<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList> result1 = null;
+        Map<AsyncObject<RawVersionList>, RawVersionList> result1 = null;
         Throwable e1 = null;
 
         try {
@@ -120,11 +120,11 @@ public class VersionManager extends InterruptibleComponent {
 
                 if (result1 != null) {
                     synchronized (versionFlushLock) {
-                        Set<Map.Entry<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList>> entrySet = result1.entrySet();
-                        for (Entry<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList> entry : entrySet) {
+                        Set<Map.Entry<AsyncObject<RawVersionList>, RawVersionList>> entrySet = result1.entrySet();
+                        for (Entry<AsyncObject<RawVersionList>, RawVersionList> entry : entrySet) {
                             if (checkConsistency(entrySet, entry)) {
                                 AsyncRawVersionListObject object = (AsyncRawVersionListObject) entry.getKey();
-                                VersionList.RawVersionList list = entry.getValue();
+                                RawVersionList list = entry.getValue();
                                 object.getVersionList().refreshVersions(list);
                                 latestVersions_.putAll(object.getVersionList().getLatestVersions());
                             }
@@ -157,9 +157,9 @@ public class VersionManager extends InterruptibleComponent {
         }
     }
 
-    private boolean checkConsistency(Set<Map.Entry<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList>> set,
-                                     Map.Entry<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList> entry) {
-        VersionList.RawVersionList list = entry.getValue();
+    private boolean checkConsistency(Set<Map.Entry<AsyncObject<RawVersionList>, RawVersionList>> set,
+                                     Map.Entry<AsyncObject<RawVersionList>, RawVersionList> entry) {
+        RawVersionList list = entry.getValue();
         if (list == null) {
             return false;
         }
@@ -169,7 +169,7 @@ public class VersionManager extends InterruptibleComponent {
             return true;
         }
 
-        for (Map.Entry<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList> checkEntry : set) {
+        for (Map.Entry<AsyncObject<RawVersionList>, RawVersionList> checkEntry : set) {
             if (checkEntry.getValue() == list && checkEntry.getKey() == object) {
                 continue;
             }
@@ -215,12 +215,12 @@ public class VersionManager extends InterruptibleComponent {
         asyncRefresh(false);
     }
 
-    private Map<AsyncObject<VersionList.RawVersionList>, VersionList.RawVersionList> refreshVersions(boolean local) throws IOException {
+    private Map<AsyncObject<RawVersionList>, RawVersionList> refreshVersions(boolean local) throws IOException {
         localList.refreshVersions();
         if (local) {
             return null;
         } else {
-            AsyncObjectContainer<VersionList.RawVersionList> container = new AsyncObjectContainer<VersionList.RawVersionList>();
+            AsyncObjectContainer<RawVersionList> container = new AsyncObjectContainer<RawVersionList>();
             RemoteVersionList[] var6 = remoteLists;
             int var5 = remoteLists.length;
 
@@ -457,7 +457,7 @@ public class VersionManager extends InterruptibleComponent {
         return container;
     }
 
-    private class AsyncRawVersionListObject extends AsyncObject<VersionList.RawVersionList> {
+    private class AsyncRawVersionListObject extends AsyncObject<RawVersionList> {
         private final RemoteVersionList remoteList;
 
         AsyncRawVersionListObject(RemoteVersionList remoteList) {
@@ -468,7 +468,7 @@ public class VersionManager extends InterruptibleComponent {
             return remoteList;
         }
 
-        protected VersionList.RawVersionList execute() throws AsyncObjectGotErrorException {
+        protected RawVersionList execute() throws AsyncObjectGotErrorException {
             try {
                 return remoteList.getRawList();
             } catch (Exception var2) {

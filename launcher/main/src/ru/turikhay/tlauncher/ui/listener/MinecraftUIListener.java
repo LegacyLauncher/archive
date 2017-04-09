@@ -46,6 +46,7 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
     public void onMinecraftClose() {
         if (t.getMinecraftLauncher().isLaunchAssist()) {
             t.getFrame().setVisible(true);
+            t.getFrame().getNotices().selectRandom();
         }
     }
 

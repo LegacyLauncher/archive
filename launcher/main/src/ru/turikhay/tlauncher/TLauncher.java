@@ -204,6 +204,7 @@ public final class TLauncher {
 
         launcher.setVersion(versionName);
         launcher.setServer(server, serverId);
+        launcher.setPromotedServers(bootConfig.getPromotedServers());
 
         launcher.start();
 
@@ -391,6 +392,7 @@ public final class TLauncher {
         }
         U.log("Beta:", isBeta());
         U.log("Machine info:", OS.getSummary());
+        U.log("Java version:", OS.JAVA_VERSION);
         U.log("Startup time:", DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(new Date()));
         U.log("Directory:", new File(""));
         U.log("Executable location:", FileUtil.getRunningJar());

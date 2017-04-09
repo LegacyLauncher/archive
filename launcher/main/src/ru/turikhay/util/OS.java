@@ -125,7 +125,7 @@ public enum OS {
     }
 
     public static String getSummary() {
-        return NAME + " (" + VERSION + ") " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + " (" + JAVA_VERSION + "), " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + Arch.AVAILABLE_PROCESSORS + "x CPU";
+        return NAME + " (" + VERSION + ") " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") +", " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + Arch.AVAILABLE_PROCESSORS + "x CPU";
     }
 
     private static void rawOpenLink(URI uri) throws Throwable {

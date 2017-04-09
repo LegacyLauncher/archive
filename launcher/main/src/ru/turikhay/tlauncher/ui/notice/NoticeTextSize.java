@@ -13,8 +13,8 @@ class NoticeTextSize {
     private static final ExecutorService computators = Executors.newFixedThreadPool(2);
 
     private final Notice notice;
-    private final Map<Float, Future<Dimension>> pending = new HashMap<Float, Future<Dimension>>();
-    private final Map<Float, Dimension> byFontMap = new HashMap<Float, Dimension>();
+    private final Map<ParamPair, Future<Dimension>> pending = new HashMap<ParamPair, Future<Dimension>>();
+    private final Map<ParamPair, Dimension> byPairMap = new HashMap<ParamPair, Dimension>();
 
     NoticeTextSize(Notice notice) {
         this.notice = U.requireNotNull(notice, "notice");
@@ -24,15 +24,15 @@ class NoticeTextSize {
         return notice;
     }
 
-    Dimension get(float size) {
+    Dimension get(ParamPair param) {
         Future<Dimension> future;
 
         synchronized (pending) {
-            Dimension result = byFontMap.get(size);
+            Dimension result = byPairMap.get(param);
             if (result != null) {
                 return result;
             }
-            future = pend(size);
+            future = pend(param);
         }
 
         Dimension d;
@@ -46,22 +46,22 @@ class NoticeTextSize {
             throw new RuntimeException(e);
         }
 
-        set(size, d);
+        set(param, d);
         return d;
     }
 
-    Future<Dimension> pend(float size) {
+    Future<Dimension> pend(ParamPair param) {
         synchronized (pending) {
-            Future<Dimension> future = pending.get(size);
+            Future<Dimension> future = pending.get(param);
             if(future == null) {
-                future = computators.submit(new SizeCalculator(this, size));
-                pending.put(size, future);
+                future = computators.submit(new SizeCalculator(this, param));
+                pending.put(param, future);
             }
             return future;
         }
     }
 
-    private void set(float size, Dimension d) {
-        byFontMap.put(size, U.requireNotNull(d));
+    private void set(ParamPair param, Dimension d) {
+        byPairMap.put(param, U.requireNotNull(d));
     }
 }

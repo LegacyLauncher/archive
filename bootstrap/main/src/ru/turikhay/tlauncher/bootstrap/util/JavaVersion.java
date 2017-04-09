@@ -41,7 +41,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
         this.version = version;
         this.identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
-        this.epoch = ifPositive(epoch, "epoch");
+        this.epoch = epoch == 0? 1 : ifPositive(epoch, "epoch");
         this.major = ifPositive(major, "major");
         this.minor = ifNotNegative(minor, "minor");
 
@@ -143,7 +143,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
         return new JavaVersion(epoch + "." + major + "." + minor + (update > 0 ? "_" + update : ""), null, epoch, major, minor, update);
     }
 
-    private static final Pattern pattern = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:_([0-9]+))?(?:-(.+))?");
+    private static final Pattern pattern = Pattern.compile("(?:([0-9]+)\\.)?([0-9]+)(?:\\.([0-9]+))?(?:_([0-9]+))?(?:-(.+))?");
 
     public static JavaVersion parse(String version) {
         if(StringUtils.isBlank(version)) {
@@ -160,9 +160,9 @@ public final class JavaVersion implements Comparable<JavaVersion> {
         }
 
         return new JavaVersion(version, matcher.group(5),
-                parse(matcher.group(1), "epoch"),
+                parse(matcher.group(1), "epoch", true),
                 parse(matcher.group(2), "major"),
-                parse(matcher.group(3), "minor"),
+                parse(matcher.group(3), "minor", true),
                 parse(matcher.group(4), "update", true)
         );
     }

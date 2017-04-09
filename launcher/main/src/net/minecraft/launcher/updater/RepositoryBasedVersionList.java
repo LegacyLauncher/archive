@@ -21,8 +21,8 @@ public class RepositoryBasedVersionList extends RemoteVersionList {
         }
     }
 
-    public VersionList.RawVersionList getRawList() throws IOException {
-        VersionList.RawVersionList rawList = super.getRawList();
+    public RawVersionList getRawList() throws IOException {
+        RawVersionList rawList = super.getRawList();
         Iterator var3 = rawList.getVersions().iterator();
 
         while (var3.hasNext()) {

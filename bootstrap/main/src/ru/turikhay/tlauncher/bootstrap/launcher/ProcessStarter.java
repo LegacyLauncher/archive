@@ -4,6 +4,7 @@ import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import shaded.org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -74,21 +75,35 @@ public class ProcessStarter implements IStarter {
 
     public static Set<File> getSystemClasspath() throws IOException {
         HashSet<File> set = new HashSet<File>();
-        URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        for(URL url : systemClassLoader.getURLs()) {
-            File systemClasspathEntry;
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        if(systemClassLoader instanceof URLClassLoader) {
+            for (URL url : ((URLClassLoader) systemClassLoader).getURLs()) {
+                File systemClasspathEntry;
 
-            try {
-                systemClasspathEntry = new File(url.toURI());
-            } catch (URISyntaxException e) {
-                throw new IOException(e);
+                try {
+                    systemClasspathEntry = new File(url.toURI());
+                } catch (URISyntaxException e) {
+                    throw new IOException(e);
+                }
+
+                if (!systemClasspathEntry.exists()) {
+                    throw new FileNotFoundException("system classpath not found: " + systemClasspathEntry.getAbsolutePath());
+                }
+
+                set.add(systemClasspathEntry);
             }
-
-            if(!systemClasspathEntry.exists()) {
-                throw new FileNotFoundException("system classpath not found: " + systemClasspathEntry.getAbsolutePath());
+        } else {
+            String classPath = System.getProperty("tlauncher.bootstrap.classpath");
+            if(classPath == null) {
+                throw new Error("tlauncher.bootstrap.classpath is not defined");
             }
-
-            set.add(systemClasspathEntry);
+            for(String path : StringUtils.split(classPath, File.pathSeparatorChar)) {
+                File file = new File(path);
+                if(!file.isFile()) {
+                    throw new FileNotFoundException("predefined classpath entry not found: " + path + "(points to: " + file.getAbsolutePath() + ")");
+                }
+                set.add(file);
+            }
         }
         return set;
     }

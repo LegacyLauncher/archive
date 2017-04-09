@@ -82,10 +82,10 @@ public abstract class VersionList {
         }
     }
 
-    public VersionList.RawVersionList getRawList() throws IOException {
+    public RawVersionList getRawList() throws IOException {
         Object lock = new Object();
         Time.start(lock);
-        VersionList.RawVersionList list = gson.fromJson(getUrl("versions/versions.json"), RawVersionList.class);
+        RawVersionList list = gson.fromJson(getUrl("versions/versions.json"), RawVersionList.class);
         Iterator var4 = list.versions.iterator();
 
         while (var4.hasNext()) {
@@ -97,7 +97,7 @@ public abstract class VersionList {
         return list;
     }
 
-    public void refreshVersions(VersionList.RawVersionList versionList) {
+    public void refreshVersions(RawVersionList versionList) {
         clearCache();
         Iterator var3 = versionList.getVersions().iterator();
 
@@ -198,18 +198,5 @@ public abstract class VersionList {
 
     void log(Object... obj) {
         U.log("[" + getClass().getSimpleName() + "]", obj);
-    }
-
-    public static class RawVersionList {
-        List<PartialVersion> versions = new ArrayList();
-        Map<ReleaseType, String> latest = new EnumMap(ReleaseType.class);
-
-        public List<PartialVersion> getVersions() {
-            return versions;
-        }
-
-        public Map<ReleaseType, String> getLatestVersions() {
-            return latest;
-        }
     }
 }

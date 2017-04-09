@@ -146,7 +146,7 @@ public class Configuration extends SimpleConfiguration {
             set("gui.font.old", getInteger("gui.font"));
         }
 
-        log(properties.entrySet());
+        log(properties);
 
         if (isSaveable()) {
             try {

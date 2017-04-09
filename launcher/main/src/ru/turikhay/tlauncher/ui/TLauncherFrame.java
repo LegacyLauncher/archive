@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.tlauncher.ui.frames.NewFeaturesFrame;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.logger.Logger;
@@ -16,6 +17,7 @@ import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.ExtendedThread;
 
 import javax.swing.*;
@@ -149,6 +151,22 @@ public class TLauncherFrame extends JFrame {
         } else {
             setExtendedState(windowState);
         }
+
+        if(settings.getInteger("gui.features") != 1337) {
+            settings.set("gui.features", 1337);
+
+            final NewFeaturesFrame newFeaturesFrame = new NewFeaturesFrame(this);
+            newFeaturesFrame.showAtCenter();
+            newFeaturesFrame.setAlwaysOnTop(true);
+
+            AsyncThread.execute(new Runnable() {
+                @Override
+                public void run() {
+                    U.sleepFor(3000);
+                    newFeaturesFrame.setAlwaysOnTop(false);
+                }
+            });
+        }
     }
 
     public TLauncher getLauncher() {
@@ -184,9 +202,13 @@ public class TLauncherFrame extends JFrame {
     }
 
     public void updateTitle() {
-        StringBuilder brandBuilder = new StringBuilder()
-                .append(TLauncher.getVersion().getNormalVersion())
-                .append(" [").append(TLauncher.getBrand()).append("]");
+        StringBuilder brandBuilder = new StringBuilder();
+
+        if (!TLauncher.getInstance().isDebug()) {
+            brandBuilder.append(TLauncher.getVersion().getNormalVersion()).append(" ");
+        }
+
+        brandBuilder.append("[").append(TLauncher.getBrand()).append("]");
 
         if (TLauncher.getInstance().isDebug()) {
             brandBuilder.append(" [DEBUG]");

@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.notice.MainNoticePanel;
 import ru.turikhay.tlauncher.ui.notice.NoticePanel;
+import ru.turikhay.tlauncher.ui.notice.NoticeSidePanel;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.Direction;
@@ -27,6 +28,7 @@ public class DefaultScene extends PseudoScene {
     public final SideNotifier notifier;
     public final LoginForm loginForm;
     public final SettingsPanel settingsForm;
+    public final NoticeSidePanel noticeSidePanel;
     private DefaultScene.SidePanel sidePanel;
     private ExtendedPanel sidePanelComp;
     private Direction lfDirection;
@@ -50,9 +52,18 @@ public class DefaultScene extends PseudoScene {
         add(loginForm);
         noticePanel = new MainNoticePanel(this);
         add(noticePanel);
+        noticeSidePanel = new NoticeSidePanel(this);
+        noticeSidePanel.setVisible(false);
+        add(noticeSidePanel);
         //infoPanel = new NoticePanel(this);
         //add(infoPanel);
         updateDirection();
+
+        if(isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+            setSidePanel(null);
+        } else {
+            noticePanel.panelShown();
+        }
     }
 
     public void setShown(boolean shown, boolean animate) {
@@ -72,7 +83,11 @@ public class DefaultScene extends PseudoScene {
         }
     }
 
+    private static final int MARGIN = 10, SPACE_BETWEEN = 15;
+
     private void updateCoords() {
+        final int margin = SwingUtil.magnify(MARGIN), spaceBetween = SwingUtil.magnify(SPACE_BETWEEN);
+
         int w = getWidth();
         int h = getHeight();
         int hw = w / 2;
@@ -83,41 +98,41 @@ public class DefaultScene extends PseudoScene {
         int lf_y;
         int n_x;
         if (sidePanel == null) {
-            switch ($SWITCH_TABLE$ru$turikhay$util$Direction()[lfDirection.ordinal()]) {
-                case 1:
-                case 4:
-                case 7:
+            switch (lfDirection) {
+                case TOP_LEFT:
+                case CENTER_LEFT:
+                case BOTTOM_LEFT:
                     lf_x = 10;
                     break;
-                case 2:
-                case 5:
-                case 8:
+                case TOP:
+                case CENTER:
+                case BOTTOM:
                     lf_x = hw - lf_w / 2;
                     break;
-                case 3:
-                case 6:
-                case 9:
-                    lf_x = w - lf_w - 10;
+                case TOP_RIGHT:
+                case CENTER_RIGHT:
+                case BOTTOM_RIGHT:
+                    lf_x = w - lf_w - margin;
                     break;
                 default:
                     throw new RuntimeException("unknown direction:" + lfDirection);
             }
 
-            switch ($SWITCH_TABLE$ru$turikhay$util$Direction()[lfDirection.ordinal()]) {
-                case 1:
-                case 2:
-                case 3:
-                    lf_y = 10;
+            switch (lfDirection) {
+                case TOP_LEFT:
+                case TOP:
+                case TOP_RIGHT:
+                    lf_y = margin;
                     break;
-                case 4:
-                case 5:
-                case 6:
+                case CENTER_LEFT:
+                case CENTER:
+                case CENTER_RIGHT:
                     lf_y = hh - lf_h / 2;
                     break;
-                case 7:
-                case 8:
-                case 9:
-                    lf_y = h - 10 - lf_h;
+                case BOTTOM_LEFT:
+                case BOTTOM:
+                case BOTTOM_RIGHT:
+                    lf_y = h - margin - lf_h;
                     break;
                 default:
                     throw new RuntimeException("unknown direction:" + lfDirection);
@@ -125,52 +140,52 @@ public class DefaultScene extends PseudoScene {
         } else {
             n_x = sidePanelComp.getWidth();
             int n_y = sidePanelComp.getHeight();
-            int bw = lf_w + n_x + 15;
+            int bw = lf_w + n_x + spaceBetween;
             int hbw = bw / 2;
             int sp_x;
             int sp_y;
             if (w > bw) {
-                switch ($SWITCH_TABLE$ru$turikhay$util$Direction()[lfDirection.ordinal()]) {
-                    case 1:
-                    case 4:
-                    case 7:
-                        lf_x = 10;
-                        sp_x = lf_x + lf_w + 15;
+                switch (lfDirection) {
+                    case TOP_LEFT:
+                    case CENTER_LEFT:
+                    case BOTTOM_LEFT:
+                        lf_x = margin;
+                        sp_x = lf_x + lf_w + spaceBetween;
                         break;
-                    case 2:
-                    case 5:
-                    case 8:
+                    case TOP:
+                    case CENTER:
+                    case BOTTOM:
                         lf_x = hw - hbw;
-                        sp_x = lf_x + 15 + n_x / 2;
+                        sp_x = lf_x + lf_w + spaceBetween;
                         break;
-                    case 3:
-                    case 6:
-                    case 9:
-                        lf_x = w - 10 - lf_w;
-                        sp_x = lf_x - 15 - n_x;
+                    case TOP_RIGHT:
+                    case CENTER_RIGHT:
+                    case BOTTOM_RIGHT:
+                        lf_x = w - margin - lf_w;
+                        sp_x = lf_x - spaceBetween - n_x;
                         break;
                     default:
                         throw new RuntimeException("unknown direction:" + lfDirection);
                 }
 
-                switch ($SWITCH_TABLE$ru$turikhay$util$Direction()[lfDirection.ordinal()]) {
-                    case 1:
-                    case 2:
-                    case 3:
-                        sp_y = 10;
-                        lf_y = 10;
+                switch (lfDirection) {
+                    case TOP_LEFT:
+                    case TOP:
+                    case TOP_RIGHT:
+                        sp_y = margin;
+                        lf_y = margin;
                         break;
-                    case 4:
-                    case 5:
-                    case 6:
+                    case CENTER_LEFT:
+                    case CENTER:
+                    case CENTER_RIGHT:
                         lf_y = hh - lf_h / 2;
                         sp_y = hh - n_y / 2;
                         break;
-                    case 7:
-                    case 8:
-                    case 9:
-                        lf_y = h - 10 - lf_h;
-                        sp_y = h - 10 - n_y;
+                    case BOTTOM_LEFT:
+                    case BOTTOM:
+                    case BOTTOM_RIGHT:
+                        lf_y = h - margin - lf_h;
+                        sp_y = h - margin - n_y;
                         break;
                     default:
                         throw new RuntimeException("unknown direction:" + lfDirection);
@@ -181,23 +196,18 @@ public class DefaultScene extends PseudoScene {
                 sp_x = hw - n_x / 2;
                 sp_y = hh - n_y / 2;
             }
-
             sidePanelComp.setLocation(sp_x, sp_y);
         }
 
         byte n_y1 = 10;
-        switch ($SWITCH_TABLE$ru$turikhay$util$Direction()[lfDirection.ordinal()]) {
-            case 1:
-            case 4:
-            case 7:
-                n_x = getMainPane().getWidth() - 10 - notifier.getWidth();
+        switch (lfDirection) {
+            case TOP_LEFT:
+            case CENTER_LEFT:
+            case BOTTOM_LEFT:
+                n_x = getMainPane().getWidth() - margin - notifier.getWidth();
                 break;
-            case 2:
-            case 3:
-            case 5:
-            case 6:
             default:
-                n_x = 10;
+                n_x = margin;
         }
 
         notifier.setLocation(n_x, n_y1);
@@ -209,7 +219,19 @@ public class DefaultScene extends PseudoScene {
         return sidePanel;
     }
 
+    public boolean isNoticeSidePanelEnabled() {
+        return getMainPane().getRootFrame().getConfiguration().getBoolean("gui.notices.enabled");
+    }
+
+    public void setNoticeSidePanelEnabled(boolean e) {
+        getMainPane().getRootFrame().getConfiguration().set("gui.notices.enabled", e);
+        setSidePanel(null);
+    }
+
     public void setSidePanel(DefaultScene.SidePanel side) {
+        if(side == null && isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+            side = SidePanel.NOTICES;
+        }
         if (sidePanel != side) {
             boolean noSidePanel = side == null;
             if (sidePanelComp != null) {
@@ -223,6 +245,9 @@ public class DefaultScene extends PseudoScene {
             }
 
             noticePanel.setVisible(noSidePanel);
+            if(noSidePanel) {
+                noticePanel.panelShown();
+            }
             //noticePanel.setVisible(noSidePanel);
             updateCoords();
         }
@@ -243,6 +268,8 @@ public class DefaultScene extends PseudoScene {
             switch (side) {
                 case SETTINGS:
                     return settingsForm;
+                case NOTICES:
+                    return noticeSidePanel;
                 default:
                     throw new RuntimeException("unknown side:" + side);
             }
@@ -268,66 +295,8 @@ public class DefaultScene extends PseudoScene {
         lfDirection = loginFormDirection;
     }
 
-    // $FF: synthetic method
-    static int[] $SWITCH_TABLE$ru$turikhay$util$Direction() {
-        int[] var10000 = $SWITCH_TABLE$ru$turikhay$util$Direction;
-        if ($SWITCH_TABLE$ru$turikhay$util$Direction != null) {
-            return var10000;
-        } else {
-            int[] var0 = new int[Direction.values().length];
-
-            try {
-                var0[Direction.BOTTOM.ordinal()] = 8;
-            } catch (NoSuchFieldError var9) {
-            }
-
-            try {
-                var0[Direction.BOTTOM_LEFT.ordinal()] = 7;
-            } catch (NoSuchFieldError var8) {
-            }
-
-            try {
-                var0[Direction.BOTTOM_RIGHT.ordinal()] = 9;
-            } catch (NoSuchFieldError var7) {
-            }
-
-            try {
-                var0[Direction.CENTER.ordinal()] = 5;
-            } catch (NoSuchFieldError var6) {
-            }
-
-            try {
-                var0[Direction.CENTER_LEFT.ordinal()] = 4;
-            } catch (NoSuchFieldError var5) {
-            }
-
-            try {
-                var0[Direction.CENTER_RIGHT.ordinal()] = 6;
-            } catch (NoSuchFieldError var4) {
-            }
-
-            try {
-                var0[Direction.TOP.ordinal()] = 2;
-            } catch (NoSuchFieldError var3) {
-            }
-
-            try {
-                var0[Direction.TOP_LEFT.ordinal()] = 1;
-            } catch (NoSuchFieldError var2) {
-            }
-
-            try {
-                var0[Direction.TOP_RIGHT.ordinal()] = 3;
-            } catch (NoSuchFieldError var1) {
-            }
-
-            $SWITCH_TABLE$ru$turikhay$util$Direction = var0;
-            return var0;
-        }
-    }
-
     public enum SidePanel {
-        SETTINGS;
+        SETTINGS, NOTICES;
 
         public final boolean requiresShow;
 

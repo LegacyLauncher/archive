@@ -1,5 +1,6 @@
 package net.minecraft.launcher.versions;
 
+import com.google.gson.annotations.Expose;
 import net.minecraft.launcher.updater.VersionList;
 import ru.turikhay.tlauncher.repository.Repository;
 
@@ -13,6 +14,8 @@ public class PartialVersion implements Version {
     private Date releaseTime;
     private ReleaseType type;
     private Repository source;
+
+    @Expose
     private VersionList list;
 
     public String getID() {

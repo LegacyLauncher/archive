@@ -117,7 +117,16 @@ public class Blocker {
         } else {
             unblock(blockable, reason);
         }
+    }
 
+    public static void setBlocked(Object reason, boolean blocked, Blockable... blockables) {
+        for(Blockable blockable : blockables) {
+            if(blocked) {
+                block(blockable, reason);
+            } else {
+                unblock(blockable, reason);
+            }
+        }
     }
 
     public static boolean isBlocked(Blockable blockable) {

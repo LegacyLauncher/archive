@@ -5,10 +5,13 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
+import ru.turikhay.tlauncher.updater.Stats;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class MainNoticePanel extends NoticePanel implements ResizeableComponent {
     private static int SAFE_ZONE = 10;
@@ -64,10 +67,17 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         registerExtraAction("expand.png", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                defaultScene.getMainPane().openNoticeScene();
+                defaultScene.setNoticeSidePanelEnabled(true);
+                //defaultScene.getMainPane().openNoticeScene();
             }
         });
         scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
+    }
+
+    public void panelShown() {
+        if(getNotice() != null) {
+            Stats.noticeViewed(getNotice());
+        }
     }
 
     protected void updateNotice() {

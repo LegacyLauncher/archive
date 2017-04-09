@@ -14,6 +14,7 @@ import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedToggleButton;
+import ru.turikhay.tlauncher.updater.Stats;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
@@ -109,6 +110,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
         super.setShown(shown, animate);
 
         if(shown) {
+            Stats.noticeSceneShown();
             NoticeManager manager = getMainPane().getRootFrame().getNotices();
 
             List<Notice> list = manager.getForCurrentLocale();

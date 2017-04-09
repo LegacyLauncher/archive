@@ -16,10 +16,10 @@ public class OfficialVersionList extends RemoteVersionList {
     public OfficialVersionList() {
     }
 
-    public VersionList.RawVersionList getRawList() throws IOException {
+    public RawVersionList getRawList() throws IOException {
         Object lock = new Object();
         Time.start(lock);
-        VersionList.RawVersionList list = gson.fromJson(getUrl("version_manifest.json"), RawVersionList.class);
+        RawVersionList list = gson.fromJson(getUrl("version_manifest.json"), RawVersionList.class);
         Iterator var4 = list.versions.iterator();
 
         while (var4.hasNext()) {
