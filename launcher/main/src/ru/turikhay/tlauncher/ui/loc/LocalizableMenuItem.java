@@ -25,6 +25,10 @@ public class LocalizableMenuItem extends JMenuItem implements LocalizableCompone
         this(path, Localizable.EMPTY_VARS);
     }
 
+    public LocalizableMenuItem() {
+        this(null);
+    }
+
     public void setText(String path, Object... vars) {
         this.path = path;
         variables = Localizable.checkVariables(vars);

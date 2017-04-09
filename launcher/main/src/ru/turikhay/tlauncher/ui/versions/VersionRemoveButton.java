@@ -6,9 +6,12 @@ import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -17,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class VersionRemoveButton extends ImageButton implements VersionHandlerListener, Blockable {
+public class VersionRemoveButton extends ExtendedButton implements VersionHandlerListener, Blockable {
     private static final long serialVersionUID = 427368162418879141L;
     private static final String ILLEGAL_SELECTION_BLOCK = "illegal-selection";
     private static final String PREFIX = "version.manager.delete.";
@@ -31,7 +34,7 @@ public class VersionRemoveButton extends ImageButton implements VersionHandlerLi
     private boolean libraries;
 
     VersionRemoveButton(VersionList list) {
-        super("remove.png");
+        setIcon(Images.getIcon("remove.png", SwingUtil.magnify(24)));
         handler = list.handler;
         handler.addListener(this);
         menu = new JPopupMenu();

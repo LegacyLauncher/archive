@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeDeserializer;
 import ru.turikhay.util.U;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ public final class BootConfiguration {
     private boolean stats, ely;
     private Map<String, List<String>> repositories = new HashMap<String, List<String>>();
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
+    private List<Server> promotedServers = new ArrayList<>();
 
     public boolean isStatsAllowed() {
         return stats;
@@ -33,6 +35,10 @@ public final class BootConfiguration {
 
     public Map<String, List<Notice>> getNotices() {
         return notices;
+    }
+
+    public List<Server> getPromotedServers() {
+        return promotedServers;
     }
 
     public static BootConfiguration parse(BootBridge bridge) {

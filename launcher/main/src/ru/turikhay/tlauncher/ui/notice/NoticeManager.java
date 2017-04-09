@@ -54,10 +54,33 @@ public final class NoticeManager implements LocalizableComponent {
                     noticeList.add(notice);
 
                     NoticeTextSize textSize = new NoticeTextSize(notice);
-                    textSize.pend(TLauncherFrame.getFontSize());
+                    textSize.pend(new ParamPair(TLauncherFrame.getFontSize(), -1));
                     //textSize.pend(TLauncherFrame.getFontSize() + NoticeScene.ADDED_FONT_SIZE);
 
                     cachedSizeMap.put(notice, textSize);
+                }
+
+                U.shuffle(noticeList);
+
+                List<Notice> noticesThatMadeMeReplaceOthersDamnIHateIt = new ArrayList<>();
+                for (int i = 0; i < noticeList.size(); i++) {
+                    Notice notice = noticeList.get(i);
+                    if(noticesThatMadeMeReplaceOthersDamnIHateIt.contains(notice)) {
+                        continue;
+                    }
+                    int pos = notice.getPos();
+                    if(pos > -1) {
+                        if(pos >= noticeList.size()) {
+                            pos = noticeList.size() - 1;
+                        }
+                        Notice replacement = noticeList.get(pos);
+                        noticeList.set(i, replacement);
+                        noticeList.set(pos, notice);
+
+                        noticesThatMadeMeReplaceOthersDamnIHateIt.add(notice);
+
+                        i =- 1; // redo the position
+                    }
                 }
 
                 byLocaleMap.put(locale, Collections.unmodifiableList(noticeList));
@@ -120,9 +143,6 @@ public final class NoticeManager implements LocalizableComponent {
         for(NoticeManagerListener l :listeners) {
             l.onNoticeSelected(notice);
         }
-        if(notice != null) {
-            Stats.noticeViewed(notice);
-        }
     }
 
     private NoticeTextSize getTextSize(Notice notice) {
@@ -134,12 +154,12 @@ public final class NoticeManager implements LocalizableComponent {
         return cachedSize;
     }
 
-    public Dimension getTextSize(Notice notice, float size) {
-        return getTextSize(notice).get(size);
+    Dimension getTextSize(Notice notice, ParamPair param) {
+        return getTextSize(notice).get(param);
     }
 
-    public void preloadNotice(Notice notice, float size) {
-        getTextSize(notice).pend(size);
+    public void preloadNotice(Notice notice, float fontSize) {
+        getTextSize(notice).pend(new ParamPair(fontSize, -1));
     }
 
     public boolean isHidden(Notice notice) {

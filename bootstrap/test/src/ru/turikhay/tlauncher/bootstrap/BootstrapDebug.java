@@ -2,12 +2,17 @@ package ru.turikhay.tlauncher.bootstrap;
 
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.launcher.LocalLauncher;
+import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import shaded.com.google.gson.Gson;
+import shaded.com.google.gson.reflect.TypeToken;
 import shaded.org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Map;
 
 public class BootstrapDebug {
 
@@ -28,7 +33,7 @@ public class BootstrapDebug {
         BootBridge bootBridge = BootBridge.create(
                 bootstrap.getMeta().getVersion().toString(),
                 args,
-                IOUtils.toString(BootstrapDebug.class.getResourceAsStream("options.json"), U.UTF8)
+                options(bootstrap.getMeta().getShortBrand())
         );
 
         Task<Void> startLauncherTask = bootstrap.startLauncher(localLauncherTask.call(), bootBridge);
@@ -40,6 +45,17 @@ public class BootstrapDebug {
         bootBridge.waitUntilClose();
 
         System.exit(0);
+    }
+
+    private static String options(String brand) throws IOException {
+        if("true".equals(System.getProperty("tlauncher.bootstrap.debug.external"))) {
+            try {
+                return UpdateMeta.fetchFor(brand).call().getOptions();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return IOUtils.toString(BootstrapDebug.class.getResourceAsStream("options.json"), U.UTF8);
     }
 
 }

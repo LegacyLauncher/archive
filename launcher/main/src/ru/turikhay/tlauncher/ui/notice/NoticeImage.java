@@ -19,6 +19,7 @@ public abstract class NoticeImage {
     static HashMap<String, NoticeImage> definedImages = new HashMap<String, NoticeImage>(){
         {
             put("default", DEFAULT_IMAGE);
+            put("youtube", new UrlNoticeImage(Images.getRes("youtube.png")));
         }
     };
 

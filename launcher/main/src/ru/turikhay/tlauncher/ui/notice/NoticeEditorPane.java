@@ -10,9 +10,9 @@ class NoticeEditorPane extends EditorPane {
     NoticeEditorPane() {
     }
 
-    void setNotice(Notice notice, float fontSize) {
-        setFont(getFont().deriveFont(fontSize));
-        setText("<html><div align=\"center\">" + notice.getText() + "</div></html>");
+    void setNotice(Notice notice, ParamPair param) {
+        setFont(getFont().deriveFont(param.fontSize));
+        setText("<html><div "+ (param.width > 0? "width=\""+ param.width +"\" " : "") +"align=\"center\">" + notice.getText() + "</div></html>");
     }
 
     Dimension calcPreferredSize(final int minHeight, final int minWidth, final int maxWidth, int widthStep, int heightStep) {
@@ -38,5 +38,9 @@ class NoticeEditorPane extends EditorPane {
 
     Dimension calcPreferredSize(final int minHeight, final int minWidth, final int maxWidth) {
         return calcPreferredSize(minHeight, minWidth, maxWidth, 5, 2);
+    }
+
+    Dimension calcPreferredSize(int width) {
+        return new Dimension(width, SwingUtil.getPrefHeight(this, width));
     }
 }

@@ -4,12 +4,14 @@ import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.SimpleListModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -30,8 +32,8 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
     public final JList<VersionSyncInfo> list;
     VersionDownloadButton download;
     VersionRemoveButton remove;
-    public final ImageButton refresh;
-    public final ImageButton back;
+    public final ExtendedButton refresh;
+    public final ExtendedButton back;
 
     VersionList(VersionHandler h) {
         super(squareInsets);
@@ -56,7 +58,8 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
         buttons.add(download);
         remove = new VersionRemoveButton(this);
         buttons.add(remove);
-        back = new ImageButton("home.png");
+        back = new ExtendedButton();
+        back.setIcon(Images.getIcon("home.png", SwingUtil.magnify(24)));
         back.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 handler.exitEditor();

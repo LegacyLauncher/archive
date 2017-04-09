@@ -13,6 +13,8 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class VersionDownloadButton extends ImageButton implements VersionHandlerListener, Unblockable {
+public class VersionDownloadButton extends ExtendedButton implements VersionHandlerListener, Unblockable {
     private static final String SELECTION_BLOCK = "selection";
     private static final String PREFIX = "version.manager.downloader.";
     private static final String WARNING = "version.manager.downloader.warning.";
@@ -86,7 +88,7 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
             throw new NullPointerException();
         } else {
             this.state = state;
-            setImage(state.image);
+            setIcon(Images.getIcon(state.image, SwingUtil.magnify(24)));
         }
     }
 
@@ -273,10 +275,10 @@ public class VersionDownloadButton extends ImageButton implements VersionHandler
         DOWNLOAD("download.png"),
         STOP("stop-circle-o.png");
 
-        final Image image;
+        final String image;
 
         ButtonState(String image) {
-            this.image = Images.getImage(image);
+            this.image = image;
         }
     }
 }

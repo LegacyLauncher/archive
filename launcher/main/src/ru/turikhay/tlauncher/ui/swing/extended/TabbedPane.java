@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
-import com.sun.java.swing.plaf.windows.WindowsTabbedPaneUI;
 import ru.turikhay.tlauncher.ui.swing.util.Orientation;
 import ru.turikhay.util.U;
 
@@ -13,24 +12,12 @@ public class TabbedPane extends JTabbedPane {
     public TabbedPane(Orientation tabLocation, TabbedPane.TabLayout layout) {
         setTabLocation(tabLocation == null ? Orientation.TOP : tabLocation);
         setTabLayout(layout == null ? TabbedPane.TabLayout.SCROLL : layout);
-        TabbedPaneUI ui = getUI();
-        if (ui instanceof WindowsTabbedPaneUI) {
-            setUI(new WindowsTabbedPaneExtendedUI());
-        }
         addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 onTabChange(getSelectedIndex());
             }
         });
-    }
-
-    public TabbedPane(Orientation tabLocation) {
-        this(tabLocation, null);
-    }
-
-    public TabbedPane(TabbedPane.TabLayout layout) {
-        this(null, layout);
     }
 
     public TabbedPane() {

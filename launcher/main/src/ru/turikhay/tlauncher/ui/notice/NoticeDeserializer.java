@@ -16,11 +16,17 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         JsonObject root = json.getAsJsonObject();
 
         int id = root.get("id").getAsInt();
+        int pos;
+        if(root.has("pos")) {
+            pos = root.get("pos").getAsInt();
+        } else {
+            pos = -1;
+        }
         String text = root.get("text").getAsString();
         NoticeImage image = parseImage(root, context);
         NoticeAction action = parseAction(id, root, context);
 
-        return new Notice(id, text, image, action);
+        return new Notice(id, pos, text, image, action);
     }
 
     private NoticeImage parseImage(JsonObject root, JsonDeserializationContext context) {

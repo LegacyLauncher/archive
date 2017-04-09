@@ -6,6 +6,8 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-public class VersionRefreshButton extends ImageButton implements VersionHandlerListener, Blockable {
+public class VersionRefreshButton extends ExtendedButton implements VersionHandlerListener, Blockable {
     private static final long serialVersionUID = -7148657244927244061L;
     private static final String PREFIX = "version.manager.refresher.";
     private static final String MENU = "version.manager.refresher.menu.";
@@ -65,7 +67,7 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
             throw new NullPointerException();
         } else {
             this.state = state;
-            setImage(state.image);
+            setIcon(Images.getIcon(state.image, SwingUtil.magnify(24)));
         }
     }
 
@@ -101,10 +103,10 @@ public class VersionRefreshButton extends ImageButton implements VersionHandlerL
         REFRESH("refresh.png"),
         CANCEL("stop-circle-o.png");
 
-        final Image image;
+        final String image;
 
         ButtonState(String image) {
-            this.image = Images.getImage(image);
+            this.image = image;
         }
     }
 }

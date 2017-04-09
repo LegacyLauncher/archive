@@ -55,9 +55,12 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
         notices = LocalizableMenuItem.newItem("loginform.button.settings.notices", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                lf.scene.getMainPane().openNoticeScene();
+                //lf.scene.getMainPane().openNoticeScene();
+                lf.scene.setNoticeSidePanelEnabled(true);
+                lf.scene.setSidePanel(DefaultScene.SidePanel.NOTICES);
             }
         });
+        popup.add(notices);
         setPreferredSize(new Dimension(30, getHeight()));
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -89,10 +92,10 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
 
     @Override
     public void onNoticeSelected(Notice notice) {
-        if(notice == null  && lf.scene.getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+        /*if(notice == null  && lf.scene.getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
             popup.add(notices);
         } else {
             popup.remove(notices);
-        }
+        }*/
     }
 }

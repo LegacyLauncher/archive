@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
@@ -775,18 +776,30 @@ public class U {
         return -1;
     }
 
+    private static void swap(List list, int i, int j) {
+        Object tmp = list.get(i);
+        list.set(i, list.get(j));
+        list.set(j, tmp);
+    }
+
     private static void swap(Object[] arr, int i, int j) {
         Object tmp = arr[i];
         arr[i] = arr[j];
         arr[j] = tmp;
     }
 
-    private static Random rnd;
+    private static final SecureRandom rnd = new SecureRandom();
+
+    public static <T> List<T> shuffle(List<T> list) {
+        int size = list.size();
+
+        for (int i = size; i > 1; i--)
+            swap(list, i - 1, rnd.nextInt(i));
+
+        return list;
+    }
 
     public static <T> T[] shuffle(T... arr) {
-        if (rnd == null)
-            rnd = new Random();
-
         int size = arr.length;
 
         // Shuffle array

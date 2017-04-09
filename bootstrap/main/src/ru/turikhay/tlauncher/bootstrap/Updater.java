@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.bootstrap;
 
+import ru.turikhay.tlauncher.bootstrap.exception.FileLockedException;
 import ru.turikhay.tlauncher.bootstrap.meta.DownloadEntry;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
@@ -30,36 +31,49 @@ public class Updater extends Task<Void> {
 
     @Override
     protected Void execute() throws Exception {
+        String randomUrl = entry.getUrl().get(new Random().nextInt(entry.getUrl().size())).toString();
+
         UserInterface.showWarning(
-                UserInterface.getResourceBundle().getString("update"),
-                entry.getUrl().get(new Random().nextInt(entry.getUrl().size()))
+                UserInterface.getLString("update", "Application is going to update. Please start it again manually afterwards."),
+                randomUrl
         );
 
         final boolean exitOnFinish = this.exitOnFinish;
 
-        File tempFile = File.createTempFile("updater", null);
-        tempFile.deleteOnExit();
+        doWork:
+        {
+            File tempFile = File.createTempFile("updater", null);
+            tempFile.deleteOnExit();
 
-        bindTo(entry.toDownloadTask(getName(), tempFile), 0., .95);
-
-        byte[] buffer = new byte[8192];
-        FileInputStream input = null;
-        FileOutputStream output = null;
-        try {
-            input = new FileInputStream(tempFile);
-            output = new FileOutputStream(destFile);
-
-            int read;
-            while((read = input.read(buffer)) != -1) {
-                output.write(buffer, 0, read);
+            try {
+                bindTo(entry.toDownloadTask(getName(), tempFile), 0., .95);
+            } catch (FileLockedException lockedException) {
+                UserInterface.showError(
+                        UserInterface.getLString("update.locked", "File is locked by another process."),
+                        randomUrl
+                );
+                break doWork;
             }
-        } finally {
-            if(input != null) {
-                input.close();
-                tempFile.delete();
-            }
-            if(output != null) {
-                output.close();
+
+            byte[] buffer = new byte[8192];
+            FileInputStream input = null;
+            FileOutputStream output = null;
+            try {
+                input = new FileInputStream(tempFile);
+                output = new FileOutputStream(destFile);
+
+                int read;
+                while ((read = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                }
+            } finally {
+                if (input != null) {
+                    input.close();
+                    tempFile.delete();
+                }
+                if (output != null) {
+                    output.close();
+                }
             }
         }
 

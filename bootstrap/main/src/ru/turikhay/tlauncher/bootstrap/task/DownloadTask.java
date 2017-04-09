@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.bootstrap.task;
 
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
+import ru.turikhay.tlauncher.bootstrap.exception.FileLockedException;
 import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 import shaded.org.apache.commons.io.FileUtils;
@@ -55,6 +56,11 @@ public class DownloadTask extends Task<Void> {
         for (URL url : urlList) {
             try {
                 downloadUrl(url);
+            } catch(TaskInterruptedException interrupted) {
+                throw interrupted;
+            } catch(FileLockedException locked) {
+                log("File is locked:", locked);
+                throw locked;
             } catch (IOException ioE) {
                 log("Failed to download:", url, ioE);
                 ioEList.add(ioE);
@@ -124,7 +130,33 @@ public class DownloadTask extends Task<Void> {
 
             out.close();
 
-            FileUtils.copyFile(temp, file);
+            boolean tryCopy = false;
+            do {
+                try {
+                    FileUtils.copyFile(temp, file);
+                } catch(FileNotFoundException fnf) {
+                    FileLockedException locked = FileLockedException.getIfPresent(fnf);
+
+                    if(tryCopy) { // already tried
+                        throw locked == null? fnf : locked;
+                    }
+
+                    if(locked != null) {
+                        log("We got the situation! File is locked. Let's wait some time...", locked);
+                    } else {
+                        log("File is probably locked, waiting:", fnf, temp, file);
+                    }
+
+                    try {
+                        Thread.sleep(FileLockedException.LOCK_COOLDOWN);
+                    } catch(InterruptedException interrupted) {
+                        throw new TaskInterruptedException(this);
+                    }
+
+                    tryCopy = true; // let's try again
+                }
+            } while(tryCopy);
+
             Bootstrap.recordBreadcrumb(DownloadTask.class, "success", DataBuilder.create("url", url).add("sha256", sha256));
         } finally {
             U.close(in, out);

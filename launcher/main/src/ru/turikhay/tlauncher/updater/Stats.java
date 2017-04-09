@@ -50,7 +50,35 @@ public final class Stats {
     }
 
     public static void noticeViewed(Notice notice) {
-        submitDenunciation(newAction("notice_viewed").add("notice_id", String.valueOf(notice.getId())));
+        noticeListViewed(Collections.singletonList(notice));
+    }
+
+    // private static final Set<Notice> viewedList = Collections.synchronizedSet(new HashSet<Notice>());
+
+    public static void noticeListViewed(List<Notice> list) {
+        final ArrayList<Notice> noticeList = new ArrayList<>(list);
+        /*noticeList.removeAll(viewedList);
+        if(noticeList.isEmpty()) {
+            return;
+        }
+        viewedList.addAll(noticeList);*/
+        submitDenunciation(newAction("notice_viewed").add("notice_id", StringUtils.join(new Iterator<String>() {
+            final Iterator<Notice> i = noticeList.iterator();
+            @Override
+            public boolean hasNext() {
+                return i.hasNext();
+            }
+
+            @Override
+            public String next() {
+                return String.valueOf(i.next().getId());
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
+        }, ',')));
     }
 
     public static void noticeHiddenByUser(Notice notice) {
@@ -59,6 +87,10 @@ public final class Stats {
 
     public static void noticeShownByUser(Notice notice) {
         submitDenunciation(newAction("notice_act_shown").add("notice_id", String.valueOf(notice.getId())));
+    }
+
+    public static void noticeSceneShown() {
+        submitDenunciation(newAction("notice_scene_shown"));
     }
 
     private static Stats.Args newAction(String name) {

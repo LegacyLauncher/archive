@@ -99,6 +99,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private long startupTime;
     private int exitCode;
     private Server server;
+    private List<Server> promotedServers;
     private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
@@ -290,6 +291,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         checkWorking();
         this.server = server;
         this.serverId = id;
+    }
+
+    public void setPromotedServers(List<Server> serverList) {
+        this.promotedServers = serverList;
     }
 
     private void collectInfo() throws MinecraftException {
@@ -661,7 +666,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         launcher.addCommand("-Dfml.ignorePatchDiscrepancies=true");
         launcher.addCommand("-Djava.net.useSystemProxies=true");
 
-        if(!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
+        if (!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
             launcher.addCommand("-Dfile.encoding=UTF-8");
         }
 
@@ -706,12 +711,23 @@ public class MinecraftLauncher implements JavaProcessListener {
             log("Cannot check resource folder. This could have been fixed [MCL-3732].", ioE);
         }
 
+
+        try {
+            NBTServer.reconstructList(new LinkedHashSet<Server>() {
+                {
+                    if (server != null) {
+                        add(server);
+                    }
+                    if (promotedServers != null && Configuration.isUSSRLocale(settings.getLocale().toString()) && settings.getBoolean("minecraft.servers.promoted")) {
+                        addAll(promotedServers);
+                    }
+                }
+            }, new File(gameDir, "servers.dat"));
+        } catch (IOException ioE) {
+            log("Couldn't reconstruct server list", ioE);
+        }
+
         if (server != null) {
-            try {
-                NBTServer.reconstructList(new HashSet<Server>(){{ add(server); }}, new File(gameDir, "servers.dat"));
-            } catch(IOException ioE) {
-                log("Couldn't reconstruct server list", ioE);
-            }
             launcher.addCommand("--server", server.getAddress());
             launcher.addCommand("--port", server.getPort());
         }
@@ -1073,15 +1089,15 @@ public class MinecraftLauncher implements JavaProcessListener {
             e.onMinecraftLaunch();
         }
 
-        if(version.getReleaseType() != null)
-        switch (version.getReleaseType()) {
-            case RELEASE:
-            case SNAPSHOT:
-                log("Starting Minecraft", version.getID());
-                break;
-            default:
-                log("Starting", version.getID());
-        }
+        if (version.getReleaseType() != null)
+            switch (version.getReleaseType()) {
+                case RELEASE:
+                case SNAPSHOT:
+                    log("Starting Minecraft", version.getID());
+                    break;
+                default:
+                    log("Starting", version.getID());
+            }
         log("Launching in:", gameDir.getAbsolutePath());
         startupTime = System.currentTimeMillis();
         recordValue("startupTime", startupTime);
@@ -1126,7 +1142,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             minecraftWorking = true;
         } catch (Exception var3) {
             notifyClose();
-            if(var3.getMessage().contains("CreateProcess error=2,")) {
+            if (var3.getMessage().contains("CreateProcess error=2,")) {
                 throw new MinecraftException(false, "Executable is not found: \"" + var3.getMessage() + "\"", "exec-not-found");
             }
             throw new MinecraftException(true, "Cannot start the game!", "start", var3);

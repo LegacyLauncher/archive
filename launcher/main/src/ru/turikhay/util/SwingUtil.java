@@ -1,5 +1,6 @@
 package ru.turikhay.util;
 
+import com.getsentry.raven.util.Base64;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 
@@ -19,6 +20,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -229,7 +231,7 @@ public class SwingUtil {
 
         offset += base64e.length();
 
-        return ImageIO.read(new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(source.substring(offset))));
+        return ImageIO.read(new ByteArrayInputStream(Base64.decode(source.substring(offset).getBytes(Charset.forName("UTF-8")), Base64.DEFAULT)));
     }
 
     public static Image loadImage(String source) throws IOException {

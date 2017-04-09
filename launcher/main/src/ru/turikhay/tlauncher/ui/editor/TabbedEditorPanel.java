@@ -9,6 +9,8 @@ import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.TabbedPane;
+import ru.turikhay.tlauncher.ui.swing.extended.WinTabbedPane;
+import ru.turikhay.util.OS;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,17 +27,33 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
     public TabbedEditorPanel(CenterPanelTheme theme, Insets insets) {
         super(theme, insets);
         tabs = new ArrayList();
-        tabPane = new TabbedPane() {
-            @Override
-            public void onTabChange(int index) {
-                super.onTabChange(index);
 
-                if (index < tabs.size()) {
-                    EditorPanelTab tab = tabs.get(index);
-                    tab.onSelected();
+        TabbedPane tabbedPane;
+        initTabbedPane: {
+            if(OS.WINDOWS.isCurrent()) {
+                try {
+                    tabbedPane = new WinTabbedPane() {
+                        @Override
+                        public void onTabChange(int index) {
+                            super.onTabChange(index);
+                            TabbedEditorPanel.this.onTabChange(index);
+                        }
+                    };
+                    break initTabbedPane;
+                } catch(Throwable t) {
+                    log(t);
                 }
             }
-        };
+            tabbedPane = new TabbedPane() {
+                @Override
+                public void onTabChange(int index) {
+                    super.onTabChange(index);
+                    TabbedEditorPanel.this.onTabChange(index);
+                }
+            };
+        }
+        tabPane = tabbedPane;
+
         if (tabPane.getExtendedUI() != null) {
             tabPane.getExtendedUI().setTheme(getTheme());
         }
@@ -45,6 +63,13 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
         container.setCenter(tabPane);
         setLayout(new BorderLayout());
         super.add(container, "Center");
+    }
+
+    private void onTabChange(int index) {
+        if (index < tabs.size()) {
+            EditorPanelTab tab = tabs.get(index);
+            tab.onSelected();
+        }
     }
 
     public TabbedEditorPanel(CenterPanelTheme theme) {

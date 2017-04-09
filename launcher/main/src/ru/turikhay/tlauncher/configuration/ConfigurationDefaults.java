@@ -49,6 +49,8 @@ public final class ConfigurationDefaults {
         d.put("minecraft.cmd", null);
         d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
 
+        d.put("minecraft.servers.promoted", true);
+
         d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.HIDE);
 
         d.put("minecraft.crash", true);
@@ -64,6 +66,8 @@ public final class ConfigurationDefaults {
         d.put("gui.logger.height", 500);
         d.put("gui.logger.x", 30);
         d.put("gui.logger.y", 30);
+
+        d.put("gui.notices.enabled", true);
 
         d.put("gui.direction.loginform", Direction.CENTER);
 

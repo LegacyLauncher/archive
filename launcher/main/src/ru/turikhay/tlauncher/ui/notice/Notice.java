@@ -10,13 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Notice {
-    private final int id;
+    private final int id, pos;
     private final String text;
     private final NoticeImage image;
     private final NoticeAction action;
 
-    Notice(int id, String text, NoticeImage image, NoticeAction action) {
+    Notice(int id, int pos, String text, NoticeImage image, NoticeAction action) {
         this.id = id;
+        this.pos = pos;
         this.text = StringUtil.requireNotBlank(text, "text");
         this.image = U.requireNotNull(image, "image");
         this.action = action;
@@ -24,6 +25,10 @@ public final class Notice {
 
     public int getId() {
         return id;
+    }
+
+    public int getPos() {
+        return pos;
     }
 
     public String getText() {
@@ -41,6 +46,7 @@ public final class Notice {
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("id", id)
+                .append("pos", pos)
                 .append("text", text.length() > 30? text.substring(0, 27) + "..." : text)
                 .append("image", image)
                 .append("action", action)
