@@ -39,7 +39,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
             @Override
             public void actionPerformed(ActionEvent e) {
                 manager.setAllHidden();
-                manager.selectNotice(null);
+                manager.selectNotice(null, true);
             }
         });
     }
@@ -72,10 +72,17 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
             }
         });
         scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                noticeSeen();
+            }
+        });
     }
 
-    public void panelShown() {
-        if(getNotice() != null) {
+    private void noticeSeen() {
+        if(isVisible() && getNotice() != null && (TLauncher.getInstance() == null || TLauncher.getInstance().getMinecraftLauncher() == null || !TLauncher.getInstance().getMinecraftLauncher().isWorking())) {
             Stats.noticeViewed(getNotice());
         }
     }
@@ -86,6 +93,8 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         if(TLauncher.getInstance() != null && TLauncher.getInstance().isReady()) {
             onResize();
         }
+
+        noticeSeen();
     }
 
     @Override

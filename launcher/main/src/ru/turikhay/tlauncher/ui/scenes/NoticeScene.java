@@ -88,7 +88,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
 
             selected = noticeList.get(currentIndex);
         }
-        getMainPane().getRootFrame().getNotices().selectNotice(selected);
+        getMainPane().getRootFrame().getNotices().selectNotice(selected, true);
 
         setVisible(true);
         noticePanel.redraw();
@@ -119,7 +119,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
                     manager.preloadNotice(notice, fontSize);
                 }
                 if(manager.getSelectedNotice() == null) {
-                    manager.selectNotice(list.get(0));
+                    manager.selectNotice(list.get(0), false);
                 }
             }
 

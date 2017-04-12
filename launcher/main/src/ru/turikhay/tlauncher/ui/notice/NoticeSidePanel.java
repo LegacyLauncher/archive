@@ -96,7 +96,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
                 public void mouseClicked(MouseEvent e) {
                     long click = System.currentTimeMillis();
                     if(click - lastClick < 500) {
-                        noticeManager.selectNotice(notice);
+                        noticeManager.selectNotice(notice, true);
                     }
                     lastClick = System.currentTimeMillis();
                 }
