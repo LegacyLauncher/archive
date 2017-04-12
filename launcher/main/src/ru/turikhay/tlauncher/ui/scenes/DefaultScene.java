@@ -62,7 +62,7 @@ public class DefaultScene extends PseudoScene {
         if(isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
             setSidePanel(null);
         } else {
-            noticePanel.panelShown();
+            //noticePanel.panelShown();
         }
     }
 
@@ -245,9 +245,9 @@ public class DefaultScene extends PseudoScene {
             }
 
             noticePanel.setVisible(noSidePanel);
-            if(noSidePanel) {
+            /*if(noSidePanel) {
                 noticePanel.panelShown();
-            }
+            }*/
             //noticePanel.setVisible(noSidePanel);
             updateCoords();
         }

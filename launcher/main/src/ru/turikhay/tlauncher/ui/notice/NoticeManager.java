@@ -4,16 +4,18 @@ import ru.turikhay.tlauncher.configuration.BootConfiguration;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
+import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.NoticeScene;
 import ru.turikhay.tlauncher.updater.Stats;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public final class NoticeManager implements LocalizableComponent {
+public final class NoticeManager implements LocalizableComponent, Blockable {
     private static final int HIDDEN_DELAY = 1000 * 60 * 60 * 24 * 7; // 1 week
 
     private final TLauncherFrame frame;
@@ -23,6 +25,7 @@ public final class NoticeManager implements LocalizableComponent {
     private final Map<Notice, NoticeTextSize> cachedSizeMap = new HashMap<Notice, NoticeTextSize>();
 
     private Notice selectedNotice;
+    private boolean forceSelected, changeLocked;
 
     NoticeManager(TLauncherFrame frame, Map<String, List<Notice>> config) {
         this.frame = frame;
@@ -107,7 +110,20 @@ public final class NoticeManager implements LocalizableComponent {
                 }*/
             }
 
-            selectRandom();
+            /*AsyncThread.execute(new Runnable() {
+                @Override
+                public void run() {
+                    while(true) {
+                        if (forceSelected) {
+                            return;
+                        }
+                        if(!changeLocked) {
+                            selectRandom();
+                        }
+                        U.sleepFor(60 * 1000);
+                    }
+                }
+            });*/
         } else {
             log("[WARN] Notice map is empty");
         }
@@ -138,8 +154,13 @@ public final class NoticeManager implements LocalizableComponent {
         return byLocaleMap.get(U.requireNotNull(locale, "locale"));
     }
 
-    public void selectNotice(Notice notice) {
+    public void selectNotice(Notice notice, boolean forceSet) {
+        if(this.forceSelected && !forceSet) {
+            return;
+        }
+
         this.selectedNotice = notice;
+        this.forceSelected = forceSet;
         for(NoticeManagerListener l :listeners) {
             l.onNoticeSelected(notice);
         }
@@ -232,6 +253,16 @@ public final class NoticeManager implements LocalizableComponent {
 
             selected = available.get(new Random().nextInt(available.size()));
         }
-        selectNotice(selected);
+        selectNotice(selected, false);
+    }
+
+    @Override
+    public void block(Object var1) {
+        changeLocked = true;
+    }
+
+    @Override
+    public void unblock(Object var1) {
+        changeLocked = false;
     }
 }

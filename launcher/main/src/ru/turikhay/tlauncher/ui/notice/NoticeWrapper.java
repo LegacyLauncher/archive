@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.images.*;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
@@ -8,9 +9,13 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.*;
 
 class NoticeWrapper extends BorderPanel {
@@ -223,6 +228,30 @@ class NoticeWrapper extends BorderPanel {
     }
 
     class Popup extends JPopupMenu {
+        {
+            addPopupMenuListener(new PopupMenuListener() {
+                @Override
+                public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                    if(manager != null) {
+                        Blocker.block(manager, this);
+                    }
+                }
+
+                @Override
+                public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                    if(manager != null) {
+                        Blocker.unblock(manager, this);
+                    }
+                }
+
+                @Override
+                public void popupMenuCanceled(PopupMenuEvent e) {
+                    if(manager != null) {
+                        Blocker.unblock(manager, this);
+                    }
+                }
+            });
+        }
         private final java.util.List<JMenuItem> items = new ArrayList<>();
 
         void clearMenu() {
