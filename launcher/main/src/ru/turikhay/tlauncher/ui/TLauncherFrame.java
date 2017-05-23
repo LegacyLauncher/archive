@@ -152,7 +152,7 @@ public class TLauncherFrame extends JFrame {
             setExtendedState(windowState);
         }
 
-        if(settings.getInteger("gui.features") != 1337) {
+        /*if(settings.getInteger("gui.features") != 1337) {
             settings.set("gui.features", 1337);
 
             final NewFeaturesFrame newFeaturesFrame = new NewFeaturesFrame(this);
@@ -166,7 +166,7 @@ public class TLauncherFrame extends JFrame {
                     newFeaturesFrame.setAlwaysOnTop(false);
                 }
             });
-        }
+        }*/
     }
 
     public TLauncher getLauncher() {
