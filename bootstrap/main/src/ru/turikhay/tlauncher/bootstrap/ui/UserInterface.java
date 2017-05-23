@@ -16,6 +16,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public final class UserInterface {
+    public static final String DEFAULT_LOCALE = "en_US";
     private static final int BORDER_SIZE = 5, TASK_DEPTH = 2;
 
     private static final ResourceBundle resourceBundle;
@@ -166,6 +167,10 @@ public final class UserInterface {
 
     public static ResourceBundle getResourceBundle() {
         return resourceBundle;
+    }
+
+    public static String getLocale() {
+        return getLString("locale", "en_US");
     }
 
     public static String getLString(String key, String defaultValue) {

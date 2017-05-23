@@ -344,15 +344,16 @@ public final class Bootstrap {
         return bridge;
     }
 
-    Task<LocalLauncher> prepareLauncher(final UpdateMeta updateMeta) {
-        return new Task<LocalLauncher>("prepareLauncher") {
+    Task<LocalLauncherTask> prepareLauncher(final UpdateMeta updateMeta) {
+        return new Task<LocalLauncherTask>("prepareLauncher") {
             @Override
-            protected LocalLauncher execute() throws Exception {
+            protected LocalLauncherTask execute() throws Exception {
                 RemoteLauncher remoteLauncher = updateMeta == null? null : new RemoteLauncher(updateMeta.getLauncher());
                 log("Remote launcher: " + remoteLauncher);
                 recordBreadcrumb("remoteLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
 
-                LocalLauncher localLauncher = bindTo(getLocalLauncher(remoteLauncher), .0, .25);
+                LocalLauncherTask localLauncherTask = bindTo(getLocalLauncher(remoteLauncher), .0, .25);
+                LocalLauncher localLauncher = localLauncherTask.getLauncher();
                 LocalLauncherMeta localLauncherMeta = localLauncher.getMeta();
                 log("Local launcher: " + localLauncher);
                 recordBreadcrumb("localLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
@@ -360,7 +361,7 @@ public final class Bootstrap {
                 log("Downloading libraries...");
                 bindTo(downloadLibraries(localLauncherMeta), .25, 1.);
 
-                return localLauncher;
+                return localLauncherTask;
             }
         };
     }
@@ -415,8 +416,13 @@ public final class Bootstrap {
                 }
 
 
-                LocalLauncher localLauncher = bindTo(prepareLauncher(updateMeta), .25, .75);
+                LocalLauncherTask localLauncherTask = bindTo(prepareLauncher(updateMeta), .25, .75);
+                LocalLauncher localLauncher = localLauncherTask.getLauncher();
+
                 BootBridge bridge = createBridge(args, updateMeta == null? null : updateMeta.getOptions());
+                if(localLauncherTask.isUpdated() && updateMeta != null) {
+                    addUpdateMessage(bridge, updateMeta.getLauncher());
+                }
                 bootBridgeRef.setObject(bridge);
 
                 bindTo(startLauncher(localLauncher, bridge), 0.75, 1.);
@@ -431,10 +437,21 @@ public final class Bootstrap {
         };
     }
 
-    private Task<LocalLauncher> getLocalLauncher(final RemoteLauncher remote) {
-        return new Task<LocalLauncher>("getLocalLauncher") {
+    private void addUpdateMessage(BootBridge bridge, RemoteLauncherMeta remoteLauncherMeta) {
+        Map<String, String> description = remoteLauncherMeta.getDescription();
+        if(description == null) {
+            return;
+        }
+        String updateTitle = UserInterface.getLString("update.launcher.title", "Launcher was updated");
+        for(Map.Entry<String, String> entry : description.entrySet()) {
+            bridge.addMessage(entry.getKey(), updateTitle, entry.getValue());
+        }
+    }
+
+    private Task<LocalLauncherTask> getLocalLauncher(final RemoteLauncher remote) {
+        return new Task<LocalLauncherTask>("getLocalLauncher") {
             @Override
-            protected LocalLauncher execute() throws Exception {
+            protected LocalLauncherTask execute() throws Exception {
                 updateProgress(0.);
                 log("Getting local launcher...");
 
@@ -460,7 +477,7 @@ public final class Bootstrap {
                 if(local != null) {
                     if(remote == null) {
                         log("We have local launcher, but have no remote.");
-                        return local;
+                        return new LocalLauncherTask(local);
                     }
 
                     LocalLauncherMeta localLauncherMeta;
@@ -495,7 +512,7 @@ public final class Bootstrap {
 
                         log("All done, local launcher is up to date.");
 
-                        return local;
+                        return new LocalLauncherTask(local);
                     }
 
                     updateProgress(.5);
@@ -505,7 +522,8 @@ public final class Bootstrap {
                     throw new LauncherNotFoundException("could not retrieve any launcher");
                 }
 
-                return bindTo(remote.toLocalLauncher(file, getTargetLibFolder()), .5, 1.);
+                local = bindTo(remote.toLocalLauncher(file, getTargetLibFolder()), .5, 1.);
+                return new LocalLauncherTask(local, true);
             }
         };
     }
@@ -528,7 +546,7 @@ public final class Bootstrap {
                 .withLevel(level)
                 .withSentryInterface(new ExceptionInterface(t))
                 .withRelease(String.valueOf(getMeta().getVersion()))
-                .withServerName(JavaVersion.getCurrent().toString());
+                .withServerName(JavaVersion.getCurrent().getVersion());
         if(b != null) {
             for(Map.Entry<String, String> entry : b.build().entrySet()) {
                 builder.withExtra(entry.getKey(), entry.getValue());

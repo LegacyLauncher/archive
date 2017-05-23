@@ -8,6 +8,6 @@ public class FbSupportFrame extends SupportFrame {
     }
 
     boolean isApplicable() {
-        return !TLauncher.getInstance().getSettings().isUSSRLocale();
+        return true;
     }
 }

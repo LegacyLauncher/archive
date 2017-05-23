@@ -50,7 +50,8 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         openNoticeScene.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                defaultScene.getMainPane().openNoticeScene();
+                defaultScene.setNoticeSidePanelEnabled(true);
+                //defaultScene.getMainPane().openNoticeScene();
             }
         });
     }
@@ -64,13 +65,14 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         } else {
             registerExtraItems(openNoticeScene, null, hideNotice);
         }*/
-        registerExtraAction("expand.png", new ActionListener() {
+        registerExtraItems(openNoticeScene, null, hideNotice);
+        /*registerExtraAction("expand.png", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 defaultScene.setNoticeSidePanelEnabled(true);
                 //defaultScene.getMainPane().openNoticeScene();
             }
-        });
+        });*/
         scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
 
         addComponentListener(new ComponentAdapter() {

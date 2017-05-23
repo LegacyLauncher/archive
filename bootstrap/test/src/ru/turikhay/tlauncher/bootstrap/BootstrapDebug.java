@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.bootstrap;
 
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.launcher.LocalLauncher;
+import ru.turikhay.tlauncher.bootstrap.launcher.LocalLauncherTask;
 import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.util.U;
@@ -28,7 +29,7 @@ public class BootstrapDebug {
         }
 
         Bootstrap bootstrap = new Bootstrap(launcherFile, libDir, false);
-        Task<LocalLauncher> localLauncherTask = bootstrap.prepareLauncher(null);
+        Task<LocalLauncherTask> localLauncherTask = bootstrap.prepareLauncher(null);
 
         BootBridge bootBridge = BootBridge.create(
                 bootstrap.getMeta().getVersion().toString(),
@@ -36,7 +37,7 @@ public class BootstrapDebug {
                 options(bootstrap.getMeta().getShortBrand())
         );
 
-        Task<Void> startLauncherTask = bootstrap.startLauncher(localLauncherTask.call(), bootBridge);
+        Task<Void> startLauncherTask = bootstrap.startLauncher(localLauncherTask.call().getLauncher(), bootBridge);
         if(bootstrap.getUserInterface() != null) {
             bootstrap.getUserInterface().bindToTask(startLauncherTask);
         }

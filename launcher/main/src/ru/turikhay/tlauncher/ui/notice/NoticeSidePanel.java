@@ -208,6 +208,15 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             popup.add(promotedItem);
             refreshPromoted();
 
+            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.restore", "refresh.png", new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    noticeManager.restoreHidden();
+                }
+            }));
+
+            popup.addSeparator();
+
             popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.hide", "collapse.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {

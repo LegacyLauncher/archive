@@ -6,7 +6,7 @@ public final class Static {
     private static final String SETTINGS = "tlauncher/mcl.properties";
     private static final String BRAND = "for Mc-launcher.com";
     private static final String FOLDER = "minecraft";
-    private static final String[] OFFICIAL_REPO = {"http://s3.amazonaws.com/Minecraft.Download/"};
+    private static final String[] OFFICIAL_REPO = {"https://s3.amazonaws.com/Minecraft.Download/"};
     private static final String[] EXTRA_REPO = U.shuffle("http://u.tlauncher.ru/repo/", "http://turikhay.ru/tlauncher/repo/", "http://tlauncherrepo.com/repo/");
     private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/"};
     private static final String[] ASSETS_REPO = {"http://resources.download.minecraft.net/"};
