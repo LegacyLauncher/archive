@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.bridge;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public final class BootBridge {
@@ -10,6 +12,7 @@ public final class BootBridge {
     private final String bootstrapVersion;
     private final String[] args;
     private final String options;
+    private final Map<String, BootMessage> messageMap;
     private UUID client;
 
     volatile boolean interrupted;
@@ -18,6 +21,8 @@ public final class BootBridge {
         if(args == null) {
             args = new String[0];
         }
+
+        this.messageMap = new HashMap<String, BootMessage>();
 
         this.bootstrapVersion = bootstrapVersion;
         this.args = args;
@@ -46,6 +51,14 @@ public final class BootBridge {
 
     void setClient(UUID client) {
         this.client = client;
+    }
+
+    BootMessage getMessage(String locale) {
+        return messageMap.get(locale);
+    }
+
+    public void addMessage(String locale, String title, String message) {
+        messageMap.put(locale, new BootMessage(title, message));
     }
 
     public synchronized void addListener(BootListener listener) {

@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
+import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
 import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
@@ -130,18 +131,19 @@ public final class TLauncher {
 
         dispatcher.onBootSucceeded();
 
-        SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
-
-        if(config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
-            Sentry.sendWarning(TLauncher.class, "bubble client",
-                    DataBuilder.create("uuid", config.getClient())
-                            .add("new", UUID.randomUUID())
-                            .add("path", new File(""))
-                            .add("home", MinecraftUtil.getWorkingDirectory())
-                            .add("time", Calendar.getInstance().toString())
-                            .add("configLocation", config.getFile())
-            );
+        try {
+            BootMessage message = dispatcher.getBootMessage(getSettings().getLocale().toString());
+            if (message == null) {
+                message = dispatcher.getBootMessage(null);
+            }
+            if (message != null) {
+                Alert.showMessage(message.getTitle(), message.getBody());
+            }
+        } catch(Throwable t) {
+            t.printStackTrace();
         }
+
+        SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
     }
 
     public BootConfiguration getBootConfig() {

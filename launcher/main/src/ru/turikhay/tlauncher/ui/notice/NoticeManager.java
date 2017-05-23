@@ -124,6 +124,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                     }
                 }
             });*/
+            selectRandom();
         } else {
             log("[WARN] Notice map is empty");
         }
@@ -210,14 +211,23 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
         setHidden(notice, hidden, true);
     }
 
-    public void setAllHidden() {
+    private void setAllHidden(boolean hidden) {
         List<Notice> noticeList = getForCurrentLocale();
         if(noticeList == null || noticeList.isEmpty()) {
             return;
         }
         for(Notice notice : noticeList) {
-            setHidden(notice, true, false);
+            setHidden(notice, hidden, false);
         }
+    }
+
+    public void setAllHidden() {
+        setAllHidden(true);
+    }
+
+    public void restoreHidden() {
+        setAllHidden(false);
+        selectRandom();
     }
 
     @Override

@@ -112,7 +112,7 @@ public class PreSupportFrame extends VActionFrame {
         getFooter().add(checkboxPanel, c);
 
         c = new GridBagConstraints();
-        c.gridx = -1;
+        c.gridx = 0;
         c.gridy = 1;
         c.weightx = 1.0;
         c.weighty = 1.0;
@@ -123,7 +123,14 @@ public class PreSupportFrame extends VActionFrame {
             if (!supportFrames[i].isApplicable()) {
                 continue;
             }
+            if(i == supportFrames.length-1) {
+                c.gridwidth = GridBagConstraints.REMAINDER;
+            }
             getFooter().add(supportFramesButtons[i], c);
+            if(++c.gridx % 2 == 0) {
+                c.gridx = 0;
+                c.gridy++;
+            }
         }
 
         pack();

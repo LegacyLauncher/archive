@@ -5,11 +5,13 @@ import ru.turikhay.tlauncher.bootstrap.util.U;
 import shaded.com.google.gson.*;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 
 public class UpdateDeserializer implements JsonDeserializer<UpdateMeta> {
     @Override
     public UpdateMeta deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         U.log("[UpdateDeserializer]", "Deserializing");
+
         UpdateMeta meta = Json.get().fromJson(jsonElement, UpdateMeta.class);
         U.requireNotNull(meta.getLauncher(), "launcher entry");
         U.requireNotNull(meta.getBootstrap(), "bootstrap entry");
@@ -23,6 +25,11 @@ public class UpdateDeserializer implements JsonDeserializer<UpdateMeta> {
             options = null;
         }
         meta.setOptions(options);
+
+        Map<String, String> description = meta.getDescription();
+        if(description != null) {
+            meta.getLauncher().setDescription(description);
+        }
 
         return meta;
     }

@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.frames.ProcessFrame;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
@@ -16,11 +17,11 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.windows.DxDiag;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 
 public class SupportButton extends LocalizableButton implements Blockable {
 
@@ -54,12 +55,26 @@ public class SupportButton extends LocalizableButton implements Blockable {
 
     {
         localeMap.put("ru_RU", new SupportMenu("vk.png")
-                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu"))
+                .add(new String[]{
+                        "йоу",
+                        "Говорят, что мы есть ВКонтакте.",
+                        "Ы-ы-ы, го вк",
+                        "Если есть проблемесы, пиши нам VK",
+                        "Подпишись на нас. У нас печеньки.",
+                        "Ti podpisalsya na nas?",
+                        "Мы тут ВКонтакте есть. Да."
+                    },
+                        "loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
         );
 
-        localeMap.put("uk_UA", localeMap.get("ru_RU"));
+        localeMap.put("uk_UA", new SupportMenu("comments-o.png")
+                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu"))
+                .add("loginform.button.support.fb", Images.getIcon("facebook-square.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu"))
+                .addSeparator()
+                .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
+        );
 
         localeMap.put("en_US", new SupportMenu("comments-o.png")
                 .add("loginform.button.support.fb", Images.getIcon("facebook-square.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu"))
@@ -76,7 +91,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (menu != null) {
-                    menu.popup.show(SupportButton.this, 0, getHeight());
+                    menu.showPopup();
                 }
             }
         });
@@ -155,11 +170,33 @@ public class SupportButton extends LocalizableButton implements Blockable {
             this.icon = Images.getScaledIcon(icon, 20);
         }
 
+        void showPopup() {
+            Localizable.updateContainer(popup);
+            popup.show(SupportButton.this, 0, getHeight());
+        }
+
         SupportMenu add(JMenuItem item) {
             popup.add(item);
             return this;
         }
 
+        public SupportMenu add(final String[] russianTitles, final String key, ImageIcon icon, ActionListener listener) {
+            LocalizableMenuItem item = new LocalizableMenuItem(null) {
+                @Override
+                public void updateLocale() {
+                    super.updateLocale();
+                    if(TLauncher.getInstance() != null && "ru_RU".equals(TLauncher.getInstance().getSettings().getLocale().toString())) {
+                        setText(U.getRandom(russianTitles));
+                    } else {
+                        setText(key);
+                    }
+                }
+            };
+            item.setIcon(icon);
+            if (listener != null) item.addActionListener(listener);
+            add(item);
+            return this;
+        }
 
         public SupportMenu add(String key, ImageIcon icon, ActionListener listener) {
             LocalizableMenuItem item = new LocalizableMenuItem(key);

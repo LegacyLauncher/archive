@@ -25,6 +25,10 @@ public final class BootEventDispatcher implements BootListener {
         return error;
     }
 
+    public BootMessage getBootMessage(String locale) {
+        return bridge.getMessage(locale);
+    }
+
     @Override
     public void onBootStarted() throws InterruptedException {
         if(booting || working) {

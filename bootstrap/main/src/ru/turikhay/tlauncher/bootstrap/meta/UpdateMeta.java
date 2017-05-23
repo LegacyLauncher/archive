@@ -131,6 +131,7 @@ public class UpdateMeta {
 
     protected UpdateEntry update;
     protected Map<String, String> support;
+    protected Map<String, String> description; // will be added to RemoteLauncherMeta by UpdateDeserializer
     @Expose
     protected String options; // this field is handled by UpdateDeserializer
 
@@ -144,6 +145,10 @@ public class UpdateMeta {
 
     public Map<String, String> getSupport() {
         return support == null ? null : Collections.unmodifiableMap(support);
+    }
+
+    public Map<String, String> getDescription() {
+        return description == null? null : Collections.unmodifiableMap(description);
     }
 
     public String getOptions() {
