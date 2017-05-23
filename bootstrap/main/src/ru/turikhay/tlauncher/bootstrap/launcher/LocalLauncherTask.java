@@ -4,10 +4,11 @@ import ru.turikhay.tlauncher.bootstrap.util.U;
 
 public final class LocalLauncherTask {
     private final LocalLauncher launcher;
-    private boolean updated;
+    private final boolean updated;
 
     public LocalLauncherTask(LocalLauncher launcher, boolean updated) {
         this.launcher = U.requireNotNull(launcher, "launcher");
+        this.updated = updated;
     }
 
     public LocalLauncherTask(LocalLauncher launcher) {
@@ -20,9 +21,5 @@ public final class LocalLauncherTask {
 
     public boolean isUpdated() {
         return updated;
-    }
-
-    void setUpdated(boolean updated) {
-        this.updated = updated;
     }
 }

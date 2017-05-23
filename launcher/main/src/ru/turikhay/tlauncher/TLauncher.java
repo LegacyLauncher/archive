@@ -131,10 +131,11 @@ public final class TLauncher {
 
         dispatcher.onBootSucceeded();
 
+
         try {
             BootMessage message = dispatcher.getBootMessage(getSettings().getLocale().toString());
             if (message == null) {
-                message = dispatcher.getBootMessage(null);
+                message = dispatcher.getBootMessage("en_US");
             }
             if (message != null) {
                 Alert.showMessage(message.getTitle(), message.getBody());
