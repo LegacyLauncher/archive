@@ -401,7 +401,7 @@ public final class Bootstrap {
                     updateMeta = bindTo(UpdateMeta.fetchFor(meta.getShortBrand()), .0, .25);
                 } catch(ExceptionList list) {
                     log("Could not retrieve update meta:", list);
-                    sendError(Event.Level.ERROR, list, DataBuilder.create("type", FatalExceptionType.getType(list)));
+                    sendError(list, DataBuilder.create("type", FatalExceptionType.getType(list)));
 
                     updateMeta = null;
                 }
@@ -540,11 +540,10 @@ public final class Bootstrap {
         recordBreadcrumb(name, "info", "general", data);
     }
 
-    private void sendError(Event.Level level, Throwable t, DataBuilder b) {
+    private EventBuilder prepareEvent(Event.Level level, DataBuilder b) {
         EventBuilder builder = new EventBuilder()
                 .withEnvironment(System.getProperty("os.name"))
                 .withLevel(level)
-                .withSentryInterface(new ExceptionInterface(t))
                 .withRelease(String.valueOf(getMeta().getVersion()))
                 .withServerName(JavaVersion.getCurrent().getVersion());
         if(b != null) {
@@ -552,17 +551,24 @@ public final class Bootstrap {
                 builder.withExtra(entry.getKey(), entry.getValue());
             }
         }
+        return builder;
+    }
 
+    private void sendEvent(EventBuilder builder) {
         Event event = builder.build();
         raven.sendEvent(event);
-
-        log("Error sent:", DataBuilder.create("error", event)
-            .add("environment", event.getEnvironment())
-            .add("level", event.getLevel())
-            .add("exception", t)
-            .add("extra", b == null? null : b.build())
-            .build()
+        log("Event sent:", DataBuilder.create("event", event)
+                .add("environment", event.getEnvironment())
+                .add("level", event.getLevel())
+                .add("interfaces", event.getSentryInterfaces())
+                .build()
         );
+    }
+
+    private void sendError(Throwable t, DataBuilder b) {
+        EventBuilder builder = prepareEvent(Event.Level.ERROR, b)
+                .withSentryInterface(new ExceptionInterface(t));
+        sendEvent(builder);
     }
 
     private static void recordBreadcrumb(String name, String level, String category, DataBuilder data) {

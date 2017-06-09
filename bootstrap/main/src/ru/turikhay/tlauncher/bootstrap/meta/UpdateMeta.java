@@ -53,6 +53,11 @@ public class UpdateMeta {
 
                             UpdateMeta meta = fetchFrom(gson, setupConnection(url, attempt));
 
+                            if(meta.isOutdated()) {
+                                log("... is outdated, skipping");
+                                continue;
+                            }
+
                             updateProgress(1.);
                             log("Success!");
 
@@ -129,11 +134,28 @@ public class UpdateMeta {
         return connection.getInputStream();
     }
 
+    private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+
+    private static Calendar calendar() {
+        return Calendar.getInstance(UTC);
+    }
+
+    private static Calendar calendar(long millis) {
+        Calendar c = calendar();
+        c.setTimeInMillis(millis);
+        return c;
+    }
+
+    protected long pendingUpdateUTC;
     protected UpdateEntry update;
     protected Map<String, String> support;
     protected Map<String, String> description; // will be added to RemoteLauncherMeta by UpdateDeserializer
     @Expose
     protected String options; // this field is handled by UpdateDeserializer
+
+    public boolean isOutdated() {
+        return pendingUpdateUTC > 0 && calendar().after(calendar(pendingUpdateUTC * 1000));
+    }
 
     public RemoteBootstrapMeta getBootstrap() {
         return update == null? null : update.bootstrap;

@@ -60,7 +60,7 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
                 lf.scene.setSidePanel(DefaultScene.SidePanel.NOTICES);
             }
         });
-        popup.add(notices);
+        updateNoticeEntry();
         setPreferredSize(new Dimension(30, getHeight()));
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -97,5 +97,19 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
         } else {
             popup.remove(notices);
         }*/
+    }
+
+    @Override
+    public void updateLocale() {
+        super.updateLocale();
+        updateNoticeEntry();
+    }
+
+    private void updateNoticeEntry() {
+        if(lf.scene.getMainPane().getRootFrame().getNotices().getForCurrentLocale() == null) {
+            popup.remove(notices);
+        } else {
+            popup.add(notices);
+        }
     }
 }

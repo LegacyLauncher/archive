@@ -61,9 +61,9 @@ public final class SentryContext {
                 .withCulprit(clazz == null ? null : clazz.toString())
                 .withMessage(message == null ? "(null message)" : message)
                 .withServerName(OS.NAME)
-                .withPlatform(OS.JAVA_VERSION.getVersion())
                 .withRelease(String.valueOf(TLauncher.getVersion()));
 
+        b.withTag("java", OS.JAVA_VERSION.getVersion());
         b.withTag("brand", TLauncher.getBrand());
         addAv(b);
 

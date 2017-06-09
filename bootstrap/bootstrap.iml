@@ -16,6 +16,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.10" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
-    <orderEntry type="library" name="tlauncher-dependencies-1.0-shaded" level="project" />
+    <orderEntry type="library" name="tlauncher-dependencies-1.0" level="project" />
   </component>
 </module>
