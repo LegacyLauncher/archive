@@ -26,7 +26,7 @@ import java.util.List;
 
 
 public class NoticeSidePanel extends CenterPanel implements LocalizableComponent {
-    private static final int BUTTON_IMAGE_SIZE = 24, BUTTON_PANEL_HEIGHT = 36, NOTICE_IMAGE_SIZE = 32;
+    private static final int BUTTON_IMAGE_SIZE = 24, BUTTON_PANEL_HEIGHT = 36, NOTICE_IMAGE_SIZE = 48;
 
     private final DefaultScene scene;
     private final NoticeManager noticeManager;

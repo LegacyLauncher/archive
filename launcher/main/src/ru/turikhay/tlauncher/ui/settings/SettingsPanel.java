@@ -67,8 +67,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler locale;
     private final TabbedEditorPanel.EditorPanelTab aboutTab;
     public final HTMLPage about;
-    //private final TabbedEditorPanel.EditorPanelTab serverTab;
-    //public final HTMLPage serverPage;
+    private final TabbedEditorPanel.EditorPanelTab serverTab;
+    public final HTMLPage serverPage;
     private final BorderPanel buttonPanel;
     private final LocalizableButton saveButton;
     private final LocalizableButton defaultButton;
@@ -302,10 +302,10 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         about = new HTMLPage("about.html");
         aboutTab.add(about);
         add(aboutTab);
-        /*serverTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.server");
+        serverTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.server");
         serverTab.setSavingEnabled(false);
         serverPage = new HTMLPage("server.html");
-        serverTab.add(serverPage);*/
+        serverTab.add(serverPage);
         saveButton = new LocalizableButton("settings.save");
         saveButton.setFont(saveButton.getFont().deriveFont(1));
         saveButton.addActionListener(new ActionListener() {
