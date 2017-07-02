@@ -27,7 +27,7 @@ public class MainPane extends ExtendedLayeredPane {
     public final BackgroundManager background;
     public final LaunchProgress progress;
     public final DefaultScene defaultScene;
-    public final AccountEditorScene accountEditor;
+    public final AccountManagerScene accountManager;
     public final VersionManagerScene versionManager;
     public final NoticeScene noticeScene;
     public final SideNotifier notifier;
@@ -48,9 +48,9 @@ public class MainPane extends ExtendedLayeredPane {
         log("Init Default scene...");
         defaultScene = new DefaultScene(this);
         add(defaultScene);
-        log("Init Account editor scene...");
-        accountEditor = new AccountEditorScene(this);
-        add(accountEditor);
+        log("Init Account manager scene...");
+        accountManager = new AccountManagerScene(this);
+        add(accountManager);
         log("Init Version manager scene...");
         versionManager = new VersionManagerScene(this);
         add(versionManager);
@@ -106,7 +106,7 @@ public class MainPane extends ExtendedLayeredPane {
     }
 
     public void openAccountEditor() {
-        setScene(accountEditor);
+        setScene(accountManager);
     }
 
     public void openVersionManager() {

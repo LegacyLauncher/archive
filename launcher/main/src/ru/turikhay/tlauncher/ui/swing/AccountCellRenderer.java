@@ -14,7 +14,7 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
     public static final Account EMPTY = Account.randomAccount();
     public static final Account MANAGE = Account.randomAccount();
     private static final ImageIcon MANAGE_ICON = Images.getIcon("gear.png", SwingUtil.magnify(16));
-    private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("star.png", SwingUtil.magnify(16));
+    private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("mojang.png", SwingUtil.magnify(16));
     private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
     private final DefaultListCellRenderer defaultRenderer;
     private AccountCellRenderer.AccountCellType type;
@@ -50,9 +50,9 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
         if (value != null && !value.equals(EMPTY)) {
             if (value.equals(MANAGE)) {
                 renderer.setText(Localizable.get("account.manage"));
-                renderer.setIcon(MANAGE_ICON);
+                ImageIcon.setup(renderer, MANAGE_ICON);
             } else {
-                Object icon = null;
+                Icon icon = null;
                 switch (value.getType()) {
                     case ELY:
                         icon = TLauncher.getInstance().getElyManager().isRefreshing() ? ELY_USER_ICON.getDisabledInstance() : ELY_USER_ICON;
@@ -62,8 +62,15 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
                 }
 
                 if (icon != null) {
-                    renderer.setIcon((Icon) icon);
+                    if(icon instanceof ImageIcon) {
+                        ImageIcon.setup(renderer, (ImageIcon) icon);
+                    } else {
+                        renderer.setIcon(icon);
+                    }
                     renderer.setFont(renderer.getFont().deriveFont(1));
+                } else {
+                    renderer.setIcon(null);
+                    renderer.setDisabledIcon(null);
                 }
 
                 switch (type) {

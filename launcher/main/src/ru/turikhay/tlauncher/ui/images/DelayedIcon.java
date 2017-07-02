@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import ru.turikhay.tlauncher.ui.notice.NoticeImage;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
@@ -16,6 +17,11 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
     public DelayedIcon() {
         setIcon(this);
         setDisabledIcon(getDisabledInstance());
+    }
+
+    public DelayedIcon(NoticeImage noticeImage, int width, int height) {
+        this();
+        setImage(noticeImage.getTask(), noticeImage.getWidth(), noticeImage.getHeight(), width, height);
     }
 
     public void setImage(Image image, int width, int height) {

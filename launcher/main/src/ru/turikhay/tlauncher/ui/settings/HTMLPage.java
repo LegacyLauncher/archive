@@ -100,7 +100,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
 
         public String resolveToken(String token) {
             if (token.equals("width"))
-                return String.valueOf(SwingUtil.magnify(425));
+                return String.valueOf(SwingUtil.magnify(525));
             return token.startsWith("image:") ? Images.getRes(token.substring("image:".length())).toExternalForm() : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? textColor : token));
         }
     }

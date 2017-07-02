@@ -41,7 +41,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         super(new MagnifiedInsets(15, 15, 10, 15));
 
         this.scene = scene;
-        setSize(SwingUtil.magnify(new Dimension(550, 510)));
+        setSize(SwingUtil.magnify(new Dimension(600, 540)));
 
         panel = new ExtendedPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -90,17 +90,28 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         Page page = new Page();
         for(final Notice notice : noticeList) {
             NoticeWrapper wrapper = new NoticeWrapper(noticeManager, TLauncherFrame.getFontSize(), getWidth() - SwingUtil.magnify(NoticeWrapper.GAP) * 2 - getInsets().left - getInsets().right - SwingUtil.magnify(NOTICE_IMAGE_SIZE) - SwingUtil.magnify(32), SwingUtil.magnify(NOTICE_IMAGE_SIZE));
-            wrapper.editorPane.addMouseListener(new MouseAdapter() {
-                long lastClick;
+            /*final LocalizableMenuItem showAtMenuItem = LocalizableMenuItem.newItem("notice.sidepanel.popup.show-at-menu", new ActionListener() {
                 @Override
-                public void mouseClicked(MouseEvent e) {
-                    long click = System.currentTimeMillis();
-                    if(click - lastClick < 500) {
-                        noticeManager.selectNotice(notice, true);
-                    }
-                    lastClick = System.currentTimeMillis();
+                public void actionPerformed(ActionEvent e) {
+                    noticeManager.selectNotice(notice, true);
                 }
             });
+            wrapper.buttonPane.action.popup.registerItem(showAtMenuItem);
+
+            final LocalizableMenuItem hideItem = LocalizableMenuItem.newItem("notice.sidepanel.popup.make-promoted", new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    noticeManager.setPromoted(notice);
+                }
+            });
+            wrapper.buttonPane.action.popup.registerItem(hideItem);
+            wrapper.buttonPane.action.popup.registerVisibilityHandler(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    showAtMenuItem.setEnabled(noticeManager.getSelectedNotice() != notice);
+                    hideItem.setEnabled(noticeManager.isPromotedAllowed() && !noticeManager.isHidden(notice) && noticeManager.getSelectedNotice() != notice);
+                }
+            });*/
             wrapper.setNotice(notice);
 
             Dimension size = wrapper.updateSize();
@@ -169,7 +180,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         fillPages(list);
         renderPage(0);
 
-        buttonPanel.promotedItem.setVisible(Configuration.isUSSRLocale(TLauncher.getInstance().getLang().getLocale().toString()));
+        //buttonPanel.promotedItem.setVisible(Configuration.isUSSRLocale(TLauncher.getInstance().getLang().getLocale().toString()));
     }
 
     private class Page {
@@ -227,6 +238,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             controlButton = newButton("bars.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    refreshPromoted();
                     popup.show(controlButton, 0, controlButton.getHeight());
                 }
             });
@@ -268,6 +280,26 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         }
 
         private void togglePromoted() {
+            boolean current = noticeManager.isPromotedAllowed();
+            noticeManager.setPromotedAllowed(!current);
+            refreshPromoted();
+        }
+
+        private void refreshPromoted() {
+            boolean enabled = TLauncher.getInstance().getSettings().getBoolean("notice.promoted");
+            String path = "notice.promoted.", image;
+            if(enabled) {
+                path += "hide";
+                image = "eye-slash.png";
+            } else {
+                path += "restore";
+                image = "eye.png";
+            }
+            promotedItem.setText(path);
+            promotedItem.setIcon(Images.getIcon(image, 16));
+        }
+
+        /*private void togglePromoted() {
             boolean current = TLauncher.getInstance().getSettings().getBoolean("minecraft.servers.promoted");
             TLauncher.getInstance().getSettings().set("minecraft.servers.promoted", !current);
             refreshPromoted();
@@ -285,6 +317,6 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             }
             promotedItem.setText(path);
             promotedItem.setIcon(Images.getIcon(image, 16));
-        }
+        }*/
     }
 }

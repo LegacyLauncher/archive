@@ -11,7 +11,7 @@ public final class Static {
     private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/"};
     private static final String[] ASSETS_REPO = {"http://resources.download.minecraft.net/"};
     private static final String[] SERVER_LIST = {};
-    private static final String[] LANG_LIST = {"en_US"};
+    private static final String[] LANG_LIST = {"en_US", "pt_BR", "vi", "in_ID", "es_ES"};
 
     public static String getSettings() {
         return SETTINGS;

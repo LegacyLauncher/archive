@@ -26,7 +26,12 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         NoticeImage image = parseImage(root, context);
         NoticeAction action = parseAction(id, root, context);
 
-        return new Notice(id, pos, text, image, action);
+        Notice notice = new Notice(id, pos, text, image, action);
+        if(root.has("promoted") && root.get("promoted").getAsBoolean()) {
+            notice.setPromoted(true);
+        }
+
+        return notice;
     }
 
     private NoticeImage parseImage(JsonObject root, JsonDeserializationContext context) {

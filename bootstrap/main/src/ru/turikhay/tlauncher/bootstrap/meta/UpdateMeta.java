@@ -25,7 +25,7 @@ public class UpdateMeta {
             "http://turikhay.ru/tlauncher/%s/bootstrap.json",
             "http://tlaun.ch/%s/bootstrap.json"
     );
-    private static final int INITIAL_TIMEOUT = 2500, MAX_ATTEMPTS = 3;
+    private static final int INITIAL_TIMEOUT = 1500, MAX_ATTEMPTS = 5;
 
     public static Task<UpdateMeta> fetchFor(final String brand) throws ExceptionList {
         U.requireNotNull(brand,  "brand");
@@ -122,10 +122,6 @@ public class UpdateMeta {
 
     private static InputStream setupConnection(URL url, int attempt) throws IOException {
         int timeout = attempt * INITIAL_TIMEOUT;
-
-        if(attempt > 1) {
-            timeout *= 2;
-        }
 
         URLConnection connection = url.openConnection();
         connection.setConnectTimeout(timeout);

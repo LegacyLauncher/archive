@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
 import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.SideNotifier;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -21,8 +22,8 @@ import java.awt.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DefaultScene extends PseudoScene {
-    public static final Dimension LOGIN_SIZE = new Dimension(250, 240);
-    public static final Dimension SETTINGS_SIZE = new Dimension(500, 520);
+    public static final Dimension LOGIN_SIZE = new Dimension(285, 240);
+    public static final Dimension SETTINGS_SIZE = new Dimension(600, 540);
     public static final int EDGE_INSETS = 10;
     public static final int INSETS = 15;
     public final SideNotifier notifier;
@@ -73,6 +74,11 @@ public class DefaultScene extends PseudoScene {
                 getMainPane().getRootFrame().getNotices().selectRandom();
             }
             noticePanel.redraw();
+
+            Account selected = getMainPane().accountManager.list.getSelected();
+            if(selected != null) {
+                loginForm.accounts.setAccount(selected);
+            }
         }
     }
 

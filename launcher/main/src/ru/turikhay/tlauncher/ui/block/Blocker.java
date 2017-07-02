@@ -33,6 +33,10 @@ public class Blocker {
         }
     }
 
+    public static void toggle(Blockable blockable, Object reason) {
+        setBlocked(blockable, reason, !getBlockList(blockable).contains(reason));
+    }
+
     public static void block(Blockable blockable, Object reason) {
         if (blockable != null) {
             if (reason == null) {

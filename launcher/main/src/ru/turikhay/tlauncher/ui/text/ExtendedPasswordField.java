@@ -41,6 +41,7 @@ public class ExtendedPasswordField extends JPasswordField {
             }
         });
         setText(null);
+        updateStyle();
     }
 
     public ExtendedPasswordField() {
@@ -95,6 +96,7 @@ public class ExtendedPasswordField extends JPasswordField {
 
     void updateStyle() {
         setForeground(getValue() == null ? theme.getFocusLost() : theme.getFocus());
+        setBackground(theme.getBackground());
     }
 
     public String getPlaceholder() {

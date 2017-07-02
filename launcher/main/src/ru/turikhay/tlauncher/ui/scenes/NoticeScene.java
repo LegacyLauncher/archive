@@ -58,6 +58,11 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             public void onNoticeSelected(Notice notice) {
                 updateNoticeVisibility();
             }
+
+            @Override
+            public void onNoticePromoted(Notice promotedNotice) {
+                updateNoticeVisibility();
+            }
         }, true);
     }
 

@@ -4,18 +4,57 @@ import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.tlauncher.ui.images.DelayedIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.util.U;
+import ru.turikhay.tlauncher.ui.notice.Notice;
+import ru.turikhay.tlauncher.ui.notice.NoticeManager;
+import ru.turikhay.tlauncher.ui.notice.NoticeManagerListener;
+import ru.turikhay.tlauncher.ui.notice.NoticePopup;
+import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
+import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 
-public class PlayButton extends LocalizableButton implements Blockable, LoginForm.LoginStateListener {
+public class PlayButton extends BorderPanel implements Blockable, LoginForm.LoginStateListener, NoticeManagerListener {
     private static final long serialVersionUID = 6944074583143406549L;
     private PlayButton.PlayButtonState state;
     private final LoginForm loginForm;
+
+    private final LocalizableButton button, promotedNoticeButton;
+    private final NoticePopup promotedNoticePopup = new NoticePopup();
+    private final LocalizableMenuItem
+            hideNotice = new LocalizableMenuItem("notice.action.hide"),
+            hidePromoted = new LocalizableMenuItem("notice.promoted.hide.here");
+    {
+        Images.getScaledIcon("eye-slash.png", 16).setup(hideNotice);
+        hideNotice.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(promotedNoticePopup.getNotice() != null) {
+                    NoticeManager manager = loginForm.scene.getMainPane().getRootFrame().getNotices();
+                    manager.setHidden(promotedNoticePopup.getNotice(), true);
+                    manager.selectRandom();
+                }
+            }
+        });
+        promotedNoticePopup.registerItem(hideNotice);
+
+        Images.getScaledIcon("eye-slash.png", 16).setup(hidePromoted);
+        hidePromoted.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                NoticeManager manager = loginForm.scene.getMainPane().getRootFrame().getNotices();
+                manager.setPromotedAllowed(false);
+            }
+        });
+        promotedNoticePopup.registerItem(hidePromoted);
+    }
 
     private int mouseX, mouseY;
     private final JPopupMenu wrongButtonMenu = new JPopupMenu();
@@ -34,8 +73,8 @@ public class PlayButton extends LocalizableButton implements Blockable, LoginFor
 
     PlayButton(LoginForm lf) {
         loginForm = lf;
-        addActionListener(new ActionListener() {
-
+        button = new LocalizableButton();
+        button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 switch (state) {
                     case CANCEL:
@@ -47,6 +86,20 @@ public class PlayButton extends LocalizableButton implements Blockable, LoginFor
 
             }
         });
+        button.setFont(getFont().deriveFont(1).deriveFont(TLauncherFrame.getFontSize() * 1.5f));
+        setCenter(button);
+
+        promotedNoticeButton =  new LocalizableButton();
+        promotedNoticeButton.setPreferredSize(SwingUtil.magnify(new Dimension(48, 1)));
+        promotedNoticeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                promotedNoticePopup.updateList();
+                promotedNoticePopup.show(promotedNoticeButton, promotedNoticeButton.getWidth(), 0);
+            }
+        });
+        onNoticePromoted(null);
+
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -61,8 +114,9 @@ public class PlayButton extends LocalizableButton implements Blockable, LoginFor
                     wrongButtonMenu.show(PlayButton.this, mouseX, mouseY);
             }
         });
-        setFont(getFont().deriveFont(1).deriveFont(TLauncherFrame.getFontSize() * 1.5f));
         setState(PlayButton.PlayButtonState.PLAY);
+
+        lf.scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
     }
 
     public PlayButton.PlayButtonState getState() {
@@ -74,7 +128,7 @@ public class PlayButton extends LocalizableButton implements Blockable, LoginFor
             throw new NullPointerException();
         } else {
             this.state = state;
-            setText(state.getPath());
+            button.setText(state.getPath());
             if (state == PlayButton.PlayButtonState.CANCEL) {
                 setEnabled(true);
             }
@@ -115,6 +169,28 @@ public class PlayButton extends LocalizableButton implements Blockable, LoginFor
 
     public void unblock(Object reason) {
         setEnabled(true);
+    }
+
+    @Override
+    public void onNoticeSelected(Notice notice) {
+
+    }
+
+    @Override
+    public void onNoticePromoted(Notice promotedNotice) {
+        if(promotedNotice == null) {
+            setEast(null);
+        } else {
+            setEast(promotedNoticeButton);
+            promotedNoticePopup.setNotice(promotedNotice);
+            promotedNoticeButton.setIcon(new DelayedIcon(promotedNotice.getImage(), SwingUtil.magnify(32), SwingUtil.magnify(32)));
+
+            Stats.noticeViewed(promotedNotice);
+        }
+
+        validate();
+        //invalidate();
+        repaint();
     }
 
     public enum PlayButtonState {

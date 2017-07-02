@@ -24,8 +24,8 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     private final Map<Locale, List<Notice>> byLocaleMap = new HashMap<Locale, List<Notice>>();
     private final Map<Notice, NoticeTextSize> cachedSizeMap = new HashMap<Notice, NoticeTextSize>();
 
-    private Notice selectedNotice;
-    private boolean forceSelected, changeLocked;
+    private Notice selectedNotice, promotedNotice;
+    private boolean forceSelected;
 
     NoticeManager(TLauncherFrame frame, Map<String, List<Notice>> config) {
         this.frame = frame;
@@ -137,10 +137,18 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     public void addListener(NoticeManagerListener l, boolean updateImmidiately) {
         listeners.add(U.requireNotNull(l, "listener"));
         l.onNoticeSelected(selectedNotice);
+        if(promotedNotice != null) {
+            final Notice promoted = promotedNotice;
+            l.onNoticePromoted(promoted);
+        }
     }
 
     public Notice getSelectedNotice() {
         return selectedNotice;
+    }
+
+    public Notice getPromotedNotice() {
+        return promotedNotice;
     }
 
     public List<Notice> getForCurrentLocale() {
@@ -161,9 +169,29 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
         }
 
         this.selectedNotice = notice;
-        this.forceSelected = forceSet;
+        this.forceSelected = notice != null && forceSet;
         for(NoticeManagerListener l :listeners) {
             l.onNoticeSelected(notice);
+        }
+    }
+
+    public void setPromoted(Notice promoted) {
+        this.promotedNotice = promoted;
+        for(NoticeManagerListener l :listeners) {
+            l.onNoticePromoted(promoted);
+        }
+    }
+
+    public boolean isPromotedAllowed() {
+        return frame.getLauncher().getSettings().getBoolean("notice.promoted");
+    }
+
+    public void setPromotedAllowed(boolean allowPromoted) {
+        frame.getLauncher().getSettings().set("notice.promoted", allowPromoted);
+        if(allowPromoted) {
+            pickPromoted(getForCurrentLocale());
+        } else {
+            setPromoted(null);
         }
     }
 
@@ -205,6 +233,12 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
             }
         }
         frame.getLauncher().getSettings().set("notice.id." + notice.getId(), hidden? System.currentTimeMillis() + HIDDEN_DELAY : null);
+        if(hidden && selectedNotice == notice) {
+            selectNotice(null, true);
+        }
+        if(hidden && promotedNotice == notice) {
+            setPromoted(null);
+        }
     }
 
     public void setHidden(Notice notice, boolean hidden) {
@@ -243,14 +277,13 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     public void selectRandom() {
         Notice selected = null;
+        List<Notice> list = getForCurrentLocale();
         selecting: {
-            List<Notice> list = getForCurrentLocale();
-
             if(list == null) {
                 break selecting;
             }
 
-            List<Notice> available = new ArrayList<Notice>();
+            List<Notice> available = new ArrayList<>();
             for(Notice notice : list) {
                 if(isHidden(notice)) {
                     continue;
@@ -263,16 +296,37 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
             selected = available.get(new Random().nextInt(available.size()));
         }
+        pickPromoted(list);
         selectNotice(selected, false);
+    }
+
+    private void pickPromoted(List<Notice> list) {
+        Notice promoted = null;
+        boolean promotedAllowed = isPromotedAllowed();
+        if(promotedAllowed && list != null) {
+            for(Notice notice : list) {
+                if(!notice.isPromoted()) {
+                    continue;
+                }
+                if(isHidden(notice)) {
+                    continue;
+                }
+                promoted = notice;
+                break;
+            }
+        }
+        this.promotedNotice = promoted;
+
+        for(NoticeManagerListener l :listeners) {
+            l.onNoticePromoted(promoted);
+        }
     }
 
     @Override
     public void block(Object var1) {
-        changeLocked = true;
     }
 
     @Override
     public void unblock(Object var1) {
-        changeLocked = false;
     }
 }
