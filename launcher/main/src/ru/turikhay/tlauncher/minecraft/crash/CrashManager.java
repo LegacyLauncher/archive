@@ -889,7 +889,7 @@ public final class CrashManager {
             }
 
             if (args.equals("accounts")) {
-                TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.accountEditor);
+                TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.accountManager);
             }
 
             if (args.equals("versions")) {

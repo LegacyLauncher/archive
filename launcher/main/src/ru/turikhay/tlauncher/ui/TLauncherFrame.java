@@ -33,7 +33,7 @@ import java.net.URL;
 import java.util.Iterator;
 
 public class TLauncherFrame extends JFrame {
-    public static final Dimension minSize = new Dimension(700, 570);
+    public static final Dimension minSize = new Dimension(700, 600);
     public static final Dimension maxSize = new Dimension(1920, 1080);
     public static final float minFontSize = 12, maxFontSize = 18;
     private static float fontSize = 12f;
@@ -64,7 +64,6 @@ public class TLauncherFrame extends JFrame {
         lang = t.getLang();
         windowSize = settings.getLauncherWindowSize();
         maxPoint = new Point();
-        notices = new NoticeManager(this, t.getBootConfig());
         SwingUtil.initFontSize((int) getFontSize());
         SwingUtil.setFavicons(this);
         setupUI();
@@ -129,6 +128,7 @@ public class TLauncherFrame extends JFrame {
                 }
             }
         });
+        notices = new NoticeManager(this, t.getBootConfig());
         mp = new MainPane(this);
         add(mp);
         log("Packing main frame...");

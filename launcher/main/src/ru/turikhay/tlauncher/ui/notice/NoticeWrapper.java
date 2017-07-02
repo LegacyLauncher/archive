@@ -75,9 +75,23 @@ class NoticeWrapper extends BorderPanel {
         }
 
         NoticeImage image = notice.getImage();
-        iconLabel.setImage(image.getTask(), image.getWidth(), image.getHeight(), fixedIconWidth, fixedIconWidth > 0? 0 : size.height);
+
+        final int setIconWidth, setIconHeight;
+        int additionalWidth = 0;
+        if(fixedIconWidth > 0 && size.height >= fixedIconWidth) {
+            setIconWidth = fixedIconWidth;
+            setIconHeight = 0;
+        } else {
+            setIconWidth = 0;
+            setIconHeight = size.height;
+        }
+        iconLabel.setImage(image.getTask(), image.getWidth(), image.getHeight(), setIconWidth, setIconHeight);
 
         int iconWidth = iconLabel.getIconWidth();
+        if(fixedIconWidth > 0 && fixedIconWidth != iconWidth) {
+            additionalWidth += fixedIconWidth - iconWidth;
+        }
+
         Dimension buttonSize = buttonPane.updateSize(size.height);
 
         int width = 0;
@@ -87,7 +101,7 @@ class NoticeWrapper extends BorderPanel {
         //log("width", width);
         width += getHgap();
         //log("width", width);
-        width += size.width + editorPane.getInsets().left + editorPane.getInsets().right;
+        width += size.width + additionalWidth + editorPane.getInsets().left + editorPane.getInsets().right;
         //log("width", width);
         width += getHgap();
         //log("width", width);
@@ -129,8 +143,8 @@ class NoticeWrapper extends BorderPanel {
                         for (JMenuItem item : noticeAction.getMenuItemList()) {
                             action.popup.registerItem(item);
                         }
-                        action.popup.show(action);
                     }
+                    action.popup.show(action);
                 }
             });
 
@@ -167,7 +181,7 @@ class NoticeWrapper extends BorderPanel {
                 removeAll();
                 c.gridx = 0;
                 c.gridy = 0;
-                c.anchor = GridBagConstraints.NORTH;
+                c.anchor = hor? GridBagConstraints.WEST : GridBagConstraints.NORTH;
                 c.fill = hor? GridBagConstraints.VERTICAL : GridBagConstraints.HORIZONTAL;
 
                 add(action, c);
@@ -178,7 +192,7 @@ class NoticeWrapper extends BorderPanel {
                     c.gridy++;
                 }
 
-                c.anchor = GridBagConstraints.SOUTH;
+                c.anchor = hor? GridBagConstraints.EAST : GridBagConstraints.SOUTH;
                 add(extra, c);
             } else {
                 width = action.updateSize(height).width;
@@ -214,6 +228,11 @@ class NoticeWrapper extends BorderPanel {
         void registerAction(String image, ActionListener l) {
             icon.setImage(Images.getImage(image), SwingUtil.magnify(BUTTON_ICON_WIDTH), true);
             listener = l;
+        }
+
+        void unregisterAction() {
+            icon.setImage(Images.getImage("ellipsis-v.png"), SwingUtil.magnify(BUTTON_ICON_WIDTH), true);
+            listener = null;
         }
 
         Dimension updateSize(int height) {
@@ -253,6 +272,7 @@ class NoticeWrapper extends BorderPanel {
             });
         }
         private final java.util.List<JMenuItem> items = new ArrayList<>();
+        private ActionListener visbilityListener;
 
         void clearMenu() {
             items.clear();
@@ -261,6 +281,10 @@ class NoticeWrapper extends BorderPanel {
 
         void registerItem(JMenuItem item) {
             items.add(item);
+        }
+
+        void registerVisibilityHandler(ActionListener l) {
+            visbilityListener = l;
         }
 
         void updateMenu() {
@@ -278,6 +302,10 @@ class NoticeWrapper extends BorderPanel {
                         add(item);
                     }
                 }
+            }
+
+            if(visbilityListener != null) {
+                visbilityListener.actionPerformed(null);
             }
         }
 

@@ -18,14 +18,6 @@ import java.io.IOException;
 import java.net.URL;
 
 public class EditorPane extends JEditorPane {
-    private final String textColor;
-
-    {
-        Color color = Theme.getTheme().getForeground();
-        textColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
-    }
-
-
     private final ExtendedHTMLEditorKit html;
 
     public EditorPane(Font font) {
@@ -81,6 +73,9 @@ public class EditorPane extends JEditorPane {
         super.setFont(font);
 
         if(html != null) {
+            Color color = Theme.getTheme().getForeground();
+            final String textColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+
             font = getFont();
 
             StyleSheet css = new StyleSheet();

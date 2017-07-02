@@ -100,6 +100,11 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
     }
 
     @Override
+    public void onNoticePromoted(Notice promotedNotice) {
+
+    }
+
+    @Override
     public void updateLocale() {
         super.updateLocale();
         updateNoticeEntry();

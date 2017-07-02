@@ -50,6 +50,9 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                 Account selected = (Account) getSelectedItem();
                 if (selected != null && !selected.equals(AccountComboBox.EMPTY)) {
                     if (selected.equals(AccountComboBox.MANAGE)) {
+                        if(selectedAccount != null) {
+                            loginForm.pane.accountManager.list.select(selectedAccount);
+                        }
                         loginForm.pane.openAccountEditor();
                         setSelectedIndex(0);
                     } else {

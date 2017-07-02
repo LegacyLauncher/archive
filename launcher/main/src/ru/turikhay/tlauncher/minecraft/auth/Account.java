@@ -258,8 +258,8 @@ public class Account {
     }
 
     public enum AccountType {
-        ELY("ely-big.png"),
-        MOJANG("mojang-user.png"),
+        ELY("ely.png"),
+        MOJANG("mojang.png"),
         FREE(null);
 
         private final String icon;

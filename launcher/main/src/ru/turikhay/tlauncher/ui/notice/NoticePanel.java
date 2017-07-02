@@ -117,6 +117,10 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         setNotice(notice);
     }
 
+    @Override
+    public void onNoticePromoted(Notice promotedNotice) {
+    }
+
     /*class Popup extends JPopupMenu {
         private final List<JMenuItem> items = new ArrayList<JMenuItem>();
 

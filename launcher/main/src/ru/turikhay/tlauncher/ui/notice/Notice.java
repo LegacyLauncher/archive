@@ -5,15 +5,13 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
-import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-
 public final class Notice {
     private final int id, pos;
     private final String text;
     private final NoticeImage image;
     private final NoticeAction action;
+
+    private boolean promoted;
 
     Notice(int id, int pos, String text, NoticeImage image, NoticeAction action) {
         this.id = id;
@@ -41,6 +39,14 @@ public final class Notice {
 
     public NoticeAction getAction() {
         return action;
+    }
+
+    public boolean isPromoted() {
+        return promoted;
+    }
+
+    public void setPromoted(boolean promoted) {
+        this.promoted = promoted;
     }
 
     public String toString() {

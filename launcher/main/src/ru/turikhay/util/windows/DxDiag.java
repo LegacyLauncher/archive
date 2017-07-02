@@ -18,6 +18,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public final class DxDiag {
     private static final long PROCESS_TIMEOUT = 90 * 1000;
@@ -201,13 +202,28 @@ public final class DxDiag {
     private static DxDiag result;
 
     static class Worker extends ExtendedThread {
+        private volatile int session;
 
         private Worker() {
             super("DxDiagWorker");
         }
 
+        void joinUntilInterruption(long millis) throws InterruptedException {
+            int currentSession = session;
+            do {
+                if(session == 0) {
+                    return;
+                }
+                if(currentSession != session) {
+                    throw new InterruptedException();
+                }
+                Thread.sleep(1000);
+            } while((millis -= 1000) > 0);
+        }
+
         @Override
         public void run() {
+            updateSession();
             error = null;
             try {
                 result = Parser.parse(new FileInputStream(retrieve()));
@@ -233,6 +249,8 @@ public final class DxDiag {
 
         void cancel() {
             log("Interrupting...");
+
+            updateSession();
             interrupt();
         }
 
@@ -283,8 +301,9 @@ public final class DxDiag {
                 } catch (IllegalThreadStateException t) {
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException interrupted) {
+                    } catch (InterruptedException inE) {
                         log("waiters were released by interruption. resuming...");
+                        updateSession();
                     }
                     continue;
                 }
@@ -298,7 +317,13 @@ public final class DxDiag {
                 throw new DxDiagFailedException("invalid exit code: " + exitCode);
             }
 
+            session = 0;
+
             return outputFile;
+        }
+
+        private void updateSession() {
+            session = new Random().nextInt();
         }
 
         private void log(Object... o) {
@@ -324,7 +349,7 @@ public final class DxDiag {
 
             if (remainingTimeout > 0) {
                 try {
-                    worker.join(remainingTimeout);
+                    worker.joinUntilInterruption(remainingTimeout);
                 } catch (InterruptedException e) {
                     throw new DxDiagFailedException(e);
                 }
@@ -345,7 +370,7 @@ public final class DxDiag {
     public static void cancel() {
         log("Interrupting worker:", new RuntimeException("interrupt trace"));
         if (worker != null) {
-            worker.interrupt();
+            worker.cancel();
         }
     }
 
