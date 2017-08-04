@@ -35,6 +35,6 @@ public class AccountWelcomeTip extends EditorPane implements LocalizableComponen
     }
 
     @Override
-    public void multipaneShown() {
+    public void multipaneShown(boolean gotBack) {
     }
 }

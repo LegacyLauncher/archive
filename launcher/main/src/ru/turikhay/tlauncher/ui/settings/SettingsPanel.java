@@ -51,6 +51,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler mcArgs;
     public final EditorFieldHandler improvedArgs;
     public final EditorFieldHandler cmd;
+    public final EditorFieldHandler ely;
     public final EditorFieldHandler memory;
     public final EditorGroupHandler versionHandler;
     private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
@@ -163,6 +164,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         minecraftTab.add(new EditorPair("settings.versions.label", versions));
+        ely = new EditorFieldHandler("ely.globally", new EditorCheckBox("settings.ely.checkbox"));
+        minecraftTab.add(new EditorPair("settings.ely.label", ely));
         minecraftTab.nextPane();
         javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
         mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);

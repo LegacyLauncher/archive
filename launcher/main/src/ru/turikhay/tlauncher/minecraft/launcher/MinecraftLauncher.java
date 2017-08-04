@@ -325,10 +325,10 @@ public class MinecraftLauncher implements JavaProcessListener {
                 Account.AccountType type2 = Reflect.parseEnum(Account.AccountType.class, settings.get("login.account.type"));
                 account = pm.getAuthDatabase().getByUsername(accountName, type2);
                 if (account == null) {
-                    account = new Account(accountName);
+                    throw new NullPointerException("account");
                 }
 
-                log("Selected account:", account.toDebugString());
+                log("Selected account:", account.getUser());
                 recordValue("account", account);
 
                 versionSync = vm.getVersionSyncInfo(versionName);
@@ -349,7 +349,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                     } else {
                         recordValue("resolvedVersion", deJureVersion);
 
-                        elyficate = account.getType() != Account.AccountType.MOJANG && (account.getType() == Account.AccountType.ELY || TLauncher.getInstance().getElyManager().isUsingGlobally());
+                        elyficate = account.getType() != Account.AccountType.MOJANG && (account.getType() == Account.AccountType.ELY || account.getType() == Account.AccountType.ELY_LEGACY || TLauncher.getInstance().getElyManager().isUsingGlobally());
                         recordValue("elyficate", elyficate);
 
                         if (elyficate) {
@@ -950,7 +950,8 @@ public class MinecraftLauncher implements JavaProcessListener {
             StrSubstitutor substitutor = new StrSubstitutor(map);
             String assets = version.getAssetIndex().getId();
             String[] split = version.getMinecraftArguments().split(" ");
-            map.put("auth_username", accountName);
+            map.putAll(account.getUser().getLoginCredentials().map());
+            /*map.put("auth_username", accountName);
             if (!account.isFree()) {
                 map.put("auth_session", String.format("token:%s:%s", account.getAccessToken(), account.getProfile().getId()));
                 map.put("auth_access_token", account.getAccessToken());
@@ -967,7 +968,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 map.put("auth_uuid", (new UUID(0L, 0L)).toString());
                 map.put("user_type", "legacy");
                 map.put("profile_name", "(Default)");
-            }
+            }*/
 
             map.put("version_name", version.getID());
             map.put("version_type", version.getReleaseType());

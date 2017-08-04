@@ -4,6 +4,10 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.*;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.tlauncher.user.AuthDetailedException;
+import ru.turikhay.tlauncher.user.AuthException;
+import ru.turikhay.tlauncher.user.AuthUnknownException;
+import ru.turikhay.util.U;
 
 import java.io.IOException;
 
@@ -31,20 +35,49 @@ public class AuthUIListener implements AuthenticatorListener {
     }
 
     private void showError(Authenticator auth, Throwable e) {
-        String description = null;
+        String title = "account.manager.error.title", locPath = "unknown";
+        Object[] locVars = null; Object textarea = null;
+
+        if(e instanceof IOException) {
+            locPath = "ioe";
+            textarea = e;
+        }
+        if(e instanceof AuthException) {
+            locPath = ((AuthException) e).getLocPath();
+            locVars = ((AuthException) e).getLocVars();
+            if(e instanceof AuthUnknownException) {
+                textarea = e;
+            }
+            if(e instanceof AuthDetailedException) {
+                textarea = ((AuthDetailedException) e).getErrorContent();
+            }
+        }
+
+        Account.AccountType accountType = auth.getType();
+        String path, description;
+
+        path = "account.manager.error."+ accountType.toString().toLowerCase() +"." + locPath + (editorOpened? ".editor" : "");
+        if(Localizable.nget(path) == null) {
+            path = "account.manager.error." + locPath + (editorOpened? ".editor" : "");
+        }
+        description = Localizable.get(path, (Object[]) locVars);
+
+        U.log(title, path, " : ", locVars, e);
+        Alert.showLocError(title, description, textarea);
+        /*String description = null;
         Object textarea = e;
 
-        if (e instanceof AuthenticatorException) {
+        /*if (e instanceof AuthenticatorException) {
             AuthenticatorException ae = (AuthenticatorException) e;
 
-            if (ae.getLangpath() != null) {
-                description = ae.getLangpath();
+            if (ae.getMessage() != null) {
+                description = ae.getMessage();
             }
 
-            if (e instanceof KnownAuthenticatorException) {
+            /*if (e instanceof KnownAuthenticatorException) {
                 textarea = null;
 
-                if (e instanceof ServiceUnavailableException) {
+                /*if (e instanceof ServiceUnavailableException) {
                     textarea = e.getMessage();
                 }
             }
@@ -54,7 +87,7 @@ public class AuthUIListener implements AuthenticatorListener {
             description = "unknown";
         }
 
-        String accountType = auth.getAccount().getType().toString().toLowerCase();
+        String accountType = auth.getType().toString().toLowerCase();
         String text = null;
 
         if (editorOpened) {
@@ -73,7 +106,7 @@ public class AuthUIListener implements AuthenticatorListener {
             }
         }
 
-        Alert.showError(Localizable.get("auth.error.title"), text, textarea);
+        Alert.showError(Localizable.get("auth.error.title"), text, textarea);*/
     }
 
     public void onAuthPassed(Authenticator auth) {

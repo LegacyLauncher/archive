@@ -32,7 +32,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
 
     private final DefaultListModel<Account> accountModel;
     private final JList<Account> list;
-    private final LocalizableButton add, back, remove;
+    private final LocalizableButton add, back, edit;
 
 
     public AccountList(final AccountManagerScene scene) {
@@ -84,13 +84,16 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         });
         firstLineButtons.add(add);
 
-        remove = new LocalizableButton(Images.getScaledIcon("minus.png", 24), "account.button.remove");
-        remove.addActionListener(new ActionListener() {
+        edit = new LocalizableButton(Images.getScaledIcon("pencil.png", 24), "account.button.remove");
+        edit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int index = list.getSelectedIndex();
+                if(scene.list.getSelected() != null) {
+                    scene.multipane.showTip("edit-account-" + scene.list.getSelected().getType().toString().toLowerCase());
+                }
+                /*int index = list.getSelectedIndex();
                 Account selected = list.getSelectedValue();
                 if(selected != null) {
-                    TLauncher.getInstance().getProfileManager().getAuthDatabase().unregisterAccount(selected);
+                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
                 }
                 try {
                     TLauncher.getInstance().getProfileManager().saveProfiles();
@@ -103,10 +106,10 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
                 }
                 if(index > -1) {
                     list.setSelectedIndex(index);
-                }
+                }*/
             }
         });
-        firstLineButtons.add(remove);
+        firstLineButtons.add(edit);
 
         back = new LocalizableButton(Images.getScaledIcon("home.png", 24), "account.button.home");
         back.addActionListener(new ActionListener() {
@@ -151,12 +154,12 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
     @Override
     public void block(Object reason) {
         //super.block(reason);
-        Blocker.blockComponents(reason, list, add, remove);
+        Blocker.blockComponents(reason, list, add, edit);
     }
 
     @Override
     public void unblock(Object reason) {
         //super.unblock(reason);
-        Blocker.unblockComponents(reason, list, add, remove);
+        Blocker.unblockComponents(reason, list, add, edit);
     }
 }

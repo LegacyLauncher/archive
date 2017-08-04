@@ -12,7 +12,6 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 
@@ -47,7 +46,7 @@ public class ServerNoticeAction extends NoticeAction {
         if (server.hasAccountTypeRestriction()) {
             Set<Account.AccountType> accountTypes = new LinkedHashSet<Account.AccountType>(server.getAccountTypes());
 
-            boolean supportsFree = accountTypes.remove(Account.AccountType.FREE);
+            boolean supportsFree = accountTypes.remove(Account.AccountType.PLAIN);
             String path = L10N_PREFIX + "account." + (supportsFree ? "supported" : "required");
 
             for (Account.AccountType accountType : accountTypes) {

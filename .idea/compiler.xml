@@ -9,7 +9,7 @@
         <module name="bootstrap" />
         <module name="bridge" />
         <module name="launcher" />
-        <module name="lib" />
+        <module name="tlauncher-dependencies" />
       </profile>
     </annotationProcessing>
   </component>

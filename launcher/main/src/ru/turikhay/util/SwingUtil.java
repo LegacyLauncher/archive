@@ -190,6 +190,26 @@ public class SwingUtil {
         return getPrefSize(component, width, 0).height;
     }
 
+    private static final String DOTS = "...";
+    public static String fitString(FontMetrics metrics, char[] chars, int prefWidth) {
+        int len, width, offset = -1, dotsWidth = metrics.stringWidth(DOTS);
+        if(prefWidth < dotsWidth) {
+            return DOTS;
+        }
+
+        do {
+            offset++;
+            len = chars.length - offset;
+            width = metrics.charsWidth(chars, 0, len) + (offset > 0? dotsWidth : 0);
+            if(width <= dotsWidth) {
+                return DOTS;
+            }
+        } while(width > prefWidth);
+
+        String result = new String(chars, 0, len);
+        return offset > 0? result + DOTS : result;
+    }
+
     public static void setClipboard(String text) {
         if (text == null) {
             return;

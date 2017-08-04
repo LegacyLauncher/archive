@@ -1,26 +1,18 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
-import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.managers.AccountManager;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.tlauncher.user.Auth;
+import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
-import java.util.UUID;
+import java.io.IOException;
 
 public abstract class Authenticator {
-    protected final Account account;
-    private final String logPrefix = '[' + getClass().getSimpleName() + ']';
 
-    protected Authenticator(Account account) {
-        if (account == null) {
-            throw new NullPointerException("account");
-        } else {
-            this.account = account;
-        }
-    }
-
-    public final Account getAccount() {
-        return account;
-    }
+    public abstract Account getAccount();
+    public abstract Account.AccountType getType();
 
     public boolean pass(AuthenticatorListener l) {
         if (l != null) {
@@ -30,11 +22,9 @@ public abstract class Authenticator {
         try {
             pass();
         } catch (Exception var3) {
-            log("Cannot authenticate:", var3);
             if (l != null) {
                 l.onAuthPassingError(this, var3);
             }
-
             return false;
         }
 
@@ -53,33 +43,13 @@ public abstract class Authenticator {
         });
     }
 
-    protected abstract void pass() throws AuthenticatorException;
+    protected abstract void pass() throws AuthException, IOException;
 
-    protected void log(Object... o) {
-        U.log(logPrefix, o);
+    public static ValidateAuthenticator instanceFor(Account account) {
+        return new ValidateAuthenticator(account, AccountManager.getAuthFor(account.getUser()));
     }
 
-    public static Authenticator instanceFor(Account account) {
-        if (account == null) {
-            throw new NullPointerException("account");
-        } else {
-            U.log("instancefor:", account);
-            switch (account.getType()) {
-                case ELY:
-                    return new ElyAuthenticator(account);
-                case MOJANG:
-                    return new MojangAuthenticator(account);
-                default:
-                    throw new IllegalArgumentException("illegal account type");
-            }
-        }
-    }
-
-    protected static UUID getClientToken() {
-        return TLauncher.getInstance().getProfileManager().getClientToken();
-    }
-
-    protected static void setClientToken(String uuid) {
-        TLauncher.getInstance().getProfileManager().setClientToken(uuid);
+    public static ExecAuthenticator instanceFor(AuthExecutor executor, Account.AccountType type) {
+        return new ExecAuthenticator(executor, type);
     }
 }

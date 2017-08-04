@@ -17,8 +17,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 
 public class ExtendedHTMLEditorKit extends HTMLEditorKit {
-    protected static final ExtendedHTMLEditorKit.ExtendedHTMLFactory extendedFactory = new ExtendedHTMLEditorKit.ExtendedHTMLFactory();
-    protected final ExtendedHTMLEditorKit.ExtendedLinkController linkController = new ExtendedHTMLEditorKit.ExtendedLinkController();
+    public static final ExtendedHTMLEditorKit.ExtendedHTMLFactory extendedFactory = new ExtendedHTMLEditorKit.ExtendedHTMLFactory();
+    public final ExtendedHTMLEditorKit.ExtendedLinkController linkController = new ExtendedHTMLEditorKit.ExtendedLinkController();
     private HyperlinkProcessor hlProc;
     private boolean processPopup;
     private static final Cursor HAND = Cursor.getPredefinedCursor(12);

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.account;
 
+import ru.turikhay.tlauncher.minecraft.auth.Account;
+
 import java.awt.*;
 
 public interface AccountMultipaneComp {
@@ -9,5 +11,5 @@ public interface AccountMultipaneComp {
     String multipaneName();
     boolean multipaneLocksView();
 
-    void multipaneShown();
+    void multipaneShown(boolean gotBack);
 }

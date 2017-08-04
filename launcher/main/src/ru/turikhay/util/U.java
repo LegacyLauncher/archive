@@ -504,7 +504,7 @@ public class U {
                 }
 
                 builder.append("\nat ").append(description);
-                if (totalElements == 100 || programElements == 10) {
+                if (totalElements == 100 || programElements == 50) {
                     int remain = elems.length - totalElements;
                     if (remain != 0) {
                         builder.append("\n... and ").append(remain).append(" more");
@@ -889,6 +889,16 @@ public class U {
             list.add((T) o);
         }
         return list;
+    }
+
+    public static Calendar getUTC() {
+        return Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    }
+
+    public static Calendar getUTC(long millis) {
+        Calendar date = getUTC();
+        date.setTimeInMillis(millis);
+        return date;
     }
 
     private static final Gson gson = new GsonBuilder().create();

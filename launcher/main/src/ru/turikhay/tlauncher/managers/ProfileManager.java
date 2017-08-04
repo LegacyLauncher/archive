@@ -2,14 +2,17 @@ package ru.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.FileTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.component.RefreshableComponent;
-import ru.turikhay.tlauncher.minecraft.auth.AccountListener;
-import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
-import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
+import ru.turikhay.tlauncher.minecraft.auth.*;
+import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.tlauncher.user.User;
+import ru.turikhay.tlauncher.user.UserSet;
+import ru.turikhay.tlauncher.user.UserSetListener;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.U;
@@ -22,11 +25,12 @@ public class ProfileManager extends RefreshableComponent {
     public static final String DEFAULT_PROFILE_NAME = "TLauncher";
     public static final String OLD_PROFILE_FILENAME = "launcher_profiles.json";
     public static final String DEFAULT_PROFILE_FILENAME = "tlauncher_profiles.json";
+
+    private final AccountManager accountManager;
+
     private final List<ProfileManagerListener> listeners;
-    private final AccountListener accountListener;
     private final Gson gson;
     private File file;
-    private UUID clientToken;
     private AuthenticatorDatabase authDatabase;
 
     public ProfileManager(ComponentManager manager, File file) throws Exception {
@@ -36,25 +40,35 @@ public class ProfileManager extends RefreshableComponent {
         } else {
             this.file = file;
             listeners = Collections.synchronizedList(new ArrayList());
-            clientToken = UUID.randomUUID();
-            accountListener = new AccountListener() {
-                public void onAccountsRefreshed(AuthenticatorDatabase db) {
-                    Iterator var3 = listeners.iterator();
 
-                    while (var3.hasNext()) {
-                        AccountListener listener = (AccountListener) var3.next();
-                        listener.onAccountsRefreshed(db);
+            this.accountManager  = new AccountManager();
+            authDatabase = new AuthenticatorDatabase(accountManager);
+
+            accountManager.addListener(new UserSetListener() {
+                @Override
+                public void userSetChanged(UserSet set) {
+                    for(ProfileManagerListener l : listeners) {
+                        try {
+                            l.onProfilesRefreshed(ProfileManager.this);
+                        } catch(Exception e) {
+                            Sentry.sendError(ProfileManager.class, "ProfileManagerListener error", e, null);
+                            log(e);
+                        }
                     }
 
+                    try {
+                        saveProfiles();
+                    } catch (IOException var3) {
+                        log(var3);
+                    }
                 }
-            };
-            authDatabase = new AuthenticatorDatabase();
-            authDatabase.setListener(accountListener);
+            });
+
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
             builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
             builder.registerTypeAdapter(File.class, new FileTypeAdapter());
-            builder.registerTypeAdapter(AuthenticatorDatabase.class, new AuthenticatorDatabase.Serializer());
+            builder.registerTypeAdapter(UserSet.class, accountManager.getTypeAdapter());
             builder.registerTypeAdapter(UUIDTypeAdapter.class, new UUIDTypeAdapter());
             builder.setPrettyPrinting();
             gson = builder.create();
@@ -103,32 +117,47 @@ public class ProfileManager extends RefreshableComponent {
             }
         }
 
-        ProfileManager.RawProfileList raw = null;
+        //ProfileManager.RawProfileList raw = null;
         InputStreamReader reader = null;
+        JsonObject object = null;
 
         try {
             reader = new InputStreamReader(new FileInputStream(file.isFile() ? file : oldFile), Charset.forName("UTF-8"));
-            raw = (ProfileManager.RawProfileList) gson.fromJson(reader, (Class) ProfileManager.RawProfileList.class);
+            object = gson.fromJson(reader, JsonObject.class);
         } catch (Exception var15) {
             log("Cannot read from", "tlauncher_profiles.json", var15);
         } finally {
             U.close(reader);
         }
 
-        if (raw == null) {
-            raw = new ProfileManager.RawProfileList();
+        RawProfileList raw = new RawProfileList();
+        try {
+            if (object != null) {
+                if (object.has("authenticationDatabase") && object.has("clientToken")) {
+                    raw.userSet = accountManager.getUserSet();
+                    AccountMigrator migrator = new AccountMigrator(object.get("clientToken").getAsString());
+                    Map<String, LegacyAccount> accountMap = migrator.parse(object.getAsJsonObject("authenticationDatabase"));
+                    for (User user : migrator.migrate(accountMap.values())) {
+                        raw.userSet.add(user);
+                    }
+                } else {
+                    raw.userSet = gson.fromJson(object.getAsJsonObject("userSet"), UserSet.class);
+                }
+            }
+        } catch(Exception e) {
+            log("Error parsing profile list", e);
         }
-
-        clientToken = raw.clientToken;
-        authDatabase = raw.authenticationDatabase;
-        authDatabase.setListener(accountListener);
+        accountManager.setUserSet(raw.userSet);
     }
 
     public void saveProfiles() throws IOException {
         ProfileManager.RawProfileList raw = new ProfileManager.RawProfileList();
-        raw.clientToken = clientToken;
-        raw.authenticationDatabase = authDatabase;
+        raw.userSet = accountManager.getUserSet();
         FileUtil.writeFile(file, gson.toJson(raw));
+    }
+
+    public AccountManager getAccountManager() {
+        return accountManager;
     }
 
     public AuthenticatorDatabase getAuthDatabase() {
@@ -154,14 +183,6 @@ public class ProfileManager extends RefreshableComponent {
         }
     }
 
-    public UUID getClientToken() {
-        return clientToken;
-    }
-
-    public void setClientToken(String uuid) {
-        clientToken = UUID.fromString(uuid);
-    }
-
     public void addListener(ProfileManagerListener listener) {
         if (listener == null) {
             throw new NullPointerException();
@@ -184,7 +205,11 @@ public class ProfileManager extends RefreshableComponent {
     }
 
     static class RawProfileList {
-        UUID clientToken = UUID.randomUUID();
-        AuthenticatorDatabase authenticationDatabase = new AuthenticatorDatabase();
+        UserSet userSet;
+    }
+
+    static class UnmigratedProfileList {
+        UUID clientToken;
+        Map<String, LegacyAccount> authenticationDatabase;
     }
 }

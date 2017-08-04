@@ -197,7 +197,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void startLauncher(Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
-            while (accounts.getAccount() != null && accounts.getAccount().getType() == Account.AccountType.ELY && tlauncher.getElyManager().isRefreshing()) {
+            while (accounts.getAccount() != null && (accounts.getAccount().getType() == Account.AccountType.ELY || accounts.getAccount().getType() == Account.AccountType.ELY_LEGACY) && tlauncher.getElyManager().isRefreshing()) {
                 U.sleepFor(500L);
             }
 
@@ -270,11 +270,12 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     public void onElyUpdating(ElyManager manager) {
-        if (accounts.getAccount() != null && accounts.getAccount().getType() == Account.AccountType.ELY) {
-            Blocker.block(buttons.play, "ely");
+        if(accounts != null) {
+            if (accounts.getAccount() != null && (accounts.getAccount().getType() == Account.AccountType.ELY || accounts.getAccount().getType() == Account.AccountType.ELY_LEGACY)) {
+                Blocker.block(buttons.play, "ely");
+            }
+            accounts.updateAccount();
         }
-
-        accounts.updateAccount();
         repaint();
     }
 
@@ -289,9 +290,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void onAuthPassingError(Authenticator auth, Throwable e) {
         Blocker.unblock(this, "auth");
-        if (!(e.getCause() instanceof IOException) && !(e.getCause() instanceof RuntimeException)) {
-            throw new LoginException("Cannot auth!");
-        }
+        throw new LoginException("Cannot auth!");
     }
 
     public void onAuthPassed(Authenticator auth) {

@@ -1,6 +1,43 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
-import com.google.gson.*;
+import ru.turikhay.tlauncher.managers.AccountManager;
+import ru.turikhay.tlauncher.user.User;
+import ru.turikhay.tlauncher.user.UserSet;
+import ru.turikhay.tlauncher.user.UserSetListener;
+import ru.turikhay.util.U;
+
+import java.util.*;
+
+public class AuthenticatorDatabase {
+    private final List<Account> accounts = new ArrayList<>(), accounts_ = Collections.unmodifiableList(accounts);
+
+    public AuthenticatorDatabase(AccountManager manager) {
+        manager.addListener(new UserSetListener() {
+            @Override
+            public void userSetChanged(UserSet set) {
+                accounts.clear();
+                for(User user : set.getSet()) {
+                    accounts.add(new Account(user));
+                }
+            }
+        });
+    }
+
+    public Collection<Account> getAccounts() {
+        return accounts_;
+    }
+
+    public Account getByUsername(String username, Account.AccountType type) {
+        for(Account account : accounts) {
+            if(account.getUsername().equals(username) && account.getType().equals(type)) {
+                return account;
+            }
+        }
+        return null;
+    }
+}
+
+/*import com.google.gson.*;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -158,4 +195,4 @@ public class AuthenticatorDatabase {
             return context.serialize(credentials);
         }
     }
-}
+}*/
