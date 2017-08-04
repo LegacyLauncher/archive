@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
@@ -32,10 +33,6 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
 
-        LocalizableLabel chooseType = new LocalizableLabel(AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".choose-type");
-        chooseType.setAlignmentX(0);
-        add(chooseType);
-
         grid = new ExtendedPanel();
         //grid.setBorder(BorderFactory.createLineBorder(Color.red));
         grid.setAlignmentX(0);
@@ -51,10 +48,10 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
                 AccountAdd.this.scene.multipane.showTip("add-account-mojang");
             }
         });
-        free = addRow("plus.png", ACCOUNT_TYPE_PREFIX + "free", new ActionListener() {
+        free = addRow("user-circle-o.png", ACCOUNT_TYPE_PREFIX + "free", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AccountAdd.this.scene.multipane.showTip("add-account-free");
+                AccountAdd.this.scene.multipane.showTip("add-account-plain");
             }
         });
         ely = addRow("ely.png", ACCOUNT_TYPE_PREFIX + "ely", new ActionListener() {
@@ -119,21 +116,26 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
     private ExtendedButton addRow(String image, String label, ActionListener action) {
         c.gridy++;
 
-        ExtendedButton button = new ExtendedButton();
+        LocalizableButton button = new LocalizableButton(label);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setIconTextGap(SwingUtil.magnify(16));
         button.addActionListener(action);
-        button.setPreferredSize(SwingUtil.magnify(new Dimension(48, 48)));
+        //button.setPreferredSize(SwingUtil.magnify(new Dimension(48, 48)));
         button.setIcon(Images.getIcon(image, 32));
         c.gridx = 0;
-        c.weightx = 0;
+        //c.weightx = 0;
+        c.weightx = 1.0;
+        c.gridwidth = GridBagConstraints.REMAINDER;
         c.insets = new Insets(SwingUtil.magnify(5), 0, 0, 0);
-        c.fill = GridBagConstraints.NONE;
+        //c.fill = GridBagConstraints.NONE;
+        c.fill = GridBagConstraints.HORIZONTAL;
         grid.add(button, c);
 
-        c.gridx = 1;
+        /*c.gridx = 1;
         c.weightx = 1.0;
         c.insets = new Insets(0, SwingUtil.magnify(10), 0, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
-        grid.add(new LocalizableLabel(label), c);
+        grid.add(new LocalizableLabel(label), c);*/
 
         return button;
     }
@@ -154,7 +156,7 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
     }
 
     @Override
-    public void multipaneShown() {
+    public void multipaneShown(boolean gotBack) {
         Blocker.unblock(AccountAdd.this, "idontknow");
     }
 

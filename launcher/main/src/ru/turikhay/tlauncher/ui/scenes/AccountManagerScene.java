@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
-import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.account.*;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -27,10 +26,25 @@ public class AccountManagerScene extends PseudoScene {
 
         multipane.registerTip(new AccountWelcomeTip());
         multipane.registerTip(new AccountAdd(this));
-        multipane.registerTip(new AccountAddFree(this));
-        multipane.registerTip(new AccountAddMojang(this));
-        multipane.registerTip(new AccountAddEly(this));
-        multipane.registerTip(new AccountAddedSuccessfully());
+
+        multipane.registerTip(new AccountPlainPane(this, PaneMode.ADD));
+        multipane.registerTip(new AccountPlainPane(this, PaneMode.EDIT));
+
+        multipane.registerTip(new AccountMojangPane(this, PaneMode.ADD));
+        multipane.registerTip(new AccountMojangPane(this, PaneMode.EDIT));
+
+        multipane.registerTip(new AccountElyLegacyPane(this, PaneMode.ADD));
+        multipane.registerTip(new AccountElyLegacyPane(this, PaneMode.EDIT));
+
+        multipane.registerTip(new AccountElyStart(this));
+        multipane.registerTip(new AccountElyProcess(this));
+        multipane.registerTip(new AccountElyEdit(this));
+
+        //multipane.registerTip(new AccountAddMojang(this));
+        //multipane.registerTip(new AccountAddEly(this));
+
+        multipane.registerTip(new AccountSuccess(PaneMode.ADD));
+        multipane.registerTip(new AccountSuccess(PaneMode.EDIT));
     }
 
     public void setShown(boolean shown, boolean animate) {

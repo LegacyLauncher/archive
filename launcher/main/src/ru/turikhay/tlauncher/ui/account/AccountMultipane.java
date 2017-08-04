@@ -48,12 +48,7 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
         back.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(breadcrumbs.size() < 2) {
-                    showTip("welcome");
-                } else {
-                    showTip(breadcrumbs.get(breadcrumbs.size() - 2), true);
-                }
-                //showTip("welcome");
+                goBack();
             }
         });
         back.setIcon(Images.getIcon("arrow-left.png", SwingUtil.magnify(16)));
@@ -77,6 +72,18 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
         return currentComp == null? null : currentComp.multipaneName();
     }
 
+    public void goBack() {
+        if(breadcrumbs.size() < 2) {
+            showTip("welcome");
+        } else {
+            showTip(breadcrumbs.get(breadcrumbs.size() - 2), true);
+        }
+    }
+
+    public void clearBreadcrumbs() {
+        breadcrumbs.clear();
+    }
+
     public void registerTip(AccountMultipaneComp comp) {
         byName.put(comp.multipaneName(), comp);
         multipane.add(comp.multipaneComp(), comp.multipaneName());
@@ -89,14 +96,14 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
             throw new IllegalArgumentException("no tip found: " + name);
         }
 
-        if(currentComp != null && currentComp instanceof AccountMultipaneCompCloseable) {
-            ((AccountMultipaneCompCloseable) currentComp).multipaneClosed();
-        }
-
         showTip(comp, false);
     }
 
     private void showTip(AccountMultipaneComp comp, boolean gotBack) {
+        if(currentComp != null && currentComp instanceof AccountMultipaneCompCloseable) {
+            ((AccountMultipaneCompCloseable) currentComp).multipaneClosed();
+        }
+
         if (!(comp instanceof AccountMultipaneCompCloseable)) {
             breadcrumbs.clear();
         } else {
@@ -121,7 +128,7 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
 
         repaint();
 
-        comp.multipaneShown();
+        comp.multipaneShown(gotBack);
     }
 
     @Override

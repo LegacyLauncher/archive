@@ -16,9 +16,11 @@ import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.util.Reflect;
+import ru.turikhay.util.U;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -48,8 +50,8 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
         addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 Account selected = (Account) getSelectedItem();
-                if (selected != null && !selected.equals(AccountComboBox.EMPTY)) {
-                    if (selected.equals(AccountComboBox.MANAGE)) {
+                if (selected != null && selected != AccountComboBox.EMPTY) {
+                    if (selected == AccountComboBox.MANAGE) {
                         if(selectedAccount != null) {
                             loginForm.pane.accountManager.list.select(selectedAccount);
                         }
@@ -57,6 +59,12 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                         setSelectedIndex(0);
                     } else {
                         selectedAccount = selected;
+                        TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().select(selectedAccount == null? null : selectedAccount.getUser(), false);
+                        try {
+                            TLauncher.getInstance().getProfileManager().saveProfiles();
+                        } catch (IOException e1) {
+                            U.log(e1);
+                        }
                         updateAccount();
                     }
                 }
@@ -66,7 +74,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
 
     public void updateAccount() {
         if (!refreshing) {
-            if (selectedAccount.getType() == Account.AccountType.ELY) {
+            if (selectedAccount.getType() == Account.AccountType.ELY || selectedAccount.getType() == Account.AccountType.ELY_LEGACY) {
                 if (loginForm.tlauncher.getElyManager().isRefreshing()) {
                     Blocker.block(loginForm.buttons.play, "ely");
                 } else {
@@ -76,10 +84,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                 Blocker.unblock(loginForm.buttons.play, "ely");
             }
 
-            VersionComboBox.showElyVersions = selectedAccount.getType() == Account.AccountType.ELY;
-            loginForm.global.setForcefully("login.account", selectedAccount.getUsername(), false);
-            loginForm.global.setForcefully("login.account.type", selectedAccount.getType(), false);
-            loginForm.global.store();
+            VersionComboBox.showElyVersions = selectedAccount.getType() == Account.AccountType.ELY || selectedAccount.getType() == Account.AccountType.ELY_LEGACY;
         }
     }
 
@@ -94,13 +99,6 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                 setSelectedItem(account);
             }
         }
-    }
-
-    void setAccount(String username, Account.AccountType type) {
-        if (username != null) {
-            setSelectedItem(manager.getAuthDatabase().getByUsername(username, type));
-        }
-
     }
 
     public void logginingIn() throws LoginException {
@@ -170,11 +168,11 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     }
 
     public void onProfilesRefreshed(ProfileManager pm) {
-        refreshAccounts(pm.getAuthDatabase(), null);
+        refreshAccounts(pm.getAuthDatabase(), pm.getAccountManager().getUserSet().getSelected() == null? null : new Account(pm.getAccountManager().getUserSet().getSelected()));
     }
 
     public void onProfileManagerChanged(ProfileManager pm) {
-        refreshAccounts(pm.getAuthDatabase(), null);
+        refreshAccounts(pm.getAuthDatabase(), pm.getAccountManager().getUserSet().getSelected() == null? null : new Account(pm.getAccountManager().getUserSet().getSelected()));
     }
 
     public void block(Object reason) {

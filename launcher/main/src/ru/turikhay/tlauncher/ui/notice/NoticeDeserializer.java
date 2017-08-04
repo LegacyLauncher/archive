@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import com.google.gson.*;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -23,6 +24,12 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
             pos = -1;
         }
         String text = root.get("text").getAsString();
+
+        text = StringUtils.replace(
+                StringUtils.replace(text, "<nobr>", "<span style=\"white-space: nowrap;\">"),
+                "</nobr>", "</span>"
+        );
+
         NoticeImage image = parseImage(root, context);
         NoticeAction action = parseAction(id, root, context);
 

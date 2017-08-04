@@ -1,10 +1,81 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
+import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.util.Reflect;
-
-import java.util.*;
+import ru.turikhay.util.U;
 
 public class Account {
+    protected final User user;
+
+    private Account() {
+        this.user = null;
+    }
+
+    public Account(User user) {
+        this.user = U.requireNotNull(user, "user");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Account account = (Account) o;
+
+        return user != null && user.equals((Object) account.user);
+    }
+
+    @Override
+    public int hashCode() {
+        return user != null ? user.hashCode() : super.hashCode();
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public String getUsername() {
+        return user.getUsername();
+    }
+
+    public String getDisplayName() {
+        return user.getDisplayName();
+    }
+
+    public AccountType getType() {
+        return Reflect.parseEnum0(AccountType.class, user.getType());
+    }
+
+    public boolean isFree() {
+        return getType().equals(AccountType.PLAIN);
+    }
+
+    public static Account randomAccount() {
+        return new Account();
+    }
+
+    public enum AccountType {
+        ELY("ely.png"),
+        ELY_LEGACY("ely.png"),
+        MOJANG("mojang.png"),
+        PLAIN(null);
+
+        private final String icon;
+
+        AccountType(String icon) {
+            this.icon = icon;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public String toString() {
+            return super.toString().toLowerCase();
+        }
+    }
+}
+/*public class Account {
     private String username;
     private String userID;
     private String displayName;
@@ -18,7 +89,7 @@ public class Account {
     private User user;
 
     public Account() {
-        type = Account.AccountType.FREE;
+        type = Account.AccountType.PLAIN;
     }
 
     public Account(String username) {
@@ -167,7 +238,7 @@ public class Account {
     }
 
     public boolean isFree() {
-        return type.equals(Account.AccountType.FREE);
+        return type.equals(Account.AccountType.PLAIN);
     }
 
     Map<String, Object> createMap() {
@@ -202,7 +273,7 @@ public class Account {
             setAccessToken(map.get("accessToken").toString());
         }
 
-        setType(map.containsKey("type") ? Reflect.parseEnum(AccountType.class, map.get("type").toString()) : (hasAccessToken ? Account.AccountType.MOJANG : Account.AccountType.FREE));
+        setType(map.containsKey("type") ? Reflect.parseEnum(AccountType.class, map.get("type").toString()) : (hasAccessToken ? Account.AccountType.MOJANG : Account.AccountType.PLAIN));
     }
 
     public void complete(Account acc) {
@@ -257,23 +328,5 @@ public class Account {
         return new Account("random" + (new Random()).nextLong());
     }
 
-    public enum AccountType {
-        ELY("ely.png"),
-        MOJANG("mojang.png"),
-        FREE(null);
 
-        private final String icon;
-
-        AccountType(String icon) {
-            this.icon = icon;
-        }
-
-        public String getIcon() {
-            return icon;
-        }
-
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-    }
-}
+}*/

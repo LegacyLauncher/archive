@@ -35,17 +35,6 @@ public class EditorPane extends JEditorPane {
         setEditorKit(html);
         setEditable(false);
         setOpaque(false);
-
-        addHyperlinkListener(new HyperlinkListener() {
-            public void hyperlinkUpdate(HyperlinkEvent e) {
-                if (e.getEventType().equals(EventType.ACTIVATED)) {
-                    URL url = e.getURL();
-                    if (url != null) {
-                        OS.openLink(url);
-                    }
-                }
-            }
-        });
     }
 
     public EditorPane() {

@@ -1,5 +1,5 @@
 {
-  "version": "1.84.1",
+  "version": "1.91",
   "mainClass": "ru.turikhay.tlauncher.TLauncher",
   "libraries": [
     {
@@ -45,6 +45,22 @@
     {
       "name": "com.getsentry.raven:raven:7.8.1",
       "checksum": "9f061ad2a82e2018d7b14a62ac3307e294afd7cda9b90714f129c423073735d7"
+    },
+    {
+      "name": "com.mojang:authlib:1.5.24",
+      "checksum": "795f783dc6301d10e356d1f3db9952d71692ed8004ffdd843f0049f813a0d1a5"
+    },
+    {
+      "name": "com.google:guava:14.0",
+      "checksum": "c0127b076e3056f58294e4ae6c01a96599b8f58200345eb6f859192a2d9b2962"
+    },
+    {
+      "name": "org.apache.logging.log4j:log4j-api:2.8.1",
+      "checksum": "1205ab764b1326f7d96d99baa4a4e12614599bf3d735790947748ee116511fa2"
+    },
+    {
+      "name": "org.apache.logging.log4j:log4j-core:2.8.1",
+      "checksum": "815a73e20e90a413662eefe8594414684df3d5723edcd76070e1a5aee864616e"
     }
   ]
 }
