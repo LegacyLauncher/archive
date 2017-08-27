@@ -45,7 +45,6 @@ public class PlainUser extends User {
     public LoginCredentials getLoginCredentials() {
         return new LoginCredentials(username,
                 "null",
-                "null",
                 null,
                 username,
                 new UUID(0, 0),

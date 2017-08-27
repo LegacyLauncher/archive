@@ -50,6 +50,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
 
         d.put("minecraft.servers.promoted", true);
+        d.put("minecraft.servers.promoted.ingame", true);
 
         d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.HIDE);
 

@@ -8,7 +8,10 @@ import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.tlauncher.managers.VersionManager;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 import ru.turikhay.util.json.ExposeExclusion;
@@ -43,7 +46,7 @@ public class CompleteVersion implements Version, Cloneable {
     String assets;
 
     @Expose Repository source;
-    @Expose boolean elyfied;
+    @Expose Account.AccountType proceededFor;
     @Expose VersionList list;
 
     public String getID() {
@@ -126,6 +129,10 @@ public class CompleteVersion implements Version, Cloneable {
         return jvmArguments;
     }
 
+    public void setJVMArguments(String jvmArguments) {
+        this.jvmArguments = jvmArguments;
+    }
+
     public String getMinecraftArguments() {
         return minecraftArguments;
     }
@@ -177,12 +184,19 @@ public class CompleteVersion implements Version, Cloneable {
         return downloads.get(type);
     }
 
-    public boolean isElyfied() {
-        return elyfied;
+    public boolean isProceededFor(Account.AccountType type, boolean require) {
+        if(proceededFor == type) {
+            return true;
+        }
+        if(proceededFor != null && require) {
+            Sentry.sendError(CompleteVersion.class, "already proceeded", null, DataBuilder.create("version", this).add("expectedFor", type).add("alreadyFor", proceededFor));
+            throw new IllegalStateException("already proceeded for another type: " + proceededFor);
+        }
+        return false;
     }
 
-    public void setElyfied(boolean elyfied) {
-        this.elyfied = elyfied;
+    public void setProceededFor(Account.AccountType type) {
+        this.proceededFor = type;
     }
 
     public boolean equals(Object o) {

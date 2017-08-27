@@ -40,7 +40,7 @@ public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
             username = user.getUsername();
             displayName = user.getDisplayName();
             uuid = user.getUUID();
-            registeredAt = user.getRegisteredAt().getTime();
+            registeredAt = user.getRegisteredAt().getTime() / 1000L;
             accessToken = user.getAccessToken();
             refreshToken = user.getRefreshToken();
             expiryTime = user.getExpiryTime();
@@ -55,7 +55,7 @@ public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
                     username,
                     StringUtils.isBlank(displayName)? username : displayName,
                     uuid,
-                    U.getUTC(expiryTime).getTime(),
+                    U.getUTC(registeredAt * 1000L).getTime(),
                     accessToken,
                     refreshToken,
                     expiryTime);

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public final class LangConfiguration extends SimpleConfiguration {
-    private static final Locale ru_RU = U.getLocale("ru_RU");
+    public static final Locale ru_RU = U.getLocale("ru_RU");
 
     private final Map<Locale, Properties> translationsMap = new HashMap<Locale, Properties>();
     private final Map<Locale, Pattern[]> pluralMap = new HashMap<Locale, Pattern[]>();
@@ -74,9 +74,7 @@ public final class LangConfiguration extends SimpleConfiguration {
     }
 
     private static String[] checkVariables(Object[] check) {
-        if (check == null) {
-            throw new NullPointerException();
-        } else if (check.length == 1 && check[0] == null) {
+        if (check == null || check.length == 1 && check[0] == null) {
             return new String[0];
         } else {
             String[] string = new String[check.length];
@@ -207,7 +205,7 @@ public final class LangConfiguration extends SimpleConfiguration {
         if (locale == null || locale == Locale.US) {
             return null;
         }
-        return Configuration.isUSSRLocale(locale.toString()) ? U.getLocale("ru_RU") : Locale.US;
+        return Configuration.isUSSRLocale(locale.toString()) ? ru_RU : Locale.US;
     }
 
     private static final List<Locale> localeList;

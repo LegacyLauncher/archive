@@ -55,7 +55,7 @@ public class TLauncherFrame extends JFrame {
 
     public static void setFontSize(float size) {
         fontSize = size;
-        magnifyDimensions = Math.sqrt(fontSize / 12f);
+        magnifyDimensions = (fontSize * 16.f / 12.f) / 16.f;
     }
 
     public TLauncherFrame(TLauncher t) {
@@ -144,13 +144,20 @@ public class TLauncherFrame extends JFrame {
             setWindowTitle();
         }
 
-        setVisible(true);
-        int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
-        if (windowState == 0) {
-            setLocationRelativeTo(null);
-        } else {
-            setExtendedState(windowState);
-        }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setVisible(true);
+
+                int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
+                if (windowState == 0) {
+                    setLocationRelativeTo(null);
+                } else {
+                    setExtendedState(windowState);
+                }
+            }
+        });
+
 
         /*if(settings.getInteger("gui.features") != 1337) {
             settings.set("gui.features", 1337);

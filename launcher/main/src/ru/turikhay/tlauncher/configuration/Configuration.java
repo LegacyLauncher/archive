@@ -131,8 +131,8 @@ public class Configuration extends SimpleConfiguration {
         if (!DEFAULT_LOCALES.contains(locale)) {
             log("We don't have localization for", locale);
 
-            if (isUSSRLocale(locale.toString())) {
-                locale = U.getLocale("ru_RU");
+            if (isUSSRLocale(locale.toString()) && DEFAULT_LOCALES.contains(LangConfiguration.ru_RU)) {
+                locale = LangConfiguration.ru_RU;
             } else {
                 locale = Locale.US;
             }

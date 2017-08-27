@@ -43,18 +43,9 @@ public final class ElyAuth implements Auth<ElyUser> {
 
     @Override
     public void validate(ElyUser user) throws AuthException, IOException {
-        validate(user, true);
-    }
-
-    public void validate(ElyUser user, boolean ignoreTime) throws AuthException, IOException {
         U.requireNotNull(user, "user");
-
-        if(!ignoreTime && System.currentTimeMillis() > user.getExpiryTime()) {
-            return;
-        }
-
         ElyUserValidator validator = new ElyUserValidator(user);
-        validator.validateUser(true);
+        validator.validateUser();
     }
 
     private final String logPrefix = "[" + getClass().getSimpleName() + "]";

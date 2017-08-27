@@ -1,5 +1,5 @@
 {
-  "version": "1.91",
+  "version": "1.96.0",
   "mainClass": "ru.turikhay.tlauncher.TLauncher",
   "libraries": [
     {
@@ -61,6 +61,10 @@
     {
       "name": "org.apache.logging.log4j:log4j-core:2.8.1",
       "checksum": "815a73e20e90a413662eefe8594414684df3d5723edcd76070e1a5aee864616e"
+    },
+    {
+      "name": "ru.turikhay.app:nstweaker:1.0",
+      "checksum": "6b4c15577b5256b64c7e3d69dcdbf8d18f17f68ac5928e36936bd6a40a91c218"
     }
   ]
 }

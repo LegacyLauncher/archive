@@ -51,9 +51,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler mcArgs;
     public final EditorFieldHandler improvedArgs;
     public final EditorFieldHandler cmd;
-    public final EditorFieldHandler ely;
     public final EditorFieldHandler memory;
     public final EditorGroupHandler versionHandler;
+    public final EditorGroupHandler extraHandler;
     private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
     public final EditorFieldHandler launcherResolution;
     public final EditorFieldHandler systemTheme;
@@ -164,9 +164,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         minecraftTab.add(new EditorPair("settings.versions.label", versions));
-        ely = new EditorFieldHandler("ely.globally", new EditorCheckBox("settings.ely.checkbox"));
-        minecraftTab.add(new EditorPair("settings.ely.label", ely));
-        minecraftTab.nextPane();
         javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
         mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
         improvedArgs = new EditorFieldHandler("minecraft.improvedargs", new EditorCheckBox("settings.java.args.improved"), new FocusListener() {
@@ -194,6 +191,17 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         minecraftTab.nextPane();
         memory = new EditorFieldHandler("minecraft.memory", memorySlider, warning);
         minecraftTab.add(new EditorPair("settings.java.memory.label", new EditorHandler[]{memory}));
+
+        minecraftTab.nextPane();
+
+        List<EditorHandler> extraHandlerList = new ArrayList<>();
+        extraHandlerList.add(new EditorFieldHandler("ely.globally", new EditorCheckBox("settings.ely", true)));
+        extraHandlerList.add(EditorPair.NEXT_COLUMN);
+        extraHandlerList.add(new EditorFieldHandler("minecraft.servers.promoted.ingame", new EditorCheckBox("settings.promotion.ingame", true)));
+        extraHandler = new EditorGroupHandler(extraHandlerList);
+        minecraftTab.add(new EditorPair("settings.extra.label", extraHandlerList));
+        minecraftTab.nextPane();
+
         add(minecraftTab);
         tlauncherTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.tlauncher");
         launcherResolution = new EditorFieldHandler("gui.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", global.getDefaultLauncherWindowSize(), true));

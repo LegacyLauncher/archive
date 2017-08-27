@@ -15,7 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class RefreshButton extends LocalizableButton implements Blockable, ComponentManagerListener, ElyManagerListener {
+public class RefreshButton extends LocalizableButton implements Blockable, ComponentManagerListener, LibraryReplaceProcessorListener {
     private static final int TYPE_REFRESH = 0;
     private static final int TYPE_CANCEL = 1;
     private LoginForm lf;
@@ -92,7 +92,7 @@ public class RefreshButton extends LocalizableButton implements Blockable, Compo
         } else {
             setEnabled(false);
         }
-
+        repaint();
     }
 
     public void unblock(Object reason) {
@@ -101,12 +101,17 @@ public class RefreshButton extends LocalizableButton implements Blockable, Compo
         }
 
         setEnabled(true);
+        repaint();
     }
 
-    public void onElyUpdating(ElyManager manager) {
+    @Override
+    public void onLibraryReplaceRefreshing(LibraryReplaceProcessor manager) {
+        Blocker.block(this, "library");
     }
 
-    public void onElyUpdated(ElyManager manager) {
+    @Override
+    public void onLibraryReplaceRefreshed(LibraryReplaceProcessor manager) {
+        Blocker.unblock(this, "library");
     }
 
     private enum Status {

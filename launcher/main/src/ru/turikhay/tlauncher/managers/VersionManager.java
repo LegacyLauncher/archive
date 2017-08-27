@@ -2,11 +2,13 @@ package ru.turikhay.tlauncher.managers;
 
 import net.minecraft.launcher.updater.*;
 import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.LibraryReplace;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.component.ComponentDependence;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncObject;
@@ -19,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-@ComponentDependence({AssetsManager.class, VersionLists.class, ElyManager.class})
+@ComponentDependence({AssetsManager.class, VersionLists.class, LibraryReplaceProcessor.class})
 public class VersionManager extends InterruptibleComponent {
     private final LocalVersionList localList;
     private final RemoteVersionList[] remoteLists;
@@ -415,7 +417,7 @@ public class VersionManager extends InterruptibleComponent {
         return getInstalledVersions(TLauncher.getInstance() == null ? null : TLauncher.getInstance().getSettings().getVersionFilter());
     }
 
-    public VersionSyncInfoContainer downloadVersion(VersionSyncInfo syncInfo, boolean ely, boolean force) throws IOException {
+    public VersionSyncInfoContainer downloadVersion(VersionSyncInfo syncInfo, Account.AccountType type, boolean force) throws IOException {
         VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
 
         CompleteVersion completeVersion = syncInfo.getCompleteVersion(force);
@@ -425,17 +427,17 @@ public class VersionManager extends InterruptibleComponent {
             syncInfo.setRemote(completeVersion);
         }*/
 
-        if (ely) {
-            completeVersion = manager.getComponent(ElyManager.class).elyficate(completeVersion);
+        if (type != null) {
+            completeVersion = manager.getComponent(LibraryReplaceProcessor.class).process(completeVersion, type);
         }
 
         File baseDirectory = localList.getBaseDirectory();
 
-        container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, ely));
+        container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, type));
 
-        if (ely) {
+        if (type != null) {
             try {
-                container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, false));
+                container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, type));
             } catch (IOException ioE) {
                 log("Could not get optional downloadables for", syncInfo.getID(), ioE);
             }

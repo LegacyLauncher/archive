@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.FileUtil;
@@ -41,7 +42,7 @@ public final class ContributorsAlert {
         settings.set("update.asked", TLauncher.getVersion());
 
         if (hasUpgraded && !contributorsHaveBeenShownBefore) {
-            Locale ruLocale = U.getLocale("ru_RU");
+            Locale ruLocale = LangConfiguration.ru_RU;
             boolean isUssr = ruLocale != null && settings.isUSSRLocale();
 
             List<String> contributorList = new ArrayList<String>();

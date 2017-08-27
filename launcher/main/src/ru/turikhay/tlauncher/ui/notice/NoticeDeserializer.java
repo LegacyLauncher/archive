@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import com.google.gson.*;
 import org.apache.commons.lang3.StringUtils;
+import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -109,7 +110,7 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         }
 
         if("server".equals(type)) {
-            return new ServerNoticeAction((Server) context.deserialize(actionObject.getAsJsonObject("server"), Server.class), noticeId);
+            return new ServerNoticeAction((PromotedServer) context.deserialize(actionObject.getAsJsonObject("server"), PromotedServer.class), noticeId);
         }
 
         throw new IllegalArgumentException("unknown action type: " + type);

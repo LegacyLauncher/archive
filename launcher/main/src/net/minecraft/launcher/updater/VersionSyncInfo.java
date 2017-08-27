@@ -6,6 +6,7 @@ import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.managers.VersionManager;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
@@ -181,12 +182,12 @@ public class VersionSyncInfo {
         return completeLocal;
     }
 
-    Set<Downloadable> getRequiredDownloadables(OS os, File targetDirectory, boolean force, boolean ely) throws IOException {
+    Set<Downloadable> getRequiredDownloadables(OS os, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
         HashSet neededFiles = new HashSet();
 
         CompleteVersion version = getCompleteVersion(force);
-        if (ely && !version.isElyfied()) {
-            version = TLauncher.getInstance().getElyManager().elyficate(version);
+        if (type != null && !version.isProceededFor(type, true)) {
+            version = TLauncher.getInstance().getLibraryManager().process(version, type);
         }
 
         Repository source = hasRemote() ? remoteVersion.getSource() : null;
@@ -226,8 +227,8 @@ public class VersionSyncInfo {
         }
     }
 
-    public Set<Downloadable> getRequiredDownloadables(File targetDirectory, boolean force, boolean ely) throws IOException {
-        return getRequiredDownloadables(OS.CURRENT, targetDirectory, force, ely);
+    public Set<Downloadable> getRequiredDownloadables(File targetDirectory, boolean force, Account.AccountType type) throws IOException {
+        return getRequiredDownloadables(OS.CURRENT, targetDirectory, force, type);
     }
 
     public static VersionSyncInfo createEmpty() {

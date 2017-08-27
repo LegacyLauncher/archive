@@ -252,6 +252,9 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
     private void fetchCode(ElyAuthCode code) {
         setState(FlowState.EXCHANGE);
 
+        TLauncher.getInstance().getFrame().requestFocus();
+        TLauncher.getInstance().getFrame().toFront();
+
         ElyUser user;
         try {
             user = code.getUser();
