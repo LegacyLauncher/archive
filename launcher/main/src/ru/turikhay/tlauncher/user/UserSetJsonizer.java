@@ -21,6 +21,7 @@ public class UserSetJsonizer implements JsonDeserializer<UserSet>, JsonSerialize
                 put(PlainUser.TYPE, PlainUser.getJsonizer());
                 put(ElyUser.TYPE, ElyUser.getJsonizer());
                 put(ElyLegacyUser.TYPE, ElyLegacyUser.getJsonizer());
+                put(McleaksUser.TYPE, McleaksUser.getJsonizer());
             }
         };
     }

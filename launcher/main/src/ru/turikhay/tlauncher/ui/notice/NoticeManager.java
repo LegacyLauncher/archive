@@ -1,15 +1,12 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.tlauncher.configuration.BootConfiguration;
-import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
-import ru.turikhay.tlauncher.ui.scenes.NoticeScene;
-import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.U;
-import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.*;
 import java.util.*;

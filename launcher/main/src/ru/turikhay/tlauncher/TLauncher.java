@@ -11,11 +11,11 @@ import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.managers.*;
+import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -25,23 +25,21 @@ import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.RunnableThread;
 import ru.turikhay.util.stream.MirroredLinkedOutputStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
-import javax.net.ssl.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.security.cert.X509Certificate;
 import java.text.DateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
@@ -57,7 +55,7 @@ public final class TLauncher {
     private final Logger logger;
 
     private final ComponentManager componentManager;
-    private final ElyManager elyManager;
+    private final LibraryReplaceProcessor libraryReplaceManager;
     private final VersionManager versionManager;
     private final ProfileManager profileManager;
 
@@ -103,8 +101,8 @@ public final class TLauncher {
         dispatcher.onBootStateChanged("Preparing managers", 0.2);
         this.componentManager = new ComponentManager(this);
 
-        dispatcher.onBootStateChanged("Loading Ely manager", 0.22);
-        elyManager = componentManager.loadComponent(ElyManager.class);
+        dispatcher.onBootStateChanged("Loading Library Replace manager", 0.22);
+        libraryReplaceManager = componentManager.loadComponent(LibraryReplaceProcessor.class);
 
         dispatcher.onBootStateChanged("Loading Version manager", 0.27);
         versionManager = componentManager.loadComponent(VersionManager.class);
@@ -175,8 +173,8 @@ public final class TLauncher {
         return componentManager;
     }
 
-    public ElyManager getElyManager() {
-        return elyManager;
+    public LibraryReplaceProcessor getLibraryManager() {
+        return libraryReplaceManager;
     }
 
     public VersionManager getVersionManager() {
@@ -222,7 +220,14 @@ public final class TLauncher {
 
         launcher.setVersion(versionName);
         launcher.setServer(server, serverId);
-        launcher.setPromotedServers(bootConfig.getPromotedServers());
+
+        List<PromotedServer> promotedServerList = new ArrayList<>();
+        if(bootConfig.getPromotedServers().containsKey(getSettings().getLocale().toString())) {
+            promotedServerList.addAll(bootConfig.getPromotedServers().get(getSettings().getLocale().toString()));
+        } else if (bootConfig.getPromotedServers().containsKey("global")) {
+            promotedServerList.addAll(bootConfig.getPromotedServers().get("global"));
+        }
+        launcher.setPromotedServers(promotedServerList);
 
         launcher.start();
 
@@ -484,36 +489,6 @@ public final class TLauncher {
     }
 
     static {
-        try {
-            SSLContext context = SSLContext.getInstance("SSL");
-            context.init(null, new X509TrustManager[]{
-                    new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-                        }
-
-                        @Override
-                        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                        }
-
-                        @Override
-                        public X509Certificate[] getAcceptedIssuers() {
-                            return new X509Certificate[0];
-                        }
-                    }
-            }, null);
-            HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-
-        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-            @Override
-            public boolean verify(String s, SSLSession sslSession) {
-                return true;
-            }
-        });
-
         System.setProperty("java.net.useSystemProxies", "true");
     }
 }

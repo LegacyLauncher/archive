@@ -14,9 +14,8 @@ import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedToggleButton;
-import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -24,8 +23,6 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.List;
 
 public class NoticeScene extends PseudoScene implements ResizeableComponent {

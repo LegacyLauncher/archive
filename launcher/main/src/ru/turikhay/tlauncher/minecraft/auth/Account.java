@@ -58,6 +58,7 @@ public class Account {
         ELY("ely.png"),
         ELY_LEGACY("ely.png"),
         MOJANG("mojang.png"),
+        MCLEAKS("mcleaks.png"),
         PLAIN(null);
 
         private final String icon;

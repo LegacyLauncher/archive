@@ -28,7 +28,7 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
     private final ExtendedPanel grid;
     private final GridBagConstraints c;
 
-    private final ExtendedButton mojang, ely, free, idontknow;
+    private final ExtendedButton mojang, ely, free, mcleaks, idontknow;
 
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
@@ -58,6 +58,12 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
             @Override
             public void actionPerformed(ActionEvent e) {
                 AccountAdd.this.scene.multipane.showTip("add-account-ely");
+            }
+        });
+        mcleaks = addRow("mcleaks.png", ACCOUNT_TYPE_PREFIX + "mcleaks", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-mcleaks");
             }
         });
         idontknow = addRow("info.png", LOC_PREFIX + "hint", new ActionListener() {
@@ -170,11 +176,11 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
         if(!"idontknow".equals(var1)) {
             Blocker.blockComponents(var1, free, idontknow);
         }
-        Blocker.blockComponents(var1, mojang, ely);
+        Blocker.blockComponents(var1, mojang, ely, mcleaks);
     }
 
     @Override
     public void unblock(Object var1) {
-        Blocker.unblockComponents(var1, mojang, free, ely, idontknow);
+        Blocker.unblockComponents(var1, mojang, free, ely, mcleaks, idontknow);
     }
 }

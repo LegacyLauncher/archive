@@ -4,6 +4,7 @@ import net.minecraft.launcher.updater.LatestVersionSyncInfo;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -20,7 +21,10 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
     public static final VersionSyncInfo EMPTY = VersionSyncInfo.createEmpty();
     private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
     private final int averageColor = U.shiftColor(Theme.getTheme().getForeground(), -128, 64, 128).getRGB();
+
     private static final ImageIcon ELY_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
+    private static final ImageIcon MOJANG_ICON = Images.getIcon("mojang.png", SwingUtil.magnify(16));
+    private static final ImageIcon MCLEAKS_ICON = Images.getIcon("mcleaks.png", SwingUtil.magnify(16));
 
     public Component getListCellRendererComponent(JList<? extends VersionSyncInfo> list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
         JLabel mainText = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -37,9 +41,26 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
             String label = getLabelFor(value);
             int width = mainText.getFontMetrics(mainText.getFont()).stringWidth(label);
 
-            if (getShowElyVersions() && TLauncher.getInstance().getElyManager().hasLibraries(value)) {
-                mainText.setIcon(ELY_ICON);
-                width += ELY_ICON.getIconWidth() + mainText.getIconTextGap();
+            if (getShowVersionsFor() != null && TLauncher.getInstance().getLibraryManager().hasLibraries(value, getShowVersionsFor())) {
+                ImageIcon icon = null;
+                switch(getShowVersionsFor()) {
+                    case ELY:
+                    case ELY_LEGACY:
+                        icon = ELY_ICON;
+                        break;
+                    case MOJANG:
+                        icon = MOJANG_ICON;
+                        break;
+                    case MCLEAKS:
+                        icon = MCLEAKS_ICON;
+                        break;
+                    case PLAIN:
+                        break;
+                }
+                mainText.setIcon(icon);
+                if(icon != null) {
+                    width += icon.getIconWidth() + mainText.getIconTextGap();
+                }
             }
 
             int prefWidth = list.getFixedCellWidth();
@@ -117,7 +138,7 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
         return text.toString();
     }
 
-    public boolean getShowElyVersions() {
-        return false;
+    public Account.AccountType getShowVersionsFor() {
+        return null;
     }
 }

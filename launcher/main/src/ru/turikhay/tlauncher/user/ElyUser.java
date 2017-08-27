@@ -133,7 +133,6 @@ public class ElyUser extends User {
     @Override
     public LoginCredentials getLoginCredentials() {
         return new LoginCredentials(username,
-                String.format("token:%s:%s", accessToken, UUIDTypeAdapter.fromUUID(uuid)),
                 accessToken,
                 null,
                 displayName,

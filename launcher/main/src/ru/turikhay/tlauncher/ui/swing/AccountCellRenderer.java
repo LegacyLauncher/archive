@@ -21,6 +21,9 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
     private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
     private static final ImageIcon ELY_USER_ICON_BIG = Images.getIcon("ely.png", SwingUtil.magnify(24));
 
+    private static final ImageIcon MCLEAKS_USER_ICON = Images.getIcon("mcleaks.png", SwingUtil.magnify(16));
+    private static final ImageIcon MCLEAKS_USER_ICON_BIG = Images.getIcon("mcleaks.png", SwingUtil.magnify(24));
+
     private static final ImageIcon USER_ICON = Images.getIcon("user-circle-o.png", SwingUtil.magnify(16));
     private static final ImageIcon USER_ICON_BIG = Images.getIcon("user-circle-o.png", SwingUtil.magnify(24));
 
@@ -60,12 +63,14 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
                 renderer.setText(Localizable.get("account.manage"));
                 ImageIcon.setup(renderer, MANAGE_ICON);
             } else {
-                Icon icon = null;
+                ImageIcon icon = null;
                 switch (value.getType()) {
+                    case MCLEAKS:
+                        icon = type == AccountCellType.EDITOR? MCLEAKS_USER_ICON_BIG : MCLEAKS_USER_ICON;
+                        break;
                     case ELY:
                     case ELY_LEGACY:
-                        ImageIcon _icon = type == AccountCellType.EDITOR? ELY_USER_ICON_BIG : ELY_USER_ICON;
-                        icon = TLauncher.getInstance().getElyManager().isRefreshing() ? _icon.getDisabledInstance() : _icon;
+                        icon = type == AccountCellType.EDITOR? ELY_USER_ICON_BIG : ELY_USER_ICON;
                         break;
                     case MOJANG:
                         icon = type == AccountCellType.EDITOR? MOJANG_USER_ICON_BIG : MOJANG_USER_ICON;
@@ -76,11 +81,7 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
                 }
 
                 if (icon != null) {
-                    if(icon instanceof ImageIcon) {
-                        ImageIcon.setup(renderer, (ImageIcon) icon);
-                    } else {
-                        renderer.setIcon(icon);
-                    }
+                    ImageIcon.setup(renderer, icon);
                     renderer.setFont(renderer.getFont().deriveFont(1));
                 } else {
                     renderer.setIcon(null);
@@ -92,11 +93,12 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
                         renderer.setText(value.getUsername());
                         break;
                     default:
-                        if ((value.getType() == Account.AccountType.ELY || value.getType() == Account.AccountType.ELY_LEGACY) && TLauncher.getInstance().getElyManager().isRefreshing()) {
+                        renderer.setText(value.getDisplayName());
+                        /*if (TLauncher.getInstance().getLibraryManager().isRefreshing()) {
                             renderer.setText(value.getDisplayName() + " " + Localizable.get("account.loading.ely"));
                         } else {
                             renderer.setText(value.getDisplayName());
-                        }
+                        }*/
                 }
             }
         } else {

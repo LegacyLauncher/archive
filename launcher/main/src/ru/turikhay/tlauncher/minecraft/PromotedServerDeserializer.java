@@ -6,18 +6,24 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.util.U;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Set;
 
-public class ServerDeserializer implements JsonDeserializer<Server> {
+public class PromotedServerDeserializer implements JsonDeserializer<PromotedServer> {
 
     @Override
-    public Server deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public PromotedServer deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject object = json.getAsJsonObject();
 
-        Server server = new Server();
+        PromotedServer server = new PromotedServer();
         server.setName(requireString(object, "name"));
         server.setFullAddress(requireString(object, "address"));
-        server.setFamily(getString(object, "family"));
+
+        if(object.get("family").isJsonArray()) {
+            server.getFamily().addAll((List<String>) context.deserialize(object.get("family"), new TypeToken<List<String>>(){}.getRawType()));
+        } else {
+            server.getFamily().add(getString(object, "family"));
+        }
 
         if(object.has("accounts")) {
             Set<Account.AccountType> accountTypes = context.deserialize(object.get("accounts"), new TypeToken<Set<Account.AccountType>>(){}.getRawType());

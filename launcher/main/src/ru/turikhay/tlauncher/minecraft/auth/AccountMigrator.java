@@ -25,7 +25,7 @@ public class AccountMigrator {
         gson = new GsonBuilder()
                 .registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer())
                 .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
-                .registerTypeAdapter(MojangUser.class, new MojangUserJsonizer())
+                .registerTypeAdapter(MojangUser.class, MojangUser.getJsonizer())
                 .create();
     }
 

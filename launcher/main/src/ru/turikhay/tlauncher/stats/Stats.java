@@ -1,4 +1,4 @@
-package ru.turikhay.tlauncher.updater;
+package ru.turikhay.tlauncher.stats;
 
 import net.minecraft.launcher.Http;
 import net.minecraft.launcher.versions.CompleteVersion;

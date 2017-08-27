@@ -14,14 +14,8 @@ import java.util.Set;
 public class Server {
     public static final int DEFAULT_PORT = 25565;
 
-    private String name, address, family;
+    private String name, address;
     private int port;
-
-    private final Set<Account.AccountType> accountTypes = new HashSet<Account.AccountType>() {
-        {
-            Collections.addAll(this, Account.AccountType.values());
-        }
-    };
 
     protected Server() {
     }
@@ -67,26 +61,6 @@ public class Server {
             throw new RuntimeException("could not parse port: " + port, rE);
         }
         setPort(parsedPort);
-    }
-
-    public final String getFamily() {
-        return family;
-    }
-
-    protected void setFamily(String family) {
-        this.family = family;
-    }
-
-    public final Set<Account.AccountType> getAccountTypes() {
-        return Collections.unmodifiableSet(accountTypes);
-    }
-
-    public final boolean hasAccountTypeRestriction() {
-        return accountTypes.size() < Account.AccountType.values().length;
-    }
-
-    protected Set<Account.AccountType> getAccountTypeSet() {
-        return accountTypes;
     }
 
     public String getFullAddress() {
@@ -142,12 +116,14 @@ public class Server {
         return getFullAddress().toLowerCase().hashCode();
     }
 
-    public String toString() {
+    public final String toString() {
+        return toStringBuilder().build();
+    }
+
+    protected ToStringBuilder toStringBuilder() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("name", name)
                 .append("address", address)
-                .append("port", port)
-                .append("family", family)
-                .build();
+                .append("port", port);
     }
 }

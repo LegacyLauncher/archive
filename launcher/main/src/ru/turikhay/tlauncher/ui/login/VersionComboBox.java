@@ -5,6 +5,7 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -23,7 +24,7 @@ import java.util.List;
 
 public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
     private static final long serialVersionUID = -9122074452728842733L;
-    static boolean showElyVersions;
+    static Account.AccountType showVersionForType;
     private static final VersionSyncInfo LOADING;
     private static final VersionSyncInfo EMPTY;
     private final VersionManager manager;
@@ -42,8 +43,8 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                 list.setFixedCellWidth(SwingUtil.magnify(180));
                 return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             }
-            public boolean getShowElyVersions() {
-                return VersionComboBox.showElyVersions;
+            public Account.AccountType getShowVersionsFor() {
+                return VersionComboBox.showVersionForType;
             }
         });
         loginForm = lf;

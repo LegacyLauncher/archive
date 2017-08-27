@@ -40,6 +40,10 @@ public class AccountManagerScene extends PseudoScene {
         multipane.registerTip(new AccountElyProcess(this));
         multipane.registerTip(new AccountElyEdit(this));
 
+        multipane.registerTip(new AccountMcleaksStart(this));
+        multipane.registerTip(new AccountMcleaksPane(this, PaneMode.ADD));
+        multipane.registerTip(new AccountMcleaksPane(this, PaneMode.EDIT));
+
         //multipane.registerTip(new AccountAddMojang(this));
         //multipane.registerTip(new AccountAddEly(this));
 

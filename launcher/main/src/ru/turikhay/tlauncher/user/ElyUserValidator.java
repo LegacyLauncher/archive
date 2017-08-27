@@ -43,15 +43,23 @@ class ElyUserValidator {
         log("user validator created for tokens", accessToken, refreshToken, expiryTime);
     }
 
-    public void validateUser(boolean renewToken) throws IOException, InvalidCredentialsException {
+    public void validateUser() throws IOException, InvalidCredentialsException {
         log("validating user...");
 
         Response<ElyUserJsonizer.ElySerialize> rawUserResponse = getUserInfo();
         renewToken: {
             renewTokenBreak: {
-                if(renewToken) {
+                if(rawUserResponse.error != null && rawUserResponse.error.isTokenExpired()) {
+                    log("token has expired. renewing");
                     break renewTokenBreak;
                 }
+
+                if(expiryTime - System.currentTimeMillis() < 1000 * 60 * 60 * 2 /* 2 hours */) {
+                    log("token will expire in less than two hours. renewing");
+                    break renewTokenBreak;
+                }
+
+                rawUserResponse = getUserInfo();
                 if(rawUserResponse.error != null) {
                     if(rawUserResponse.error.isTokenExpired()) {
                         log("token has expired. renewing");
@@ -60,16 +68,17 @@ class ElyUserValidator {
                         throw new InvalidCredentialsException(rawUserResponse.error.toString());
                     }
                 }
+
                 break renewToken; // do not renewToken
             }
 
             TokenRefreshResponse response = refreshAccessToken();
-            setToken(response.access_token, refreshToken, U.getUTC().getTimeInMillis() + expiryTime);
-        }
+            setToken(response.access_token, refreshToken, System.currentTimeMillis() + (response.expires_in * 1000));
 
-        rawUserResponse = getUserInfo();
-        if(rawUserResponse.error != null) {
-            throw new InvalidCredentialsException(rawUserResponse.error.toString());
+            rawUserResponse = getUserInfo();
+            if(rawUserResponse.error != null) {
+                throw new InvalidCredentialsException(rawUserResponse.error.toString());
+            }
         }
 
         ElyUserJsonizer.ElySerialize rawUser = rawUserResponse.response;
@@ -193,7 +202,7 @@ class ElyUserValidator {
         private int code, status;
 
         boolean isTokenExpired() {
-            return "Token expired".equals(message);
+            return "Token expired".equals(message) || "Unauthorized".equals(name);
         }
 
         public String toString() {

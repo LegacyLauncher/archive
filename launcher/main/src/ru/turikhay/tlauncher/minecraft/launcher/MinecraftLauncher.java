@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import ru.turikhay.app.nstweaker.NSTweaker;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
@@ -23,6 +24,7 @@ import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.NBTServer;
+import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
@@ -30,7 +32,7 @@ import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
-import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.stream.LinkedOutputStringStream;
@@ -72,11 +74,12 @@ public class MinecraftLauncher implements JavaProcessListener {
     private final List<MinecraftExtendedListener> extListeners;
     private final List<MinecraftLauncherAssistant> assistants;
     private MinecraftLauncher.MinecraftLauncherStep step;
+    private Account.AccountType librariesForType;
+    private String oldMainclass;
     private String versionName;
     private VersionSyncInfo versionSync;
     private CompleteVersion version;
     private CompleteVersion deJureVersion;
-    private boolean elyficate;
     private String accountName;
     private Account account;
     private String cmd;
@@ -99,7 +102,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private long startupTime;
     private int exitCode;
     private Server server;
-    private List<Server> promotedServers;
+    private List<PromotedServer> promotedServers;
     private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
@@ -293,7 +296,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         this.serverId = id;
     }
 
-    public void setPromotedServers(List<Server> serverList) {
+    public void setPromotedServers(List<PromotedServer> serverList) {
         this.promotedServers = serverList;
     }
 
@@ -349,13 +352,45 @@ public class MinecraftLauncher implements JavaProcessListener {
                     } else {
                         recordValue("resolvedVersion", deJureVersion);
 
-                        elyficate = account.getType() != Account.AccountType.MOJANG && (account.getType() == Account.AccountType.ELY || account.getType() == Account.AccountType.ELY_LEGACY || TLauncher.getInstance().getElyManager().isUsingGlobally());
-                        recordValue("elyficate", elyficate);
+                        Account.AccountType lookupLibrariesForType;
+                        switch (account.getType()) {
+                            case MCLEAKS:
+                                if(McleaksManager.isUnsupported()) {
+                                    throw new MinecraftException(false, "MCLeaks is not supported", "mcleaks-unsupported");
+                                } else {
+                                    lookupLibrariesForType = Account.AccountType.MCLEAKS;
+                                    oldMainclass = deJureVersion.getMainClass();
+                                }
+                                break;
+                            case ELY:
+                            case ELY_LEGACY:
+                                lookupLibrariesForType = Account.AccountType.ELY;
+                                break;
+                            case PLAIN:
+                                mayBeEly: {
+                                    if(!TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()) {
+                                        break mayBeEly;
+                                    }
+                                    if(!settings.getBoolean("ely.globally")) {
+                                        break mayBeEly;
+                                    }
+                                    lookupLibrariesForType = Account.AccountType.ELY;
+                                    break;
+                                }
+                                lookupLibrariesForType = Account.AccountType.PLAIN;
+                                break;
+                            default:
+                                lookupLibrariesForType = account.getType();
+                        }
 
-                        if (elyficate) {
-                            TLauncher.getInstance().getElyManager().refreshOnce();
-                            version = TLauncher.getInstance().getElyManager().elyficate(deJureVersion);
+                        log("Looking up libraries for", librariesForType = lookupLibrariesForType);
+
+                        TLauncher.getInstance().getLibraryManager().refreshComponent();
+                        if(TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, account.getType())) {
+                            recordValue("librariesFound", lookupLibrariesForType);
+                            version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType);
                         } else {
+                            recordValue("librariesNotFound", librariesForType);
                             version = deJureVersion;
                         }
 
@@ -530,7 +565,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         DownloadableContainer versionContainer;
         try {
-            versionContainer = vm.downloadVersion(versionSync, elyficate, forceUpdate);
+            versionContainer = vm.downloadVersion(versionSync, librariesForType, forceUpdate);
         } catch (IOException var8) {
             throw new MinecraftException(false, "Cannot download version!", "download-jar", var8);
         }
@@ -718,8 +753,12 @@ public class MinecraftLauncher implements JavaProcessListener {
                     if (server != null) {
                         add(server);
                     }
-                    if (promotedServers != null && Configuration.isUSSRLocale(settings.getLocale().toString()) && settings.getBoolean("minecraft.servers.promoted")) {
-                        addAll(promotedServers);
+                    if (account.getType() != Account.AccountType.MOJANG && promotedServers != null && settings.getBoolean("minecraft.servers.promoted.ingame")) {
+                        for(PromotedServer promotedServer : promotedServers) {
+                            if(promotedServer.getFamily().isEmpty() || promotedServer.getFamily().contains(family)) {
+                                add(promotedServer);
+                            }
+                        }
                     }
                 }
             }, new File(gameDir, "servers.dat"));
@@ -1004,11 +1043,18 @@ public class MinecraftLauncher implements JavaProcessListener {
                 args.add("-XX:+UseCMSInitiatingOccupancyOnly");
             }
         }
-
         String rawArgs = version.getJVMArguments();
         if (StringUtils.isNotEmpty(rawArgs)) {
             args.addAll(Arrays.asList(StringUtils.split(rawArgs, ' ')));
         }
+
+        if(librariesForType == Account.AccountType.MCLEAKS) {
+            args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
+            args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
+            args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
+            args.add("-Dru.turikhay.mcleaks.nstweaker.mainclass=" + oldMainclass);
+        }
+
         return args.toArray(new String[args.size()]);
     }
 

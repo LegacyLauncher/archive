@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener, ElyManagerListener, CrashManagerListener {
+public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener, CrashManagerListener {
     private final List<LoginForm.LoginStateListener> stateListeners = Collections.synchronizedList(new ArrayList());
     private final List<LoginForm.LoginProcessListener> processListeners = Collections.synchronizedList(new ArrayList());
     public final DefaultScene scene;
@@ -90,7 +90,11 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                     throw new RuntimeException("could not resolve local version", e);
                 }
 
-                if(local.getAssetIndex().getId().equals("legacy")) {
+                if(local.getReleaseType() != ReleaseType.OLD_ALPHA &&
+                        local.getReleaseType() != ReleaseType.OLD_BETA &&
+                        !ReleaseType.SubType.OLD_RELEASE.isSubType(local) &&
+                        local.getAssetIndex().getId().equals("legacy"))
+                {
                     if(Alert.showLocQuestion("versions.damaged-json")) {
                         checkbox.forceupdate.setSelected(true);
                     }
@@ -106,7 +110,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         add(checkbox);
         add(del(0));
         add(buttons);
-        tlauncher.getElyManager().addListener(this);
         tlauncher.getVersionManager().addListener(this);
         tlauncher.getDownloader().addListener(this);
         tlauncher.getUIListeners().registerMinecraftLauncherListener(this);
@@ -197,10 +200,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void startLauncher(Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
-            while (accounts.getAccount() != null && (accounts.getAccount().getType() == Account.AccountType.ELY || accounts.getAccount().getType() == Account.AccountType.ELY_LEGACY) && tlauncher.getElyManager().isRefreshing()) {
+            while (tlauncher.getLibraryManager().isRefreshing()) {
                 U.sleepFor(500L);
             }
-
             this.server = server;
             this.serverId = serverId;
             autologin.setActive(false);
@@ -267,21 +269,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void onVersionsRefreshed(VersionManager manager) {
         Blocker.unblock(this, "refresh");
-    }
-
-    public void onElyUpdating(ElyManager manager) {
-        if(accounts != null) {
-            if (accounts.getAccount() != null && (accounts.getAccount().getType() == Account.AccountType.ELY || accounts.getAccount().getType() == Account.AccountType.ELY_LEGACY)) {
-                Blocker.block(buttons.play, "ely");
-            }
-            accounts.updateAccount();
-        }
-        repaint();
-    }
-
-    public void onElyUpdated(ElyManager manager) {
-        Blocker.unblock(buttons.play, "ely");
-        repaint();
     }
 
     public void onAuthPassing(Authenticator auth) {

@@ -2,10 +2,10 @@ package ru.turikhay.tlauncher.configuration;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
+import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.Server;
-import ru.turikhay.tlauncher.minecraft.ServerDeserializer;
+import ru.turikhay.tlauncher.minecraft.PromotedServerDeserializer;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeDeserializer;
 import ru.turikhay.util.U;
@@ -19,7 +19,7 @@ public final class BootConfiguration {
     private boolean stats, ely;
     private Map<String, List<String>> repositories = new HashMap<String, List<String>>();
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
-    private List<Server> promotedServers = new ArrayList<>();
+    private Map<String, List<PromotedServer>> promotedServers = new HashMap<>();
 
     public boolean isStatsAllowed() {
         return stats;
@@ -37,7 +37,7 @@ public final class BootConfiguration {
         return notices;
     }
 
-    public List<Server> getPromotedServers() {
+    public Map<String, List<PromotedServer>> getPromotedServers() {
         return promotedServers;
     }
 
@@ -57,7 +57,7 @@ public final class BootConfiguration {
 
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Notice.class, new NoticeDeserializer())
-                .registerTypeAdapter(Server.class, new ServerDeserializer())
+                .registerTypeAdapter(PromotedServer.class, new PromotedServerDeserializer())
                 .create();
 
         return gson.fromJson(options, BootConfiguration.class);

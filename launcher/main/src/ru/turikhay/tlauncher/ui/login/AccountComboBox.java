@@ -65,27 +65,28 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                         } catch (IOException e1) {
                             U.log(e1);
                         }
-                        updateAccount();
                     }
                 }
+                updateAccount();
             }
         });
     }
 
-    public void updateAccount() {
+    private void updateAccount() {
+        Account.AccountType type = Account.AccountType.PLAIN;
         if (!refreshing) {
-            if (selectedAccount.getType() == Account.AccountType.ELY || selectedAccount.getType() == Account.AccountType.ELY_LEGACY) {
-                if (loginForm.tlauncher.getElyManager().isRefreshing()) {
-                    Blocker.block(loginForm.buttons.play, "ely");
-                } else {
-                    loginForm.tlauncher.getElyManager().refreshOnceAsync();
+            if(selectedAccount != null) {
+                if (selectedAccount.getType() == Account.AccountType.ELY ||
+                        selectedAccount.getType() == Account.AccountType.ELY_LEGACY ||
+                        selectedAccount.getType() == Account.AccountType.MCLEAKS) {
+                    if (!loginForm.tlauncher.getLibraryManager().isRefreshing()) {
+                        loginForm.tlauncher.getLibraryManager().asyncRefresh();
+                    }
                 }
-            } else {
-                Blocker.unblock(loginForm.buttons.play, "ely");
+                type = selectedAccount.getType();
             }
-
-            VersionComboBox.showElyVersions = selectedAccount.getType() == Account.AccountType.ELY || selectedAccount.getType() == Account.AccountType.ELY_LEGACY;
         }
+        VersionComboBox.showVersionForType = type;
     }
 
     public Account getAccount() {
@@ -123,19 +124,8 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     }
 
     public void refreshAccounts(AuthenticatorDatabase db, Account select) {
-        if (select == null) {
-            if (selectedAccount == null) {
-                String list = loginForm.global.get("login.account");
-                if (list != null) {
-                    Account.AccountType account = Reflect.parseEnum(Account.AccountType.class, loginForm.global.get("login.account.type"));
-                    selectedAccount = loginForm.tlauncher.getProfileManager().getAuthDatabase().getByUsername(list, account);
-                }
-            }
-
-            select = selectedAccount;
-        }
-
         removeAllItems();
+        selectedAccount = null;
         Collection list1 = db.getAccounts();
         if (list1.isEmpty()) {
             addItem(EMPTY);
@@ -153,10 +143,9 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
             }
 
             refreshing = false;
-            updateAccount();
         }
-
         addItem(MANAGE);
+        updateAccount();
     }
 
     public void updateLocale() {

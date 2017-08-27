@@ -27,6 +27,8 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
     static final String SERVER_FULL_URL = SERVER_ADDRESS + SERVER_ENTRY_POINT, QUERY_CODE_KEY = "code", QUERY_STATE_KEY = "state";
     private static final int PORT_CREATING_TRIES = 5, SERVER_BACKLOG = 1, SERVER_STOP_DELAY = 5;
 
+    static final String TOKEN_EXCHANGE_SUCCESS = ElyAuth.ACCOUNT_BASE + "/oauth2/code/success?appName=TLauncher";
+
     HttpServerAdapter server;
 
     @Override
@@ -117,7 +119,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
                         String response;
 
                         if (HttpServerAdapter.this.watchdog.passURI(httpExchange.getRequestURI(), getRedirectUri(HttpServerAdapter.this.port), HttpServerAdapter.this.state)) {
-                            responseStatus = HttpURLConnection.HTTP_OK;
+                            responseStatus = HttpURLConnection.HTTP_MOVED_TEMP;
                             response = TokenReplacingReader.resolveVars(SERVER_RESPONSE, new MapTokenResolver(new HashMap<String, String>() {
                                 { put("text", Localizable.get("account.manager.multipane.process-account-ely.flow.complete.response")); }
                             }));
@@ -128,10 +130,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
 
                         httpExchange.getResponseHeaders().set("Content-Type", "text/html; charset=" + FileUtil.getCharset().name());
                         if(responseStatus == HttpURLConnection.HTTP_MOVED_TEMP) {
-
-
-                            // TODO redirect to the special page when it's ready
-                            httpExchange.getResponseHeaders().set("Location", ElyAuth.ACCOUNT_BASE);
+                            httpExchange.getResponseHeaders().set("Location", TOKEN_EXCHANGE_SUCCESS);
                         }
                         httpExchange.sendResponseHeaders(responseStatus, response.getBytes(FileUtil.getCharset()).length);
 

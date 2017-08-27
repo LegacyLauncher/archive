@@ -5,7 +5,7 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
-import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.tlauncher.stats.Stats;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;

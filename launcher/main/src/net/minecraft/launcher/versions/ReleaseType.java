@@ -88,7 +88,7 @@ public enum ReleaseType {
 
             {
                 GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-                calendar.set(2013, 3, 20, 15, 0);
+                calendar.set(2014, Calendar.MAY, 14, 0, 0);
                 marker = calendar.getTime();
             }
 

@@ -72,7 +72,6 @@ public class ElyLegacyUser extends User {
     public LoginCredentials getLoginCredentials() {
         return new LoginCredentials(
                 username,
-                String.format("token:%s:%s", accessToken, UUIDTypeAdapter.fromUUID(uuid)),
                 accessToken,
                 null,
                 displayName,

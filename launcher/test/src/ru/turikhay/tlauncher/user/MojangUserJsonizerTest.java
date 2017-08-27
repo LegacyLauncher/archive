@@ -17,7 +17,7 @@ public class MojangUserJsonizerTest {
     MojangUserJsonizerTest() throws Exception {
         gson = new GsonBuilder()
                 .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
-                .registerTypeAdapter(MojangUser.class, new MojangUserJsonizer())
+                .registerTypeAdapter(MojangUser.class, MojangUser.getJsonizer())
                 .create();
     }
 

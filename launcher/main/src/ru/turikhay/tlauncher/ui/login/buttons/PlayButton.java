@@ -14,7 +14,7 @@ import ru.turikhay.tlauncher.ui.notice.NoticeManager;
 import ru.turikhay.tlauncher.ui.notice.NoticeManagerListener;
 import ru.turikhay.tlauncher.ui.notice.NoticePopup;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
-import ru.turikhay.tlauncher.updater.Stats;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

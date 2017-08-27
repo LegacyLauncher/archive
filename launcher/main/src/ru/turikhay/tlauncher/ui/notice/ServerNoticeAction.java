@@ -4,6 +4,7 @@ import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -23,11 +24,11 @@ import java.util.*;
 public class ServerNoticeAction extends NoticeAction {
     private static final int MAX_FAMILY_MEMBERS = 2;
 
-    private final Server server;
+    private final PromotedServer server;
     private final int serverId;
     private final ImageIcon installedVersion;
 
-    ServerNoticeAction(Server server, int serverId) {
+    ServerNoticeAction(PromotedServer server, int serverId) {
         super("server");
         this.server = U.requireNotNull(server, "server");
         this.serverId = serverId;
@@ -64,10 +65,20 @@ public class ServerNoticeAction extends NoticeAction {
         selectItem.setEnabled(false);
         list.add(selectItem);
 
+        LocalizableMenuItem currentItem = new LocalizableMenuItem(L10N_PREFIX + "choose-version.current");
+        currentItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                VersionSyncInfo vs = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.versions.getVersion();
+                startVersion(vs);
+            }
+        });
+        list.add(currentItem);
+
         if (server.getFamily() != null) {
-            List<VersionSyncInfo> syncInfoList = filterLatestVersions(getFamilyMembers(
+            List<VersionSyncInfo> syncInfoList = getFamilyMembers(
                     server.getFamily(), TLauncher.getInstance().getVersionManager().getVersions(false)
-            ));
+            );
             for (final VersionSyncInfo syncInfo : syncInfoList) {
                 JMenuItem item = new JMenuItem(syncInfo.getID());
                 if (syncInfo.isInstalled() && syncInfo.isUpToDate()) {
@@ -82,16 +93,6 @@ public class ServerNoticeAction extends NoticeAction {
                 list.add(item);
             }
         }
-
-        LocalizableMenuItem currentItem = new LocalizableMenuItem(L10N_PREFIX + "choose-version.current");
-        currentItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                VersionSyncInfo vs = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.versions.getVersion();
-                startVersion(vs);
-            }
-        });
-        list.add(currentItem);
 
         return list;
     }
@@ -152,26 +153,30 @@ public class ServerNoticeAction extends NoticeAction {
         lf.startLauncher(server, serverId);
     }
 
-    static List<VersionSyncInfo> getFamilyMembers(String family, List<VersionSyncInfo> syncInfoList) {
-        List<VersionSyncInfo> versionList = new ArrayList<VersionSyncInfo>();
+    static List<VersionSyncInfo> getFamilyMembers(List<String> familyList, List<VersionSyncInfo> syncInfoList) {
+        List<VersionSyncInfo> fullVersionList = new ArrayList<VersionSyncInfo>();
 
-        for (VersionSyncInfo syncInfo : syncInfoList) {
-            String currentFamily;
+        for(String family : familyList) {
+            List<VersionSyncInfo> curVersionList = new ArrayList<VersionSyncInfo>();
+            for (VersionSyncInfo syncInfo : syncInfoList) {
+                String currentFamily;
 
-            if (family.equals(syncInfo.getID())) {
-                currentFamily = family;
-            } else if (syncInfo.getLocalCompleteVersion() != null) {
-                currentFamily = syncInfo.getLocalCompleteVersion().getFamily();
-            } else {
-                currentFamily = CompleteVersion.getFamilyOf(syncInfo.getID());
+                if (family.equals(syncInfo.getID())) {
+                    currentFamily = family;
+                } else if (syncInfo.getLocalCompleteVersion() != null) {
+                    currentFamily = syncInfo.getLocalCompleteVersion().getFamily();
+                } else {
+                    currentFamily = CompleteVersion.getFamilyOf(syncInfo.getID());
+                }
+
+                if (family.equals(currentFamily)) {
+                    curVersionList.add(syncInfo);
+                }
             }
-
-            if (family.equals(currentFamily)) {
-                versionList.add(syncInfo);
-            }
+            fullVersionList.addAll(filterLatestVersions(curVersionList));
         }
 
-        return versionList;
+        return fullVersionList;
     }
 
     static List<VersionSyncInfo> filterLatestVersions(List<VersionSyncInfo> syncInfoList) {
