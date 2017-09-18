@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class DefaultScene extends PseudoScene {
     public static final Dimension LOGIN_SIZE = new Dimension(285, 240);
-    public static final Dimension SETTINGS_SIZE = new Dimension(600, 540);
+    public static final Dimension SETTINGS_SIZE = new Dimension(600, 550);
     public static final int EDGE_INSETS = 10;
     public static final int INSETS = 15;
     public final SideNotifier notifier;
@@ -256,6 +256,14 @@ public class DefaultScene extends PseudoScene {
             }*/
             //noticePanel.setVisible(noSidePanel);
             updateCoords();
+
+            validate();
+            repaint();
+
+            if(sidePanelComp != null) {
+                sidePanelComp.validate();
+                sidePanelComp.repaint();
+            }
         }
     }
 

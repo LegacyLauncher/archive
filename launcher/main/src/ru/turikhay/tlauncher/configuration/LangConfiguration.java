@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public final class LangConfiguration extends SimpleConfiguration {
+public final class LangConfiguration {
     public static final Locale ru_RU = U.getLocale("ru_RU");
 
     private final Map<Locale, Properties> translationsMap = new HashMap<Locale, Properties>();
@@ -23,25 +23,32 @@ public final class LangConfiguration extends SimpleConfiguration {
         setLocale(Locale.US);
     }
 
-    public String nget(String key) {
-        return key == null? null : properties.getProperty(key);
+    public String lget(Locale locale, String key) {
+        if(key == null) {
+            return null;
+        }
+        if(translationsMap.containsKey(locale)) {
+            Properties l = translationsMap.get(locale);
+            return l.getProperty(key);
+        }
+        return null;
     }
 
-    public String get(String key) {
-        String value = nget(key);
-        return value == null ? key : value;
-    }
+    public String lget(Locale locale, String key, Object... vars) {
+        if(key == null) {
+            return null;
+        }
 
-    public String nget(String key, Object... vars) {
-        String value = nget(key);
-
-        if (key == null || key.equals(value) || StringUtils.isEmpty(value)) {
+        String value = lget(locale, key);
+        if (key.equals(value) || StringUtils.isEmpty(value)) {
             return null;
         }
 
         String[] variables = checkVariables(vars);
 
-        if(plurals != null) {
+        if(pluralMap.containsKey(locale)) {
+            Pattern[] plurals = pluralMap.get(locale);
+
             for (int var = 0; var < variables.length; var++) {
                 String pluralReplacementValue = nget(key + '.' + var + ".plural");
                 if (pluralReplacementValue == null) {
@@ -64,13 +71,32 @@ public final class LangConfiguration extends SimpleConfiguration {
         return value;
     }
 
-    public String get(String key, Object... vars) {
-        String value = nget(key, vars);
+    public String nget(String key) {
+        return lget(locale, key);
+    }
+
+    public String get(String key) {
+        String value = nget(key);
+        if(value == null) {
+            value = lget(selectBackingLocale(), key);
+        }
         return value == null ? key : value;
     }
 
-    public void set(String key, Object value) {
-        throw new UnsupportedOperationException();
+    public String nget(String key, Object... vars) {
+        return lget(locale, key, vars);
+    }
+
+    public String get(String key, Object... vars) {
+        String value = nget(key, vars);
+        if(value == null) {
+            value = lget(selectBackingLocale(), key, vars);
+        }
+        return value == null ? key : value;
+    }
+
+    private Locale selectBackingLocale() {
+        return locale != ru_RU && Configuration.isUSSRLocale(locale.toString())? ru_RU : Locale.US;
     }
 
     private static String[] checkVariables(Object[] check) {
@@ -96,8 +122,6 @@ public final class LangConfiguration extends SimpleConfiguration {
     }
 
     public synchronized void setLocale(Locale locale) {
-        clear();
-
         this.locale = locale;
         this.plurals = null;
 
@@ -109,7 +133,6 @@ public final class LangConfiguration extends SimpleConfiguration {
         Properties translations = getTranslations(locale);
         if (translations != null) {
             translationsMap.put(locale, translations);
-            properties.putAll(translations);
 
             Pattern[] pluralPatterns = pluralMap.get(locale);
             if (pluralPatterns == null) {
@@ -137,7 +160,7 @@ public final class LangConfiguration extends SimpleConfiguration {
                 if (in == null) {
                     throw new NullPointerException("could not find translations for " + locale);
                 }
-                translations = loadFromStream(in);
+                translations = SimpleConfiguration.loadFromStream(in);
             } catch (Exception e) {
                 log("Could not load translations for:", locale, e);
                 return null;

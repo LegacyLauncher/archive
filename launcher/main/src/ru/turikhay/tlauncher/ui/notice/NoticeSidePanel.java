@@ -40,16 +40,21 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         super(new MagnifiedInsets(15, 15, 10, 15));
 
         this.scene = scene;
-        setSize(SwingUtil.magnify(new Dimension(600, 540)));
+        setSize(SwingUtil.magnify(new Dimension(600, 550)));
+
+        BorderPanel wrapper = new BorderPanel();
+        wrapper.setInsets(0, 0, 0, 0);
+        add(wrapper);
 
         panel = new ExtendedPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setInsets(0, 0, 0, 0);
 
         scrollPane = new ScrollPane(panel, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER, false);
-        add(scrollPane);
-        add(del(Del.CENTER));
-        add(buttonPanel = new ButtonPanel());
+        scrollPane.setBorder(null);
+        wrapper.setCenter(scrollPane);
+        //add(del(Del.CENTER));
+        wrapper.setSouth(buttonPanel = new ButtonPanel());
 
         workHeight = getHeight() -
                 getInsets().top - getInsets().bottom -

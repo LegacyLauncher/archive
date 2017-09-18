@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.Multipane;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.SwingUtil;
@@ -16,6 +17,8 @@ import ru.turikhay.util.U;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +43,7 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
         BorderPanel wrapper = new BorderPanel(0, SwingUtil.magnify(10));
         wrapper.setInsets(0, 0, 0, 0);
 
-        BorderPanel titlePanel = new BorderPanel();
+        final BorderPanel titlePanel = new BorderPanel();
         titlePanel.setHgap(SwingUtil.magnify(10));
 
         back = new ExtendedButton();
@@ -66,6 +69,13 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
         wrapper.setCenter(multipane);
 
         add(wrapper);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                multipane.setPreferredSize(new Dimension(getWidth() - getInsets().left - getInsets().right - SwingUtil.magnify(30), getHeight() - getInsets().top - getInsets().bottom - back.getHeight() - SwingUtil.magnify(40)));
+            }
+        });
     }
 
     public String currentTip() {

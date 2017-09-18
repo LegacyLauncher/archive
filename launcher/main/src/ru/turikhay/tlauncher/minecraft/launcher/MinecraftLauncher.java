@@ -297,7 +297,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public void setPromotedServers(List<PromotedServer> serverList) {
-        this.promotedServers = serverList;
+        this.promotedServers = U.shuffle(serverList);
     }
 
     private void collectInfo() throws MinecraftException {
@@ -336,7 +336,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                 versionSync = vm.getVersionSyncInfo(versionName);
                 if (versionSync == null) {
-                    throw new IllegalArgumentException("Cannot find version " + version);
+                    throw new IllegalArgumentException("Cannot find version " + versionName);
                 } else {
                     log("Version sync info:", versionSync);
                     recordValue("version", versionSync);
@@ -1075,7 +1075,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             AssetIndex.AssetObject lastObject = null;
             int timer = 0;
 
-            while (working && checker.checkWorking()) {
+            while (working && checker != null && checker.checkWorking()) {
                 final AssetIndex.AssetObject object = checker.getCurrent();
                 if (object != null) {
                     log("Instant state on:", object);

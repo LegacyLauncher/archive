@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class McleaksStatus {
     private final List<McleaksStatusListener> listeners = Collections.synchronizedList(new ArrayList<McleaksStatusListener>());
 
     private final McleaksStatusThread thread;
+    private final AtomicBoolean started = new AtomicBoolean();
     private String serverIp;
 
     McleaksStatus() {
         thread = new McleaksStatusThread(this);
-        thread.start();
     }
 
     public void addListener(McleaksStatusListener listener) {
@@ -26,7 +27,7 @@ public class McleaksStatus {
     }
 
     public boolean hasStatus() {
-        return !thread.isAlive();
+        return started.get() && !thread.isAlive();
     }
 
     public String getServerIp(long millis) throws TimeoutException, InterruptedException {
@@ -38,7 +39,14 @@ public class McleaksStatus {
         return serverIp;
     }
 
+    void triggerFetch() {
+        if(!started.getAndSet(true)) {
+            thread.start();
+        }
+    }
+
     public void waitForResponse(long millis) throws InterruptedException, TimeoutException {
+        triggerFetch();
         if(thread.isAlive()) {
             thread.join(millis);
             if(thread.isAlive()) {

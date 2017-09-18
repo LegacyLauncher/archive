@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public final class Stats {
     private static final URL STATS_BASE = Http.constantURL("http://u.tlauncher.ru/stats/");
@@ -91,6 +92,14 @@ public final class Stats {
 
     public static void noticeSceneShown() {
         submitDenunciation(newAction("notice_scene_shown"));
+    }
+
+    public static void feedbackStarted() {
+        submitDenunciation(newAction("feedback_started"));
+    }
+
+    public static void feedbackRefused(boolean returnBack) {
+        submitDenunciation(newAction("feedback_refused").add("return_back", String.valueOf(returnBack)));
     }
 
     private static Stats.Args newAction(String name) {

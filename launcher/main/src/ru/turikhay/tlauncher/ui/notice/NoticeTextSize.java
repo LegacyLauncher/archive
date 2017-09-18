@@ -40,7 +40,6 @@ class NoticeTextSize {
         try {
             d = future.get(3, TimeUnit.SECONDS);
         } catch(TimeoutException timeout) {
-            Sentry.sendError(NoticeTextSize.class, "text size is computing for too long", timeout, DataBuilder.create("notice", notice));
             d = new Dimension(0, 0);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -131,6 +131,9 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
 
     @Override
     public void multipaneShown(boolean gotBack) {
+        if(!McleaksManager.isUnsupported()) {
+            McleaksManager.triggerConnection();
+        }
         setState(StartState.DESCRIPTION);
     }
 

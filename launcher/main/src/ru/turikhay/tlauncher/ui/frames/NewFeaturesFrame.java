@@ -11,14 +11,15 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 public class NewFeaturesFrame extends VActionFrame {
+    public static final int INCREMENTAL = 1338;
 
-    final LocalizableCheckbox newNoticeList, promotedServers;
+    // NEW FEATURES
+    final LocalizableCheckbox promotedServers;
+    //
+
     final LocalizableButton okayButton;
 
     public NewFeaturesFrame(final TLauncherFrame frame) {
@@ -28,23 +29,17 @@ public class NewFeaturesFrame extends VActionFrame {
         getHead().setText("newfeatures.title");
 
         getBodyText().setText("newfeatures.body");
-        getBody().add(newNoticeList = new LocalizableCheckbox("newfeatures.list.new_notice_list"));
-        newNoticeList.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.mp.defaultScene.setNoticeSidePanelEnabled(newNoticeList.isSelected());
-            }
-        });
-        newNoticeList.setSelected(true);
 
+        // NEW FEATURES
         getBody().add(promotedServers = new LocalizableCheckbox("newfeatures.list.promoted_servers"));
         promotedServers.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.getLauncher().getSettings().set("minecraft.servers.promoted", promotedServers.isSelected());
+                frame.getLauncher().getSettings().set("minecraft.servers.promoted.ingame", promotedServers.isSelected());
             }
         });
         promotedServers.setSelected(true);
+        //
 
         getBody().add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(5))));
         LocalizableHTMLLabel help = new LocalizableHTMLLabel("newfeatures.help");
@@ -52,7 +47,7 @@ public class NewFeaturesFrame extends VActionFrame {
         help.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                OS.openLink("http://tlaun.ch/tmp/new_features?locale=" + TLauncher.getInstance().getLang().getLocale().toString());
+                OS.openLink("http://tlaun.ch/new_features/"+ INCREMENTAL +"?locale=" + TLauncher.getInstance().getLang().getLocale().toString());
             }
         });
         getBody().add(help);
@@ -71,7 +66,7 @@ public class NewFeaturesFrame extends VActionFrame {
         getFooter().setLayout(new BorderLayout());
         getFooter().add(okayButton, "East");
 
-        final ActionListener listener = new ActionListener() {
+        /*final ActionListener listener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (newNoticeList.isSelected() || promotedServers.isSelected()) {
@@ -82,7 +77,14 @@ public class NewFeaturesFrame extends VActionFrame {
             }
         };
         newNoticeList.addActionListener(listener);
-        promotedServers.addActionListener(listener);
+        promotedServers.addActionListener(listener);*/
+
+        okayButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.getConfiguration().set("gui.features", NewFeaturesFrame.INCREMENTAL);
+            }
+        });
 
         pack();
         okayButton.requestFocusInWindow();

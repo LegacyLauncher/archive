@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.tlauncher.ui.frames.FeedbackFrame;
 import ru.turikhay.tlauncher.ui.frames.NewFeaturesFrame;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
@@ -15,6 +16,7 @@ import ru.turikhay.tlauncher.ui.swing.Dragger;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.IntegerArray;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
@@ -70,19 +72,18 @@ public class TLauncherFrame extends JFrame {
         updateUILocale();
         setWindowSize();
         setWindowTitle();
-        addWindowListener(new WindowAdapter() {
+        /*addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 instance.setVisible(false);
                 TLauncher.kill();
             }
-        });
-        setDefaultCloseOperation(3);
+        });*/
+        setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowIconified(WindowEvent e) {
                 mp.background.pauseBackground();
             }
-
             @Override
             public void windowDeiconified(WindowEvent e) {
                 mp.background.startBackground();
@@ -95,17 +96,41 @@ public class TLauncherFrame extends JFrame {
             public void windowDeactivated(WindowEvent e) {
                 mp.background.pauseBackground();
             }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                feedback:
+                {
+                    if (!settings.getBoolean("feedback") && tlauncher.getBootConfig().getFeedback() != null) {
+                        String url;
+                        if (tlauncher.getBootConfig().getFeedback().containsKey(tlauncher.getSettings().getLocale().toString())) {
+                            url = tlauncher.getBootConfig().getFeedback().get(tlauncher.getSettings().getLocale().toString());
+                        } else if (tlauncher.getBootConfig().getFeedback().containsKey("global")) {
+                            url = tlauncher.getBootConfig().getFeedback().get("global");
+                        } else {
+                            break feedback;
+                        }
+                        settings.set("feedback", true);
+                        new FeedbackFrame(TLauncherFrame.this, url);
+                        return;
+                    }
+                }
+                instance.setVisible(false);
+                TLauncher.kill();
+            }
         });
         addComponentListener(new ExtendedComponentAdapter(this) {
             public void onComponentResized(ComponentEvent e) {
                 updateMaxPoint();
                 Dragger.update();
-                boolean lock = getExtendedState() != 0;
-                Blocker.setBlocked(mp.defaultScene.settingsForm.launcherResolution, "extended", lock);
-                if (!lock) {
-                    IntegerArray arr = new IntegerArray(getWidth(), getHeight());
-                    mp.defaultScene.settingsForm.launcherResolution.setValue(arr);
-                    settings.set("gui.size", arr);
+                if(mp != null && mp.defaultScene != null) {
+                    boolean lock = getExtendedState() != 0;
+                    Blocker.setBlocked(mp.defaultScene.settingsForm.launcherResolution, "extended", lock);
+                    if (!lock) {
+                        IntegerArray arr = new IntegerArray(getWidth(), getHeight());
+                        mp.defaultScene.settingsForm.launcherResolution.setValue(arr);
+                        settings.set("gui.size", arr);
+                    }
                 }
             }
 
@@ -147,8 +172,11 @@ public class TLauncherFrame extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                setVisible(true);
-
+                try {
+                    setVisible(true);
+                } catch(RuntimeException rE) {
+                    log("Hidden exception on setVisible(true)", rE);
+                }
                 int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
                 if (windowState == 0) {
                     setLocationRelativeTo(null);
@@ -159,9 +187,7 @@ public class TLauncherFrame extends JFrame {
         });
 
 
-        /*if(settings.getInteger("gui.features") != 1337) {
-            settings.set("gui.features", 1337);
-
+        if(settings.getInteger("gui.features") < NewFeaturesFrame.INCREMENTAL) {
             final NewFeaturesFrame newFeaturesFrame = new NewFeaturesFrame(this);
             newFeaturesFrame.showAtCenter();
             newFeaturesFrame.setAlwaysOnTop(true);
@@ -173,7 +199,7 @@ public class TLauncherFrame extends JFrame {
                     newFeaturesFrame.setAlwaysOnTop(false);
                 }
             });
-        }*/
+        }
     }
 
     public TLauncher getLauncher() {
@@ -244,11 +270,15 @@ public class TLauncherFrame extends JFrame {
         int width = windowSize[0] > maxSize.width ? maxSize.width : windowSize[0];
         int height = windowSize[1] > maxSize.height ? maxSize.height : windowSize[1];
         Dimension curSize = new Dimension(width, height);
-        setMinimumSize(minSize);
+        setMinimumSize(SwingUtil.magnify(minSize));
         setPreferredSize(curSize);
     }
 
     private void setupUI() {
+        if(OS.WINDOWS.isCurrent()) {
+            UIManager.put("FileChooser.useSystemExtensionHiding", false); // http://bugs.java.com/bugdatabase/view_bug.do?bug_id=8179014
+        }
+
         UIManager.put("FileChooser.newFolderErrorSeparator", ": ");
         UIManager.put("FileChooser.readOnly", Boolean.FALSE);
         UIManager.put("TabbedPane.contentOpaque", Boolean.valueOf(false));

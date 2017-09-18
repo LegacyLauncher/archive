@@ -16,6 +16,7 @@ import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -31,10 +32,12 @@ import ru.turikhay.util.async.RunnableThread;
 import ru.turikhay.util.stream.MirroredLinkedOutputStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 
+import javax.net.ssl.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -251,6 +254,38 @@ public final class TLauncher {
     private void initConfig() {
         config.setUsingSystemLookAndFeel(config.isUsingSystemLookAndFeel() && SwingUtil.initLookAndFeel());
         TLauncherFrame.setFontSize(config.getFontSize());
+        if(!config.getBoolean("connection.ssl")) {
+            U.log("Disabling SSL certificate/hostname validation");
+            try {
+                SSLContext context = SSLContext.getInstance("SSL");
+                context.init(null, new X509TrustManager[]{
+                        new X509TrustManager() {
+                            @Override
+                            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+                            }
+
+                            @Override
+                            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                            }
+
+                            @Override
+                            public X509Certificate[] getAcceptedIssuers() {
+                                return new X509Certificate[0];
+                            }
+                        }
+                }, null);
+                HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
+            } catch(Exception e) {
+                U.log("Could not ini SSLContext", e);
+                Sentry.sendError(TLauncher.class, "could not init SSLContext", e, null);
+            }
+            HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String s, SSLSession sslSession) {
+                    return true;
+                }
+            });
+        }
         reloadLocale();
     }
 

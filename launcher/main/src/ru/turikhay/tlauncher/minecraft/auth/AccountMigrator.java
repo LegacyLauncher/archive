@@ -5,12 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.properties.PropertyMap;
-import com.mojang.util.UUIDTypeAdapter;
 import ru.turikhay.tlauncher.managers.AccountManager;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.user.ElyLegacyUser;
 import ru.turikhay.tlauncher.user.MojangUser;
-import ru.turikhay.tlauncher.user.MojangUserJsonizer;
 import ru.turikhay.tlauncher.user.User;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
@@ -29,8 +29,11 @@ public class AccountMigrator {
                 .create();
     }
 
+    private String output;
     public Map<String, LegacyAccount> parse(JsonObject object) {
-        return gson.fromJson(object, new TypeToken<Map<String, LegacyAccount>>(){}.getType());
+        Map<String, LegacyAccount> map = gson.fromJson(object, new TypeToken<Map<String, LegacyAccount>>(){}.getType());
+        output = gson.toJson(map);
+        return map;
     }
 
     public List<User> migrate(Collection<LegacyAccount> unmigratedList) {
@@ -41,19 +44,25 @@ public class AccountMigrator {
                 account.type = "free";
             }
             User user;
-            switch(account.type) {
-                case "free":
-                    user = AccountManager.getPlainAuth().authorize(account.username);
-                    break;
-                case "mojang":
-                    account.clientToken = clientToken;
-                    user = gson.fromJson(gson.toJson(account), MojangUser.class);
-                    break;
-                case "ely":
-                    user = new ElyLegacyUser(account.username, account.uuid, account.displayName, account.accessToken, clientToken);
-                    break;
-                default:
-                    continue;
+            try {
+                switch (account.type) {
+                    case "free":
+                        user = AccountManager.getPlainAuth().authorize(account.username);
+                        break;
+                    case "mojang":
+                        account.clientToken = clientToken;
+                        user = gson.fromJson(gson.toJson(account), MojangUser.class);
+                        break;
+                    case "ely":
+                        user = new ElyLegacyUser(account.username, account.uuid, account.displayName, clientToken, account.accessToken);
+                        break;
+                    default:
+                        continue;
+                }
+            } catch(Exception e) {
+                log("Could not migrate", account, e);
+                Sentry.sendError(AccountMigrator.class, "could not migrate account", e, DataBuilder.create("account", account).add("output", output));
+                continue;
             }
             migrated.add(user);
         }

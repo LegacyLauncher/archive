@@ -3,6 +3,8 @@ package ru.turikhay.tlauncher.bootstrap.meta;
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.json.UpdateDeserializer;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
+import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
+import ru.turikhay.tlauncher.bootstrap.util.Compressor;
 import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import shaded.com.google.gson.Gson;
 import shaded.com.google.gson.annotations.Expose;
@@ -18,13 +20,26 @@ import java.net.URLConnection;
 import java.util.*;
 
 public class UpdateMeta {
-    private static final List<String> UPDATE_URL_LIST = Arrays.asList(
-            "http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json",
-            "http://tlauncherrepo.com/%s/bootstrap.json",
-            "http://u.tlauncher.ru/%s/bootstrap.json",
-            "http://turikhay.ru/tlauncher/%s/bootstrap.json",
-            "http://tlaun.ch/%s/bootstrap.json"
-    );
+    private static final List<String> UPDATE_URL_LIST = new ArrayList<String>() {
+        {
+            add("http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
+            Collections.addAll(this, U.shuffle(
+                    "https://tlauncherrepo.com/%s/bootstrap.json",
+                    "https://u.tlauncher.ru/%s/bootstrap.json",
+                    "https://turikhay.ru/tlauncher/%s/bootstrap.json"
+            ));
+            Collections.addAll(this, U.shuffle(
+                    "http://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
+                    "http://u.tlauncher.ru/%s/bootstrap.json.mgz.signed"
+            ));
+        }
+    };
+    static {
+        UPDATE_URL_LIST.add("https://tlaun.ch/%s/bootstrap.json");
+        UPDATE_URL_LIST.add("http://tlaun.ch/%s/bootstrap.json.mgz.signed");
+        Compressor.init(); // init compressor
+    }
+
     private static final int INITIAL_TIMEOUT = 1500, MAX_ATTEMPTS = 5;
 
     public static Task<UpdateMeta> fetchFor(final String brand) throws ExceptionList {
@@ -51,7 +66,12 @@ public class UpdateMeta {
                             URL url = new URL(_url);
                             log("URL: ", url);
 
-                            UpdateMeta meta = fetchFrom(gson, setupConnection(url, attempt));
+                            InputStream stream = setupConnection(url, attempt);
+                            if(url.toExternalForm().endsWith(".signed")) {
+                                log("Requested is marked as signed, requiring valid signature");
+                                stream = new SignedStream(stream);
+                            }
+                            UpdateMeta meta = fetchFrom(gson, Compressor.uncompressMarked(stream));
 
                             if(meta.isOutdated()) {
                                 log("... is outdated, skipping");
