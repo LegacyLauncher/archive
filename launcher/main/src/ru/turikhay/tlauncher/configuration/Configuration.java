@@ -214,7 +214,6 @@ public class Configuration extends SimpleConfiguration {
                 value[1] = arr.get(1);
             } catch (Exception var4) {
             }
-
             return value;
         }
     }
@@ -291,7 +290,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public void setUsingSystemLookAndFeel(boolean use) {
-        set("gui.systemlookandfell", use, false);
+        set("gui.systemlookandfeel", use, false);
     }
 
     public float getFontSize() {

@@ -1,18 +1,23 @@
 package ru.turikhay.tlauncher.managers;
 
+import com.getsentry.raven.util.Base64;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.FileTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.component.RefreshableComponent;
 import ru.turikhay.tlauncher.minecraft.auth.*;
 import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.user.McleaksUser;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.tlauncher.user.UserSetListener;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.U;
@@ -97,6 +102,7 @@ public class ProfileManager extends RefreshableComponent {
             saveProfiles();
             return true;
         } catch (IOException var3) {
+            Alert.showError("Could not save profiles!", var3);
             return false;
         }
     }
@@ -120,17 +126,21 @@ public class ProfileManager extends RefreshableComponent {
         //ProfileManager.RawProfileList raw = null;
         InputStreamReader reader = null;
         JsonObject object = null;
+        File readFile = file.isFile() ? file : oldFile;
+        String saveBackup = null;
 
         try {
-            reader = new InputStreamReader(new FileInputStream(file.isFile() ? file : oldFile), Charset.forName("UTF-8"));
+            reader = new InputStreamReader(new FileInputStream(readFile), Charset.forName("UTF-8"));
             object = gson.fromJson(reader, JsonObject.class);
         } catch (Exception var15) {
-            log("Cannot read from", "tlauncher_profiles.json", var15);
+            log("Cannot read from", readFile, var15);
         } finally {
             U.close(reader);
         }
 
+        String outputJson = gson.toJson(object);
         RawProfileList raw = new RawProfileList();
+
         try {
             if (object != null) {
                 if (object.has("authenticationDatabase") && object.has("clientToken")) {
@@ -140,12 +150,36 @@ public class ProfileManager extends RefreshableComponent {
                     for (User user : migrator.migrate(accountMap.values())) {
                         raw.userSet.add(user);
                     }
+                    saveBackup = "migrated";
                 } else {
                     raw.userSet = gson.fromJson(object.getAsJsonObject("userSet"), UserSet.class);
                 }
             }
         } catch(Exception e) {
             log("Error parsing profile list", e);
+            Sentry.sendError(ProfileManager.class, "error parsing profile list", e, DataBuilder.create("object", Base64.encodeToString(outputJson.getBytes(FileUtil.getCharset()), Base64.DEFAULT)));
+            saveBackup = "errored";
+        }
+
+        if(saveBackup != null) {
+            File backupFile = new File(readFile.getAbsolutePath() + "." + saveBackup + ".bak");
+            try {
+                FileUtil.createFile(backupFile);
+                try(FileOutputStream backupOut = new FileOutputStream(backupFile)) {
+                    IOUtils.write(outputJson, backupOut, FileUtil.getCharset());
+                }
+            } catch(Exception e) {
+                log("Could not save backup!", e);
+                Alert.showError("Could not save profile backup. Accounts will be lost :(", e);
+            }
+        }
+
+        if(raw.userSet != null) {
+            for(User user : raw.userSet.getSet()) {
+                if(user.getType().equals(McleaksUser.TYPE)) {
+                    McleaksManager.triggerConnection();
+                }
+            }
         }
         accountManager.setUserSet(raw.userSet);
     }

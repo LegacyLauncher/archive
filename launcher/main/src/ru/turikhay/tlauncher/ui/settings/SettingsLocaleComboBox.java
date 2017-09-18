@@ -78,11 +78,7 @@ public class SettingsLocaleComboBox extends BorderPanel implements EditorField, 
         String locale = panel.lang.getLocale().toString();
         hint.setVisible(!locale.equals("ru_RU") && !locale.equals("uk_UA"));
 
-        String hintLocalized = panel.lang.nget(CONTRIBUTE_PATH);
-        if (StringUtils.isEmpty(hintLocalized)) {
-            hintLocalized = panel.lang.getDefault(CONTRIBUTE_PATH);
-        }
-
+        String hintLocalized = panel.lang.get(CONTRIBUTE_PATH);
         hint.setText(new StringBuilder().append("<html>").append(hintLocalized).append("</html>").toString());
     }
 }

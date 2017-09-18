@@ -4,8 +4,6 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.net.*;
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -13,16 +11,6 @@ import java.util.Random;
 public final class U {
     public static final Charset UTF8 = Charset.forName("UTF-8");
     private static final Random rnd = new Random();
-    private static final WeakObjectPool<MessageDigest> SHA256Pool = new WeakObjectPool<MessageDigest>(new Factory<MessageDigest>() {
-        @Override
-        public MessageDigest createNew() {
-            try {
-                return MessageDigest.getInstance("SHA-256");
-            } catch (NoSuchAlgorithmException nsaE) {
-                throw new Error(nsaE);
-            }
-        }
-    });
 
     public static void log(String prefix, Object... o) {
         synchronized (System.out) {
@@ -70,21 +58,7 @@ public final class U {
     }
 
     public static String getSHA256(File file) throws IOException {
-        WeakObjectPool<MessageDigest>.ObjectRef<MessageDigest> digestRef = SHA256Pool.get();
-        try {
-            final MessageDigest digest = digestRef.get();
-            FileInputStream fis = new FileInputStream(file);
-            byte[] dataBytes = new byte[1024];
-            int nread;
-
-            while ((nread = fis.read(dataBytes)) != -1) {
-                digest.update(dataBytes, 0, nread);
-            }
-
-            return String.format("%064x", new java.math.BigInteger(1, digest.digest()));
-        } finally {
-            digestRef.free();
-        }
+        return Sha256Sign.calc(file);
     }
 
     public static File getJar(Class clazz) {
@@ -187,6 +161,33 @@ public final class U {
         T[] arr = (T[]) Array.newInstance(classOfT, list.size());
         list.toArray(arr);
         return arr;
+    }
+
+    public static byte[] intToByte(int i) {
+        byte[] b = new byte[4];
+        b[3] = (byte) i;
+        b[2] = (byte) (i >>> 8);
+        b[1] = (byte) (i >>> 16);
+        b[0] = (byte) (i >>> 24);
+        return b;
+    }
+
+    public static int byteToInt(byte[] b) {
+        int i = 0;
+        switch(b.length) {
+            case 4:
+                i |= (b[3] & 0xFF);
+            case 3:
+                i |= (b[2] & 0xFF) << 8;
+            case 2:
+                i |= (b[1] & 0xFF) << 16;
+            case 1:
+                i |= b[0] << 24;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+        return i;
     }
 
     public static InputStreamReader toReader(InputStream in) {

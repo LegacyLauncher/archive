@@ -57,3 +57,5 @@
 /bin/gcc-nm.exe
 /bin/libmpfr-4.dll
 /bin/addr2line.exe
+/bin/ld
+/bin/windres

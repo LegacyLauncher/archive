@@ -138,11 +138,10 @@ public class ExtendedTextField extends JTextField {
         updateStyle();
     }
 
-    protected void onFocusGained() {
+    public void onFocusGained() {
         if (getValue() == null) {
             setEmpty();
         }
-
     }
 
     protected void onFocusLost() {

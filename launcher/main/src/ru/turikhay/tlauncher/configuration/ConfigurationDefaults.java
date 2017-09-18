@@ -57,7 +57,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.crash", true);
 
         d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
-        d.put("gui.size", new IntegerArray(1000, 600));
+        d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent()? 1000 : 1200, 600));
         d.put("gui.systemlookandfeel", true);
 
         d.put("gui.background", null);
@@ -74,6 +74,8 @@ public final class ConfigurationDefaults {
         d.put("gui.direction.loginform", Direction.CENTER);
 
         d.put("client", UUID.randomUUID());
+
+        d.put("connection.ssl", true);
 
         d.put("ely.globally", true);
 

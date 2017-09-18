@@ -41,4 +41,10 @@ public final class McleaksManager {
         checkSupported();
         return CONNECTOR;
     }
+
+    public static void triggerConnection() {
+        if(SUPPORTED) {
+            getStatus().triggerFetch();
+        }
+    }
 }

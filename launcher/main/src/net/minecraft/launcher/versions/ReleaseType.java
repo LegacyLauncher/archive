@@ -2,6 +2,7 @@ package net.minecraft.launcher.versions;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.util.U;
 
 import java.util.*;
 
@@ -98,8 +99,12 @@ public enum ReleaseType {
                 }
 
                 Date date = version.getReleaseTime();
+                if(date == null) {
+                    U.log("WARNING: release time is null", version.getID());
+                    return false;
+                }
 
-                if(version.getReleaseTime().getTime() == 0) {
+                if(date.getTime() <= 0) {
                     if(StringUtils.containsIgnoreCase(version.getID(), "forge")) {
                         date = version.getUpdatedTime();
                     } else {

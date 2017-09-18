@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class ExtendedThread extends Thread {
     private static AtomicInteger threadNum = new AtomicInteger();
-    private final ExtendedThread.ExtendedThreadCaller caller;
+    private volatile ExtendedThread.ExtendedThreadCaller caller;
     private String blockReason;
     private final Object monitor;
 
@@ -22,6 +22,10 @@ public abstract class ExtendedThread extends Thread {
 
     public ExtendedThread.ExtendedThreadCaller getCaller() {
         return caller;
+    }
+
+    void setCaller(ExtendedThreadCaller caller) {
+        this.caller = caller;
     }
 
     public void startAndWait() {
@@ -96,8 +100,8 @@ public abstract class ExtendedThread extends Thread {
         U.log("[" + getName() + "]", o);
     }
 
-    public class ExtendedThreadCaller extends RuntimeException {
-        private ExtendedThreadCaller() {
+    static class ExtendedThreadCaller extends RuntimeException {
+        ExtendedThreadCaller() {
         }
     }
 }

@@ -65,6 +65,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler fullCommand;
     public final EditorFieldHandler launchAction;
     public final EditorGroupHandler alertUpdates;
+    public final EditorFieldHandler sslCheck;
     public final EditorFieldHandler locale;
     private final TabbedEditorPanel.EditorPanelTab aboutTab;
     public final HTMLPage about;
@@ -164,6 +165,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         minecraftTab.add(new EditorPair("settings.versions.label", versions));
+        minecraftTab.nextPane();
         javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
         mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
         improvedArgs = new EditorFieldHandler("minecraft.improvedargs", new EditorCheckBox("settings.java.args.improved"), new FocusListener() {
@@ -204,7 +206,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
         add(minecraftTab);
         tlauncherTab = new TabbedEditorPanel.EditorPanelTab("settings.tab.tlauncher");
-        launcherResolution = new EditorFieldHandler("gui.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", global.getDefaultLauncherWindowSize(), true));
+        launcherResolution = new EditorFieldHandler("gui.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", global.getDefaultLauncherWindowSize(), false));
         launcherResolution.addListener(new EditorFieldListener() {
             protected void onChange(EditorHandler handler, String oldValue, String newValue) {
                 if (tlauncher.isReady()) {
@@ -216,6 +218,15 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         tlauncherTab.add(new EditorPair("settings.clientres.label", new EditorHandler[]{launcherResolution}));
         font = new EditorFieldHandler("gui.font", new SettingsFontSlider(), restart);
         tlauncherTab.add(new EditorPair("settings.fontsize.label", font));
+        loginFormDirection = new EditorFieldHandler("gui.direction.loginform", new EditorComboBox(new DirectionConverter(), Direction.values()));
+        loginFormDirection.addListener(new EditorFieldChangeListener() {
+            protected void onChange(String oldValue, String newValue) {
+                if (tlauncher.isReady()) {
+                    tlauncher.getFrame().mp.defaultScene.updateDirection();
+                }
+            }
+        });
+        tlauncherTab.add(new EditorPair("settings.direction.label", new EditorHandler[]{loginFormDirection}));
         systemTheme = new EditorFieldHandler("gui.systemlookandfeel", new EditorCheckBox("settings.systemlnf"));
         systemTheme.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
@@ -226,17 +237,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         tlauncherTab.add(new EditorPair("settings.systemlnf.label", new EditorHandler[]{systemTheme}));
-        tlauncherTab.nextPane();
-        loginFormDirection = new EditorFieldHandler("gui.direction.loginform", new EditorComboBox(new DirectionConverter(), Direction.values()));
-        loginFormDirection.addListener(new EditorFieldChangeListener() {
-            protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
-                    tlauncher.getFrame().mp.defaultScene.updateDirection();
-                }
-            }
-        });
-        tlauncherTab.add(new EditorPair("settings.direction.label", new EditorHandler[]{loginFormDirection}));
-        tlauncherTab.nextPane();
+        //tlauncherTab.nextPane();
+        //tlauncherTab.nextPane();
 
         boolean mediaFxAvailable = sc.getMainPane().background.getMediaFxBackground() != null;
         FileExplorer backgroundExplorer = null;
@@ -278,7 +280,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         tlauncherTab.add(new EditorPair("settings.logger.label", new EditorHandler[]{logger}));
         fullCommand = new EditorFieldHandler("gui.logger.fullcommand", new EditorCheckBox("settings.logger.fullcommand"));
         tlauncherTab.add(new EditorPair("settings.logger.fullcommand.label", new EditorHandler[]{fullCommand}));
-        tlauncherTab.nextPane();
+        //tlauncherTab.nextPane();
         launchAction = new EditorFieldHandler("minecraft.onlaunch", new EditorComboBox(new ActionOnLaunchConverter(), Configuration.ActionOnLaunch.values()));
         tlauncherTab.add(new EditorPair("settings.launch-action.label", new EditorHandler[]{launchAction}));
         crashManager = new EditorFieldHandler("minecraft.crash", new EditorCheckBox("settings.crash.enable"));
@@ -294,6 +296,18 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         alertUpdates = new EditorGroupHandler(defReleaseTypeHandlers);
         tlauncherTab.add(new EditorPair("settings.alert-on.label", defReleaseTypeHandlers));
         tlauncherTab.nextPane();
+
+        sslCheck = new EditorFieldHandler("connection.ssl", new EditorCheckBox("settings.ssl", true));
+        sslCheck.addListener(new EditorFieldChangeListener() {
+            protected void onChange(String oldValue, String newValue) {
+                if (tlauncher.isReady()) {
+                    Alert.showLocWarning("settings.ssl.warning.title", "settings.ssl.warning.value." + newValue, null);
+                }
+            }
+        });
+        tlauncherTab.add(new EditorPair("settings.ssl.label", sslCheck));
+        tlauncherTab.nextPane();
+
         locale = new EditorFieldHandler("locale", new SettingsLocaleComboBox(this));
         locale.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldvalue, String newvalue) {

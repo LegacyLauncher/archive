@@ -9,6 +9,7 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
+import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
@@ -19,7 +20,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable, Blockable {
+public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable {
     private final String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
     private final String ACCOUNT_TYPE_PREFIX =  LOC_PREFIX +"type.";
 
@@ -116,7 +117,7 @@ public class AccountAdd extends VPanel implements AccountMultipaneCompCloseable,
         c.weighty = 1.0;
         grid.add(new ExtendedPanel(), c);
 
-        add(grid);
+        setCenter(grid);
     }
 
     private ExtendedButton addRow(String image, String label, ActionListener action) {

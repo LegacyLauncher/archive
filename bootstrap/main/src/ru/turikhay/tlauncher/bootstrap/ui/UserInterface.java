@@ -91,7 +91,8 @@ public final class UserInterface {
                     //frame.setAlwaysOnTop(true);
                     frame.setVisible(true);
 
-                    progressBar.setValue(-1);
+                    progressBar.setValue(0);
+                    progressBar.setIndeterminate(true);
                 }
             }
 
@@ -101,16 +102,22 @@ public final class UserInterface {
                     int newValue = percentage < 0. ? -1 : (int) (percentage * 100.);
                     if (progressBar.getValue() - newValue != 0) {
                         log("Task updated:", percentage);
-                        progressBar.setValue(newValue);
+
+                        Task childTask = getChildTask(task, TASK_DEPTH);
+                        if(childTask.getProgress() < 0) {
+                            progressBar.setIndeterminate(true);
+                        } else {
+                            progressBar.setIndeterminate(false);
+                            progressBar.setValue(newValue);
+                        }
 
                         StringBuilder title = new StringBuilder();
                         title.append(getLString("appname", "Bootstrap")).append(" :: ");
-                        String taskName = getChildTask(task, TASK_DEPTH).getName();
                         title.append(newValue == -1? "..." : newValue + "%").append(" :: ");
                         try {
-                            title.append(resourceBundle.getString("loading.task." + taskName));
+                            title.append(resourceBundle.getString("loading.task." + childTask.getName()));
                         } catch(MissingResourceException missing) {
-                            title.append(taskName);
+                            title.append(childTask.getName());
                         }
                         frame.setTitle(title.toString());
                     }
@@ -174,7 +181,7 @@ public final class UserInterface {
     }
 
     public static String getLString(String key, String defaultValue) {
-        return resourceBundle == null? defaultValue : resourceBundle.getString(key);
+        return resourceBundle == null? defaultValue : resourceBundle.containsKey(key) ? resourceBundle.getString(key) : defaultValue;
     }
 
     public static void showError(String message, Object textarea) {

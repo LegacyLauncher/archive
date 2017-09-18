@@ -244,6 +244,8 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                 throw new IllegalArgumentException("unknown mode: " + mode);
         }
 
+        newToken.addMouseListener(new TextPopup());
+
         this.progressBar = new ProgressBar();
         progressBar.setPreferredSize(new Dimension(1, 10));
         c1.gridy++;

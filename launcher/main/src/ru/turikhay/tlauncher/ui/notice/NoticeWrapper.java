@@ -137,6 +137,9 @@ class NoticeWrapper extends BorderPanel {
             action.registerAction("go.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    if(notice == null) {
+                        return;
+                    }
                     if(notice.getAction() != null) {
                         action.popup.clearMenu();
                         NoticeAction noticeAction = notice.getAction();
