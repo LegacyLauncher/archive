@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.minecraft.PromotedServerAddStatus;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.notice.Notice;
@@ -38,8 +39,8 @@ public final class Stats {
         submitDenunciation(newAction("beacon"));
     }
 
-    public static void minecraftLaunched(Account account, CompleteVersion version, Server server, int serverId) {
-        Stats.Args args = newAction("mc_launched").add("mc_version", version.getID()).add("account_type", account.getType().toString());
+    public static void minecraftLaunched(Account account, CompleteVersion version, Server server, int serverId, PromotedServerAddStatus promotionStatus) {
+        Stats.Args args = newAction("mc_launched").add("mc_version", version.getID()).add("account_type", account.getType().toString()).add("promotion_status", promotionStatus.toString());
         if (server != null) {
             args.add("server", server.getFullAddress());
         }

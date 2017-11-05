@@ -90,19 +90,4 @@ public class NBTServer extends Server {
 
         CompressedStreamTools.safeWrite(compound, file);
     }
-
-    public static void reconstructList(Set<Server> addSet, File file) throws IOException {
-        LinkedHashSet<NBTServer> set = new LinkedHashSet<NBTServer>();
-        LinkedHashSet<NBTServer> origin = loadSet(file);
-
-        for(Server server : addSet) {
-            if(origin.contains(server)) {
-                origin.remove(server);
-            }
-            set.add(new NBTServer(server));
-        }
-        set.addAll(origin);
-
-        saveSet(set, file);
-    }
 }

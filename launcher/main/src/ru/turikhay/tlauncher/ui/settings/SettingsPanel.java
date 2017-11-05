@@ -53,6 +53,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler cmd;
     public final EditorFieldHandler memory;
     public final EditorGroupHandler versionHandler;
+    public final EditorFieldHandler oldVersionsHandler; // temp
     public final EditorGroupHandler extraHandler;
     private final TabbedEditorPanel.EditorPanelTab tlauncherTab;
     public final EditorFieldHandler launcherResolution;
@@ -157,7 +158,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                 versions.add(EditorPair.NEXT_COLUMN);
         }
 
-        versions.add(new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.OLD_RELEASE)));
+        versions.add(oldVersionsHandler = new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.OLD_RELEASE)));
         versionHandler = new EditorGroupHandler(versions);
         versionHandler.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldvalue, String newvalue) {

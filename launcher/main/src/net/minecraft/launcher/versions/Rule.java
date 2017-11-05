@@ -2,12 +2,14 @@ package net.minecraft.launcher.versions;
 
 import ru.turikhay.util.OS;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Rule {
     private Rule.Action action;
     private Rule.OSRestriction os;
+    private Map<String, Object> features;
 
     public Rule() {
         action = Rule.Action.ALLOW;
@@ -19,12 +21,25 @@ public class Rule {
         if (rule.os != null) {
             os = new Rule.OSRestriction(rule.os);
         }
-
+        if(rule.features != null) {
+            features = rule.features;
+        }
     }
 
-    public Rule.Action getAppliedAction() {
-        return os != null && !os.isCurrentOperatingSystem() ? null : action;
+    public Rule.Action getAppliedAction(Rule.FeatureMatcher featureMatcher) {
+        if ((this.os != null) && (!this.os.isCurrentOperatingSystem())) return null;
+        if (this.features != null) {
+            if (featureMatcher == null) return null;
+            for (Map.Entry<String, Object> feature : this.features.entrySet()) {
+                if (!featureMatcher.hasFeature(feature.getKey(), feature.getValue())) {
+                    return null;
+                }
+            }
+        }
+
+        return this.action;
     }
+
 
     public String toString() {
         return "Rule{action=" + action + ", os=" + os + '}';
@@ -67,4 +82,10 @@ public class Rule {
             return "OSRestriction{name=" + name + ", version=\'" + version + '\'' + '}';
         }
     }
+
+    public interface FeatureMatcher
+    {
+        boolean hasFeature(String paramString, Object paramObject);
+    }
+
 }

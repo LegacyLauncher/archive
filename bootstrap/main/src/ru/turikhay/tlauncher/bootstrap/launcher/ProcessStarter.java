@@ -73,7 +73,7 @@ public class ProcessStarter implements IStarter {
         return classpathBuilder.toString();
     }
 
-    public static Set<File> getSystemClasspath() throws IOException {
+    public static Set<File> getDefinedClasspath() throws IOException {
         HashSet<File> set = new HashSet<File>();
         ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
         if(systemClassLoader instanceof URLClassLoader) {
@@ -95,7 +95,8 @@ public class ProcessStarter implements IStarter {
         } else {
             String classPath = System.getProperty("tlauncher.bootstrap.classpath");
             if(classPath == null) {
-                throw new Error("tlauncher.bootstrap.classpath is not defined");
+                U.log("[WARNING] tlauncher.bootstrap.classpath is not defined");
+                return set;
             }
             for(String path : StringUtils.split(classPath, File.pathSeparatorChar)) {
                 File file = new File(path);

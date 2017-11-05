@@ -20,9 +20,11 @@ import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.login.buttons.ButtonPanel;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
+import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
@@ -276,6 +278,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     public void onAuthPassingError(Authenticator auth, Throwable e) {
+        if(e instanceof AuthException && ((AuthException) e).isSoft() && Alert.showLocQuestion("account.exception.soft")) {
+            return;
+        }
         Blocker.unblock(this, "auth");
         throw new LoginException("Cannot auth!");
     }

@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import shaded.org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import shaded.org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import shaded.org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -76,7 +75,7 @@ public abstract class Compressor {
             return compressor.uncompress(in);
         }
 
-        return new SequenceInputStream(new ByteInputStream(markerBytes, markerBytes.length), in);
+        return new SequenceInputStream(new ByteArrayInputStream(markerBytes), in);
     }
 
     public static InputStream uncompressMarked(InputStream in) throws IOException {

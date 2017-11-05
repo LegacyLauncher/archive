@@ -385,8 +385,10 @@ public enum OS {
                     }
                     return 1024;
                 case x64:
-                    if (TOTAL_RAM_MB > 6000L) {
-                        return 3072;
+                    if (TOTAL_RAM_MB > 12000L) {
+                        return 8192;
+                    } else if(TOTAL_RAM_MB > 8000L) {
+                        return 6144;
                     } else {
                         if (TOTAL_RAM_MB > 3000L) {
                             return 1536;

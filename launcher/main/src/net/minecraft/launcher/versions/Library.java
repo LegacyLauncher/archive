@@ -60,24 +60,19 @@ public class Library {
         return rules == null ? null : Collections.unmodifiableList(rules);
     }
 
-    public boolean appliesToCurrentEnvironment() {
-        if (rules == null) {
-            return true;
-        } else {
-            Rule.Action lastAction = Rule.Action.DISALLOW;
-            Iterator var3 = rules.iterator();
+    public boolean appliesToCurrentEnvironment(Rule.FeatureMatcher featureMatcher) {
+        if (this.rules == null) return true;
+        Rule.Action lastAction = Rule.Action.DISALLOW;
 
-            while (var3.hasNext()) {
-                Rule rule = (Rule) var3.next();
-                Rule.Action action = rule.getAppliedAction();
-                if (action != null) {
-                    lastAction = action;
-                }
+        for (Rule compatibilityRule : this.rules) {
+            Rule.Action action = compatibilityRule.getAppliedAction(featureMatcher);
+            if (action != null) {
+                lastAction = action;
             }
-
-            return lastAction == Rule.Action.ALLOW;
         }
+        return lastAction == Rule.Action.ALLOW;
     }
+
 
     public Map<OS, String> getNatives() {
         return natives;
@@ -136,8 +131,8 @@ public class Library {
         return "Library{name=\'" + name + '\'' + ", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", packed=\'" + packed + "\'}";
     }
 
-    public Downloadable getDownloadable(Repository versionSource, File file, OS os) {
-        String classifier = natives != null && appliesToCurrentEnvironment() ? natives.get(os) : null;
+    public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {
+        String classifier = natives != null && appliesToCurrentEnvironment(featureMatcher) ? natives.get(os) : null;
 
         if (downloads != null) {
             DownloadInfo info = this.downloads.getDownloadInfo(SUBSTITUTOR.replace(classifier));

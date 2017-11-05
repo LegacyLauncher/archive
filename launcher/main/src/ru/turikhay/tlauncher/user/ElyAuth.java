@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.user;
 
 import ru.turikhay.tlauncher.minecraft.auth.AuthExecutor;
 import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.U;
 
 import java.io.IOException;
@@ -45,7 +46,12 @@ public final class ElyAuth implements Auth<ElyUser> {
     public void validate(ElyUser user) throws AuthException, IOException {
         U.requireNotNull(user, "user");
         ElyUserValidator validator = new ElyUserValidator(user);
-        validator.validateUser();
+        try {
+            validator.validateUser();
+        } catch(IOException e) {
+            Sentry.sendError(ElyAuth.class, "Ely soft exception", e, DataBuilder.create("user", user));
+            throw AuthException.soft(new AuthUnavailableException(e));
+        }
     }
 
     private final String logPrefix = "[" + getClass().getSimpleName() + "]";

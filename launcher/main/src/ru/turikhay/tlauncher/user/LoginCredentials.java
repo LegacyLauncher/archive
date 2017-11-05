@@ -69,7 +69,7 @@ public class LoginCredentials {
                 put("auth_access_token", accessToken);
                 put("user_properties", properties);
                 put("auth_player_name", playerName);
-                put("auth_uuid", String.valueOf(uuid));
+                put("auth_uuid", UUIDTypeAdapter.fromUUID(uuid));
                 put("user_type", userType);
                 put("profile_name", profileName);
             }

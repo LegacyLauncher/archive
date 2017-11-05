@@ -39,7 +39,7 @@ public class Server {
     }
 
     protected void setAddress(String address) {
-        this.address = StringUtil.requireNotBlank(address, "address");
+        this.address = address;
     }
 
     public final int getPort() {
@@ -91,9 +91,14 @@ public class Server {
                 break;
             case 1:
                 // ipv4 with port
-                String[] split = StringUtils.split(fullAddress, ':');
-                setAddress(split[0]);
-                setPort(split[1]);
+                if(fullAddress.startsWith(":")) {
+                    setAddress("");
+                    setPort(fullAddress.substring(1));
+                } else {
+                    String[] split = StringUtils.split(fullAddress, ':');
+                    setAddress(split[0]);
+                    setPort(split[1]);
+                }
                 break;
             default:
                 // ipv6 without port

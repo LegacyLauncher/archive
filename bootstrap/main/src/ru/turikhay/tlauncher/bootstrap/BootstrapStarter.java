@@ -10,9 +10,7 @@ import shaded.org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public final class BootstrapStarter {
     public static void main(String[] args) throws Exception {
@@ -34,7 +32,11 @@ public final class BootstrapStarter {
         Collections.addAll(appArgs, args);
         appArgs.addAll(loadExternalArgs(currentDir, "args"));
 
-        Process process = ProcessStarter.startJarProcess(currentDir, ProcessStarter.getSystemClasspath(), Bootstrap.class.getName(), jvmArgs, appArgs);
+        Set<File> classPath = new LinkedHashSet<File>();
+        classPath.addAll(ProcessStarter.getDefinedClasspath());
+        classPath.add(new File(BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
+
+        Process process = ProcessStarter.startJarProcess(currentDir, classPath, Bootstrap.class.getName(), jvmArgs, appArgs);
 
         log("Inherit process started");
 

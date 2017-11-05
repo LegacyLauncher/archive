@@ -47,9 +47,10 @@ public class AuthUIListener implements AuthenticatorListener {
             locVars = ((AuthException) e).getLocVars();
             if(e instanceof AuthUnknownException) {
                 textarea = e;
-            }
-            if(e instanceof AuthDetailedException) {
+            } else if(e instanceof AuthDetailedException) {
                 textarea = ((AuthDetailedException) e).getErrorContent();
+            } else if(e.getCause() != null) {
+                textarea = e.getCause();
             }
         }
 

@@ -72,7 +72,7 @@ public abstract class AuthlibUser extends User {
                 gson.toJson(userAuthentication.getUserProperties()),
                 getDisplayName(),
                 getSelectedMojangProfile().getId(),
-                userAuthentication.getUserType().getName(),
+                "mojang",
                 getSelectedMojangProfile().getName()
         );
     }

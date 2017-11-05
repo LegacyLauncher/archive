@@ -16,15 +16,27 @@ import java.io.InputStream;
 import java.lang.ref.SoftReference;
 
 public final class ImageBackground extends JComponent implements ISwingBackground {
-    private SoftReference<Image> defaultImage, currentImage, renderImage;
+    private static ImageBackground lastInstance;
+
+    private Image defaultImage, currentImage, renderImage;
     private boolean paused;
 
     ImageBackground() {
+        lastInstance = this;
         addComponentListener(new ExtendedComponentAdapter(this) {
             public void onComponentResized(ComponentEvent e) {
                 updateRender();
             }
         });
+    }
+
+    public static ImageBackground getLastInstance() {
+        return lastInstance;
+    }
+
+    public void wipe() {
+        currentImage = null;
+        renderImage = null;
     }
 
     @Override
@@ -56,7 +68,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 throw new Error("could not load default image", e);
             }
 
-            defaultImage = new SoftReference<>(image);
+            defaultImage = image;
         }
 
         renderImage = null;
@@ -93,7 +105,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 return;
             }
 
-            currentImage = new SoftReference<>(image);
+            currentImage = image;
         }
 
         updateRender();
@@ -103,11 +115,11 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
         renderImage = null;
 
         final Image image;
-        if (currentImage == null || (image = currentImage.get()) == null) {
+        if ((image = currentImage) == null) {
             return;
         }
 
-        renderImage = new SoftReference<>(image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH));
+        renderImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
         repaint();
     }
 
@@ -115,7 +127,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     public void paint(Graphics g) {
         Image original, render;
 
-        if (currentImage == null || (original = currentImage.get()) == null || renderImage == null || (render = renderImage.get()) == null) {
+        if ((original = currentImage) == null || (render = renderImage) == null) {
             return;
         }
 
@@ -129,10 +141,6 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
         try {
             g.drawImage(render, (int) x, (int) y, (int) width, (int) height, null);
         } catch(OutOfMemoryError oom) {
-            original = null;
-            render = null;
-            currentImage = null;
-            renderImage = null;
             ExceptionHandler.reduceMemory(oom);
         }
     }

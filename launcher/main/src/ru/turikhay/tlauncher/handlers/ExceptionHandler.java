@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.handlers;
 
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.background.ImageBackground;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
@@ -48,6 +49,9 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
         U.log("OutOfMemory error has occurred, solving...");
 
         Logger.wipeAll();
+        if(ImageBackground.getLastInstance() != null) {
+            ImageBackground.getLastInstance().wipe();
+        }
 
         long currentTime = System.currentTimeMillis();
         long diff = Math.abs(currentTime - gcLastCall);

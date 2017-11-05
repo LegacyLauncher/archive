@@ -230,7 +230,14 @@ public final class TLauncher {
         } else if (bootConfig.getPromotedServers().containsKey("global")) {
             promotedServerList.addAll(bootConfig.getPromotedServers().get("global"));
         }
-        launcher.setPromotedServers(promotedServerList);
+
+        List<PromotedServer> outdatedServerList = new ArrayList<>();
+        if(bootConfig.getOutdatedPromotedServers().containsKey(getSettings().getLocale().toString())) {
+            outdatedServerList.addAll(bootConfig.getOutdatedPromotedServers().get(getSettings().getLocale().toString()));
+        } else if (bootConfig.getOutdatedPromotedServers().containsKey("global")) {
+            outdatedServerList.addAll(bootConfig.getOutdatedPromotedServers().get("global"));
+        }
+        launcher.setPromotedServers(promotedServerList, outdatedServerList);
 
         launcher.start();
 

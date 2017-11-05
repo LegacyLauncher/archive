@@ -1,10 +1,7 @@
 package ru.turikhay.tlauncher.managers;
 
 import net.minecraft.launcher.updater.*;
-import net.minecraft.launcher.versions.CompleteVersion;
-import net.minecraft.launcher.versions.LibraryReplace;
-import net.minecraft.launcher.versions.ReleaseType;
-import net.minecraft.launcher.versions.Version;
+import net.minecraft.launcher.versions.*;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.component.ComponentDependence;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
@@ -418,6 +415,7 @@ public class VersionManager extends InterruptibleComponent {
     }
 
     public VersionSyncInfoContainer downloadVersion(VersionSyncInfo syncInfo, Account.AccountType type, boolean force) throws IOException {
+        Rule.FeatureMatcher featureMatcher = new CurrentLaunchFeatureMatcher();
         VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
 
         CompleteVersion completeVersion = syncInfo.getCompleteVersion(force);
@@ -433,11 +431,11 @@ public class VersionManager extends InterruptibleComponent {
 
         File baseDirectory = localList.getBaseDirectory();
 
-        container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, type));
+        container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type));
 
         if (type != null) {
             try {
-                container.addAll(syncInfo.getRequiredDownloadables(baseDirectory, force, type));
+                container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type));
             } catch (IOException ioE) {
                 log("Could not get optional downloadables for", syncInfo.getID(), ioE);
             }

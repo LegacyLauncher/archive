@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
@@ -47,7 +48,7 @@ public final class CrashManager {
     private void setupActions() {
         actionsMap.clear();
 
-        addAction(new BrowseAction());
+        addAction(new BrowseAction(launcher == null? new File("") : launcher.getGameDir()));
         addAction(new SetAction());
         addAction(new GuiAction());
         addAction(new ExitAction());
@@ -72,7 +73,7 @@ public final class CrashManager {
             {
                 CrashEntryList external;
                 try {
-                    external = loadEntries(Compressor.uncompressMarked(Repository.EXTRA_VERSION_REPO.get("signatures.json")), "external");
+                    external = loadEntries(Compressor.uncompressMarked(Repository.EXTRA_VERSION_REPO.get("libraries/signature.json")), "external");
                 } catch (Exception e) {
                     log("Could not load external entries", e);
                     break loadExternal;
@@ -366,6 +367,11 @@ public final class CrashManager {
                     }
                 }
             }
+
+            SentryContext.getContextOrGlobal(MinecraftLauncher.SENTRY_CONTEXT_NAME)
+                    .sendWarning(CrashManager.class, capableEntry == null? "unknown crash" : "crash:" + capableEntry.getName(),
+                            DataBuilder.create("crash", crash).add("version", version).add("exitCode", exitCode)
+                    );
 
             log("Done in", Time.stop(timer), "ms");
         }
@@ -801,8 +807,11 @@ public final class CrashManager {
     }
 
     private class BrowseAction extends ArgsAction {
-        BrowseAction() {
+        private final File gameDir;
+
+        BrowseAction(File gameDir) {
             super("browse", new String[]{"www", "folder"});
+            this.gameDir = gameDir;
         }
 
         @Override
@@ -813,7 +822,13 @@ public final class CrashManager {
             }
 
             if (args.has("folder")) {
-                File folder = new File(args.valueOf("folder").toString());
+                String folderName = args.valueOf("folder").toString();
+                File folder;
+                if(folderName.startsWith(".")) {
+                    folder = new File(gameDir, folderName.substring(1));
+                } else {
+                    folder = new File(folderName);
+                }
                 if (folder.isDirectory()) {
                     OS.openFolder(folder);
                 }
