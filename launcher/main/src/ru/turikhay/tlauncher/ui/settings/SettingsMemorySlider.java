@@ -31,10 +31,10 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
     SettingsMemorySlider(SettingsPanel s) {
         settings = s;
         slider.setOpaque(false);
-        slider.setMinimum(512);
+        slider.setMinimum(OS.Arch.x64.isCurrent()? 1024 : 512);
         slider.setMaximum(OS.Arch.MAX_MEMORY);
-        slider.setMinorTickSpacing(OS.Arch.x64.isCurrent() ? 256 : 128);
-        slider.setMajorTickSpacing(512);
+        slider.setMinorTickSpacing(OS.Arch.x64.isCurrent() ? 1024 : 256);
+        slider.setMajorTickSpacing(OS.Arch.x64.isCurrent() ? 1024 : 512);
         slider.setSnapToTicks(true);
         slider.setPaintLabels(true);
         slider.setPaintTicks(true);

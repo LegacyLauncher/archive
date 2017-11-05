@@ -25,6 +25,10 @@ public class JavaProcessLauncher {
         Collections.addAll(this.commands, commands);
     }
 
+    public String getJvmPath() {
+        return jvmPath;
+    }
+
     public JavaProcess start() throws IOException {
         return new JavaProcess(createProcess().start());
     }

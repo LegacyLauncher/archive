@@ -2,6 +2,7 @@ package net.minecraft.launcher.updater;
 
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
+import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
@@ -182,7 +183,7 @@ public class VersionSyncInfo {
         return completeLocal;
     }
 
-    Set<Downloadable> getRequiredDownloadables(OS os, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
+    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
         HashSet neededFiles = new HashSet();
 
         CompleteVersion version = getCompleteVersion(force);
@@ -194,7 +195,7 @@ public class VersionSyncInfo {
         if (source != null && !source.isRemote()) {
             return neededFiles;
         } else {
-            Iterator var9 = version.getRelevantLibraries().iterator();
+            Iterator var9 = version.getRelevantLibraries(featureMatcher).iterator();
 
             while (true) {
                 Library library;
@@ -222,13 +223,13 @@ public class VersionSyncInfo {
                 }
                 while (!force && local1.isFile() && (library.getChecksum() == null || library.getChecksum().equals(FileUtil.getChecksum(local1, "SHA-1"))));
 
-                neededFiles.add(library.getDownloadable(source, local1, os));
+                neededFiles.add(library.getDownloadable(source, featureMatcher, local1, os));
             }
         }
     }
 
-    public Set<Downloadable> getRequiredDownloadables(File targetDirectory, boolean force, Account.AccountType type) throws IOException {
-        return getRequiredDownloadables(OS.CURRENT, targetDirectory, force, type);
+    public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
+        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, type);
     }
 
     public static VersionSyncInfo createEmpty() {

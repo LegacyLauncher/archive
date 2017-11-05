@@ -50,8 +50,8 @@ public class LibraryReplace extends Library {
         return supports != null && supports.contains(version);
     }
 
-    public Downloadable getDownloadable(Repository versionSource, File file, OS os) {
-        return super.getDownloadable(Repository.EXTRA_VERSION_REPO, file, os);
+    public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {
+        return super.getDownloadable(Repository.EXTRA_VERSION_REPO, featureMatcher, file, os);
     }
 
     public ToStringBuilder toStringBuilder() {

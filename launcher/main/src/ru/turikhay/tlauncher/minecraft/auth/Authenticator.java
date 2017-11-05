@@ -14,6 +14,8 @@ public abstract class Authenticator {
     public abstract Account getAccount();
     public abstract Account.AccountType getType();
 
+    private Exception e;
+
     public boolean pass(AuthenticatorListener l) {
         if (l != null) {
             l.onAuthPassing(this);
@@ -22,6 +24,7 @@ public abstract class Authenticator {
         try {
             pass();
         } catch (Exception var3) {
+            e = var3;
             if (l != null) {
                 l.onAuthPassingError(this, var3);
             }
@@ -33,6 +36,10 @@ public abstract class Authenticator {
         }
 
         return true;
+    }
+
+    public Exception getException() {
+        return e;
     }
 
     public void asyncPass(final AuthenticatorListener l) {

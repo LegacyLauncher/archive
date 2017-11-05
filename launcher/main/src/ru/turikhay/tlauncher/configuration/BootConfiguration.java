@@ -19,7 +19,7 @@ public final class BootConfiguration {
     private boolean stats, ely;
     private Map<String, List<String>> repositories = new HashMap<String, List<String>>();
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
-    private Map<String, List<PromotedServer>> promotedServers = new HashMap<>();
+    private Map<String, List<PromotedServer>> promotedServers = new HashMap<>(), outdatedPromotedServers = new HashMap<>();
     private Map<String, String> feedback = new HashMap<>();
 
     public boolean isStatsAllowed() {
@@ -40,6 +40,10 @@ public final class BootConfiguration {
 
     public Map<String, List<PromotedServer>> getPromotedServers() {
         return promotedServers;
+    }
+
+    public Map<String, List<PromotedServer>> getOutdatedPromotedServers() {
+        return outdatedPromotedServers;
     }
 
     public Map<String, String> getFeedback() {

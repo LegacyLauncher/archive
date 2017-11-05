@@ -7,9 +7,7 @@ import net.minecraft.launcher.process.JavaProcessListener;
 import net.minecraft.launcher.process.ProcessMonitorThread;
 import net.minecraft.launcher.updater.AssetIndex;
 import net.minecraft.launcher.updater.VersionSyncInfo;
-import net.minecraft.launcher.versions.CompleteVersion;
-import net.minecraft.launcher.versions.ExtractRules;
-import net.minecraft.launcher.versions.Library;
+import net.minecraft.launcher.versions.*;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -25,9 +23,11 @@ import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.NBTServer;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
+import ru.turikhay.tlauncher.minecraft.PromotedServerAddStatus;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -50,8 +50,8 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class MinecraftLauncher implements JavaProcessListener {
-    public static final String SENTRY_CONTEXT_NAME = "minecraftLauncher";
-    private static final int OFFICIAL_VERSION = 18, ALTERNATIVE_VERSION = 8, MIN_WORK_TIME = 5000;
+    public static final String SENTRY_CONTEXT_NAME = "minecraftLauncher", CAPABLE_WITH = "1.6.84-j";
+    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 8, MIN_WORK_TIME = 5000;
     private SentryContext sentryContext = SentryContext.createWithName(SENTRY_CONTEXT_NAME);
     private boolean working;
     private boolean killed;
@@ -103,9 +103,13 @@ public class MinecraftLauncher implements JavaProcessListener {
     private int exitCode;
     private Server server;
     private List<PromotedServer> promotedServers;
+    private List<PromotedServer> outdatedPromotedServers;
+    private PromotedServerAddStatus promotedServerAddStatus = PromotedServerAddStatus.NONE;
     private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
+
+    private Rule.FeatureMatcher featureMatcher = createFeatureMatcher();
 
     private boolean firstLine;
     private int logStart, logEnd;
@@ -296,8 +300,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         this.serverId = id;
     }
 
-    public void setPromotedServers(List<PromotedServer> serverList) {
+    public void setPromotedServers(List<PromotedServer> serverList, List<PromotedServer> outdatedServerList) {
         this.promotedServers = U.shuffle(serverList);
+        this.outdatedPromotedServers = outdatedServerList;
     }
 
     private void collectInfo() throws MinecraftException {
@@ -412,6 +417,11 @@ public class MinecraftLauncher implements JavaProcessListener {
                         rootDir = new File(settings.get("minecraft.gamedir"));
                         recordValue("rootDir", rootDir);
 
+                        long freeSpace = rootDir.getUsableSpace();
+                        if(freeSpace > 0 && freeSpace < 1024L * 64L) {
+                            throw new MinecraftException(true, "Insufficient space " + rootDir.getAbsolutePath() + "(" + freeSpace + ")", "free-space", rootDir);
+                        }
+
                         if (settings.getBoolean("minecraft.gamedir.separate")) {
                             gameDir = new File(rootDir, "home/" + family);
                         } else {
@@ -514,7 +524,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                                     Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.launcher", null);
                                 }
 
-                                if (!version.appliesToCurrentEnvironment()) {
+                                if (!version.appliesToCurrentEnvironment(featureMatcher)) {
                                     Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.environment", null);
                                 }
 
@@ -668,28 +678,110 @@ public class MinecraftLauncher implements JavaProcessListener {
             assistant.onMinecraftConstructing();
         }
 
+        ArrayList<String> jvmArgs = new ArrayList<>(), programArgs = new ArrayList<>();
+        createJvmArgs(jvmArgs);
+
+        if(this.programArgs != null) {
+            programArgs.addAll(Arrays.asList(StringUtils.split(this.programArgs, ' ')));
+        }
+
         launcher = new JavaProcessLauncher(cmd, new String[0]);
         launcher.directory(gameDir);
-        if (OS.OSX.isCurrent()) {
-            File assistant1 = null;
 
-            try {
-                assistant1 = getAssetObject("icons/minecraft.icns");
-            } catch (IOException var4) {
-                log("Cannot get icon file from assets.", var4);
-            }
-
-            if (assistant1 != null) {
-                launcher.addCommand("-Xdock:icon=\"" + assistant1.getAbsolutePath() + "\"", "-Xdock:name=Minecraft");
-            }
+        try {
+            fixResourceFolder();
+        } catch (Exception ioE) {
+            log("Cannot check resource folder. This could have been fixed [MCL-3732].", ioE);
         }
 
-        if (OS.WINDOWS.isCurrent()) {
-            launcher.addCommand("-XX:HeapDumpPath=ThisTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
+
+        Set<NBTServer> exisingServerList = null, nbtServerList = new LinkedHashSet<>();
+        try {
+            File file = new File(gameDir, "servers.dat");
+            if(file.isFile()) {
+                try {
+                    FileUtil.copyFile(file, new File(file.getAbsolutePath() + ".bak"), true);
+                } catch (IOException ioE) {
+                    log("Could not make backup for servers.dat", ioE);
+                }
+                try {
+                    exisingServerList = NBTServer.loadSet(file);
+                } catch(Exception e) {
+                    log("Could not read servers.dat", e);
+                    log("We'll have to overwrite it as it can't be read by Minecraft neither");
+                    exisingServerList = new LinkedHashSet<>();
+                }
+            } else {
+                FileUtil.createFile(file);
+                exisingServerList = new LinkedHashSet<>();
+            }
+            if(server != null) {
+                nbtServerList.add(new NBTServer(server));
+            }
+            if (outdatedPromotedServers != null) {
+                Iterator<NBTServer> i = exisingServerList.iterator();
+                while (i.hasNext()) {
+                    NBTServer existingServer = i.next();
+                    for(PromotedServer outdatedServer : outdatedPromotedServers) {
+                        if(existingServer.equals(outdatedServer) && existingServer.getName().equals(outdatedServer.getName())) {
+                            log("Removed outdated server:", existingServer, ", compared with", outdatedServer);
+                            i.remove();
+                            break;
+                        }
+                    }
+                }
+            }
+            if(settings.getBoolean("minecraft.servers.promoted.ingame")) {
+                if (promotedServers != null) {
+                    for (final PromotedServer promotedServer : promotedServers) {
+                        if (!promotedServer.getFamily().isEmpty() && !promotedServer.getFamily().contains(family)) {
+                            continue;
+                        }
+                        if(promotedServer.equals(server)) {
+                            continue;
+                        }
+                        NBTServer existingServer = null;
+                        for (NBTServer nbtServer : exisingServerList) {
+                            if (promotedServer.equals(nbtServer)) {
+                                existingServer = nbtServer;
+                                break;
+                            }
+                        }
+                        if (existingServer != null) {
+                            nbtServerList.add(existingServer);
+                            exisingServerList.remove(existingServer);
+                        } else {
+                            nbtServerList.add(new NBTServer(promotedServer));
+                        }
+                    }
+                } else {
+                    promotedServerAddStatus = PromotedServerAddStatus.EMPTY;
+                }
+            } else {
+                promotedServerAddStatus = PromotedServerAddStatus.DISABLED;
+            }
+
+            nbtServerList.addAll(exisingServerList);
+            if(!nbtServerList.isEmpty()) {
+                FileUtil.copyFile(file, new File(gameDir, "servers.dat.bak"), true);
+                NBTServer.saveSet(nbtServerList, file);
+                if(promotedServerAddStatus == PromotedServerAddStatus.NONE) {
+                    promotedServerAddStatus = PromotedServerAddStatus.SUCCESS;
+                }
+            }
+        } catch (Exception e) {
+            Sentry.sendError(MinecraftLauncher.class, "couldn't reconstruct server list", e, DataBuilder.create("existing", exisingServerList).add("new", nbtServerList).add("status", promotedServerAddStatus));
+            log("Couldn't reconstruct server list", e);
+            promotedServerAddStatus = PromotedServerAddStatus.ERROR;
         }
 
-        launcher.addCommand("-Xmx" + ramSize + "M");
-        launcher.addCommand("-Djava.library.path=" + nativeDir.getAbsolutePath());
+        try {
+            makeCompatibleWithOlderVersions();
+        } catch(Exception e) {
+            log("Could not make it compatible with older versions", e);
+        }
+
+        /*launcher.addCommand("-Djava.library.path=" + nativeDir.getAbsolutePath());
 
         if (OS.WINDOWS.isCurrent() && OS.VERSION.startsWith("10.")) {
             launcher.addCommand("-Dos.name=Windows 10");
@@ -718,7 +810,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             assistant2.constructJavaArguments();
         }
 
-        launcher.addCommand(version.getMainClass());
+
         if (!fullCommand) {
             log("Half command (characters are not escaped):\n" + launcher.getCommandsAsString());
         }
@@ -747,23 +839,73 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
 
+        Set<NBTServer> exisingServerList = null, nbtServerList = new LinkedHashSet<>();
         try {
-            NBTServer.reconstructList(new LinkedHashSet<Server>() {
-                {
-                    if (server != null) {
-                        add(server);
-                    }
-                    if (account.getType() != Account.AccountType.MOJANG && promotedServers != null && settings.getBoolean("minecraft.servers.promoted.ingame")) {
-                        for(PromotedServer promotedServer : promotedServers) {
-                            if(promotedServer.getFamily().isEmpty() || promotedServer.getFamily().contains(family)) {
-                                add(promotedServer);
-                            }
+            File file = new File(gameDir, "servers.dat");
+            if(file.isFile()) {
+                exisingServerList = NBTServer.loadSet(file);
+            } else {
+                FileUtil.createFile(file);
+                exisingServerList = new LinkedHashSet<>();
+            }
+            if(server != null) {
+                nbtServerList.add(new NBTServer(server));
+            }
+            if (outdatedPromotedServers != null) {
+                Iterator<NBTServer> i = exisingServerList.iterator();
+                while (i.hasNext()) {
+                    NBTServer existingServer = i.next();
+                    for(PromotedServer outdatedServer : outdatedPromotedServers) {
+                        if(existingServer.equals(outdatedServer) && existingServer.getName().equals(outdatedServer.getName())) {
+                            log("Removed outdated server:", existingServer, ", compared with", outdatedServer);
+                            i.remove();
+                            break;
                         }
                     }
                 }
-            }, new File(gameDir, "servers.dat"));
-        } catch (IOException ioE) {
-            log("Couldn't reconstruct server list", ioE);
+            }
+            if(settings.getBoolean("minecraft.servers.promoted.ingame")) {
+                if (promotedServers != null) {
+                    for (final PromotedServer promotedServer : promotedServers) {
+                        if (!promotedServer.getFamily().isEmpty() && !promotedServer.getFamily().contains(family)) {
+                            continue;
+                        }
+                        if(promotedServer.equals(server)) {
+                            continue;
+                        }
+                        NBTServer existingServer = null;
+                        for (NBTServer nbtServer : exisingServerList) {
+                            if (promotedServer.equals(nbtServer)) {
+                                existingServer = nbtServer;
+                                break;
+                            }
+                        }
+                        if (existingServer != null) {
+                            nbtServerList.add(existingServer);
+                            exisingServerList.remove(existingServer);
+                        } else {
+                            nbtServerList.add(new NBTServer(promotedServer));
+                        }
+                    }
+                } else {
+                    promotedServerAddStatus = PromotedServerAddStatus.EMPTY;
+                }
+            } else {
+                promotedServerAddStatus = PromotedServerAddStatus.DISABLED;
+            }
+
+            nbtServerList.addAll(exisingServerList);
+            if(!nbtServerList.isEmpty()) {
+                FileUtil.copyFile(file, new File(gameDir, "servers.dat.bak"), true);
+                NBTServer.saveSet(nbtServerList, file);
+                if(promotedServerAddStatus == PromotedServerAddStatus.NONE) {
+                    promotedServerAddStatus = PromotedServerAddStatus.SUCCESS;
+                }
+            }
+        } catch (Exception e) {
+            Sentry.sendError(MinecraftLauncher.class, "couldn't reconstruct server list", e, DataBuilder.create("existing", exisingServerList).add("new", nbtServerList).add("status", promotedServerAddStatus));
+            log("Couldn't reconstruct server list", e);
+            promotedServerAddStatus = PromotedServerAddStatus.ERROR;
         }
 
         if (server != null) {
@@ -780,11 +922,76 @@ public class MinecraftLauncher implements JavaProcessListener {
         while (address.hasNext()) {
             assistant2 = (MinecraftLauncherAssistant) address.next();
             assistant2.constructProgramArguments();
+        }*/
+
+        StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
+        jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
+        programArgs.addAll(version.addArguments(ArgumentType.GAME, featureMatcher, argumentsSubstitutor));
+
+        if (server != null) {
+            programArgs.addAll(Arrays.asList("--server", server.getAddress()));
+            programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
+        }
+
+        for(String arg : jvmArgs) {
+            launcher.addCommand(arg);
+        }
+
+        launcher.addCommand(version.getMainClass());
+
+        if (!fullCommand) {
+            List<String> l = new ArrayList<>(launcher.getCommands());
+            l.addAll(programArgs);
+            log("Half command (characters are not escaped):\n" + launcher.getJvmPath() + ' ' + joinList(l, ARGS_CENSORED, BLACKLIST_MODE_CENSOR));
+        }
+
+        for (String arg : programArgs) {
+            launcher.addCommand(arg);
         }
 
         if (fullCommand) {
             log("Full command (characters are not escaped):\n" + launcher.getCommandsAsString());
         }
+
+        /*    CompatibilityRule.FeatureMatcher featureMatcher = createFeatureMatcher();
+    StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor(getVersion(), this.selectedProfile, gameDirectory, assetsDir, this.auth);
+
+    getVersion().addArguments(net.minecraft.launcher.updater.ArgumentType.JVM, featureMatcher, processBuilder, argumentsSubstitutor);
+    processBuilder.withArguments(new String[] { getVersion().getMainClass() });
+
+    LOGGER.info("Half command: " + org.apache.commons.lang3.StringUtils.join(processBuilder.getFullCommands(), " "));
+
+    getVersion().addArguments(net.minecraft.launcher.updater.ArgumentType.GAME, featureMatcher, processBuilder, argumentsSubstitutor);
+
+    Proxy proxy = getLauncher().getProxy();
+    PasswordAuthentication proxyAuth = getLauncher().getProxyAuth();
+    if (!proxy.equals(Proxy.NO_PROXY)) {
+      InetSocketAddress address = (InetSocketAddress)proxy.address();
+      processBuilder.withArguments(new String[] { "--proxyHost", address.getHostName() });
+      processBuilder.withArguments(new String[] { "--proxyPort", Integer.toString(address.getPort()) });
+      if (proxyAuth != null) {
+        processBuilder.withArguments(new String[] { "--proxyUser", proxyAuth.getUserName() });
+        processBuilder.withArguments(new String[] { "--proxyPass", new String(proxyAuth.getPassword()) });
+      }
+    }
+
+    processBuilder.withArguments(this.additionalLaunchArgs);
+    try
+    {
+      LOGGER.debug("Running " + org.apache.commons.lang3.StringUtils.join(processBuilder.getFullCommands(), " "));
+      GameProcess process = this.processFactory.startGame(processBuilder);
+      process.setExitRunnable(this);
+
+      setStatus(GameInstanceStatus.PLAYING);
+      if (this.visibilityRule != LauncherVisibilityRule.DO_NOTHING) {
+        this.minecraftLauncher.getUserInterface().setVisible(false);
+      }
+    } catch (IOException e) {
+      LOGGER.error("Couldn't launch game", e);
+      setStatus(GameInstanceStatus.IDLE);
+      return;
+    }
+*/
 
         launchMinecraft();
     }
@@ -860,7 +1067,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void unpackNatives(boolean force) throws IOException {
         log("Unpacking natives...");
-        Collection libraries = version.getRelevantLibraries();
+        Collection libraries = version.getRelevantLibraries(featureMatcher);
         OS os = OS.CURRENT;
         ZipFile zip = null;
         if (force) {
@@ -962,7 +1169,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private String constructClassPath(CompleteVersion version) throws MinecraftException {
         log("Constructing classpath...");
         StringBuilder result = new StringBuilder();
-        Collection classPath = version.getClassPath(OS.CURRENT, rootDir);
+        Collection classPath = version.getClassPath(OS.CURRENT, featureMatcher, rootDir);
         String separator = System.getProperty("path.separator");
 
         File file;
@@ -980,7 +1187,64 @@ public class MinecraftLauncher implements JavaProcessListener {
         return result.toString();
     }
 
-    private String[] getMinecraftArguments() throws MinecraftException {
+    private void makeCompatibleWithOlderVersions() throws MinecraftException {
+        boolean needSave = false;
+        if(version.getMinecraftArguments() == null) {
+            deJureVersion.setMinecraftArguments(makeLegacyArgumentString(ArgumentType.GAME));
+            needSave = true;
+        }
+        if(needSave) {
+            try {
+                vm.getLocalList().saveVersion(deJureVersion);
+            } catch (IOException var7) {
+                log("Cannot save legacy arguments!", var7);
+            }
+        }
+    }
+
+    private String makeLegacyArgumentString(ArgumentType type) {
+        List<String> argList = version.addArguments(type, featureMatcher, null);
+        return joinList(argList, ARGS_LEGACY_REMOVED, BLACKLIST_MODE_REMOVE);
+    }
+
+    private static final String[] ARGS_LEGACY_REMOVED = new String[] {
+            "--width", "${resolution_width}", "--height", "${resolution_height}"
+    };
+
+    private static final String[] ARGS_CENSORED = new String[] {
+            "--accessToken"
+    };
+
+    private static final String[] CENSORED = new String[] {
+            "not for you", "censored", "nothinginteresting", "boiiiiiiiiii",
+            "Minecraft is a lie", "vk.cc/7iPiB9"
+    };
+
+    private static final int BLACKLIST_MODE_REMOVE = 0, BLACKLIST_MODE_CENSOR = 1;
+
+    private String joinList(List<String> l, String[] blackList, int blacklistMode) {
+        StringBuilder b = new StringBuilder();
+        Iterator<String> i = l.iterator();
+        while (i.hasNext()) {
+            String arg = i.next();
+            if(U.find(arg, blackList) == -1) {
+                b.append(' ').append(arg);
+            } else {
+                if(blacklistMode == BLACKLIST_MODE_CENSOR) {
+                    b.append(' ').append(arg).append(" [").append(U.getRandom(CENSORED)).append("]");
+                    if(i.hasNext()) {
+                        i.next(); // skip
+                    }
+                }
+            }
+        }
+        if(b.length() > 1) {
+            return b.substring(1);
+        }
+        return null;
+    }
+
+    /*private String[] getMinecraftArguments() throws MinecraftException {
         log("Getting Minecraft arguments...");
         if (version.getMinecraftArguments() == null) {
             throw new MinecraftException(true, "Can\'t run version, missing minecraftArguments", "noArgs");
@@ -1007,7 +1271,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 map.put("auth_uuid", (new UUID(0L, 0L)).toString());
                 map.put("user_type", "legacy");
                 map.put("profile_name", "(Default)");
-            }*/
+            }**
 
             map.put("version_name", version.getID());
             map.put("version_type", version.getReleaseType());
@@ -1022,19 +1286,17 @@ public class MinecraftLauncher implements JavaProcessListener {
 
             return split;
         }
-    }
+    }*/
 
-    private String[] getJVMArguments() {
-        List<String> args = new ArrayList<String>();
-
+    private void createJvmArgs(List<String> args) {
+        if(javaArgs != null) {
+            args.addAll(Arrays.asList(StringUtils.split(javaArgs, ' ')));
+        }
         if (settings.getBoolean("minecraft.improvedargs")) {
-            args.add("-Xms256M");
             if (OS.JAVA_VERSION.getDouble() >= 1.7 && ramSize >= 3072) {
                 args.add("-XX:+UseG1GC");
                 args.add("-XX:ConcGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
             } else {
-                args.add("-Xmn128M");
-
                 args.add("-XX:+UseConcMarkSweepGC");
                 args.add("-XX:-UseAdaptiveSizePolicy");
                 args.add("-XX:+CMSParallelRemarkEnabled");
@@ -1043,20 +1305,19 @@ public class MinecraftLauncher implements JavaProcessListener {
                 args.add("-XX:+UseCMSInitiatingOccupancyOnly");
             }
         }
-        String rawArgs = version.getJVMArguments();
-        if (StringUtils.isNotEmpty(rawArgs)) {
-            args.addAll(Arrays.asList(StringUtils.split(rawArgs, ' ')));
-        }
-
+        args.add("-Xmx" + ramSize + "M");
         if(librariesForType == Account.AccountType.MCLEAKS) {
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
             args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.mainclass=" + oldMainclass);
         }
-
-        return args.toArray(new String[args.size()]);
+        if (!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
+            args.add("-Dfile.encoding=UTF-8");
+        }
     }
+
+    private AssetsManager.ResourceChecker resourceChecker;
 
     private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) throws MinecraftException {
         log("Comparing assets...");
@@ -1071,6 +1332,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         try {
+            resourceChecker = checker;
             boolean showTimerWarning = true;
             AssetIndex.AssetObject lastObject = null;
             int timer = 0;
@@ -1208,7 +1470,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             listener.onMinecraftPostLaunch();
         }
 
-        Stats.minecraftLaunched(account, version, server, serverId);
+        Stats.minecraftLaunched(account, version, server, serverId, promotedServerAddStatus);
         if (assistLaunch) {
             waitForClose();
         } else {
@@ -1410,6 +1672,82 @@ public class MinecraftLauncher implements JavaProcessListener {
     private void recordBreadcumb(String message, DataBuilder data) {
         SentryBreadcrumb.info(null, message).data(data).push(sentryContext);
     }
+
+    private Rule.FeatureMatcher createFeatureMatcher() {
+        return new CurrentLaunchFeatureMatcher();
+    }
+
+    private StrSubstitutor createArgumentsSubstitutor() throws MinecraftException {
+        Map<String, String> map = new HashMap<>();
+
+
+        map.putAll(account.getUser().getLoginCredentials().map());
+
+        /*map.put("auth_access_token", user.getAuthenticatedToken());
+        map.put("user_properties", new GsonBuilder().registerTypeAdapter(PropertyMap.class, new com.mojang.launcher.LegacyPropertyMapSerializer()).create().toJson(authentication.getUserProperties()));
+        map.put("user_property_map", new GsonBuilder().registerTypeAdapter(PropertyMap.class, new com.mojang.authlib.properties.PropertyMap.Serializer()).create().toJson(authentication.getUserProperties()));
+
+        if ((authentication.isLoggedIn()) && (authentication.canPlayOnline())) {
+            if ((authentication instanceof com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication)) {
+                map.put("auth_session", String.format("token:%s:%s", new Object[] { authentication.getAuthenticatedToken(), UUIDTypeAdapter.fromUUID(authentication.getSelectedProfile().getId()) }));
+            } else {
+                map.put("auth_session", authentication.getAuthenticatedToken());
+            }
+        }
+        else {
+            map.put("auth_session", "-");
+        }
+
+        if (authentication.getSelectedProfile() != null) {
+            map.put("auth_player_name", authentication.getSelectedProfile().getName());
+            map.put("auth_uuid", UUIDTypeAdapter.fromUUID(authentication.getSelectedProfile().getId()));
+            map.put("user_type", authentication.getUserType().getName());
+        } else {
+            map.put("auth_player_name", "Player");
+            map.put("auth_uuid", new UUID(0L, 0L).toString());
+            map.put("user_type", UserType.LEGACY.getName());
+        }
+
+        map.put("profile_name", selectedProfile.getName());*/
+
+        map.put("version_name", version.getID());
+
+        map.put("game_directory", gameDir.getAbsolutePath());
+        map.put("game_assets", localAssetsDir.getAbsolutePath());
+
+        map.put("assets_root", globalAssetsDir.getAbsolutePath());
+        map.put("assets_index_name", version.getAssetIndex().getId());
+
+        map.put("version_type", version.getReleaseType().toString());
+
+        if (windowSize[0] > 0 && windowSize[1] > 0) {
+            map.put("resolution_width", String.valueOf(windowSize[0]));
+            map.put("resolution_height", String.valueOf(windowSize[1]));
+        } else {
+            map.put("resolution_width", "");
+            map.put("resolution_height", "");
+        }
+
+        map.put("language", "en-us");
+
+        if(resourceChecker != null) {
+            for (AssetIndex.AssetObject asset : resourceChecker.getAssetList()){
+                String hash = asset.getHash();
+                String path = new File(assetsObjectsDir, hash.substring(0, 2) + "/" + hash).getAbsolutePath();
+                map.put("asset=" + asset.getHash(), path);
+            }
+        }
+
+        map.put("launcher_name", "java-minecraft-launcher");
+        map.put("launcher_version", CAPABLE_WITH);
+        map.put("natives_directory", this.nativeDir.getAbsolutePath());
+        map.put("classpath", constructClassPath(version));
+        map.put("classpath_separator", System.getProperty("path.separator"));
+        map.put("primary_jar", new File(rootDir, "versions/" + version.getID() + "/" + version.getID() + ".jar").getAbsolutePath());
+
+        return new StrSubstitutor(map);
+    }
+
 
     private void recordValue(String key, Object value) {
         recordBreadcumb("valueSet", DataBuilder.create(key, value));

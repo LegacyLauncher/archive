@@ -10,8 +10,8 @@ public enum ReleaseType {
     RELEASE("release", false, true),
     SNAPSHOT("snapshot", true, true),
     MODIFIED("modified", true, true),
-    OLD_BETA("old-beta", true, true),
-    OLD_ALPHA("old-alpha", true, true),
+    OLD_BETA("old-beta", true, false),
+    OLD_ALPHA("old-alpha", true, false),
     UNKNOWN("unknown", false, false);
 
     private static final Map<String, ReleaseType> lookup;

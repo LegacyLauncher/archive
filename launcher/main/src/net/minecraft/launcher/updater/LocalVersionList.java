@@ -2,6 +2,8 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
 import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.CurrentLaunchFeatureMatcher;
+import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
@@ -87,6 +89,7 @@ public class LocalVersionList extends StreamVersionList {
     }
 
     public void deleteVersion(String id, boolean deleteLibraries) throws IOException {
+        Rule.FeatureMatcher featureMatcher = new CurrentLaunchFeatureMatcher();
         CompleteVersion version = getCompleteVersion(id);
         if (version == null) {
             throw new IllegalArgumentException("Version is not installed!");
@@ -97,14 +100,14 @@ public class LocalVersionList extends StreamVersionList {
             } else {
                 FileUtil.deleteDirectory(dir);
                 if (deleteLibraries) {
-                    Iterator var6 = version.getClassPath(baseDirectory).iterator();
+                    Iterator var6 = version.getClassPath(featureMatcher, baseDirectory).iterator();
 
                     while (var6.hasNext()) {
                         File nativeLib = (File) var6.next();
                         FileUtil.deleteFile(nativeLib);
                     }
 
-                    var6 = version.getNatives().iterator();
+                    var6 = version.getNatives(featureMatcher).iterator();
 
                     while (var6.hasNext()) {
                         String nativeLib1 = (String) var6.next();
@@ -121,7 +124,7 @@ public class LocalVersionList extends StreamVersionList {
     }
 
     public boolean hasAllFiles(CompleteVersion version, OS os) {
-        Set files = version.getRequiredFiles(os);
+        Set files = version.getRequiredFiles(os, new CurrentLaunchFeatureMatcher());
         Iterator var5 = files.iterator();
 
         File required;

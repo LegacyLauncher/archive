@@ -1,10 +1,14 @@
 {
-  "revision": 6,
-  "required": 1.79,
+  "revision": 9,
+  "required": "1.98.0",
+  "external": {
+    "revision": 1,
+    "checksum": "1ea4e9ffaaa20a7cf6e9482b652e8967bdfa549b6835705db44096991823f043"
+  },
   "variables": {
     "skip-folders": "millenaire",
     "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
-    "oom-pattern": "^java.lang.OutOfMemoryError: .+",
+    "oom-pattern": ".*java.lang.OutOfMemoryError: .+$",
     "forge-pattern": ".*(?i:forge).*"
   },
   "buttons": [
@@ -36,13 +40,27 @@
       ]
     },
     {
-      "text": "logs",
+      "text": "update-java",
       "actions": [
-        "gui logs"
+        "browse --www http://tlaun.ch/wiki/update:java"
+      ]
+    },
+    {
+      "text": "open-mods",
+      "actions": [
+        "browse --folder ./mods"
       ]
     }
   ],
   "signatures": [
+    {
+      "name": "unsupported-java-version",
+      "image": "java.png",
+      "pattern": ".*java\\.lang\\.UnsupportedClassVersionError: .+ : Unsupported major.minor version .+",
+      "buttons": [
+        "update-java"
+      ]
+    },
     {
       "name": "direct-close",
       "pattern": "Someone is closing me!",
@@ -51,7 +69,7 @@
     },
     {
       "name": "incorrent-mods-version",
-      "pattern": ".*java\\.lang\\.NoClassDefFoundError\\: net/minecraftforge/fml/relauncher/IFMLLoadingPlugin$",
+      "pattern": ".+/relauncher/IFMLLoadingPlugin$",
       "version": "${forge-pattern}"
     },
     {
@@ -65,6 +83,40 @@
             "browse --www http://mods.curse.com/mc-mods/minecraft/222213-codechickencore#t1:other-downloads"
           ]
         }
+      ]
+    },
+    {
+      "name": "update-optifine",
+      "pattern": ".*java\\.lang\\.NoSuchMethodError: net\\.minecraft\\.client\\.renderer\\.texture\\.TextureMap\\.\\<init\\>\\(ILjava\\/lang\\/String\\;Z\\)V.*",
+      "buttons": [
+        {
+          "text": "update-optifine",
+          "actions": [
+            "browse --www https://optifine.net/downloads"
+          ]
+        },
+        "open-mods"
+      ]
+    },
+    {
+      "name": "fastcraft-optifine",
+      "pattern": ".*at fastcraft\\.Z\\.\\<clinit\\>.+",
+      "buttons": [
+        "open-mods"
+      ]
+    },
+    {
+      "name": "mods-duplicate",
+      "pattern": ".*Caused by\\: java\\.lang.ClassFormatError\\: Duplicate method name\\&signature in class file .+",
+      "buttons": [
+        "open-mods"
+      ]
+    },
+    {
+      "name": "shadersmod-detected",
+      "pattern": "[\\s]*java\\.lang\\.RuntimeException: Shaders Mod detected\\. Please remove it, OptiFine has built\\-in support for shaders\\.",
+      "buttons": [
+        "open-mods"
       ]
     },
     {
@@ -128,7 +180,7 @@
       "pattern": "^(.*)\\[Downloader 0\\/ERROR]: INTERRUPTED$"
     },
     {
-      "name": "heap-x86",
+      "name": "heap-x32",
       "pattern": "${heap-pattern}",
       "archIssue": true,
       "buttons": [
@@ -145,15 +197,11 @@
     },
     {
       "name": "arch",
+      "image": "java.png",
       "archIssue": true,
       "buttons": [
         "install-java64"
       ]
-    },
-    {
-      "name": "extracted-mods-found",
-      "pattern": "^java\\.lang\\.RuntimeException: Extracted mod jars found, loading will NOT continue$",
-      "version": "${forge-pattern}"
     }
   ]
 }

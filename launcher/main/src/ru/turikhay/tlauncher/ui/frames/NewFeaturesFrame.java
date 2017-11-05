@@ -4,8 +4,10 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.*;
+import ru.turikhay.tlauncher.ui.swing.Del;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
@@ -14,10 +16,11 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class NewFeaturesFrame extends VActionFrame {
-    public static final int INCREMENTAL = 1338;
+    public static final int INCREMENTAL = 1339;
 
     // NEW FEATURES
-    final LocalizableCheckbox promotedServers;
+    final LocalizableCheckbox oldReleases;
+    final LocalizableHTMLLabel oldReleasesDesc;
     //
 
     final LocalizableButton okayButton;
@@ -29,28 +32,25 @@ public class NewFeaturesFrame extends VActionFrame {
         getHead().setText("newfeatures.title");
 
         getBodyText().setText("newfeatures.body");
+        getBody().add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(10))));
 
         // NEW FEATURES
-        getBody().add(promotedServers = new LocalizableCheckbox("newfeatures.list.promoted_servers"));
-        promotedServers.addActionListener(new ActionListener() {
+        getBody().add(oldReleases = new LocalizableCheckbox("newfeatures.list.old_releases"));
+        oldReleases.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.getLauncher().getSettings().set("minecraft.servers.promoted.ingame", promotedServers.isSelected());
+                frame.mp.defaultScene.settingsForm.oldVersionsHandler.setValue(oldReleases.isSelected());
+                frame.mp.defaultScene.settingsForm.saveValues();
             }
         });
-        promotedServers.setSelected(true);
+        oldReleases.setSelected(frame.mp.defaultScene.settingsForm.oldVersionsHandler.getValue().equals("true"));
+
+        oldReleasesDesc = new LocalizableHTMLLabel("newfeatures.list.old_releases.description");
+        oldReleasesDesc.setLabelWidth(SwingUtil.magnify(450));
+        getBody().add(oldReleasesDesc);
         //
 
-        getBody().add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(5))));
-        LocalizableHTMLLabel help = new LocalizableHTMLLabel("newfeatures.help");
-        help.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        help.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                OS.openLink("http://tlaun.ch/new_features/"+ INCREMENTAL +"?locale=" + TLauncher.getInstance().getLang().getLocale().toString());
-            }
-        });
-        getBody().add(help);
+        getBody().add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(10))));
         getBody().add(new LocalizableHTMLLabel("newfeatures.bottom"));
 
         //getFooter().add(new);

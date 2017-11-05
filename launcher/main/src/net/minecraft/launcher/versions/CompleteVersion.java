@@ -7,6 +7,7 @@ import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
@@ -44,6 +45,8 @@ public class CompleteVersion implements Version, Cloneable {
     Map<DownloadType, DownloadInfo> downloads = new HashMap<DownloadType, DownloadInfo>();
     AssetIndexInfo assetIndex;
     String assets;
+
+    Map<ArgumentType, List<Argument>> arguments;
 
     @Expose Repository source;
     @Expose Account.AccountType proceededFor;
@@ -239,7 +242,7 @@ public class CompleteVersion implements Version, Cloneable {
         return new File(base, "versions/" + getID() + "/" + getID() + ".jar");
     }
 
-    public boolean appliesToCurrentEnvironment() {
+    public boolean appliesToCurrentEnvironment(Rule.FeatureMatcher matcher) {
         if (rules == null) {
             return true;
         } else {
@@ -247,7 +250,7 @@ public class CompleteVersion implements Version, Cloneable {
 
             while (var2.hasNext()) {
                 Rule rule = (Rule) var2.next();
-                Rule.Action action = rule.getAppliedAction();
+                Rule.Action action = rule.getAppliedAction(matcher);
                 if (action == Rule.Action.DISALLOW) {
                     return false;
                 }
@@ -257,13 +260,13 @@ public class CompleteVersion implements Version, Cloneable {
         }
     }
 
-    public Collection<Library> getRelevantLibraries() {
+    public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher) {
         ArrayList result = new ArrayList();
         Iterator var3 = libraries.iterator();
 
         while (var3.hasNext()) {
             Library library = (Library) var3.next();
-            if (library.appliesToCurrentEnvironment()) {
+            if (library.appliesToCurrentEnvironment(matcher)) {
                 result.add(library);
             }
         }
@@ -271,8 +274,8 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
-    public Collection<File> getClassPath(OS os, File base) {
-        Collection libraries = getRelevantLibraries();
+    public Collection<File> getClassPath(OS os, Rule.FeatureMatcher matcher, File base) {
+        Collection libraries = getRelevantLibraries(matcher);
         ArrayList result = new ArrayList();
         Iterator var6 = libraries.iterator();
 
@@ -287,12 +290,12 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
-    public Collection<File> getClassPath(File base) {
-        return getClassPath(OS.CURRENT, base);
+    public Collection<File> getClassPath(Rule.FeatureMatcher matcher, File base) {
+        return getClassPath(OS.CURRENT, matcher, base);
     }
 
-    public Collection<String> getNatives(OS os) {
-        Collection libraries = getRelevantLibraries();
+    public Collection<String> getNatives(OS os, Rule.FeatureMatcher matcher) {
+        Collection libraries = getRelevantLibraries(matcher);
         ArrayList result = new ArrayList();
         Iterator var5 = libraries.iterator();
 
@@ -307,13 +310,13 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
-    public Collection<String> getNatives() {
-        return getNatives(OS.CURRENT);
+    public Collection<String> getNatives(Rule.FeatureMatcher matcher) {
+        return getNatives(OS.CURRENT, matcher);
     }
 
-    public Set<String> getRequiredFiles(OS os) {
+    public Set<String> getRequiredFiles(OS os, Rule.FeatureMatcher matcher) {
         HashSet neededFiles = new HashSet();
-        Iterator var4 = getRelevantLibraries().iterator();
+        Iterator var4 = getRelevantLibraries(matcher).iterator();
 
         while (var4.hasNext()) {
             Library library = (Library) var4.next();
@@ -330,8 +333,8 @@ public class CompleteVersion implements Version, Cloneable {
         return neededFiles;
     }
 
-    public Collection<String> getExtractFiles(OS os) {
-        Collection libraries = getRelevantLibraries();
+    public Collection<String> getExtractFiles(OS os, Rule.FeatureMatcher matcher) {
+        Collection libraries = getRelevantLibraries(matcher);
         ArrayList result = new ArrayList();
         Iterator var5 = libraries.iterator();
 
@@ -455,6 +458,18 @@ public class CompleteVersion implements Version, Cloneable {
             result.libraries = rulesCopy;
         }
 
+        if (arguments != null) {
+            if (result.arguments == null) result.arguments = new java.util.EnumMap(ArgumentType.class);
+            for (Map.Entry<ArgumentType, List<Argument>> entry : this.arguments.entrySet()) {
+                List<Argument> arguments = result.arguments.get(entry.getKey());
+                if (arguments == null) {
+                    arguments = new ArrayList<>();
+                    result.arguments.put(entry.getKey(), arguments);
+                }
+                arguments.addAll(entry.getValue());
+            }
+        }
+
         if (rules != null) {
             if (result.rules != null) {
                 result.rules.addAll(rules);
@@ -497,6 +512,57 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
+    public Rule.FeatureMatcher createFeatureMatcher() {
+        return new CurrentLaunchFeatureMatcher();
+    }
+
+    public List<String> addArguments(ArgumentType type, Rule.FeatureMatcher featureMatcher, StrSubstitutor substitutor) {
+        ArrayList<String> result = new ArrayList<>();
+        if (this.arguments != null) {
+            List<Argument> args = this.arguments.get(type);
+            if (args != null) {
+                for (Argument argument : args) {
+                    result.addAll(argument.apply(featureMatcher, substitutor));
+                }
+            }
+        } else {
+            if (this.minecraftArguments != null) {
+                if (type == ArgumentType.GAME) {
+                    for (String arg : this.minecraftArguments.split(" ")) {
+                        result.add(substitutor.replace(arg));
+                    }
+                    if (featureMatcher.hasFeature("is_demo_user", Boolean.TRUE)) {
+                        result.add("--demo");
+                    }
+                    if (featureMatcher.hasFeature("has_custom_resolution", Boolean.TRUE)) {
+                        result.addAll(Arrays.asList("--width", substitutor.replace("${resolution_width}"), "--height", substitutor.replace("${resolution_height}")));
+                    }
+                } else if (type == ArgumentType.JVM) {
+
+                    result.add("-Dfml.ignoreInvalidMinecraftCertificates=true");
+                    result.add("-Dfml.ignorePatchDiscrepancies=true");
+                    result.add("-Djava.net.useSystemProxies=true");
+
+                    if (OS.WINDOWS.isCurrent()) {
+                        result.add("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump");
+                        if (OS.VERSION.startsWith("10.")) {
+                            result.addAll(Arrays.asList("-Dos.name=Windows 10", "-Dos.version=10.0"));
+                        }
+                    } else if (OS.OSX.isCurrent()) {
+                        result.addAll(Arrays.asList(substitutor.replace("-Xdock:icon=${asset=icons/minecraft.icns}"), "-Xdock:name=Minecraft"));
+                    }
+                    result.add(substitutor.replace("-Djava.library.path=${natives_directory}"));
+                    result.add(substitutor.replace("-Dminecraft.launcher.brand=${launcher_name}"));
+                    result.add(substitutor.replace("-Dminecraft.launcher.version=${launcher_version}"));
+                    result.add(substitutor.replace("-Dminecraft.client.jar=${primary_jar}"));
+                    result.addAll(Arrays.asList("-cp", substitutor.replace("${classpath}")));
+                }
+            }
+        }
+        return result;
+    }
+
+
     private void log(Object... o) {
         U.log("[Version:" + id + "]", o);
     }
@@ -524,6 +590,7 @@ public class CompleteVersion implements Version, Cloneable {
             ExposeExclusion.setup(builder);
             builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
             builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
+            builder.registerTypeAdapter(Argument.class, new Argument.Serializer());
             builder.enableComplexMapKeySerialization();
             builder.setPrettyPrinting();
             defaultContext = builder.create();
