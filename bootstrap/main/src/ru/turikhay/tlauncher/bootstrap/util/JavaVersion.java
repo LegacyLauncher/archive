@@ -30,7 +30,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
 
     private final String version, identifier;
     private final int epoch, major, minor, update;
-    private final boolean beta, ea;
+    private final boolean ea;
 
     private final double d;
 
@@ -41,59 +41,28 @@ public final class JavaVersion implements Comparable<JavaVersion> {
         this.version = version;
         this.identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
-        this.epoch = epoch == 0? 1 : ifPositive(epoch, "epoch");
-        this.major = ifPositive(major, "major");
-        this.minor = ifNotNegative(minor, "minor");
+        if(epoch == 1) {
+            this.epoch = epoch;
+            this.major = ifPositive(major, "major");
+            this.minor = ifNotNegative(minor, "minor");
 
-        if (identifier != null && update == 0) {
-            update = -1;
+            if (identifier != null && update == 0) {
+                update = -1;
+            }
+            this.update = ifNotSmallerMinusOne(update, "update");
+        } else if(epoch == 0 && ifPositive(major, "major") > 0) {
+            this.epoch = 1;
+            this.major = major;
+            this.minor = ifNotNegative(minor, "minor (java 9+)");
+            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
+        } else {
+            this.epoch = 1;
+            this.major = ifPositive(epoch, "major (java 9+)");
+            this.minor = ifNotNegative(major, "minor (java 9+)");
+            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
         }
-        this.update = ifNotSmallerMinusOne(update, "update");
-
-        beta = Pattern.compile(".+-b[0-9]+.*").matcher(version).matches();
         ea = version.contains("-ea");
-
-        d = Double.parseDouble(epoch + "." + major);
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public double getDouble() {
-        return d;
-    }
-
-    public int getEpoch() {
-        return epoch;
-    }
-
-    public int getMajor() {
-        return major;
-    }
-
-    public int getMinor() {
-        return minor;
-    }
-
-    public int getUpdate() {
-        return update;
-    }
-
-    public boolean isBeta() {
-        return beta;
-    }
-
-    public boolean isEarlyAccess() {
-        return ea;
-    }
-
-    public boolean isRelease() {
-        return identifier == null;
+        d = Double.parseDouble(this.epoch + "." + this.major);
     }
 
     @Override
@@ -124,6 +93,42 @@ public final class JavaVersion implements Comparable<JavaVersion> {
         return currentRelease - compareRelease; // 00,11 = 0; 01 = -1; 10 = 1
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public double getDouble() {
+        return d;
+    }
+
+    public int getEpoch() {
+        return epoch;
+    }
+
+    public int getMajor() {
+        return major;
+    }
+
+    public int getMinor() {
+        return minor;
+    }
+
+    public int getUpdate() {
+        return update;
+    }
+
+    public boolean isEarlyAccess() {
+        return ea;
+    }
+
+    public boolean isRelease() {
+        return identifier == null;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
@@ -133,7 +138,6 @@ public final class JavaVersion implements Comparable<JavaVersion> {
                 .append("major", getMajor())
                 .append("minor", getMinor())
                 .append("update", getUpdate())
-                .append("beta", isBeta())
                 .append("ea", isEarlyAccess())
                 .append("release", isRelease())
                 .build();

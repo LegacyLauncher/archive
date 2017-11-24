@@ -11,12 +11,20 @@ public final class Sentry {
         return raven;
     }
 
+    public static void sendError(Class clazz, String message, Throwable t, DataBuilder data, DataBuilder tags) {
+        SentryContext.GLOBAL_CONTEXT.sendError(clazz, message, t, data, tags);
+    }
+
     public static void sendError(Class clazz, String message, Throwable t, DataBuilder data) {
-        SentryContext.GLOBAL_CONTEXT.sendError(clazz, message, t, data);
+        sendWarning(clazz, message, data, null);
+    }
+
+    public static void sendWarning(Class clazz, String message, DataBuilder data, DataBuilder tags) {
+        SentryContext.GLOBAL_CONTEXT.sendWarning(clazz, message, data, tags);
     }
 
     public static void sendWarning(Class clazz, String message, DataBuilder data) {
-        SentryContext.GLOBAL_CONTEXT.sendWarning(clazz, message, data);
+        sendWarning(clazz, message, data, null);
     }
 
     private Sentry() {

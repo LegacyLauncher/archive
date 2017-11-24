@@ -4,6 +4,7 @@ import com.github.zafarkhaja.semver.Version;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import joptsimple.OptionSet;
+import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
@@ -28,6 +29,7 @@ import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.*;
+import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.RunnableThread;
 import ru.turikhay.util.stream.MirroredLinkedOutputStringStream;
 import ru.turikhay.util.stream.PrintLogger;
@@ -37,12 +39,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
@@ -146,6 +147,55 @@ public final class TLauncher {
         }
 
         SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
+
+        if(config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
+            config.set("client", UUID.randomUUID());
+            String creationTime = "unknown";
+            try {
+                creationTime = Files.readAttributes(config.getFile().toPath(), BasicFileAttributes.class).creationTime().toString();
+            } catch(Exception e) {
+                // ignore
+            }
+            Sentry.sendWarning(TLauncher.class, "bubble client",
+                    DataBuilder.create("new_uuid", config.getClient())
+                            .add("old_uuid", "23a9e755-046a-4250-9e03-1920baa98aeb")
+                            .add("path", new File(""))
+                            .add("home", MinecraftUtil.getWorkingDirectory())
+                            .add("configLocation", config.getFile())
+                            .add("configCreationDate", creationTime)
+            );
+        }
+
+        final int testIteration = 1;
+        if(config.getInteger("connection.testPassed") != testIteration) {
+            AsyncThread.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Set<String> urlList = new LinkedHashSet<>();
+                    urlList.add("https://s3.amazonaws.com/Minecraft.Download/versions/versions.json");
+                    for (String extraRepo : Static.getExtraRepo()) {
+                        urlList.add(extraRepo + "versions/versions.json");
+                    }
+                    urlList.add("https://account.ely.by/");
+                    urlList.add("https://tlauncher.ru/test.txt");
+                    urlList.add("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                    for (String url : urlList) {
+                        String response = null;
+                        try {
+                            response = IOUtils.toString(new URL(url), "UTF-8");
+                            if (url.endsWith("json") && !response.startsWith("{")) {
+                                throw new IOException("invalid json response");
+                            }
+                            U.log("Connection OK:", url);
+                        } catch (Exception e) {
+                            U.log("Test connection failed for " + url, e);
+                            Sentry.sendError(TLauncher.class, "test connection failed for " + url, e, DataBuilder.create("response", response), DataBuilder.create("fix_applied", String.valueOf(!config.getBoolean("connection.ssl"))));
+                        }
+                    }
+                    config.set("connection.testPassed", testIteration);
+                }
+            });
+        }
     }
 
     public BootConfiguration getBootConfig() {

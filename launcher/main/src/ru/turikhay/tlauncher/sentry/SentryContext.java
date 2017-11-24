@@ -40,22 +40,30 @@ public final class SentryContext {
         breadcrumbList.add(breadcrumb);
     }
 
-    public void sendError(Class clazz, String message, Throwable t, DataBuilder data) {
+    public void sendError(Class clazz, String message, Throwable t, DataBuilder data, DataBuilder tags) {
         Sentry.getRaven().sendEvent(
-                buildEvent(Event.Level.ERROR, clazz, message, data)
+                buildEvent(Event.Level.ERROR, clazz, message, data, tags)
                         .withSentryInterface(new ExceptionInterface(t))
                         .build()
         );
     }
 
-    public void sendWarning(Class clazz, String message, DataBuilder data) {
+    public void sendError(Class clazz, String message, Throwable t, DataBuilder data) {
+        sendError(clazz, message, t, data, null);
+    }
+
+    public void sendWarning(Class clazz, String message, DataBuilder data, DataBuilder tags) {
         Sentry.getRaven().sendEvent(
-                buildEvent(Event.Level.WARNING, clazz, message, data)
-                .build()
+                buildEvent(Event.Level.WARNING, clazz, message, data, tags)
+                        .build()
         );
     }
 
-    private EventBuilder buildEvent(Event.Level level, Class clazz, String message, DataBuilder data) {
+    public void sendWarning(Class clazz, String message, DataBuilder data) {
+        sendWarning(clazz, message, data, null);
+    }
+
+    private EventBuilder buildEvent(Event.Level level, Class clazz, String message, DataBuilder data, DataBuilder tags) {
         EventBuilder b = new EventBuilder()
                 .withLevel(level)
                 .withCulprit(clazz == null ? null : clazz.toString())
@@ -64,7 +72,15 @@ public final class SentryContext {
                 .withRelease(String.valueOf(TLauncher.getVersion()));
 
         b.withTag("java", OS.JAVA_VERSION.getVersion());
+        b.withTag("arch", OS.Arch.CURRENT.name());
         b.withTag("brand", TLauncher.getBrand());
+
+        if(tags != null) {
+            for(Map.Entry<String, String> entry : tags.build().entrySet()) {
+                b.withTag(entry.getKey(), entry.getValue());
+            }
+        }
+
         addAv(b);
 
         if(TLauncher.getInstance() != null) {

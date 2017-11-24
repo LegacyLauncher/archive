@@ -607,7 +607,7 @@ public final class Bootstrap {
     private static void checkRunningConditions() {
         JavaVersion supported = JavaVersion.create(1, 7, 0, 25);
 
-        if(JavaVersion.getCurrent().compareTo(supported) == -1) {
+        if(JavaVersion.getCurrent().compareTo(supported) < 0) {
             String message =
                     "Your Java version is not supported. Please install at least " + supported.getVersion() + " from Java.com" +
                     "\n" +

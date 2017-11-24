@@ -5,7 +5,9 @@ import com.google.gson.GsonBuilder;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import net.minecraft.options.OptionsFile;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
@@ -41,7 +43,8 @@ public final class CrashManager {
     private final Map<String, BindableAction> actionsMap = new HashMap<String, BindableAction>();
 
     private final Entry
-            generatedFilesSearcherEntry = new GeneratedFilesSearcher(),
+            generatedFilesSeekerEntry = new GeneratedFilesSeeker(),
+            crashDescriptionSeeker = new CrashDescriptionSeeker(),
             dxDiagAheadProcessorEntry = DxDiag.isScannable()? new DxDiagAheadProcessor() : null,
             logFlusherEntry = new LogFlusherEntry();
 
@@ -52,19 +55,21 @@ public final class CrashManager {
         addAction(new SetAction());
         addAction(new GuiAction());
         addAction(new ExitAction());
+        addAction(new SetOptionAction(launcher == null? new OptionsFile(new File("test.txt")) : launcher.getOptionsFile()));
     }
 
     private void setupEntries() {
         crashEntries.clear();
 
-        addEntry(generatedFilesSearcherEntry);
-        addEntry(new CrashReportAnalyzer());
+        addEntry(generatedFilesSeekerEntry);
+        addEntry(crashDescriptionSeeker);
+        addEntry(new ErroredModListAnalyzer());
 
         loadLocal:
         {
             CrashEntryList internal;
             try {
-                internal = loadEntries(getClass().getResourceAsStream("signatures.json"), "internal");
+                internal = loadEntries(getClass().getResourceAsStream("signature.json"), "internal");
             } catch (Exception e) {
                 throw new RuntimeException("could not load local signatures", e);
             }
@@ -244,6 +249,21 @@ public final class CrashManager {
         }
     }
 
+    private Scanner getCrashFileScanner() throws IOException {
+        File crashFile = crash.getCrashFile();
+        if(crashFile == null || !crashFile.isFile()) {
+            log("Crash report file doesn't exist. May be looking into logs?");
+            return PatternEntry.getScanner(getOutput());
+        } else {
+            log("Crash report file exist. We'll scan it.");
+            return new Scanner(new InputStreamReader(new FileInputStream(crashFile), FileUtil.getCharset()));
+        }
+    }
+
+    private SentryContext sentry() {
+        return SentryContext.getContextOrGlobal(MinecraftLauncher.SENTRY_CONTEXT_NAME);
+    }
+
     void log(Object... o) {
         U.log("[Crash]", o);
     }
@@ -281,8 +301,7 @@ public final class CrashManager {
                     for (CrashManagerListener listener : listeners) {
                         listener.onCrashManagerFailed(CrashManager.this, e);
                     }
-                    SentryContext.getContextOrGlobal(MinecraftLauncher.SENTRY_CONTEXT_NAME)
-                            .sendError(CrashManager.class, "crashmanager fatal error", e, null);
+                    sentry().sendError(CrashManager.class, "crashmanager fatal error", e, null);
                     break executor;
                 }
                 for (CrashManagerListener listener : listeners) {
@@ -368,10 +387,25 @@ public final class CrashManager {
                 }
             }
 
-            SentryContext.getContextOrGlobal(MinecraftLauncher.SENTRY_CONTEXT_NAME)
-                    .sendWarning(CrashManager.class, capableEntry == null? "unknown crash" : "crash:" + capableEntry.getName(),
-                            DataBuilder.create("crash", crash).add("version", version).add("exitCode", exitCode)
-                    );
+            String sentryMessage;
+            if(capableEntry == null) {
+                if(crash.getJavaDescription() != null) {
+                    sentryMessage = "crash:\""+  crash.getJavaDescription() +"\"";
+                } else {
+                    sentryMessage = "unknown crash";
+                }
+            } else {
+                sentryMessage = "crash:" + capableEntry.getName();
+            }
+
+            DataBuilder dataBuilder = DataBuilder.create("crash", crash)
+                    .add("exitCode", exitCode).add("description", crash.getDescription())
+                    .add("stackTrace", crash.getStackTrace()).add("javaDescription", crash.getJavaDescription())
+                    .add(crash.getExtraInfo());
+
+            sentry().sendWarning(CrashManager.class, sentryMessage, dataBuilder,
+                DataBuilder.create("mcVersion", version).add("exitCode", exitCode).add("javaDescription", crash.getJavaDescription())
+            );
 
             log("Done in", Time.stop(timer), "ms");
         }
@@ -423,12 +457,12 @@ public final class CrashManager {
         }
     }
 
-    private class CrashReportAnalyzer extends CrashEntry {
+    private class ErroredModListAnalyzer extends CrashEntry {
         private final Pattern modPattern;
         private final ArrayList<Pattern> patterns = new ArrayList<Pattern>();
 
-        public CrashReportAnalyzer() {
-            super(CrashManager.this, "analyzer");
+        ErroredModListAnalyzer() {
+            super(CrashManager.this, "errored mod list analyzer");
             modPattern = Pattern.compile("^[\\W]+[ULCHIJAD]*([ULCHIJADE])[\\W]+.+\\{.+\\}[\\W]+\\[(.+)\\][\\W]+\\((.+)\\).*");
 
             patterns.add(Pattern.compile("^-- System Details --$"));
@@ -439,38 +473,15 @@ public final class CrashManager {
         }
 
         protected boolean checkCapability() throws Exception {
-            Scanner scanner;
+            Scanner scanner = getCrashFileScanner();
 
-            File crashFile = crash.getCrashFile();
-            if(crashFile == null || !crashFile.isFile()) {
-                log("Crash report file doesn't exist. May be looking into logs?");
-                scanner = PatternEntry.getScanner(getOutput());
-            } else {
-                log("Crash report file exist. We'll scan it.");
-                scanner = new Scanner(new InputStreamReader(new FileInputStream(crashFile), FileUtil.getCharset()));
-            }
-
-            Pattern expectedPattern; int expectedPatternIndex = 0;
-
-            while(scanner.hasNextLine()) {
-                expectedPattern = patterns.get(expectedPatternIndex);
-                String line = scanner.nextLine();
-
-                if(expectedPattern.matcher(line).matches()) {
-                    log("Pattern matches:", expectedPattern);
-                    if(++expectedPatternIndex == patterns.size()) {
-                        break;
-                    }
-                }
-            }
-
-            if(expectedPatternIndex != patterns.size()) {
-                log("Not all patterns are met. Skipping.");
+            if(PatternEntry.matchPatterns(scanner, patterns, null)) {
+                log("Not all patterns met. Skipping");
                 return false;
             }
 
             log("All patterns are met. Working on a mod list");
-            final List<ErroredMod> errorModList = new ArrayList<ErroredMod>();
+            final List<ErroredMod> errorModList = new ArrayList<>();
 
             while(scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -536,17 +547,87 @@ public final class CrashManager {
                     }
                 });
             }
+            crash.addExtra("erroredModList", errorModList.toString());
             return true;
         }
     }
 
-    private class GeneratedFilesSearcher extends Entry {
+    private class CrashDescriptionSeeker extends Entry {
+        private final List<Pattern> patternList = Arrays.asList(
+                Pattern.compile(".*[-]+.*Minecraft Crash Report.*[-]+"),
+                Pattern.compile(".*Description: (?i:(?!.*debug.*))(.*)")
+        );
+
+        CrashDescriptionSeeker() {
+            super(CrashManager.this, "crash description seeker");
+        }
+
+        @Override
+        protected void execute() throws Exception {
+            log("Looking for crash description...");
+            Scanner scanner = getCrashFileScanner();
+            ArrayList<String> matches = new ArrayList<>();
+            String description = null;
+            findDescription:
+            {
+                if (!PatternEntry.matchPatterns(scanner, patternList, matches)) {
+                    break findDescription;
+                }
+                if (matches.isEmpty()) {
+                    log("No description?");
+                    break findDescription;
+                }
+                description = matches.get(0);
+            }
+            if(description == null) {
+                log("Could not find crash description");
+                return;
+            }
+            String line = null;
+            if(scanner.hasNextLine()) {
+                line = scanner.nextLine();
+                if(StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) { // must be empty after "Description" line
+                    line = scanner.nextLine();
+                }
+            }
+            if(StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) {
+                log("Stack trace line is empty?");
+
+                StringBuilder moreLines = new StringBuilder();
+                int additionalLines = 0;
+
+                while(scanner.hasNextLine() && additionalLines < 10) {
+                    additionalLines++;
+                    moreLines.append('\n').append(scanner.nextLine());
+                }
+                sentry().sendWarning(CrashManager.class, "stack trace line is empty", DataBuilder.create("description", description).add("lines", moreLines.length() > 1? moreLines.substring(1) : null));
+                crash.addExtra("stackTraceLineIsEmpty", "");
+
+                return;
+            }
+            crash.setJavaDescription(line);
+            StringBuilder stackTraceBuilder = new StringBuilder();
+            while(scanner.hasNextLine()) {
+                line = scanner.nextLine();
+                if(StringUtils.isBlank(line)) {
+                    break;
+                } else {
+                    stackTraceBuilder.append('\n').append(line);
+                }
+            }
+            if(stackTraceBuilder.length() > 1) {
+                crash.setStackTrace(stackTraceBuilder.substring(1));
+            }
+        }
+    }
+
+    private class GeneratedFilesSeeker extends Entry {
         final Pattern
                 crashFilePattern = Pattern.compile("^.*#@!@# Game crashed!.+@!@# (.+)$"),
                 nativeCrashFilePattern = Pattern.compile("# (.+)$");
 
-        GeneratedFilesSearcher() {
-            super(CrashManager.this, "generated files searcher");
+        GeneratedFilesSeeker() {
+            super(CrashManager.this, "generated files seeker");
         }
 
         @Override
@@ -554,9 +635,38 @@ public final class CrashManager {
             Scanner scanner = PatternEntry.getScanner(getOutput());
 
             while (scanner.hasNextLine()) {
-                String line;
+                String line = scanner.nextLine();
 
-                String crashFile = get(crashFilePattern, line = scanner.nextLine());
+                /*String crashDescription = get(crashDescriptionPattern, line);
+                if(crashDescription != null) {
+                    crash.setDescription(crashDescription);
+                    if(scanner.hasNextLine()) {
+                        String nextLine = null;
+                        while(scanner.hasNextLine()) {
+                            nextLine = scanner.nextLine();
+                            if(!StringUtils.isBlank(nextLine)) {
+                                break;
+                            }
+                        }
+                        StringBuilder stackTraceBuilder = new StringBuilder();
+                        if(!StringUtils.isBlank(nextLine)) {
+                            crash.setJavaDescription(nextLine);
+                            while(scanner.hasNextLine()) {
+                                nextLine = scanner.nextLine();
+                                if(StringUtils.isBlank(nextLine)) {
+                                    break;
+                                } else {
+                                    stackTraceBuilder.append('\n').append(nextLine);
+                                }
+                            }
+                        }
+                        if(stackTraceBuilder.length() > 1) {
+                            crash.setStackTrace(stackTraceBuilder.substring(1));
+                        }
+                    }
+                }*/
+
+                String crashFile = get(crashFilePattern, line);
                 if (crashFile != null) {
                     crash.setCrashFile(crashFile);
                     continue;
@@ -833,6 +943,26 @@ public final class CrashManager {
                     OS.openFolder(folder);
                 }
             }
+        }
+    }
+
+    private class SetOptionAction extends BindableAction {
+        private final OptionsFile file;
+
+        public SetOptionAction(OptionsFile file) {
+            super("option");
+            this.file = U.requireNotNull(file, "file");
+        }
+
+        @Override
+        public void execute(String arg) throws Exception {
+            for(String optionPair : StringUtils.split(arg, ';')) {
+                String[] pair = StringUtils.split(optionPair, ':');
+                String key = pair[0], value = pair[1];
+                file.set(key, value);
+            }
+            file.save();
+            Alert.showLocMessage("crash.actions.set-options");
         }
     }
 

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public final class JavaVersion {
     private final String version, identifier;
     private final int epoch, major, minor, update;
-    private final boolean beta, ea;
+    private final boolean ea;
 
     private final double d;
 
@@ -21,19 +21,28 @@ public final class JavaVersion {
         this.version = StringUtil.requireNotBlank(version, "version");
         this.identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
-        this.epoch = epoch == 0? 1 : ifPositive(epoch, "epoch");
-        this.major = ifPositive(major, "major");
-        this.minor = ifNotNegative(minor, "minor");
+        if(epoch == 1) {
+            this.epoch = epoch;
+            this.major = ifPositive(major, "major");
+            this.minor = ifNotNegative(minor, "minor");
 
-        if (identifier != null && update == 0) {
-            update = -1;
+            if (identifier != null && update == 0) {
+                update = -1;
+            }
+            this.update = ifNotSmallerMinusOne(update, "update");
+        } else if(epoch == 0 && ifPositive(major, "major") > 0) {
+            this.epoch = 1;
+            this.major = major;
+            this.minor = ifNotNegative(minor, "minor (java 9+)");
+            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
+        } else {
+            this.epoch = 1;
+            this.major = ifPositive(epoch, "major (java 9+)");
+            this.minor = ifNotNegative(major, "minor (java 9+)");
+            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
         }
-        this.update = ifNotSmallerMinusOne(update, "update");
-
-        beta = Pattern.compile(".+-b[0-9]+.*").matcher(version).matches();
         ea = version.contains("-ea");
-
-        d = Double.parseDouble(epoch + "." + major);
+        d = Double.parseDouble(this.epoch + "." + this.major);
     }
 
     public String getVersion() {
@@ -64,10 +73,6 @@ public final class JavaVersion {
         return update;
     }
 
-    public boolean isBeta() {
-        return beta;
-    }
-
     public boolean isEarlyAccess() {
         return ea;
     }
@@ -85,7 +90,6 @@ public final class JavaVersion {
                 .append("major", getMajor())
                 .append("minor", getMinor())
                 .append("update", getUpdate())
-                .append("beta", isBeta())
                 .append("ea", isEarlyAccess())
                 .append("release", isRelease())
                 .build();

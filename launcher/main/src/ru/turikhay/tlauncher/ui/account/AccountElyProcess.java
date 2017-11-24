@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.account;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
@@ -171,7 +172,8 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
             }
 
             @Override
-            public void strategyErrored(ElyAuthFlow strategy) {
+            public void strategyErrored(ElyAuthFlow strategy, Exception e) {
+                Stats.accountCreation("ely", "primary", "", false);
                 setState(FlowState.ERROR);
             }
 
@@ -182,17 +184,20 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
             @Override
             public void strategyUrlOpeningFailed(ElyAuthFlow strategy, URL url) {
+                Stats.accountCreation("ely", "primary", "url_opening", false);
                 setState(FlowState.ERROR);
             }
 
             @Override
             public void strategyCancelled(ElyAuthFlow strategy) {
+                Stats.accountCreation("ely", "primary", "cancelled", false);
                 setState(FlowState.CANCELLED);
             }
 
             @Override
             public void strategyComplete(ElyAuthFlow strategy, ElyAuthCode code) {
                 fetchCode(code);
+                Stats.accountCreation("ely", "primary", "", true);
             }
         });
         authProcess = AsyncThread.future(primaryFlow);
@@ -222,7 +227,8 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
             }
 
             @Override
-            public void strategyErrored(ElyAuthFlow strategy) {
+            public void strategyErrored(ElyAuthFlow strategy, Exception e) {
+                Stats.accountCreation("ely", "fallback", "", false);
                 setState(FlowState.ERROR);
             }
 
@@ -233,16 +239,19 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
             @Override
             public void strategyUrlOpeningFailed(ElyAuthFlow strategy, URL url) {
+                Stats.accountCreation("ely", "fallback", "url_opening", false);
                 setState(FlowState.ERROR);
             }
 
             @Override
             public void strategyCancelled(ElyAuthFlow strategy) {
+                Stats.accountCreation("ely", "fallback", "cancelled", false);
                 setState(FlowState.CANCELLED);
             }
 
             @Override
             public void strategyComplete(ElyAuthFlow strategy, ElyAuthCode code) {
+                Stats.accountCreation("ely", "fallback", "", true);
                 fetchCode(code);
             }
         });

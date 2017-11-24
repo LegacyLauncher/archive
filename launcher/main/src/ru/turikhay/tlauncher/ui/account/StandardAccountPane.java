@@ -2,8 +2,8 @@ package ru.turikhay.tlauncher.ui.account;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.minecraft.auth.*;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -209,6 +209,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
             @Override
             public void onAuthPassingError(Authenticator var1, Throwable var2) {
                 if(session == currentSession) {
+                    Stats.accountCreation(accountType.toString().toLowerCase(), "standard", "", false);
                     Blocker.unblockComponents(StandardAccountPane.this, "user-pass");
                     progressBar.setIndeterminate(false);
                 }
@@ -227,6 +228,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
                             if(findAccount(account.getDisplayName(), true) != null) {
                                 return;
                             }
+                            Stats.accountCreation(accountType.toString().toLowerCase(), "standard", "", true);
                             break;
                         case EDIT:
                             User newUser = account.getUser();

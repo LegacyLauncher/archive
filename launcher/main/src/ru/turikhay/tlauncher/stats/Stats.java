@@ -10,7 +10,9 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.PromotedServerAddStatus;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.notice.Notice;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
@@ -101,6 +103,14 @@ public final class Stats {
 
     public static void feedbackRefused(boolean returnBack) {
         submitDenunciation(newAction("feedback_refused").add("return_back", String.valueOf(returnBack)));
+    }
+
+    public static void accountCreation(String type, String strategy, String step, boolean success) {
+        Sentry.sendWarning(Stats.class, "account_creation:" + type + ":" + strategy, null, DataBuilder.create("success", success).add("step", step));
+    }
+
+    public static void elyEnabled(boolean enabled) {
+        Sentry.sendWarning(Stats.class, "ely_enabled", null, DataBuilder.create("enabled", enabled));
     }
 
     private static Stats.Args newAction(String name) {
