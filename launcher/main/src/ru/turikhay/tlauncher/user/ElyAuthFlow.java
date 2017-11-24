@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.user;
 
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.StringUtil;
@@ -52,8 +53,9 @@ public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Call
                 }
                 throw interrupted;
             } catch (Exception e) {
+                Sentry.sendError(ElyAuthFlow.class, "Ely strategy " + getClass().getSimpleName() + " error", e, null);
                 for (L listener : listenerList) {
-                    listener.strategyErrored(this);
+                    listener.strategyErrored(this, e);
                 }
                 throw e;
             }

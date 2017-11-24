@@ -9,6 +9,7 @@ import net.minecraft.launcher.updater.AssetIndex;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.*;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
+import net.minecraft.options.OptionsFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -95,6 +96,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private boolean fullScreen;
     private boolean fullCommand;
     private int ramSize;
+    private OptionsFile optionsFile;
     private JavaProcessLauncher launcher;
     private String javaArgs;
     private String programArgs;
@@ -305,6 +307,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         this.outdatedPromotedServers = outdatedServerList;
     }
 
+    public OptionsFile getOptionsFile() {
+        return optionsFile;
+    }
+
     private void collectInfo() throws MinecraftException {
         checkStep(MinecraftLauncher.MinecraftLauncherStep.NONE, MinecraftLauncher.MinecraftLauncherStep.COLLECTING);
         log("Collecting info...");
@@ -443,6 +449,20 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                         log("Root directory:", rootDir);
                         log("Game directory:", gameDir);
+
+                        optionsFile = new OptionsFile(new File(gameDir, "options.txt"));
+
+                        if(optionsFile.getFile().isFile()) {
+                            try {
+                                optionsFile.read();
+                            } catch (IOException ioE) {
+                                recordValue("optionsReadError", ioE);
+                                log("could not read options file", ioE);
+                            }
+                        }
+
+                        log("Options:", optionsFile);
+                        recordValue("options", optionsFile.copy());
 
                         globalAssetsDir = new File(rootDir, "assets");
 
@@ -1471,6 +1491,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         Stats.minecraftLaunched(account, version, server, serverId, promotedServerAddStatus);
+        if(account.getType() != Account.AccountType.ELY && account.getType() != Account.AccountType.ELY) {
+            Stats.elyEnabled(settings.getBoolean("ely.globally"));
+        }
         if (assistLaunch) {
             waitForClose();
         } else {

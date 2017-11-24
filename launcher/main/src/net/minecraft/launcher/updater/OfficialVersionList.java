@@ -2,11 +2,10 @@ package net.minecraft.launcher.updater;
 
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.Time;
-import ru.turikhay.util.U;
+import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.util.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,7 +31,21 @@ public class OfficialVersionList extends RemoteVersionList {
             log("Got in", Time.stop(lock), "ms");
             return list;
         } catch(Exception e) {
-            Sentry.sendError(OfficialVersionList.class, "official repo is not reachable", e, null);
+            if(e.getMessage().contains("PKIX path building failed") || e.getMessage().contains("the trustAnchors parameter must be non-empty")) {
+                Alert.showLocError("version.error.title", "version.error.cert", null);
+                boolean certFixed = false;
+                if(Alert.showLocQuestion("version.error.title", "version.error.cert.question", null)) {
+                    certFixed = true;
+                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.sslCheck.setValue(false);
+                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.saveValues();
+                }
+                Sentry.sendWarning(OfficialVersionList.class, "no certificates", DataBuilder.create("exception", e), DataBuilder.create("cert-fixed", certFixed));
+                if(certFixed) {
+                    TLauncher.kill();
+                }
+            } else {
+                Sentry.sendError(OfficialVersionList.class, "official repo is not reachable", e, null);
+            }
             throw new IOException(e);
         }
     }

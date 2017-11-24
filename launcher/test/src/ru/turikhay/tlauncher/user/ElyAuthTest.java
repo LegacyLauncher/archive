@@ -21,7 +21,7 @@ public class ElyAuthTest {
             }
 
             @Override
-            public void strategyErrored(ElyAuthFlow strategy) {
+            public void strategyErrored(ElyAuthFlow strategy, Exception e) {
             }
 
             @Override

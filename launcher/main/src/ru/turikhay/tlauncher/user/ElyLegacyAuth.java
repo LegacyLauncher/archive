@@ -54,6 +54,9 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
         @Override
         public void validate() throws Exception {
             if("ForbiddenOperationException".equals(error)) {
+                if("Account protected with two factor auth.".equals(errorMessage)) {
+                    throw new AuthException(errorMessage, "2fa");
+                }
                 if("This account has been suspended.".equals(errorMessage)) {
                     throw new AuthBannedException();
                 }

@@ -7,6 +7,13 @@ import java.util.Map;
 public final class DataBuilder {
     private final Map<String, String> data = new LinkedHashMap<String, String>();
 
+    public DataBuilder add(Map<String, String> data) {
+        if(data != null) {
+            this.data.putAll(data);
+        }
+        return this;
+    }
+
     public DataBuilder add(String key, String value) {
         data.put(key, value);
         return this;

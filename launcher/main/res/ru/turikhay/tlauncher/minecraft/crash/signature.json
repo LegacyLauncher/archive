@@ -1,6 +1,6 @@
 {
-  "revision": 9,
-  "required": "1.98.0",
+  "revision": 12,
+  "required": "1.98.6",
   "external": {
     "revision": 1,
     "checksum": "1ea4e9ffaaa20a7cf6e9482b652e8967bdfa549b6835705db44096991823f043"
@@ -12,6 +12,12 @@
     "forge-pattern": ".*(?i:forge).*"
   },
   "buttons": [
+    {
+      "text": "logs",
+      "actions": [
+        "gui args"
+      ]
+    },
     {
       "text": "disable-optimized",
       "actions": [
@@ -54,6 +60,11 @@
   ],
   "signatures": [
     {
+      "name": "jdk9-not-supported",
+      "image": "java.png",
+      "pattern": ".+ cannot be cast to java\\.base\\/java\\.net\\.URLClassLoader.*"
+    },
+    {
       "name": "unsupported-java-version",
       "image": "java.png",
       "pattern": ".*java\\.lang\\.UnsupportedClassVersionError: .+ : Unsupported major.minor version .+",
@@ -90,7 +101,7 @@
       "pattern": ".*java\\.lang\\.NoSuchMethodError: net\\.minecraft\\.client\\.renderer\\.texture\\.TextureMap\\.\\<init\\>\\(ILjava\\/lang\\/String\\;Z\\)V.*",
       "buttons": [
         {
-          "text": "update-optifine",
+          "text": "update",
           "actions": [
             "browse --www https://optifine.net/downloads"
           ]
@@ -143,6 +154,24 @@
       ]
     },
     {
+      "name": "memory-leak",
+      "os": [
+        "windows"
+      ],
+      "buttons": [
+        {
+          "text": "disable-vbos",
+          "actions": [
+            "option useVbo:false"
+          ],
+          "block": true
+        },
+        "open-settings",
+        "update-java"
+      ],
+      "exitCode": -1073740940
+    },
+    {
       "name": "oom-x86",
       "pattern": "${oom-pattern}",
       "archIssue": true,
@@ -177,7 +206,7 @@
     },
     {
       "name": "server-resource-pack",
-      "pattern": "^(.*)\\[Downloader 0\\/ERROR]: INTERRUPTED$"
+      "pattern": ".*(?:\\[Downloader [\\d]+\\/ERROR]: INTERRUPTED|f\\: Updating screen events).*"
     },
     {
       "name": "heap-x32",

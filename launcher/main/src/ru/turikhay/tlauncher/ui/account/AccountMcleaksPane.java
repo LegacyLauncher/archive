@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.AuthExecutor;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -118,6 +119,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                         }
                         Blocker.unblockComponents(AccountMcleaksPane.this, "mcleaks-auth");
                         progressBar.setIndeterminate(false);
+                        Stats.accountCreation("mcleaks", "standard", "", false);
                     }
 
                     @Override
@@ -147,6 +149,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                         TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
                         scene.list.select(new Account(user));
                         scene.multipane.showTip("success-" + mode.toString().toLowerCase());
+                        Stats.accountCreation("mcleaks", "standard", "", true);
                     }
                 }){{editorOpened = true;}});
             }
