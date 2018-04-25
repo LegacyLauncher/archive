@@ -153,11 +153,11 @@ public class Library {
                 repo = versionSource;
                 path = url.substring(1) + path;
             } else {
-                repo = null;
+                repo = Repository.PROXIFIED_REPO;
                 path = url + path;
             }
         } else {
-            repo = null;
+            repo = Repository.PROXIFIED_REPO;
             path = exact_url;
         }
 
@@ -291,12 +291,12 @@ public class Library {
         }
 
         private LibraryDownloadable(String path, File file) {
-            super(path, file);
+            super(Repository.PROXIFIED_REPO, path, file);
             this.checksum = Library.this.getChecksum();
         }
 
         private LibraryDownloadable(DownloadInfo info, File file) {
-            super(info.getUrl().toString(), file);
+            super(Repository.PROXIFIED_REPO, info.getUrl().toString(), file);
             this.checksum = info.getSha1();
         }
 

@@ -109,10 +109,6 @@ public final class Stats {
         Sentry.sendWarning(Stats.class, "account_creation:" + type + ":" + strategy, null, DataBuilder.create("success", success).add("step", step));
     }
 
-    public static void elyEnabled(boolean enabled) {
-        Sentry.sendWarning(Stats.class, "ely_enabled", null, DataBuilder.create("enabled", enabled));
-    }
-
     private static Stats.Args newAction(String name) {
         return new Stats.Args()
                 .add("client", TLauncher.getInstance().getSettings().getClient().toString())

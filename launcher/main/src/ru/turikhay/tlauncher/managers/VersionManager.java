@@ -431,7 +431,7 @@ public class VersionManager extends InterruptibleComponent {
 
         File baseDirectory = localList.getBaseDirectory();
 
-        container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type));
+        //container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type));
 
         if (type != null) {
             try {

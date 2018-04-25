@@ -63,13 +63,15 @@ public abstract class AuthlibUser extends User {
     }
 
     private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(com.mojang.authlib.properties.PropertyMap.class, new com.mojang.authlib.properties.PropertyMap.Serializer())
+            //.registerTypeAdapter(com.mojang.authlib.properties.PropertyMap.class, new com.mojang.authlib.properties.PropertyMap.Serializer())
             .create();
+
+    // TODO fix properties
 
     public LoginCredentials getLoginCredentials() {
         return new LoginCredentials(username,
                 userAuthentication.getAuthenticatedToken(),
-                gson.toJson(userAuthentication.getUserProperties()),
+                "{}",
                 getDisplayName(),
                 getSelectedMojangProfile().getId(),
                 "mojang",

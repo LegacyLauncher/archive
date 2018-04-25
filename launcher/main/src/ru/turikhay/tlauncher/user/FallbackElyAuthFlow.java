@@ -16,8 +16,7 @@ public class FallbackElyAuthFlow extends ElyAuthFlow<FallbackElyAuthFlowListener
                 return new ElyAuthCode(result, STATIC_PAGE_REDIRECT_NAME, state);
             }
         }
-
-        return null;
+        throw new InterruptedException("no result in listeners");
     }
 
     @Override

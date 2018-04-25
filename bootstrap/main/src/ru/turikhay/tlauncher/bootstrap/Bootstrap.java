@@ -134,6 +134,10 @@ public final class Bootstrap {
             System.exit(-1);
         }
 
+        if(recordedError) {
+            bootstrap.sendEvent(bootstrap.prepareEvent(Event.Level.WARNING, null).withMessage("recorded error"));
+        }
+
         System.exit(0);
     }
 
@@ -330,6 +334,8 @@ public final class Bootstrap {
         return taskList;
     }
 
+    private BootBridge bootBridge;
+
     private BootBridge createBridge(String[] args, String options) {
         BootBridge bridge = BootBridge.create(meta.getVersion().toString(), args, options);
         bridge.addListener(new BootListenerAdapter() {
@@ -420,6 +426,7 @@ public final class Bootstrap {
                 LocalLauncher localLauncher = localLauncherTask.getLauncher();
 
                 BootBridge bridge = createBridge(args, updateMeta == null? null : updateMeta.getOptions());
+                bootBridge = bridge;
                 if(localLauncherTask.isUpdated() && updateMeta != null) {
                     addUpdateMessage(bridge, updateMeta.getLauncher());
                 }
@@ -522,13 +529,26 @@ public final class Bootstrap {
                     throw new LauncherNotFoundException("could not retrieve any launcher");
                 }
 
-                local = bindTo(remote.toLocalLauncher(file, getTargetLibFolder()), .5, 1.);
-                return new LocalLauncherTask(local, true);
+                LocalLauncher fromRemote;
+                try {
+                    fromRemote = bindTo(remote.toLocalLauncher(file, getTargetLibFolder()), .5, 1.);
+                } catch(IOException ioE) {
+                    if(local == null) {
+                        throw ioE;
+                    }
+                    recordBreadcrumbError(Bootstrap.class, "could not download update", ioE, null);
+                    return new LocalLauncherTask(local);
+                }
+
+                return new LocalLauncherTask(fromRemote, true);
             }
         };
     }
 
+    private static boolean recordedError;
+
     public static void recordBreadcrumbError(Class<?> clazz, String name, Throwable t, DataBuilder b) {
+        recordedError = true;
         recordBreadcrumb(name, "error", "class:" + clazz.getSimpleName(), b.add("exception", U.toString(t)));
     }
 
@@ -540,18 +560,28 @@ public final class Bootstrap {
         recordBreadcrumb(name, "info", "general", data);
     }
 
-    private EventBuilder prepareEvent(Event.Level level, DataBuilder b) {
+    private static EventBuilder prepareEvent(Event.Level level, DataBuilder b, LocalBootstrapMeta meta, BootBridge bridge) {
         EventBuilder builder = new EventBuilder()
                 .withEnvironment(System.getProperty("os.name"))
                 .withLevel(level)
-                .withRelease(String.valueOf(getMeta().getVersion()))
-                .withServerName(JavaVersion.getCurrent().getVersion());
+                .withRelease(meta == null ? null : String.valueOf(meta.getVersion()));
+
+        builder.withTag("java", JavaVersion.getCurrent().getVersion());
+        if(bridge != null && bridge.getClient() != null) {
+            builder.withSentryInterface(new shaded.com.getsentry.raven.event.interfaces.UserInterface(
+                    bridge.getClient().toString(), null, null, null
+            ));
+        }
         if(b != null) {
             for(Map.Entry<String, String> entry : b.build().entrySet()) {
                 builder.withExtra(entry.getKey(), entry.getValue());
             }
         }
         return builder;
+    }
+
+    private EventBuilder prepareEvent(Event.Level level, DataBuilder b) {
+        return prepareEvent(level, b, getMeta(), bootBridge);
     }
 
     private void sendEvent(EventBuilder builder) {

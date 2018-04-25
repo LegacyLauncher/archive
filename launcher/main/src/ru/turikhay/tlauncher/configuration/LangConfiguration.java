@@ -96,7 +96,12 @@ public final class LangConfiguration {
     }
 
     private Locale selectBackingLocale() {
-        return locale != ru_RU && Configuration.isUSSRLocale(locale.toString())? ru_RU : Locale.US;
+        if(locale != ru_RU && Configuration.isUSSRLocale(locale.toString())) {
+            loadLocale(ru_RU);
+            return ru_RU;
+        } else {
+            return Locale.US;
+        }
     }
 
     private static String[] checkVariables(Object[] check) {
@@ -130,6 +135,10 @@ public final class LangConfiguration {
             return;
         }
 
+        loadLocale(locale);
+    }
+
+    private synchronized void loadLocale(Locale locale) {
         Properties translations = getTranslations(locale);
         if (translations != null) {
             translationsMap.put(locale, translations);
@@ -142,7 +151,6 @@ public final class LangConfiguration {
             checkConsistancy(locale);
 
             this.plurals = pluralPatterns;
-            log("Plurals for", locale, plurals);
         }
     }
 

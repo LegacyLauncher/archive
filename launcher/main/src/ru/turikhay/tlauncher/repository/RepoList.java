@@ -56,8 +56,10 @@ public class RepoList {
         Time.start(total);
 
         log(String.format("Fetching: \"%s\", timeout: %d, proxy: %s", path, timeout / 1000, proxy));
+        int attempt = 0;
 
         for (IRepo repo : l) {
+            ++attempt;
             Object current = new Object();
             Time.start(current);
 
@@ -73,12 +75,12 @@ public class RepoList {
             }
 
             try {
-                InputStream result = read(repo.get(path, timeout, proxy));
+                InputStream result = read(connect(repo, path, timeout, proxy, attempt));
                 long[] deltas = Time.stop(total, current);
-                log(String.format("Fetched successfully: \"%s\"; attempt: %d ms; total: %d ms", _path, deltas[1], deltas[0]));
+                log(String.format("Fetched successfully: \"%s\"; attempt: %d ms; total: %d ms, attempt: %d", _path, deltas[1], deltas[0], attempt));
                 return result;
             } catch (IOException ioE) {
-                log(String.format("Failed to fetch \"%s\": %s", _path, ioE));
+                log(String.format("Failed to fetch \"%s\": %s, attempt: %d", _path, ioE, attempt));
                 exList.add(ioE);
             }
         }
@@ -88,6 +90,10 @@ public class RepoList {
 
     public final InputStream read(String path) throws IOExceptionList {
         return read(path, U.getProxy());
+    }
+
+    protected URLConnection connect(IRepo repo, String path, int timeout, Proxy proxy, int attempt) throws IOException {
+        return repo.get(path, timeout, proxy);
     }
 
     protected InputStream read(URLConnection connection) throws IOException {
@@ -101,7 +107,7 @@ public class RepoList {
         try {
             return readIntoBuffer(in, size);
         } catch (BufferException repoException) {
-            log("Could not read into buffer", repoException);
+            //log("Could not read into buffer", repoException);
         }
 
         //log("Reading into file", in);

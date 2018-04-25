@@ -1,5 +1,5 @@
 {
-  "version": "1.98.10",
+  "version": "1.99.0",
   "mainClass": "ru.turikhay.tlauncher.TLauncher",
   "libraries": [
     {
@@ -65,6 +65,10 @@
     {
       "name": "ru.turikhay.app:nstweaker:1.0",
       "checksum": "6b4c15577b5256b64c7e3d69dcdbf8d18f17f68ac5928e36936bd6a40a91c218"
+    },
+    {
+      "name": "com.timgroup:java-statsd-client:3.1.0",
+      "checksum": "bbb82aadb5e4209527c15fcc40e514b6f4c921a37bc66b68b3611bec70c538e8"
     }
   ]
 }
