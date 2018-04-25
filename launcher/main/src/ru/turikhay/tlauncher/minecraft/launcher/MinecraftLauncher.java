@@ -1491,9 +1491,6 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         Stats.minecraftLaunched(account, version, server, serverId, promotedServerAddStatus);
-        if(account.getType() != Account.AccountType.ELY && account.getType() != Account.AccountType.ELY) {
-            Stats.elyEnabled(settings.getBoolean("ely.globally"));
-        }
         if (assistLaunch) {
             waitForClose();
         } else {

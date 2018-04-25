@@ -19,6 +19,7 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
+import ru.turikhay.tlauncher.stats.Statsd;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;

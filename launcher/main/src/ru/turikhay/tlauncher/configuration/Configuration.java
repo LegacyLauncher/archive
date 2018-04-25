@@ -157,6 +157,10 @@ public class Configuration extends SimpleConfiguration {
         }
     }
 
+    public boolean isCertFixed() {
+        return !getBoolean("connection.ssl");
+    }
+
     public boolean isFirstRun() {
         return firstRun;
     }

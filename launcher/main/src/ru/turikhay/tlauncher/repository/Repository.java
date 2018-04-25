@@ -16,17 +16,21 @@ public enum Repository {
     EXTRA_VERSION_REPO(TLauncher.getExtraRepo()),
     ASSETS_REPO(TLauncher.getAssetsRepo()),
     LIBRARY_REPO(TLauncher.getLibraryRepo()),
-    SERVERLIST_REPO(TLauncher.getServerList());
+    SERVERLIST_REPO(TLauncher.getServerList()),
+    PROXIFIED_REPO(RepositoryProxy.getProxyRepoList());
 
     public static final Repository[] VERSION_REPOS = new Repository[]{LOCAL_VERSION_REPO, OFFICIAL_VERSION_REPO, EXTRA_VERSION_REPO};
 
-    private final AppenderRepoList defaultRepoList;
-    private AppenderRepoList repoList;
-    private final String lowerName;
+    private final RepoList defaultRepoList;
+    private RepoList repoList;
+    private final String lowerName = name().toLowerCase();
 
     Repository(String[] urlList) {
         defaultRepoList = new AppenderRepoList(name(), U.requireNotNull(urlList, "defaultUrlList"));
-        lowerName = name().toLowerCase();
+    }
+
+    Repository(RepoList repoList) {
+        defaultRepoList = U.requireNotNull(repoList, "repoList");
     }
 
     Repository() {

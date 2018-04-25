@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.user;
 
+import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
@@ -38,10 +39,12 @@ public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
         } catch (com.mojang.authlib.exceptions.InvalidCredentialsException invalidCredentials) {
             throw new InvalidCredentialsException(invalidCredentials.getMessage());
         } catch (com.mojang.authlib.exceptions.AuthenticationException e) {
-            if (e.getCause() instanceof IOException) {
-                throw (IOException) e.getCause();
+            if(ConnectionHelper.fixCertException(e, "mojang-auth") == -1) {
+                if (e.getCause() instanceof IOException) {
+                    throw (IOException) e.getCause();
+                }
+                throw new AuthUnknownException(e);
             }
-            throw new AuthUnknownException(e);
         }
     }
 

@@ -42,4 +42,8 @@ public final class DataBuilder {
     public static DataBuilder create(String key, Object value) {
         return new DataBuilder().add(key, value);
     }
+
+    public static DataBuilder create() {
+        return new DataBuilder();
+    }
 }

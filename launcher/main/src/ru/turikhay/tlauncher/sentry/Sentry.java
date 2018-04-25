@@ -16,7 +16,7 @@ public final class Sentry {
     }
 
     public static void sendError(Class clazz, String message, Throwable t, DataBuilder data) {
-        sendWarning(clazz, message, data, null);
+        sendError(clazz, message, t, data, null);
     }
 
     public static void sendWarning(Class clazz, String message, DataBuilder data, DataBuilder tags) {

@@ -1,8 +1,10 @@
 package ru.turikhay.tlauncher.ui.account;
 
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -14,7 +16,9 @@ import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.user.*;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 import javax.swing.*;
@@ -106,6 +110,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
                 break;
             case CANCELLED:
                 labelText = "cancelled";
+                progress = 0;
                 break;
             case INPUT_WAITING:
                 labelText = "input_waiting";
@@ -120,7 +125,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
                 break;
             case COMPLETE:
                 labelText = "complete";
-                progress = 0;
+                progress = 1;
                 helpEnabled = false;
                 break;
             default:
@@ -196,7 +201,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
             @Override
             public void strategyComplete(ElyAuthFlow strategy, ElyAuthCode code) {
-                fetchCode(code);
+                fetchCode("primary", code);
                 Stats.accountCreation("ely", "primary", "", true);
             }
         });
@@ -252,13 +257,13 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
             @Override
             public void strategyComplete(ElyAuthFlow strategy, ElyAuthCode code) {
                 Stats.accountCreation("ely", "fallback", "", true);
-                fetchCode(code);
+                fetchCode("fallback", code);
             }
         });
         authProcess = AsyncThread.future(fallbackFlow);
     }
 
-    private void fetchCode(ElyAuthCode code) {
+    private void fetchCode(String strategy, ElyAuthCode code) {
         setState(FlowState.EXCHANGE);
 
         TLauncher.getInstance().getFrame().requestFocus();
@@ -268,6 +273,11 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
         try {
             user = code.getUser();
         } catch (Exception e) {
+            log("Could not get user", e);
+            Sentry.sendError(AccountElyProcess.class, "Could not exchange code", e, DataBuilder.create().add("strategy", strategy));
+            if(ConnectionHelper.fixCertException(e, "ely-auth") == -1) {
+                Alert.showLocError("account.manager.error.title", "account.manager.error.ely.fetch-code", e);
+            }
             setState(FlowState.ERROR);
             return;
         }
@@ -319,5 +329,10 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
     public enum FlowState {
         INIT, WAITING, CANCELLED, INPUT_WAITING, EXCHANGE, ERROR, COMPLETE
+    }
+
+    private final String logPrefix = "[" + getClass().getSimpleName() + "]";
+    private void log(Object... o) {
+        U.log(logPrefix, o);
     }
 }

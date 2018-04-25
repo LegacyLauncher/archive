@@ -1,10 +1,8 @@
 package ru.turikhay.tlauncher.user;
 
+import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
+import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.net.URL;
@@ -20,7 +18,7 @@ public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Call
     // client_id=tlauncher&response_type=code&scope=account_info,minecraft_server_session,offline_access&redirect_uri=http://localhost:80
     static final String OAUTH2_BASE = ElyAuth.ACCOUNT_BASE  + "/oauth2/v1";
     static final String OAUTH2_AUTH_REQUEST = OAUTH2_BASE +
-            "?client_id=tlauncher&response_type=code&scope=account_info,minecraft_server_session,offline_access&redirect_uri=%s&state=%d";
+            "?client_id=tlauncher&response_type=code&scope=account_info,minecraft_server_session,offline_access&redirect_uri=%s&state=%d&prompt=select_account";
 
 
     private final List<L> listenerList = new ArrayList<L>(), listenerList_ = Collections.unmodifiableList(listenerList);
@@ -53,9 +51,12 @@ public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Call
                 }
                 throw interrupted;
             } catch (Exception e) {
-                Sentry.sendError(ElyAuthFlow.class, "Ely strategy " + getClass().getSimpleName() + " error", e, null);
-                for (L listener : listenerList) {
-                    listener.strategyErrored(this, e);
+                log("Error", e);
+                Sentry.sendError(ElyAuthFlow.class, "Ely strategy " + getClass().getSimpleName() + " error", e, DataBuilder.create().add("flow", getClass().getSimpleName()));
+                if(ConnectionHelper.fixCertException(e, "ely-auth") == -1) {
+                    for (L listener : listenerList) {
+                        listener.strategyErrored(this, e);
+                    }
                 }
                 throw e;
             }

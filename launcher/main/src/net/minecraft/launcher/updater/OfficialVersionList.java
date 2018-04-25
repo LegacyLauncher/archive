@@ -3,6 +3,9 @@ package net.minecraft.launcher.updater;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.connection.ConnectionHelper;
+import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.*;
@@ -10,6 +13,7 @@ import ru.turikhay.util.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Iterator;
 
 public class OfficialVersionList extends RemoteVersionList {
@@ -31,22 +35,14 @@ public class OfficialVersionList extends RemoteVersionList {
             log("Got in", Time.stop(lock), "ms");
             return list;
         } catch(Exception e) {
-            if(e.getMessage().contains("PKIX path building failed") || e.getMessage().contains("the trustAnchors parameter must be non-empty")) {
-                Alert.showLocError("version.error.title", "version.error.cert", null);
-                boolean certFixed = false;
-                if(Alert.showLocQuestion("version.error.title", "version.error.cert.question", null)) {
-                    certFixed = true;
-                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.sslCheck.setValue(false);
-                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.saveValues();
-                }
-                Sentry.sendWarning(OfficialVersionList.class, "no certificates", DataBuilder.create("exception", e), DataBuilder.create("cert-fixed", certFixed));
-                if(certFixed) {
-                    TLauncher.kill();
-                }
-            } else {
+            if(ConnectionHelper.fixCertException(e, "official-repo") == -1) {
                 Sentry.sendError(OfficialVersionList.class, "official repo is not reachable", e, null);
             }
-            throw new IOException(e);
+            if(e instanceof IOException) {
+                throw e;
+            } else {
+                throw new IOException(e);
+            }
         }
     }
 
@@ -55,8 +51,9 @@ public class OfficialVersionList extends RemoteVersionList {
         return true;
     }
 
+    private static final String LAUNCHER_META_PREFIX = "https://launchermeta.mojang.com/mc/game/";
     @Override
     protected InputStreamReader getUrl(String var1) throws IOException {
-        return new InputStreamReader(new URL("https://launchermeta.mojang.com/mc/game/" + var1).openConnection(U.getProxy()).getInputStream(), FileUtil.DEFAULT_CHARSET);
+        return Repository.PROXIFIED_REPO.read(LAUNCHER_META_PREFIX + var1);
     }
 }
