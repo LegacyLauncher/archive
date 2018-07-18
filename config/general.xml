@@ -40,15 +40,13 @@
                 load(project.getProperty('tlauncher.base.config') + '/util.js');
 
                 var parsed = JSON.parse(project.getProperty('meta-input'));
-                var brand = project.getProperty('tlauncher.brand');
-                if(project.getProperty('git.branch') != 'master') {
-                    brand += '_beta';
-                }
+                var brand = brandByBranch(project.getProperty('tlauncher.brand'), project.getProperty('git.branch'));
+                var branch_normalized = normalizeToVersion(project.getProperty('git.branch'));
 
                 project.setProperty('build.version', parsed.version);
                 project.setProperty('meta-output', JSON.stringify(
                     Object.assign(parsed, {
-                        "version": parsed.version + "+" + project.getProperty('git.branch').replace(/\//gi, '-').replace(/[^a-zA-Z0-9.\-\+]/gi, ''),
+                        "version": parsed.version + "+" + branch_normalized,
                         "shortBrand": brand,
                         "brand": project.getProperty('tlauncher.brand.long'),
                         "buildDate": new Date().toUTCString()
@@ -143,11 +141,10 @@
         <property file="${artifact.output.path}/checksum.properties" prefix="checksum"/>
 
         <script language="javascript">
+            load(project.getProperty('tlauncher.base.config') + '/util.js');
+
             var repos = ["http://tlauncherrepo.com/", "http://u.tlauncher.ru/", "http://turikhay.ru/tlauncher/"];
-            var brand = project.getProperty('tlauncher.brand');
-            if(project.getProperty('git.branch') != 'master') {
-                brand += '_beta';
-            }
+            var brand = brandByBranch(project.getProperty('tlauncher.brand'), project.getProperty('git.branch'));
             var project_name = project.getProperty('tlauncher.final_name');
 
             var parsed = {}; var section = parsed;

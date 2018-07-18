@@ -16,9 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-class ClassLoaderStarter implements IStarter {
-    @Override
-    public Task<Void> start(final LocalLauncher launcher, final BootBridge bridge) {
+public class ClassLoaderStarter {
+    public static Task<Void> start(final LocalLauncher launcher, final BootBridge bridge) {
         U.requireNotNull(launcher, "LocalLauncher");
 
         return new Task<Void>("startLauncher") {

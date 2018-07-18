@@ -4,6 +4,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
@@ -55,6 +56,11 @@ public class EditorPane extends JEditorPane {
         this();
         setContentType(type);
         setText(text);
+    }
+
+    public EditorPane(String text, int width) {
+        this("text/html", text);
+        setPreferredSize(new Dimension(width, SwingUtil.getPrefHeight(this, width)));
     }
 
     @Override

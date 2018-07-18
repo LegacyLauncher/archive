@@ -47,10 +47,6 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
         setRawText(value);
     }
 
-    protected void setRawText(String value) {
-        super.setText(value);
-    }
-
     public void setText(String path) {
         setText(path, Localizable.EMPTY_VARS);
     }

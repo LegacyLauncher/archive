@@ -113,6 +113,10 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
             return new ServerNoticeAction((PromotedServer) context.deserialize(actionObject.getAsJsonObject("server"), PromotedServer.class), noticeId);
         }
 
+        if("launcher".equals(type)) {
+            return new LauncherNoticeAction(actionObject.get("launcher").getAsString(), actionObject.has("url")?actionObject.get("url").getAsString() : null);
+        }
+
         throw new IllegalArgumentException("unknown action type: " + type);
     }
 

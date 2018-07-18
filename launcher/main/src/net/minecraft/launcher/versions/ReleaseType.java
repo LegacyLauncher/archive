@@ -12,6 +12,7 @@ public enum ReleaseType {
     MODIFIED("modified", true, true),
     OLD_BETA("old-beta", true, false),
     OLD_ALPHA("old-alpha", true, false),
+    LAUNCHER("launcher", true, false),
     UNKNOWN("unknown", false, false);
 
     private static final Map<String, ReleaseType> lookup;

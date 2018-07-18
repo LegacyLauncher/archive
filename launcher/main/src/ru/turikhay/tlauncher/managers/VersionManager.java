@@ -333,7 +333,7 @@ public class VersionManager extends InterruptibleComponent {
         }
 
         ArrayList plainResult = new ArrayList();
-        ArrayList result = new ArrayList();
+        ArrayList<VersionSyncInfo> result = new ArrayList<>();
         HashMap lookup = new HashMap();
         Version remoteList;
         Iterator var7;
@@ -391,6 +391,17 @@ public class VersionManager extends InterruptibleComponent {
             }
         });
         result.addAll(plainResult);
+
+        /*(TLauncher.getInstance() != null && !TLauncher.getInstance().isDebug()) {
+            Iterator<VersionSyncInfo> i = result.iterator();
+            while (i.hasNext()) {
+                VersionSyncInfo vs = i.next();
+                if (vs.getLatestVersion().getReleaseType() == ReleaseType.LAUNCHER) {
+                    i.remove();
+                }
+            }
+        }*/
+
         return result;
     }
 

@@ -147,11 +147,11 @@ public class Alert {
     }
 
     private static String getTitle(String title) {
-        return "TLauncher : " + (title == null ? "MISSING TITLE" : title);
+        return "TL : " + (title == null ? "" : title);
     }
 
     private static String getLoc(String path, String fallbackMessage) {
-        String result = Localizable.get(path);
-        return result == null ? fallbackMessage : result;
+        String result = Localizable.nget(path);
+        return result == null ? "" : result;
     }
 }

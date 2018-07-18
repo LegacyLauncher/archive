@@ -58,9 +58,7 @@ public class BootstrapTest {
     @Test
     public void testCreateBootstrapWithJvmArgs() throws Exception {
         Map<String, String> propMap = new HashMap<String, String>();
-        propMap.put("launchType", "PROCESS");
         propMap.put("brand", "mcl");
-        propMap.put("forceUpdate", "true");
 
         propMap.put("targetJar", "legacy.jar");
         propMap.put("targetLibFolder", "lib");
@@ -68,9 +66,7 @@ public class BootstrapTest {
         try {
             setupJvmProperties(propMap, false);
             Bootstrap bootstrap = Bootstrap.createBootstrap();
-            assertEquals(bootstrap.getMeta().getLaunchType().name(), propMap.get("launchType"));
             assertEquals(bootstrap.getMeta().getShortBrand(), propMap.get("brand"));
-            assertEquals(bootstrap.getMeta().isForceUpdate(), propMap.containsKey("forceUpdate"));
 
             assertEquals(bootstrap.getTargetJar(), new File(propMap.get("targetJar")));
             assertEquals(bootstrap.getTargetLibFolder(), new File(propMap.get("targetLibFolder")));

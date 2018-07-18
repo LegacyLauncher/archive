@@ -93,6 +93,10 @@ public final class Stats {
         submitDenunciation(newAction("notice_act_shown").add("notice_id", String.valueOf(notice.getId())));
     }
 
+    public static void noticeStatusUpdated(boolean enabled) {
+        submitDenunciation(newAction("notices_" + (enabled? "shown" : "hidden")).add("notice_id", "0"));
+    }
+
     public static void noticeSceneShown() {
         submitDenunciation(newAction("notice_scene_shown"));
     }

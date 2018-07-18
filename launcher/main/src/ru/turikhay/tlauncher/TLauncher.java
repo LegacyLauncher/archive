@@ -19,11 +19,13 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
-import ru.turikhay.tlauncher.stats.Statsd;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
 import ru.turikhay.tlauncher.ui.frames.NewFolderFrame;
+import ru.turikhay.tlauncher.ui.frames.UpdateFrame;
+import ru.turikhay.tlauncher.ui.frames.yandex.YandexFrame;
+import ru.turikhay.tlauncher.ui.frames.yandex.YandexInstaller;
 import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
@@ -102,6 +104,8 @@ public final class TLauncher {
 
         dispatcher.onBootStateChanged("Handling run conditions", 0.17);
         handleWorkdir();
+        handleUpdate();
+        handleNoticeHiding();
 
         dispatcher.onBootStateChanged("Preparing managers", 0.2);
         this.componentManager = new ComponentManager(this);
@@ -135,7 +139,7 @@ public final class TLauncher {
         dispatcher.onBootSucceeded();
 
 
-        try {
+        /*try {
             BootMessage message = dispatcher.getBootMessage(getSettings().getLocale().toString());
             if (message == null) {
                 message = dispatcher.getBootMessage("en_US");
@@ -145,7 +149,7 @@ public final class TLauncher {
             }
         } catch(Throwable t) {
             t.printStackTrace();
-        }
+        }*/
 
         SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
 
@@ -355,12 +359,55 @@ public final class TLauncher {
         U.log("Logger initialized");
     }
 
+    private void handleNoticeHiding() {
+        if(!isNoticeDisablingAllowed()) {
+            config.set("notice.enabled", true);
+        }
+    }
+
     private void handleWorkdir() {
         if (config.isFirstRun()) {
             handleFirstRun();
         } else {
             config.set("minecraft.gamedir", MinecraftUtil.getWorkingDirectory(), false);
         }
+    }
+
+    private void handleUpdate() {
+        String locale = getSettings().getLocale().toString();
+        boolean isRussian = locale.equals("ru_RU");
+        BootMessage message = dispatcher.getBootMessage(locale);
+        if (message == null) {
+            message = dispatcher.getBootMessage("en_US");
+        }
+        if (message != null) {
+            new UpdateFrame(getVersion().getNormalVersion(), message.getBody()).showAndWait();
+        }
+        if(isRussian) {
+            YandexConfig yandexConfig = bootConfig.getYandexConfig();
+            if (yandexConfig != null) {
+                if(System.getProperty("yandex.distrib", "0").equals("1") // force show yandex
+                        ||
+                        (yandexConfig.isEnabled() // or if yandex enabled, then
+                                &&
+                                (config.isFirstRun() || message != null) // show if it is first run or updated
+                        )
+                ) {
+                    showYandex(yandexConfig);
+                }
+            }
+        }
+    }
+
+    private void showYandex(YandexConfig yandexConfig) {
+        Repository repo = null;
+        String url = yandexConfig.getUrl();
+        if(url.startsWith("/")) {
+            repo = Repository.EXTRA_VERSION_REPO;
+            url = url.substring(1);
+        }
+        new YandexInstaller(repo, url, yandexConfig.getChecksum());
+        new YandexFrame().showAndWait();
     }
 
     private void handleFirstRun() {
@@ -374,6 +421,14 @@ public final class TLauncher {
                 new NewFolderFrame(this, currentDir).showAndWait();
             }
         }
+    }
+
+    public boolean isNoticeDisablingAllowed() {
+        return bootConfig.isAllowNoticeDisable(config.getClient());
+    }
+
+    public boolean isNoticeDisabled() {
+        return isNoticeDisablingAllowed() && !config.getBoolean("notice.enabled");
     }
 
     private void initAndRefreshUI() {

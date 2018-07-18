@@ -64,6 +64,7 @@ class NoticeWrapper extends BorderPanel {
     void setNotice(Notice notice) {
         this.notice = notice;
         editorPane.setNotice(notice, paramPair);
+        buttonPane.updateButton();
     }
 
     Dimension updateSize() {
@@ -167,6 +168,14 @@ class NoticeWrapper extends BorderPanel {
             extra.popup.updateMenu();
         }
 
+        void updateButton() {
+            if(notice != null && notice.getAction() instanceof LauncherNoticeAction) {
+                action.updateIcon("go-launcher.png");
+            } else {
+                action.updateIcon("go.png");
+            }
+        }
+
         Dimension updateSize(int height) {
             int width;
 
@@ -228,8 +237,12 @@ class NoticeWrapper extends BorderPanel {
             });
         }
 
-        void registerAction(String image, ActionListener l) {
+        void updateIcon(String image) {
             icon.setImage(Images.getImage(image), SwingUtil.magnify(BUTTON_ICON_WIDTH), true);
+        }
+
+        void registerAction(String image, ActionListener l) {
+            updateIcon(image);
             listener = l;
         }
 

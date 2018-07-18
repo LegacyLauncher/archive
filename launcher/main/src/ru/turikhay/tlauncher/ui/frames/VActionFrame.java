@@ -1,8 +1,10 @@
 package ru.turikhay.tlauncher.ui.frames;
 
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableHTMLLabel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
+import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
@@ -18,11 +20,15 @@ public class VActionFrame extends ActionFrame {
 
     private final BorderPanel holder;
     private final VPanel body;
-    private final LocalizableHTMLLabel bodyText;
+    private final VActionBody bodyText;
+
+    protected int labelWidth;
 
     private final ExtendedPanel footer;
 
     public VActionFrame(int width) {
+        this.labelWidth = width;
+
         setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
         setIconImages(SwingUtil.getFavicons());
 
@@ -49,8 +55,7 @@ public class VActionFrame extends ActionFrame {
         body.add(Box.createRigidArea(SwingUtil.magnify(new Dimension(1, 4))));
         holder.setCenter(body);
 
-        bodyText = new LocalizableHTMLLabel();
-        bodyText.setLabelWidth(width);
+        bodyText = new VActionBody();
         body.add(bodyText);
 
         footer = new ExtendedPanel();
@@ -73,11 +78,41 @@ public class VActionFrame extends ActionFrame {
         return body;
     }
 
-    public final LocalizableHTMLLabel getBodyText() {
+    public final VActionBody getBodyText() {
         return bodyText;
     }
 
     public final ExtendedPanel getFooter() {
         return footer;
+    }
+
+    public int getLabelWidth() {
+        return labelWidth;
+    }
+
+    @Override
+    public void pack() {
+        super.pack();
+        bodyText.calcText();
+    }
+
+    public class VActionBody extends EditorPane {
+        protected VActionBody() {
+            setAlignmentX(LEFT_ALIGNMENT);
+        }
+
+        public void setText(String text) {
+            super.setText(Localizable.get(text));
+            calcText();
+        }
+
+        public void setText(String text, Object... vars) {
+            super.setText(Localizable.get(text, vars));
+            calcText();
+        }
+
+        public void calcText() {
+            setPreferredSize(new Dimension(labelWidth, SwingUtil.getPrefHeight(this, labelWidth)));
+        }
     }
 }

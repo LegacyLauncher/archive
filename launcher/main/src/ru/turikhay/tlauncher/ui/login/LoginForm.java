@@ -181,7 +181,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             changeState(LoginForm.LoginState.LAUNCHING);
 
             log("Calling Minecraft Launcher...");
-            tlauncher.newMinecraftLauncher(versions.getVersion().getID(), server, serverId, checkbox.forceupdate.isSelected());
+            tlauncher.newMinecraftLauncher(requestedVersion == null? versions.getVersion().getID() : requestedVersion.getID(), server, serverId, checkbox.forceupdate.isSelected());
             //tlauncher.newMinecraftLauncher(server, force1);
             checkbox.forceupdate.setSelected(false);
         }
@@ -196,15 +196,22 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         tlauncher.getMinecraftLauncher().stop();
     }
 
+    private VersionSyncInfo requestedVersion;
+
     public void startLauncher() {
         startLauncher(null, 0);
     }
 
     public void startLauncher(Server server, int serverId) {
+        startLauncher(null, server, serverId);
+    }
+
+    public void startLauncher(VersionSyncInfo requestedVersion, Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
             while (tlauncher.getLibraryManager().isRefreshing()) {
                 U.sleepFor(500L);
             }
+            this.requestedVersion = requestedVersion;
             this.server = server;
             this.serverId = serverId;
             autologin.setActive(false);

@@ -30,3 +30,23 @@ if (!Object.assign) {
     }
   });
 }
+
+function normalizeToVersion(str) {
+    return str.replace(/\//gi, '-').replace(/[^a-zA-Z0-9.\-\+]/gi, '')
+}
+
+function brandByBranch(brand, branch) {
+    var branch_normalized = normalizeToVersion(project.getProperty('git.branch'))
+
+    switch(project.getProperty('git.branch')) {
+        case 'master':
+            break;
+        case 'develop':
+            brand += '_beta';
+            break;
+        default:
+            brand += '_beta_' + branch_normalized;
+    }
+
+    return brand;
+}

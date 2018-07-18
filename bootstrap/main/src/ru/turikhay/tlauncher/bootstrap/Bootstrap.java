@@ -15,6 +15,7 @@ import shaded.com.getsentry.raven.event.EventBuilder;
 import shaded.com.getsentry.raven.event.interfaces.ExceptionInterface;
 import ru.turikhay.tlauncher.bootstrap.launcher.*;
 import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
+import shaded.com.github.zafarkhaja.semver.Version;
 import shaded.joptsimple.ArgumentAcceptingOptionSpec;
 import shaded.joptsimple.OptionParser;
 import shaded.joptsimple.OptionSet;
@@ -51,8 +52,6 @@ public final class Bootstrap {
             defaultLibFolder = defaultFile.getParentFile() == null? new File("lib") : new File(defaultFile.getParentFile(), "lib");
 
         OptionParser parser = new OptionParser();
-        ArgumentAcceptingOptionSpec<LaunchType> launchTypeParser =
-                parser.accepts("launchType", "defines launch type").withRequiredArg().ofType(LaunchType.class).defaultsTo(U.requireNotNull(localBootstrapMeta.getLaunchType(), "default LaunchType"));
         ArgumentAcceptingOptionSpec<File> targetFileParser =
                 parser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new FileValueConverter()).defaultsTo(defaultFile);
         ArgumentAcceptingOptionSpec<File> targetLibFolderParser =
@@ -60,24 +59,21 @@ public final class Bootstrap {
         ArgumentAcceptingOptionSpec<String> brandParser =
                 parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class).defaultsTo(U.requireNotNull(localBootstrapMeta.getShortBrand(), "default shortBrand"));
         OptionSpecBuilder forceUpdateParser =
-                parser.accepts("forceUpdate", "defines if bootstrap should update launcher on update found");
+                parser.accepts("ignoreUpdate", "defines if bootstrap should ignore update processes");
 
         OptionSet parsed = parseJvmArgs(parser);
 
-        localBootstrapMeta.setLaunchType(U.requireNotNull(launchTypeParser.value(parsed), "LaunchType"));
-        log("Launch type:", localBootstrapMeta.getLaunchType());
-
         localBootstrapMeta.setShortBrand(U.requireNotNull(brandParser.value(parsed), "shortBrand"));
         log("Short brand: ", localBootstrapMeta.getShortBrand());
-
-        localBootstrapMeta.setForceUpdate(parsed.has(forceUpdateParser) || localBootstrapMeta.isForceUpdate());
-        log("Force update?", localBootstrapMeta.isForceUpdate());
 
         bootstrap.setTargetJar(targetFileParser.value(parsed));
         log("Target jar:", bootstrap.getTargetJar());
 
         bootstrap.setTargetLibFolder(targetLibFolderParser.value(parsed));
         log("Target lib folder:", bootstrap.getTargetLibFolder());
+
+        bootstrap.setIgnoreUpdate(parsed.has(forceUpdateParser));
+        log("Ignore update:", bootstrap.getIgnoreUpdate());
 
         try {
             checkAccessible(bootstrap.getTargetJar(), false);
@@ -226,6 +222,7 @@ public final class Bootstrap {
     private final InternalLauncher internal;
     private final LocalBootstrapMeta meta;
     private File targetJar, targetLibFolder;
+    private boolean ignoreUpdate;
 
     Bootstrap(File targetJar, File targetLibFolder, boolean uiEnabled) {
         UserInterface userInterface = null;
@@ -285,6 +282,14 @@ public final class Bootstrap {
 
     private void setTargetLibFolder(File targetLibFolder) {
         this.targetLibFolder = targetLibFolder;
+    }
+
+    public boolean getIgnoreUpdate() {
+        return ignoreUpdate;
+    }
+
+    private void setIgnoreUpdate(boolean ignore) {
+        this.ignoreUpdate = ignore;
     }
 
     public LocalBootstrapMeta getMeta() {
@@ -386,7 +391,7 @@ public final class Bootstrap {
                     }
                 });
 
-                return bindTo(meta.getLaunchType().getStarter().start(localLauncher, bridge), 0., 1.);
+                return bindTo(ClassLoaderStarter.start(localLauncher, bridge), 0., 1.);
             }
         };
     }
@@ -415,9 +420,14 @@ public final class Bootstrap {
                 if(updateMeta != null) {
                     DownloadEntry downloadEntry = getBootstrapUpdate(updateMeta);
                     if(downloadEntry != null) {
-                        Updater updater = new Updater("bootstrapUpdate", U.getJar(Bootstrap.class), downloadEntry, true);
-                        bindTo(updater, .25, 1.);
-                        return null;
+                        if(getIgnoreUpdate()) {
+                            log("Bootstrap update ignored:", updateMeta.getBootstrap().getVersion());
+                        } else {
+                            Updater updater = new Updater("bootstrapUpdate",
+                                    U.getJar(Bootstrap.class), downloadEntry, true);
+                            bindTo(updater, .25, 1.);
+                            return null;
+                        }
                     }
                 }
 
@@ -471,7 +481,6 @@ public final class Bootstrap {
                     log("Could not find local launcher:", lnfE);
 
                     if (internal == null) {
-                        log("... and we have no internal one?");
                         local = null;
                     } else {
                         log("... replacing it with internal one:", internal);
@@ -508,16 +517,25 @@ public final class Bootstrap {
                         U.requireNotNull(localLauncherMeta.getBrand(), "LocalLauncher brand");
                         U.requireNotNull(localLauncherMeta.getMainClass(), "LocalLauncher mainClass");
 
-                        String localLauncherHash = U.getSHA256(local.getFile());
-                        log("Local SHA256: " + localLauncherHash);
-                        log("Remote SHA256: " + remoteLauncherMeta.getChecksum());
+                        if(!localLauncherMeta.getVersion().equals(remote.getMeta().getVersion())) {
+                            log("Local version doesn't match remote");
+                            if(getIgnoreUpdate()) {
+                                log("... nevermind");
+                            } else {
+                                break replaceSelect;
+                            }
+                        } else if(!getIgnoreUpdate()) {
+                            String localLauncherHash = U.getSHA256(local.getFile());
+                            log("Local SHA256: " + localLauncherHash);
+                            log("Remote SHA256: " + remoteLauncherMeta.getChecksum());
 
-                        if (!localLauncherHash.equalsIgnoreCase(remoteLauncherMeta.getChecksum())) {
-                            log("... local SHA256 checksum is not the same as remote");
-                            break replaceSelect;
+                            if (!localLauncherHash.equalsIgnoreCase(remoteLauncherMeta.getChecksum())) {
+                                log("... local SHA256 checksum is not the same as remote");
+                                break replaceSelect;
+                            }
+
+                            log("All done, local launcher is up to date.");
                         }
-
-                        log("All done, local launcher is up to date.");
 
                         return new LocalLauncherTask(local);
                     }

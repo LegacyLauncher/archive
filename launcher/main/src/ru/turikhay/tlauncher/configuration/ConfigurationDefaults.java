@@ -71,6 +71,7 @@ public final class ConfigurationDefaults {
 
         d.put("gui.notices.enabled", true);
         d.put("notice.promoted", true);
+        d.put("notice.enabled", true);
 
         d.put("gui.direction.loginform", Direction.CENTER);
 
