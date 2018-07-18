@@ -276,6 +276,10 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
         Notice selected = null;
         List<Notice> list = getForCurrentLocale();
         selecting: {
+            if(frame.getLauncher().isNoticeDisabled()) {
+                break selecting;
+            }
+
             if(list == null) {
                 break selecting;
             }

@@ -66,6 +66,30 @@ public final class JavaVersion implements Comparable<JavaVersion> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JavaVersion that = (JavaVersion) o;
+        return version.equals(that.version);
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = version != null ? version.hashCode() : 0;
+        result = 31 * result + (identifier != null ? identifier.hashCode() : 0);
+        result = 31 * result + epoch;
+        result = 31 * result + major;
+        result = 31 * result + minor;
+        result = 31 * result + update;
+        result = 31 * result + (ea ? 1 : 0);
+        temp = Double.doubleToLongBits(d);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
     public int compareTo(JavaVersion o) {
         U.requireNotNull(o, "version");
 

@@ -56,7 +56,9 @@ public class LocalizableHTMLLabel extends LocalizableLabel {
         if (getLabelWidth() > 0) {
             builder.append("<div width=\"").append(getLabelWidth()).append("\">");
         }
-        builder.append(StringUtils.replace(Localizable.get(path, vars), "\n", "<br/>"));
+        if(path != null) {
+            builder.append(StringUtils.replace(Localizable.get(path, vars), "\n", "<br/>"));
+        }
         if (getLabelWidth() > 0) {
             builder.append("</div>");
         }

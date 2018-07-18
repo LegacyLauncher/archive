@@ -37,6 +37,10 @@ public class ExtendedLabel extends JLabel {
         this(null, null, 10);
     }
 
+    protected void setRawText(String value) {
+        super.setText(value);
+    }
+
     public void setIcon(ImageIcon icon) {
         super.setIcon(icon);
         super.setDisabledIcon(icon == null ? null : icon.getDisabledInstance());

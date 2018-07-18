@@ -17,11 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ProcessStarter implements IStarter {
-    @Override
-    public Task<Void> start(LocalLauncher launcher, BootBridge bridge) {
-        throw new Error("NYI");
-    }
+public class ProcessStarter {
 
     public static Process startJarProcess(File dir, Set<File> classpath, String mainClass, List<String> jvmArgs, List<String> appArgs) throws IOException {
         U.requireNotNull(classpath, "classpath");

@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.List;
 
 public class MainNoticePanel extends NoticePanel implements ResizeableComponent {
     private static int SAFE_ZONE = 10;
@@ -51,7 +52,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
             @Override
             public void actionPerformed(ActionEvent e) {
                 defaultScene.setNoticeSidePanelEnabled(true);
-                //defaultScene.getMainPane().openNoticeScene();
+                defaultScene.getMainPane().defaultScene.setSidePanel(DefaultScene.SidePanel.NOTICES);
             }
         });
     }

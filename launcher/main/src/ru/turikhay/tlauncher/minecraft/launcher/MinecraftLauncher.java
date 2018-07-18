@@ -52,7 +52,7 @@ import java.util.zip.ZipOutputStream;
 
 public class MinecraftLauncher implements JavaProcessListener {
     public static final String SENTRY_CONTEXT_NAME = "minecraftLauncher", CAPABLE_WITH = "1.6.84-j";
-    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 8, MIN_WORK_TIME = 5000;
+    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 9, MIN_WORK_TIME = 5000;
     private SentryContext sentryContext = SentryContext.createWithName(SENTRY_CONTEXT_NAME);
     private boolean working;
     private boolean killed;
@@ -81,6 +81,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private VersionSyncInfo versionSync;
     private CompleteVersion version;
     private CompleteVersion deJureVersion;
+    private boolean isLauncher;
     private String accountName;
     private Account account;
     private String cmd;
@@ -330,7 +331,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         log("Force update:", Boolean.valueOf(forceUpdate));
         recordValue("forceUpdate", forceUpdate);
-        versionName = settings.get("login.version");
+
+        if(versionName == null) {
+            versionName = settings.get("login.version");
+        }
         if (versionName != null && !versionName.isEmpty()) {
             log("Selected version:", versionName);
             recordValue("versionName", versionName);
@@ -363,45 +367,55 @@ public class MinecraftLauncher implements JavaProcessListener {
                     } else {
                         recordValue("resolvedVersion", deJureVersion);
 
-                        Account.AccountType lookupLibrariesForType;
-                        switch (account.getType()) {
-                            case MCLEAKS:
-                                if(McleaksManager.isUnsupported()) {
-                                    throw new MinecraftException(false, "MCLeaks is not supported", "mcleaks-unsupported");
-                                } else {
-                                    lookupLibrariesForType = Account.AccountType.MCLEAKS;
-                                    oldMainclass = deJureVersion.getMainClass();
-                                }
-                                break;
-                            case ELY:
-                            case ELY_LEGACY:
-                                lookupLibrariesForType = Account.AccountType.ELY;
-                                break;
-                            case PLAIN:
-                                mayBeEly: {
-                                    if(!TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()) {
-                                        break mayBeEly;
+                        if(deJureVersion.getReleaseType() == ReleaseType.LAUNCHER) {
+                            isLauncher = true;
+                        }
+                        recordValue("isLauncher", isLauncher);
+
+                        if(!isLauncher) {
+                            Account.AccountType lookupLibrariesForType;
+                            switch (account.getType()) {
+                                case MCLEAKS:
+                                    if (McleaksManager.isUnsupported()) {
+                                        throw new MinecraftException(false, "MCLeaks is not supported", "mcleaks-unsupported");
+                                    } else {
+                                        lookupLibrariesForType = Account.AccountType.MCLEAKS;
+                                        oldMainclass = deJureVersion.getMainClass();
                                     }
-                                    if(!settings.getBoolean("ely.globally")) {
-                                        break mayBeEly;
-                                    }
+                                    break;
+                                case ELY:
+                                case ELY_LEGACY:
                                     lookupLibrariesForType = Account.AccountType.ELY;
                                     break;
-                                }
-                                lookupLibrariesForType = Account.AccountType.PLAIN;
-                                break;
-                            default:
-                                lookupLibrariesForType = account.getType();
-                        }
+                                case PLAIN:
+                                    mayBeEly:
+                                    {
+                                        if (!TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()) {
+                                            break mayBeEly;
+                                        }
+                                        if (!settings.getBoolean("ely.globally")) {
+                                            break mayBeEly;
+                                        }
+                                        lookupLibrariesForType = Account.AccountType.ELY;
+                                        break;
+                                    }
+                                    lookupLibrariesForType = Account.AccountType.PLAIN;
+                                    break;
+                                default:
+                                    lookupLibrariesForType = account.getType();
+                            }
 
-                        log("Looking up libraries for", librariesForType = lookupLibrariesForType);
+                            log("Looking up libraries for", librariesForType = lookupLibrariesForType);
 
-                        TLauncher.getInstance().getLibraryManager().refreshComponent();
-                        if(TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, account.getType())) {
-                            recordValue("librariesFound", lookupLibrariesForType);
-                            version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType);
+                            TLauncher.getInstance().getLibraryManager().refreshComponent();
+                            if (TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, account.getType())) {
+                                recordValue("librariesFound", lookupLibrariesForType);
+                                version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType);
+                            } else {
+                                recordValue("librariesNotFound", librariesForType);
+                                version = deJureVersion;
+                            }
                         } else {
-                            recordValue("librariesNotFound", librariesForType);
                             version = deJureVersion;
                         }
 
@@ -440,11 +454,12 @@ public class MinecraftLauncher implements JavaProcessListener {
                         } catch (Exception var9) {
                             throw new MinecraftException(true, "Cannot create working directory!", "folder-not-found", var9);
                         }
-
-                        try {
-                            FileUtil.createFolder(gameDir);
-                        } catch (Exception var9) {
-                            throw new MinecraftException(true, "Cannot create game directory!", "folder-not-found", var9);
+                        if(!isLauncher) {
+                            try {
+                                FileUtil.createFolder(gameDir);
+                            } catch (Exception var9) {
+                                throw new MinecraftException(true, "Cannot create game directory!", "folder-not-found", var9);
+                            }
                         }
 
                         log("Root directory:", rootDir);
@@ -466,26 +481,32 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                         globalAssetsDir = new File(rootDir, "assets");
 
-                        try {
-                            FileUtil.createFolder(globalAssetsDir);
-                        } catch (IOException var8) {
-                            throw new RuntimeException("Cannot create assets directory!", var8);
+                        if(!isLauncher) {
+                            try {
+                                FileUtil.createFolder(globalAssetsDir);
+                            } catch (IOException var8) {
+                                throw new RuntimeException("Cannot create assets directory!", var8);
+                            }
                         }
 
                         assetsIndexesDir = new File(globalAssetsDir, "indexes");
 
-                        try {
-                            FileUtil.createFolder(assetsIndexesDir);
-                        } catch (IOException var7) {
-                            throw new RuntimeException("Cannot create assets indexes directory!", var7);
+                        if(!isLauncher) {
+                            try {
+                                FileUtil.createFolder(assetsIndexesDir);
+                            } catch (IOException var7) {
+                                throw new RuntimeException("Cannot create assets indexes directory!", var7);
+                            }
                         }
 
                         assetsObjectsDir = new File(globalAssetsDir, "objects");
 
-                        try {
-                            FileUtil.createFolder(assetsObjectsDir);
-                        } catch (IOException var6) {
-                            throw new RuntimeException("Cannot create assets objects directory!", var6);
+                        if(!isLauncher) {
+                            try {
+                                FileUtil.createFolder(assetsObjectsDir);
+                            } catch (IOException var6) {
+                                throw new RuntimeException("Cannot create assets objects directory!", var6);
+                            }
                         }
 
                         nativeDir = new File(rootDir, "versions/" + version.getID() + "/" + "natives");
@@ -706,7 +727,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         launcher = new JavaProcessLauncher(cmd, new String[0]);
-        launcher.directory(gameDir);
+        launcher.directory(isLauncher? rootDir : gameDir);
 
         try {
             fixResourceFolder();
@@ -715,90 +736,92 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
 
-        Set<NBTServer> exisingServerList = null, nbtServerList = new LinkedHashSet<>();
-        try {
-            File file = new File(gameDir, "servers.dat");
-            if(file.isFile()) {
-                try {
-                    FileUtil.copyFile(file, new File(file.getAbsolutePath() + ".bak"), true);
-                } catch (IOException ioE) {
-                    log("Could not make backup for servers.dat", ioE);
-                }
-                try {
-                    exisingServerList = NBTServer.loadSet(file);
-                } catch(Exception e) {
-                    log("Could not read servers.dat", e);
-                    log("We'll have to overwrite it as it can't be read by Minecraft neither");
+        if(!isLauncher) {
+            Set<NBTServer> exisingServerList = null, nbtServerList = new LinkedHashSet<>();
+            try {
+                File file = new File(gameDir, "servers.dat");
+                if (file.isFile()) {
+                    try {
+                        FileUtil.copyFile(file, new File(file.getAbsolutePath() + ".bak"), true);
+                    } catch (IOException ioE) {
+                        log("Could not make backup for servers.dat", ioE);
+                    }
+                    try {
+                        exisingServerList = NBTServer.loadSet(file);
+                    } catch (Exception e) {
+                        log("Could not read servers.dat", e);
+                        log("We'll have to overwrite it as it can't be read by Minecraft neither");
+                        exisingServerList = new LinkedHashSet<>();
+                    }
+                } else {
+                    FileUtil.createFile(file);
                     exisingServerList = new LinkedHashSet<>();
                 }
-            } else {
-                FileUtil.createFile(file);
-                exisingServerList = new LinkedHashSet<>();
-            }
-            if(server != null) {
-                nbtServerList.add(new NBTServer(server));
-            }
-            if (outdatedPromotedServers != null) {
-                Iterator<NBTServer> i = exisingServerList.iterator();
-                while (i.hasNext()) {
-                    NBTServer existingServer = i.next();
-                    for(PromotedServer outdatedServer : outdatedPromotedServers) {
-                        if(existingServer.equals(outdatedServer) && existingServer.getName().equals(outdatedServer.getName())) {
-                            log("Removed outdated server:", existingServer, ", compared with", outdatedServer);
-                            i.remove();
-                            break;
-                        }
-                    }
+                if (server != null) {
+                    nbtServerList.add(new NBTServer(server));
                 }
-            }
-            if(settings.getBoolean("minecraft.servers.promoted.ingame")) {
-                if (promotedServers != null) {
-                    for (final PromotedServer promotedServer : promotedServers) {
-                        if (!promotedServer.getFamily().isEmpty() && !promotedServer.getFamily().contains(family)) {
-                            continue;
-                        }
-                        if(promotedServer.equals(server)) {
-                            continue;
-                        }
-                        NBTServer existingServer = null;
-                        for (NBTServer nbtServer : exisingServerList) {
-                            if (promotedServer.equals(nbtServer)) {
-                                existingServer = nbtServer;
+                if (outdatedPromotedServers != null) {
+                    Iterator<NBTServer> i = exisingServerList.iterator();
+                    while (i.hasNext()) {
+                        NBTServer existingServer = i.next();
+                        for (PromotedServer outdatedServer : outdatedPromotedServers) {
+                            if (existingServer.equals(outdatedServer) && existingServer.getName().equals(outdatedServer.getName())) {
+                                log("Removed outdated server:", existingServer, ", compared with", outdatedServer);
+                                i.remove();
                                 break;
                             }
                         }
-                        if (existingServer != null) {
-                            nbtServerList.add(existingServer);
-                            exisingServerList.remove(existingServer);
-                        } else {
-                            nbtServerList.add(new NBTServer(promotedServer));
+                    }
+                }
+                if (settings.getBoolean("minecraft.servers.promoted.ingame")) {
+                    if (promotedServers != null) {
+                        for (final PromotedServer promotedServer : promotedServers) {
+                            if (!promotedServer.getFamily().isEmpty() && !promotedServer.getFamily().contains(family)) {
+                                continue;
+                            }
+                            if (promotedServer.equals(server)) {
+                                continue;
+                            }
+                            NBTServer existingServer = null;
+                            for (NBTServer nbtServer : exisingServerList) {
+                                if (promotedServer.equals(nbtServer)) {
+                                    existingServer = nbtServer;
+                                    break;
+                                }
+                            }
+                            if (existingServer != null) {
+                                nbtServerList.add(existingServer);
+                                exisingServerList.remove(existingServer);
+                            } else {
+                                nbtServerList.add(new NBTServer(promotedServer));
+                            }
                         }
+                    } else {
+                        promotedServerAddStatus = PromotedServerAddStatus.EMPTY;
                     }
                 } else {
-                    promotedServerAddStatus = PromotedServerAddStatus.EMPTY;
+                    promotedServerAddStatus = PromotedServerAddStatus.DISABLED;
                 }
-            } else {
-                promotedServerAddStatus = PromotedServerAddStatus.DISABLED;
-            }
 
-            nbtServerList.addAll(exisingServerList);
-            if(!nbtServerList.isEmpty()) {
+                nbtServerList.addAll(exisingServerList);
                 FileUtil.copyFile(file, new File(gameDir, "servers.dat.bak"), true);
                 NBTServer.saveSet(nbtServerList, file);
-                if(promotedServerAddStatus == PromotedServerAddStatus.NONE) {
+                if (promotedServerAddStatus == PromotedServerAddStatus.NONE) {
                     promotedServerAddStatus = PromotedServerAddStatus.SUCCESS;
                 }
+            } catch (Exception e) {
+                Sentry.sendError(MinecraftLauncher.class, "couldn't reconstruct server list", e, DataBuilder.create("existing", exisingServerList).add("new", nbtServerList).add("status", promotedServerAddStatus));
+                log("Couldn't reconstruct server list", e);
+                promotedServerAddStatus = PromotedServerAddStatus.ERROR;
             }
-        } catch (Exception e) {
-            Sentry.sendError(MinecraftLauncher.class, "couldn't reconstruct server list", e, DataBuilder.create("existing", exisingServerList).add("new", nbtServerList).add("status", promotedServerAddStatus));
-            log("Couldn't reconstruct server list", e);
-            promotedServerAddStatus = PromotedServerAddStatus.ERROR;
         }
 
-        try {
-            makeCompatibleWithOlderVersions();
-        } catch(Exception e) {
-            log("Could not make it compatible with older versions", e);
+        if(!isLauncher) {
+            try {
+                makeCompatibleWithOlderVersions();
+            } catch (Exception e) {
+                log("Could not make it compatible with older versions", e);
+            }
         }
 
         /*launcher.addCommand("-Djava.library.path=" + nativeDir.getAbsolutePath());
@@ -948,7 +971,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
         programArgs.addAll(version.addArguments(ArgumentType.GAME, featureMatcher, argumentsSubstitutor));
 
-        if (server != null) {
+        if (!isLauncher && server != null) {
             programArgs.addAll(Arrays.asList("--server", server.getAddress()));
             programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
         }
@@ -1340,6 +1363,11 @@ public class MinecraftLauncher implements JavaProcessListener {
     private AssetsManager.ResourceChecker resourceChecker;
 
     private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) throws MinecraftException {
+        if(version.getAssetIndex() != null && "none".equals(version.getAssetIndex().getId())) {
+            log("Assets comparing skipped");
+            return null;
+        }
+
         log("Comparing assets...");
 
         AssetsManager.ResourceChecker checker = null;
@@ -1396,6 +1424,9 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private void fixResourceFolder() throws Exception {
+        if(isLauncher) {
+            return;
+        }
         File serverResourcePacksFolder = new File(gameDir, "server-resource-packs");
         if (serverResourcePacksFolder.isDirectory()) {
             File[] files = U.requireNotNull(serverResourcePacksFolder.listFiles(), "files of " + serverResourcePacksFolder.getAbsolutePath());

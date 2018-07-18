@@ -11,13 +11,11 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 import java.util.Locale;
 
 public class FirstRunNotice extends VActionFrame {
@@ -35,8 +33,9 @@ public class FirstRunNotice extends VActionFrame {
         VPanel list = new VPanel();
         list.setInsets(new MagnifiedInsets(0, 10, 0, 0));
         for (int i = 0; i < 3; i++) {
-            LocalizableHTMLLabel label = new LocalizableHTMLLabel("firstrun.notice.body." + i);
-            label.setLabelWidth(getBodyText().getLabelWidth());
+            VActionFrame.VActionBody label = new VActionFrame.VActionBody();
+            label.setText("firstrun.notice.body." + i);
+            //label.setLabelWidth(getLabelWidth());
             list.add(label);
         }
 
@@ -100,5 +99,43 @@ public class FirstRunNotice extends VActionFrame {
         pack();
 
         ContributorsAlert.showAlert();
+    }
+
+    private FirstRunNotice parent;
+    private boolean localeUpdated;
+
+    private void showLocaleUpdated(final FirstRunNotice parent) {
+        this.parent = parent;
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if(localeUpdated) {
+                } else {
+                    FirstRunNotice p = FirstRunNotice.this;
+                    while(p.parent != null) {
+                        p = p.parent;
+                    }
+                    p.localeUpdated = false;
+                }
+            }
+        });
+        showAtCenter();
+    }
+
+    public void showAndWait() {
+        showAtCenter();
+        while (isDisplayable() || localeUpdated) {
+            U.sleepFor(100);
+        }
+    }
+
+    @Override
+    public void updateLocale() {
+        if(isDisplayable()) {
+            localeUpdated = true;
+            dispose();
+            FirstRunNotice f = new FirstRunNotice();
+            f.showLocaleUpdated(this);
+        }
     }
 }

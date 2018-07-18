@@ -4,16 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
-import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.PromotedServerDeserializer;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeDeserializer;
 import ru.turikhay.util.U;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class BootConfiguration {
     private boolean stats, ely;
@@ -21,6 +20,8 @@ public final class BootConfiguration {
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
     private Map<String, List<PromotedServer>> promotedServers = new HashMap<>(), outdatedPromotedServers = new HashMap<>();
     private Map<String, String> feedback = new HashMap<>();
+    private YandexConfig yandex;
+    private int allowNoticeDisable;
 
     public boolean isStatsAllowed() {
         return stats;
@@ -48,6 +49,18 @@ public final class BootConfiguration {
 
     public Map<String, String> getFeedback() {
         return feedback;
+    }
+
+    public YandexConfig getYandexConfig() {
+        return yandex;
+    }
+
+    public boolean isAllowNoticeDisable(UUID userId) {
+        return (allowNoticeDisable > 0) && (userId.hashCode() % allowNoticeDisable == 0);
+    }
+
+    public int getAllowNoticeDisable() {
+        return allowNoticeDisable;
     }
 
     public static BootConfiguration parse(BootBridge bridge) {

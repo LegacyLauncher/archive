@@ -187,7 +187,7 @@ public class TLauncherFrame extends JFrame {
         });
 
 
-        if(settings.getInteger("gui.features") < NewFeaturesFrame.INCREMENTAL) {
+        /*if(settings.getInteger("gui.features") < NewFeaturesFrame.INCREMENTAL) {
             final NewFeaturesFrame newFeaturesFrame = new NewFeaturesFrame(this);
             newFeaturesFrame.showAtCenter();
             newFeaturesFrame.setAlwaysOnTop(true);
@@ -199,7 +199,7 @@ public class TLauncherFrame extends JFrame {
                     newFeaturesFrame.setAlwaysOnTop(false);
                 }
             });
-        }
+        }*/
     }
 
     public TLauncher getLauncher() {
@@ -258,9 +258,9 @@ public class TLauncherFrame extends JFrame {
         updateTitle();
         String title;
         if (TLauncher.getInstance().isDebug()) {
-            title = String.format("TLauncher %s [%s]", brand, U.memoryStatus());
+            title = String.format("TL %s [%s]", brand, U.memoryStatus());
         } else {
-            title = String.format("TLauncher %s", brand);
+            title = String.format("TL %s", brand);
         }
 
         setTitle(title);

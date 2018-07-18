@@ -4,6 +4,7 @@ import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.managers.VersionLists;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
     private final DefaultScene scene;
@@ -67,6 +69,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler launchAction;
     public final EditorGroupHandler alertUpdates;
     public final EditorFieldHandler sslCheck;
+    public final EditorFieldHandler allowNoticeDisable;
+    public final SettingsHint allowNoticeDisableHint;
     public final EditorFieldHandler locale;
     private final TabbedEditorPanel.EditorPanelTab aboutTab;
     public final HTMLPage about;
@@ -85,6 +89,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
     public SettingsPanel(DefaultScene sc) {
         super(tipTheme, new Insets(5, 10, 10, 10));
+
+        container.setNorth(null);
         setMagnifyGaps(false);
 
         if (tabPane.getExtendedUI() != null) {
@@ -309,6 +315,20 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         tlauncherTab.add(new EditorPair("settings.ssl.label", sslCheck));
         tlauncherTab.nextPane();
 
+        allowNoticeDisable = new EditorFieldHandler("notice.enabled", new EditorCheckBox("notice.enable"));
+        allowNoticeDisable.addListener(new EditorFieldChangeListener() {
+            protected void onChange(String oldValue, String newValue) {
+                if (tlauncher.isReady()) {
+                    Stats.noticeStatusUpdated(Boolean.valueOf(newValue));
+                    tlauncher.getFrame().getNotices().selectRandom();
+                    Alert.showLocMessage("notice.enable.alert." + newValue);
+                }
+            }
+        });
+        allowNoticeDisableHint = new SettingsHint("notice.enable.hint");
+        tlauncherTab.add(new EditorPair("notice.enable.label", allowNoticeDisable, allowNoticeDisableHint));
+        tlauncherTab.nextPane();
+
         locale = new EditorFieldHandler("locale", new SettingsLocaleComboBox(this));
         locale.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldvalue, String newvalue) {
@@ -417,6 +437,11 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public void updateValues() {
         boolean globalUnSaveable = !global.isSaveable();
         Iterator var3 = handlers.iterator();
+
+        if(!tlauncher.isNoticeDisablingAllowed()) {
+            allowNoticeDisable.getComponent().setEnabled(false);
+            //allowNoticeDisableHint.getComponent().setEnabled(false);
+        }
 
         while (true) {
             EditorHandler handler;
@@ -531,6 +556,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     }
 
     public void updateLocale() {
+        allowNoticeDisableHint.updateLocale();
         /*if (tlauncher.getSettings().isUSSRLocale()) {
             add(serverTab);
         } else {

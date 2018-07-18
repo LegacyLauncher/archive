@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.ui.SideNotifier;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.notice.MainNoticePanel;
+import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticePanel;
 import ru.turikhay.tlauncher.ui.notice.NoticeSidePanel;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
@@ -235,7 +236,8 @@ public class DefaultScene extends PseudoScene {
     }
 
     public void setSidePanel(DefaultScene.SidePanel side) {
-        if(side == null && isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+        java.util.List<Notice> noticeList = getMainPane().getRootFrame().getNotices().getForCurrentLocale();
+        if(side == null && isNoticeSidePanelEnabled() && noticeList != null && noticeList.size() > 1) {
             side = SidePanel.NOTICES;
         }
         if (sidePanel != side) {

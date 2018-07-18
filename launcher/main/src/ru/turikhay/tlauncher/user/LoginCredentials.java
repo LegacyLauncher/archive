@@ -66,6 +66,7 @@ public class LoginCredentials {
         return new LinkedHashMap<String, String>() {
             {
                 put("auth_username", username);
+                put("auth_session", session);
                 put("auth_access_token", accessToken);
                 put("user_properties", properties);
                 put("auth_player_name", playerName);
