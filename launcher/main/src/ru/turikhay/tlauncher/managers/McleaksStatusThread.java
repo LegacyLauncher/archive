@@ -27,6 +27,7 @@ class McleaksStatusThread extends ExtendedThread {
             receivePayload();
         } catch(Exception e) {
             Sentry.sendError(McleaksStatusThread.class, "cannot receive payload", e, null);
+            parent.receiveNothing();
         }
     }
 

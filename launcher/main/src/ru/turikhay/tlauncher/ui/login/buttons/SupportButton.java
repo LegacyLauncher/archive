@@ -25,17 +25,16 @@ import java.util.List;
 
 public class SupportButton extends LocalizableButton implements Blockable {
 
-    private ProcessFrame<Void> dxdiagFlusher;
+    //private ProcessFrame<Void> dxdiagFlusher;
     private PreSupportFrame supportFrame;
 
     private final ActionListener showSupportFrame = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (supportFrame.isVisible()) {
-                return;
+            if (!supportFrame.isVisible()) {
+                supportFrame.showAtCenter();
             }
-
-            dxdiagFlusher.submit(dxdiagFlusher.new Process() {
+            /*dxdiagFlusher.submit(dxdiagFlusher.new Process() {
                 @Override
                 protected Void get() throws Exception {
                     if (DxDiag.isScannable()) {
@@ -47,7 +46,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
                     }
                     return null;
                 }
-            });
+            });*/
         }
     };
 
@@ -117,7 +116,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
     public void updateLocale() {
         super.updateLocale();
 
-        dxdiagFlusher = new ProcessFrame<Void>() {
+        /*dxdiagFlusher = new ProcessFrame<Void>() {
             {
                 setTitlePath("loginform.button.support.processing.title");
                 getHead().setText("loginform.button.support.processing.head");
@@ -134,7 +133,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
                 super.onCancelled();
                 DxDiag.cancel();
             }
-        };
+        };*/
 
         PreSupportFrame oldSupportFrame = supportFrame;
         supportFrame = new PreSupportFrame();

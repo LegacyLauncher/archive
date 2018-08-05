@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class GraphicsEntry extends PatternContainerEntry {
     private final Pattern intelWin10BugJrePattern, intelWin10BugCardNamePattern, intelBugMinecraft1_10Pattern;
-    private final PatternEntry general, amd, intel;
+    private final PatternEntry amd, intel;
 
     public GraphicsEntry(CrashManager manager) {
         super(manager, "graphics");
@@ -19,9 +19,8 @@ public class GraphicsEntry extends PatternContainerEntry {
         intelWin10BugCardNamePattern = manager.getVar("intel-win10-bug-card-pattern") == null ? Pattern.compile("Intel HD Graphics(?: [2-3]000)?") : Pattern.compile(manager.getVar("intel-win10-bug-card-pattern"));
         intelBugMinecraft1_10Pattern = manager.getVar("intel-bug-minecraft-1.10") == null ? Pattern.compile(".*1\\.(?:1[0-9]|[2-9][0-9])(?:\\.[\\d]+|)(?:-.+|)") : Pattern.compile(manager.getVar("intel-bug-minecraft-1.10"));
 
-        general = addPattern("general",
-                Pattern.compile("[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated")
-        );
+        addPattern("general", Pattern.compile("[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated"));
+        addPattern("general", Pattern.compile("WGL\\: The driver does not appear to support OpenGL"));
 
         amd = addPattern("amd",
                 Pattern.compile(manager.getVar("amd-pattern") == null ? "^#[ ]+C[ ]+\\[atio(?:gl|[0-9a-z]{2,})xx\\.dll\\+0x[0-9a-z]+\\]$" : manager.getVar("amd-pattern"))
@@ -92,7 +91,7 @@ public class GraphicsEntry extends PatternContainerEntry {
                     clearButtons();
 
                     setPath("intel.downgrade-to-jre8u60");
-                    newButton("intel.buttons.downgrade-to-jre8u60", new VarUrlAction("intel-bug-jre-link", "http://tlaun.ch/wiki/trbl:intel-8u60"));
+                    newButton("intel.buttons.downgrade-to-jre8u60", new VarUrlAction("intel-bug-jre-link", "https://yadi.sk/d/dvzmBSqttQXhy/Java%208%20update%2045/Installers"));
                     return true;
                 }
             }
@@ -106,11 +105,13 @@ public class GraphicsEntry extends PatternContainerEntry {
         if (haveIntel) {
             if (haveNvidia) {
                 setToUpdateDrivers("Intel", "NVIDIA");
-                newButton("intel-nvidia-select", new VarUrlAction("intel-nvidia-select-url", "http://tlaun.ch/wiki/guide:select-intel-nvidia"));
+                newButton("intel-nvidia-select", new VarUrlAction("intel-nvidia-select-url", "https://tlaun.ch/wiki/guide:gpu-select:nvidia"));
                 return true;
             }
             if (haveAmd) {
-                return setToUpdateDrivers("Intel", "AMD");
+                setToUpdateDrivers("Intel", "AMD");
+                newButton("intel-amd-select", new VarUrlAction("intel-nvidia-select-url", "https://tlaun.ch/wiki/guide:gpu-select:amd"));
+                return true;
             }
             return setToUpdateDrivers("Intel");
         }

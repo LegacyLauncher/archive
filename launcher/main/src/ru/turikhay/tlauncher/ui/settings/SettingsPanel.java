@@ -304,7 +304,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         tlauncherTab.add(new EditorPair("settings.alert-on.label", defReleaseTypeHandlers));
         tlauncherTab.nextPane();
 
-        sslCheck = new EditorFieldHandler("connection.ssl", new EditorCheckBox("settings.ssl", true));
+        sslCheck = new EditorFieldHandler("connection.ssl", new EditorCheckBox("settings.ssl"));
         sslCheck.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
                 if (tlauncher.isReady()) {

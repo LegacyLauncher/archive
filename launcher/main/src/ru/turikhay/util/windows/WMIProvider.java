@@ -11,7 +11,12 @@ import java.util.concurrent.*;
 public final class WMIProvider {
     private static final Future<List<String>> AV_LIST = AsyncThread.future(new Callable<List<String>>() {
         public List<String> call() throws Exception {
-            return WMI.getAVSoftwareList();
+            try {
+                return WMI.getAVSoftwareList();
+            } catch(NoClassDefFoundError noClassDefFoundError) {
+                // ignore
+                return Collections.emptyList();
+            }
         }
     });
 

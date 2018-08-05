@@ -352,7 +352,7 @@ public final class CrashManager {
                 }
 
                 if (capableEntry == null && entry instanceof CrashEntry) {
-                    log("Checking entry:", entry.getName());
+                    //log("Checking entry:", entry.getName());
                     boolean capable;
 
                     try {
@@ -706,23 +706,12 @@ public final class CrashManager {
     }
 
     private class LogFlusherEntry extends Entry {
-        private String[] skipFolderList;
-
         public LogFlusherEntry() {
             super(CrashManager.this, "log flusher");
         }
 
         @Override
         protected void execute() throws Exception {
-            String skipFolderListStr = getVar("skip-folders");
-
-            if(StringUtils.isBlank(skipFolderListStr)) {
-                skipFolderList = null;
-            } else {
-                log("Skip folder list:", skipFolderListStr);
-                skipFolderList = StringUtils.split(skipFolderListStr, ';');
-            }
-
             synchronized (U.lock) {
                 readFile(getCrash().getCrashFile());
                 readFile(getCrash().getNativeCrashFile());
@@ -812,16 +801,13 @@ public final class CrashManager {
 
                     skipIt:
                     {
-                        if (skipFolderList != null) {
-                            for (String skipFolder : skipFolderList) {
-                                if (file.getName().equalsIgnoreCase(skipFolder)) {
-                                    skipDir = true;
-                                    name.append(" [skipped]");
-                                    break skipIt;
-                                }
+                        for (String skipFolder : listDeserializer.getSkipFolders()) {
+                            if (file.getName().equalsIgnoreCase(skipFolder)) {
+                                skipDir = true;
+                                name.append(" [skipped]");
+                                break skipIt;
                             }
                         }
-
                         if (subList == null || subList.length == 0) {
                             name.append(" [empty dir]");
                             skipDir = true;
@@ -847,7 +833,7 @@ public final class CrashManager {
                     if(currentLevel == levelLimit) {
                         String str;
 
-                        if(subList != null && subList.length > 0) {
+                        if(subList != null) {
                             StringBuilder s = new StringBuilder();
 
                             int files = 0, directories = 0;

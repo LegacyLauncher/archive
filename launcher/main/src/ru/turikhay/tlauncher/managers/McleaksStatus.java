@@ -63,4 +63,10 @@ public class McleaksStatus {
             listener.onMcleaksUpdated(this);
         }
     }
+
+    void receiveNothing() {
+        for(McleaksStatusListener listener : listeners) {
+            listener.onMcleaksUpdated(this);
+        }
+    }
 }

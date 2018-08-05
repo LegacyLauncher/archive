@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.OS;
@@ -42,6 +43,7 @@ public final class CrashEntryList {
 
         private final Map<String, String> vars;
         private final Map<String, Button> buttonMap;
+        private final List<String> skipFolders;
 
         private final MapTokenResolver varsResolver;
         private final Button.Deserializer buttonDeserializer;
@@ -56,10 +58,16 @@ public final class CrashEntryList {
             vars.put("arch", OS.Arch.CURRENT.toString());
             vars.put("locale", TLauncher.getInstance() == null? Locale.getDefault().toString() : TLauncher.getInstance().getSettings().getLocale().toString());
 
+            skipFolders = new ArrayList<>();
+
             varsResolver = new MapTokenResolver(vars);
 
             buttonMap = new HashMap<String, Button>();
             buttonDeserializer = new Button.Deserializer(manager, varsResolver);
+        }
+
+        List<String> getSkipFolders() {
+            return skipFolders;
         }
 
         Map<String, String> getVars() {
@@ -94,6 +102,17 @@ public final class CrashEntryList {
                 log("Processing var:", entry.getKey(), value);
             }
             vars.putAll(loadedVars);
+
+            skipFolders.clear();
+            if(root.has("skipFolders")) {
+                JsonArray skippingFolders = root.get("skipFolders").getAsJsonArray();
+                Iterator<JsonElement> elem = skippingFolders.iterator();
+                if(elem.hasNext()) {
+                    skipFolders.add(elem.next().getAsString());
+                }
+            } else if(vars.containsKey("skipFolders")) {
+                Collections.addAll(skipFolders, StringUtils.split(vars.get("skipFolders"), ';'));
+            }
 
             JsonArray buttons = root.get("buttons").getAsJsonArray();
             for (int i = 0; i < buttons.size(); i++) {

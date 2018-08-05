@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.support;
 
+import ru.turikhay.tlauncher.ui.frames.ProcessFrame;
 import ru.turikhay.tlauncher.ui.frames.VActionFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -9,11 +10,15 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
+import ru.turikhay.util.windows.DxDiag;
 
 import java.awt.*;
 import java.awt.event.*;
 
 public class PreSupportFrame extends VActionFrame {
+    private ProcessFrame<Void> dxdiagFlusher;
+
     private final ExtendedLabel whatIsDiagnosticLabel = new ExtendedLabel();
 
     {
@@ -54,8 +59,8 @@ public class PreSupportFrame extends VActionFrame {
 
         protected void onFailed(Process process, Exception e) {
             super.onFailed(process, e);
-
             sendDiagnosticCheckbox.setSelected(false);
+            PreSupportFrame.this.setVisible(true);
         }
     };
 
@@ -84,6 +89,26 @@ public class PreSupportFrame extends VActionFrame {
     }
 
     public PreSupportFrame() {
+        dxdiagFlusher = new ProcessFrame<Void>() {
+            {
+                setTitlePath("loginform.button.support.processing.title");
+                getHead().setText("loginform.button.support.processing.head");
+                setIcon("comments-o.png");
+                pack();
+            }
+
+            protected void onSucceeded(Process process, Void result) {
+                super.onSucceeded(process, result);
+            }
+
+            protected void onCancelled() {
+                super.onCancelled();
+                DxDiag.cancel();
+                PreSupportFrame.this.setVisible(true);
+                supportFrame = null;
+            }
+        };
+
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -138,9 +163,27 @@ public class PreSupportFrame extends VActionFrame {
         whatIsDiagnosticLabel.setToolTipText(Localizable.get("support.pre.diag.whatisit"));
     }
 
-    protected void onSupportFrameSelected(SupportFrame frame) {
+    private SupportFrame supportFrame;
+    protected void onSupportFrameSelected(final SupportFrame frame) {
         if (sendDiagnosticCheckbox.isSelected()) {
-            sendInfoFrame.setFrame(frame);
+            supportFrame = frame;
+            dxdiagFlusher.submit(dxdiagFlusher.new Process() {
+                @Override
+                protected Void get() throws Exception {
+                    PreSupportFrame.this.setVisible(false);
+                    if (DxDiag.isScannable()) {
+                        try {
+                            DxDiag.get();
+                        } catch (Exception e) {
+                            U.log("Could not retrieve DxDiag", e);
+                        }
+                    }
+                    if(supportFrame != null) {
+                        sendInfoFrame.setFrame(frame);
+                    }
+                    return null;
+                }
+            });
         } else {
             frame.openUrl();
         }

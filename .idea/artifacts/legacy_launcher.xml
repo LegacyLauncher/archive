@@ -23,7 +23,7 @@
     </properties>
     <root id="archive" name="launcher.jar">
       <element id="module-output" name="launcher" />
-      <element id="module-output" name="lib" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/target/original-tlauncher-dependencies-1.0.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
