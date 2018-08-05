@@ -33,6 +33,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
     <orderEntry type="module" module-name="bridge" scope="PROVIDED" />
-    <orderEntry type="module" module-name="tlauncher-dependencies" scope="PROVIDED" />
+    <orderEntry type="module" module-name="tlauncher-dependencies" />
   </component>
 </module>

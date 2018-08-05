@@ -1,15 +1,25 @@
 {
-  "revision": 12,
-  "required": "1.98.6",
-  "external": {
-    "revision": 1,
-    "checksum": "1ea4e9ffaaa20a7cf6e9482b652e8967bdfa549b6835705db44096991823f043"
-  },
+  "revision": 13,
+  "required": "1.99.20",
+  "skip-folders": ["millenaire"],
   "variables": {
-    "skip-folders": "millenaire",
     "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
     "oom-pattern": ".*java.lang.OutOfMemoryError: .+$",
-    "forge-pattern": ".*(?i:forge).*"
+    "forge-pattern": ".*(?i:forge).*",
+    "intel-bug-jre-link": "https://yadi.sk/d/dvzmBSqttQXhy/Java%208%20update%2045/Installers",
+    "intel-nvidia-select-url": "https://tlaun.ch/wiki/guide:gpu-select:nvidia",
+    "nvidia-driver-update": {
+      "ru_RU": "http://tlaun.ch/wiki/update:driver:nvidia",
+      "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
+    },
+    "amd-driver-update": {
+      "ru_RU": "http://tlaun.ch/wiki/update:driver:amd",
+      "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
+    },
+    "intel-driver-update": {
+      "ru_RU": "http://tlaun.ch/wiki/update:driver:intel",
+      "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
+    }
   },
   "buttons": [
     {
@@ -59,6 +69,30 @@
     }
   ],
   "signatures": [
+    {
+      "name": "bug-mc-129374",
+      "pattern": "^.+Unable to bootstrap datafixers$",
+      "title": {
+        "ru_RU": "MC-129374",
+        "en_US": "MC-129374"
+      },
+      "body": {
+        "ru_RU": "Minecraft закрыт из-за бага MC-129374, описанного в официальном баг-трекере.\n\n32-битная Java имеет меньший размер стека, поэтому этой ошибке подвержены только 32-битные системы.",
+        "en_US": "Minecraft is crashed due to the error specified in the bug tracker: MC-129374.\n\nJava for x86 systems has smaller stack size, that is only 32-bit system users are affected by this issue."
+      },
+      "buttons": [
+        {
+          "name": "fix-stack-size",
+          "text": {
+            "ru_RU": "Исправить размер стека: \"-Xss1M\"",
+            "en_US": "Fix stack size: \"-Xss1M\""
+          },
+          "actions": [
+            "set --minecraft.javaargs \"-Xss1M\""
+          ]
+        }
+      ]
+    },
     {
       "name": "jdk9-not-supported",
       "image": "java.png",
@@ -129,22 +163,6 @@
       "buttons": [
         "open-mods"
       ]
-    },
-    {
-      "name": "permgen",
-      "exitCode": -805306369,
-      "buttons": [
-        {
-          "text": "set-permgen",
-          "actions": [
-            "set --minecraft.improvedargs false",
-            "set --minecraft.javaargs -XX:MaxPermSize=256M"
-          ],
-          "block": true
-        }
-      ],
-      "jre": "1\\.[0-7]\\..+",
-      "_jre": "up to 1.7"
     },
     {
       "name": "metaspace",

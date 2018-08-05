@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Random;
 
 public final class DxDiag {
-    private static final long PROCESS_TIMEOUT = 90 * 1000;
+    private static final long PROCESS_TIMEOUT = 120 * 1000;
 
     private final List<DisplayDevice> displayDevices = new ArrayList<DisplayDevice>(), _displayDevices = Collections.unmodifiableList(displayDevices);
     private SystemInformation sysInfo;

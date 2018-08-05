@@ -151,7 +151,7 @@ public class Alert {
     }
 
     private static String getLoc(String path, String fallbackMessage) {
-        String result = Localizable.nget(path);
+        String result = Localizable.get(path);
         return result == null ? "" : result;
     }
 }
