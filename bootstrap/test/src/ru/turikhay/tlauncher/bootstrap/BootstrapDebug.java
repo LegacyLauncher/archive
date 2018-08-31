@@ -28,7 +28,9 @@ public class BootstrapDebug {
             throw new FileNotFoundException("libDir: " + libDir.getAbsolutePath());
         }
 
-        Bootstrap bootstrap = new Bootstrap(launcherFile, libDir, false);
+        Bootstrap bootstrap = new Bootstrap(launcherFile, libDir);
+        bootstrap.setupUserInterface(true);
+
         Task<LocalLauncherTask> localLauncherTask = bootstrap.prepareLauncher(null);
 
         BootBridge bootBridge = BootBridge.create(

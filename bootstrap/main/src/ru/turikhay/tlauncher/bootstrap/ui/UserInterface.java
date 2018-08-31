@@ -12,25 +12,22 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-public final class UserInterface {
+public final class UserInterface implements IInterface {
     public static final String DEFAULT_LOCALE = "en_US";
-    private static final int BORDER_SIZE = 5, TASK_DEPTH = 2;
+    static final int BORDER_SIZE = 5, TASK_DEPTH = 2;
 
     private static final ResourceBundle resourceBundle;
     static {
         ResourceBundle b = null;
-
-        if(isHeaded()) {
-            try {
-                b = ResourceBundle.getBundle("bootstrap", new UTF8Control());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            b = ResourceBundle.getBundle("bootstrap", new UTF8Control());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
         resourceBundle = b;
     }
 
@@ -114,11 +111,8 @@ public final class UserInterface {
                         StringBuilder title = new StringBuilder();
                         title.append(getLString("appname", "Bootstrap")).append(" :: ");
                         title.append(newValue == -1? "..." : newValue + "%").append(" :: ");
-                        try {
-                            title.append(resourceBundle.getString("loading.task." + childTask.getName()));
-                        } catch(MissingResourceException missing) {
-                            title.append(childTask.getName());
-                        }
+                        title.append(getLocalizedTaskName(childTask));
+
                         frame.setTitle(title.toString());
                     }
                     if (percentage == 1.) {
@@ -154,6 +148,7 @@ public final class UserInterface {
     }
 
     private Task bindingTask;
+    @Override
     public void bindToTask(Task task) {
         if(this.bindingTask != null && this.bindingTask.isExecuting()) {
             throw new IllegalStateException();
@@ -163,6 +158,11 @@ public final class UserInterface {
         if(this.bindingTask != null) {
             this.bindingTask.addListener(taskListener);
         }
+    }
+
+    @Override
+    public void dispose() {
+        getFrame().dispose();
     }
 
     @Override
@@ -181,26 +181,44 @@ public final class UserInterface {
     }
 
     public static String getLString(String key, String defaultValue) {
-        return resourceBundle == null? defaultValue : resourceBundle.containsKey(key) ? resourceBundle.getString(key) : defaultValue;
+        final ResourceBundle b = resourceBundle;
+        return b == null? defaultValue : b.containsKey(key) ? b.getString(key) : defaultValue;
     }
 
     public static void showError(String message, Object textarea) {
         if(isHeaded()) {
             Alert.showError(message, textarea);
+        } else {
+            HeadlessInterface.printError(message, textarea);
         }
     }
 
     public static void showWarning(String message, Object textarea) {
         if(isHeaded()) {
             Alert.showWarning(message, textarea);
+        } else {
+            HeadlessInterface.printWarning(message, textarea);
         }
     }
 
+    private static boolean headed = !GraphicsEnvironment.isHeadless();
     public static boolean isHeaded() {
-        return !GraphicsEnvironment.isHeadless();
+        return headed;
     }
 
-    private Task getChildTask(Task task, int depth) {
+    public static void setHeaded(boolean head) {
+        if(GraphicsEnvironment.isHeadless() && head) {
+            throw new HeadlessException("current instance is headless");
+        }
+        UserInterface.headed = head;
+    }
+
+    static String getLocalizedTaskName(Task task) {
+        U.requireNotNull(task, "task");
+        return getLString("loading.task." + task.getName(), task.getName());
+    }
+
+    static Task getChildTask(Task task, int depth) {
         Task child = task.getBindingTask();
         if(child == null || depth == 0) {
             return task;

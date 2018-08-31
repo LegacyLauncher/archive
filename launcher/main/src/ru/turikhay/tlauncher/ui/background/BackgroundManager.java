@@ -15,6 +15,7 @@ public final class BackgroundManager extends ExtendedLayeredPane {
     final Cover cover;
 
     private final ImageBackground imageBackground;
+    private final OldAnimatedBackground oldAnimatedBackground;
     private final FXWrapper<MediaFxBackground> mediaFxBackground;
 
     private IBackground background;
@@ -28,7 +29,7 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         add(cover, COVER_INDEX);
 
         imageBackground = new ImageBackground();
-
+        oldAnimatedBackground = null;//new OldAnimatedBackground();
         FXWrapper<MediaFxBackground> _mediaFxBackground = null;
         try {
             _mediaFxBackground = new FXWrapper<MediaFxBackground>(MediaFxBackground.class);
@@ -52,11 +53,13 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         }
 
         if (this.background != null) {
+            this.background.pauseBackground();
             remove((JComponent) this.background);
         }
 
         if (background != null) {
             add((JComponent) background, BACKGROUND_INDEX);
+            background.startBackground();
         }
 
         this.background = background;
@@ -77,12 +80,20 @@ public final class BackgroundManager extends ExtendedLayeredPane {
 
     public void loadBackground() {
         String path = TLauncher.getInstance().getSettings().get("gui.background");
-
         if (path != null && mediaFxBackground != null && (path.endsWith(".mp4") || path.endsWith(".flv"))) {
             worker.setBackground(mediaFxBackground, path);
         } else {
             worker.setBackground(imageBackground, path);
         }
+        /*if(path == null) {
+            worker.setBackground(oldAnimatedBackground, null);
+        } else {
+            if (mediaFxBackground != null && (path.endsWith(".mp4") || path.endsWith(".flv"))) {
+                worker.setBackground(mediaFxBackground, path);
+            } else {
+                worker.setBackground(imageBackground, path);
+            }
+        }*/
     }
 
     @Override

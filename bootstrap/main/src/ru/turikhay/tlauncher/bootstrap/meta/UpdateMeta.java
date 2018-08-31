@@ -24,13 +24,13 @@ public class UpdateMeta {
         {
             add("http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
             Collections.addAll(this, U.shuffle(
+                    "http://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
+                    "http://u.tlauncher.ru/%s/bootstrap.json.mgz.signed"
+            ));
+            Collections.addAll(this, U.shuffle(
                     "https://tlauncherrepo.com/%s/bootstrap.json",
                     "https://u.tlauncher.ru/%s/bootstrap.json",
                     "https://turikhay.ru/tlauncher/%s/bootstrap.json"
-            ));
-            Collections.addAll(this, U.shuffle(
-                    "http://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
-                    "http://u.tlauncher.ru/%s/bootstrap.json.mgz.signed"
             ));
         }
     };
@@ -61,17 +61,23 @@ public class UpdateMeta {
                         String _url = null;
                         long time = System.currentTimeMillis();
 
+                        InputStream stream = null;
                         try {
                             _url = String.format(UPDATE_URL_LIST.get(i), brand);
                             URL url = new URL(_url);
                             log("URL: ", url);
 
-                            InputStream stream = setupConnection(url, attempt);
+                            stream = setupConnection(url, attempt);
                             if(url.toExternalForm().endsWith(".signed")) {
-                                log("Requested is marked as signed, requiring valid signature");
+                                log("Request is signed, requiring valid signature");
                                 stream = new SignedStream(stream);
                             }
+
                             UpdateMeta meta = fetchFrom(gson, Compressor.uncompressMarked(stream));
+
+                            if(stream instanceof SignedStream) {
+                                ((SignedStream) stream).validateSignature();
+                            }
 
                             if(meta.isOutdated()) {
                                 log("... is outdated, skipping");
@@ -96,6 +102,10 @@ public class UpdateMeta {
                                     .add("delta_ms", System.currentTimeMillis() - time)
                                     .add("attempt", attempt)
                             );
+                        } finally {
+                            if(stream != null) {
+                                U.close(stream);
+                            }
                         }
                     }
                 }

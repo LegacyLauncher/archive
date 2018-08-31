@@ -10,14 +10,14 @@ class Alert {
     private static final String TITLE = "Alert";
 
     static void showError(String message, Object textarea) {
-        showOkay(JOptionPane.ERROR_MESSAGE, message, textarea);
+        show(JOptionPane.ERROR_MESSAGE, message, textarea);
     }
 
     static void showWarning(String message, Object textarea) {
-        showOkay(JOptionPane.WARNING_MESSAGE, message, textarea);
+        show(JOptionPane.WARNING_MESSAGE, message, textarea);
     }
 
-    private static void showOkay(int messageType, String message, Object textarea) {
+    private static void show(int messageType, String message, Object textarea) {
         JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), TITLE, messageType);
     }
 

@@ -93,14 +93,16 @@ class Worker {
             {
                 wrapper.setBackground(background);
 
-                try {
-                    background.loadBackground(path);
-                } catch (OutOfMemoryError outOfMemoryError) {
-                    ExceptionHandler.reduceMemory(outOfMemoryError);
-                    break loadBackground;
-                } catch (Exception e) {
-                    log("Could not load background for", background, "; path:", path, e);
-                    break loadBackground;
+                if(background != null) {
+                    try {
+                        background.loadBackground(path);
+                    } catch (OutOfMemoryError outOfMemoryError) {
+                        ExceptionHandler.reduceMemory(outOfMemoryError);
+                        break loadBackground;
+                    } catch (Exception e) {
+                        log("Could not load background for", background, "; path:", path, e);
+                        break loadBackground;
+                    }
                 }
             }
 

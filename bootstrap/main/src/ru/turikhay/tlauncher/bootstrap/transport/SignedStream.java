@@ -2,7 +2,9 @@ package ru.turikhay.tlauncher.bootstrap.transport;
 
 import ru.turikhay.tlauncher.bootstrap.util.Sha256Sign;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import shaded.com.getsentry.raven.util.Base64;
 import shaded.org.apache.commons.io.IOUtils;
+import shaded.org.apache.commons.lang3.NotImplementedException;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -28,11 +30,11 @@ public class SignedStream extends ChecksumStream {
         PUBLIC_KEY = publicKey;
     }
 
-    byte[] signedChecksum;
-
     public SignedStream(InputStream stream) {
         super(stream);
     }
+
+    byte[] signedChecksum;
 
     @Override
     public int read() throws IOException {
@@ -81,7 +83,7 @@ public class SignedStream extends ChecksumStream {
         return true;
     }
 
-    void validateSignature() throws IOException {
+    public void validateSignature() throws IOException {
         if(signedChecksum == null) {
             throw new StreamNotSignedException("signedChecksum not read yet");
         }
@@ -102,8 +104,11 @@ public class SignedStream extends ChecksumStream {
             signatureRef.initVerify(PUBLIC_KEY);
             signatureRef.update(data);
             return signatureRef.verify(signature);
+        } catch(SignatureException sign) {
+            U.log("could not verify signature", sign);
+            return false;
         } catch(Exception e) {
-            throw new Error("could not perform verification", e);
+            throw new Error("verification error", e);
         }
     }
 }
