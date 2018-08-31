@@ -68,6 +68,8 @@ public class Server {
     }
 
     protected void setFullAddress(String fullAddress) {
+        fullAddress = StringUtils.trim(fullAddress);
+
         if (fullAddress.startsWith("[") && fullAddress.contains("]:")) {
             // ipv6 with port
             String address;

@@ -3,6 +3,9 @@ package ru.turikhay.tlauncher.bootstrap;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.exception.*;
 import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
+import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
+import ru.turikhay.tlauncher.bootstrap.ui.HeadlessInterface;
+import ru.turikhay.tlauncher.bootstrap.ui.IInterface;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.*;
 import shaded.com.getsentry.raven.DefaultRavenFactory;
@@ -32,6 +35,7 @@ import shaded.ru.turikhay.util.windows.wmi.WMI;
 
 import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -47,6 +51,14 @@ public final class Bootstrap {
 
         log("Version: " + localBootstrapMeta.getVersion());
 
+        /*log("Starting bootstrap...");
+
+
+
+        Bootstrap bootstrap = new Bootstrap(!parsed.has(forceHeadlessMode));
+        LocalBootstrapMeta localBootstrapMeta = bootstrap.getMeta();
+        log("Version: " + localBootstrapMeta.getVersion());*/
+
         File
             defaultFile = U.requireNotNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation"),
             defaultLibFolder = defaultFile.getParentFile() == null? new File("lib") : new File(defaultFile.getParentFile(), "lib");
@@ -60,8 +72,14 @@ public final class Bootstrap {
                 parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class).defaultsTo(U.requireNotNull(localBootstrapMeta.getShortBrand(), "default shortBrand"));
         OptionSpecBuilder forceUpdateParser =
                 parser.accepts("ignoreUpdate", "defines if bootstrap should ignore update processes");
+        OptionSpecBuilder forceHeadlessMode =
+                parser.accepts("headlessMode", "defines if bootstrap should run without UI");
+        ArgumentAcceptingOptionSpec<File> targetUpdateFile =
+                parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
 
         OptionSet parsed = parseJvmArgs(parser);
+
+        bootstrap.setupUserInterface(parsed.has(forceHeadlessMode));
 
         localBootstrapMeta.setShortBrand(U.requireNotNull(brandParser.value(parsed), "shortBrand"));
         log("Short brand: ", localBootstrapMeta.getShortBrand());
@@ -71,6 +89,9 @@ public final class Bootstrap {
 
         bootstrap.setTargetLibFolder(targetLibFolderParser.value(parsed));
         log("Target lib folder:", bootstrap.getTargetLibFolder());
+
+        bootstrap.setUpdateMetaFile(targetUpdateFile.value(parsed));
+        log("Update meta file:", bootstrap.getUpdateMetaFile());
 
         bootstrap.setIgnoreUpdate(parsed.has(forceUpdateParser));
         log("Ignore update:", bootstrap.getIgnoreUpdate());
@@ -191,8 +212,8 @@ public final class Bootstrap {
             raven.sendEvent(b);
         }
 
-        if(bootstrap != null && bootstrap.getUserInterface() != null) {
-            bootstrap.getUserInterface().getFrame().dispose();
+        if(bootstrap != null) {
+            bootstrap.getUserInterface().dispose();
         }
 
         if(UserInterface.getResourceBundle() != null) {
@@ -218,26 +239,14 @@ public final class Bootstrap {
         }
     }
 
-    private final UserInterface ui;
     private final InternalLauncher internal;
     private final LocalBootstrapMeta meta;
-    private File targetJar, targetLibFolder;
+
+    private IInterface ui;
+    private File targetJar, targetLibFolder, targetUpdateFile, updateMetaFile;
     private boolean ignoreUpdate;
 
-    Bootstrap(File targetJar, File targetLibFolder, boolean uiEnabled) {
-        UserInterface userInterface = null;
-
-        if(uiEnabled) {
-            try {
-                userInterface = new UserInterface();
-            } catch (RuntimeException rE) {
-                log("User interface is not loaded:", rE);
-                userInterface = null;
-            }
-        }
-
-        this.ui = userInterface;
-
+    Bootstrap(File targetJar, File targetLibFolder) {
         final String resourceName = "meta.json";
         try {
             meta = Json.parse(U.requireNotNull(getClass().getResourceAsStream(resourceName), resourceName), LocalBootstrapMeta.class);
@@ -261,10 +270,36 @@ public final class Bootstrap {
     }
 
     public Bootstrap() {
-        this(null, null, true);
+        this(null, null);
     }
 
-    UserInterface getUserInterface() {
+    public void setupUserInterface(boolean forceHeadlessMode) {
+        if(ui != null) {
+            return;
+        }
+        log("Setting up user interface");
+        loadSwing:
+        {
+            if(forceHeadlessMode) {
+                log("Forcing headless mode");
+                break loadSwing;
+            }
+
+            log("Trying to load user interface");
+            try {
+                ui = new UserInterface();
+            } catch (RuntimeException rE) {
+                log("User interface is not loaded:", rE);
+                break loadSwing;
+            }
+            log("UI loaded");
+            return;
+        }
+        ui = new HeadlessInterface();
+        log("Headless mode loaded");
+    }
+
+    IInterface getUserInterface() {
         return ui;
     }
 
@@ -290,6 +325,22 @@ public final class Bootstrap {
 
     private void setIgnoreUpdate(boolean ignore) {
         this.ignoreUpdate = ignore;
+    }
+
+    public File getTargetUpdateFile() {
+        return targetUpdateFile;
+    }
+
+    private void setTargetUpdateFile(File targetUpdateFile) {
+        this.targetUpdateFile = targetUpdateFile;
+    }
+
+    public File getUpdateMetaFile() {
+        return updateMetaFile;
+    }
+
+    private void setUpdateMetaFile(File updateMetaFile) {
+        this.updateMetaFile = updateMetaFile;
     }
 
     public LocalBootstrapMeta getMeta() {
@@ -367,6 +418,7 @@ public final class Bootstrap {
                 LocalLauncher localLauncher = localLauncherTask.getLauncher();
                 LocalLauncherMeta localLauncherMeta = localLauncher.getMeta();
                 log("Local launcher: " + localLauncher);
+                printVersion(localLauncherMeta);
                 recordBreadcrumb("localLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
 
                 log("Downloading libraries...");
@@ -406,10 +458,23 @@ public final class Bootstrap {
 
             @Override
             protected Void execute() throws Exception {
+                printVersion(null);
                 UpdateMeta updateMeta;
 
                 try {
-                    updateMeta = bindTo(UpdateMeta.fetchFor(meta.getShortBrand()), .0, .25);
+                    if(updateMetaFile != null) {
+                        Compressor.init();
+                        SignedStream signedStream = null;
+                        try {
+                            signedStream = new SignedStream(new FileInputStream(updateMetaFile));
+                            updateMeta = UpdateMeta.fetchFrom(Compressor.uncompressMarked(signedStream, false));
+                            signedStream.validateSignature();
+                        } finally {
+                            U.close(signedStream);
+                        }
+                    } else {
+                        updateMeta = bindTo(UpdateMeta.fetchFor(meta.getShortBrand()), .0, .25);
+                    }
                 } catch(ExceptionList list) {
                     log("Could not retrieve update meta:", list);
                     sendError(list, DataBuilder.create("type", FatalExceptionType.getType(list)));
@@ -463,6 +528,10 @@ public final class Bootstrap {
         for(Map.Entry<String, String> entry : description.entrySet()) {
             bridge.addMessage(entry.getKey(), updateTitle, entry.getValue());
         }
+    }
+
+    private void printVersion(LocalLauncherMeta localLauncherMeta) {
+        HeadlessInterface.printVersion(getMeta().getVersion().toString(), localLauncherMeta == null? null : localLauncherMeta.getVersion().toString());
     }
 
     private Task<LocalLauncherTask> getLocalLauncher(final RemoteLauncher remote) {

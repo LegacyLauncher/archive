@@ -119,4 +119,10 @@ public final class BootstrapStarter {
     private static void log(Object... o) {
         U.log("[BootstrapStarter]", o);
     }
+
+    private static class ShutdownHook extends Thread {
+        ShutdownHook() {
+
+        }
+    }
 }
