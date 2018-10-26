@@ -185,6 +185,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             //tlauncher.newMinecraftLauncher(server, force1);
             checkbox.forceupdate.setSelected(false);
         }
+        requestedVersion = null;
     }
 
     private void stopProcess() {
@@ -196,7 +197,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         tlauncher.getMinecraftLauncher().stop();
     }
 
-    private VersionSyncInfo requestedVersion;
+    VersionSyncInfo requestedVersion;
 
     public void startLauncher() {
         startLauncher(null, 0);
@@ -212,6 +213,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                 U.sleepFor(500L);
             }
             this.requestedVersion = requestedVersion;
+            if(requestedVersion != null) {
+                versions.setSelectedValue(requestedVersion);
+            }
             this.server = server;
             this.serverId = serverId;
             autologin.setActive(false);

@@ -62,7 +62,7 @@ public class ElyUser extends User {
         this.displayName = StringUtil.requireNotBlank(displayName, "displayName");
     }
 
-    UUID getUUID() {
+    public UUID getUUID() {
         return uuid;
     }
 

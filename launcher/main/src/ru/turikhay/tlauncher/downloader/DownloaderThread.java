@@ -146,7 +146,7 @@ public class DownloaderThread extends ExtendedThread {
                         downloadURL(connection, timeout);
                         return;
                     } catch (IOException ioE) {
-                        dlog("Failed:", connection.getURL(), current.getURL(), ioE.getMessage());
+                        dlog("Failed:", connection == null? "(conn. is not open)" : connection.getURL(), current.getURL(), ioE.getMessage());
                         current.getRepository().getList().markInvalid(repo);
                         exL.add(ioE);
                     } catch (AbortedDownloadException var9) {

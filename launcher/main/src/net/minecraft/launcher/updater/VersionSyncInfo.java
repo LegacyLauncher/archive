@@ -114,7 +114,7 @@ public class VersionSyncInfo {
     }
 
     public boolean isUpToDate() {
-        return localVersion == null ? false : (remoteVersion == null ? true : localVersion.getUpdatedTime().compareTo(remoteVersion.getUpdatedTime()) >= 0);
+        return localVersion != null && (remoteVersion == null || localVersion.getUpdatedTime().compareTo(remoteVersion.getUpdatedTime()) >= 0);
     }
 
     public String toString() {

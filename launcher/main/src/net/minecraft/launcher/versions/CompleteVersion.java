@@ -48,6 +48,8 @@ public class CompleteVersion implements Version, Cloneable {
 
     Map<ArgumentType, List<Argument>> arguments;
 
+    Boolean modListAbsolutePrefix;
+
     @Expose Repository source;
     @Expose Account.AccountType proceededFor;
     @Expose VersionList list;
@@ -118,6 +120,10 @@ public class CompleteVersion implements Version, Cloneable {
         } else {
             this.list = list;
         }
+    }
+
+    public boolean isModListAbsolutePrefix() {
+        return modListAbsolutePrefix != null && modListAbsolutePrefix;
     }
 
     public String getJar() {
@@ -281,6 +287,9 @@ public class CompleteVersion implements Version, Cloneable {
 
         while (var6.hasNext()) {
             Library library = (Library) var6.next();
+            if(library.isMod()) {
+                continue;
+            }
             if (library.getNatives() == null) {
                 result.add(new File(base, "libraries/" + library.getArtifactPath()));
             }
@@ -292,6 +301,19 @@ public class CompleteVersion implements Version, Cloneable {
 
     public Collection<File> getClassPath(Rule.FeatureMatcher matcher, File base) {
         return getClassPath(OS.CURRENT, matcher, base);
+    }
+
+    public Collection<Library> collectMods(Rule.FeatureMatcher matcher) {
+        Collection<Library> libraries = getRelevantLibraries(matcher);
+        ArrayList<Library> result = new ArrayList<>();
+
+        for (Library library : libraries) {
+            if (library.isMod()) {
+                result.add(library);
+            }
+        }
+
+        return result;
     }
 
     public Collection<String> getNatives(OS os, Rule.FeatureMatcher matcher) {
@@ -516,6 +538,10 @@ public class CompleteVersion implements Version, Cloneable {
         return new CurrentLaunchFeatureMatcher();
     }
 
+    public boolean hasModernArguments() {
+        return this.arguments != null;
+    }
+
     public List<String> addArguments(ArgumentType type, Rule.FeatureMatcher featureMatcher, StrSubstitutor substitutor) {
         ArrayList<String> result = new ArrayList<>();
         if (this.arguments != null) {
@@ -639,6 +665,10 @@ public class CompleteVersion implements Version, Cloneable {
                 U.log("Cloning of CompleteVersion is not supported O_o", var7);
                 return defaultContext.toJsonTree(version0, type);
             }
+
+            /*Set<Library> lib = new LinkedHashSet<>(version.libraries);
+            version.libraries.clear();
+            version.libraries.addAll(lib);*/
 
             JsonObject object = (JsonObject) defaultContext.toJsonTree(version, type);
             JsonElement jar = object.get("jar");

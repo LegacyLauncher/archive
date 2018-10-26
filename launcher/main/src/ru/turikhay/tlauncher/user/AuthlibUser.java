@@ -6,6 +6,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
+import java.util.UUID;
+
 public abstract class AuthlibUser extends User {
     private final String clientToken, username;
     private final com.mojang.authlib.UserAuthentication userAuthentication;
@@ -26,6 +28,11 @@ public abstract class AuthlibUser extends User {
 
     String getClientToken() {
         return clientToken;
+    }
+
+    @Override
+    public UUID getUUID() {
+        return getSelectedMojangProfile().getId();
     }
 
     com.mojang.authlib.UserAuthentication getMojangUserAuthentication() {
@@ -59,7 +66,7 @@ public abstract class AuthlibUser extends User {
 
     @Override
     protected ToStringBuilder toStringBuilder() {
-        return super.toStringBuilder().append("uuid", getSelectedMojangProfile().getId());
+        return super.toStringBuilder();
     }
 
     private static final Gson gson = new GsonBuilder()

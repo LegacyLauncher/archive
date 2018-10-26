@@ -13,10 +13,15 @@ import java.util.regex.Pattern;
 
 public class PatternEntry extends CrashEntry {
     private final Pattern pattern;
+    private Matcher match;
 
     public PatternEntry(CrashManager manager, String name, Pattern pattern) {
         super(manager, name);
         this.pattern = U.requireNotNull(pattern, "pattern");
+    }
+
+    protected Matcher getMatch() {
+        return match;
     }
 
     @Override
@@ -29,6 +34,7 @@ public class PatternEntry extends CrashEntry {
         while (scanner.hasNextLine()) {
             Matcher matcher = pattern.matcher(scanner.nextLine());
             if (matcher.matches()) {
+                match = matcher;
                 getManager().getCrash().addExtra("pattern:" + pattern.toString(), matcher.toString());
                 return true;
             }
