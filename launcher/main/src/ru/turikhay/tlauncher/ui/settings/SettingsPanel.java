@@ -70,7 +70,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorGroupHandler alertUpdates;
     public final EditorFieldHandler sslCheck;
     public final EditorFieldHandler allowNoticeDisable;
-    public final SettingsHint allowNoticeDisableHint;
     public final EditorFieldHandler locale;
     private final TabbedEditorPanel.EditorPanelTab aboutTab;
     public final HTMLPage about;
@@ -325,8 +324,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                 }
             }
         });
-        allowNoticeDisableHint = new SettingsHint("notice.enable.hint");
-        tlauncherTab.add(new EditorPair("notice.enable.label", allowNoticeDisable, allowNoticeDisableHint));
+        tlauncherTab.add(new EditorPair("notice.enable.label", allowNoticeDisable));
         tlauncherTab.nextPane();
 
         locale = new EditorFieldHandler("locale", new SettingsLocaleComboBox(this));
@@ -556,7 +554,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     }
 
     public void updateLocale() {
-        allowNoticeDisableHint.updateLocale();
         /*if (tlauncher.getSettings().isUSSRLocale()) {
             add(serverTab);
         } else {

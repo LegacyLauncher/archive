@@ -30,6 +30,7 @@ public class Library {
     protected String checksum;
     protected List<String> deleteEntries;
     protected LibraryDownloadInfo downloads;
+    protected Boolean mod;
 
     static {
         HashMap<String, String> map = new HashMap<String, String>();
@@ -45,6 +46,11 @@ public class Library {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 
     public String getName() {
@@ -90,6 +96,10 @@ public class Library {
         return deleteEntries;
     }
 
+    public boolean isMod() {
+        return mod != null && mod;
+    }
+
     String getArtifactBaseDir() {
         if (name == null) {
             throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
@@ -128,7 +138,7 @@ public class Library {
     }
 
     public String toString() {
-        return "Library{name=\'" + name + '\'' + ", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", packed=\'" + packed + "\'}";
+        return "Library{name=\'" + name + '\'' + ", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", packed=\'" + packed + "\', mod="+ mod +"}";
     }
 
     public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {
@@ -150,7 +160,7 @@ public class Library {
             if (url == null) {
                 repo = Repository.LIBRARY_REPO;
             } else if (url.startsWith("/")) {
-                repo = versionSource;
+                repo = versionSource == null? Repository.EXTRA_VERSION_REPO : versionSource;
                 path = url.substring(1) + path;
             } else {
                 repo = Repository.PROXIFIED_REPO;

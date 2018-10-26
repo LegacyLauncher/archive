@@ -1,7 +1,9 @@
 package ru.turikhay.tlauncher.user;
 
 import com.google.gson.*;
+import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 
 import java.lang.reflect.Type;
 import java.util.UUID;
@@ -9,14 +11,21 @@ import java.util.UUID;
 public class PlainUser extends User {
     public static final String TYPE = "plain";
     private final String username;
+    private final UUID uuid;
 
-    PlainUser(String username) {
+    PlainUser(String username, UUID uuid) {
         this.username = StringUtil.requireNotBlank(username, "username");
+        this.uuid = U.requireNotNull(uuid, "uuid");
     }
 
     @Override
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public UUID getUUID() {
+        return uuid;
     }
 
     @Override
@@ -44,10 +53,10 @@ public class PlainUser extends User {
     @Override
     public LoginCredentials getLoginCredentials() {
         return new LoginCredentials(username,
-                "null",
+                UUIDTypeAdapter.fromUUID(uuid),
                 null,
                 username,
-                new UUID(0, 0),
+                uuid,
                 "legacy",
                 "(Default)"
         );
@@ -60,13 +69,20 @@ public class PlainUser extends User {
     private static class Jsonizer extends UserJsonizer<PlainUser> {
         @Override
         public PlainUser deserialize(JsonObject json, JsonDeserializationContext context) throws JsonParseException {
-            return new PlainUser(json.get("username").getAsString());
+            UUID uuid;
+            if(json.has("uuid")) {
+                uuid = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
+            } else {
+                uuid = UUID.randomUUID();
+            }
+            return new PlainUser(json.get("username").getAsString(), uuid);
         }
 
         @Override
         public JsonObject serialize(PlainUser src, JsonSerializationContext context) {
             JsonObject object = new JsonObject();
             object.addProperty("username", src.getUsername());
+            object.addProperty("uuid", UUIDTypeAdapter.fromUUID(src.getUUID()));
             return object;
         }
     }

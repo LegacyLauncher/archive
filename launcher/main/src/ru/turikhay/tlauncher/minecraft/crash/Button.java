@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import com.google.gson.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.StringUtil;
@@ -23,7 +24,7 @@ public class Button {
     private final String name;
 
     private String text;
-    private Object[] vars;
+    private Object[] vars = Localizable.EMPTY_VARS;
     private boolean blockAfter, localizable = true, useGlobalPath = false;
 
     public Button(String name) {
@@ -40,7 +41,7 @@ public class Button {
 
     void setText(String text, Object... vars) {
         this.text = text;
-        this.vars = vars;
+        this.vars = vars == null? Localizable.EMPTY_VARS : vars;
     }
 
     public final List<Action> getActions() {

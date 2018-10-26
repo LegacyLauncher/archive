@@ -25,7 +25,7 @@ public class UpdateMeta {
             add("http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
             Collections.addAll(this, U.shuffle(
                     "http://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
-                    "http://u.tlauncher.ru/%s/bootstrap.json.mgz.signed"
+                    "http://u.tlauncher.ru/%s/bootstrap.json.mgz"
             ));
             Collections.addAll(this, U.shuffle(
                     "https://tlauncherrepo.com/%s/bootstrap.json",
@@ -180,7 +180,13 @@ public class UpdateMeta {
     protected String options; // this field is handled by UpdateDeserializer
 
     public boolean isOutdated() {
-        return pendingUpdateUTC > 0 && calendar().after(calendar(pendingUpdateUTC * 1000));
+        if(pendingUpdateUTC < 0) {
+            return false;
+        }
+        if(pendingUpdateUTC == 0) {
+            return true;
+        }
+        return calendar().after(calendar(pendingUpdateUTC * 1000));
     }
 
     public RemoteBootstrapMeta getBootstrap() {

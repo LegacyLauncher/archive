@@ -71,7 +71,9 @@ public final class Bootstrap {
         ArgumentAcceptingOptionSpec<String> brandParser =
                 parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class).defaultsTo(U.requireNotNull(localBootstrapMeta.getShortBrand(), "default shortBrand"));
         OptionSpecBuilder forceUpdateParser =
-                parser.accepts("ignoreUpdate", "defines if bootstrap should ignore update processes");
+                parser.accepts("ignoreUpdate", "defines if bootstrap should ignore launcher update processes");
+        OptionSpecBuilder ignoreSelfUpdateParser =
+                parser.accepts("ignoreSelfUpdate", "defines if bootstrap should ignore self update processes");
         OptionSpecBuilder forceHeadlessMode =
                 parser.accepts("headlessMode", "defines if bootstrap should run without UI");
         ArgumentAcceptingOptionSpec<File> targetUpdateFile =
@@ -94,7 +96,10 @@ public final class Bootstrap {
         log("Update meta file:", bootstrap.getUpdateMetaFile());
 
         bootstrap.setIgnoreUpdate(parsed.has(forceUpdateParser));
-        log("Ignore update:", bootstrap.getIgnoreUpdate());
+        log("Ignore launcher update:", bootstrap.getIgnoreUpdate());
+
+        bootstrap.setIgnoreSelfUpdate(parsed.has(ignoreSelfUpdateParser));
+        log("Ignore self update:", bootstrap.getIgnoreSelfUpdate());
 
         try {
             checkAccessible(bootstrap.getTargetJar(), false);
@@ -244,7 +249,7 @@ public final class Bootstrap {
 
     private IInterface ui;
     private File targetJar, targetLibFolder, targetUpdateFile, updateMetaFile;
-    private boolean ignoreUpdate;
+    private boolean ignoreUpdate, ignoreSelfUpdate;
 
     Bootstrap(File targetJar, File targetLibFolder) {
         final String resourceName = "meta.json";
@@ -325,6 +330,14 @@ public final class Bootstrap {
 
     private void setIgnoreUpdate(boolean ignore) {
         this.ignoreUpdate = ignore;
+    }
+
+    public boolean getIgnoreSelfUpdate() {
+        return ignoreSelfUpdate;
+    }
+
+    public void setIgnoreSelfUpdate(boolean ignoreSelfUpdate) {
+        this.ignoreSelfUpdate = ignoreSelfUpdate;
     }
 
     public File getTargetUpdateFile() {
@@ -485,8 +498,8 @@ public final class Bootstrap {
                 if(updateMeta != null) {
                     DownloadEntry downloadEntry = getBootstrapUpdate(updateMeta);
                     if(downloadEntry != null) {
-                        if(getIgnoreUpdate()) {
-                            log("Bootstrap update ignored:", updateMeta.getBootstrap().getVersion());
+                        if(getIgnoreSelfUpdate()) {
+                            log("Bootstrap self update ignored:", updateMeta.getBootstrap().getVersion());
                         } else {
                             Updater updater = new Updater("bootstrapUpdate",
                                     U.getJar(Bootstrap.class), downloadEntry, true);

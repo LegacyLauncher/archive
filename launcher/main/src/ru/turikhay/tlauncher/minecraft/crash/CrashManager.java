@@ -98,6 +98,7 @@ public final class CrashManager {
         }
 
         addEntry(new GraphicsEntry(this));
+        addEntry(new BadMainClassEntry(this));
         if(DxDiag.isScannable()) {
             addEntry(dxDiagAheadProcessorEntry);
         }

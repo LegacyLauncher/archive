@@ -12,17 +12,14 @@ import java.util.regex.Pattern;
  */
 public final class JavaVersion {
     private final String version, identifier;
-    private final int epoch, major, minor, update;
+    private final int major, minor, update;
     private final boolean ea;
-
-    private final double d;
 
     private JavaVersion(String version, String identifier, int epoch, int major, int minor, int update) {
         this.version = StringUtil.requireNotBlank(version, "version");
         this.identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
         if(epoch == 1) {
-            this.epoch = epoch;
             this.major = ifPositive(major, "major");
             this.minor = ifNotNegative(minor, "minor");
 
@@ -30,19 +27,12 @@ public final class JavaVersion {
                 update = -1;
             }
             this.update = ifNotSmallerMinusOne(update, "update");
-        } else if(epoch == 0 && ifPositive(major, "major") > 0) {
-            this.epoch = 1;
+        } else {
             this.major = major;
             this.minor = ifNotNegative(minor, "minor (java 9+)");
-            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
-        } else {
-            this.epoch = 1;
-            this.major = ifPositive(epoch, "major (java 9+)");
-            this.minor = ifNotNegative(major, "minor (java 9+)");
-            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
+            this.update = ifNotSmallerMinusOne(update, "update (java 9+)");
         }
         ea = version.contains("-ea");
-        d = Double.parseDouble(this.epoch + "." + this.major);
     }
 
     public String getVersion() {
@@ -51,14 +41,6 @@ public final class JavaVersion {
 
     public String getIdentifier() {
         return identifier;
-    }
-
-    public double getDouble() {
-        return d;
-    }
-
-    public int getEpoch() {
-        return epoch;
     }
 
     public int getMajor() {
@@ -86,7 +68,6 @@ public final class JavaVersion {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("version", getVersion())
                 .append("identifier", getIdentifier())
-                .append("epoch", getEpoch())
                 .append("major", getMajor())
                 .append("minor", getMinor())
                 .append("update", getUpdate())

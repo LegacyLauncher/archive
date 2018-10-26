@@ -54,6 +54,9 @@ public class Rule {
         private OS name;
         private String version;
 
+        public OSRestriction() {
+        }
+
         public OSRestriction(Rule.OSRestriction osRestriction) {
             name = osRestriction.name;
             version = osRestriction.version;

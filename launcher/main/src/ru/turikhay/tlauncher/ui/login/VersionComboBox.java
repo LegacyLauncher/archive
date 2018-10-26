@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
@@ -68,6 +69,9 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
     }
 
     public VersionSyncInfo getVersion() {
+        if(loginForm.requestedVersion != null) {
+            return loginForm.requestedVersion;
+        }
         VersionSyncInfo selected = (VersionSyncInfo) getSelectedItem();
         return selected != null && !selected.equals(LOADING) && !selected.equals(EMPTY) ? selected : null;
     }
@@ -93,7 +97,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             if (!Alert.showLocQuestion("versions.found-update")) {
                 try {
                     CompleteVersion e = manager.getLocalList().getCompleteVersion(selected.getLocal());
-                    e.setUpdatedTime(selected.getLatestVersion().getUpdatedTime());
+                    e.setUpdatedTime(U.getUTC().getTime());
                     manager.getLocalList().saveVersion(e);
                 } catch (IOException var3) {
                     Alert.showLocError("versions.found-update.error");

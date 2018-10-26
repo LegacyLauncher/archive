@@ -22,10 +22,7 @@ import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.managers.*;
-import ru.turikhay.tlauncher.minecraft.NBTServer;
-import ru.turikhay.tlauncher.minecraft.PromotedServer;
-import ru.turikhay.tlauncher.minecraft.PromotedServerAddStatus;
-import ru.turikhay.tlauncher.minecraft.Server;
+import ru.turikhay.tlauncher.minecraft.*;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.sentry.Sentry;
@@ -652,6 +649,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
             throw new MinecraftException(false, message1.toString(), "download", versionContainer.getErrors().get(0));
         } else {
+            deJureVersion.setUpdatedTime(U.getUTC().getTime());
             try {
                 vm.getLocalList().saveVersion(deJureVersion);
             } catch (IOException var7) {
@@ -818,7 +816,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         if(!isLauncher) {
             try {
-                makeCompatibleWithOlderVersions();
+                fixForNewerVersions();
             } catch (Exception e) {
                 log("Could not make it compatible with older versions", e);
             }
@@ -974,6 +972,18 @@ public class MinecraftLauncher implements JavaProcessListener {
         if (!isLauncher && server != null) {
             programArgs.addAll(Arrays.asList("--server", server.getAddress()));
             programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
+        }
+
+        String modListFile = null;
+        try {
+            modListFile = generateModListFile();
+        } catch(IOException ioE) {
+            log("Cannot generate mod list file", ioE);
+        }
+
+        if(modListFile != null) {
+            programArgs.add("--modListFile");
+            programArgs.add(modListFile);
         }
 
         for(String arg : jvmArgs) {
@@ -1230,10 +1240,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         return result.toString();
     }
 
-    private void makeCompatibleWithOlderVersions() throws MinecraftException {
+    private void fixForNewerVersions() throws MinecraftException {
         boolean needSave = false;
-        if(version.getMinecraftArguments() == null) {
-            deJureVersion.setMinecraftArguments(makeLegacyArgumentString(ArgumentType.GAME));
+        if(version.getMinecraftArguments() != null && version.hasModernArguments()) {
+            deJureVersion.setMinecraftArguments(null);
             needSave = true;
         }
         if(needSave) {
@@ -1248,6 +1258,39 @@ public class MinecraftLauncher implements JavaProcessListener {
     private String makeLegacyArgumentString(ArgumentType type) {
         List<String> argList = version.addArguments(type, featureMatcher, null);
         return joinList(argList, ARGS_LEGACY_REMOVED, BLACKLIST_MODE_REMOVE);
+    }
+
+    private void removeOldModlistFiles() {
+        File[] fileList = gameDir.listFiles();
+        if(fileList == null) {
+            log("Cannot get file list in", rootDir);
+            return;
+        }
+        for(File file : fileList) {
+            if(file.getName().startsWith("tempModList-")) {
+                FileUtil.deleteFile(file);
+            }
+        }
+    }
+
+    private String generateModListFile() throws IOException {
+        removeOldModlistFiles();
+
+        Collection<Library> collectedLibMods = version.collectMods(featureMatcher);
+        if(collectedLibMods == null || collectedLibMods.isEmpty()) {
+            return null;
+        }
+
+        ModList modList = new ModList(new File(rootDir, "libraries"), version.isModListAbsolutePrefix());
+        for (Library collectedLibMod : collectedLibMods) {
+            modList.addMod(collectedLibMod);
+        }
+
+        String modListFilename = "tempModList-" + System.currentTimeMillis();
+        File modListFile = new File(gameDir, modListFilename);
+        modList.save(modListFile);
+
+        return modListFilename;
     }
 
     private static final String[] ARGS_LEGACY_REMOVED = new String[] {
@@ -1336,9 +1379,10 @@ public class MinecraftLauncher implements JavaProcessListener {
             args.addAll(Arrays.asList(StringUtils.split(javaArgs, ' ')));
         }
         if (settings.getBoolean("minecraft.improvedargs")) {
-            if (OS.JAVA_VERSION.getDouble() >= 1.7 && ramSize >= 3072) {
+            if (OS.JAVA_VERSION.getMajor() >= 9 || ramSize >= 3072) {
                 args.add("-XX:+UseG1GC");
-                args.add("-XX:ConcGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
+                args.add("-XX:ConcGCThreads=" + Math.min(1, OS.Arch.AVAILABLE_PROCESSORS / 4));
+                args.add("-XX:ParallelGCThreads=" + Math.min(1, OS.Arch.AVAILABLE_PROCESSORS));
             } else {
                 args.add("-XX:+UseConcMarkSweepGC");
                 args.add("-XX:-UseAdaptiveSizePolicy");
@@ -1470,7 +1514,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         try {
-            process = launcher.start();
+            ProcessBuilder b = launcher.createProcess();
+            b.environment().put("_JAVA_OPTIONS", "");
+            process = new JavaProcess(b.start());
             process.getMonitor().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                 @Override
                 public void uncaughtException(Thread t, Throwable e) {

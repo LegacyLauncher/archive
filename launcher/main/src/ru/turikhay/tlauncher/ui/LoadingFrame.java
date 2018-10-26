@@ -18,10 +18,7 @@ public class LoadingFrame extends JFrame {
         progress.setPreferredSize(new Dimension(250, 0));
         add(progress, "Center");
         add(new JLabel(Images.getIcon("fav32.png")), "West");
-
-        if (OS.JAVA_VERSION.getDouble() > 1.6) {
-            setType(Type.UTILITY);
-        }
+        setType(Type.UTILITY);
 
         pack();
         setResizable(false);

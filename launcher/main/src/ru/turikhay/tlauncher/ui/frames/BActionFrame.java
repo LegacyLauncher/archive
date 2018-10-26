@@ -16,9 +16,7 @@ public class BActionFrame extends ActionFrame {
     public BActionFrame(Insets insets) {
         setDefaultCloseOperation(HIDE_ON_CLOSE);
 
-        if (OS.JAVA_VERSION.getDouble() > 1.6) {
-            setType(Type.UTILITY);
-        }
+        setType(Type.UTILITY);
 
         head = new LocalizableLabel();
         body = new BorderPanel();

@@ -1,5 +1,5 @@
 {
-  "revision": 13,
+  "revision": 14,
   "required": "1.99.20",
   "skip-folders": ["millenaire"],
   "variables": {
@@ -70,6 +70,30 @@
   ],
   "signatures": [
     {
+      "name": "no-lwjgl32-on-linux",
+      "pattern": "^.+Failed to locate library: liblwjgl32.so$",
+      "title": {
+        "ru_RU": "Linux x86 не поддерживается",
+        "en_US": "Linux x86 not supported"
+      },
+      "body": {
+        "ru_RU": "LWJGL 3, который используют последние версии Minecraft, забросил поддержку 32-битных версий Linux.\nУстановите 64-битную версию вашего дистрибутива или играйте на более старых версиях.",
+        "en_US": "LWJGL 3 developers dropped Linux x86 support.\nYou may install 64-bit version of your distro, or just play older version of Minecraft."
+      },
+      "buttons": [
+        {
+          "name": "read-more",
+          "text": {
+            "ru_RU": "Подробнее на GitHub",
+            "en_US": "Read more on GitHub"
+          },
+          "actions": [
+            "browse --www https://github.com/LWJGL/lwjgl3/issues/162"
+          ]
+        }
+      ]
+    },
+    {
       "name": "bug-mc-129374",
       "pattern": "^.+Unable to bootstrap datafixers$",
       "title": {
@@ -94,9 +118,9 @@
       ]
     },
     {
-      "name": "jdk9-not-supported",
+      "name": "jre9-and-above-not-supported",
       "image": "java.png",
-      "pattern": ".+ cannot be cast to java\\.base\\/java\\.net\\.URLClassLoader.*"
+      "pattern": ".+ClassLoader cannot be cast to (?:java\\.base\\/|class )?java\\.net\\.URLClassLoader.*"
     },
     {
       "name": "unsupported-java-version",
