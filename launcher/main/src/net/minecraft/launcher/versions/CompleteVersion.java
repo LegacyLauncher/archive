@@ -449,6 +449,10 @@ public class CompleteVersion implements Version, Cloneable {
 
         result.inheritsFrom = null;
 
+        if(result.modListAbsolutePrefix == null || !result.modListAbsolutePrefix) {
+            result.modListAbsolutePrefix = modListAbsolutePrefix;
+        }
+
         if (time.getTime() != 0L) {
             result.time = time;
         }
@@ -469,15 +473,19 @@ public class CompleteVersion implements Version, Cloneable {
             result.mainClass = mainClass;
         }
 
-        ArrayList rulesCopy;
         if (libraries != null) {
-            rulesCopy = new ArrayList();
+            Set<Library> lib = new LinkedHashSet<>();
+            lib.addAll(libraries);
+            if(result.libraries != null) {
+                lib.addAll(result.libraries);
+            }
+            /*rulesCopy = new ArrayList();
             rulesCopy.addAll(libraries);
             if (result.libraries != null) {
                 rulesCopy.addAll(result.libraries);
-            }
-
-            result.libraries = rulesCopy;
+            }*/
+            result.libraries = new ArrayList<>();
+            result.libraries.addAll(lib);
         }
 
         if (arguments != null) {
@@ -496,9 +504,7 @@ public class CompleteVersion implements Version, Cloneable {
             if (result.rules != null) {
                 result.rules.addAll(rules);
             } else {
-                rulesCopy = new ArrayList(rules.size());
-                Collections.copy(rulesCopy, rules);
-                result.rules = rules;
+                result.rules = new ArrayList<>(rules);
             }
         }
 
