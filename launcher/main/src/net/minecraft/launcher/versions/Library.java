@@ -1,6 +1,8 @@
 package net.minecraft.launcher.versions;
 
 import net.minecraft.launcher.updater.DownloadInfo;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.tukaani.xz.XZInputStream;
 import ru.turikhay.tlauncher.downloader.Downloadable;
@@ -39,18 +41,32 @@ public class Library {
         SUBSTITUTOR = new StrSubstitutor(map);
     }
 
+    @Override
     public boolean equals(Object o) {
-        if (o != null && o instanceof Library) {
-            Library lib = (Library) o;
-            return name == null ? lib.name == null : name.equalsIgnoreCase(lib.name);
-        } else {
-            return false;
-        }
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Library library = (Library) o;
+
+        return new EqualsBuilder()
+                .append(name, library.name)
+                .append(rules, library.rules)
+                .append(natives, library.natives)
+                .append(extract, library.extract)
+                .append(mod, library.mod)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return new HashCodeBuilder(17, 37)
+                .append(name)
+                .append(rules)
+                .append(natives)
+                .append(extract)
+                .append(mod)
+                .toHashCode();
     }
 
     public String getName() {

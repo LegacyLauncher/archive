@@ -474,8 +474,7 @@ public class CompleteVersion implements Version, Cloneable {
         }
 
         if (libraries != null) {
-            Set<Library> lib = new LinkedHashSet<>();
-            lib.addAll(libraries);
+            Set<Library> lib = new LinkedHashSet<>(libraries);
             if(result.libraries != null) {
                 lib.addAll(result.libraries);
             }
