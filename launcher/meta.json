@@ -1,5 +1,5 @@
 {
-  "version": "1.110.1",
+  "version": "1.110.2",
   "mainClass": "ru.turikhay.tlauncher.TLauncher",
   "libraries": [
     {
