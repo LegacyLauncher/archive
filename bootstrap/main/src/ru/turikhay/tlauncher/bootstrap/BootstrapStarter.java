@@ -77,18 +77,31 @@ public final class BootstrapStarter {
         return jvmArgs;
     }
 
+    private static void addPossibleName(ArrayList<String> possibleNames, String name, String extension) {
+        possibleNames.add("tl" + name + "." + extension);
+        possibleNames.add("tlauncher" + name + "." + extension);
+    }
+
+    private static List<String> getPossibleExternalArgsFileNames(String extension) {
+        ArrayList<String> possibleNames = new ArrayList<String>();
+        addPossibleName(possibleNames, "-" + OS.CURRENT.nameLowerCase() + "-" + OS.Arch.CURRENT.nameLowerCase(), extension);
+        addPossibleName(possibleNames, OS.CURRENT.nameLowerCase(), extension);
+        addPossibleName(possibleNames, "", extension);
+        return possibleNames;
+    }
+
     private static List<String> loadExternalArgs(File currentDir, String extension) {
-        File externalArgsFile = new File(currentDir, "tlauncher-" + OS.CURRENT.nameLowerCase() + "-" + OS.Arch.CURRENT.nameLowerCase() + "." + extension);
+        File externalArgsFile = null;
 
-        if (!externalArgsFile.isFile()) {
-            externalArgsFile = new File(currentDir, "tlauncher-" + OS.CURRENT.nameLowerCase() + "." + extension);
+        for(String possibleName : getPossibleExternalArgsFileNames(extension)) {
+            File file = new File(currentDir, possibleName);
+            if(file.isFile()) {
+                externalArgsFile = file;
+                break;
+            }
         }
 
-        if (!externalArgsFile.isFile()) {
-            externalArgsFile = new File(currentDir, "tlauncher." + extension);
-        }
-
-        if (externalArgsFile.isFile()) {
+        if (externalArgsFile != null) {
             load:
             {
 

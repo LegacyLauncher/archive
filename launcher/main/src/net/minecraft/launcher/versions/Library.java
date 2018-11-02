@@ -337,7 +337,7 @@ public class Library {
         @Override
         protected void onComplete() throws RetryDownloadException {
             if (checksum != null) {
-                String fileHash = FileUtil.getSHA(getDestination()); //FileUtil.getChecksum(getDestination(), "sha1");
+                String fileHash = FileUtil.getChecksum(getDestination(), "SHA-1");
                 if (fileHash != null && !fileHash.equals(checksum)) {
                     throw new RetryDownloadException("illegal library hash. got: " + fileHash + "; expected: " + checksum);
                 }

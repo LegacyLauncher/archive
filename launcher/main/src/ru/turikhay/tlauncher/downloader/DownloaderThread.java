@@ -244,6 +244,10 @@ public class DownloaderThread extends ExtendedThread {
                     }
                 }
 
+                if(length > 0 && read != length) {
+                    throw new IOException("read ("+ read +") != length ("+ length +")");
+                }
+
                 downloaded_e = System.currentTimeMillis() - downloaded_s;
                 downloadSpeed = downloaded_e != 0L ? (double) read / (double) downloaded_e : 0.0D;
                 in.close();
