@@ -20,7 +20,11 @@ public class UpdateDeserializer implements JsonDeserializer<UpdateMeta> {
 
         String options;
         if(object.has("options")) {
-            options = Json.get().toJson(object.get("options"));
+            JsonObject optionsObject = (JsonObject) object.get("options");
+            if(object.has("java") && !optionsObject.has("java")) {
+                optionsObject.add("java", object.get("java"));
+            }
+            options = Json.get().toJson(optionsObject);
         } else {
             options = null;
         }

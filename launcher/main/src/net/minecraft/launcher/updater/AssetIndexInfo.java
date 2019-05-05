@@ -14,7 +14,7 @@ public class AssetIndexInfo extends DownloadInfo {
 
     public AssetIndexInfo(String id) {
         this.id = id;
-        url = U.makeURL("https://s3.amazonaws.com/Minecraft.Download/indexes/" + id + ".json");
+        url = "https://s3.amazonaws.com/Minecraft.Download/indexes/" + id + ".json";
         known = false;
     }
 

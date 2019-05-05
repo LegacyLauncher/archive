@@ -429,7 +429,7 @@ public class VersionManager extends InterruptibleComponent {
         Rule.FeatureMatcher featureMatcher = new CurrentLaunchFeatureMatcher();
         VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
 
-        CompleteVersion completeVersion = syncInfo.getCompleteVersion(force);
+        CompleteVersion completeVersion = syncInfo.resolveCompleteVersion(this, false);
         /*if (syncInfo.getLocal() == completeVersion) {
             syncInfo.setLocal(completeVersion);
         } else {
@@ -456,7 +456,7 @@ public class VersionManager extends InterruptibleComponent {
 
         File destination = new File(baseDirectory, "versions/" + completeVersion.getID() + "/" + completeVersion.getID() + ".jar");
 
-        if (!force && destination.isFile()) {
+        if (!force && destination.isFile() && destination.length() > 0L) {
             return container;
         }
 

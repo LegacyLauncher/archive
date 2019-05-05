@@ -31,6 +31,7 @@ import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.stats.Stats;
+import ru.turikhay.tlauncher.user.PlainUser;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.stream.LinkedOutputStringStream;
@@ -329,253 +330,257 @@ public class MinecraftLauncher implements JavaProcessListener {
         log("Force update:", Boolean.valueOf(forceUpdate));
         recordValue("forceUpdate", forceUpdate);
 
-        if(versionName == null) {
+        if (versionName == null) {
             versionName = settings.get("login.version");
         }
-        if (versionName != null && !versionName.isEmpty()) {
-            log("Selected version:", versionName);
-            recordValue("versionName", versionName);
-            accountName = settings.get("login.account");
-            if (accountName != null && !accountName.isEmpty()) {
-                Account.AccountType type2 = Reflect.parseEnum(Account.AccountType.class, settings.get("login.account.type"));
-                account = pm.getAuthDatabase().getByUsername(accountName, type2);
-                if (account == null) {
-                    throw new NullPointerException("account");
-                }
+        if (versionName == null || versionName.isEmpty()) {
+            throw new IllegalArgumentException("Version name is NULL or empty!");
+        }
 
-                log("Selected account:", account.getUser());
-                recordValue("account", account);
+        log("Selected version:", versionName);
+        recordValue("versionName", versionName);
 
-                versionSync = vm.getVersionSyncInfo(versionName);
-                if (versionSync == null) {
-                    throw new IllegalArgumentException("Cannot find version " + versionName);
-                } else {
-                    log("Version sync info:", versionSync);
-                    recordValue("version", versionSync);
+        versionSync = vm.getVersionSyncInfo(versionName);
+        if (versionSync == null) {
+            throw new IllegalArgumentException("Cannot find version " + versionName);
+        }
 
-                    try {
-                        deJureVersion = versionSync.resolveCompleteVersion(vm, forceUpdate);
-                    } catch (IOException var10) {
-                        throw new RuntimeException("Cannot get complete version!", var10);
-                    }
+        log("Version sync info:", versionSync);
+        recordValue("version", versionSync);
 
-                    if (deJureVersion == null) {
-                        throw new NullPointerException("Could not get complete version");
-                    } else {
-                        recordValue("resolvedVersion", deJureVersion);
+        try {
+            deJureVersion = versionSync.resolveCompleteVersion(vm, forceUpdate);
+        } catch (IOException var10) {
+            throw new RuntimeException("Cannot get complete version!", var10);
+        }
 
-                        if(deJureVersion.getReleaseType() == ReleaseType.LAUNCHER) {
-                            isLauncher = true;
-                        }
-                        recordValue("isLauncher", isLauncher);
+        if (deJureVersion == null) {
+            throw new NullPointerException("Could not get complete version");
+        }
+        recordValue("resolvedVersion", deJureVersion);
 
-                        if(!isLauncher) {
-                            Account.AccountType lookupLibrariesForType;
-                            switch (account.getType()) {
-                                case MCLEAKS:
-                                    if (McleaksManager.isUnsupported()) {
-                                        throw new MinecraftException(false, "MCLeaks is not supported", "mcleaks-unsupported");
-                                    } else {
-                                        lookupLibrariesForType = Account.AccountType.MCLEAKS;
-                                        oldMainclass = deJureVersion.getMainClass();
-                                    }
-                                    break;
-                                case ELY:
-                                case ELY_LEGACY:
-                                    lookupLibrariesForType = Account.AccountType.ELY;
-                                    break;
-                                case PLAIN:
-                                    mayBeEly:
-                                    {
-                                        if (!TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()) {
-                                            break mayBeEly;
-                                        }
-                                        if (!settings.getBoolean("ely.globally")) {
-                                            break mayBeEly;
-                                        }
-                                        lookupLibrariesForType = Account.AccountType.ELY;
-                                        break;
-                                    }
-                                    lookupLibrariesForType = Account.AccountType.PLAIN;
-                                    break;
-                                default:
-                                    lookupLibrariesForType = account.getType();
-                            }
+        if (deJureVersion.getReleaseType() == ReleaseType.LAUNCHER) {
+            isLauncher = true;
+        }
+        recordValue("isLauncher", isLauncher);
 
-                            log("Looking up libraries for", librariesForType = lookupLibrariesForType);
-
-                            TLauncher.getInstance().getLibraryManager().refreshComponent();
-                            if (TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, account.getType())) {
-                                recordValue("librariesFound", lookupLibrariesForType);
-                                version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType);
-                            } else {
-                                recordValue("librariesNotFound", librariesForType);
-                                version = deJureVersion;
-                            }
-                        } else {
-                            version = deJureVersion;
-                        }
-
-                        recordValue("finalVersion", version);
-
-                        if (logger != null) {
-                            logger.setName(version.getID());
-                        }
-
-                        family = version.getFamily();
-                        if (StringUtils.isEmpty(family))
-                            family = "unknown";
-
-                        String command1 = settings.get("minecraft.cmd");
-                        cmd = command1 == null ? OS.getJavaPath() : command1;
-                        log("Command:", cmd);
-                        recordValue("command", cmd);
-
-                        rootDir = new File(settings.get("minecraft.gamedir"));
-                        recordValue("rootDir", rootDir);
-
-                        long freeSpace = rootDir.getUsableSpace();
-                        if(freeSpace > 0 && freeSpace < 1024L * 64L) {
-                            throw new MinecraftException(true, "Insufficient space " + rootDir.getAbsolutePath() + "(" + freeSpace + ")", "free-space", rootDir);
-                        }
-
-                        if (settings.getBoolean("minecraft.gamedir.separate")) {
-                            gameDir = new File(rootDir, "home/" + family);
-                        } else {
-                            gameDir = rootDir;
-                        }
-                        recordValue("gameDir", gameDir);
-
-                        try {
-                            FileUtil.createFolder(rootDir);
-                        } catch (Exception var9) {
-                            throw new MinecraftException(true, "Cannot create working directory!", "folder-not-found", var9);
-                        }
-                        if(!isLauncher) {
-                            try {
-                                FileUtil.createFolder(gameDir);
-                            } catch (Exception var9) {
-                                throw new MinecraftException(true, "Cannot create game directory!", "folder-not-found", var9);
-                            }
-                        }
-
-                        log("Root directory:", rootDir);
-                        log("Game directory:", gameDir);
-
-                        optionsFile = new OptionsFile(new File(gameDir, "options.txt"));
-
-                        if(optionsFile.getFile().isFile()) {
-                            try {
-                                optionsFile.read();
-                            } catch (IOException ioE) {
-                                recordValue("optionsReadError", ioE);
-                                log("could not read options file", ioE);
-                            }
-                        }
-
-                        log("Options:", optionsFile);
-                        recordValue("options", optionsFile.copy());
-
-                        globalAssetsDir = new File(rootDir, "assets");
-
-                        if(!isLauncher) {
-                            try {
-                                FileUtil.createFolder(globalAssetsDir);
-                            } catch (IOException var8) {
-                                throw new RuntimeException("Cannot create assets directory!", var8);
-                            }
-                        }
-
-                        assetsIndexesDir = new File(globalAssetsDir, "indexes");
-
-                        if(!isLauncher) {
-                            try {
-                                FileUtil.createFolder(assetsIndexesDir);
-                            } catch (IOException var7) {
-                                throw new RuntimeException("Cannot create assets indexes directory!", var7);
-                            }
-                        }
-
-                        assetsObjectsDir = new File(globalAssetsDir, "objects");
-
-                        if(!isLauncher) {
-                            try {
-                                FileUtil.createFolder(assetsObjectsDir);
-                            } catch (IOException var6) {
-                                throw new RuntimeException("Cannot create assets objects directory!", var6);
-                            }
-                        }
-
-                        nativeDir = new File(rootDir, "versions/" + version.getID() + "/" + "natives");
-
-                        try {
-                            FileUtil.createFolder(nativeDir);
-                        } catch (IOException var5) {
-                            throw new RuntimeException("Cannot create native files directory!", var5);
-                        }
-
-                        javaArgs = settings.get("minecraft.javaargs");
-                        if (javaArgs != null && javaArgs.isEmpty()) {
-                            javaArgs = null;
-                        }
-                        recordValue("javaArgs", javaArgs);
-
-                        programArgs = settings.get("minecraft.args");
-                        if (programArgs != null && programArgs.isEmpty()) {
-                            programArgs = null;
-                        }
-                        recordValue("appArgs", programArgs);
-
-                        windowSize = settings.getClientWindowSize();
-                        if (windowSize[0] < 1) {
-                            throw new IllegalArgumentException("Invalid window width!");
-                        } else if (windowSize[1] < 1) {
-                            throw new IllegalArgumentException("Invalid window height!");
-                        } else {
-                            fullScreen = settings.getBoolean("minecraft.fullscreen");
-                            recordValue("fullScreen", fullScreen);
-
-                            ramSize = settings.getInteger("minecraft.memory");
-                            if (ramSize < 512) {
-                                throw new IllegalArgumentException("Invalid RAM size!");
-                            }
-                            recordValue("memoryAmount", ramSize);
-
-                            fullCommand = settings.getBoolean("gui.logger.fullcommand");
-                            recordValue("fullCommand", fullCommand);
-
-                            Iterator var4 = assistants.iterator();
-
-                            while (var4.hasNext()) {
-                                MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant) var4.next();
-                                assistant.collectInfo();
-                            }
-
-                            log("Checking conditions...");
-                            if (version.getMinimumCustomLauncherVersion() > ALTERNATIVE_VERSION) {
-                                throw new MinecraftException(false, "Alternative launcher is incompatible with launching version!", "incompatible");
-                            } else {
-                                if (version.getMinimumCustomLauncherVersion() == 0 && version.getMinimumLauncherVersion() > OFFICIAL_VERSION) {
-                                    sentryContext.sendWarning(null, "minimumLauncherVersion",
-                                            DataBuilder.create("expectedLauncherVersion", version.getMinimumLauncherVersion()).add("currentLauncherVersion", OFFICIAL_VERSION)
-                                    );
-                                    Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.launcher", null);
-                                }
-
-                                if (!version.appliesToCurrentEnvironment(featureMatcher)) {
-                                    Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.environment", null);
-                                }
-
-                                downloadResources();
-                            }
-                        }
-                    }
-                }
+        accountName = settings.get("login.account");
+        if (accountName != null && !accountName.isEmpty()) {
+            Account.AccountType type2 = Reflect.parseEnum(Account.AccountType.class, settings.get("login.account.type"));
+            account = pm.getAuthDatabase().getByUsername(accountName, type2);
+        }
+        if(account == null) {
+            if (isLauncher) {
+                log("Account is not required, setting user \"launcher\"");
+                accountName = "launcher";
+                account = new Account(new PlainUser("launcher", new UUID(0L, 0L)));
             } else {
-                throw new IllegalArgumentException("Account is NULL or empty!");
+                throw new NullPointerException("account");
+            }
+        }
+
+        log("Selected account:", account.getUser());
+        recordValue("account", account);
+
+        if (!isLauncher) {
+            Account.AccountType lookupLibrariesForType;
+            switch (account.getType()) {
+                case MCLEAKS:
+                    if (McleaksManager.isUnsupported()) {
+                        throw new MinecraftException(false, "MCLeaks is not supported", "mcleaks-unsupported");
+                    } else {
+                        lookupLibrariesForType = Account.AccountType.MCLEAKS;
+                        oldMainclass = deJureVersion.getMainClass();
+                    }
+                    break;
+                case ELY:
+                case ELY_LEGACY:
+                    lookupLibrariesForType = Account.AccountType.ELY;
+                    break;
+                case PLAIN:
+                    mayBeEly:
+                    {
+                        if (!TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()) {
+                            break mayBeEly;
+                        }
+                        if (!settings.getBoolean("ely.globally")) {
+                            break mayBeEly;
+                        }
+                        lookupLibrariesForType = Account.AccountType.ELY;
+                        break;
+                    }
+                    lookupLibrariesForType = Account.AccountType.PLAIN;
+                    break;
+                default:
+                    lookupLibrariesForType = account.getType();
+            }
+
+            log("Looking up libraries for", librariesForType = lookupLibrariesForType);
+
+            TLauncher.getInstance().getLibraryManager().refreshComponent();
+            if (TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, librariesForType)) {
+                recordValue("librariesFound", lookupLibrariesForType);
+                version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType);
+            } else {
+                recordValue("librariesNotFound", librariesForType);
+                version = deJureVersion;
             }
         } else {
-            throw new IllegalArgumentException("Version name is NULL or empty!");
+            version = deJureVersion;
+        }
+
+        recordValue("finalVersion", version);
+
+        if (logger != null) {
+            logger.setName(version.getID());
+        }
+
+        family = version.getFamily();
+        if (StringUtils.isEmpty(family))
+            family = "unknown";
+
+        String command1 = settings.get("minecraft.cmd");
+        cmd = command1 == null ? OS.getJavaPath() : command1;
+        log("Command:", cmd);
+        recordValue("command", cmd);
+
+        rootDir = new File(settings.get("minecraft.gamedir"));
+        recordValue("rootDir", rootDir);
+
+        long freeSpace = rootDir.getUsableSpace();
+        if (freeSpace > 0 && freeSpace < 1024L * 64L) {
+            throw new MinecraftException(true, "Insufficient space " + rootDir.getAbsolutePath() + "(" + freeSpace + ")", "free-space", rootDir);
+        }
+
+        if (settings.getBoolean("minecraft.gamedir.separate")) {
+            gameDir = new File(rootDir, "home/" + family);
+        } else {
+            gameDir = rootDir;
+        }
+        recordValue("gameDir", gameDir);
+
+        try {
+            FileUtil.createFolder(rootDir);
+        } catch (Exception var9) {
+            throw new MinecraftException(true, "Cannot create working directory!", "folder-not-found", var9);
+        }
+        if (!isLauncher) {
+            try {
+                FileUtil.createFolder(gameDir);
+            } catch (Exception var9) {
+                throw new MinecraftException(true, "Cannot create game directory!", "folder-not-found", var9);
+            }
+        }
+
+        log("Root directory:", rootDir);
+        log("Game directory:", gameDir);
+
+        optionsFile = new OptionsFile(new File(gameDir, "options.txt"));
+
+        if (optionsFile.getFile().isFile()) {
+            try {
+                optionsFile.read();
+            } catch (IOException ioE) {
+                recordValue("optionsReadError", ioE);
+                log("could not read options file", ioE);
+            }
+        }
+
+        log("Options:", optionsFile);
+        recordValue("options", optionsFile.copy());
+
+        globalAssetsDir = new File(rootDir, "assets");
+
+        if (!isLauncher) {
+            try {
+                FileUtil.createFolder(globalAssetsDir);
+            } catch (IOException var8) {
+                throw new RuntimeException("Cannot create assets directory!", var8);
+            }
+        }
+
+        assetsIndexesDir = new File(globalAssetsDir, "indexes");
+
+        if (!isLauncher) {
+            try {
+                FileUtil.createFolder(assetsIndexesDir);
+            } catch (IOException var7) {
+                throw new RuntimeException("Cannot create assets indexes directory!", var7);
+            }
+        }
+
+        assetsObjectsDir = new File(globalAssetsDir, "objects");
+
+        if (!isLauncher) {
+            try {
+                FileUtil.createFolder(assetsObjectsDir);
+            } catch (IOException var6) {
+                throw new RuntimeException("Cannot create assets objects directory!", var6);
+            }
+        }
+
+        nativeDir = new File(rootDir, "versions/" + version.getID() + "/" + "natives");
+
+        try {
+            FileUtil.createFolder(nativeDir);
+        } catch (IOException var5) {
+            throw new RuntimeException("Cannot create native files directory!", var5);
+        }
+
+        javaArgs = settings.get("minecraft.javaargs");
+        if (javaArgs != null && javaArgs.isEmpty()) {
+            javaArgs = null;
+        }
+        recordValue("javaArgs", javaArgs);
+
+        programArgs = settings.get("minecraft.args");
+        if (programArgs != null && programArgs.isEmpty()) {
+            programArgs = null;
+        }
+        recordValue("appArgs", programArgs);
+
+        windowSize = settings.getClientWindowSize();
+        if (windowSize[0] < 1) {
+            throw new IllegalArgumentException("Invalid window width!");
+        } else if (windowSize[1] < 1) {
+            throw new IllegalArgumentException("Invalid window height!");
+        } else {
+            fullScreen = settings.getBoolean("minecraft.fullscreen");
+            recordValue("fullScreen", fullScreen);
+
+            ramSize = settings.getInteger("minecraft.memory");
+            if (ramSize < 512) {
+                throw new IllegalArgumentException("Invalid RAM size!");
+            }
+            recordValue("memoryAmount", ramSize);
+
+            fullCommand = settings.getBoolean("gui.logger.fullcommand");
+            recordValue("fullCommand", fullCommand);
+
+            Iterator var4 = assistants.iterator();
+
+            while (var4.hasNext()) {
+                MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant) var4.next();
+                assistant.collectInfo();
+            }
+
+            log("Checking conditions...");
+            if (version.getMinimumCustomLauncherVersion() > ALTERNATIVE_VERSION) {
+                throw new MinecraftException(false, "Alternative launcher is incompatible with launching version!", "incompatible");
+            } else {
+                if (version.getMinimumCustomLauncherVersion() == 0 && version.getMinimumLauncherVersion() > OFFICIAL_VERSION) {
+                    sentryContext.sendWarning(null, "minimumLauncherVersion",
+                            DataBuilder.create("expectedLauncherVersion", version.getMinimumLauncherVersion()).add("currentLauncherVersion", OFFICIAL_VERSION)
+                    );
+                    Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.launcher", null);
+                }
+
+                if (!version.appliesToCurrentEnvironment(featureMatcher)) {
+                    Alert.showLocWarning("launcher.warning.title", "launcher.warning.incompatible.environment", null);
+                }
+
+                downloadResources();
+            }
         }
     }
 
@@ -720,12 +725,12 @@ public class MinecraftLauncher implements JavaProcessListener {
         ArrayList<String> jvmArgs = new ArrayList<>(), programArgs = new ArrayList<>();
         createJvmArgs(jvmArgs);
 
-        if(this.programArgs != null) {
+        if (this.programArgs != null) {
             programArgs.addAll(Arrays.asList(StringUtils.split(this.programArgs, ' ')));
         }
 
         launcher = new JavaProcessLauncher(cmd, new String[0]);
-        launcher.directory(isLauncher? rootDir : gameDir);
+        launcher.directory(isLauncher ? rootDir : gameDir);
 
         try {
             fixResourceFolder();
@@ -734,7 +739,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
 
-        if(!isLauncher) {
+        if (!isLauncher) {
             Set<NBTServer> exisingServerList = null, nbtServerList = new LinkedHashSet<>();
             try {
                 File file = new File(gameDir, "servers.dat");
@@ -814,7 +819,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
 
-        if(!isLauncher) {
+        if (!isLauncher) {
             try {
                 fixForNewerVersions();
             } catch (Exception e) {
@@ -977,16 +982,16 @@ public class MinecraftLauncher implements JavaProcessListener {
         String modListFile = null;
         try {
             modListFile = generateModListFile();
-        } catch(IOException ioE) {
+        } catch (IOException ioE) {
             log("Cannot generate mod list file", ioE);
         }
 
-        if(modListFile != null) {
+        if (modListFile != null) {
             programArgs.add("--modListFile");
             programArgs.add(modListFile);
         }
 
-        for(String arg : jvmArgs) {
+        for (String arg : jvmArgs) {
             launcher.addCommand(arg);
         }
 
@@ -1242,11 +1247,11 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void fixForNewerVersions() throws MinecraftException {
         boolean needSave = false;
-        if(version.getMinecraftArguments() != null && version.hasModernArguments()) {
+        if (version.getMinecraftArguments() != null && version.hasModernArguments()) {
             deJureVersion.setMinecraftArguments(null);
             needSave = true;
         }
-        if(needSave) {
+        if (needSave) {
             try {
                 vm.getLocalList().saveVersion(deJureVersion);
             } catch (IOException var7) {
@@ -1262,12 +1267,12 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void removeOldModlistFiles() {
         File[] fileList = gameDir.listFiles();
-        if(fileList == null) {
+        if (fileList == null) {
             log("Cannot get file list in", rootDir);
             return;
         }
-        for(File file : fileList) {
-            if(file.getName().startsWith("tempModList-")) {
+        for (File file : fileList) {
+            if (file.getName().startsWith("tempModList-")) {
                 FileUtil.deleteFile(file);
             }
         }
@@ -1277,7 +1282,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         removeOldModlistFiles();
 
         Collection<Library> collectedLibMods = version.collectMods(featureMatcher);
-        if(collectedLibMods == null || collectedLibMods.isEmpty()) {
+        if (collectedLibMods == null || collectedLibMods.isEmpty()) {
             return null;
         }
 
@@ -1293,15 +1298,15 @@ public class MinecraftLauncher implements JavaProcessListener {
         return modListFilename;
     }
 
-    private static final String[] ARGS_LEGACY_REMOVED = new String[] {
+    private static final String[] ARGS_LEGACY_REMOVED = new String[]{
             "--width", "${resolution_width}", "--height", "${resolution_height}"
     };
 
-    private static final String[] ARGS_CENSORED = new String[] {
+    private static final String[] ARGS_CENSORED = new String[]{
             "--accessToken"
     };
 
-    private static final String[] CENSORED = new String[] {
+    private static final String[] CENSORED = new String[]{
             "not for you", "censored", "nothinginteresting", "boiiiiiiiiii",
             "Minecraft is a lie", "vk.cc/7iPiB9"
     };
@@ -1313,18 +1318,18 @@ public class MinecraftLauncher implements JavaProcessListener {
         Iterator<String> i = l.iterator();
         while (i.hasNext()) {
             String arg = i.next();
-            if(U.find(arg, blackList) == -1) {
+            if (U.find(arg, blackList) == -1) {
                 b.append(' ').append(arg);
             } else {
-                if(blacklistMode == BLACKLIST_MODE_CENSOR) {
+                if (blacklistMode == BLACKLIST_MODE_CENSOR) {
                     b.append(' ').append(arg).append(" [").append(U.getRandom(CENSORED)).append("]");
-                    if(i.hasNext()) {
+                    if (i.hasNext()) {
                         i.next(); // skip
                     }
                 }
             }
         }
-        if(b.length() > 1) {
+        if (b.length() > 1) {
             return b.substring(1);
         }
         return null;
@@ -1375,7 +1380,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }*/
 
     private void createJvmArgs(List<String> args) {
-        if(javaArgs != null) {
+        if (javaArgs != null) {
             args.addAll(Arrays.asList(StringUtils.split(javaArgs, ' ')));
         }
         if (settings.getBoolean("minecraft.improvedargs")) {
@@ -1393,7 +1398,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
         args.add("-Xmx" + ramSize + "M");
-        if(librariesForType == Account.AccountType.MCLEAKS) {
+        if (librariesForType == Account.AccountType.MCLEAKS) {
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
             args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
@@ -1407,7 +1412,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private AssetsManager.ResourceChecker resourceChecker;
 
     private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) throws MinecraftException {
-        if(version.getAssetIndex() != null && "none".equals(version.getAssetIndex().getId())) {
+        if (version.getAssetIndex() != null && "none".equals(version.getAssetIndex().getId())) {
             log("Assets comparing skipped");
             return null;
         }
@@ -1468,7 +1473,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private void fixResourceFolder() throws Exception {
-        if(isLauncher) {
+        if (isLauncher) {
             return;
         }
         File serverResourcePacksFolder = new File(gameDir, "server-resource-packs");
@@ -1668,7 +1673,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         int exit = jp.getExitCode();
 
-        log("Minecraft closed with exit code: " + exit + " (0x"+ Integer.toHexString(exit) +")");
+        log("Minecraft closed with exit code: " + exit + " (0x" + Integer.toHexString(exit) + ")");
         exitCode = exit;
 
 
@@ -1827,8 +1832,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         map.put("language", "en-us");
 
-        if(resourceChecker != null) {
-            for (AssetIndex.AssetObject asset : resourceChecker.getAssetList()){
+        if (resourceChecker != null) {
+            for (AssetIndex.AssetObject asset : resourceChecker.getAssetList()) {
                 String hash = asset.getHash();
                 String path = new File(assetsObjectsDir, hash.substring(0, 2) + "/" + hash).getAbsolutePath();
                 map.put("asset=" + asset.getHash(), path);

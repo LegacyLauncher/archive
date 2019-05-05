@@ -3,11 +3,11 @@ package net.minecraft.launcher.updater;
 import java.net.URL;
 
 public class DownloadInfo {
-    protected URL url;
+    protected String url;
     protected String sha1;
     protected int size;
 
-    public URL getUrl() {
+    public String getUrl() {
         return url;
     }
 

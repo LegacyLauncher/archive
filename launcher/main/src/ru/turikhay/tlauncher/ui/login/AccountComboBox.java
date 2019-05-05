@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.login;
 
+import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ProfileManager;
 import ru.turikhay.tlauncher.managers.ProfileManagerListener;
@@ -103,6 +104,10 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     }
 
     public void logginingIn() throws LoginException {
+        if(loginForm.versions.getVersion() != null &&
+                loginForm.versions.getVersion().getAvailableVersion().getReleaseType() == ReleaseType.LAUNCHER) {
+            return;
+        }
         final Account account = getAccount();
         if (account == null) {
             loginForm.pane.openAccountEditor();

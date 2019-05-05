@@ -112,6 +112,7 @@ public final class TLauncher {
 
         dispatcher.onBootStateChanged("Loading Library Replace manager", 0.22);
         libraryReplaceManager = componentManager.loadComponent(LibraryReplaceProcessor.class);
+        libraryReplaceManager.setAllowElyEverywhere(bootConfig.isElyAllowed());
 
         dispatcher.onBootStateChanged("Loading Version manager", 0.27);
         versionManager = componentManager.loadComponent(VersionManager.class);

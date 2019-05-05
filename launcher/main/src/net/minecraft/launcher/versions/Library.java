@@ -322,7 +322,7 @@ public class Library {
         }
 
         private LibraryDownloadable(DownloadInfo info, File file) {
-            super(Repository.PROXIFIED_REPO, info.getUrl().toString(), file);
+            super(Repository.PROXIFIED_REPO, info.getUrl(), file);
             this.checksum = info.getSha1();
         }
 
