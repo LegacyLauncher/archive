@@ -13,7 +13,7 @@ public class PlainUser extends User {
     private final String username;
     private final UUID uuid;
 
-    PlainUser(String username, UUID uuid) {
+    public PlainUser(String username, UUID uuid) {
         this.username = StringUtil.requireNotBlank(username, "username");
         this.uuid = U.requireNotNull(uuid, "uuid");
     }

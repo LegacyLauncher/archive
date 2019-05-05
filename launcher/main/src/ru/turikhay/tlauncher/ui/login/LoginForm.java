@@ -173,8 +173,10 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         if (error != null) {
             log("Login process has ended with an error.");
         } else {
-            global.setForcefully("login.account", accounts.getAccount().getUsername(), false);
-            global.setForcefully("login.account.type", accounts.getAccount().getType(), false);
+            if(accounts.getAccount() != null) {
+                global.setForcefully("login.account", accounts.getAccount().getUsername(), false);
+                global.setForcefully("login.account.type", accounts.getAccount().getType(), false);
+            }
             global.setForcefully("login.version", versions.getVersion().getID(), false);
             global.store();
 

@@ -5,6 +5,7 @@ import net.minecraft.launcher.updater.AssetDownloadable;
 import net.minecraft.launcher.updater.AssetIndex;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.component.ComponentDependence;
 import ru.turikhay.tlauncher.component.LauncherComponent;
@@ -124,12 +125,12 @@ public class AssetsManager extends LauncherComponent {
 
         Reader json;
 
-        if (version.getAssetIndex().getUrl() == null) {
+        if (StringUtils.isBlank(version.getAssetIndex().getUrl())) {
             log("Reading from repository...");
             json = Repository.OFFICIAL_VERSION_REPO.read("indexes/" + indexName + ".json");
         } else {
             log("Reading from index:", version.getAssetIndex().getUrl());
-            json = IOUtils.toBufferedReader(new InputStreamReader(version.getAssetIndex().getUrl().openStream(), FileUtil.DEFAULT_CHARSET));
+            json = IOUtils.toBufferedReader(new InputStreamReader(U.makeURL(version.getAssetIndex().getUrl()).openStream(), FileUtil.DEFAULT_CHARSET));
         }
 
         File tempIndexFile = null;

@@ -1,6 +1,8 @@
 package net.minecraft.launcher.versions;
 
 import com.google.gson.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.lang.reflect.Type;
@@ -16,6 +18,14 @@ public class Argument
     {
         this.value = values;
         this.compatibilityRules = Rules;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("value", value)
+                .append("compatibilityRules", compatibilityRules)
+                .build();
     }
 
     public List<String> apply(Rule.FeatureMatcher featureMatcher, StrSubstitutor substitutor) {

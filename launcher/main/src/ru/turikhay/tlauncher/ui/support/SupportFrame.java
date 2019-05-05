@@ -28,7 +28,7 @@ public abstract class SupportFrame extends VActionFrame {
 
     SupportFrame(String name, String image, String url) {
         this.name = StringUtil.requireNotBlank(name, "name");
-        this.url = StringUtil.requireNotBlank(url, "url");
+        this.url = url;
 
         getFooter().setLayout(new GridBagLayout());
 
@@ -70,6 +70,10 @@ public abstract class SupportFrame extends VActionFrame {
         pack();
     }
 
+    SupportFrame(String name, String image) {
+        this(name, image, null);
+    }
+
     void setResponse(SendInfoFrame.SendInfoResponse response) {
         U.requireNotNull(response);
         getTextField().setText(getCode(response));
@@ -102,6 +106,6 @@ public abstract class SupportFrame extends VActionFrame {
     }
 
     public void openUrl() {
-        OS.openLink(url);
+        OS.openLink(StringUtil.requireNotBlank(url, "url"));
     }
 }

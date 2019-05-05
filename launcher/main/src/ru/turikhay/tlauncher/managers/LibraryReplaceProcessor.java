@@ -40,6 +40,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         return allowElyEverywhere;
     }
 
+    public void setAllowElyEverywhere(boolean allowElyEverywhere) {
+        this.allowElyEverywhere = allowElyEverywhere;
+    }
+
     private List<LibraryReplace> forAccount(Account.AccountType type) {
         return libraries.get(type);
     }

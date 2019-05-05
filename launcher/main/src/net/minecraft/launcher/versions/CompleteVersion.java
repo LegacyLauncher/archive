@@ -272,6 +272,10 @@ public class CompleteVersion implements Version, Cloneable {
 
         while (var3.hasNext()) {
             Library library = (Library) var3.next();
+            if(library.getName().startsWith("com.mojang:patchy:") && matcher.hasFeature("delete_patchy", null)) {
+                U.log("Not including com.mojang:patchy library. Disable this feature in config file if you want.");
+                continue;
+            }
             if (library.appliesToCurrentEnvironment(matcher)) {
                 result.add(library);
             }
@@ -371,10 +375,6 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
-    public CompleteVersion resolve(VersionManager vm) throws IOException {
-        return resolve(vm, false);
-    }
-
     public CompleteVersion resolve(VersionManager vm, boolean useLatest) throws IOException {
         return resolve(vm, useLatest, new ArrayList());
     }
@@ -407,30 +407,22 @@ public class CompleteVersion implements Version, Cloneable {
 
                 family = family_;
             }
-            return this;
+            return this.clone();
         } else if (inheristance.contains(id)) {
             throw new CompleteVersion.DuplicateInheritanceException();
         } else {
+            if(jar == null) {
+                jar = inheritsFrom;
+            }
             inheristance.add(id);
             VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom);
             if (parentSyncInfo == null) {
                 throw new CompleteVersion.ParentNotFoundException();
             } else {
-                CompleteVersion result;
-
-                try {
-                    result = (CompleteVersion) parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance).clone();
-                } catch (CloneNotSupportedException var7) {
-                    throw new RuntimeException(var7);
-                }
-
-                log(result);
-                log(copyInto(result));
-
+                CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance);
                 if (id.toLowerCase().contains("forge") && family == null && result.family != null && !result.family.startsWith(FORGE_PREFIX)) {
                     family = FORGE_PREFIX + result.family;
                 }
-
                 return copyInto(result);
             }
         }
@@ -663,24 +655,12 @@ public class CompleteVersion implements Version, Cloneable {
         }
 
         public JsonElement serialize(CompleteVersion version0, Type type, JsonSerializationContext context) {
-            CompleteVersion version;
-            try {
-                version = (CompleteVersion) version0.clone();
-            } catch (CloneNotSupportedException var7) {
-                U.log("Cloning of CompleteVersion is not supported O_o", var7);
-                return defaultContext.toJsonTree(version0, type);
-            }
-
-            /*Set<Library> lib = new LinkedHashSet<>(version.libraries);
-            version.libraries.clear();
-            version.libraries.addAll(lib);*/
-
+            CompleteVersion version = version0.clone();
             JsonObject object = (JsonObject) defaultContext.toJsonTree(version, type);
             JsonElement jar = object.get("jar");
             if (jar == null) {
                 object.remove("downloadJarLibraries");
             }
-
             return object;
         }
     }
@@ -711,5 +691,20 @@ public class CompleteVersion implements Version, Cloneable {
     public class ParentNotFoundException extends CompleteVersion.InheritanceException {
         public ParentNotFoundException() {
         }
+    }
+
+    @Override
+    public CompleteVersion clone() {
+        CompleteVersion c;
+        try {
+            c = (CompleteVersion) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+        c.arguments = new java.util.EnumMap(ArgumentType.class);
+        for(Map.Entry<ArgumentType, List<Argument>> argsList : arguments.entrySet()) {
+            c.arguments.put(argsList.getKey(), new ArrayList<>(argsList.getValue()));
+        }
+        return c;
     }
 }

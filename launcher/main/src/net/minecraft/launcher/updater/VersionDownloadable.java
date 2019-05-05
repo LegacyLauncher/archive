@@ -20,7 +20,7 @@ public class VersionDownloadable extends Downloadable {
 
         if (version.getDownloadURL(DownloadType.CLIENT) != null) {
             DownloadInfo downloadInfo = version.getDownloadURL(DownloadType.CLIENT);
-            setURL(downloadInfo.getUrl().toString());
+            setURL(downloadInfo.getUrl());
         } else {
             Repository repo;
             String id;

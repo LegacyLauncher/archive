@@ -67,6 +67,7 @@ public class PreSupportFrame extends VActionFrame {
     private final SupportFrame[] supportFrames = new SupportFrame[]{
             new VkSupportFrame(),
             new FbSupportFrame(),
+            new DiscordFrame(),
             new MailSupportFrame()
     };
 
