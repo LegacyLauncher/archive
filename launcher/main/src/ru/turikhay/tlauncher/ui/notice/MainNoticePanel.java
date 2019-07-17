@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.stats.Stats;
+import ru.turikhay.util.U;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -82,6 +83,8 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
                 noticeSeen();
             }
         });
+
+        U.log("+++++++++++++++++++++++++++++++++++ NOTICE PANEL LOADED");
     }
 
     private void noticeSeen() {

@@ -442,14 +442,10 @@ public class VersionManager extends InterruptibleComponent {
 
         File baseDirectory = localList.getBaseDirectory();
 
-        //container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type));
-
-        if (type != null) {
-            try {
-                container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type));
-            } catch (IOException ioE) {
-                log("Could not get optional downloadables for", syncInfo.getID(), ioE);
-            }
+        try {
+            container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type == null? Account.AccountType.PLAIN : null));
+        } catch (IOException ioE) {
+            log("Could not get downloadables for", syncInfo.getID(), ioE);
         }
 
         log("Required for version " + syncInfo.getID() + ':', container.getList());

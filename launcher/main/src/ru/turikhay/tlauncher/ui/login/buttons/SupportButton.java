@@ -11,6 +11,8 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.support.PreSupportFrame;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -26,13 +28,14 @@ import java.util.List;
 public class SupportButton extends LocalizableButton implements Blockable {
 
     //private ProcessFrame<Void> dxdiagFlusher;
-    private PreSupportFrame supportFrame;
+    private DelayedComponent<PreSupportFrame> supportFrame;
 
     private final ActionListener showSupportFrame = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!supportFrame.isVisible()) {
-                supportFrame.showAtCenter();
+            loadSupportFrame();
+            if (!supportFrame.get().isVisible()) {
+                supportFrame.get().showAtCenter();
             }
             /*dxdiagFlusher.submit(dxdiagFlusher.new Process() {
                 @Override
@@ -91,6 +94,26 @@ public class SupportButton extends LocalizableButton implements Blockable {
         updateLocale();
     }
 
+    private void loadSupportFrame() {
+        PreSupportFrame oldSupportFrame = supportFrame == null? null : supportFrame.get();
+        supportFrame = new DelayedComponent<>(new DelayedComponentLoader<PreSupportFrame>() {
+            @Override
+            public PreSupportFrame loadComponent() {
+                return new PreSupportFrame();
+            }
+
+            @Override
+            public void onComponentLoaded(PreSupportFrame loaded) {
+                TLauncher.getInstance().reloadLocale();
+            }
+        });
+
+        if (oldSupportFrame != null && oldSupportFrame.isVisible()) {
+            oldSupportFrame.dispose();
+            supportFrame.get().showAtCenter();
+        }
+    }
+
     void setLocale(String locale) {
         if (menu != null) {
             menu.popup.setVisible(false);
@@ -135,12 +158,8 @@ public class SupportButton extends LocalizableButton implements Blockable {
             }
         };*/
 
-        PreSupportFrame oldSupportFrame = supportFrame;
-        supportFrame = new PreSupportFrame();
-
-        if (oldSupportFrame != null && oldSupportFrame.isVisible()) {
-            oldSupportFrame.dispose();
-            supportFrame.showAtCenter();
+        if(supportFrame != null && supportFrame.isLoaded()) {
+            loadSupportFrame();
         }
 
         String selectedLocale = TLauncher.getInstance().getSettings().getLocale().toString();

@@ -84,6 +84,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     private final LocalizableMenuItem defaultItem;
     private EditorHandler selectedHandler;
 
+    public boolean ready = false;
     private boolean hideUponSave = true;
 
     public SettingsPanel(DefaultScene sc) {
@@ -129,7 +130,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         directory = new EditorFieldHandler("minecraft.gamedir", new EditorFileField("settings.client.gamedir.prompt", dirExplorer, false, false), warning);
         directory.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (ready) {
                     try {
                         tlauncher.getManager().getComponent(VersionLists.class).updateLocal();
                     } catch (IOException var4) {
@@ -215,7 +216,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         launcherResolution = new EditorFieldHandler("gui.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", global.getDefaultLauncherWindowSize(), false));
         launcherResolution.addListener(new EditorFieldListener() {
             protected void onChange(EditorHandler handler, String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
                     IntegerArray arr = IntegerArray.parseIntegerArray(newValue);
                     tlauncher.getFrame().setSize(arr.get(0), arr.get(1));
                 }
@@ -227,7 +228,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         loginFormDirection = new EditorFieldHandler("gui.direction.loginform", new EditorComboBox(new DirectionConverter(), Direction.values()));
         loginFormDirection.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
                     tlauncher.getFrame().mp.defaultScene.updateDirection();
                 }
             }
@@ -236,7 +237,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         systemTheme = new EditorFieldHandler("gui.systemlookandfeel", new EditorCheckBox("settings.systemlnf"));
         systemTheme.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
                     Alert.showLocWarning("settings.systemlnf.note.title", "settings.systemlnf.note." + newValue, null);
                 }
 
@@ -257,7 +258,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt." + (mediaFxAvailable ? "media" : "image"), backgroundExplorer, true, true));
         background.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
                     tlauncher.getFrame().mp.background.loadBackground();
                 }
             }
@@ -306,7 +307,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         sslCheck = new EditorFieldHandler("connection.ssl", new EditorCheckBox("settings.ssl"));
         sslCheck.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
                     Alert.showLocWarning("settings.ssl.warning.title", "settings.ssl.warning.value." + newValue, null);
                 }
             }
@@ -317,7 +318,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         allowNoticeDisable = new EditorFieldHandler("notice.enabled", new EditorCheckBox("notice.enable"));
         allowNoticeDisable.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
                     Stats.noticeStatusUpdated(Boolean.valueOf(newValue));
                     tlauncher.getFrame().getNotices().selectRandom();
                     Alert.showLocMessage("notice.enable.alert." + newValue);
@@ -330,10 +331,10 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         locale = new EditorFieldHandler("locale", new SettingsLocaleComboBox(this));
         locale.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldvalue, String newvalue) {
-                if (tlauncher.getFrame() != null) {
-                    tlauncher.getFrame().updateLocales();
-                }
-                if (tlauncher.isReady()) {
+                if (SettingsPanel.this.ready) {
+                    if (tlauncher.getFrame() != null) {
+                        tlauncher.getFrame().updateLocales();
+                    }
                     ContributorsAlert.showAlert();
                 }
                 hideUponSave = false;

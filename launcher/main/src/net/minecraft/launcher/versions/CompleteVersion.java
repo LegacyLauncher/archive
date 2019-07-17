@@ -294,6 +294,11 @@ public class CompleteVersion implements Version, Cloneable {
             if(library.isMod()) {
                 continue;
             }
+
+            if(library.isDownloadOnly()) {
+                continue;
+            }
+
             if (library.getNatives() == null) {
                 result.add(new File(base, "libraries/" + library.getArtifactPath()));
             }
@@ -701,10 +706,14 @@ public class CompleteVersion implements Version, Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
-        c.arguments = new java.util.EnumMap(ArgumentType.class);
-        for(Map.Entry<ArgumentType, List<Argument>> argsList : arguments.entrySet()) {
-            c.arguments.put(argsList.getKey(), new ArrayList<>(argsList.getValue()));
+
+        if(this.arguments != null) {
+            c.arguments = new java.util.EnumMap(ArgumentType.class);
+            for (Map.Entry<ArgumentType, List<Argument>> argsList : arguments.entrySet()) {
+                c.arguments.put(argsList.getKey(), new ArrayList<>(argsList.getValue()));
+            }
         }
+
         return c;
     }
 }

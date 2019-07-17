@@ -990,7 +990,9 @@ public final class CrashManager {
                 }
                 log("Setting:", key, value);
                 TLauncher.getInstance().getSettings().set(key, value);
-                TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.updateValues();
+                if(TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
+                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
+                }
             }
         }
     }
@@ -1015,17 +1017,17 @@ public final class CrashManager {
                 TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.defaultScene);
                 TLauncher.getInstance().getFrame().mp.defaultScene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
                 if (args.equals("settings-tlauncher")) {
-                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.getTabPane().setSelectedIndex(1);
+                    TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().getTabPane().setSelectedIndex(1);
                 }
                 return;
             }
 
             if (args.equals("accounts")) {
-                TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.accountManager);
+                TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.accountManager.get());
             }
 
             if (args.equals("versions")) {
-                TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.versionManager);
+                TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.versionManager.get());
             }
         }
     }
@@ -1037,7 +1039,7 @@ public final class CrashManager {
 
         @Override
         public void execute(String arg) throws Exception {
-            TLauncher.getInstance().getUIListeners().getMinecraftUIListener().getCrashProcessingFrame().getCrashFrame().setVisible(false);
+            TLauncher.getInstance().getUIListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
         }
     }
 }

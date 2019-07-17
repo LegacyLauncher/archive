@@ -1,5 +1,10 @@
 package ru.turikhay.tlauncher.ui;
 
+import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
+import ru.turikhay.tlauncher.minecraft.launcher.MinecraftExtendedListener;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.background.BackgroundManager;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -8,6 +13,8 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.progress.LaunchProgress;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.tlauncher.ui.scenes.*;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
@@ -19,22 +26,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.concurrent.Callable;
 
 public class MainPane extends ExtendedLayeredPane {
     private final TLauncherFrame rootFrame;
     private final boolean repaintEveryTime;
     private PseudoScene scene;
     public final BackgroundManager background;
-    public final LaunchProgress progress;
+    public final DelayedComponent<LaunchProgress> progress;
     public final DefaultScene defaultScene;
-    public final AccountManagerScene accountManager;
-    public final VersionManagerScene versionManager;
-    public final NoticeScene noticeScene;
-    public final SideNotifier notifier;
-    public final RevertFontSize revertFont;
+    public final DelayedComponent<AccountManagerScene> accountManager;
+    public final DelayedComponent<VersionManagerScene> versionManager;
+    public final DelayedComponent<NoticeScene> noticeScene;
+    public final DelayedComponent<SideNotifier> notifier;
+    public final DelayedComponent<RevertFontSize> revertFont;
     //final ServicePanel service;
 
-    MainPane(TLauncherFrame frame) {
+    MainPane(final TLauncherFrame frame) {
         super(null);
         rootFrame = frame;
         repaintEveryTime = OS.LINUX.isCurrent();
@@ -42,26 +50,175 @@ public class MainPane extends ExtendedLayeredPane {
         background = new BackgroundManager(this);
         add(background);
         //service = new ServicePanel(this);
-        notifier = new SideNotifier();
-        notifier.setSize(SwingUtil.magnify(new Dimension(32, 32)));
-        add(notifier);
+        notifier = new DelayedComponent<>(new DelayedComponentLoader<SideNotifier>() {
+            @Override
+            public SideNotifier loadComponent() {
+                return new SideNotifier();
+            }
+
+            @Override
+            public void onComponentLoaded(SideNotifier loaded) {
+                loaded.setSize(SwingUtil.magnify(new Dimension(32, 32)));
+                MainPane.this.add(loaded);
+                defaultScene.onResize();
+            }
+        });
+        //notifier.setSize(SwingUtil.magnify(new Dimension(32, 32)));
+        //add(notifier);
         log("Init Default scene...");
         defaultScene = new DefaultScene(this);
         add(defaultScene);
         log("Init Account manager scene...");
-        accountManager = new AccountManagerScene(this);
-        add(accountManager);
+        accountManager = new DelayedComponent<>(new DelayedComponentLoader<AccountManagerScene>() {
+            @Override
+            public AccountManagerScene loadComponent() {
+                return new AccountManagerScene(MainPane.this);
+            }
+
+            @Override
+            public void onComponentLoaded(AccountManagerScene scene) {
+                MainPane.this.add(scene);
+                scene.onResize();
+
+                Account selected = scene.list.getSelected();
+                if (selected != null) {
+                    MainPane.this.defaultScene.loginForm.accounts.setAccount(selected);
+                }
+            }
+        });
+        //(accountManager);
         log("Init Version manager scene...");
-        versionManager = new VersionManagerScene(this);
-        add(versionManager);
-        noticeScene = new NoticeScene(this);
-        add(noticeScene);
-        progress = new LaunchProgress(frame);
-        frame.getLauncher().getUIListeners().registerMinecraftLauncherListener(progress);
-        add(progress);
-        revertFont = new RevertFontSize();
-        if (revertFont.shouldShow())
-            add(revertFont);
+        versionManager = new DelayedComponent<>(new DelayedComponentLoader<VersionManagerScene>() {
+            @Override
+            public VersionManagerScene loadComponent() {
+                return new VersionManagerScene(MainPane.this);
+            }
+
+            @Override
+            public void onComponentLoaded(VersionManagerScene loaded) {
+                MainPane.this.add(loaded);
+                TLauncher.getInstance().getVersionManager().asyncRefresh(true);
+                loaded.onResize();
+            }
+        });
+        //add(versionManager);
+        noticeScene = new DelayedComponent<>(new DelayedComponentLoader<NoticeScene>() {
+            @Override
+            public NoticeScene loadComponent() {
+                return new NoticeScene(MainPane.this);
+            }
+
+            @Override
+            public void onComponentLoaded(NoticeScene loaded) {
+                MainPane.this.add(loaded);
+                loaded.onResize();
+            }
+        });
+        //add(noticeScene);
+        progress = new DelayedComponent<>(new DelayedComponentLoader<LaunchProgress>() {
+            @Override
+            public LaunchProgress loadComponent() {
+                return new LaunchProgress(frame);
+            }
+
+            @Override
+            public void onComponentLoaded(LaunchProgress loaded) {
+                MainPane.this.add(loaded);
+                onResize();
+            }
+        });
+        frame.getLauncher().getUIListeners().registerMinecraftLauncherListener(new MinecraftExtendedListener() {
+            @Override
+            public void onMinecraftCollecting() {
+                progress.get().onMinecraftCollecting();
+            }
+
+            @Override
+            public void onMinecraftComparingAssets(boolean fast) {
+                progress.get().onMinecraftComparingAssets(fast);
+            }
+
+            @Override
+            public void onMinecraftDownloading() {
+                progress.get().onMinecraftDownloading();
+            }
+
+            @Override
+            public void onMinecraftReconstructingAssets() {
+                progress.get().onMinecraftReconstructingAssets();
+            }
+
+            @Override
+            public void onMinecraftUnpackingNatives() {
+                progress.get().onMinecraftUnpackingNatives();
+            }
+
+            @Override
+            public void onMinecraftDeletingEntries() {
+                progress.get().onMinecraftDeletingEntries();
+            }
+
+            @Override
+            public void onMinecraftConstructing() {
+                progress.get().onMinecraftConstructing();
+            }
+
+            @Override
+            public void onMinecraftLaunch() {
+                progress.get().onMinecraftLaunch();
+            }
+
+            @Override
+            public void onMinecraftPostLaunch() {
+                progress.get().onMinecraftPostLaunch();
+            }
+
+            @Override
+            public void onMinecraftPrepare() {
+                progress.get().onMinecraftPrepare();
+            }
+
+            @Override
+            public void onMinecraftAbort() {
+                progress.get().onMinecraftAbort();
+            }
+
+            @Override
+            public void onMinecraftClose() {
+                progress.get().onMinecraftClose();
+            }
+
+            @Override
+            public void onMinecraftError(Throwable var1) {
+                progress.get().onMinecraftError(var1);
+            }
+
+            @Override
+            public void onMinecraftKnownError(MinecraftException var1) {
+                progress.get().onMinecraftKnownError(var1);
+            }
+
+            @Override
+            public void onCrashManagerInit(CrashManager manager) {
+                progress.get().onCrashManagerInit(manager);
+            }
+        });
+        //add(progress);
+        revertFont = new DelayedComponent<>(new DelayedComponentLoader<RevertFontSize>() {
+            @Override
+            public RevertFontSize loadComponent() {
+                return new RevertFontSize();
+            }
+
+            @Override
+            public void onComponentLoaded(RevertFontSize loaded) {
+                MainPane.this.add(loaded);
+                onResize();
+            }
+        });
+        if (shouldShowRevertFont())
+            revertFont.load();
+
         setScene(defaultScene, false);
         addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -106,28 +263,32 @@ public class MainPane extends ExtendedLayeredPane {
     }
 
     public void openAccountEditor() {
-        setScene(accountManager);
+        setScene(accountManager.get());
     }
 
     public void openVersionManager() {
-        setScene(versionManager);
+        setScene(versionManager.get());
     }
 
     public void openNoticeScene() {
-        setScene(noticeScene);
+        setScene(noticeScene.get());
     }
 
     public TLauncherFrame getRootFrame() {
         return rootFrame;
     }
 
-    public LaunchProgress getProgress() {
+    public DelayedComponent<LaunchProgress> getProgress() {
         return progress;
     }
 
     public void onResize() {
-        progress.setBounds(0, getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, getWidth(), ProgressBar.DEFAULT_HEIGHT);
-        revertFont.setBounds(0, 0, getWidth(), getFontMetrics(revertFont.revertButton.getFont()).getHeight() * 3);
+        if(progress.isLoaded()) {
+            progress.get().setBounds(0, getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, getWidth(), ProgressBar.DEFAULT_HEIGHT);
+        }
+        if(revertFont.isLoaded()) {
+            revertFont.get().setBounds(0, 0, getWidth(), getFontMetrics(revertFont.get().revertButton.getFont()).getHeight() * 3);
+        }
         //service.onResize();
     }
 
@@ -135,6 +296,14 @@ public class MainPane extends ExtendedLayeredPane {
         Point compLocation = comp.getLocationOnScreen();
         Point paneLocation = getLocationOnScreen();
         return new Point(compLocation.x - paneLocation.x, compLocation.y - paneLocation.y);
+    }
+
+    private boolean shouldShowRevertFont() {
+        float size = (float) rootFrame.getConfiguration().getInteger("gui.font.old");
+        if (size < TLauncherFrame.minFontSize || size > TLauncherFrame.maxFontSize)
+            size = TLauncherFrame.maxFontSize;
+        float oldSize = size;
+        return TLauncherFrame.getFontSize() != oldSize;
     }
 
     public class RevertFontSize extends ExtendedPanel implements LocalizableComponent {
@@ -156,8 +325,8 @@ public class MainPane extends ExtendedLayeredPane {
             revertButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    defaultScene.settingsForm.font.setValue(oldSizeInt);
-                    defaultScene.settingsForm.saveValues();
+                    defaultScene.settingsForm.get().font.setValue(oldSizeInt);
+                    defaultScene.settingsForm.get().saveValues();
 
                     Alert.showLocMessage("revert.font.approved");
 
@@ -180,10 +349,6 @@ public class MainPane extends ExtendedLayeredPane {
             add(revertButton, closeButton);
 
             updateLocale();
-        }
-
-        public boolean shouldShow() {
-            return TLauncherFrame.getFontSize() != oldSize;
         }
 
         @Override
