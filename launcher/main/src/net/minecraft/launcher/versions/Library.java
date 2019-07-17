@@ -33,6 +33,7 @@ public class Library {
     protected List<String> deleteEntries;
     protected LibraryDownloadInfo downloads;
     protected Boolean mod;
+    protected Boolean downloadOnly;
 
     static {
         HashMap<String, String> map = new HashMap<String, String>();
@@ -116,11 +117,14 @@ public class Library {
         return mod != null && mod;
     }
 
+    public boolean isDownloadOnly() { return downloadOnly != null && downloadOnly; }
+
     String getArtifactBaseDir() {
         if (name == null) {
             throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
         } else {
-            String[] parts = name.split(":", 3);
+            String[] parts = name.split(":", 4);
+
             return String.format("%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
         }
     }
@@ -141,12 +145,16 @@ public class Library {
         if (name == null) {
             throw new IllegalStateException("Cannot get artifact filename of empty/blank artifact");
         } else {
-            String[] parts = name.split(":", 3);
+            String[] parts = name.split(":", 4);
             String result;
             if (classifier == null) {
-                result = String.format("%s-%s.jar", parts[1], parts[2]);
+                if (parts.length == 4) {
+                    result = String.format("%s-%s-%s.jar", parts[1], parts[2], parts[3]);
+                } else {
+                    result = String.format("%s-%s.jar", parts[1], parts[2]);
+                }
             } else {
-                result = String.format("%s-%s%s.jar", parts[1], parts[2], "-" + classifier);
+                result = String.format("%s-%s-%s.jar", parts[1], parts[2], classifier);
             }
 
             return SUBSTITUTOR.replace(result);
@@ -154,7 +162,7 @@ public class Library {
     }
 
     public String toString() {
-        return "Library{name=\'" + name + '\'' + ", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", packed=\'" + packed + "\', mod="+ mod +"}";
+        return "Library{name=\'" + name + '\'' + ", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", packed=\'" + packed + "\', mod="+ mod +", downloadOnly=\'+" + downloadOnly + "\'}";
     }
 
     public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {
@@ -322,7 +330,7 @@ public class Library {
         }
 
         private LibraryDownloadable(DownloadInfo info, File file) {
-            super(Repository.PROXIFIED_REPO, info.getUrl(), file);
+            super(info.getUrl().startsWith("/")? Repository.EXTRA_VERSION_REPO : Repository.PROXIFIED_REPO, info.getUrl(), file);
             this.checksum = info.getSha1();
         }
 

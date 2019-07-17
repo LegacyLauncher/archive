@@ -39,11 +39,11 @@ public class NewFeaturesFrame extends VActionFrame {
         oldReleases.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.mp.defaultScene.settingsForm.oldVersionsHandler.setValue(oldReleases.isSelected());
-                frame.mp.defaultScene.settingsForm.saveValues();
+                frame.mp.defaultScene.settingsForm.get().oldVersionsHandler.setValue(oldReleases.isSelected());
+                frame.mp.defaultScene.settingsForm.get().saveValues();
             }
         });
-        oldReleases.setSelected(frame.mp.defaultScene.settingsForm.oldVersionsHandler.getValue().equals("true"));
+        oldReleases.setSelected(frame.mp.defaultScene.settingsForm.get().oldVersionsHandler.getValue().equals("true"));
 
         oldReleasesDesc = new LocalizableHTMLLabel("newfeatures.list.old_releases.description");
         oldReleasesDesc.setLabelWidth(SwingUtil.magnify(450));

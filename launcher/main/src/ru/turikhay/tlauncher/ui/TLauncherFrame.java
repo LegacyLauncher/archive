@@ -125,10 +125,14 @@ public class TLauncherFrame extends JFrame {
                 Dragger.update();
                 if(mp != null && mp.defaultScene != null) {
                     boolean lock = getExtendedState() != 0;
-                    Blocker.setBlocked(mp.defaultScene.settingsForm.launcherResolution, "extended", lock);
-                    if (!lock) {
-                        IntegerArray arr = new IntegerArray(getWidth(), getHeight());
-                        mp.defaultScene.settingsForm.launcherResolution.setValue(arr);
+                    IntegerArray arr = new IntegerArray(getWidth(), getHeight());
+                    if(mp.defaultScene.settingsForm.isLoaded()) {
+                        Blocker.setBlocked(mp.defaultScene.settingsForm.get().launcherResolution, "extended", lock);
+                        if (!lock) {
+                            mp.defaultScene.settingsForm.get().launcherResolution.setValue(arr);
+                        }
+                    }
+                    if(!lock) {
                         settings.set("gui.size", arr);
                     }
                 }

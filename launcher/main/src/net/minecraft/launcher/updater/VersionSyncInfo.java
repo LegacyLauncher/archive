@@ -14,6 +14,7 @@ import ru.turikhay.util.OS;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -186,17 +187,24 @@ public class VersionSyncInfo {
     Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
         HashSet neededFiles = new HashSet();
 
-        CompleteVersion version = getCompleteVersion(force);
-        if (type != null && !version.isProceededFor(type, true)) {
-            version = TLauncher.getInstance().getLibraryManager().process(version, type);
+        CompleteVersion version0 = getCompleteVersion(force), version;
+        if (type != null && !version0.isProceededFor(type, true)) {
+            version = TLauncher.getInstance().getLibraryManager().process(version0, type);
+        } else {
+            version = version0;
         }
 
         Repository source = hasRemote() ? remoteVersion.getSource() : null;
         if (source != null && !source.isRemote()) {
             return neededFiles;
         } else {
-            Iterator var9 = version.getRelevantLibraries(featureMatcher).iterator();
+            Collection libraries = version.getRelevantLibraries(featureMatcher);
 
+            if(type != Account.AccountType.PLAIN) {
+                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, Account.AccountType.PLAIN));
+            }
+
+            Iterator var9 = libraries.iterator();
             while (true) {
                 Library library;
                 File local1;

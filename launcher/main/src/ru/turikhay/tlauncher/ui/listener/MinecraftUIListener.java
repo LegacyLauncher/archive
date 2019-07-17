@@ -12,10 +12,12 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.crash.CrashProcessingFrame;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.support.MailSupportFrame;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.util.U;
 
 public class MinecraftUIListener implements MinecraftListener, CrashManagerListener, LocalizableComponent {
-    private final CrashProcessingFrame crashFrame;
+    private final DelayedComponent<CrashProcessingFrame> crashFrame;
 
     private final TLauncher t;
     private final LangConfiguration lang;
@@ -23,10 +25,20 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
     public MinecraftUIListener(TLauncher tlauncher) {
         t = tlauncher;
         lang = t.getLang();
-        crashFrame = new CrashProcessingFrame();
+        crashFrame = new DelayedComponent<>(new DelayedComponentLoader<CrashProcessingFrame>() {
+            @Override
+            public CrashProcessingFrame loadComponent() {
+                return new CrashProcessingFrame();
+            }
+
+            @Override
+            public void onComponentLoaded(CrashProcessingFrame loaded) {
+                TLauncher.getInstance().getFrame().updateLocales();
+            }
+        });
     }
 
-    public CrashProcessingFrame getCrashProcessingFrame() {
+    public DelayedComponent<CrashProcessingFrame> getCrashProcessingFrame() {
         return crashFrame;
     }
 
@@ -61,7 +73,7 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
     @Override
     public void onCrashManagerInit(CrashManager manager) {
         manager.addListener(this);
-        manager.addListener(crashFrame);
+        manager.addListener(crashFrame.get());
     }
 
     @Override
@@ -84,6 +96,8 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
 
     @Override
     public void updateLocale() {
-        crashFrame.updateLocale();
+        if(crashFrame.isLoaded()) {
+            crashFrame.get().updateLocale();
+        }
     }
 }

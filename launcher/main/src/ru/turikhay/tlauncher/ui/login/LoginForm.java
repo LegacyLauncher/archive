@@ -24,6 +24,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.login.buttons.ButtonPanel;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
@@ -39,7 +40,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     private final List<LoginForm.LoginProcessListener> processListeners = Collections.synchronizedList(new ArrayList());
     public final DefaultScene scene;
     public final MainPane pane;
-    private final SettingsPanel settings;
+    private final DelayedComponent<SettingsPanel> settings;
     public final AccountComboBox accounts;
     public final VersionComboBox versions;
     public final CheckBoxPanel checkbox;
@@ -70,7 +71,22 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         versions = new VersionComboBox(this);
         checkbox = new CheckBoxPanel(this);
         processListeners.add(autologin);
-        processListeners.add(settings);
+        processListeners.add(new LoginProcessListener() {
+            @Override
+            public void logginingIn() throws LoginException {
+                settings.get().logginingIn();
+            }
+
+            @Override
+            public void loginFailed() {
+                settings.get().loginFailed();
+            }
+
+            @Override
+            public void loginSucceed() {
+                settings.get().loginSucceed();
+            }
+        });
         processListeners.add(checkbox);
         processListeners.add(versions);
         processListeners.add(accounts);

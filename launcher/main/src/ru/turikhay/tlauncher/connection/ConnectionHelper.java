@@ -28,8 +28,8 @@ public class ConnectionHelper {
                         (requireRestart? "\n\n" + Localizable.get("connection.error.ssl.restart") : ""),
                 null
         );
-        TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.sslCheck.setValue(false);
-        TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.saveValues();
+        TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().sslCheck.setValue(false);
+        TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().saveValues();
         Sentry.sendWarning(OfficialVersionList.class, "no certificates", DataBuilder.create("exception", e), DataBuilder.create("cert-fixed", true));
         TLauncher.kill();
         return 1;
