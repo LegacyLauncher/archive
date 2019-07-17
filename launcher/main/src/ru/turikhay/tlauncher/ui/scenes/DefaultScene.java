@@ -1,15 +1,12 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.SideNotifier;
-import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.notice.MainNoticePanel;
 import ru.turikhay.tlauncher.ui.notice.Notice;
-import ru.turikhay.tlauncher.ui.notice.NoticePanel;
 import ru.turikhay.tlauncher.ui.notice.NoticeSidePanel;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
@@ -17,13 +14,8 @@ import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
-import ru.turikhay.util.async.ExtendedThread;
-import ru.turikhay.util.async.LoopedThread;
 
-import javax.swing.*;
 import java.awt.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class DefaultScene extends PseudoScene {
     public static final Dimension LOGIN_SIZE = new Dimension(285, 240);
@@ -44,6 +36,8 @@ public class DefaultScene extends PseudoScene {
     private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
     // $FF: synthetic field
     private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel;
+
+    private boolean sceneLoaded;
 
     public DefaultScene(MainPane main) {
         super(main);
@@ -76,6 +70,7 @@ public class DefaultScene extends PseudoScene {
             @Override
             public void onComponentLoaded(MainNoticePanel loaded) {
                 DefaultScene.this.add(loaded);
+                updateSidePanel();
             }
         });
         //add(noticePanel);
@@ -87,8 +82,8 @@ public class DefaultScene extends PseudoScene {
 
             @Override
             public void onComponentLoaded(NoticeSidePanel loaded) {
-                loaded.setVisible(false);
                 DefaultScene.this.add(loaded);
+                updateSidePanel();
             }
         });
         //noticeSidePanel.setVisible(false);
@@ -97,10 +92,16 @@ public class DefaultScene extends PseudoScene {
         //add(infoPanel);
         updateDirection();
 
+        sceneLoaded = true;
+
+        /*if(isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+            setSidePanel(null);
+        }*/
+    }
+
+    private void updateSidePanel() {
         if(isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
             setSidePanel(null);
-        } else {
-            //noticePanel.panelShown();
         }
     }
 
