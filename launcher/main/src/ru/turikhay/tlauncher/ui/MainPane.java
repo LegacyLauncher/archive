@@ -79,6 +79,7 @@ public class MainPane extends ExtendedLayeredPane {
             public void onComponentLoaded(AccountManagerScene scene) {
                 MainPane.this.add(scene);
                 scene.onResize();
+                scene.list.updateList();
 
                 Account selected = scene.list.getSelected();
                 if (selected != null) {

@@ -443,7 +443,7 @@ public class VersionManager extends InterruptibleComponent {
         File baseDirectory = localList.getBaseDirectory();
 
         try {
-            container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type == null? Account.AccountType.PLAIN : null));
+            container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type == null? Account.AccountType.PLAIN : type));
         } catch (IOException ioE) {
             log("Could not get downloadables for", syncInfo.getID(), ioE);
         }
