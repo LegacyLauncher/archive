@@ -133,6 +133,10 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         list.setSelectedValue(account, true);
     }
 
+    public void updateList() {
+        onAccountsRefreshed(TLauncher.getInstance().getProfileManager().getAuthDatabase());
+    }
+
     @Override
     public void onAccountsRefreshed(AuthenticatorDatabase db) {
         accountModel.clear();
