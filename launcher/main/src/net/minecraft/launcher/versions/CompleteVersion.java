@@ -42,7 +42,7 @@ public class CompleteVersion implements Version, Cloneable {
     List<Rule> rules;
     List<String> deleteEntries;
 
-    Map<DownloadType, DownloadInfo> downloads = new HashMap<DownloadType, DownloadInfo>();
+    Map<String, DownloadInfo> downloads = new HashMap<>();
     AssetIndexInfo assetIndex;
     String assets;
 
@@ -189,7 +189,7 @@ public class CompleteVersion implements Version, Cloneable {
         return assetIndex;
     }
 
-    public DownloadInfo getDownloadURL(DownloadType type) {
+    public DownloadInfo getDownloadURL(String type) {
         return downloads.get(type);
     }
 
