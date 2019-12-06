@@ -11,12 +11,18 @@ import java.util.Map;
 import java.util.Set;
 
 public class AssetIndex {
-    public static final String DEFAULT_ASSET_NAME = "legacy";
+    public static final String DEFAULT_ASSET_NAME = "pre-1.6";
     private Map<String, AssetIndex.AssetObject> objects = new LinkedHashMap<String, AssetIndex.AssetObject>();
     private boolean virtual;
 
     public Map<String, AssetIndex.AssetObject> getFileMap() {
         return objects;
+    }
+
+    public Boolean map_to_resources;
+
+    public boolean isMapToResources() {
+        return map_to_resources != null && map_to_resources;
     }
 
     public Set<AssetIndex.AssetObject> getUniqueObjects() {

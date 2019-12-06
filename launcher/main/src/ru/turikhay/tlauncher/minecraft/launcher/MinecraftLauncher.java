@@ -1083,7 +1083,11 @@ public class MinecraftLauncher implements JavaProcessListener {
                 throw new MinecraftException(false, "Cannot read index file!", "index-file", var9);
             }
 
-            if (index.isVirtual()) {
+            if (index.isMapToResources()) {
+                virtualRoot = new File(gameDir, "resources");
+            }
+
+            if (index.isVirtual() || index.isMapToResources()) {
                 log("Reconstructing virtual assets folder at " + virtualRoot);
                 Iterator var6 = index.getFileMap().entrySet().iterator();
 
@@ -1385,9 +1389,14 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
         if (settings.getBoolean("minecraft.improvedargs")) {
             if (OS.JAVA_VERSION.getMajor() >= 9 || ramSize >= 3072) {
+                args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
                 args.add("-XX:+UseG1GC");
-                args.add("-XX:ConcGCThreads=" + Math.min(1, OS.Arch.AVAILABLE_PROCESSORS / 4));
-                args.add("-XX:ParallelGCThreads=" + Math.min(1, OS.Arch.AVAILABLE_PROCESSORS));
+                args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
+                args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
+                args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
+                args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
+                args.add("-XX:ConcGCThreads=" + ((OS.Arch.AVAILABLE_PROCESSORS / 4 > 0) ? OS.Arch.AVAILABLE_PROCESSORS / 4 : 1));
+                args.add("-XX:ParallelGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
             } else {
                 args.add("-XX:+UseConcMarkSweepGC");
                 args.add("-XX:-UseAdaptiveSizePolicy");
