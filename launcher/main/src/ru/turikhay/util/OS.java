@@ -297,6 +297,7 @@ public enum OS {
         public static final int PREFERRED_MEMORY;
         public static final int MAX_MEMORY;
         public static final int AVAILABLE_PROCESSORS;
+        private static final int TOTAL_RAM_GB;
 
         private final int bit, arch;
         private final String sBit, sArch;
@@ -305,6 +306,7 @@ public enum OS {
             CURRENT = getCurrent();
             TOTAL_RAM = getTotalRam();
             TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
+            TOTAL_RAM_GB = Math.round((float)TOTAL_RAM_MB / 1024.0F);
             PREFERRED_MEMORY = getPreferredMemory();
             MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
@@ -369,8 +371,12 @@ public enum OS {
                 case x64:
                     return 1024;
                 case x86:
-                    if (TOTAL_RAM_MB > 4000L) {
+                    if (TOTAL_RAM_GB == 2) {
                         return 768;
+                    }
+
+                    if (TOTAL_RAM_GB > 2) {
+                        return 1024;
                     }
                 default:
                     return MIN_MEMORY;
@@ -380,22 +386,20 @@ public enum OS {
         private static int getMaximumMemory() {
             switch (CURRENT) {
                 case x86:
-                    if (TOTAL_RAM_MB > 4000L) {
+                    if (TOTAL_RAM_GB > 2) {
                         return 1536;
                     }
                     return 1024;
                 case x64:
-                    if (TOTAL_RAM_MB > 12000L) {
-                        return 8192;
-                    } else if(TOTAL_RAM_MB > 6000L) {
-                        return 6144;
-                    } else {
-                        if (TOTAL_RAM_MB > 3000L) {
-                            return 1536;
-                        }
-
-                        return 1024;
+                    if (TOTAL_RAM_GB == 3) {
+                        return 1536;
                     }
+
+                    if (TOTAL_RAM_GB > 3) {
+                        return (TOTAL_RAM_GB - 2) * 1024;
+                    }
+
+                    return 1024;
                 default:
                     return MIN_MEMORY;
             }

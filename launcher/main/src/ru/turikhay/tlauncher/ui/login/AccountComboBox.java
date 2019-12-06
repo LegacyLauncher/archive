@@ -16,6 +16,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
+import ru.turikhay.tlauncher.user.InvalidCredentialsException;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
@@ -47,7 +48,20 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
         model = getSimpleModel();
         manager = TLauncher.getInstance().getProfileManager();
         manager.addListener(this);
-        listener = new AuthUIListener(lf);
+        listener = new AuthUIListener(lf) {
+            @Override
+            public void onAuthPassingError(Authenticator auth, Throwable e) {
+                if(e instanceof InvalidCredentialsException) {
+                    //TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selectedAccount.getUser());
+                    loginForm.pane.openAccountEditor();
+                    loginForm.pane.accountManager.get().multipane.showTip("add-account-" +
+                            (selectedAccount.getType() == Account.AccountType.ELY_LEGACY? "ely" :
+                            selectedAccount.getType().name().toLowerCase())
+                    );
+                }
+                super.onAuthPassingError(auth, e);
+            }
+        };
         addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 Account selected = (Account) getSelectedItem();
