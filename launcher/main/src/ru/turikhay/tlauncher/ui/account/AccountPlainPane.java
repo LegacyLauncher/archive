@@ -85,8 +85,13 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                         }
                         break;
                 }
-                if(checkUsername != null && StandardAccountPane.findAccount(checkUsername, Account.AccountType.PLAIN,true) != null) {
-                    return;
+
+                if(mode == PaneMode.EDIT) {
+                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(scene.list.getSelected().getUser());
+                }
+
+                if(checkUsername != null) {
+                    StandardAccountPane.removeAccountIfFound(checkUsername, Account.AccountType.PLAIN);
                 }
 
                 if(!unlocked) {
@@ -96,9 +101,6 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                 }
 
                 User user = AccountManager.getPlainAuth().authorize(username);
-                if(mode == PaneMode.EDIT) {
-                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(scene.list.getSelected().getUser());
-                }
                 TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
                 AccountPlainPane.this.scene.list.select(new Account(user));
                 AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase());

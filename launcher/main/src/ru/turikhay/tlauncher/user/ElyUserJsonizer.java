@@ -7,9 +7,6 @@ import com.google.gson.JsonSerializationContext;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.util.U;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
@@ -33,7 +30,7 @@ public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
         long registeredAt;
         String accessToken;
         String refreshToken;
-        long expiryTime;
+        Long expiryTime;
 
         ElySerialize(ElyUser user) {
             id = user.getId();
@@ -46,19 +43,17 @@ public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
             expiryTime = user.getExpiryTime();
         }
 
-        ElySerialize() {
-        }
-
         ElyUser create() {
             return new ElyUser(
-                    id,
-                    username,
-                    StringUtils.isBlank(displayName)? username : displayName,
-                    uuid,
-                    U.getUTC(registeredAt * 1000L).getTime(),
-                    accessToken,
-                    refreshToken,
-                    expiryTime);
+                id,
+                username,
+                StringUtils.isBlank(displayName)? username : displayName,
+                uuid,
+                U.getUTC(registeredAt * 1000L).getTime(),
+                accessToken,
+                refreshToken,
+                expiryTime
+            );
         }
     }
 }

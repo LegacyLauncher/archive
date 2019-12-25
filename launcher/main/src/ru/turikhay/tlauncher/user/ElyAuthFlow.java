@@ -15,10 +15,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Callable<ElyAuthCode> {
-    // client_id=tlauncher&response_type=code&scope=account_info,minecraft_server_session,offline_access&redirect_uri=http://localhost:80
+    // client_id=tlauncher&response_type=code&scope=account_info+minecraft_server_session&redirect_uri=http://localhost:80
     static final String OAUTH2_BASE = ElyAuth.ACCOUNT_BASE  + "/oauth2/v1";
     static final String OAUTH2_AUTH_REQUEST = OAUTH2_BASE +
-            "?client_id=tlauncher&response_type=code&scope=account_info,minecraft_server_session,offline_access&redirect_uri=%s&state=%d&prompt=select_account";
+            "?client_id=" + ElyAuth.CLIENT_ID + "&response_type=code&scope=account_info+minecraft_server_session&redirect_uri=%s&state=%d&prompt=select_account";
 
 
     private final List<L> listenerList = new ArrayList<L>(), listenerList_ = Collections.unmodifiableList(listenerList);

@@ -24,7 +24,7 @@ class ElyUserValidator {
 
     private String accessToken;
     private String refreshToken;
-    private long expiryTime;
+    private Long expiryTime;
 
     private ElyUser user;
 
@@ -37,31 +37,33 @@ class ElyUserValidator {
         log("user validator created for user:", user);
     }
 
-    ElyUserValidator(String accessToken, String refreshToken, long expiryTime) {
-        setToken(accessToken, refreshToken, expiryTime);
-
-        log("user validator created for tokens", accessToken, refreshToken, expiryTime);
-    }
-
     public void validateUser() throws IOException, InvalidCredentialsException {
         log("validating user...");
 
         Response<ElyUserJsonizer.ElySerialize> rawUserResponse = getUserInfo();
         renewToken: {
+            if (rawUserResponse.error == null) {
+                break renewToken;
+            }
+
             renewTokenBreak: {
-                if(rawUserResponse.error != null && rawUserResponse.error.isTokenExpired()) {
+                if(rawUserResponse.error.isTokenExpired()) {
                     log("token has expired. renewing");
                     break renewTokenBreak;
                 }
 
-                if(expiryTime - System.currentTimeMillis() < 1000 * 60 * 60 * 2 /* 2 hours */) {
+                if (expiryTime != null && expiryTime - System.currentTimeMillis() < 1000 * 60 * 60 * 2 /* 2 hours */) {
+                    if (refreshToken == null) {
+                        break renewToken; // we cannot refresh token, so run the game with token we has
+                    }
+
                     log("token will expire in less than two hours. renewing");
                     break renewTokenBreak;
                 }
 
                 rawUserResponse = getUserInfo();
                 if(rawUserResponse.error != null) {
-                    if(rawUserResponse.error.isTokenExpired()) {
+                    if(rawUserResponse.error.isTokenExpired() && refreshToken != null) {
                         log("token has expired. renewing");
                         break renewTokenBreak;
                     } else {
@@ -128,11 +130,11 @@ class ElyUserValidator {
         setToken(user.getAccessToken(), user.getRefreshToken(), user.getExpiryTime());
     }
 
-    private void setToken(String accessToken, String refreshToken, long expiryTime) {
+    private void setToken(String accessToken, String refreshToken, Long expiryTime) {
         this.accessToken = StringUtil.requireNotBlank(accessToken, "accessToken");
-        this.refreshToken = StringUtil.requireNotBlank(refreshToken, "refreshToken");
+        this.refreshToken = refreshToken;
 
-        if(expiryTime < 0) {
+        if (expiryTime != null && expiryTime < 0) {
             throw new IllegalArgumentException("expiryTime");
         }
 
@@ -225,7 +227,7 @@ class ElyUserValidator {
             if(!"Bearer".equals(token_type)) {
                 throw new IllegalArgumentException("token type: \""+ token_type +"\"");
             }
-            if(expires_in < 0) {
+            if(expires_in != 0 && expires_in < 0) {
                 throw new IllegalArgumentException("expires_in: " + expires_in);
             }
         }

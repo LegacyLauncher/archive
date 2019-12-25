@@ -116,14 +116,12 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
 
                 switch (mode) {
                     case ADD:
-                        if(findAccount(email, true) != null) {
-                            return;
-                        }
+                        removeAccountIfFound(email);
                         break;
                     case EDIT:
                         String oldUsername = scene.list.getSelected() == null || scene.list.getSelected().getType() != accountType? null : scene.list.getSelected().getUsername();
-                        if(!email.equalsIgnoreCase(oldUsername) && findAccount(email, true) != null) {
-                            return;
+                        if(oldUsername != null) {
+                            removeAccountIfFound(oldUsername);
                         }
                         break;
                 }
@@ -172,19 +170,16 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
         });
     }
 
-    static Account findAccount(String username, Account.AccountType type, boolean alertIfFound) {
-        Account existing = TLauncher.getInstance().getProfileManager().getAuthDatabase().getByUsername(username, type);
-        if(existing == null) {
-            return null;
+    static void removeAccountIfFound(String username, Account.AccountType type) {
+        UserSet userSet = TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet();
+        User user = userSet.getByUsername(username, type.name().toLowerCase());
+        if(user != null) {
+            userSet.remove(user);
         }
-        if(alertIfFound) {
-            Alert.showLocError("account.manager.multipane.add-account.error.exists");
-        }
-        return existing;
     }
 
-    protected Account findAccount(String username, boolean alertIfFound) {
-        return findAccount(username, accountType, alertIfFound);
+    protected void removeAccountIfFound(String username) {
+        removeAccountIfFound(username, accountType);
     }
 
     protected final void credentialsEntered(final int currentSession, final String email, final String password) {
@@ -225,9 +220,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
 
                     switch (mode) {
                         case ADD:
-                            if(findAccount(account.getDisplayName(), true) != null) {
-                                return;
-                            }
+                            removeAccountIfFound(account.getUsername());
                             Stats.accountCreation(accountType.toString().toLowerCase(), "standard", "", true);
                             break;
                         case EDIT:

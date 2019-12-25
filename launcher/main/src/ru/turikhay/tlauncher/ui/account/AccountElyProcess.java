@@ -284,16 +284,12 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
         setState(FlowState.COMPLETE);
 
-        if(StandardAccountPane.findAccount(user.getUsername(), Account.AccountType.ELY, true) == null &&
-                StandardAccountPane.findAccount(user.getUsername(), Account.AccountType.ELY_LEGACY, true) == null &&
-                StandardAccountPane.findAccount(user.getDisplayName(), Account.AccountType.ELY, true) == null &&
-                StandardAccountPane.findAccount(user.getDisplayName(), Account.AccountType.ELY_LEGACY, true) == null) {
-            TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
-            scene.multipane.showTip("success-add");
-            scene.list.select(new Account(user));
-        } else {
-            scene.multipane.showTip("welcome");
-        }
+        StandardAccountPane.removeAccountIfFound(user.getUsername(), Account.AccountType.ELY);
+        StandardAccountPane.removeAccountIfFound(user.getUsername(), Account.AccountType.ELY_LEGACY);
+
+        TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
+        scene.multipane.showTip("success-add");
+        scene.list.select(new Account(user));
     }
 
     private void cancelCurrentFlow() {

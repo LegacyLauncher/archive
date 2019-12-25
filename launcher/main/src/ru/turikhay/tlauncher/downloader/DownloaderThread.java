@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.downloader;
 
 import ru.turikhay.tlauncher.exceptions.IOExceptionList;
 import ru.turikhay.tlauncher.repository.IRepo;
+import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
@@ -29,6 +30,7 @@ public class DownloaderThread extends ExtendedThread {
     private boolean launched;
     private final StringBuilder b = new StringBuilder();
     private final Formatter formatter;
+    private final byte[] HTML_SIGNATURE = {(byte)0x3c, (byte)0x21, (byte)0x44, (byte)0x4f, (byte)0x43, (byte)0x54, (byte)0x59, (byte)0x50, (byte)0x45}; // <!DOCTYPE
 
     DownloaderThread(Downloader d, int id) {
         super("DT#" + id);
@@ -55,6 +57,18 @@ public class DownloaderThread extends ExtendedThread {
 
     void stopDownload() {
         launched = false;
+    }
+
+    private boolean isHTML(File file) {
+        byte[] buffer = new byte[HTML_SIGNATURE.length];
+
+        try {
+            new FileInputStream(file).read(buffer);
+        } catch (IOException e) {
+            return false;
+        }
+
+        return Arrays.equals(buffer, HTML_SIGNATURE);
     }
 
     public void run() {
@@ -150,7 +164,12 @@ public class DownloaderThread extends ExtendedThread {
                 for (IRepo repo : list) {
                     URLConnection connection = null;
                     try {
-                        connection = repo.get(current.getURL(), attempt * U.getConnectionTimeout(), U.getProxy());
+                        if(repo instanceof RepositoryProxy.ProxyRepo) {
+                            connection = ((RepositoryProxy.ProxyRepo) repo)
+                                    .get(current.getURL(), attempt * U.getConnectionTimeout(), U.getProxy(), attempt);
+                        } else {
+                            connection = repo.get(current.getURL(), attempt * U.getConnectionTimeout(), U.getProxy());
+                        }
                         dlog("Downloading:", connection);
 
                         downloadURL(connection, timeout, skip, length);
@@ -210,6 +229,13 @@ public class DownloaderThread extends ExtendedThread {
                         throw new IOException("expected 206 response for partial content");
                     }
                 }
+
+                String contentType = connection.getHeaderField("Content-Type");
+                dlog("Content type:", contentType);
+                if (contentType.equalsIgnoreCase("text/html")) {
+                    throw new RetryDownloadException("requested file is html");
+                }
+
                 long reply = System.currentTimeMillis() - reply_s;
                 dlog("Replied in " + reply + " ms.");
                 File file = current.getDestination();
@@ -294,6 +320,12 @@ public class DownloaderThread extends ExtendedThread {
                 downloadSpeed = downloaded_e != 0L ? (double) totalRead / (double) downloaded_e : 0.0D;
                 FileUtil.copyFile(temp, file, true);
                 FileUtil.deleteFile(temp);
+
+                dlog("Checking file is not HTML");
+                if (isHTML(file)) {
+                    throw new RetryDownloadException("Downloaded file is HTML");
+                }
+
                 List copies1 = current.getAdditionalDestinations();
                 if (copies1.size() > 0) {
                     dlog("Found additional destinations. Copying...");
