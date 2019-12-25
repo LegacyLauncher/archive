@@ -1,15 +1,10 @@
 package ru.turikhay.tlauncher.user;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class ElyUser extends User {
@@ -24,9 +19,9 @@ public class ElyUser extends User {
     private UUID uuid;
 
     private String accessToken, refreshToken;
-    private long expiryTime;
+    private Long expiryTime;
 
-    ElyUser(int id, String username, String displayName, UUID uuid, Date registeredAt, String accessToken, String refreshToken, long expiryTime) {
+    ElyUser(int id, String username, String displayName, UUID uuid, Date registeredAt, String accessToken, String refreshToken, Long expiryTime) {
         if(id < 0) {
             throw new IllegalArgumentException("id");
         }
@@ -82,16 +77,17 @@ public class ElyUser extends User {
         return refreshToken;
     }
 
-    long getExpiryTime() {
+    Long getExpiryTime() {
         return expiryTime;
     }
 
-    void setToken(String accessToken, String refreshToken, long expiryTime) {
-        if(expiryTime < 1) {
+    void setToken(String accessToken, String refreshToken, Long expiryTime) {
+        if(expiryTime != null && expiryTime < 1) {
             throw new IllegalArgumentException("expiryTime");
         }
+
         this.accessToken = StringUtil.requireNotBlank(accessToken, "accessToken");
-        this.refreshToken = StringUtil.requireNotBlank(refreshToken, "refreshToken");
+        this.refreshToken = refreshToken;
         this.expiryTime = expiryTime;
     }
 

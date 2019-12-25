@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.user;
 
+import com.getsentry.raven.util.Base64;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
@@ -58,7 +59,7 @@ public final class ElyAuthCode {
     CodeExchangePayload exchangeCode() throws IOException, AuthException {
         log("Exchanging code...");
 
-        CodeExchangePayload payload = parse(setupExchangeConnection(), CodeExchangePayload.class);
+        CodeExchangePayload payload = readResponse(setupExchangeConnection(), CodeExchangePayload.class);
 
         log("Checking payload consistency...");
         payload.checkConsistency();
@@ -69,17 +70,30 @@ public final class ElyAuthCode {
 
     ElyUserJsonizer.ElySerialize getRawUser(CodeExchangePayload payload) throws IOException, AuthException {
         log("Getting user using payload...");
-        ElyUserJsonizer.ElySerialize serialize = parse(setupInfoConnection(payload), ElyUserJsonizer.ElySerialize.class);
+        ElyUserJsonizer.ElySerialize serialize = readResponse(setupInfoConnection(payload), ElyUserJsonizer.ElySerialize.class);
 
         serialize.accessToken = payload.access_token;
         serialize.refreshToken = payload.refresh_token;
-        serialize.expiryTime = U.getUTC().getTimeInMillis() + payload.expires_in;
+        if (payload.expires_in != 0) {
+            serialize.expiryTime = U.getUTC().getTimeInMillis() + payload.expires_in * 1000L;
+        } else {
+            String[] jwtTokenParts = payload.access_token.split("\\.");
+            if (jwtTokenParts.length != 3) {
+                throw new IllegalArgumentException("Cannot determine token lifetime. The token is " + payload.access_token);
+            }
+
+            byte[] decoded = Base64.decode(jwtTokenParts[1], Base64.URL_SAFE | Base64.NO_PADDING);
+            JWTPayload jwtPayload = parse(new ByteArrayInputStream(decoded), JWTPayload.class);
+            if (jwtPayload.exp != 0) {
+                serialize.expiryTime = jwtPayload.exp * 1000L;
+            }
+        }
 
         log("User:", gson.toJson(serialize));
         return serialize;
     }
 
-    <T> T parse(HttpURLConnection connection, Class<T> clazz) throws IOException, AuthException {
+    <T> T readResponse(HttpURLConnection connection, Class<T> clazz) throws IOException, AuthException {
         IOException ioE = null;
         byte[] read;
 
@@ -100,15 +114,17 @@ public final class ElyAuthCode {
             throw detailed(read);
         }
 
-        T result;
         try {
-            result = gson.fromJson(new InputStreamReader(new ByteArrayInputStream(read), FileUtil.getCharset()), clazz);
-        } catch(RuntimeException rE) {
+            return this.parse(new ByteArrayInputStream(read), clazz);
+        } catch (RuntimeException rE) {
             AuthDetailedException detailedException = detailed(read);
             detailedException.addSuppressed(rE);
             throw detailedException;
         }
-        return result;
+    }
+
+    <T> T parse(InputStream in, Class<T> clazz) {
+        return gson.fromJson(new InputStreamReader(in, FileUtil.getCharset()), clazz);
     }
 
     private AuthDetailedException detailed(byte[] data) {
@@ -120,8 +136,8 @@ public final class ElyAuthCode {
 
         String request = TokenReplacingReader.resolveVars(TOKEN_EXCHANGE_REQUEST, new MapTokenResolver(new HashMap<String, String>(){
             {
-                put("client_id", "tlauncher");
-                put("client_secret", "SbOVmJHBCjMV1NsewphGgA2SbyrVjN7IBcOte6b1HR7JGup2");
+                put("client_id", ElyAuth.CLIENT_ID);
+                put("client_secret", ElyAuth.CLIENT_SECRET);
                 put("code", code);
                 put("state", String.valueOf(state));
                 put("redirect_uri", redirect_uri);
@@ -129,7 +145,7 @@ public final class ElyAuthCode {
         }));
         log("Request:", request);
 
-        HttpURLConnection connection = setupConnection(TOKEN_EXCHANGE);
+        HttpURLConnection connection = setupConnection("POST", TOKEN_EXCHANGE);
 
         connection.setDoOutput(true);
         log("Writing request...");
@@ -140,16 +156,16 @@ public final class ElyAuthCode {
     }
 
     HttpURLConnection setupInfoConnection(CodeExchangePayload codePayload) throws IOException {
-        HttpURLConnection connection = setupConnection(ACCOUNT_INFO);
+        HttpURLConnection connection = setupConnection("GET", ACCOUNT_INFO);
         connection.setRequestProperty("Authorization", "Bearer " + codePayload.access_token);
         return connection;
     }
 
-    static HttpURLConnection setupConnection(String _url) throws IOException {
-        URL url = new URL(_url);
+    static HttpURLConnection setupConnection(String method, String url) throws IOException {
+        URL _url = new URL(url);
 
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        urlConnection.setRequestMethod("POST");
+        HttpURLConnection urlConnection = (HttpURLConnection) _url.openConnection();
+        urlConnection.setRequestMethod(method);
         urlConnection.setUseCaches(false);
         urlConnection.setReadTimeout(U.getReadTimeout());
         urlConnection.setConnectTimeout(U.getConnectionTimeout());
@@ -168,15 +184,18 @@ public final class ElyAuthCode {
 
         void checkConsistency() throws AuthException {
             StringUtil.requireNotBlank(access_token, "access_token");
-            StringUtil.requireNotBlank(refresh_token, "refresh_token");
 
             if(!"Bearer".equals(token_type)) {
                 throw new IllegalArgumentException("token_type: " + token_type);
             }
 
-            if(expires_in < 0) {
+            if(expires_in != 0 && expires_in < 0) {
                 throw new IllegalArgumentException("expires_in: " + expires_in);
             }
         }
+    }
+
+    private static class JWTPayload {
+        int iat, exp;
     }
 }
