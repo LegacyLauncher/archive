@@ -8,11 +8,11 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.DataBuilder;
 
 public class ConnectionHelper {
-    public static boolean isCertException(Exception e) {
+    public static boolean isCertException(Throwable e) {
         return e.getMessage().contains("PKIX path building failed") || e.getMessage().contains("the trustAnchors parameter must be non-empty");
     }
 
-    public static int fixCertException(Exception e, String cause, boolean requireRestart) {
+    public static int fixCertException(Throwable e, String cause, boolean requireRestart) {
         if(!isCertException(e)) {
             return -1;
         }

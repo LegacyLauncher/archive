@@ -17,6 +17,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import ru.turikhay.app.nstweaker.NSTweaker;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
@@ -645,6 +646,16 @@ public class MinecraftLauncher implements JavaProcessListener {
         if (versionContainer.isAborted()) {
             throw new MinecraftLauncher.MinecraftLauncherAborted(new AbortedDownloadException());
         } else if (!versionContainer.getErrors().isEmpty()) {
+            for (Throwable error : versionContainer.getErrors()) {
+                if(ConnectionHelper.isCertException(error)) {
+                    if(ConnectionHelper.fixCertException(error, "version-download", true) == 1) {
+                        // must restart
+                        return;
+                    }
+                    // already restarted, did not fix the problem
+                    break;
+                }
+            }
             boolean e1 = versionContainer.getErrors().size() == 1;
             StringBuilder message1 = new StringBuilder();
             message1.append(versionContainer.getErrors().size()).append(" error").append(e1 ? "" : "s").append(" occurred while trying to download binaries.");

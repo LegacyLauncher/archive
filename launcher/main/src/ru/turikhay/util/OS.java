@@ -386,9 +386,6 @@ public enum OS {
         private static int getMaximumMemory() {
             switch (CURRENT) {
                 case x86:
-                    if (TOTAL_RAM_GB > 2) {
-                        return 1536;
-                    }
                     return 1024;
                 case x64:
                     if (TOTAL_RAM_GB == 3) {
