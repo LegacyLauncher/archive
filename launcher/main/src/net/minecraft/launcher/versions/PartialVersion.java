@@ -12,7 +12,7 @@ public class PartialVersion implements Version {
     private String url;
     private Date time;
     private Date releaseTime;
-    private ReleaseType type;
+    private String type;
     private Repository source;
 
     @Expose
@@ -35,6 +35,11 @@ public class PartialVersion implements Version {
     }
 
     public ReleaseType getReleaseType() {
+        return ReleaseType.of(type);
+    }
+
+    @Override
+    public String getType() {
         return type;
     }
 

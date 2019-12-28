@@ -88,7 +88,7 @@ public class Reflect {
         try {
             return parseEnum0(enumClass, string);
         } catch (Exception e) {
-            U.log(e);
+            U.log(e.toString());
         }
         return null;
     }
