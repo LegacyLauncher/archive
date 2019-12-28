@@ -1840,7 +1840,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         map.put("assets_root", globalAssetsDir.getAbsolutePath());
         map.put("assets_index_name", version.getAssetIndex().getId());
 
-        map.put("version_type", version.getReleaseType().toString());
+        map.put("version_type", version.getType());
 
         if (windowSize[0] > 0 && windowSize[1] > 0) {
             map.put("resolution_width", String.valueOf(windowSize[0]));

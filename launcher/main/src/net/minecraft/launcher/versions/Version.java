@@ -16,6 +16,8 @@ public interface Version {
 
     ReleaseType getReleaseType();
 
+    String getType();
+
     Repository getSource();
 
     void setSource(Repository var1);

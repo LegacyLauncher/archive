@@ -32,7 +32,7 @@ public class CompleteVersion implements Version, Cloneable {
     String inheritsFrom;
     Date time;
     Date releaseTime;
-    ReleaseType type;
+    String type;
     String jvmArguments;
     String minecraftArguments;
     String mainClass;
@@ -79,6 +79,10 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public ReleaseType getReleaseType() {
+        return ReleaseType.of(type);
+    }
+
+    public String getType() {
         return type;
     }
 
@@ -393,7 +397,7 @@ public class CompleteVersion implements Version, Cloneable {
             if (family == null || family.equals(FORGE_PREFIX)) {
                 String family_;
 
-                switch (type) {
+                switch (getReleaseType()) {
                     case UNKNOWN:
                     case OLD_ALPHA:
                     case SNAPSHOT:
@@ -454,7 +458,7 @@ public class CompleteVersion implements Version, Cloneable {
             result.time = time;
         }
 
-        if (type != ReleaseType.UNKNOWN) {
+        if (type != null) {
             result.type = type;
         }
 
@@ -644,7 +648,7 @@ public class CompleteVersion implements Version, Cloneable {
                 throw new JsonParseException("Version ID is NULL!");
             } else {
                 if (version.type == null) {
-                    version.type = ReleaseType.UNKNOWN;
+                    version.type = ReleaseType.UNKNOWN.getName();
                 }
 
                 if (version.source == null) {

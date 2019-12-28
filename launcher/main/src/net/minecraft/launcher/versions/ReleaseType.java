@@ -2,6 +2,7 @@ package net.minecraft.launcher.versions;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 import java.util.*;
@@ -194,5 +195,10 @@ public enum ReleaseType {
         }
 
         public abstract boolean isSubType(Version var1);
+    }
+
+    public static ReleaseType of(String input) {
+        ReleaseType value = Reflect.parseEnum(ReleaseType.class, input);
+        return value == null? ReleaseType.UNKNOWN : value;
     }
 }
