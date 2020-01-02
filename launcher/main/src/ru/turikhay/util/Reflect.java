@@ -87,8 +87,8 @@ public class Reflect {
     public static <T extends Enum<T>> T parseEnum(Class<T> enumClass, String string) {
         try {
             return parseEnum0(enumClass, string);
-        } catch (Exception e) {
-            U.log(e.toString());
+        } catch (Exception ignored) {
+            //U.log(e.toString());
         }
         return null;
     }
