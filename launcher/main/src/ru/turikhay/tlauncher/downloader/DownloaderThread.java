@@ -156,10 +156,10 @@ public class DownloaderThread extends ExtendedThread {
 
         if (current.hasRepository()) {
             List<IRepo> list = current.getRepository().getRelevant().getList();
-            int attempt = 0, max = list.size();
+            int attempt = 1, max = list.size();
 
 
-            while (attempt < max) {
+            while (attempt <= max) {
                 cause = null;
                 for (IRepo repo : list) {
                     URLConnection connection = null;
@@ -177,7 +177,7 @@ public class DownloaderThread extends ExtendedThread {
                     } catch (PartialDownloadException | AbortedDownloadException var9) {
                         throw var9;
                     } catch (IOException ioE) {
-                        dlog("Failed:", connection == null? "(conn. is not open)" : connection.getURL(), current.getURL(), ioE.getMessage());
+                        dlog("Failed:", connection == null? "(conn. is not open)" : connection.getURL(), current.getURL(), ioE.toString());
                         current.getRepository().getList().markInvalid(repo);
                         exL.add(ioE);
                     } catch (Throwable var10) {
@@ -232,7 +232,7 @@ public class DownloaderThread extends ExtendedThread {
 
                 String contentType = connection.getHeaderField("Content-Type");
                 dlog("Content type:", contentType);
-                if (contentType.equalsIgnoreCase("text/html")) {
+                if ("text/html".equalsIgnoreCase(contentType)) {
                     throw new RetryDownloadException("requested file is html");
                 }
 
@@ -321,7 +321,7 @@ public class DownloaderThread extends ExtendedThread {
                 FileUtil.copyFile(temp, file, true);
                 FileUtil.deleteFile(temp);
 
-                dlog("Checking file is not HTML");
+                //dlog("Checking file is not HTML");
                 if (isHTML(file)) {
                     throw new RetryDownloadException("Downloaded file is HTML");
                 }

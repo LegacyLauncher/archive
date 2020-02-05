@@ -53,7 +53,7 @@ public class RepositoryProxy {
             if(attempt == 1) {
                 log("First attempt: without proxyfying: " + path);
                 try {
-                    return openHttpConnection(originalUrl, proxy);
+                    return openHttpConnection(originalUrl, proxy, timeout);
                 } catch(IOException ioE1) {
                     ioE = ioE1;
                     log("Failed to open connection: " + path, ioE);
@@ -91,7 +91,7 @@ public class RepositoryProxy {
             log("Proxyfying request: " + originalUrl);
             HttpURLConnection connection;
             try {
-                connection = openHttpConnection(proxyPrefix + encodeUrl(originalUrl), proxy);
+                connection = openHttpConnection(proxyPrefix + encodeUrl(originalUrl), proxy, timeout);
             } catch(IOException oneMoreIOE) {
                 log("Proxy failed too!", oneMoreIOE);
                 dataBuilder.add("proxy_ioE", oneMoreIOE);
@@ -107,13 +107,22 @@ public class RepositoryProxy {
             return connection;
         }
 
-        private HttpURLConnection openHttpConnection(String path, Proxy proxy) throws IOException {
-            return (HttpURLConnection) makeHttpUrl(path).openConnection(proxy);
+        private HttpURLConnection openHttpConnection(String path, Proxy proxy, int timeout) throws IOException {
+            HttpURLConnection httpURLConnection = (HttpURLConnection) makeHttpUrl(path).openConnection(proxy);
+            setupTimeout(httpURLConnection, timeout);
+            return httpURLConnection;
         }
 
-        private HttpURLConnection openHttpConnection(URL url, Proxy proxy) throws IOException {
+        private HttpURLConnection openHttpConnection(URL url, Proxy proxy, int timeout) throws IOException {
             checkHttpUrl(url);
-            return (HttpURLConnection) url.openConnection(proxy);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection(proxy);
+            setupTimeout(httpURLConnection, timeout);
+            return httpURLConnection;
+        }
+
+        private static void setupTimeout(HttpURLConnection connection, int timeout) {
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
         }
 
         private URL makeHttpUrl(String path) throws IOException {

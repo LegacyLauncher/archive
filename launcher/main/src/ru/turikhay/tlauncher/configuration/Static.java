@@ -8,8 +8,8 @@ public final class Static {
     private static final String FOLDER = "minecraft";
     private static final String[] OFFICIAL_REPO = {"https://s3.amazonaws.com/Minecraft.Download/"};
     private static final String[] EXTRA_REPO = U.shuffle("http://u.tlauncher.ru/repo/", "http://turikhay.ru/tlauncher/repo/", "http://tlauncherrepo.com/repo/");
-    private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/", "http://u.tlauncher.ru/repo/libraries/", "http://turikhay.ru/tlauncher/repo/libraries/", "http://tlauncherrepo.com/repo/libraries/"};
-    private static final String[] ASSETS_REPO = {"http://resources.download.minecraft.net/"};
+    private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/", "https://u.tlauncher.ru/repo/libraries/", "https://turikhay.ru/tlauncher/repo/libraries/", "https://tlauncherrepo.com/repo/libraries/"};
+    private static final String[] ASSETS_REPO = {"https://resources.download.minecraft.net/"};
     private static final String[] SERVER_LIST = {};
     private static final String[] LANG_LIST = {"en_US", "ru_RU", "uk_UA"};
 
