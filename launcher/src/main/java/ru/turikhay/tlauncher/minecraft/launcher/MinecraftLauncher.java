@@ -51,7 +51,7 @@ import java.util.zip.ZipOutputStream;
 
 public class MinecraftLauncher implements JavaProcessListener {
     public static final String SENTRY_CONTEXT_NAME = "minecraftLauncher", CAPABLE_WITH = "1.6.84-j";
-    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 11, MIN_WORK_TIME = 5000;
+    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 12, MIN_WORK_TIME = 5000;
     private SentryContext sentryContext = SentryContext.createWithName(SENTRY_CONTEXT_NAME);
     private boolean working;
     private boolean killed;

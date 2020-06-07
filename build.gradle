@@ -7,7 +7,11 @@ plugins {
     id "java"
     id "org.ajoberstar.grgit" version "4.0.2" apply false
 }
+
 allprojects {
+    compileJava {
+        options.encoding = 'UTF-8'
+    }
     repositories {
         jcenter()
         mavenCentral()
