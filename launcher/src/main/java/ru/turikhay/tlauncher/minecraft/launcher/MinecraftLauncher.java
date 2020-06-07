@@ -1842,6 +1842,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         map.put("version_type", version.getType());
 
+        map.put("game_libraries_directory", new File(this.rootDir, "libraries").getAbsolutePath());
+
         if (windowSize[0] > 0 && windowSize[1] > 0) {
             map.put("resolution_width", String.valueOf(windowSize[0]));
             map.put("resolution_height", String.valueOf(windowSize[1]));
