@@ -1,0 +1,202 @@
+import groovy.json.JsonBuilder
+
+import java.security.DigestInputStream
+import java.security.MessageDigest
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
+plugins {
+    id 'java'
+    id "org.ajoberstar.grgit"
+}
+
+version '1.114.5'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+configurations {
+    tlRuntime
+    implementation.extendsFrom(tlRuntime)
+}
+
+sourceSets {
+    mcl {
+        java {
+            srcDir '../launcher-mcl/src'
+        }
+    }
+}
+
+def authlibVersion = "1.5.24"
+def nstweakerVersion = "1.0"
+
+dependencies {
+    tlRuntime("com.google.guava:guava:14.0")
+    tlRuntime("org.apache.logging.log4j:log4j-api:2.8.1")
+    tlRuntime("org.apache.logging.log4j:log4j-core:2.8.1")
+    tlRuntime("com.getsentry.raven:raven:7.8.1")
+    tlRuntime("org.slf4j:slf4j-api:1.7.21")
+    tlRuntime("com.fasterxml.jackson.core:jackson-core:2.7.3")
+    tlRuntime("com.github.zafarkhaja:java-semver:0.9.0")
+    tlRuntime("com.google.code.gson:gson:2.6.2")
+    tlRuntime("commons-io:commons-io:2.5")
+    tlRuntime("net.sf.jopt-simple:jopt-simple:4.9")
+    tlRuntime("org.apache.commons:commons-compress:1.10")
+    tlRuntime("org.tukaani:xz:1.5")
+    tlRuntime("org.jdom:jdom:2.0.2")
+    tlRuntime("org.apache.commons:commons-lang3:3.4")
+    tlRuntime("com.timgroup:java-statsd-client:3.1.0")
+    implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
+    implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
+    implementation(project(":jWMI"))
+    implementation(project(":bridge"))
+    testImplementation("org.testng:testng:6.9.10")
+}
+
+task cleanLauncherRepo(type: Delete) {
+    doLast {
+        delete file("${rootProject.rootDir}/lib")
+    }
+}
+
+task buildLauncherRepo(type: Sync) {
+    doFirst {
+        mkdir(file("${rootProject.rootDir}/lib"))
+    }
+
+    dependsOn(cleanLauncherRepo)
+
+    destinationDir = file("${rootProject.rootDir}/lib")
+    configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+        def path = artifact.moduleVersion.id.with {
+            "${group.replace('.', '/')}/${name.replace('.', '/')}/$version"
+        }
+        into(path) {
+            from(artifact.file)
+        }
+    }
+
+    from(file("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar")) {
+        into("ru/turikhay/app/nstweaker/${nstweakerVersion}")
+    }
+
+    from(file("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar")) {
+        into("com/mojang/authlib/${authlibVersion}")
+    }
+}
+
+task prepareLauncherDir(type: Sync) {
+    doFirst {
+        delete(file("build/tlRun"))
+        mkdir(file("build/tlRun"))
+    }
+
+    destinationDir = file("build/tlRun")
+    dependsOn(compileJava)
+
+    from(compileJava)
+    from(sourceSets.main.resources)
+}
+
+static def generateChecksum(File file) {
+    file.withInputStream {
+        new DigestInputStream(it, MessageDigest.getInstance('SHA-256')).withStream {
+            it.eachByte {}
+            it.messageDigest.digest().encodeHex() as String
+        }
+    }
+}
+
+ext {
+    git_branch = grgit?.branch?.current()?.name
+    short_brand = System.getenv("SHORT_BRAND")
+    bootstrap_version = project.version
+    full_brand = System.getenv("BRAND") ?: "Legacy"
+}
+
+switch (git_branch) {
+    case null:
+        if (!short_brand) short_brand = "legacy_beta+unknown"
+        bootstrap_version += "+unknown"
+        break
+    case "master":
+        if (!short_brand) short_brand = "legacy"
+        break
+    case "develop":
+        if (!short_brand) short_brand = "legacy_beta"
+        bootstrap_version += "+$git_branch"
+        break
+    default:
+        if (!short_brand) short_brand = git_branch.replace("/", "-")
+        bootstrap_version += "+${git_branch.replace("/", "-")}"
+}
+
+task generateMeta {
+    doLast {
+        def main_class = System.getenv("MAIN_CLASS")
+        if (!main_class) main_class = "ru.turikhay.tlauncher.TLauncher"
+
+        def libs = []
+        configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            libs.add([name: artifact.moduleVersion.id.toString(), checksum: generateChecksum(artifact.file)])
+        }
+        libs.add([name: "com.mojang:authlib:${authlibVersion}", checksum: generateChecksum(file("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))])
+        libs.add([name: "ru.turikhay.app:nstweaker:${nstweakerVersion}", checksum: generateChecksum(file("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))])
+
+        def meta = new JsonBuilder()
+
+        meta {
+            version(bootstrap_version)
+            shortBrand(short_brand)
+            brand(full_brand)
+            buildDate(OffsetDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME))
+            libraries(libs)
+            mainClass(main_class)
+        }
+
+        file("$projectDir/src/main/resources/ru/turikhay/tlauncher/meta.json").write(meta.toString())
+        file("$projectDir/meta.json").write(meta.toPrettyString())
+    }
+}
+
+task generateUpdateJson {
+    dependsOn jar
+    doLast {
+        def meta = new JsonBuilder()
+        def jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
+        def downloadUrlList = [
+                "http://tlauncherrepo.com/",
+                "http://u.tlauncher.ru/",
+                "http://turikhay.ru/tlauncher/",
+        ].collect {
+            urlPrefix -> urlPrefix + short_brand + "/launcher/" + jarFileChecksum + ".jar"
+        }
+
+        meta {
+            version bootstrap_version
+            shortBrand short_brand
+            checksum jarFileChecksum
+            downloads downloadUrlList
+        }
+
+        file("${buildDir}/update/launcher.json").write(meta.toString())
+    }
+}
+
+task copyJarAndRenameToSha256(type: Copy) {
+    dependsOn jar
+    from jar.outputs.files.singleFile
+    into "${buildDir}/update"
+    rename { generateChecksum(jar.outputs.files.singleFile) + ".jar" }
+}
+
+compileJava {
+    dependsOn(generateMeta)
+}
+
+assemble {
+    dependsOn(generateUpdateJson, copyJarAndRenameToSha256)
+}

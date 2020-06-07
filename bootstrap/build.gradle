@@ -1,0 +1,138 @@
+import edu.sc.seis.launch4j.tasks.Launch4jLibraryTask
+import groovy.json.JsonBuilder
+import org.gradle.internal.jvm.Jvm
+import proguard.gradle.ProGuardTask
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'net.sf.proguard:proguard-gradle:6.2.2'
+    }
+}
+
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+    id "org.ajoberstar.grgit"
+    id 'edu.sc.seis.launch4j' version '2.4.6'
+}
+
+version '1.8.2'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_6
+    targetCompatibility = JavaVersion.VERSION_1_6
+}
+
+dependencies {
+    implementation(project(":bridge"))
+    implementation(project(":jWMI"))
+    implementation("com.getsentry.raven:raven:7.8.1")
+    implementation("net.sf.jopt-simple:jopt-simple:4.9")
+    implementation("com.timgroup:java-statsd-client:3.1.0")
+    implementation("com.github.zafarkhaja:java-semver:0.9.0")
+    implementation("org.apache.commons:commons-lang3:3.4")
+    implementation("org.apache.commons:commons-compress:1.10")
+    implementation("com.google.code.gson:gson:2.6.2")
+    implementation("commons-io:commons-io:2.5")
+
+    testImplementation("org.testng:testng:6.9.10")
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'ru.turikhay.tlauncher.bootstrap.BootstrapStarter'
+    }
+}
+
+shadowJar {
+    relocate("com", "shaded.com")
+    relocate("joptsimple", "shaded.joptsimple")
+    relocate("org", "shaded.org")
+    relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
+    relocate("net", "shaded.net")
+}
+
+def javaHome = Jvm.current().getJavaHome()
+
+task minifiedJar(type: ProGuardTask) {
+    injars "build/libs/${shadowJar.archiveFileName.get()}"
+    outjars "build/libs/${shadowJar.archiveFileName.get().replace("all", "min")}"
+    configuration "${rootProject.rootDir}/config/proguard.pro"
+    libraryjars "${javaHome}/lib/rt.jar"
+    libraryjars "${javaHome}/lib/ext/jfxrt.jar"
+    // КОСТЫЛЬ
+    libraryjars "${javaHome}/jre/lib/rt.jar"
+    libraryjars "${javaHome}/jre/lib/ext/jfxrt.jar"
+
+    dependsOn shadowJar
+}
+
+launch4j {
+    mainClassName = "ru.turikhay.tlauncher.bootstrap.BootstrapStarter"
+    icon = "${rootProject.rootDir}/config/icon.ico"
+    jar = "lib/${shadowJar.archiveFileName.get().replace("all", "min")}"
+    outfile = "${project.name}-${project.version}.exe"
+    copyConfigurable = project.tasks.minifiedJar.outputs.files
+//    xmlFileName = "${rootProject.rootDir}/config/launch4j-legacy.xml"
+    xmlFileName = "${rootProject.rootDir}/config/launch4j-mcl.xml"
+}
+createExe.dependsOn(minifiedJar)
+
+task runDebug(type: JavaExec) {
+    group = "Execution"
+    description = "Run BootstrapDebug"
+    classpath(sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
+    main = "ru.turikhay.tlauncher.bootstrap.BootstrapDebug"
+    args("--debug")
+
+    dependsOn(":launcher:buildLauncherRepo")
+    dependsOn(":launcher:prepareLauncherDir")
+}
+
+task generateMeta {
+    doLast {
+        def git_branch = (grgit) ? grgit.branch.current().name.replace("/", "-") : null
+        def short_brand = System.getenv("SHORT_BRAND")
+        def full_brand = System.getenv("BRAND")
+        def bootstrap_version = project.version
+        if (!full_brand) full_brand = "Legacy"
+
+        switch (git_branch) {
+            case null:
+                if (!short_brand) short_brand = "legacy_beta_unknown"
+                bootstrap_version += "+unknown"
+                break
+            case "master":
+                if (!short_brand) short_brand = "legacy"
+                break
+            case "develop":
+                if (!short_brand) short_brand = "legacy_beta"
+                bootstrap_version += "+$git_branch"
+                break
+            default:
+                if (!short_brand) short_brand = "legacy_beta_$git_branch"
+                bootstrap_version += "+$git_branch"
+        }
+
+        def meta = new JsonBuilder()
+
+        meta {
+            version(bootstrap_version)
+            shortBrand(short_brand)
+            brand(full_brand)
+            buildDate(OffsetDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME))
+        }
+
+        file("$projectDir/src/main/resources/ru/turikhay/tlauncher/bootstrap/meta.json").write(meta.toString())
+        file("$projectDir/meta.json").write(meta.toPrettyString())
+    }
+}
+
+compileJava {
+    dependsOn(generateMeta)
+}

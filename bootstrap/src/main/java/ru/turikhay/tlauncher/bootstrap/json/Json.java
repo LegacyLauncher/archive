@@ -1,0 +1,37 @@
+package ru.turikhay.tlauncher.bootstrap.json;
+
+import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
+import com.github.zafarkhaja.semver.Version;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import org.apache.commons.io.IOUtils;
+import ru.turikhay.tlauncher.bootstrap.util.U;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.util.Locale;
+
+public final class Json {
+    private static final Gson GSON = build().create();
+
+    public static <T> T parse(InputStream in, Type type) throws IOException, JsonSyntaxException {
+        return get().fromJson(new InputStreamReader(in, U.UTF8), type);
+    }
+
+    public static Gson get() {
+        return GSON;
+    }
+
+    public static GsonBuilder build() {
+        return ExposeExclusion.setup(new GsonBuilder())
+                .registerTypeAdapter(Locale.class, new LocaleDeserializer())
+                .registerTypeAdapter(Version.class, new VersionJsonizer());
+    }
+
+    private Json() {
+        throw new NoSuchMethodError();
+    }
+}

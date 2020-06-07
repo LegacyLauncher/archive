@@ -1,12 +1,21 @@
-# Created by .ignore support plugin (hsz.mobi)
-/.idea/workspace.xml
-/.idea/vcs.xml
-
 out/
 build/
 */target/
 
-*/main/res/**/meta.json
+meta.json
 proguard.log
 
+*/src/main/resources/**/meta.json
+
 **/Thumbs.db
+
+/lib/*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# IDEA may break if committed from newer versions or when левая пятка breaks everything.
+.idea
