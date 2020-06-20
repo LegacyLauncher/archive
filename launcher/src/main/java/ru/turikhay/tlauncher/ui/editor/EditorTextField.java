@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.editor;
 
 import ru.turikhay.tlauncher.ui.loc.LocalizableTextField;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 
 public class EditorTextField extends BorderPanel implements EditorField {
     private static final long serialVersionUID = 3920711425159165958L;

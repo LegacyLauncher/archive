@@ -1,10 +1,6 @@
 package ru.turikhay.tlauncher.user;
 
-import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
-
 import java.io.IOException;
-import java.util.UUID;
 
 public final class MojangAuth extends AuthlibAuth<MojangUser> implements StandardAuth<MojangUser> {
 

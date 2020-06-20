@@ -9,7 +9,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.image.ImageObserver;
 
 public class ImageButton extends ExtendedButton {
     private static final long serialVersionUID = 1L;

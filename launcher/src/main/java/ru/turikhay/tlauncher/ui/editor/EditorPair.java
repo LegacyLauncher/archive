@@ -2,8 +2,6 @@ package ru.turikhay.tlauncher.ui.editor;
 
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;

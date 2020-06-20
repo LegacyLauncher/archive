@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.frames;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;

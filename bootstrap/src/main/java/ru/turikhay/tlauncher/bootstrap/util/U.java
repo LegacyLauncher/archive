@@ -2,7 +2,10 @@ package ru.turikhay.tlauncher.bootstrap.util;
 
 import java.io.*;
 import java.lang.reflect.Array;
-import java.net.*;
+import java.net.Proxy;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Locale;

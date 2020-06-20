@@ -1,7 +1,5 @@
 package ru.turikhay.util.async;
 
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-
 import java.util.concurrent.*;
 
 public class AsyncThread {

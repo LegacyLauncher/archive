@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui.converter;
 
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.U;
 
 import java.util.Locale;

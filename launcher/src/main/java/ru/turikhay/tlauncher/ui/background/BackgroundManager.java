@@ -4,7 +4,6 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.background.fx.MediaFxBackground;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 import javax.swing.*;

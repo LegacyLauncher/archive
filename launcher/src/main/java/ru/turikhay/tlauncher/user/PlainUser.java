@@ -1,11 +1,13 @@
 package ru.turikhay.tlauncher.user;
 
-import com.google.gson.*;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
-import java.lang.reflect.Type;
 import java.util.UUID;
 
 public class PlainUser extends User {

@@ -1,12 +1,10 @@
 package ru.turikhay.tlauncher.user;
 
 import org.testng.annotations.Test;
-import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
-import ru.turikhay.util.U;
 
 import java.util.UUID;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class MojangAuthTest {
     private final MojangAuth auth = new MojangAuth();

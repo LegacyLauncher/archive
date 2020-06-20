@@ -14,8 +14,8 @@ import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.pastebin.Paste;
 import ru.turikhay.util.pastebin.PasteResult;
-import ru.turikhay.util.stream.LinkedOutputStringStream;
 import ru.turikhay.util.stream.BufferedOutputStringStream;
+import ru.turikhay.util.stream.LinkedOutputStringStream;
 import ru.turikhay.util.stream.PrintLogger;
 import ru.turikhay.util.stream.StreamLogger;
 

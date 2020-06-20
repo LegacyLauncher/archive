@@ -1,19 +1,15 @@
 package ru.turikhay.tlauncher.bootstrap;
 
+import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
-import ru.turikhay.tlauncher.bootstrap.launcher.LocalLauncher;
 import ru.turikhay.tlauncher.bootstrap.launcher.LocalLauncherTask;
 import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.util.U;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Map;
 
 public class BootstrapDebug {
 

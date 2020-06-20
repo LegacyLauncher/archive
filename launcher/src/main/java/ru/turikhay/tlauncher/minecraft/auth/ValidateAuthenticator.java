@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
-import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.user.Auth;
 import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.util.U;
