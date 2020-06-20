@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.user;
 
+import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 

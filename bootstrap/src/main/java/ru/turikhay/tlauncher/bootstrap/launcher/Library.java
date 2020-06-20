@@ -1,11 +1,11 @@
 package ru.turikhay.tlauncher.bootstrap.launcher;
 
+import ru.turikhay.tlauncher.bootstrap.json.ToStringBuildable;
 import com.google.gson.annotations.Expose;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import ru.turikhay.tlauncher.bootstrap.json.ToStringBuildable;
 import ru.turikhay.tlauncher.bootstrap.task.DownloadTask;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.File;
 import java.net.URL;

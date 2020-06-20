@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
 import ru.turikhay.tlauncher.ui.swing.util.Orientation;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;

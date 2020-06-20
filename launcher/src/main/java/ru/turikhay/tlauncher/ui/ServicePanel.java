@@ -4,7 +4,10 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.LoopedThread;
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -12,6 +15,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 

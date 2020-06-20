@@ -4,10 +4,7 @@ import net.minecraft.launcher.versions.Library;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 

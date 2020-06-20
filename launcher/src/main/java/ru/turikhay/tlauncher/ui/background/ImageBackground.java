@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.lang.ref.SoftReference;
 
 public final class ImageBackground extends JComponent implements ISwingBackground {
     private static ImageBackground lastInstance;

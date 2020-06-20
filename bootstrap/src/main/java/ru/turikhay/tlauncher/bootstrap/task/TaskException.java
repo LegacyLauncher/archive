@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.task;
 
+import ru.turikhay.tlauncher.bootstrap.util.U;
+
 public class TaskException extends Exception {
     TaskException(Task task) {
         super(getTaskName(task, null));

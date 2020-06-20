@@ -13,6 +13,8 @@ import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.util.U;
 
 import java.util.*;
 import java.util.regex.Pattern;

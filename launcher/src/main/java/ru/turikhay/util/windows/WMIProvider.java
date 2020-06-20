@@ -6,9 +6,7 @@ import ru.turikhay.util.windows.wmi.WMI;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public final class WMIProvider {
     private static final Future<List<String>> AV_LIST = AsyncThread.future(new Callable<List<String>>() {

@@ -6,7 +6,7 @@ import ru.turikhay.util.U;
 
 import java.net.URL;
 
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 /**
  * Created by turikhay on 01.02.2017.

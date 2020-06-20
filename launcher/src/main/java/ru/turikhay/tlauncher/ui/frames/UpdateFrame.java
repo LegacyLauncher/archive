@@ -1,12 +1,19 @@
 package ru.turikhay.tlauncher.ui.frames;
 
+import ru.turikhay.tlauncher.configuration.LangConfiguration;
+import ru.turikhay.tlauncher.ui.converter.LocaleConverter;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.support.ContributorsAlert;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.Locale;
 
 public class UpdateFrame extends VActionFrame {
 

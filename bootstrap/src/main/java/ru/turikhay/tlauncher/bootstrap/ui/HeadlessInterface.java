@@ -1,10 +1,10 @@
 package ru.turikhay.tlauncher.bootstrap.ui;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public final class HeadlessInterface implements IInterface {
     private static Gson gson;

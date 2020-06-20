@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.user;
 
+import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -8,6 +9,8 @@ import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class LoginCredentials {

@@ -1,9 +1,7 @@
 package ru.turikhay.tlauncher.ui.listener;
 
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
-import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
+import ru.turikhay.tlauncher.minecraft.auth.*;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.user.AuthDetailedException;

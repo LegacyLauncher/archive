@@ -4,6 +4,8 @@ import com.google.gson.JsonPrimitive;
 import org.testng.annotations.Test;
 import ru.turikhay.util.U;
 
+import static org.testng.Assert.*;
+
 
 public class LegacyVersionSerializerTest {
     @Test

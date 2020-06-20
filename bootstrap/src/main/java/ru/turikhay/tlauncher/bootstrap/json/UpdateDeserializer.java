@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.json;
 
-import com.google.gson.*;
 import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import com.google.gson.*;
 
 import java.lang.reflect.Type;
 import java.util.Map;

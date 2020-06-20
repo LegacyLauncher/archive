@@ -1,5 +1,8 @@
 package ru.turikhay.tlauncher.ui.account;
 
+import ru.turikhay.tlauncher.minecraft.auth.Account;
+
+import javax.swing.*;
 import java.awt.*;
 
 public interface AccountMultipaneComp {

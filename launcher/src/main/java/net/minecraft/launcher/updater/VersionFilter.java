@@ -2,6 +2,7 @@ package net.minecraft.launcher.updater;
 
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
+import ru.turikhay.util.U;
 
 import java.util.Collections;
 import java.util.HashSet;

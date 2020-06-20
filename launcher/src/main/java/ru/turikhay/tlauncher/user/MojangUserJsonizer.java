@@ -1,8 +1,14 @@
 package ru.turikhay.tlauncher.user;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.UserAuthentication;
+import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
+
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MojangUserJsonizer extends AuthlibUserJsonizer<MojangUser> {
 

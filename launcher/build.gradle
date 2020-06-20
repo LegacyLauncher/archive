@@ -10,7 +10,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.116.0'
+version '1.115.3'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7

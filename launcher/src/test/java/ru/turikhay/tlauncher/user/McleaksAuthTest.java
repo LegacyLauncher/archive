@@ -1,9 +1,12 @@
 package ru.turikhay.tlauncher.user;
 
+import org.testng.TestException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import ru.turikhay.tlauncher.managers.McleaksManager;
 import ru.turikhay.util.U;
+
+import static org.testng.Assert.*;
 
 public class McleaksAuthTest {
 

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import ru.turikhay.tlauncher.sentry.Sentry;
+import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.U;
 
 import java.awt.*;

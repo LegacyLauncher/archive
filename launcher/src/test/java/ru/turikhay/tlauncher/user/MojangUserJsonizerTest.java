@@ -2,11 +2,14 @@ package ru.turikhay.tlauncher.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.U;
 
 import java.util.UUID;
+
+import static org.testng.Assert.*;
 
 public class MojangUserJsonizerTest {
     private final Gson gson;

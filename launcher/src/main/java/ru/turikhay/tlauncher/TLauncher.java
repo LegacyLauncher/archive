@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import joptsimple.OptionSet;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
@@ -19,7 +20,6 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
@@ -31,6 +31,7 @@ import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.RunnableThread;
@@ -511,7 +512,7 @@ public final class TLauncher {
         }
 
         SEMVER = U.requireNotNull(Version.valueOf(meta.get("version").getAsString()), "semver");
-        BETA = SEMVER.getBuildMetadata() != null && !SEMVER.getBuildMetadata().startsWith("master");
+        BETA = !StringUtils.isBlank(SEMVER.getBuildMetadata());
     }
 
     public static String getBrand() {

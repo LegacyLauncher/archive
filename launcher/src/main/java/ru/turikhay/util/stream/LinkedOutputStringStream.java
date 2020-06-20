@@ -1,5 +1,7 @@
 package ru.turikhay.util.stream;
 
+import ru.turikhay.tlauncher.ui.alert.Alert;
+
 public class LinkedOutputStringStream extends BufferedOutputStringStream {
     private StreamLogger logger;
 

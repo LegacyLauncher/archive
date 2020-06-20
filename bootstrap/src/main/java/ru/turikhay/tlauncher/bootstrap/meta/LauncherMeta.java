@@ -1,8 +1,12 @@
 package ru.turikhay.tlauncher.bootstrap.meta;
 
-import com.github.zafarkhaja.semver.Version;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.json.ToStringBuildable;
+import com.github.zafarkhaja.semver.Version;
+import ru.turikhay.tlauncher.bootstrap.launcher.Library;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import java.util.List;
 
 public abstract class LauncherMeta extends ToStringBuildable {
     private String version;

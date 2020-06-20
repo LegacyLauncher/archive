@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -15,6 +14,7 @@ import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedToggleButton;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

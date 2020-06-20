@@ -4,11 +4,9 @@ import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.tlauncher.user.UserSetListener;
+import ru.turikhay.util.U;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class AuthenticatorDatabase {
     private final List<Account> accounts = new ArrayList<>(), accounts_ = Collections.unmodifiableList(accounts);

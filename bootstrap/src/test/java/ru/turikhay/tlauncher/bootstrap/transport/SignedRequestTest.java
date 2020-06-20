@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.transport;
 
-import org.apache.commons.io.IOUtils;
 import org.testng.annotations.Test;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import org.apache.commons.io.IOUtils;
 
 import java.net.URL;
 import java.util.zip.GZIPInputStream;
