@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.swing;
 
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;

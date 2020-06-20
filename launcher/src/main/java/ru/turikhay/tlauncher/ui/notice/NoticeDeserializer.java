@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.notice;
 import com.google.gson.*;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
+import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 

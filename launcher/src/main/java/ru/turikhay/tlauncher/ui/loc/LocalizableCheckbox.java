@@ -1,6 +1,11 @@
 package ru.turikhay.tlauncher.ui.loc;
 
+import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedCheckbox;
+import ru.turikhay.tlauncher.ui.theme.Theme;
+
+import javax.swing.*;
+import java.awt.event.ItemListener;
 
 public class LocalizableCheckbox extends ExtendedCheckbox implements LocalizableComponent {
     private String path;

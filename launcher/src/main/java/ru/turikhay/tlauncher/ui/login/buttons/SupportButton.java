@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.login.buttons;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
+import ru.turikhay.tlauncher.ui.frames.ProcessFrame;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -15,13 +16,14 @@ import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
+import ru.turikhay.util.windows.DxDiag;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 
 public class SupportButton extends LocalizableButton implements Blockable {
 

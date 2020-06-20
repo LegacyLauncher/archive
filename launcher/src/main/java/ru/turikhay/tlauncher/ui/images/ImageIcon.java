@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.images;
 
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;

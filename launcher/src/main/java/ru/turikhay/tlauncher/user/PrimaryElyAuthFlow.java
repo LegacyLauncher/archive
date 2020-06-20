@@ -3,11 +3,13 @@ package ru.turikhay.tlauncher.user;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.exceptions.IOExceptionList;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.git.MapTokenResolver;
@@ -16,14 +18,8 @@ import ru.turikhay.util.git.TokenReplacingReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.net.*;
+import java.util.*;
 
 public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> {
     private static final String SERVER_ADDRESS = "http://127.0.0.1:%d";

@@ -1,8 +1,7 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.tlauncher.ui.block.Blocker;
-import ru.turikhay.tlauncher.ui.images.DelayedIcon;
-import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.images.*;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
@@ -15,7 +14,9 @@ import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.util.*;
 
 class NoticeWrapper extends BorderPanel {
     static final int GAP = 5;

@@ -9,6 +9,8 @@ import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeManagerListener;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
+import ru.turikhay.tlauncher.ui.swing.ImageButton;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

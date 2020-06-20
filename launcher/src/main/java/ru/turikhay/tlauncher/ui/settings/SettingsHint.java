@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
+import ru.turikhay.tlauncher.ui.swing.extended.HTMLLabel;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

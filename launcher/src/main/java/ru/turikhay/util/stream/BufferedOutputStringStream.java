@@ -1,7 +1,11 @@
 package ru.turikhay.util.stream;
 
 import org.apache.commons.io.IOUtils;
+import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.util.U;
 
+import javax.swing.*;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 

@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.frames;
 
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.tlauncher.ui.loc.LocalizableHTMLLabel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;

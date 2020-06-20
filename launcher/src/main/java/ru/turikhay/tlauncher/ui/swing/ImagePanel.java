@@ -7,6 +7,7 @@ import ru.turikhay.util.U;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.ImageObserver;
 
 public class ImagePanel extends ExtendedPanel {
     private static final long serialVersionUID = 1L;

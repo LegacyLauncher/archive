@@ -4,6 +4,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.converter.LocaleConverter;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.loc.LocalizableHTMLLabel;
 import ru.turikhay.tlauncher.ui.support.ContributorsAlert;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;

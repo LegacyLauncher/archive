@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.*;
+
 public class NoticePanelTest {
 
     @Test

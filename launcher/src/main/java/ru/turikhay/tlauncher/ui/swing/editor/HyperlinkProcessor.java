@@ -5,6 +5,7 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.OS;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;

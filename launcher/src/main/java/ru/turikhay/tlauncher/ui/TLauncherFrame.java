@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.frames.FeedbackFrame;
+import ru.turikhay.tlauncher.ui.frames.NewFeaturesFrame;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.logger.Logger;
@@ -18,6 +19,7 @@ import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.ExtendedThread;
 
 import javax.swing.*;

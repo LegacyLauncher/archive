@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.frames.yandex;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.tlauncher.repository.Repository;
@@ -10,11 +11,13 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 import java.io.*;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public final class YandexInstaller {
     private final static String PARTNER_ID = "7958";

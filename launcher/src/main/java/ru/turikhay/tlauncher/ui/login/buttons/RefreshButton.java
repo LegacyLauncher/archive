@@ -9,6 +9,7 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;

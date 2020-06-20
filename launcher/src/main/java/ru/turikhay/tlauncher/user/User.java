@@ -2,7 +2,9 @@ package ru.turikhay.tlauncher.user;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import ru.turikhay.util.Reflect;
 
+import java.io.IOException;
 import java.util.UUID;
 
 public abstract class User {

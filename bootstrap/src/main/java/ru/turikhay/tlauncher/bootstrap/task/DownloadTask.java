@@ -1,11 +1,11 @@
 package ru.turikhay.tlauncher.bootstrap.task;
 
-import org.apache.commons.io.FileUtils;
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.exception.FileLockedException;
 import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URL;

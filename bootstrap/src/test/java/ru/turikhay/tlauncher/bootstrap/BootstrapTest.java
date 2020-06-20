@@ -1,14 +1,15 @@
 package ru.turikhay.tlauncher.bootstrap;
 
-import com.github.zafarkhaja.semver.Version;
 import org.testng.annotations.Test;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.meta.LocalLauncherMeta;
 import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskList;
+import com.github.zafarkhaja.semver.Version;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

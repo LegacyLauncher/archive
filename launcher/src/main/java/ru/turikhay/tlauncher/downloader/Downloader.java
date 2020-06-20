@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.downloader;
 
+import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 

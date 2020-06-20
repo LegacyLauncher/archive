@@ -7,8 +7,7 @@ import org.testng.annotations.Test;
 
 import java.net.URL;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 public class PrimaryElyAuthFlowTest {
     int state;

@@ -2,17 +2,20 @@ package ru.turikhay.tlauncher.ui.frames.yandex;
 
 import ru.turikhay.tlauncher.ui.frames.VActionFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedCheckbox;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.tlauncher.ui.swing.extended.HTMLLabel;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
 
 public class YandexFrame extends VActionFrame {

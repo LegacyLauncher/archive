@@ -5,6 +5,7 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
+import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
@@ -13,6 +14,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.util.U;
+
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

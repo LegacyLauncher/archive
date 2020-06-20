@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.loc;
 
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 

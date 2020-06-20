@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui.login.buttons;
 
 import net.minecraft.launcher.updater.VersionSyncInfo;
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -15,6 +14,7 @@ import ru.turikhay.tlauncher.ui.notice.NoticeManager;
 import ru.turikhay.tlauncher.ui.notice.NoticeManagerListener;
 import ru.turikhay.tlauncher.ui.notice.NoticePopup;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

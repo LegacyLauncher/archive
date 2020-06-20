@@ -1,16 +1,16 @@
 package ru.turikhay.tlauncher.bootstrap.transport;
 
-import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.util.Sha256Sign;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import com.getsentry.raven.util.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.NotImplementedException;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.security.KeyFactory;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
 
 public class SignedStream extends ChecksumStream {

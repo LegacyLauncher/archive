@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.text;
 
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

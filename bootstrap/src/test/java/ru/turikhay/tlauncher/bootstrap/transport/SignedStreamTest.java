@@ -1,18 +1,17 @@
 package ru.turikhay.tlauncher.bootstrap.transport;
 
-import com.getsentry.raven.util.Base64;
-import org.apache.commons.io.IOUtils;
 import org.testng.TestException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.internal.junit.ArrayAsserts;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import com.getsentry.raven.util.Base64;
+import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class SignedStreamTest {
     // "Hello, World!" signed with private key
