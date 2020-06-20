@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui;
 
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

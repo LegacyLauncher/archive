@@ -1,10 +1,10 @@
 package ru.turikhay.tlauncher.bootstrap.launcher;
 
-import ru.turikhay.tlauncher.bootstrap.task.Task;
-import ru.turikhay.tlauncher.bootstrap.util.U;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import ru.turikhay.tlauncher.bootstrap.task.Task;
+import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.*;
 import java.net.URL;

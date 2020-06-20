@@ -1,7 +1,5 @@
 package net.minecraft.launcher.updater;
 
-import java.net.URL;
-
 public class DownloadInfo {
     protected String url;
     protected String sha1;

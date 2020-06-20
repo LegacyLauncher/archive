@@ -4,7 +4,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.UserAuthentication;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class McleaksUserJsonizer extends AuthlibUserJsonizer<McleaksUser> {

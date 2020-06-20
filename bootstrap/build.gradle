@@ -1,7 +1,7 @@
-import edu.sc.seis.launch4j.tasks.Launch4jLibraryTask
 import groovy.json.JsonBuilder
 import org.gradle.internal.jvm.Jvm
 import proguard.gradle.ProGuardTask
+
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 

@@ -6,7 +6,6 @@ import ru.turikhay.tlauncher.managers.ProfileManagerListener;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.AccountListener;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
-import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
@@ -24,7 +23,6 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 
 public class AccountList extends CenterPanel implements ProfileManagerListener, AccountListener, Blockable {
 

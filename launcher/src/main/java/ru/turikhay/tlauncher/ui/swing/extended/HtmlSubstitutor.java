@@ -5,8 +5,6 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.git.ITokenResolver;
 
-import java.net.URL;
-
 public class HtmlSubstitutor implements ITokenResolver {
     @Override
     public String resolveToken(String token) {

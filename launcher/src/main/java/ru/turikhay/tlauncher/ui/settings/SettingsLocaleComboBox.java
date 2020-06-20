@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.settings;
 
-import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.ui.converter.LocaleConverter;
 import ru.turikhay.tlauncher.ui.editor.EditorComboBox;
 import ru.turikhay.tlauncher.ui.editor.EditorField;

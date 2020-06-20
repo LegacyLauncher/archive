@@ -1,24 +1,15 @@
 package ru.turikhay.tlauncher.ui.notice;
 
-import ru.turikhay.tlauncher.minecraft.Server;
-import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
-import ru.turikhay.tlauncher.ui.images.DelayedIcon;
-import ru.turikhay.tlauncher.ui.images.ImageIcon;
-import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
-import ru.turikhay.tlauncher.ui.swing.extended.*;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.event.ActionListener;
 
 public class NoticePanel extends CenterPanel implements Blockable, NoticeManagerListener {
     private final NoticeWrapper noticeWrapper;

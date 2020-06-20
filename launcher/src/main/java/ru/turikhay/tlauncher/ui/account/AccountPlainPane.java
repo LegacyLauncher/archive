@@ -17,7 +17,6 @@ import ru.turikhay.util.SwingUtil;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 
 public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneCompCloseable {
     private static final String[] DISALLOWED = {"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay", "ErickSkrauch"};

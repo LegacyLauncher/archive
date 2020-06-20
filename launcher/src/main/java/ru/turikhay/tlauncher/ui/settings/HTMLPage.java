@@ -14,12 +14,9 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
-import javax.swing.*;
-import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.io.IOException;
 import java.io.StringReader;
-import java.lang.reflect.Method;
 
 public class HTMLPage extends BorderPanel implements LocalizableComponent {
     private final String textColor;

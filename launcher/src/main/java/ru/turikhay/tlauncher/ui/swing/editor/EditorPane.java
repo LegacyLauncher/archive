@@ -3,16 +3,9 @@ package ru.turikhay.tlauncher.ui.swing.editor;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.tlauncher.ui.theme.Theme;
-import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkEvent.EventType;
-import javax.swing.event.HyperlinkListener;
-import javax.swing.plaf.basic.BasicHTML;
-import javax.swing.plaf.basic.BasicTextUI;
 import javax.swing.text.html.StyleSheet;
 import java.awt.*;
 import java.io.IOException;

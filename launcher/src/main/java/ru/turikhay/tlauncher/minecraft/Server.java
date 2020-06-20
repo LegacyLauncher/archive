@@ -3,13 +3,7 @@ package ru.turikhay.tlauncher.minecraft;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 public class Server {
     public static final int DEFAULT_PORT = 25565;

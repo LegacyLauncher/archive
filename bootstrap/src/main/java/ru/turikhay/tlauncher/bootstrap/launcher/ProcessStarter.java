@@ -1,10 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.launcher;
 
-import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
-import ru.turikhay.tlauncher.bootstrap.task.Task;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 import ru.turikhay.tlauncher.bootstrap.util.U;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.ui.block;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class Blocker {
     private static final Map<Blockable, List<Object>> blockMap = new Hashtable();

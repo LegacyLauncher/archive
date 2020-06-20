@@ -1,7 +1,8 @@
 package net.minecraft.launcher.updater;
 
-import com.google.gson.*;
-import com.google.gson.annotations.Expose;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.ReleaseType;

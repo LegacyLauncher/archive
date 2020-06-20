@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.swing.editor;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -12,7 +11,6 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
-import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 

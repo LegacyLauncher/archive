@@ -1,11 +1,9 @@
 package ru.turikhay.tlauncher.bootstrap.json;
 
-import ru.turikhay.tlauncher.bootstrap.meta.UpdateMeta;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.IOException;

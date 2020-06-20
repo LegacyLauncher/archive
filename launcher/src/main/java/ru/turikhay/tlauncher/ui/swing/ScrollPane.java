@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui.swing;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 
 public class ScrollPane extends JScrollPane {
