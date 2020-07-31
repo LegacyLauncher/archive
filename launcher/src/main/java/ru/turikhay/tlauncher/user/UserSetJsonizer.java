@@ -5,7 +5,6 @@ import ru.turikhay.tlauncher.managed.ManagedListener;
 import ru.turikhay.util.U;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -2,15 +2,15 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.tlauncher.configuration.BootConfiguration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.U;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public final class NoticeManager implements LocalizableComponent, Blockable {
     private static final int HIDDEN_DELAY = 1000 * 60 * 60 * 24 * 7; // 1 week

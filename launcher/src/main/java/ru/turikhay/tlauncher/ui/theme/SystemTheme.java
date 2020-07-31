@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.theme;
 
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;

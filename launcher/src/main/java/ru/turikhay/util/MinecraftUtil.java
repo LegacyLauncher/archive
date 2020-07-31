@@ -12,35 +12,44 @@ public class MinecraftUtil {
     private static FileExplorer explorer;
     private static JFrame parent;
 
+    private static boolean checkDirectory(File directory) {
+        return directory.isDirectory() && directory.canRead() && directory.canWrite();
+    }
+
     private static File chooseWorkingDir(String path) {
-        File defaultDirectory = getDefaultWorkingDirectory();
         File directory = new File(path);
 
+        if (checkDirectory(directory)) return directory;
+        try {
+            FileUtil.createFolder(directory);
+            if (checkDirectory(directory)) return directory;
+        } catch (IOException e) {
+            U.log("Got error trying to create directory");
+        }
+
+        // so we can't create directory
+        // let's get default directory
+        File defaultDirectory = getDefaultWorkingDirectory();
+        File preferredDirectory;
+        // let's create it
+        try {
+            FileUtil.createFolder(defaultDirectory);
+            preferredDirectory = defaultDirectory;
+        } catch (IOException e) {
+            U.log("Can't even create default folder. AM I IN HELL? AAAAAAAAAA!", e);
+            preferredDirectory = new File(System.getProperty("user.home", "/"));
+        }
+
         do {
-            try {
-                FileUtil.createFolder(directory);
-            } catch (IOException var7) {
-                Alert.showLocError("version.dir.noaccess", directory);
-
-                File preferred = new File("/");
-                if (!directory.equals(defaultDirectory)) {
-                    try {
-                        FileUtil.createFolder(defaultDirectory);
-                        preferred = defaultDirectory;
-                    } catch (IOException var6) {
-                        U.log("Can\'t even create default folder. AM I IN HELL? AAAAAAAAAA!", var6);
-                    }
-                }
-
-                directory = showExplorer(preferred);
-            }
-
+            U.log("Current directory is unwritable", directory);
+            Alert.showLocError("version.dir.noaccess", directory);
+            directory = showExplorer(preferredDirectory);
             if (directory == null) {
-                Alert.showLocWarning("version.dir.exit");
-                TLauncher.kill();
-                return null;
+                U.log("No directory selected, killing launcher. Good bye!");
+                System.exit(0);
             }
-        } while (!directory.isDirectory() || !directory.canWrite());
+            U.log("User selected directory, checking...", directory);
+        } while (!checkDirectory(directory));
 
         return directory;
     }

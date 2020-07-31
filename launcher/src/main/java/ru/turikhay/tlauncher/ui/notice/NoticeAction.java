@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.notice;
 
-import com.google.gson.JsonObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 

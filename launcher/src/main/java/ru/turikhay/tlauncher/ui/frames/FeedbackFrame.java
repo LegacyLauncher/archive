@@ -3,10 +3,8 @@ package ru.turikhay.tlauncher.ui.frames;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
-import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 

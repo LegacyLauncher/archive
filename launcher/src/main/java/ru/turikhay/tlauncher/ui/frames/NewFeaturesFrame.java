@@ -1,19 +1,16 @@
 package ru.turikhay.tlauncher.ui.frames;
 
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.loc.*;
-import ru.turikhay.tlauncher.ui.swing.Del;
-import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.ui.theme.Theme;
-import ru.turikhay.util.OS;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.loc.LocalizableCheckbox;
+import ru.turikhay.tlauncher.ui.loc.LocalizableHTMLLabel;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class NewFeaturesFrame extends VActionFrame {
     public static final int INCREMENTAL = 1339;

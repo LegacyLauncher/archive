@@ -2,7 +2,10 @@ package net.minecraft.launcher.versions;
 
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
-import net.minecraft.launcher.updater.*;
+import net.minecraft.launcher.updater.AssetIndexInfo;
+import net.minecraft.launcher.updater.DownloadInfo;
+import net.minecraft.launcher.updater.VersionList;
+import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.lang3.builder.ToStringBuilder;

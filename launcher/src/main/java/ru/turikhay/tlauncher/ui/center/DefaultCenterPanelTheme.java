@@ -1,10 +1,7 @@
 package ru.turikhay.tlauncher.ui.center;
 
 import ru.turikhay.tlauncher.ui.theme.Theme;
-import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
-import javax.swing.*;
 import java.awt.*;
 
 public class DefaultCenterPanelTheme implements CenterPanelTheme {

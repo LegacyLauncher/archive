@@ -1,15 +1,17 @@
 package ru.turikhay.tlauncher.bootstrap.transport;
 
+import org.apache.commons.io.IOUtils;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.internal.junit.ArrayAsserts;
 import ru.turikhay.tlauncher.bootstrap.util.Sha256Sign;
 import ru.turikhay.tlauncher.bootstrap.util.U;
-import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class ChecksumStreamTest {
     private static final byte[] _data;

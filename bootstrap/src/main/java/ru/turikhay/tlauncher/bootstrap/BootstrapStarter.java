@@ -1,11 +1,11 @@
 package ru.turikhay.tlauncher.bootstrap;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.bootstrap.launcher.ProcessStarter;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 import ru.turikhay.tlauncher.bootstrap.util.stream.InputStreamCopier;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;

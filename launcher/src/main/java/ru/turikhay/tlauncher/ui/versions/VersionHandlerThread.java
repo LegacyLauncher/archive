@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.versions;
 
-import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;

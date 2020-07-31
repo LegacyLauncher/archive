@@ -6,7 +6,6 @@ import net.minecraft.launcher.updater.AssetIndex;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.component.ComponentDependence;
 import ru.turikhay.tlauncher.component.LauncherComponent;
 import ru.turikhay.tlauncher.downloader.Downloadable;

@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.bootstrap.meta;
 
-import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.HashMap;

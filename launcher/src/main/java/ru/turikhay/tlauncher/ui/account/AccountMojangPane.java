@@ -1,15 +1,10 @@
 package ru.turikhay.tlauncher.ui.account;
 
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.AccountManager;
-import ru.turikhay.tlauncher.minecraft.auth.*;
-import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.block.Blocker;
-import ru.turikhay.tlauncher.ui.listener.AuthUIListener;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
-import ru.turikhay.tlauncher.user.*;
-
-import java.io.IOException;
+import ru.turikhay.tlauncher.user.MojangAuth;
+import ru.turikhay.tlauncher.user.MojangUser;
 
 public class AccountMojangPane extends StandardAccountPane<MojangAuth, MojangUser> {
     public AccountMojangPane(AccountManagerScene scene, PaneMode mode) {

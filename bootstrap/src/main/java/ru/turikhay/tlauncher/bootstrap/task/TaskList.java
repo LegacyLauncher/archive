@@ -3,7 +3,9 @@ package ru.turikhay.tlauncher.bootstrap.task;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.util.*;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 public final class TaskList extends Task<Void> {

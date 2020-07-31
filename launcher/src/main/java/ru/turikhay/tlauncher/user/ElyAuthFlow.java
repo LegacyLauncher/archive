@@ -2,7 +2,9 @@ package ru.turikhay.tlauncher.user;
 
 import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.*;
+import ru.turikhay.util.DataBuilder;
+import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.net.URL;

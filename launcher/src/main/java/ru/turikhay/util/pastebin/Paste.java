@@ -18,7 +18,7 @@ import java.util.HashMap;
 
 public class Paste {
     private static final String DEV_KEY = "19a886bbdf6e11670d7f0a4e2dace1a5";
-    private static final URL POST_URL = Http.constantURL("http://pastebin.com/api/api_post.php");
+    private static final URL POST_URL = Http.constantURL("https://pastebin.com/api/api_post.php");
     private String title;
     private CharSequence content;
     private String format;
