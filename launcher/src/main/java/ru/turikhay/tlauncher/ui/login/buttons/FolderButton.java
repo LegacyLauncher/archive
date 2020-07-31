@@ -2,15 +2,12 @@ package ru.turikhay.tlauncher.ui.login.buttons;
 
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
-import net.minecraft.launcher.versions.Version;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.ui.block.Unblockable;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.ui.swing.ImageButton;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 

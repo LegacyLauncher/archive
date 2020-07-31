@@ -11,12 +11,10 @@ import ru.turikhay.tlauncher.ui.swing.editor.HyperlinkProcessor;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.HtmlSubstitutor;
-import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.U;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

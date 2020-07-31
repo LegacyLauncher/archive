@@ -1,13 +1,5 @@
 package ru.turikhay.tlauncher.bootstrap;
 
-import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
-import ru.turikhay.tlauncher.bootstrap.exception.*;
-import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
-import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
-import ru.turikhay.tlauncher.bootstrap.ui.HeadlessInterface;
-import ru.turikhay.tlauncher.bootstrap.ui.IInterface;
-import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
-import ru.turikhay.tlauncher.bootstrap.util.*;
 import com.getsentry.raven.DefaultRavenFactory;
 import com.getsentry.raven.Raven;
 import com.getsentry.raven.dsn.Dsn;
@@ -16,21 +8,25 @@ import com.getsentry.raven.event.BreadcrumbBuilder;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
-import ru.turikhay.tlauncher.bootstrap.launcher.*;
-import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
-import com.github.zafarkhaja.semver.Version;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
+import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
+import ru.turikhay.tlauncher.bootstrap.exception.*;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
+import ru.turikhay.tlauncher.bootstrap.launcher.*;
 import ru.turikhay.tlauncher.bootstrap.meta.*;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
+import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
 import ru.turikhay.tlauncher.bootstrap.task.TaskList;
-import ru.turikhay.tlauncher.bootstrap.util.U;
+import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
+import ru.turikhay.tlauncher.bootstrap.ui.HeadlessInterface;
+import ru.turikhay.tlauncher.bootstrap.ui.IInterface;
+import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
+import ru.turikhay.tlauncher.bootstrap.util.*;
 import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
-import ru.turikhay.tlauncher.bootstrap.util.FileValueConverter;
 import ru.turikhay.util.windows.wmi.WMI;
 
 import javax.imageio.ImageIO;
@@ -76,6 +72,8 @@ public final class Bootstrap {
                 parser.accepts("ignoreSelfUpdate", "defines if bootstrap should ignore self update processes");
         OptionSpecBuilder forceHeadlessMode =
                 parser.accepts("headlessMode", "defines if bootstrap should run without UI");
+        OptionSpecBuilder packageMode =
+                parser.accepts("packageMode", "defines if bootstrap runs inside a package");
         ArgumentAcceptingOptionSpec<File> targetUpdateFile =
                 parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
 
@@ -101,14 +99,22 @@ public final class Bootstrap {
         bootstrap.setIgnoreSelfUpdate(parsed.has(ignoreSelfUpdateParser));
         log("Ignore self update:", bootstrap.getIgnoreSelfUpdate());
 
+        bootstrap.setPackageMode(parsed.has(packageMode));
+        log("Package mode:", bootstrap.getPackageMode());
+
+        if (bootstrap.getPackageMode()) {
+            bootstrap.setIgnoreSelfUpdate(true);
+            bootstrap.setIgnoreUpdate(true);
+        }
+
         try {
-            checkAccessible(bootstrap.getTargetJar(), false);
+            checkAccessible(bootstrap.getTargetJar(), false, !bootstrap.getPackageMode());
         } catch (IOException e) {
             throw new RuntimeException("error checking target jar: " + bootstrap.getTargetJar().getAbsolutePath(), e);
         }
 
         try {
-            checkAccessible(bootstrap.getTargetLibFolder(), false);
+            checkAccessible(bootstrap.getTargetLibFolder(), false, !bootstrap.getPackageMode());
         } catch (IOException e) {
             throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
         }
@@ -249,7 +255,7 @@ public final class Bootstrap {
 
     private IInterface ui;
     private File targetJar, targetLibFolder, targetUpdateFile, updateMetaFile;
-    private boolean ignoreUpdate, ignoreSelfUpdate;
+    private boolean ignoreUpdate, ignoreSelfUpdate, packageMode;
 
     Bootstrap(File targetJar, File targetLibFolder) {
         final String resourceName = "meta.json";
@@ -338,6 +344,12 @@ public final class Bootstrap {
 
     public void setIgnoreSelfUpdate(boolean ignoreSelfUpdate) {
         this.ignoreSelfUpdate = ignoreSelfUpdate;
+    }
+
+    public boolean getPackageMode() { return packageMode; }
+
+    public void setPackageMode(boolean packageMode) {
+        this.packageMode = packageMode;
     }
 
     public File getTargetUpdateFile() {
@@ -765,7 +777,7 @@ public final class Bootstrap {
             }
 
             try {
-                checkAccessible(jar, false);
+                checkAccessible(jar, false, false);
             } catch (IOException jarException) {
                 file = jar;
 
@@ -792,7 +804,7 @@ public final class Bootstrap {
             File tempFile;
             try {
                 tempFile = File.createTempFile("bootstrap", null);
-                checkAccessible(tempFile, true);
+                checkAccessible(tempFile, true, true);
             } catch (IOException tempFileException) {
                 if (tempFileException instanceof UnknownFreeSpaceException) {
                     message =
@@ -825,13 +837,13 @@ public final class Bootstrap {
         }
     }
 
-    private static void checkAccessible(File file, boolean requireExistance) throws IOException {
+    private static void checkAccessible(File file, boolean requireExistance, boolean requireWritePermission) throws IOException {
         if(!file.exists()) {
             if(requireExistance) {
                 throw new FileNotFoundException(file.getAbsolutePath());
             }
         } else {
-            NoFileAccessException.throwIfNoAccess(file);
+            NoFileAccessException.throwIfNoAccess(file, requireWritePermission);
         }
 
         long freeSpace = file.getFreeSpace();

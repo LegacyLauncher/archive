@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.meta;
 
-import ru.turikhay.tlauncher.bootstrap.launcher.Library;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import ru.turikhay.tlauncher.bootstrap.launcher.Library;
 
 import java.util.List;
 

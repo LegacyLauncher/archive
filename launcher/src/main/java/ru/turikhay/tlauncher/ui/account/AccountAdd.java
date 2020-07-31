@@ -1,18 +1,13 @@
 package ru.turikhay.tlauncher.ui.account;
 
-import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
-import ru.turikhay.tlauncher.ui.center.CenterPanel;
-import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
-import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;

@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui.theme;
 
 import ru.turikhay.exceptions.ParseException;
-import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.U;
 

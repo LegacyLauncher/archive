@@ -7,7 +7,6 @@ import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 

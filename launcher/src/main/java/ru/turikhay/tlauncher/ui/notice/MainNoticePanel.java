@@ -1,11 +1,11 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.U;
 
 import java.awt.*;
@@ -13,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.List;
 
 public class MainNoticePanel extends NoticePanel implements ResizeableComponent {
     private static int SAFE_ZONE = 10;

@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.images;
 
 import ru.turikhay.tlauncher.ui.notice.NoticeImage;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
-import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.*;

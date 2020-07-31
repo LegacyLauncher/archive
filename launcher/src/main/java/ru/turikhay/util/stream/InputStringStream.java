@@ -1,8 +1,5 @@
 package ru.turikhay.util.stream;
 
-import ru.turikhay.util.U;
-
-import java.io.IOException;
 import java.io.InputStream;
 
 public class InputStringStream extends InputStream {

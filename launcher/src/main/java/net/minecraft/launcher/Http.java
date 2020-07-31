@@ -4,12 +4,13 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Map;

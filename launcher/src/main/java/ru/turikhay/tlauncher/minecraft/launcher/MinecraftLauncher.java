@@ -29,9 +29,9 @@ import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.sentry.SentryContext;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.logger.Logger;
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.user.PlainUser;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
@@ -1406,7 +1406,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
                 args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
                 args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
-                args.add("-XX:ConcGCThreads=" + ((OS.Arch.AVAILABLE_PROCESSORS / 4 > 0) ? OS.Arch.AVAILABLE_PROCESSORS / 4 : 1));
+                args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 4));
                 args.add("-XX:ParallelGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
             } else {
                 args.add("-XX:+UseConcMarkSweepGC");

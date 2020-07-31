@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.editor;
 
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;

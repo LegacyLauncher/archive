@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.BlockableButton;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -9,17 +10,20 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
-import ru.turikhay.tlauncher.ui.swing.*;
+import ru.turikhay.tlauncher.ui.swing.Del;
+import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 

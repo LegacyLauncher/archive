@@ -1,13 +1,10 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import ru.turikhay.tlauncher.ui.images.ExtendedIcon;
-import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.EmptyFuture;
 
 import java.awt.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 public class DirectNoticeImage extends NoticeImage {

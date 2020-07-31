@@ -2,18 +2,14 @@ package net.minecraft.launcher.updater;
 
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.util.*;
+import ru.turikhay.util.OS;
+import ru.turikhay.util.Time;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.Iterator;
 
 public class OfficialVersionList extends RemoteVersionList {

@@ -5,7 +5,6 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.WeakObjectPool;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.Callable;
 

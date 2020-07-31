@@ -1,15 +1,11 @@
 package ru.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
-import ru.turikhay.tlauncher.managers.McleaksStatus;
 import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 
 class McleaksStatusThread extends ExtendedThread {

@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.launcher;
 
-import ru.turikhay.tlauncher.bootstrap.meta.LauncherMeta;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
+import ru.turikhay.tlauncher.bootstrap.meta.LauncherMeta;
 import ru.turikhay.tlauncher.bootstrap.meta.LocalLauncherMeta;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 import ru.turikhay.tlauncher.bootstrap.util.U;

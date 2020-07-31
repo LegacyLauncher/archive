@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.user;
 
-import ru.turikhay.tlauncher.minecraft.auth.AuthExecutor;
 import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.U;

@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.util.SwingUtil;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;

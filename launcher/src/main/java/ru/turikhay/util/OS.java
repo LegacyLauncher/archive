@@ -190,47 +190,8 @@ public enum OS {
         return openLink(url, true);
     }
 
-    private static void openPath(File path, boolean appendSeparator) throws Throwable {
-        String absPath = path.getAbsolutePath() + File.separatorChar;
-        Runtime r = Runtime.getRuntime();
-        Throwable t = null;
-
-        switch (CURRENT) {
-            case WINDOWS:
-                String cmd = String.format("cmd.exe /C start \"Open path\" \"%s\"", absPath);
-
-                try {
-                    r.exec(cmd);
-                    return;
-                } catch (Throwable var9) {
-                    t = var9;
-                    log("Cannot open folder using CMD.exe:\n", cmd, var9);
-                    break;
-                }
-            case OSX:
-                String[] e = new String[]{"/usr/bin/open", absPath};
-
-                try {
-                    r.exec(e);
-                    return;
-                } catch (Throwable var10) {
-                    t = var10;
-                    log("Cannot open folder using:\n", e, var10);
-                    break;
-                }
-            default:
-                log("... will use desktop");
-        }
-
-        try {
-            rawOpenLink(path.toURI());
-        } catch (Throwable var8) {
-            t = var8;
-        }
-
-        if (t != null) {
-            throw t;
-        }
+    private static void openPath(File path) throws Throwable {
+        Desktop.getDesktop().open(path);
     }
 
     public static boolean openFolder(File folder, boolean alertError) {
@@ -240,7 +201,7 @@ public enum OS {
             return false;
         } else {
             try {
-                openPath(folder, true);
+                openPath(folder);
                 return true;
             } catch (Throwable var3) {
                 log("Failed to open folder:", var3);
@@ -264,7 +225,7 @@ public enum OS {
             return false;
         } else {
             try {
-                openPath(file, false);
+                openPath(file);
                 return true;
             } catch (Throwable var3) {
                 log("Failed to open file:", var3);
@@ -306,7 +267,7 @@ public enum OS {
             CURRENT = getCurrent();
             TOTAL_RAM = getTotalRam();
             TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
-            TOTAL_RAM_GB = Math.round((float)TOTAL_RAM_MB / 1024.0F);
+            TOTAL_RAM_GB = Math.round((float)TOTAL_RAM_MB / 1024.0F + 0.25F); // better round
             PREFERRED_MEMORY = getPreferredMemory();
             MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
@@ -367,20 +328,12 @@ public enum OS {
         }
 
         private static int getPreferredMemory() {
-            switch (CURRENT) {
-                case x64:
-                    return 1024;
-                case x86:
-                    if (TOTAL_RAM_GB == 2) {
-                        return 768;
-                    }
-
-                    if (TOTAL_RAM_GB > 2) {
-                        return 1024;
-                    }
-                default:
-                    return MIN_MEMORY;
-            }
+            // A lot of users have old pcs with 2-4gb ram and x64 os, so...
+            if (TOTAL_RAM_GB == 2) return 768; // 2gb, any arch, 768mb
+            if (TOTAL_RAM_GB < 2) return MIN_MEMORY; // less then 2gb, any arch, 512mb
+            if (CURRENT == x86) return 1024; // more that 2gb ram, x86, limited to 1024mb, so will use 1024mb
+            if (TOTAL_RAM_GB > 4) return 2048; // more that 4gb ram, x64, use 2048mb
+            return 1024; // 2 to 4 gb ram, use 1024mb
         }
 
         private static int getMaximumMemory() {

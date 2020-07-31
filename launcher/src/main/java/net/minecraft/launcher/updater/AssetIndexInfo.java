@@ -2,7 +2,6 @@ package net.minecraft.launcher.updater;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import ru.turikhay.util.U;
 
 public class AssetIndexInfo extends DownloadInfo {
     protected long totalSize;

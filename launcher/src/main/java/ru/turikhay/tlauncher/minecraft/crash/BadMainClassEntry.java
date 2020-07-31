@@ -1,7 +1,5 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
-import ru.turikhay.util.U;
-
 import java.util.regex.Pattern;
 
 public class BadMainClassEntry extends PatternEntry {

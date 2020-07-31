@@ -21,11 +21,12 @@ public class NoFileAccessException extends IOException {
         return scope;
     }
 
-    public static void throwIfNoAccess(File file) throws NoFileAccessException {
+    public static void throwIfNoAccess(File file, boolean requireWritePermission) throws NoFileAccessException {
         if(file == null) {
             throw new NullPointerException();
         }
         if (!AccessScope.READ.check(file)) throw new NoFileAccessException(file, AccessScope.READ);
+        if (requireWritePermission && !AccessScope.WRITE.check(file)) throw new NoFileAccessException(file, AccessScope.WRITE);
     }
 
     public enum AccessScope {

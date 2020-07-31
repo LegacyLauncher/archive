@@ -5,8 +5,6 @@ import org.testng.annotations.Test;
 import javax.swing.*;
 import java.awt.*;
 
-import static org.testng.Assert.*;
-
 /**
  * Created by turikhay on 10.07.2017.
  */
