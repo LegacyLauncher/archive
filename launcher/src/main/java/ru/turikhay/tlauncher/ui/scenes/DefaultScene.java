@@ -282,7 +282,7 @@ public class DefaultScene extends PseudoScene {
 
     public void setSidePanel(DefaultScene.SidePanel side) {
         java.util.List<Notice> noticeList = getMainPane().getRootFrame().getNotices().getForCurrentLocale();
-        if(side == null && isNoticeSidePanelEnabled() && noticeList != null && noticeList.size() > 1) {
+        if(side == null && isNoticeSidePanelEnabled() && noticeList != null && noticeList.size() > 3) {
             side = SidePanel.NOTICES;
         }
         if (sidePanel != side) {

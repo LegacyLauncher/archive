@@ -11,7 +11,6 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.crash.CrashProcessingFrame;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
-import ru.turikhay.tlauncher.ui.support.MailSupportFrame;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.util.U;
@@ -91,7 +90,7 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
     @Override
     public void onCrashManagerFailed(CrashManager manager, Exception e) {
         U.log(e);
-        Alert.showLocError("crash.error", MailSupportFrame.SUPPORT_MAIL);
+        Alert.showLocError("crash.error", TLauncher.getSupportEmail());
     }
 
     @Override

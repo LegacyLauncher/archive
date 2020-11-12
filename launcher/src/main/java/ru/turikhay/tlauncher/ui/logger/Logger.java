@@ -12,8 +12,8 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedTextArea;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
-import ru.turikhay.util.pastebin.Paste;
-import ru.turikhay.util.pastebin.PasteResult;
+import ru.turikhay.tlauncher.pasta.Pasta;
+import ru.turikhay.tlauncher.pasta.PastaResult;
 import ru.turikhay.util.stream.BufferedOutputStringStream;
 import ru.turikhay.util.stream.LinkedOutputStringStream;
 import ru.turikhay.util.stream.PrintLogger;
@@ -266,35 +266,6 @@ public class Logger implements StreamLogger {
         check();
         save();
         frame.hideIn(millis);
-    }
-
-    public void sendPaste() {
-        if (!Alert.showLocQuestion("logger.pastebin.alert")) {
-            return;
-        }
-        AsyncThread.execute(new Runnable() {
-            public void run() {
-                Paste paste = new Paste();
-                paste.addListener(frame);
-                paste.setTitle(frame.getTitle());
-                paste.setContent(frame.logger.getOutput());
-                PasteResult result = paste.paste();
-                if (result instanceof PasteResult.PasteUploaded) {
-                    PasteResult.PasteUploaded error = (PasteResult.PasteUploaded) result;
-                    if (Alert.showLocQuestion("logger.pastebin.sent", error.getURL())) {
-                        OS.openLink(error.getURL());
-                    }
-                } else if (result instanceof PasteResult.PasteFailed) {
-                    Throwable error1 = ((PasteResult.PasteFailed) result).getError();
-                    if (error1 instanceof RuntimeException) {
-                        Alert.showLocError("logger.pastebin.invalid", error1);
-                    } else if (error1 instanceof IOException) {
-                        Alert.showLocError("logger.pastebin.failed", error1);
-                    }
-                }
-
-            }
-        });
     }
 
     public void saveAs() {

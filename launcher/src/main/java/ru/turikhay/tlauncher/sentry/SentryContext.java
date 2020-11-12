@@ -73,7 +73,7 @@ public final class SentryContext {
 
         b.withTag("java", OS.JAVA_VERSION.getVersion());
         b.withTag("arch", OS.Arch.CURRENT.name());
-        b.withTag("brand", TLauncher.getBrand());
+        b.withTag("brand", TLauncher.getShortBrand());
 
         if(tags != null) {
             for(Map.Entry<String, String> entry : tags.build().entrySet()) {

@@ -10,8 +10,8 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedTextArea;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
-import ru.turikhay.util.pastebin.Paste;
-import ru.turikhay.util.pastebin.PasteListener;
+import ru.turikhay.tlauncher.pasta.Pasta;
+import ru.turikhay.tlauncher.pasta.PastaListener;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
@@ -20,7 +20,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 
-public class LoggerFrame extends JFrame implements PasteListener, LocalizableComponent {
+public class LoggerFrame extends JFrame implements LocalizableComponent {
     public static final int MIN_WIDTH = 670;
     public static final int MIN_HEIGHT = 500;
     public final Logger logger;
@@ -116,16 +116,6 @@ public class LoggerFrame extends JFrame implements PasteListener, LocalizableCom
         Localizable.updateContainer(this);
     }
 
-    public void pasteUploading(Paste paste) {
-        bottom.pastebin.setEnabled(false);
-        popup.pastebinAction.setEnabled(false);
-    }
-
-    public void pasteDone(Paste paste) {
-        bottom.pastebin.setEnabled(true);
-        popup.pastebinAction.setEnabled(true);
-    }
-
     void hideIn(final long millis) {
         hiding = true;
         bottom.closeCancelButton.setVisible(true);
@@ -156,11 +146,6 @@ public class LoggerFrame extends JFrame implements PasteListener, LocalizableCom
                 logger.saveAs();
             }
         };
-        private final Action pastebinAction = new EmptyAction() {
-            public void actionPerformed(ActionEvent e) {
-                logger.sendPaste();
-            }
-        };
         private final Action clearAllAction = new EmptyAction() {
             public void actionPerformed(ActionEvent e) {
                 onClearCalled();
@@ -174,7 +159,6 @@ public class LoggerFrame extends JFrame implements PasteListener, LocalizableCom
             } else {
                 menu.addSeparator();
                 menu.add(saveAllAction).setText(Localizable.get("logger.save.popup"));
-                menu.add(pastebinAction).setText(Localizable.get("logger.pastebin"));
                 menu.addSeparator();
                 menu.add(clearAllAction).setText(Localizable.get("logger.clear.popup"));
                 return menu;

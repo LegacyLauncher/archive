@@ -24,19 +24,13 @@ public class UpdateMeta {
         {
             add("http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
             Collections.addAll(this, U.shuffle(
-                    "http://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
-                    "http://u.tlauncher.ru/%s/bootstrap.json.mgz"
-            ));
-            Collections.addAll(this, U.shuffle(
-                    "https://tlauncherrepo.com/%s/bootstrap.json",
-                    "https://u.tlauncher.ru/%s/bootstrap.json",
-                    "https://turikhay.ru/tlauncher/%s/bootstrap.json"
+                    "https://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
+                    "https://u.tlauncher.ru/%s/bootstrap.json.mgz.signed",
+                    "https://tlaun.ch/%s/bootstrap.json.mgz.signed"
             ));
         }
     };
     static {
-        UPDATE_URL_LIST.add("https://tlaun.ch/%s/bootstrap.json");
-        UPDATE_URL_LIST.add("http://tlaun.ch/%s/bootstrap.json.mgz.signed");
         Compressor.init(); // init compressor
     }
 

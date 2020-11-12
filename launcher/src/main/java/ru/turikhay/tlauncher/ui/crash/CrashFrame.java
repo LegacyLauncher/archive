@@ -8,7 +8,6 @@ import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.support.PreSupportFrame;
-import ru.turikhay.tlauncher.ui.support.SupportFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
@@ -22,9 +21,10 @@ public final class CrashFrame extends VActionFrame {
     private final ImageIcon crashIcon = Images.getIcon("bug.png");
 
     private final PreSupportFrame supportFrame = new PreSupportFrame() {
-        protected void onSupportFrameSelected(SupportFrame frame) {
+        @Override
+        protected void onContinued() {
+            super.onContinued();
             CrashFrame.this.setVisible(false);
-            super.onSupportFrameSelected(frame);
         }
     };
 

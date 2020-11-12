@@ -64,30 +64,7 @@ public class PreSupportFrame extends VActionFrame {
         }
     };
 
-    private final SupportFrame[] supportFrames = new SupportFrame[]{
-            new VkSupportFrame(),
-            new FbSupportFrame(),
-            new DiscordFrame(),
-            new MailSupportFrame()
-    };
-
-    private final LocalizableButton[] supportFramesButtons = new LocalizableButton[supportFrames.length];
-
-    {
-        for (int i = 0; i < supportFrames.length; i++) {
-            final SupportFrame frame = supportFrames[i];
-
-            LocalizableButton button = (supportFramesButtons[i] = new LocalizableButton("support.pre.buttons." + frame.name));
-            button.setIcon(Images.getIcon(frame.getImage(), SwingUtil.magnify(24)));
-            button.setPreferredSize(new Dimension(1, SwingUtil.magnify(50)));
-            button.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    onSupportFrameSelected(frame);
-                }
-            });
-        }
-    }
+    private final LocalizableButton continueButton;
 
     public PreSupportFrame() {
         dxdiagFlusher = new ProcessFrame<Void>() {
@@ -106,7 +83,6 @@ public class PreSupportFrame extends VActionFrame {
                 super.onCancelled();
                 DxDiag.cancel();
                 PreSupportFrame.this.setVisible(true);
-                supportFrame = null;
             }
         };
 
@@ -144,49 +120,28 @@ public class PreSupportFrame extends VActionFrame {
         c.weighty = 1.0;
         c.fill = GridBagConstraints.BOTH;
 
-
-        for (int i = 0; i < supportFrames.length; i++) {
-            if (!supportFrames[i].isApplicable()) {
-                continue;
+        continueButton = new LocalizableButton("support.pre.continue");
+        continueButton.setPreferredSize(new Dimension(1, SwingUtil.magnify(50)));
+        continueButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onContinued();
             }
-            if(i == supportFrames.length-1) {
-                c.gridwidth = GridBagConstraints.REMAINDER;
-            }
-            getFooter().add(supportFramesButtons[i], c);
-            if(++c.gridx % 2 == 0) {
-                c.gridx = 0;
-                c.gridy++;
-            }
-        }
+        });
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        getFooter().add(continueButton, c);
 
         pack();
 
         whatIsDiagnosticLabel.setToolTipText(Localizable.get("support.pre.diag.whatisit"));
     }
 
-    private SupportFrame supportFrame;
-    protected void onSupportFrameSelected(final SupportFrame frame) {
-        if (sendDiagnosticCheckbox.isSelected()) {
-            supportFrame = frame;
-            dxdiagFlusher.submit(dxdiagFlusher.new Process() {
-                @Override
-                protected Void get() throws Exception {
-                    PreSupportFrame.this.setVisible(false);
-                    if (DxDiag.isScannable()) {
-                        try {
-                            DxDiag.get();
-                        } catch (Exception e) {
-                            U.log("Could not retrieve DxDiag", e);
-                        }
-                    }
-                    if(supportFrame != null) {
-                        sendInfoFrame.setFrame(frame);
-                    }
-                    return null;
-                }
-            });
+    protected void onContinued() {
+        if(sendDiagnosticCheckbox.isSelected()) {
+            sendInfoFrame.submit();
         } else {
-            frame.openUrl();
+            new ContactUsFrame().showAtCenter();
         }
+        setVisible(false);
     }
 }

@@ -172,6 +172,8 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             panel.add(comp);
         }
 
+        setSize(SwingUtil.magnify(600), Math.min(page.height + SwingUtil.magnify(75), workHeight));
+
         validate();
         repaint();
 

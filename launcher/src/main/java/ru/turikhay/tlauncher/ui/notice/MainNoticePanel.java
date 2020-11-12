@@ -82,8 +82,6 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
                 noticeSeen();
             }
         });
-
-        U.log("+++++++++++++++++++++++++++++++++++ NOTICE PANEL LOADED");
     }
 
     private void noticeSeen() {
