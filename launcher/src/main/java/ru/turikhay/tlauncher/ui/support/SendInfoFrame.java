@@ -3,15 +3,14 @@ package ru.turikhay.tlauncher.ui.support;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CharSequenceInputStream;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.frames.ProcessFrame;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
-import ru.turikhay.util.pastebin.Paste;
-import ru.turikhay.util.pastebin.PasteResult;
+import ru.turikhay.util.*;
+import ru.turikhay.tlauncher.pasta.PastaResult;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,18 +18,16 @@ import java.io.IOException;
 public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> {
 
     public final class SendInfoResponse {
-        private final String pastebinLink;
+        private final String link;
 
-        SendInfoResponse(String pastebinLink) {
-            this.pastebinLink = StringUtil.requireNotBlank(pastebinLink);
+        SendInfoResponse(String link) {
+            this.link = StringUtil.requireNotBlank(link);
         }
 
-        public final String getPastebinLink() {
-            return pastebinLink;
+        public final String getLink() {
+            return link;
         }
     }
-
-    private SupportFrame helpFrame;
 
     public SendInfoFrame() {
         setTitlePath("support.sending.title");
@@ -39,26 +36,19 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
         pack();
     }
 
-    public final SupportFrame getSupportFrame() {
-        return helpFrame;
-    }
-
-    public final void setFrame(SupportFrame frame) {
-        helpFrame = U.requireNotNull(frame);
-
+    public final void submit() {
         submit(new Process() {
             @Override
             protected SendInfoResponse get() throws Exception {
-                Paste paste = new Paste();
-                paste.setTitle("Diagnostic Log");
-                paste.setContent(TLauncher.getInstance().getLogger().getOutput());
+                Pasta pasta = new Pasta();
+                pasta.setContent(TLauncher.getInstance().getLogger().getOutput());
 
-                PasteResult result = paste.paste();
+                PastaResult result = pasta.paste();
 
-                if (result instanceof PasteResult.PasteUploaded) {
-                    return new SendInfoResponse(((PasteResult.PasteUploaded) result).getURL().toString());
-                } else if (result instanceof PasteResult.PasteFailed) {
-                    throw new IOException(((PasteResult.PasteFailed) result).getError());
+                if (result instanceof PastaResult.PastaUploaded) {
+                    return new SendInfoResponse(((PastaResult.PastaUploaded) result).getURL().toString());
+                } else if (result instanceof PastaResult.PastaFailed) {
+                    throw new IOException(((PastaResult.PastaFailed) result).getError());
                 }
                 throw new InternalError("unknown result type");
             }
@@ -68,7 +58,14 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
     @Override
     protected void onSucceeded(Process process, SendInfoResponse result) {
         super.onSucceeded(process, result);
-        helpFrame.setResponse(result);
+
+        final String link = result.getLink();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new OpenLinkFrame(link).showAtCenter();
+            }
+        });
     }
 
     @Override

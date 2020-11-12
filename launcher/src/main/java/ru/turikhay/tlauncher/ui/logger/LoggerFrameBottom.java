@@ -19,7 +19,7 @@ import java.io.File;
 public class LoggerFrameBottom extends BorderPanel implements LocalizableComponent {
     private final LoggerFrame frame;
     public final LocalizableButton closeCancelButton;
-    public final ExtendedButton folder, save, pastebin, kill;
+    public final ExtendedButton folder, save, kill;
 
     File openFolder;
 
@@ -50,11 +50,6 @@ public class LoggerFrameBottom extends BorderPanel implements LocalizableCompone
                 frame.logger.saveAs();
             }
         });
-        pastebin = newButton("mail-attachment.png", new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                frame.logger.sendPaste();
-            }
-        });
         kill = newButton("stop-circle-o.png", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 frame.logger.launcher.killProcess();
@@ -64,7 +59,7 @@ public class LoggerFrameBottom extends BorderPanel implements LocalizableCompone
         kill.setEnabled(false);
         updateLocale();
         ExtendedPanel buttonPanel = new ExtendedPanel();
-        buttonPanel.add(folder, save, pastebin, kill);
+        buttonPanel.add(folder, save, kill);
         setEast(buttonPanel);
     }
 
@@ -78,7 +73,6 @@ public class LoggerFrameBottom extends BorderPanel implements LocalizableCompone
 
     public void updateLocale() {
         save.setToolTipText(Localizable.get("logger.save"));
-        pastebin.setToolTipText(Localizable.get("logger.pastebin"));
         kill.setToolTipText(Localizable.get("logger.kill"));
     }
 }

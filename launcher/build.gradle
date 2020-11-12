@@ -1,8 +1,10 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 import groovy.json.JsonBuilder
 
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 plugins {
@@ -10,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.116.1'
+version '1.117.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -20,14 +22,6 @@ java {
 configurations {
     tlRuntime
     implementation.extendsFrom(tlRuntime)
-}
-
-sourceSets {
-    mcl {
-        java {
-            srcDir '../launcher-mcl/src'
-        }
-    }
 }
 
 def authlibVersion = "1.5.24"
@@ -111,7 +105,7 @@ static def generateChecksum(File file) {
 }
 
 ext {
-    git_branch = grgit?.branch?.current()?.name
+    git_branch = grgit.branch.current()?.name?.replace("/", "-")
     short_brand = System.getenv("SHORT_BRAND")
     bootstrap_version = project.version
     full_brand = System.getenv("BRAND") ?: "Legacy"
@@ -125,13 +119,10 @@ switch (git_branch) {
     case "master":
         if (!short_brand) short_brand = "legacy"
         break
-    case "develop":
+    default:
         if (!short_brand) short_brand = "legacy_beta"
         bootstrap_version += "+$git_branch"
         break
-    default:
-        if (!short_brand) short_brand = git_branch.replace("/", "-")
-        bootstrap_version += "+${git_branch.replace("/", "-")}"
 }
 
 task generateMeta {
@@ -152,7 +143,7 @@ task generateMeta {
             version(bootstrap_version)
             shortBrand(short_brand)
             brand(full_brand)
-            buildDate(OffsetDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME))
+            buildDate(OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
             libraries(libs)
             mainClass(main_class)
         }
@@ -168,9 +159,10 @@ task generateUpdateJson {
         def meta = new JsonBuilder()
         def jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
         def downloadUrlList = [
-                "http://tlauncherrepo.com/",
-                "http://u.tlauncher.ru/",
-                "http://turikhay.ru/tlauncher/",
+                "https://tlauncherrepo.com/",
+                "https://u.tlauncher.ru/",
+                "https://tlaun.ch/",
+                "http://cdn.turikhay.ru/tlauncher/"
         ].collect {
             urlPrefix -> urlPrefix + short_brand + "/launcher/" + jarFileChecksum + ".jar"
         }
@@ -193,8 +185,18 @@ task copyJarAndRenameToSha256(type: Copy) {
     rename { generateChecksum(jar.outputs.files.singleFile) + ".jar" }
 }
 
+task generateSources(type: Copy) {
+    from "src/main/java"
+    into "$buildDir/generated"
+    filter(ReplaceTokens, tokens: [
+            'tl_short_brand': short_brand,
+            'tl_brand': full_brand
+    ])
+}
+
 compileJava {
-    dependsOn(generateMeta)
+    source = generateSources.destinationDir
+    dependsOn(generateSources, generateMeta)
 }
 
 assemble {

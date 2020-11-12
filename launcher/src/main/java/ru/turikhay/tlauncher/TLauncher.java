@@ -519,6 +519,10 @@ public final class TLauncher {
         return Static.getBrand();
     }
 
+    public static String getShortBrand() {
+        return Static.getShortBrand();
+    }
+
     public static String getDeveloper() {
         return "turikhay";
     }
@@ -549,6 +553,10 @@ public final class TLauncher {
 
     public static String[] getServerList() {
         return Static.getServerList();
+    }
+
+    public static String getSupportEmail() {
+        return "support@tlauncher.ru";
     }
 
     public static void launch(BootBridge bridge) throws InterruptedException {

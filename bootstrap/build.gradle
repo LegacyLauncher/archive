@@ -3,6 +3,7 @@ import org.gradle.internal.jvm.Jvm
 import proguard.gradle.ProGuardTask
 
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 buildscript {
@@ -88,6 +89,9 @@ task runDebug(type: JavaExec) {
     description = "Run BootstrapDebug"
     classpath(sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
     main = "ru.turikhay.tlauncher.bootstrap.BootstrapDebug"
+    if (System.getenv("RUN_EXTERNAL") == "true") {
+        jvmArgs("-Dtlauncher.bootstrap.debug.external=true")
+    }
     args("--debug")
 
     dependsOn(":launcher:buildLauncherRepo")
@@ -96,7 +100,7 @@ task runDebug(type: JavaExec) {
 
 task generateMeta {
     doLast {
-        def git_branch = (grgit) ? grgit.branch.current().name.replace("/", "-") : null
+        def git_branch = (grgit) ? grgit.branch.current()?.name?.replace("/", "-") : null
         def short_brand = System.getenv("SHORT_BRAND")
         def full_brand = System.getenv("BRAND")
         def bootstrap_version = project.version
@@ -110,13 +114,10 @@ task generateMeta {
             case "master":
                 if (!short_brand) short_brand = "legacy"
                 break
-            case "develop":
+            default:
                 if (!short_brand) short_brand = "legacy_beta"
                 bootstrap_version += "+$git_branch"
                 break
-            default:
-                if (!short_brand) short_brand = "legacy_beta_$git_branch"
-                bootstrap_version += "+$git_branch"
         }
 
         def meta = new JsonBuilder()
@@ -125,7 +126,7 @@ task generateMeta {
             version(bootstrap_version)
             shortBrand(short_brand)
             brand(full_brand)
-            buildDate(OffsetDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME))
+            buildDate(OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
         }
 
         file("$projectDir/src/main/resources/ru/turikhay/tlauncher/bootstrap/meta.json").write(meta.toString())

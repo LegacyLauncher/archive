@@ -99,10 +99,6 @@ public class VersionManagerUIListener implements VersionManagerListener {
         int i = 0;
 
         for (SimpleVersion version : newList.versions) {
-            if(!version.hasRemote) {
-                log(version, "is local, ignored");
-            }
-
             if (oldList.versions.contains(version)) {
                 continue;
             }
