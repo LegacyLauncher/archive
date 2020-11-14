@@ -184,7 +184,16 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         });
         minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{javaArgs, mcArgs, improvedArgs}));
         final SettingsMemorySlider memorySlider = new SettingsMemorySlider(this);
-        cmd = new EditorFieldHandler("minecraft.cmd", new EditorTextField("settings.java.cmd", true) {
+
+        FileExplorer fileExplorer;
+        try {
+            fileExplorer = FileExplorer.newExplorer();
+            fileExplorer.setFileSelectionMode(FileExplorer.FILES_ONLY);
+            fileExplorer.setFileHidingEnabled(false);
+        } catch (Exception e) {
+            fileExplorer = null;
+        }
+        cmd = new EditorFieldHandler("minecraft.cmd", new EditorFileField("settings.java.cmd", "settings.java.cmd.browse", fileExplorer, true, true) {
             {
                 textField.getDocument().addDocumentListener(new DocumentChangeListener() {
                     @Override
@@ -334,8 +343,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                         tlauncher.getFrame().updateLocales();
                     }
                     ContributorsAlert.showAlert();
+                    hideUponSave = false;
                 }
-                hideUponSave = false;
             }
         });
         tlauncherTab.add(new EditorPair("settings.lang.label", new EditorHandler[]{locale}));

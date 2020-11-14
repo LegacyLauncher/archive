@@ -26,8 +26,6 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
 import ru.turikhay.tlauncher.ui.frames.NewFolderFrame;
 import ru.turikhay.tlauncher.ui.frames.UpdateFrame;
-import ru.turikhay.tlauncher.ui.frames.yandex.YandexFrame;
-import ru.turikhay.tlauncher.ui.frames.yandex.YandexInstaller;
 import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.Logger;
@@ -385,31 +383,6 @@ public final class TLauncher {
         if (message != null) {
             new UpdateFrame(getVersion().getNormalVersion(), message.getBody()).showAndWait();
         }
-        if(isRussian) {
-            YandexConfig yandexConfig = bootConfig.getYandexConfig();
-            if (yandexConfig != null) {
-                if(System.getProperty("yandex.distrib", "0").equals("1") // force show yandex
-                        ||
-                        (yandexConfig.isEnabled() // or if yandex enabled, then
-                                &&
-                                (config.isFirstRun() || message != null) // show if it is first run or updated
-                        )
-                ) {
-                    showYandex(yandexConfig);
-                }
-            }
-        }
-    }
-
-    private void showYandex(YandexConfig yandexConfig) {
-        Repository repo = null;
-        String url = yandexConfig.getUrl();
-        if(url.startsWith("/")) {
-            repo = Repository.EXTRA_VERSION_REPO;
-            url = url.substring(1);
-        }
-        new YandexInstaller(repo, url, yandexConfig.getChecksum());
-        new YandexFrame().showAndWait();
     }
 
     private void handleFirstRun() {
@@ -568,7 +541,7 @@ public final class TLauncher {
         setupPrintStream();
 
         U.log("Starting TLauncher", getBrand(), getVersion());
-        if(bridge.getBootstrapVersion() != null) {
+        if (bridge.getBootstrapVersion() != null) {
             U.log("... from Bootstrap", bridge.getBootstrapVersion());
         }
         U.log("Beta:", isBeta());
@@ -582,21 +555,18 @@ public final class TLauncher {
         BootEventDispatcher dispatcher = bridge.setupDispatcher();
         dispatcher.onBootStarted();
 
-        while(true) {
+        while (true) {
             try {
                 new TLauncher(bridge, dispatcher);
+                break;
             } catch (Throwable t) {
-                U.log("Error launcing TLauncher:", t);
+                U.log("Error launching TLauncher:", t);
 
-                if(handleLookAndFeelException(t)) {
-                    continue;
+                if (!handleLookAndFeelException(t)) {
+                    dispatcher.onBootErrored(t);
+                    return;
                 }
-
-                dispatcher.onBootErrored(t);
-
-                return;
             }
-            break;
         }
     }
 

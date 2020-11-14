@@ -392,12 +392,35 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public static final String FORGE_PREFIX = "Forge-";
+    public static final String FABRIC_PREFIX = "Fabric-";
+
+    protected void resolveFamily(String parent_family) {
+        if (family != null) return; // early exit
+
+        if (parent_family == null) parent_family = "unknown"; // to prevent NPE
+
+        if (parent_family.startsWith(FORGE_PREFIX) || parent_family.startsWith(FABRIC_PREFIX)) {
+            family = parent_family;
+            return;
+        };
+
+        if (id.toLowerCase().contains("forge")) {
+            family = FORGE_PREFIX + parent_family;
+            return;
+        }
+        if (id.toLowerCase().contains("fabric")) {
+            family = FABRIC_PREFIX + parent_family;
+            return;
+        }
+
+        family = parent_family;
+    }
 
     protected CompleteVersion resolve(VersionManager vm, boolean useLatest, List<String> inheristance) throws IOException {
         if (vm == null) {
             throw new NullPointerException("version manager");
         } else if (inheritsFrom == null) {
-            if (family == null || family.equals(FORGE_PREFIX)) {
+            if (family == null || family.equals(FORGE_PREFIX) || family.equals(FABRIC_PREFIX)) {
                 String family_;
 
                 switch (getReleaseType()) {
@@ -417,7 +440,7 @@ public class CompleteVersion implements Version, Cloneable {
                 if (family_ == null)
                     family_ = "unknown";
 
-                family = family_;
+                resolveFamily(family_);
             }
             return this.clone();
         } else if (inheristance.contains(id)) {
@@ -432,9 +455,9 @@ public class CompleteVersion implements Version, Cloneable {
                 throw new CompleteVersion.ParentNotFoundException();
             } else {
                 CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance);
-                if (id.toLowerCase().contains("forge") && family == null && result.family != null && !result.family.startsWith(FORGE_PREFIX)) {
-                    family = FORGE_PREFIX + result.family;
-                }
+
+                resolveFamily(result.family);
+
                 return copyInto(result);
             }
         }

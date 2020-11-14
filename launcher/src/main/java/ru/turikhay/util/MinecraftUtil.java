@@ -51,6 +51,13 @@ public class MinecraftUtil {
             U.log("User selected directory, checking...", directory);
         } while (!checkDirectory(directory));
 
+        // User asked for "please remove default directory if it is empty and not used for launcher"
+        if (defaultDirectory != directory && defaultDirectory.isDirectory() && defaultDirectory.length() == 0) {
+            U.log("Default game folder is exists, is empty and is not used. Deleting...");
+            defaultDirectory.delete();
+        }
+
+
         return directory;
     }
 

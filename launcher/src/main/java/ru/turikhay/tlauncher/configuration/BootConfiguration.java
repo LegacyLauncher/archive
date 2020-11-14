@@ -20,7 +20,6 @@ public final class BootConfiguration {
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
     private Map<String, List<PromotedServer>> promotedServers = new HashMap<>(), outdatedPromotedServers = new HashMap<>();
     private Map<String, String> feedback = new HashMap<>();
-    private YandexConfig yandex;
     private int allowNoticeDisable;
 
     public boolean isStatsAllowed() {
@@ -49,10 +48,6 @@ public final class BootConfiguration {
 
     public Map<String, String> getFeedback() {
         return feedback;
-    }
-
-    public YandexConfig getYandexConfig() {
-        return yandex;
     }
 
     public boolean isAllowNoticeDisable(UUID userId) {
