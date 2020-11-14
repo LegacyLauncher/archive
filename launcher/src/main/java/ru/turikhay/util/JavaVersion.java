@@ -80,7 +80,7 @@ public final class JavaVersion {
         return new JavaVersion(epoch + "." + major + "." + minor + (update > 0 ? "_" + update : ""), null, epoch, major, minor, update);
     }
 
-    private static final Pattern pattern = Pattern.compile("(?:([0-9]+)\\.)?([0-9]+)(?:\\.([0-9]+))?(?:_([0-9]+))?(?:-(.+))?");
+    private static final Pattern pattern = Pattern.compile("(?:([0-9]+)\\.)?([0-9]+)(?:\\.([0-9]+))?(?:\\.(?:[0-9]+))?(?:_([0-9]+))?(?:-(.+))?");
 
     public static JavaVersion parse(String version) {
         Matcher matcher = pattern.matcher(StringUtil.requireNotBlank(version, "version"));

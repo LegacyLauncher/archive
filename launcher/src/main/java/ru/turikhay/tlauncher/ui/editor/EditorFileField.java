@@ -15,7 +15,7 @@ import java.net.URL;
 public class EditorFileField extends BorderPanel implements EditorField {
     private static final String DEFAULT_BUTTON_PATH = "explorer.browse";
 
-    private final EditorTextField textField;
+    protected final EditorTextField textField;
     private final LocalizableButton explorerButton;
     private final FileExplorer explorer;
 

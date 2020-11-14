@@ -16,6 +16,7 @@ public class JavaVersionTest {
         test("10.0.1", 1, 10, 0, 1, null, false);
         test("11.5", 1, 11, 5, 0, null, false);
         test("121.0.55", 1, 121, 0, 55, null, false);
+        test("11.0.9.1", 1, 11, 0, 9, null, false);
     }
 
     private void test(String parse, int epoch, int major, int minor, int update, String identifier, boolean ea) {
