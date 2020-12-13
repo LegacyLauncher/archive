@@ -4,6 +4,8 @@ import com.github.zafarkhaja.semver.Version;
 import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.util.*;
@@ -17,6 +19,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class Configuration extends SimpleConfiguration {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final List<Locale> DEFAULT_LOCALES = getDefaultLocales();
 
     private ConfigurationDefaults defaults;
@@ -44,22 +47,21 @@ public class Configuration extends SimpleConfiguration {
             if (!file.isFile()) {
                 file = FileUtil.getNeighborFile("tlauncher.properties");
             }
-
             if (!file.isFile()) {
                 file = getDefaultFile();
             }
         } else {
-            log("Fetching configuration from argument:", path);
+            LOGGER.debug("--settings argument: {}", path);
             file = new File(path.toString());
         }
 
         boolean doesntExist = !file.isFile();
         if (doesntExist) {
-            log("Creating file:", file);
+            LOGGER.debug("Creating file: {}", file);
             FileUtil.createFile(file);
         }
 
-        log("File:", file);
+        LOGGER.info("Reading configuration from: {}", file);
 
         Configuration config = new Configuration(file, set);
         config.firstRun = doesntExist;
@@ -72,16 +74,16 @@ public class Configuration extends SimpleConfiguration {
         constants = ArgumentParser.parse(set);
 
         if (getDouble("settings.version") != ConfigurationDefaults.getVersion()) {
-            log("Configuration is being wiped due to version incapability");
+            LOGGER.warn("Configuration is being wiped due to version incapability");
             set("settings.version", ConfigurationDefaults.getVersion(), false);
             clear();
         }
 
-        log("Constants:", constants);
+        LOGGER.debug("Constants: {}", constants);
         set(constants, false);
 
         if(externalLocation) {
-            log("Loaded configuration from external location");
+            LOGGER.debug("Using configuration from an external location");
 
             File defFile = getDefaultFile();
             SimpleConfiguration backConfig = new SimpleConfiguration(defFile);
@@ -89,7 +91,7 @@ public class Configuration extends SimpleConfiguration {
             if(defFile.isFile()) {
                 //log("Default file exists, backing up some values...");
             } else {
-                //log("Default file doesn't exist, oops...");
+                LOGGER.debug("Default file doesn't exist, oops...");
                 backConfig.set("settings.version", ConfigurationDefaults.getVersion());
                 backConfig.set("client", UUID.randomUUID());
                 backConfig.store();
@@ -101,11 +103,11 @@ public class Configuration extends SimpleConfiguration {
         try {
             UUID.fromString(get("client"));
         } catch (RuntimeException rE) {
-            log("Recreating UUID...");
+            LOGGER.debug("Recreating UUID...");
             set("client", UUID.randomUUID(), false);
         }
 
-        log("UUID:", getClient());
+        LOGGER.info("UUID: {}", getClient());
 
         for (Entry<String, Object> defEntry : defaults.getMap().entrySet()) {
             if (constants.containsKey(defEntry.getKey())) {
@@ -116,20 +118,20 @@ public class Configuration extends SimpleConfiguration {
             try {
                 PlainParser.parse(get(defEntry.getKey()), defEntry.getValue());
             } catch (RuntimeException rE) {
-                log("Could not parse", defEntry.getKey(), "; got:", value);
+                LOGGER.warn("Could not parse {}, got: {}", defEntry.getKey(), value);
                 set(defEntry.getKey(), defEntry.getValue(), false);
             }
         }
 
         Locale locale = U.getLocale(get("locale"));
         if (locale == null) {
-            log("Presented locale is not supported by Java:", get("locale"));
-            log("May be system default?");
+            LOGGER.warn("Locale is not supported by Java: {}", get("locale"));
+            LOGGER.warn("May be system default?");
             locale = Locale.getDefault();
         }
 
         if (!DEFAULT_LOCALES.contains(locale)) {
-            log("We don't have localization for", locale);
+            LOGGER.debug("We don't have localization for {}", locale);
 
             if (isUSSRLocale(locale.toString()) && DEFAULT_LOCALES.contains(LangConfiguration.ru_RU)) {
                 locale = LangConfiguration.ru_RU;
@@ -137,7 +139,7 @@ public class Configuration extends SimpleConfiguration {
                 locale = Locale.US;
             }
 
-            log("Selecting", locale);
+            LOGGER.debug("Selecting {}", locale);
         }
         set("locale", locale);
 
@@ -146,13 +148,13 @@ public class Configuration extends SimpleConfiguration {
             set("gui.font.old", getInteger("gui.font"));
         }
 
-        log(properties);
+        LOGGER.debug("Using configuration: {}", properties);
 
         if (isSaveable()) {
             try {
                 save();
             } catch (IOException ioE) {
-                log("Couldn't save config", ioE);
+                LOGGER.warn("Couldn't save config", ioE);
             }
         }
     }
@@ -476,9 +478,5 @@ public class Configuration extends SimpleConfiguration {
         public static LoggerType getDefault() {
             return NONE;
         }
-    }
-
-    private static void log(Object... o) {
-        U.log("[Config]", o);
     }
 }

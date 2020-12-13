@@ -33,7 +33,6 @@ public abstract class Theme {
 
     Theme(String name) {
         this.name = StringUtil.requireNotBlank(name, "name");
-        logPrefix = "[" + getClass().getSimpleName() + ":" + name + "]";
     }
 
     public abstract Color getForeground();
@@ -56,10 +55,5 @@ public abstract class Theme {
         public int id() {
             return ordinal();
         }
-    }
-
-    private final String logPrefix;
-    protected final void log(Object...o) {
-        U.log(logPrefix, o);
     }
 }

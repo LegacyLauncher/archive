@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.managers;
 
 import net.minecraft.launcher.updater.*;
 import net.minecraft.launcher.versions.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.component.ComponentDependence;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
@@ -20,6 +22,8 @@ import java.util.Map.Entry;
 
 @ComponentDependence({AssetsManager.class, VersionLists.class, LibraryReplaceProcessor.class})
 public class VersionManager extends InterruptibleComponent {
+    private static final Logger LOGGER = LogManager.getLogger(VersionManager.class);
+
     private final LocalVersionList localList;
     private final RemoteVersionList[] remoteLists;
     private Map<ReleaseType, Version> latestVersions;
@@ -61,9 +65,9 @@ public class VersionManager extends InterruptibleComponent {
         local |= !manager.getLauncher().getSettings().getBoolean("minecraft.versions.sub.remote");
         hadRemote |= !local;
         if (local) {
-            log("Refreshing versions locally...");
+            LOGGER.info("Refreshing versions locally...");
         } else {
-            log("Refreshing versions remotely...");
+            LOGGER.info("Refreshing versions remotely...");
             List lock = listeners;
             synchronized (listeners) {
                 Iterator e = listeners.iterator();
@@ -87,7 +91,7 @@ public class VersionManager extends InterruptibleComponent {
         }
 
         if (isCancelled(refreshID)) {
-            log("Version refresh has been cancelled (" + Time.stop(lock1) + " ms)");
+            LOGGER.info("Version refresh has been cancelled ({} ms)", Time.stop(lock1));
             return false;
         } else {
             Iterator var8;
@@ -108,7 +112,7 @@ public class VersionManager extends InterruptibleComponent {
                     }
                 }
 
-                log("Cannot refresh versions (" + Time.stop(lock1) + " ms)", e1);
+                LOGGER.error("Cannot refresh versions ({} ms)", Time.stop(lock1), e1);
                 return true;
             } else {
                 if (!local) {
@@ -134,7 +138,7 @@ public class VersionManager extends InterruptibleComponent {
                 latestVersions.putAll(latestVersions_);
                 latestVersions = U.sortMap(latestVersions, ReleaseType.values());
 
-                log("Versions has been refreshed (" + Time.stop(lock1) + " ms)");
+                LOGGER.info("Versions has been refreshed ({} ms)", Time.stop(lock1));
                 refreshList[refreshID] = false;
                 e01 = listeners;
                 synchronized (listeners) {
@@ -146,7 +150,7 @@ public class VersionManager extends InterruptibleComponent {
                         try {
                             listener1.onVersionsRefreshed(this);
                         } catch (Exception e) {
-                            log("Caught listener exception:", e);
+                            LOGGER.warn("Caught listener exception:", e);
                         }
                     }
 
@@ -177,7 +181,8 @@ public class VersionManager extends InterruptibleComponent {
                 if (checkConsistency(set, checkEntry)) {
                     continue;
                 }
-                log(object.getVersionList(), "depends on unavailable", checkObject.getVersionList());
+                LOGGER.warn("Version list {} depends on unavailable {}",
+                        object.getVersionList(), checkObject.getVersionList());
                 return false;
             }
         }
@@ -203,7 +208,7 @@ public class VersionManager extends InterruptibleComponent {
                 try {
                     startRefresh(local);
                 } catch (Exception var2) {
-                    log("Exception occured refreshing:", var2);
+                    LOGGER.error("Couldn't refresh versions", var2);
                 }
 
             }
@@ -276,12 +281,12 @@ public class VersionManager extends InterruptibleComponent {
                 }
             }
 
-            Object var10 = localList.getVersion(name);
+            Version var10 = localList.getVersion(name);
             if (var10 instanceof CompleteVersion && ((CompleteVersion) var10).getInheritsFrom() != null) {
                 try {
                     var10 = ((CompleteVersion) var10).resolve(this, false);
                 } catch (Exception var9) {
-                    log("Can\'t resolve version " + ((Version) var10).getID(), var9);
+                    LOGGER.warn("Can't resolve version {}", var10.getID(), var9);
                     var10 = null;
                 }
             }
@@ -299,7 +304,7 @@ public class VersionManager extends InterruptibleComponent {
                 }
             }
 
-            return var10 == null && var11 == null ? null : new VersionSyncInfo((Version) var10, var11);
+            return var10 == null && var11 == null ? null : new VersionSyncInfo(var10, var11);
         }
     }
 
@@ -445,10 +450,10 @@ public class VersionManager extends InterruptibleComponent {
         try {
             container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, type == null? Account.AccountType.PLAIN : type));
         } catch (IOException ioE) {
-            log("Could not get downloadables for", syncInfo.getID(), ioE);
+            LOGGER.warn("Could not fetch required downloads for {}", syncInfo.getID(), ioE);
         }
 
-        log("Required for version " + syncInfo.getID() + ':', container.getList());
+        LOGGER.debug("Required for version " + syncInfo.getID() + ':', container.getList());
 
         File destination = new File(baseDirectory, "versions/" + completeVersion.getID() + "/" + completeVersion.getID() + ".jar");
 
@@ -458,7 +463,7 @@ public class VersionManager extends InterruptibleComponent {
 
         VersionDownloadable jarDownloadable = new VersionDownloadable(completeVersion, destination, syncInfo.getRemote() != null ? syncInfo.getRemote().getSource() : null);
 
-        log("Jar for " + syncInfo.getID() + ':', jarDownloadable);
+        LOGGER.debug("Jar for {}: {}", syncInfo.getID(), jarDownloadable);
 
         container.add(jarDownloadable);
         return container;
@@ -479,7 +484,7 @@ public class VersionManager extends InterruptibleComponent {
             try {
                 return remoteList.getRawList();
             } catch (Exception var2) {
-                log("Error refreshing", remoteList, var2);
+                LOGGER.error("Error refreshing {}", remoteList, var2);
                 throw new AsyncObjectGotErrorException(this, var2);
             }
         }

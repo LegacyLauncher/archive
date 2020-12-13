@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.settings;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -19,6 +21,8 @@ import java.io.IOException;
 import java.io.StringReader;
 
 public class HTMLPage extends BorderPanel implements LocalizableComponent {
+    private static final Logger LOGGER = LogManager.getLogger(HTMLPage.class);
+
     private final String textColor;
 
     {
@@ -35,7 +39,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
         try {
             tempSource = FileUtil.getResource(getClass().getResource(resourceName));
         } catch (Exception var4) {
-            U.log(var4);
+            LOGGER.warn("Could not load HTML page resource from {}", resourceName, var4);
             tempSource = null;
         }
 

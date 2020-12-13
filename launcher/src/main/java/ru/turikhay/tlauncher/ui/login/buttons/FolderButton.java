@@ -79,7 +79,6 @@ public class FolderButton extends LocalizableButton implements Unblockable {
 
     private File getFamilyFolder() {
         if(!lf.global.getBoolean("minecraft.gamedir.separate")) {
-            U.log("separate folders are off");
             return null;
         }
 

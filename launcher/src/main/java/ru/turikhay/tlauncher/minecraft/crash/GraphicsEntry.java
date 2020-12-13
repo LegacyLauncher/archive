@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.windows.DxDiag;
 
@@ -7,6 +9,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class GraphicsEntry extends PatternContainerEntry {
+    private static final Logger LOGGER = LogManager.getLogger(GraphicsEntry.class);
+
     private final Pattern intelWin10BugJrePattern, intelWin10BugCardNamePattern, intelBugMinecraft1_10Pattern;
     private final PatternEntry amd, intel;
 
@@ -46,16 +50,19 @@ public class GraphicsEntry extends PatternContainerEntry {
         setPath("general");
 
         if (capablePatterns.contains(amd)) {
-            log("found AMD pattern");
+            LOGGER.info("{} is relevant because the crash logs explicitly mention " +
+                    "AMD graphics card drivers", getName());
             return setToUpdateDrivers("AMD");
         }
 
         if (capablePatterns.contains(intel)) {
-            log("found Intel pattern");
+            LOGGER.info("{} is relevant because the crash logs explicitly mention " +
+                    "Intel graphics card drivers", getName());
             setToUpdateDrivers("Intel");
 
             if (intelBugMinecraft1_10Pattern.matcher(getManager().getVersion()).matches()) {
-                log("We're currently running Minecraft 1.10+, but still having Intel HD graphics drivers issue.");
+                LOGGER.info("We're currently running Minecraft 1.10+, but still having Intel HD graphics " +
+                        "driver issue.");
 
                 setPath("intel.1.10");
                 addButton(getManager().getButton("open-settings"));
@@ -73,20 +80,22 @@ public class GraphicsEntry extends PatternContainerEntry {
         try {
             result = DxDiag.get();
         } catch (Exception e) {
-            log("could not get dxdiag result", e);
+            LOGGER.warn("Could not get DxDiag result", e);
             return true;
         }
 
         if (OS.VERSION.contains("10.")) {
             DxDiag.DisplayDevice intelGraphics = result.getDisplayDevice("intel");
             if (intelGraphics != null && intelWin10BugCardNamePattern.matcher(intelGraphics.getCardName()).matches()) {
-                log("DXDiag found 1st or 2nd generation of Intel chipset");
-                log("External pattern:", intelWin10BugJrePattern);
+                LOGGER.info("Using DxDiag we found out that the machine is running on 1st or 2nd generation of " +
+                        "Intel graphics chipset");
+                LOGGER.debug("External pattern: {}", intelWin10BugJrePattern);
 
                 if (intelWin10BugJrePattern == null ?
                         (OS.JAVA_VERSION.getMajor() == 8? OS.JAVA_VERSION.getUpdate() > 60 : OS.JAVA_VERSION.getMajor() > 8) : // 8u60 or above
                         intelWin10BugJrePattern.matcher(System.getProperty("java.version")).matches()) {
-                    log("We're currently running Java version on Windows 10 that have known incompatibility bug with first- and -second generation Intel HD graphics chipsets");
+                    LOGGER.info("We're currently running Java version on Windows 10 that have known incompatibility " +
+                            "bug with 1st and 2nd generation Intel HD graphics chipsets");
 
                     clearButtons();
 
@@ -135,14 +144,12 @@ public class GraphicsEntry extends PatternContainerEntry {
     private boolean setToUpdateDrivers(String... manufacturers) {
         clearButtons();
 
-        log("offering to update drivers for:", manufacturers);
-
         StringBuilder nameBuilder = new StringBuilder();
         for (String manufacturerName : manufacturers) {
             nameBuilder.append(", ").append(manufacturerName);
 
             String manufacturer = manufacturerName.toLowerCase();
-            newButton("driver-update", new VarUrlAction(manufacturer + "-driver-update", "http://tlaun.ch/wiki/update:driver:" + manufacturer), manufacturerName);
+            newButton("driver-update", new VarUrlAction(manufacturer + "-driver-update", "https://tlaun.ch/wiki/update:driver:" + manufacturer), manufacturerName);
         }
         setPath("update-driver", nameBuilder.substring(", ".length()));
 

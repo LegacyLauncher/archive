@@ -1,7 +1,7 @@
 package net.minecraft.launcher.process;
 
 public interface JavaProcessListener {
-    void onJavaProcessLog(JavaProcess var1, String var2);
+    void onJavaProcessPrint(JavaProcess process, PrintStreamType streamType, String line);
 
     void onJavaProcessEnded(JavaProcess var1);
 

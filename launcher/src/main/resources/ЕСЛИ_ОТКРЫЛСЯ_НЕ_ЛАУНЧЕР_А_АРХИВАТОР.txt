@@ -1,4 +1,4 @@
 Если Вы не можете запустить TLauncher, а вместо лаунчера открывается архиватор (WinRar, 7zip, etc) попробуйте следующее:
 
--- Скачайте EXE-версию TLauncher (для Windows): http://tlaun.ch/exe
--- Попробуйте переустановить Java с сайта: http://java.com/
+-- Скачайте EXE-версию TLauncher (для Windows): https://tlaun.ch/exe
+-- Попробуйте переустановить Java с сайта: https://java.com/

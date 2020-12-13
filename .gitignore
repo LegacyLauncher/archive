@@ -19,3 +19,5 @@ build
 
 # IDEA may break if committed from newer versions or when левая пятка breaks everything.
 .idea
+
+logs/

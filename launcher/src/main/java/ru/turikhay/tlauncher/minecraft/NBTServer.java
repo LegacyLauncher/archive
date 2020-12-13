@@ -3,6 +3,8 @@ package ru.turikhay.tlauncher.minecraft;
 import net.minecraft.common.CompressedStreamTools;
 import net.minecraft.common.NBTTagCompound;
 import net.minecraft.common.NBTTagList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.U;
 
 import java.io.File;
@@ -11,6 +13,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class NBTServer extends Server {
+    private static final Logger LOGGER = LogManager.getLogger(NBTServer.class);
+
     private boolean hideAddress;
     private int acceptTextures;
 
@@ -68,7 +72,7 @@ public class NBTServer extends Server {
             try {
                 nbtServer = getNBTServer((NBTTagCompound) servers.tagAt(i));
             } catch(RuntimeException rE) {
-                U.log("Could not parse server from NBT", rE);
+                LOGGER.warn("Could not parse server from NBT file {}", file, rE);
                 continue;
             }
 

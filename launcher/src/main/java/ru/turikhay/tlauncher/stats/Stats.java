@@ -6,13 +6,13 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.PromotedServerAddStatus;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.notice.Notice;
-import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
@@ -27,7 +27,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class Stats {
-    private static final URL STATS_BASE = Http.constantURL("http://u.tlauncher.ru/stats/");
+    private static final Logger LOGGER = LogManager.getLogger(Stats.class);
+
+    private static final URL STATS_BASE = Http.constantURL("https://u.tlauncher.ru/stats/");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
     private static String lastResult;
@@ -109,7 +111,6 @@ public final class Stats {
     }
 
     public static void accountCreation(String type, String strategy, String step, boolean success) {
-        Sentry.sendWarning(Stats.class, "account_creation:" + type + ":" + strategy, null, DataBuilder.create("success", success).add("step", step));
     }
 
     private static Stats.Args newAction(String name) {
@@ -155,7 +156,7 @@ public final class Stats {
 
     private static HttpURLConnection createUrlConnection(URL url) throws IOException {
         Validate.notNull(url);
-        debug("Opening connection to " + url);
+        LOGGER.trace("Opening connection to {}", url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection(U.getProxy());
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
@@ -168,7 +169,7 @@ public final class Stats {
         Validate.notNull(request);
         url = new URL(url.toString() + '?' + request);
         HttpURLConnection connection = createUrlConnection(url);
-        debug("Reading data from " + url);
+        LOGGER.trace("Reading data from {}", url);
         InputStream inputStream = null;
 
         String var7;
@@ -176,35 +177,26 @@ public final class Stats {
             try {
                 inputStream = connection.getInputStream();
                 String e = IOUtils.toString(inputStream, Charsets.UTF_8);
-                debug("Successful read, server response was " + connection.getResponseCode());
-                debug("Response: " + e);
+                LOGGER.debug("{} responded with {}: {}", url, connection.getResponseCode(), e);
                 var7 = e;
                 return var7;
             } catch (IOException var10) {
                 IOUtils.closeQuietly(inputStream);
                 inputStream = connection.getErrorStream();
                 if (inputStream == null) {
-                    debug("Request failed", var10);
+                    LOGGER.warn("Stats request failed: {}", var10.toString());
                     throw var10;
                 }
             }
 
-            debug("Reading error page from " + url);
             String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-            debug("Successful read, server response was " + connection.getResponseCode());
-            debug("Response: " + result);
+            LOGGER.debug("{} responded with {}: {}", url, connection.getResponseCode(), result);
             var7 = result;
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
 
         return var7;
-    }
-
-    private static void debug(Object... o) {
-        if (TLauncher.getInstance() == null || TLauncher.getInstance().isDebug()) {
-            U.log("[Stats]", o);
-        }
     }
 
     private static class Args {

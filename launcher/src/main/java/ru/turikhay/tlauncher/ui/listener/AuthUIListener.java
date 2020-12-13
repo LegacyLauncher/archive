@@ -65,7 +65,6 @@ public class AuthUIListener implements AuthenticatorListener {
         }
         description = Localizable.get(path, (Object[]) locVars);
 
-        U.log(title, path, " : ", locVars, e);
         Alert.showLocError(title, description, textarea);
         /*String description = null;
         Object textarea = e;

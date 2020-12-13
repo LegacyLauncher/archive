@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.downloader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 
@@ -7,6 +9,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Downloader extends ExtendedThread {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static final int MAX_THREADS = 6;
     public static final String DOWNLOAD_BLOCK = "download";
     static final double SMOOTHING_FACTOR = 0.005D;
@@ -179,7 +183,7 @@ public class Downloader extends ExtendedThread {
 
         while (true) {
             lockThread("iteration");
-            log("Files in queue", list.size());
+            LOGGER.debug("Files in the queue: {}", list.size());
             List i = list;
             synchronized (list) {
                 sortOut();
@@ -212,7 +216,7 @@ public class Downloader extends ExtendedThread {
             int downloadablesAtThread = U.getMaxMultiply(size, 6);
             int x = 0;
             boolean y = true;
-            log("Starting download " + size + " files...");
+            LOGGER.info("Starting to download {} files...", size);
             onStart(size);
             int max = 6;
 
@@ -291,7 +295,7 @@ public class Downloader extends ExtendedThread {
 
     void onFileComplete(DownloaderThread thread, Downloadable file) {
         int remaining = remainingObjects.decrementAndGet();
-        log("Objects remaining:", Integer.valueOf(remaining));
+        LOGGER.debug("Remaining: {}", remaining);
         Iterator var5 = listeners.iterator();
 
         while (var5.hasNext()) {
@@ -316,7 +320,7 @@ public class Downloader extends ExtendedThread {
     }
 
     private void waitForThreads() {
-        log("Waiting for", Integer.valueOf(workingThreads), "threads...");
+        LOGGER.debug("Waiting for {} threads...", workingThreads);
 
         boolean blocked;
         do {
@@ -329,10 +333,6 @@ public class Downloader extends ExtendedThread {
             }
         } while (!blocked);
 
-        log("All threads are blocked by now");
-    }
-
-    private static void log(Object... o) {
-        U.log("[Downloader2]", o);
+        LOGGER.debug("All threads are blocked by now");
     }
 }

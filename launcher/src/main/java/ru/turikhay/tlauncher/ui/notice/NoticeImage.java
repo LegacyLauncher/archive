@@ -33,9 +33,4 @@ public abstract class NoticeImage {
     public final String toString() {
         return toStringBuilder().build();
     }
-
-    protected String logPrefix = '[' + getClass().getSimpleName() + ']';
-    private void log(Object...o) {
-        U.log(logPrefix, o);
-    }
 }

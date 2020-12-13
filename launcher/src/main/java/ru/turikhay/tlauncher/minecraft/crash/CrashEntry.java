@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 import ru.turikhay.util.windows.DxDiag;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CrashEntry extends IEntry {
+    private static final Logger LOGGER = LogManager.getLogger(CrashEntry.class);
+
     public CrashEntry(CrashManager manager, String name) {
         super(manager, name);
         setPath(null);
@@ -186,30 +190,30 @@ public class CrashEntry extends IEntry {
 
     protected boolean checkCapability() throws Exception {
         if (getVersionPattern() != null && !getVersionPattern().matcher(getManager().getVersion()).matches()) {
-            log("is not capable because of Minecraft version");
+            LOGGER.debug("{} is not relevant because of Minecraft version", getName());
             return false;
         }
 
         if (getExitCode() != 0 && getExitCode() != getManager().getExitCode()) {
-            log("is not capable because of exit code");
+            LOGGER.debug("{} is not relevant because of exit code", getName());
             return false;
         }
 
         if (!isCompatibleWith(OS.CURRENT)) {
-            log("is not capable because of OS");
+            LOGGER.debug("{} is not relevant because of OS", getName());
             return false;
         }
 
         if (getJrePattern() != null && !getJrePattern().matcher(System.getProperty("java.version")).matches()) {
-            log("is not capable because of Java version");
+            LOGGER.debug("{} is not relevant because of Java version", getName());
             return false;
         }
 
         if (getGraphicsCardPattern() != null) {
-            log("graphics card pattern", getGraphicsCardPattern());
+            LOGGER.debug("graphics card pattern of {}: {}", getName(), getGraphicsCardPattern());
 
             if (!DxDiag.isScannable()) {
-                log("is not capable because it requires DXDiag scanner");
+                LOGGER.debug("{} is not capable because it requires DXDiag scanner", getName());
                 return false;
             }
 
@@ -217,19 +221,20 @@ public class CrashEntry extends IEntry {
             try {
                 result = DxDiag.get();
             } catch (Exception e) {
-                log("is not capable because DxDiag result is unavailable");
+                LOGGER.debug("{} is not capable because DxDiag result is unavailable", getName());
                 return false;
             }
 
             List<DxDiag.DisplayDevice> deviceList = result.getDisplayDevices();
             if (deviceList == null || deviceList.isEmpty()) {
-                log("is not capable because display devices list is unavailable:", deviceList);
+                LOGGER.debug("{} is not capable because display devices list is unavailable: {}",
+                        getName(), deviceList);
                 return false;
             }
 
             for (DxDiag.DisplayDevice device : deviceList) {//DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice device : deviceList) {
                 if (getGraphicsCardPattern().matcher(device.getCardName()).matches()) {
-                    log("is capable, found device:", device);
+                    LOGGER.debug("{} is capable, found device: {}", getName(), device);
                     return true;
                 }
             }
@@ -244,14 +249,14 @@ public class CrashEntry extends IEntry {
                 try {
                     is64Bit = DxDiag.get().getSystemInfo().is64Bit();
                 } catch (Exception e) {
-                    log("Could not determinte if system is 64-bit...");
+                    LOGGER.warn("Could not detect if system is 64-bit");
                 }
 
                 if(OS.Arch.x86.isCurrent() && is64Bit) {
                     return true;
                 }
 
-                log("is not capable because OS and Java arch are the same");
+                LOGGER.debug("{} is not capable because OS and Java arch are the same", getName());
             }
             return false;
         }

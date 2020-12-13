@@ -3,6 +3,8 @@ package net.minecraft.launcher;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.U;
 
@@ -17,6 +19,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Http {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private static String buildQuery(Map<String, Object> query) {
         StringBuilder builder = new StringBuilder();
         Iterator var3 = query.entrySet().iterator();
@@ -30,7 +34,7 @@ public class Http {
             try {
                 builder.append(URLEncoder.encode((String) entry.getKey(), "UTF-8"));
             } catch (UnsupportedEncodingException var6) {
-                U.log("Unexpected exception building query", var6);
+                LOGGER.error("Unexpected exception building query", var6);
             }
 
             if (entry.getValue() != null) {
@@ -39,7 +43,7 @@ public class Http {
                 try {
                     builder.append(URLEncoder.encode(entry.getValue().toString(), "UTF-8"));
                 } catch (UnsupportedEncodingException var5) {
-                    U.log("Unexpected exception building query", var5);
+                    LOGGER.error("Unexpected exception building query", var5);
                 }
             }
         }
@@ -128,17 +132,9 @@ public class Http {
         }
     }
 
-    private static void log(Object... o) {
-        U.log("[AUTHSERV]", o);
-    }
-
-    private static void debug(Object... o) {
-        if (TLauncher.getInstance() != null && TLauncher.getInstance().isDebug()) log(o);
-    }
-
     private static HttpURLConnection createUrlConnection(URL url) throws IOException {
         Validate.notNull(url);
-        debug("Opening connection to " + url);
+        LOGGER.trace("Opening connection to {}", url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection(U.getProxy());
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
@@ -155,7 +151,7 @@ public class Http {
         connection.setRequestProperty("Content-Type", contentType + "; charset=utf-8");
         connection.setRequestProperty("Content-Length", "" + postAsBytes.length);
         connection.setDoOutput(true);
-        debug("Writing POST data to " + url + ": " + post);
+        LOGGER.trace("Writing POST data to {}: {}", url, post);
         OutputStream outputStream = null;
 
         try {
@@ -165,28 +161,28 @@ public class Http {
             IOUtils.closeQuietly(outputStream);
         }
 
-        debug("Reading data from " + url);
+        LOGGER.trace("Reading data from {}", url);
         InputStream inputStream = null;
 
         String var10;
         try {
             inputStream = connection.getInputStream();
             String e = IOUtils.toString(inputStream, Charsets.UTF_8);
-            debug("Successful read, server response was " + connection.getResponseCode());
-            debug("Response: " + e);
+            LOGGER.trace("Successful read, server response was {}", connection.getResponseCode());
+            LOGGER.trace("Response: {}", e);
             var10 = e;
         } catch (IOException var18) {
             IOUtils.closeQuietly(inputStream);
             inputStream = connection.getErrorStream();
             if (inputStream == null) {
-                debug("Request failed", var18);
+                LOGGER.error("Request to {} failed", url, var18);
                 throw var18;
             }
 
-            debug("Reading error page from " + url);
+            LOGGER.error("Reading error page from {}", url);
             String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-            debug("Successful read, server response was " + connection.getResponseCode());
-            debug("Response: " + result);
+            LOGGER.error("Successful read, server response was {}", connection.getResponseCode());
+            LOGGER.error("Response: {}", result);
             var10 = result;
         } finally {
             IOUtils.closeQuietly(inputStream);
@@ -198,7 +194,7 @@ public class Http {
     public static String performGetRequest(URL url) throws IOException {
         Validate.notNull(url);
         HttpURLConnection connection = createUrlConnection(url);
-        debug("Reading data from " + url);
+        LOGGER.trace("Reading data from {}", url);
         InputStream inputStream = null;
 
         String var6;
@@ -206,23 +202,23 @@ public class Http {
             try {
                 inputStream = connection.getInputStream();
                 String e = IOUtils.toString(inputStream, Charsets.UTF_8);
-                debug("Successful read, server response was " + connection.getResponseCode());
-                debug("Response: " + e);
+                LOGGER.trace("Successful read, server response was {}", connection.getResponseCode());
+                LOGGER.trace("Response: {}", e);
                 var6 = e;
                 return var6;
             } catch (IOException var9) {
                 IOUtils.closeQuietly(inputStream);
                 inputStream = connection.getErrorStream();
                 if (inputStream == null) {
-                    debug("Request failed", var9);
+                    LOGGER.error("Request to {} failed", url, var9);
                     throw var9;
                 }
             }
 
-            debug("Reading error page from " + url);
+            LOGGER.debug("Reading error page from {}",url);
             String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-            debug("Successful read, server response was " + connection.getResponseCode());
-            debug("Response: " + result);
+            LOGGER.debug("Successful read, server response was {}", connection.getResponseCode());
+            LOGGER.debug("Response: {}", result);
             var6 = result;
         } finally {
             IOUtils.closeQuietly(inputStream);

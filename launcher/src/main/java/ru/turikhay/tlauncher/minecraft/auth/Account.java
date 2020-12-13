@@ -54,6 +54,13 @@ public class Account {
         return new Account();
     }
 
+    @Override
+    public String toString() {
+        return "Account{" +
+                "user=" + user +
+                '}';
+    }
+
     public enum AccountType {
         ELY("ely.png"),
         ELY_LEGACY("ely.png"),

@@ -93,6 +93,16 @@ public enum OS {
         return openUri(uri);
     }
 
+    public static boolean openPath(File path) {
+        try {
+            Desktop.getDesktop().open(path);
+        } catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
     private final String[] aliases;
     private final String lowerCase;
 

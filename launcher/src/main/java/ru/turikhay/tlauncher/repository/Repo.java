@@ -12,7 +12,6 @@ public abstract class Repo implements IRepo {
 
     public Repo(String name) {
         this.name = U.requireNotNull(name);
-        logPrefix = '[' + name + ']';
     }
 
     public String toString() {
@@ -49,9 +48,4 @@ public abstract class Repo implements IRepo {
     }
 
     protected abstract URL makeUrl(String path) throws IOException;
-
-    private final String logPrefix;
-    protected final void log(Object... o) {
-        U.log(logPrefix, o);
-    }
 }

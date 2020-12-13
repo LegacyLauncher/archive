@@ -76,7 +76,6 @@ public class Server {
             }
             setAddress(address);
             setPort(port);
-            U.log(":", getFullAddress());
             return;
         }
         switch(StringUtils.countMatches(fullAddress, ':')) {

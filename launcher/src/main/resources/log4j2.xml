@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns:xi="http://www.w3.org/2001/XInclude" status="warn">
+    <Properties>
+        <Property name="defaultPattern">%highlight{%d{ISO8601} [%c{1}] %msg%n%throwable}{INFO=default}</Property>
+        <Property name="childStdOutPattern">> %style{%msg{ansi}}{bright}%n</Property>
+        <Property name="childStdErrPattern">> %style{%msg}{red}%n</Property>
+        <Property name="logFolder">${sys:tlauncher.logFolder:-${sys:user.home}/.tl/logs}</Property>
+    </Properties>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <xi:include href="log4j2-xinclude-PatternLayout.xml" />
+        </Console>
+        <RollingFile name="file" fileName="${logFolder}/launcher.log" filePattern="${logFolder}/launcher.log.%i">
+            <xi:include href="log4j2-xinclude-PatternLayout.xml" />
+            <Policies>
+                <OnStartupTriggeringPolicy />
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        <SwingLogger name="swingLogger">
+            <PatternLayout charset="UTF-8">
+                <MarkerPatternSelector defaultPattern="> [%c{1}] %msg%n%throwable">
+                    <PatternMatch key="child_stdout" pattern=">> %msg%n"/>
+                    <PatternMatch key="child_stderr" pattern="[STDERR] >> %msg%n"/>
+                </MarkerPatternSelector>
+            </PatternLayout>
+        </SwingLogger>
+    </Appenders>
+    <Loggers>
+        <Logger name="ru.turikhay.tlauncher" level="debug" />
+        <Root level="info">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+            <AppenderRef ref="swingLogger" />
+        </Root>
+    </Loggers>
+</Configuration>

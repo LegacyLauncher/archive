@@ -1,11 +1,15 @@
 package ru.turikhay.tlauncher.managed;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.U;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ManagedListenerHelper<L extends ManagedListener> implements ManagedListener {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final List<ManagedListener> listeners = new ArrayList<>();
 
     public synchronized void addListener(ManagedListener l) {
@@ -18,7 +22,7 @@ public class ManagedListenerHelper<L extends ManagedListener> implements Managed
             try {
                 l.changedSet(set);
             } catch(Exception e) {
-                U.log("ManagedListenerHelper caught exception ", set, l, e);
+                LOGGER.warn("Exception has been caught in of the listeners of {}: {}", set, l, e);
             }
         }
     }

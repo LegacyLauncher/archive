@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.configuration;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
@@ -11,6 +13,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class SimpleConfiguration implements AbstractConfiguration {
+    private final static Logger LOGGER = LogManager.getLogger();
+
     protected final Properties properties;
     protected Object input;
     protected String comments;
@@ -31,7 +35,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
         try {
             loadFromFile(properties, file);
         } catch (Exception var3) {
-            U.log("Error loading config from file:", var3);
+            LOGGER.warn("Error loading config from file: {}", file, var3);
         }
 
         input = file;
@@ -218,8 +222,8 @@ public class SimpleConfiguration implements AbstractConfiguration {
     public void store() {
         try {
             save();
-        } catch (IOException var2) {
-            U.log(var2);
+        } catch (IOException e) {
+            LOGGER.warn("Couldn't save configuration to {}", input, e);
         }
     }
 

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.editor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
@@ -13,6 +15,8 @@ import java.io.File;
 import java.net.URL;
 
 public class EditorFileField extends BorderPanel implements EditorField {
+    private static final Logger LOGGER = LogManager.getLogger(EditorFileField.class);
+
     private static final String DEFAULT_BUTTON_PATH = "explorer.browse";
 
     protected final EditorTextField textField;
@@ -47,7 +51,8 @@ public class EditorFileField extends BorderPanel implements EditorField {
                             path = selected.getCanonicalPath();
                         } catch (Exception ex) {
                             path = selected.getAbsolutePath();
-                            log(ex);
+                            LOGGER.warn("Couldn't get canonical path. Will use absolute path: {} -> {}",
+                                    selected, path, ex);
                         }
                     }
 
@@ -122,10 +127,6 @@ public class EditorFileField extends BorderPanel implements EditorField {
     @Override
     public void unblock(Object reason) {
         Blocker.unblockComponents(Blocker.UNIVERSAL_UNBLOCK, textField, explorerButton);
-    }
-
-    protected void log(Object... w) {
-        U.log("[" + getClass().getSimpleName() + "]", w);
     }
 
     private static URL parseUrl(String s) {

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -16,6 +18,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 public class Images {
+    private static final Logger LOGGER = LogManager.getLogger(Images.class);
+
     private static final Map<URL, WeakReference<BufferedImage>> loadedImages = new Hashtable<URL, WeakReference<BufferedImage>>();
     private static final Map<URL, WeakReference<Image>> magnifiedImages = new Hashtable<URL, WeakReference<Image>>();
     private static final boolean THROW_IF_ERROR = true;
@@ -34,7 +38,7 @@ public class Images {
                 if (throwIfError) {
                     throw new RuntimeException("could not load the image", var3);
                 }
-                U.log("could not load the image", var3);
+                LOGGER.warn("could not load the image: {}", url, var3);
                 return null;
             }
 

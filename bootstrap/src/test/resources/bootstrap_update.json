@@ -5,11 +5,11 @@
       "shortBrand": "legacy",
       "downloads": {
         "JAR": {
-          "url": "http://repo.tlauncher.ru/legacy/bootstrap.jar",
+          "url": "https://repo.tlauncher.ru/legacy/bootstrap.jar",
           "checksum": ""
         },
         "EXE": {
-          "url": "http://repo.tlauncher.ru/legacy/bootstrap.exe",
+          "url": "https://repo.tlauncher.ru/legacy/bootstrap.exe",
           "checksum": ""
         }
       }
@@ -22,8 +22,8 @@
     }
   },
   "support": {
-    "ru_RU": "http://tlaun.ch/support/ru",
-    "en_US": "http://tlaun.ch/support/en"
+    "ru_RU": "https://tlaun.ch/support/ru",
+    "en_US": "https://tlaun.ch/support/en"
   },
   "options": {
     "stats": true,

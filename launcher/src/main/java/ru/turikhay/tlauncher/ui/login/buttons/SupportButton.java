@@ -55,23 +55,23 @@ public class SupportButton extends LocalizableButton implements Blockable {
 
     {
         localeMap.put("ru_RU", new SupportMenu("info.png")
-                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu"))
-                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/discord/ru?from=menu"))
+                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/vk?from=menu"))
+                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/discord/ru?from=menu"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
         );
 
         localeMap.put("uk_UA", new SupportMenu("comments-o.png")
-                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/vk?from=menu"))
-                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/discord/ru?from=menu"))
-                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu"))
+                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/vk?from=menu"))
+                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/discord/ru?from=menu"))
+                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/fb?from=menu"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
         );
 
         localeMap.put("en_US", new SupportMenu("comments-o.png")
-                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/discord/intl?from=menu"))
-                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("http://tlaun.ch/fb?from=menu"))
+                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/discord/intl?from=menu"))
+                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/fb?from=menu"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
         );

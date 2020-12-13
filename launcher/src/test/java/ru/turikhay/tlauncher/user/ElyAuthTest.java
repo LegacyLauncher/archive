@@ -52,7 +52,7 @@ public class ElyAuthTest {
         });
         ElyUser user = auth.createUser(null);
         assertNotNull(user, "user");
-        U.log(user);
+        System.out.println(user.toString());
     }
 
     @Test

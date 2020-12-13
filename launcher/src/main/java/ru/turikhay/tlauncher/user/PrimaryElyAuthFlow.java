@@ -3,8 +3,14 @@ package ru.turikhay.tlauncher.user;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.exceptions.IOExceptionList;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.FileUtil;
@@ -26,6 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> {
+    private static final Logger LOGGER = LogManager.getLogger(PrimaryElyAuthFlow.class);
+
     private static final String SERVER_ADDRESS = "http://127.0.0.1:%d";
     private static final String SERVER_ENTRY_POINT = "/";
     static final String SERVER_FULL_URL = SERVER_ADDRESS + SERVER_ENTRY_POINT, QUERY_CODE_KEY = "code", QUERY_STATE_KEY = "state";
@@ -63,7 +71,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
     }
 
     HttpServerAdapter createServer(URIWatchdog watchdog) throws ElyAuthStrategyException, InterruptedException {
-        log("Creating server...");
+        LOGGER.debug("Creating server...");
 
         int portCreatingTries = 0, port;
         ArrayList<IOException> ioEList = new ArrayList<IOException>();
@@ -73,7 +81,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
             ++portCreatingTries;
             port = U.random(49152, 65535);
 
-            log("try:", portCreatingTries, "; selected port:", port);
+            LOGGER.debug("attempt {}; selected port: {}", portCreatingTries, port);
 
             HttpServerAdapter adapter;
             try {
@@ -107,7 +115,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         private final int port, state;
 
         private HttpServerAdapter(URIWatchdog watchdog, int port, int state) throws ClassNotFoundException, IOException {
-            log("Creating HttpServerAdapter at port", port);
+            LOGGER.debug("Creating HttpServerAdapter at port {}", port);
 
             this.watchdog = U.requireNotNull(watchdog, "watchdog");
             this.port = port;
@@ -118,7 +126,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
                 @Override
                 public void handle(HttpExchange httpExchange) throws IOException {
                     try {
-                        log("handling uri:", httpExchange.getRequestURI());
+                        LOGGER.debug("handling uri: {}", httpExchange.getRequestURI());
                         int responseStatus;
                         String response;
 
@@ -142,14 +150,19 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
                         IOUtils.write(response, out, FileUtil.getCharset());
                         out.close();
                     } catch (Exception e) {
-                        U.log("Interrupting watchdog because of Server failure:", e);
+                        LOGGER.error("Interrupting watchdog because of Server (port {}) failure", port, e);
+                        Sentry.capture(new EventBuilder()
+                                .withMessage("internal server crashed")
+                                .withSentryInterface(new ExceptionInterface(e))
+                                .withLevel(Event.Level.ERROR)
+                        );
                         HttpServerAdapter.this.watchdog.interrupt();
                     }
                 }
             });
             server.setExecutor(null);
 
-            log("HttpServer created successfully");
+            LOGGER.debug("HttpServer created successfully");
         }
 
         int getPort() {
@@ -161,17 +174,13 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         }
 
         void start() {
-            log("Http server started at port", port);
+            LOGGER.debug("Http server started at port {}", port);
             server.start();
         }
 
         void stop() {
-            log("Http server stopped at port", port);
+            LOGGER.debug("Http server stopped at port {}", port);
             server.stop(SERVER_STOP_DELAY);
-        }
-
-        private void log(Object... o) {
-            PrimaryElyAuthFlow.this.log("[HttpServer]", o);
         }
     }
 
@@ -185,10 +194,10 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         private URIWatchdog( int state) {
             this.state = state;
 
-            log("Starting watchdog...");
+            LOGGER.debug("Starting watchdog...");
             startAndWait();
             unlockThread("start");
-            log("Started");
+            LOGGER.debug("Started");
         }
 
         int getCheckState() {
@@ -207,12 +216,12 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         }
 
         boolean passURI(URI uri, String redirect_uri, int state) {
-            log("uri passed externally:", uri);
+            LOGGER.debug("uri passed externally: {}", uri);
 
             try {
                 parseURI(uri, redirect_uri, state);
             } catch (Exception e) {
-                log("invalid uri passed:", e);
+                LOGGER.debug("invalid uri passed:", e);
                 return false;
             }
 
@@ -235,12 +244,12 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         public void run() {
             lockThread("start");
             while (true) {
-                log("iteration");
+                LOGGER.trace("iteration");
                 URI currentURI = this.uri;
                 while (currentURI == this.uri) {
-                    log("still same:", currentURI, this.uri);
+                    LOGGER.trace("still same: {} vs {}", currentURI, this.uri);
                     synchronized (wait) {
-                        log("waiting");
+                        LOGGER.trace("waiting");
                         try {
                             wait.wait();
                         } catch (InterruptedException interrupted) {
@@ -249,12 +258,12 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
                     }
                 }
 
-                log("got new uri");
+                LOGGER.debug("got new uri");
                 currentURI = this.uri;
 
                 try {
                     code = parseURI(currentURI, getRedirectUri(server.port), state);
-                    log("got the code", code);
+                    LOGGER.debug("got the code {}", code);
                     return;
                 } catch (Exception e) {
                     for (PrimaryElyAuthFlowListener listener : getListenerList()) {
@@ -270,13 +279,9 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
                             return;
                         }
                     }
-                    log("one more loop", e);
+                    LOGGER.debug("one more loop", e);
                 }
             }
-        }
-
-        private void log(Object... o) {
-            PrimaryElyAuthFlow.this.log("[URIWatchdog]", o);
         }
     }
 

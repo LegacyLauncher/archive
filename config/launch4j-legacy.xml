@@ -3,32 +3,24 @@
     <dontWrapJar>false</dontWrapJar>
     <headerType>gui</headerType>
     <errTitle>Требуется Java / Java required</errTitle>
-    <cmdLine></cmdLine>
     <chdir>.</chdir>
     <priority>normal</priority>
-    <downloadUrl>http://java.com/ru/download/manual.jsp</downloadUrl>
-    <supportUrl></supportUrl>
+    <downloadUrl>https://java.com/ru/download/manual.jsp</downloadUrl>
     <stayAlive>false</stayAlive>
     <restartOnCrash>false</restartOnCrash>
-    <manifest></manifest>
     <icon>icon.ico</icon>
     <jre>
-        <path></path>
         <bundledJre64Bit>false</bundledJre64Bit>
         <bundledJreAsFallback>false</bundledJreAsFallback>
         <minVersion>1.6.0</minVersion>
-        <maxVersion></maxVersion>
         <jdkPreference>preferJre</jdkPreference>
         <runtimeBits>64/32</runtimeBits>
     </jre>
     <versionInfo>
         <fileDescription>Free Minecraft launcher</fileDescription>
-        <copyright>2017</copyright>
-        <productName>TLauncher Legacy</productName>
-        <companyName></companyName>
-        <internalName>tlauncher-legacy</internalName>
-        <originalFilename>TLauncher.exe</originalFilename>
-        <trademarks></trademarks>
+        <productName>TL Legacy</productName>
+        <internalName>tl-legacy</internalName>
+        <originalFilename>TL.exe</originalFilename>
         <language>ENGLISH_US</language>
     </versionInfo>
 </launch4jConfig>

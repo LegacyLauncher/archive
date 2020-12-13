@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.background;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.background.fx.MediaFxBackground;
@@ -9,6 +11,8 @@ import ru.turikhay.util.U;
 import javax.swing.*;
 
 public final class BackgroundManager extends ExtendedLayeredPane {
+    private static final Logger LOGGER = LogManager.getLogger(BackgroundManager.class);
+
     private final static int BACKGROUND_INDEX = 1, COVER_INDEX = Integer.MAX_VALUE;
     final Worker worker;
     final Cover cover;
@@ -33,7 +37,8 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         try {
             _mediaFxBackground = new FXWrapper<MediaFxBackground>(MediaFxBackground.class);
         } catch(Throwable t) {
-            U.log("Could not load MediaFxBackground", t);
+            LOGGER.info("MediaFxBackground will not be available: {}", t.toString());
+            LOGGER.debug("Detailed exception", t);
         }
         mediaFxBackground = _mediaFxBackground;
     }
@@ -93,11 +98,5 @@ public final class BackgroundManager extends ExtendedLayeredPane {
                 worker.setBackground(imageBackground, path);
             }
         }*/
-    }
-
-    @Override
-    public void onResize() {
-        U.log("background manager resized", getSize(), getParent().getSize());
-        super.onResize();
     }
 }

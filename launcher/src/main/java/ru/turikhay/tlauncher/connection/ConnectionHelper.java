@@ -1,11 +1,12 @@
 package ru.turikhay.tlauncher.connection;
 
-import net.minecraft.launcher.updater.OfficialVersionList;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.util.DataBuilder;
 
 public class ConnectionHelper {
     public static boolean isCertException(Throwable e) {
@@ -17,10 +18,18 @@ public class ConnectionHelper {
             return -1;
         }
         if(TLauncher.getInstance().getSettings().isCertFixed()) {
-            Sentry.sendError(OfficialVersionList.class, "certificate fix doesn't help", e, DataBuilder.create().add("cause", cause));
+            Sentry.capture(new EventBuilder()
+                    .withLevel(Event.Level.ERROR)
+                    .withMessage("cert exception with cert fix")
+                    .withSentryInterface(new ExceptionInterface(e))
+                    .withExtra("cause", cause)
+            );
             return 0;
         }
-
+        Sentry.capture(new EventBuilder()
+                .withLevel(Event.Level.INFO)
+                .withMessage("cert fix")
+        );
         Alert.showError(
                 Localizable.get("connection.error.title"),
                 (cause == null? "" : Localizable.get("connection.error.ssl.cause." + cause) + "\n\n") +
@@ -30,7 +39,6 @@ public class ConnectionHelper {
         );
         TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().sslCheck.setValue(false);
         TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().saveValues();
-        Sentry.sendWarning(OfficialVersionList.class, "no certificates", DataBuilder.create("exception", e), DataBuilder.create("cert-fixed", true));
         TLauncher.kill();
         return 1;
     }

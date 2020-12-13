@@ -2,6 +2,8 @@ package net.minecraft.options;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.U;
 
 import java.io.File;
@@ -15,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class OptionsFile {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern LINE_PATTERN = Pattern.compile("^(.+?):(.+)$");
 
     private final Map<String, String> options = new LinkedHashMap<>();
@@ -22,7 +25,6 @@ public final class OptionsFile {
 
     public OptionsFile(File file) {
         this.file = U.requireNotNull(file);
-        logPrefix = "[OptionsFile:" + file.getAbsolutePath() + "]";
     }
 
     public File getFile() {
@@ -58,7 +60,7 @@ public final class OptionsFile {
                 if(m.matches()) {
                     options.put(m.group(1), m.group(2));
                 } else {
-                    log("line skipped:" + line);
+                    LOGGER.warn("Line skipped while parsing {}: {}", file, line);
                 }
             }
         }
@@ -79,10 +81,5 @@ public final class OptionsFile {
                 .append("fileExist", file.isFile())
                 .append("options", options)
                 .build();
-    }
-
-    private final String logPrefix;
-    private void log(Object... o) {
-        U.log(logPrefix, o);
     }
 }

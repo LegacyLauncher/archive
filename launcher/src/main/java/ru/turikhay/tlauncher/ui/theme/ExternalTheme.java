@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.theme;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.U;
@@ -13,6 +15,8 @@ import java.net.URL;
 import java.util.Properties;
 
 public final class ExternalTheme extends ChildTheme {
+    private static final Logger LOGGER = LogManager.getLogger(ExternalTheme.class);
+
     private final Properties properties = new Properties();
 
     ExternalTheme(String name, InputStream input) throws IOException {
@@ -44,7 +48,7 @@ public final class ExternalTheme extends ChildTheme {
                 }
             }
         } catch(RuntimeException rE) {
-            log("Could not parse color: ", key, rE);
+            LOGGER.warn("Could not parse color: {}", key, rE);
             properties.remove(key);
             return defaultColor;
         }
@@ -68,7 +72,7 @@ public final class ExternalTheme extends ChildTheme {
                 throw new ParseException("illegal value [0, "+maxValue+"]: " + key);
             }
         } catch(RuntimeException rE) {
-            log("Could not parse integer: " + key, rE);
+            LOGGER.warn("Could not parse integer at: {} = {}", key, value, rE);
             return defValue;
         }
 

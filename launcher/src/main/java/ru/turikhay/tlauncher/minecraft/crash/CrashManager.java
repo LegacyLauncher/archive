@@ -7,11 +7,13 @@ import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import net.minecraft.options.OptionsFile;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
+import ru.turikhay.tlauncher.minecraft.launcher.ChildProcessLogger;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.sentry.SentryContext;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.util.*;
@@ -19,11 +21,14 @@ import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.windows.DxDiag;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class CrashManager {
+    private static final Logger LOGGER = LogManager.getLogger(CrashManager.class);
+
     private final ArrayList<CrashManagerListener> listeners = new ArrayList<CrashManagerListener>();
     private final Watchdog watchdog = new Watchdog();
 
@@ -32,7 +37,8 @@ public final class CrashManager {
 
     private final MinecraftLauncher launcher;
     private final String version;
-    private final CharSequence output;
+    private final ChildProcessLogger processLogger;
+    private final Charset charset;
     private final int exitCode;
 
     private final CrashEntryList.ListDeserializer listDeserializer;
@@ -78,18 +84,19 @@ public final class CrashManager {
                 try {
                     external = loadEntries(Compressor.uncompressMarked(Repository.EXTRA_VERSION_REPO.get("libraries/signature.json")), "external");
                 } catch (Exception e) {
-                    log("Could not load external entries", e);
+                    LOGGER.warn("Could not load external entries", e);
                     break loadExternal;
                 }
 
                 if (external.getRevision() <= internal.getRevision()) {
-                    log("External signatures are older or the same:", external.getRevision());
+                    LOGGER.info("External signatures are older or the same: {}", external.getRevision());
                     break loadExternal;
                 }
 
                 addAllEntries(external, "external");
 
-                log("External entries revision (" + external.getRevision() + ") is newer than internal (" + internal.getRevision() + "), we'll load them instead of internal ones.");
+                LOGGER.info("Using external entries, because their revision ({}) is newer than the revision" +
+                        "of the internal ones ({})", external.getRevision(), internal.getRevision());
                 break loadLocal; // don't load internal if we have newer external
             }
             addAllEntries(internal, "internal");
@@ -103,10 +110,12 @@ public final class CrashManager {
         addEntry(logFlusherEntry);
     }
 
-    private CrashManager(MinecraftLauncher launcher, String version, CharSequence output, int exitCode) {
+    private CrashManager(MinecraftLauncher launcher, String version,
+                         ChildProcessLogger processLogger, Charset charset, int exitCode) {
         this.launcher = launcher;
         this.version = version;
-        this.output = U.requireNotNull(output, "output");
+        this.processLogger = U.requireNotNull(processLogger, "processLogger");
+        this.charset = U.requireNotNull(charset, "charset");
         this.exitCode = exitCode;
 
         gson = new GsonBuilder()
@@ -118,11 +127,13 @@ public final class CrashManager {
     }
 
     public CrashManager(MinecraftLauncher launcher) {
-        this(launcher, launcher.getVersion(), launcher.getLogOutput(), launcher.getExitCode());
+        this(launcher, launcher.getVersion(), launcher.getProcessLogger(),
+                launcher.getCharset(), launcher.getExitCode());
     }
 
-    public CrashManager(String version, CharSequence output, int exitCode) {
-        this(null, version, output, exitCode);
+    public CrashManager(String version, ChildProcessLogger processLogger,
+                        Charset charset, int exitCode) {
+        this(null, version, processLogger, charset, exitCode);
     }
 
     public void startAndJoin() {
@@ -133,7 +144,7 @@ public final class CrashManager {
             try {
                 watchdog.join();
             } catch (InterruptedException e) {
-                log("Thread was interrupted", e);
+                LOGGER.debug("Thread was interrupted", e);
             }
         }
     }
@@ -151,9 +162,8 @@ public final class CrashManager {
 
     private <T extends IEntry> T addEntry(T entry) {
         if (crashEntries.containsKey(entry.getName())) {
-            log("Removing", crashEntries.get(entry.getName()));
+            LOGGER.trace("Removing {}", crashEntries.get(entry.getName()));
         }
-        //log("Adding", entry.getName());
         crashEntries.put(entry.getName(), entry);
         return entry;
     }
@@ -180,7 +190,7 @@ public final class CrashManager {
     }
 
     private CrashEntryList loadEntries(InputStream input, String type) throws Exception {
-        log("Loading", type, "entries...");
+        LOGGER.trace("Loading {} entries...", type);
 
         try {
             return gson.fromJson(new InputStreamReader(input, FileUtil.DEFAULT_CHARSET), CrashEntryList.class);
@@ -197,8 +207,8 @@ public final class CrashManager {
         return version;
     }
 
-    public CharSequence getOutput() {
-        return output;
+    public ChildProcessLogger getProcessLogger() {
+        return processLogger;
     }
 
     public int getExitCode() {
@@ -251,20 +261,12 @@ public final class CrashManager {
     private Scanner getCrashFileScanner() throws IOException {
         File crashFile = crash.getCrashFile();
         if(crashFile == null || !crashFile.isFile()) {
-            log("Crash report file doesn't exist. May be looking into logs?");
-            return PatternEntry.getScanner(getOutput());
+            LOGGER.info("Crash report file doesn't exist. May be looking into logs?");
+            return PatternEntry.getScanner(getProcessLogger());
         } else {
-            log("Crash report file exist. We'll scan it.");
+            LOGGER.info("Crash report file exist. We'll scan it.");
             return new Scanner(new InputStreamReader(new FileInputStream(crashFile), FileUtil.getCharset()));
         }
-    }
-
-    private SentryContext sentry() {
-        return SentryContext.getContextOrGlobal(MinecraftLauncher.SENTRY_CONTEXT_NAME);
-    }
-
-    void log(Object... o) {
-        U.log("[Crash]", o);
     }
 
     private class Watchdog extends ExtendedThread {
@@ -300,7 +302,6 @@ public final class CrashManager {
                     for (CrashManagerListener listener : listeners) {
                         listener.onCrashManagerFailed(CrashManager.this, e);
                     }
-                    sentry().sendError(CrashManager.class, "crashmanager fatal error", e, null);
                     break executor;
                 }
                 for (CrashManagerListener listener : listeners) {
@@ -363,21 +364,21 @@ public final class CrashManager {
                     if (capable) {
                         capableEntry = (CrashEntry) entry;
 
-                        log("Found capable:", capableEntry.getName());
+                        LOGGER.info("Found relevant: {}", capableEntry.getName());
                         crash.setEntry(capableEntry);
 
                         if (capableEntry.isFake()) {
-                            log("It is fake, skipping remaining...");
+                            LOGGER.info("It is a \"fake\" crash, skipping remaining...");
                         }
                     }
                 } else if (entry instanceof Entry) {
                     if (capableEntry != null) {
                         if (!((Entry) entry).isCapable(capableEntry)) {
-                            log("Skipping:", entry.getName());
+                            LOGGER.trace("Skipping: {}", entry.getName());
                             continue;
                         }
                     }
-                    log("Executing:", entry.getName());
+                    LOGGER.trace("Executing: {}", entry.getName());
                     try {
                         ((Entry) entry).execute();
                     } catch (Exception e) {
@@ -402,11 +403,7 @@ public final class CrashManager {
                     .add("stackTrace", crash.getStackTrace()).add("javaDescription", crash.getJavaDescription())
                     .add(crash.getExtraInfo());
 
-            sentry().sendWarning(CrashManager.class, sentryMessage, dataBuilder,
-                DataBuilder.create("mcVersion", version).add("exitCode", exitCode).add("javaDescription", crash.getJavaDescription())
-            );
-
-            log("Done in", Time.stop(timer), "ms");
+            LOGGER.info("Done in {} ms", Time.stop(timer));
         }
 
         @Override
@@ -472,33 +469,34 @@ public final class CrashManager {
         }
 
         protected boolean checkCapability() throws Exception {
-            Scanner scanner = getCrashFileScanner();
-
-            if(PatternEntry.matchPatterns(scanner, patterns, null)) {
-                log("Not all patterns met. Skipping");
-                return false;
-            }
-
-            log("All patterns are met. Working on a mod list");
             final List<ErroredMod> errorModList = new ArrayList<>();
 
-            while(scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                Matcher matcher = modPattern.matcher(line);
+            try(Scanner scanner = getCrashFileScanner()) {
+                if (PatternEntry.matchPatterns(scanner, patterns, null)) {
+                    LOGGER.debug("Not all patterns met. Skipping");
+                    return false;
+                }
+                LOGGER.debug("All patterns are met. Working on a mod list");
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    Matcher matcher = modPattern.matcher(line);
 
 
-                // check if the last state is "E"
-                if(matcher.matches() && "e".equalsIgnoreCase(matcher.group(1))) {
-                    // add its name to the list
-                    ErroredMod mod = new ErroredMod(matcher);
-                    errorModList.add(mod);
-                    log("Added:", mod);
+                    // check if the last state is "E"
+                    if (matcher.matches() && "e".equalsIgnoreCase(matcher.group(1))) {
+                        // add its name to the list
+                        ErroredMod mod = new ErroredMod(matcher);
+                        errorModList.add(mod);
+                        LOGGER.debug("Added: {}", mod);
+                    }
                 }
             }
 
             if(errorModList.isEmpty()) {
-                log("Could not find any errored mods. Well, okay...");
+                LOGGER.info("Could not find mods that caused the crash.");
                 return false;
+            } else {
+                LOGGER.info("Crash probably caused by the following mods: {}", errorModList);
             }
 
             boolean multiple = errorModList.size() > 1;
@@ -563,59 +561,59 @@ public final class CrashManager {
 
         @Override
         protected void execute() throws Exception {
-            log("Looking for crash description...");
-            Scanner scanner = getCrashFileScanner();
-            ArrayList<String> matches = new ArrayList<>();
-            String description = null;
-            findDescription:
-            {
-                if (!PatternEntry.matchPatterns(scanner, patternList, matches)) {
-                    break findDescription;
+            LOGGER.debug("Looking for crash description...");
+            try(Scanner scanner = getCrashFileScanner()) {
+                ArrayList<String> matches = new ArrayList<>();
+                String description = null;
+                findDescription:
+                {
+                    if (!PatternEntry.matchPatterns(scanner, patternList, matches)) {
+                        break findDescription;
+                    }
+                    if (matches.isEmpty()) {
+                        LOGGER.debug("No description?");
+                        break findDescription;
+                    }
+                    description = matches.get(0);
                 }
-                if (matches.isEmpty()) {
-                    log("No description?");
-                    break findDescription;
+                if (description == null) {
+                    LOGGER.info("Could not find crash description");
+                    return;
                 }
-                description = matches.get(0);
-            }
-            if(description == null) {
-                log("Could not find crash description");
-                return;
-            }
-            String line = null;
-            if(scanner.hasNextLine()) {
-                line = scanner.nextLine();
-                if(StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) { // must be empty after "Description" line
+                String line = null;
+                if (scanner.hasNextLine()) {
                     line = scanner.nextLine();
+                    if (StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) { // must be empty after "Description" line
+                        line = scanner.nextLine();
+                    }
                 }
-            }
-            if(StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) {
-                log("Stack trace line is empty?");
+                if (StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) {
+                    LOGGER.debug("Stack trace line is empty?");
 
-                StringBuilder moreLines = new StringBuilder();
-                int additionalLines = 0;
+                    StringBuilder moreLines = new StringBuilder();
+                    int additionalLines = 0;
 
-                while(scanner.hasNextLine() && additionalLines < 10) {
-                    additionalLines++;
-                    moreLines.append('\n').append(scanner.nextLine());
+                    while (scanner.hasNextLine() && additionalLines < 10) {
+                        additionalLines++;
+                        moreLines.append('\n').append(scanner.nextLine());
+                    }
+                    crash.addExtra("stackTraceLineIsEmpty", "");
+
+                    return;
                 }
-                sentry().sendWarning(CrashManager.class, "stack trace line is empty", DataBuilder.create("description", description).add("lines", moreLines.length() > 1? moreLines.substring(1) : null));
-                crash.addExtra("stackTraceLineIsEmpty", "");
-
-                return;
-            }
-            crash.setJavaDescription(line);
-            StringBuilder stackTraceBuilder = new StringBuilder();
-            while(scanner.hasNextLine()) {
-                line = scanner.nextLine();
-                if(StringUtils.isBlank(line)) {
-                    break;
-                } else {
-                    stackTraceBuilder.append('\n').append(line);
+                crash.setJavaDescription(line);
+                StringBuilder stackTraceBuilder = new StringBuilder();
+                while (scanner.hasNextLine()) {
+                    line = scanner.nextLine();
+                    if (StringUtils.isBlank(line)) {
+                        break;
+                    } else {
+                        stackTraceBuilder.append('\n').append(line);
+                    }
                 }
-            }
-            if(stackTraceBuilder.length() > 1) {
-                crash.setStackTrace(stackTraceBuilder.substring(1));
+                if (stackTraceBuilder.length() > 1) {
+                    crash.setStackTrace(stackTraceBuilder.substring(1));
+                }
             }
         }
     }
@@ -631,51 +629,19 @@ public final class CrashManager {
 
         @Override
         protected void execute() throws Exception {
-            Scanner scanner = PatternEntry.getScanner(getOutput());
-
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-
-                /*String crashDescription = get(crashDescriptionPattern, line);
-                if(crashDescription != null) {
-                    crash.setDescription(crashDescription);
-                    if(scanner.hasNextLine()) {
-                        String nextLine = null;
-                        while(scanner.hasNextLine()) {
-                            nextLine = scanner.nextLine();
-                            if(!StringUtils.isBlank(nextLine)) {
-                                break;
-                            }
-                        }
-                        StringBuilder stackTraceBuilder = new StringBuilder();
-                        if(!StringUtils.isBlank(nextLine)) {
-                            crash.setJavaDescription(nextLine);
-                            while(scanner.hasNextLine()) {
-                                nextLine = scanner.nextLine();
-                                if(StringUtils.isBlank(nextLine)) {
-                                    break;
-                                } else {
-                                    stackTraceBuilder.append('\n').append(nextLine);
-                                }
-                            }
-                        }
-                        if(stackTraceBuilder.length() > 1) {
-                            crash.setStackTrace(stackTraceBuilder.substring(1));
-                        }
-                    }
-                }*/
-
-                String crashFile = get(crashFilePattern, line);
-                if (crashFile != null) {
-                    crash.setCrashFile(crashFile);
-                    continue;
-                }
-
-                if (line.equals("# An error report file with more information is saved as:") && scanner.hasNextLine()) {
-                    String nativeCrashFile = get(nativeCrashFilePattern, line = scanner.nextLine());
-                    if (nativeCrashFile != null) {
-                        crash.setNativeCrashFile(nativeCrashFile);
+            try(Scanner scanner = PatternEntry.getScanner(getProcessLogger())) {
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    String crashFile = get(crashFilePattern, line);
+                    if (crashFile != null) {
+                        crash.setCrashFile(crashFile);
                         continue;
+                    }
+                    if (line.equals("# An error report file with more information is saved as:") && scanner.hasNextLine()) {
+                        String nativeCrashFile = get(nativeCrashFilePattern, line = scanner.nextLine());
+                        if (nativeCrashFile != null) {
+                            crash.setNativeCrashFile(nativeCrashFile);
+                        }
                     }
                 }
             }
@@ -711,21 +677,19 @@ public final class CrashManager {
 
         @Override
         protected void execute() throws Exception {
-            synchronized (U.lock) {
-                readFile(getCrash().getCrashFile());
-                readFile(getCrash().getNativeCrashFile());
+            readFile(getCrash().getCrashFile());
+            readFile(getCrash().getNativeCrashFile());
 
-                if (getLauncher() != null && getVersion().toLowerCase().contains("forge")) {
-                    treeDir(new File(getLauncher().getGameDir(), "mods"), 2);
-                    writeDelimiter();
-                }
+            if (getLauncher() != null && getVersion().toLowerCase().contains("forge")) {
+                treeDir(new File(getLauncher().getGameDir(), "mods"), 2);
+                writeDelimiter();
+            }
 
-                if (DxDiag.isScannable()) {
-                    try {
-                        DxDiag.get();
-                    } catch (Exception e) {
-                        U.log("Could not retrieve DxDiag", e);
-                    }
+            if (DxDiag.isScannable()) {
+                try {
+                    DxDiag.get();
+                } catch (Exception e) {
+                    LOGGER.warn("Could not retrieve DxDiag", e);
                 }
             }
         }
@@ -742,23 +706,21 @@ public final class CrashManager {
             nlog("<File", file, ">");
             try {
                 if (!file.isFile()) {
-                    log("File doesn't exist:", file);
+                    LOGGER.warn("File doesn't exist: {}", file);
                     return;
                 }
 
                 nlog("Reading file:", file);
                 nlog();
 
-                Scanner scanner = null;
-                try {
-                    scanner = new Scanner(file);
+                try(Scanner scanner = new Scanner(
+                        new InputStreamReader(new FileInputStream(file), charset)
+                )){
                     while (scanner.hasNextLine()) {
                         nlog(scanner.nextLine());
                     }
                 } catch (Exception e) {
-                    log("Could not read file:", file, e);
-                } finally {
-                    U.close(scanner);
+                    LOGGER.warn("Could not read file: {}", file, e);
                 }
             } finally {
                 nlog("</File", file, ">");
@@ -887,7 +849,7 @@ public final class CrashManager {
         }
 
         private void nlog(Object... o) {
-            U.plog("+", o);
+            LOGGER.info("+", o);
         }
 
         private void plog(Object... objs) {
@@ -951,7 +913,8 @@ public final class CrashManager {
         }
     }
 
-    private class SetAction extends ArgsAction {
+    private static class SetAction extends ArgsAction {
+        private static final Logger LOGGER = LogManager.getLogger(SetAction.class);
         private final Map<OptionSpec<String>, String> optionMap = new HashMap<OptionSpec<String>, String>();
 
         SetAction() {
@@ -968,7 +931,7 @@ public final class CrashManager {
                 String key = optionMap.get(spec);
 
                 if (key == null) {
-                    log("Could not find key for spec", spec);
+                    LOGGER.warn("Could not find key for spec {}", spec);
                     continue;
                 }
 
@@ -986,7 +949,7 @@ public final class CrashManager {
 
                     value = String.valueOf(set);
                 }
-                log("Setting:", key, value);
+                LOGGER.info("Set configuration key {} = {}", key, value);
                 TLauncher.getInstance().getSettings().set(key, value);
                 if(TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
                     TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
@@ -1002,15 +965,6 @@ public final class CrashManager {
 
         @Override
         public void execute(String args) throws Exception {
-            if(args.equals("logs")) {
-                if (getLauncher() != null && getLauncher().getLogger() != null && !getLauncher().getLogger().isKilled()) {
-                    getLauncher().getLogger().show(true);
-                } else {
-                    TLauncher.getInstance().getLogger().show(true);
-                }
-                return;
-            }
-
             if (args.startsWith("settings")) {
                 TLauncher.getInstance().getFrame().mp.setScene(TLauncher.getInstance().getFrame().mp.defaultScene);
                 TLauncher.getInstance().getFrame().mp.defaultScene.setSidePanel(DefaultScene.SidePanel.SETTINGS);

@@ -65,4 +65,9 @@ public abstract class ExtendedComponentListener implements ComponentListener {
     public abstract void onComponentMoving(ComponentEvent var1);
 
     public abstract void onComponentMoved(ComponentEvent var1);
+
+    public void dispose() {
+        moveListener.dispose();
+        resizeListener.dispose();
+    }
 }

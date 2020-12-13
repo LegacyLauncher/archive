@@ -1,11 +1,15 @@
 package ru.turikhay.tlauncher.ui.alert;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
 
 public class Alert {
+    private static final Logger LOGGER = LogManager.getLogger(Alert.class);
+
     private static final String PREFIX = "TLauncher : ";
     private static final String MISSING_TITLE = "MISSING TITLE";
     private static final String MISSING_MESSAGE = "MISSING MESSAGE";
@@ -15,7 +19,7 @@ public class Alert {
 
     public static void showError(String title, String message, Object textarea) {
         if (textarea instanceof Throwable) {
-            U.log("Showing error:", textarea);
+            LOGGER.error("Showed this error to the user:", (Throwable) textarea);
         }
 
         showMonolog(0, title, message, textarea);

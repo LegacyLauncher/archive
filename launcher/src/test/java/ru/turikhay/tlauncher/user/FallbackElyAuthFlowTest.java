@@ -10,7 +10,7 @@ public class FallbackElyAuthFlowTest {
     public void testFetchCode() throws Exception {
         FallbackElyAuthFlow fallbackElyAuthStrategy = new FallbackElyAuthFlow();
         fallbackElyAuthStrategy.registerListener(new FallbackLisenerTest());
-        U.log(fallbackElyAuthStrategy.call());
+        System.out.println(fallbackElyAuthStrategy.call());
     }
 
     private static class FallbackLisenerTest implements FallbackElyAuthFlowListener {

@@ -176,10 +176,6 @@ public class Downloadable {
         return container != null;
     }
 
-    public boolean hasLogger() {
-        return container != null && container.hasLogger();
-    }
-
     public void addHandler(DownloadableHandler handler) {
         if (handler == null) {
             throw new NullPointerException();

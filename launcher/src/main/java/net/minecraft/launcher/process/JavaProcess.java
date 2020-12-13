@@ -1,20 +1,28 @@
 package net.minecraft.launcher.process;
 
+import java.nio.charset.Charset;
+
 public class JavaProcess {
     private static final int MAX_SYSOUT_LINES = 5;
 
     private final LimitedCapacityList<String> sysOutLines = new LimitedCapacityList<String>(String.class, MAX_SYSOUT_LINES);
     private JavaProcessListener listener;
     private final Process process;
-    private final ProcessMonitorThread monitor;
+    private final ProcessMonitor monitor;
+    private final Charset charset;
 
-    public JavaProcess(Process process) {
+    public JavaProcess(Process process, Charset charset) {
         this.process = process;
-        monitor = new ProcessMonitorThread(this);
+        this.charset = charset;
+        monitor = new ProcessMonitor(this, charset);
         monitor.start();
     }
 
-    public ProcessMonitorThread getMonitor() {
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public ProcessMonitor getMonitor() {
         return monitor;
     }
 

@@ -194,8 +194,4 @@ public class CenterPanel extends VPanel implements Blockable {
         setEnabled(true);
         Blocker.unblockComponents(this, reason);
     }
-
-    protected void log(Object... o) {
-        U.log("[" + getClass().getSimpleName() + "]", o);
-    }
 }

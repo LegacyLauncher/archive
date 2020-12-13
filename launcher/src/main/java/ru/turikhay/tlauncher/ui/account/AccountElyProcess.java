@@ -1,10 +1,15 @@
 package ru.turikhay.tlauncher.ui.account;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -16,9 +21,7 @@ import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.user.*;
-import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 import javax.swing.*;
@@ -30,6 +33,7 @@ import java.net.URL;
 import java.util.concurrent.Future;
 
 public class AccountElyProcess extends BorderPanel implements AccountMultipaneCompCloseable {
+    private static final Logger LOGGER = LogManager.getLogger(AccountElyProcess.class);
     private final String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
 
     private final AccountManagerScene scene;
@@ -272,9 +276,13 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
         try {
             user = code.getUser();
         } catch (Exception e) {
-            log("Could not get user", e);
-            Sentry.sendError(AccountElyProcess.class, "Could not exchange code", e, DataBuilder.create().add("strategy", strategy));
+            LOGGER.error("Could not get user", e);
             if(ConnectionHelper.fixCertException(e, "ely-auth") == -1) {
+                Sentry.capture(new EventBuilder()
+                    .withMessage("couldn't fetch Ely user code")
+                    .withLevel(Event.Level.ERROR)
+                    .withSentryInterface(new ExceptionInterface(e))
+                );
                 Alert.showLocError("account.manager.error.title", "account.manager.error.ely.fetch-code", e);
             }
             setState(FlowState.ERROR);
@@ -324,10 +332,5 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
     public enum FlowState {
         INIT, WAITING, CANCELLED, INPUT_WAITING, EXCHANGE, ERROR, COMPLETE
-    }
-
-    private final String logPrefix = "[" + getClass().getSimpleName() + "]";
-    private void log(Object... o) {
-        U.log(logPrefix, o);
     }
 }

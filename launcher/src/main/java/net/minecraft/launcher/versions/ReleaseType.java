@@ -1,6 +1,8 @@
 package net.minecraft.launcher.versions;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
@@ -15,6 +17,8 @@ public enum ReleaseType {
     OLD_ALPHA("old-alpha", true, false),
     LAUNCHER("launcher", true, false),
     UNKNOWN("unknown", false, false);
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<String, ReleaseType> lookup;
     private static final List<ReleaseType> defaultTypes;
@@ -102,7 +106,7 @@ public enum ReleaseType {
 
                 Date date = version.getReleaseTime();
                 if(date == null) {
-                    U.log("WARNING: release time is null", version.getID());
+                    LOGGER.warn("release time null: {}", version.getID());
                     return false;
                 }
 

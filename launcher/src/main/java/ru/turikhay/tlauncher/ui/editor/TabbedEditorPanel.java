@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.editor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.center.CenterPanelTheme;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
@@ -18,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TabbedEditorPanel extends AbstractEditorPanel {
+    private static final Logger LOGGER = LogManager.getLogger(TabbedEditorPanel.class);
+
     private static final Point zeroPoint = new Point(0, 0);
 
     protected final BorderPanel container;
@@ -41,7 +45,7 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
                     };
                     break initTabbedPane;
                 } catch(Throwable t) {
-                    log(t);
+                    LOGGER.warn("Unable to initialize WinTabbedPane: {}", t.toString());
                 }
             }
             tabbedPane = new TabbedPane() {

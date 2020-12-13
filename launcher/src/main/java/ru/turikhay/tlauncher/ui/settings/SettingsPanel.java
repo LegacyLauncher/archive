@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.ui.settings;
 
 import net.minecraft.launcher.versions.ReleaseType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.managers.VersionLists;
@@ -41,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
+    private static final Logger LOGGER = LogManager.getLogger(SettingsPanel.class);
     private final DefaultScene scene;
     private final TabbedEditorPanel.EditorPanelTab minecraftTab;
     public final EditorFieldHandler directory;
@@ -259,7 +262,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         try {
             backgroundExplorer = mediaFxAvailable ? MediaFileExplorer.newExplorer() : ImageFileExplorer.newExplorer();
         } catch (Exception e) {
-            log("could not load explorer", e);
+            LOGGER.warn("Could not load FileExplorer", e);
         }
 
         background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt." + (mediaFxAvailable ? "media" : "image"), backgroundExplorer, true, true));
@@ -276,18 +279,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         logger.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldvalue, String newvalue) {
                 if (newvalue != null) {
-                    switch (Configuration.LoggerType.get(newvalue)) {
-                        case GLOBAL:
-                            TLauncher.getInstance().getLogger().show(false);
-                            break;
-                        case MINECRAFT:
-                        case NONE:
-                            TLauncher.getInstance().getLogger().hide();
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Unknown logger type!");
-                    }
-
+                    tlauncher.reloadLoggerUI();
                 }
             }
         });
@@ -506,9 +498,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         String path = handler.getPath();
         if (global.isSaveable(path)) {
             String value = global.getDefault(path);
-            log("Resetting:", handler.getClass().getSimpleName(), path, value);
             handler.setValue(value);
-            log("Reset!");
         }
     }
 

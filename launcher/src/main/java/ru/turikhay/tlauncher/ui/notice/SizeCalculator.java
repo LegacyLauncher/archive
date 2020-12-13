@@ -27,7 +27,6 @@ class SizeCalculator implements Callable<Dimension> {
 
     @Override
     public Dimension call() throws Exception {
-        long start = System.currentTimeMillis();
         WeakObjectPool<NoticeEditorPane>.ObjectRef<NoticeEditorPane> ref = editorPanePool.get();
         try {
             final NoticeEditorPane pane = ref.get();
@@ -38,7 +37,6 @@ class SizeCalculator implements Callable<Dimension> {
                 return pane.calcPreferredSize(SwingUtil.magnify(MIN_HEIGHT), SwingUtil.magnify(MIN_WIDTH), SwingUtil.magnify(MAX_WIDTH));
             }
         } finally {
-            U.log("Dimension calculated in", (System.currentTimeMillis() - start), "for", notice.getId());
             ref.free();
         }
     }

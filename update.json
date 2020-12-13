@@ -25,8 +25,8 @@
     }
   },
   "support": {
-    "ru_RU": "http://tlaun.ch/support/ru",
-    "en_US": "http://tlaun.ch/support/en"
+    "ru_RU": "https://tlaun.ch/support/ru",
+    "en_US": "https://tlaun.ch/support/en"
   },
   "options": {
     "stats": true,

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.configuration.BootConfiguration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.stats.Stats;
@@ -13,6 +15,8 @@ import java.util.List;
 import java.util.*;
 
 public final class NoticeManager implements LocalizableComponent, Blockable {
+    private static final Logger LOGGER = LogManager.getLogger(NoticeManager.class);
+
     private static final int HIDDEN_DELAY = 1000 * 60 * 60 * 24 * 7; // 1 week
 
     private final TLauncherFrame frame;
@@ -33,22 +37,22 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                 Locale locale = U.getLocale(entry.getKey());
 
                 if (locale == null) {
-                    log("[WARN] Couldn't parse locale:", key);
+                    LOGGER.warn("Couldn't parse locale: {}", key);
                     continue;
                 }
                 if (entry.getValue() == null) {
-                    log("[WARN] Notice list is null:", key);
+                    LOGGER.warn("Notice list is null: {}", key);
                     continue;
                 }
                 if (entry.getValue().isEmpty()) {
-                    log("[WARN] Notice list is empty:", key);
+                    LOGGER.debug("Notice list is empty: {}", key);
                     continue;
                 }
 
                 List<Notice> noticeList = new ArrayList<Notice>();
                 for (Notice notice : entry.getValue()) {
                     if (notice == null) {
-                        log("[WARN] Found null selectedNotice in", key);
+                        LOGGER.warn("Found null selectedNotice in {}", key);
                         continue;
                     }
                     noticeList.add(notice);
@@ -84,7 +88,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                 }
 
                 byLocaleMap.put(locale, Collections.unmodifiableList(noticeList));
-                log("Added", noticeList.size(), "notices for", locale);
+                LOGGER.debug("Added {} notices for {}", noticeList.size(), locale);
             }
 
             if(frame != null){
@@ -123,7 +127,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
             });*/
             selectRandom();
         } else {
-            log("[WARN] Notice map is empty");
+            LOGGER.debug("Notice map is empty");
         }
     }
 
@@ -264,12 +268,6 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     @Override
     public void updateLocale() {
         selectRandom();
-    }
-
-    private final String logPrefix = '[' + getClass().getSimpleName() + ']';
-
-    private void log(Object... o) {
-        U.log(logPrefix, o);
     }
 
     public void selectRandom() {

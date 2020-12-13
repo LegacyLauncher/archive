@@ -22,17 +22,19 @@ plugins {
     id 'edu.sc.seis.launch4j' version '2.4.6'
 }
 
-version '1.8.2'
+version '1.10.0'
+
+apply from: '../gradle/brand.gradle'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_6
-    targetCompatibility = JavaVersion.VERSION_1_6
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 dependencies {
     implementation(project(":bridge"))
     implementation(project(":jWMI"))
-    implementation("com.getsentry.raven:raven:7.8.1")
+    implementation("com.getsentry.raven:raven:7.8.6")
     implementation("net.sf.jopt-simple:jopt-simple:4.9")
     implementation("com.timgroup:java-statsd-client:3.1.0")
     implementation("com.github.zafarkhaja:java-semver:0.9.0")
@@ -72,6 +74,7 @@ task minifiedJar(type: ProGuardTask) {
 
     dependsOn shadowJar
 }
+jar.finalizedBy(minifiedJar)
 
 launch4j {
     mainClassName = "ru.turikhay.tlauncher.bootstrap.BootstrapStarter"
@@ -79,8 +82,7 @@ launch4j {
     jar = "lib/${shadowJar.archiveFileName.get().replace("all", "min")}"
     outfile = "${project.name}-${project.version}.exe"
     copyConfigurable = project.tasks.minifiedJar.outputs.files
-//    xmlFileName = "${rootProject.rootDir}/config/launch4j-legacy.xml"
-    xmlFileName = "${rootProject.rootDir}/config/launch4j-mcl.xml"
+    xmlFileName = "${rootProject.rootDir}/config/launch4j-${launch4j_xml}.xml"
 }
 createExe.dependsOn(minifiedJar)
 
@@ -88,10 +90,12 @@ task runDebug(type: JavaExec) {
     group = "Execution"
     description = "Run BootstrapDebug"
     classpath(sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
+    maxHeapSize = "128M"
     main = "ru.turikhay.tlauncher.bootstrap.BootstrapDebug"
     if (System.getenv("RUN_EXTERNAL") == "true") {
         jvmArgs("-Dtlauncher.bootstrap.debug.external=true")
     }
+    jvmArgs("-Dtlauncher.logFolder=${rootDir}/logs")
     args("--debug")
 
     dependsOn(":launcher:buildLauncherRepo")
@@ -100,30 +104,10 @@ task runDebug(type: JavaExec) {
 
 task generateMeta {
     doLast {
-        def git_branch = (grgit) ? grgit.branch.current()?.name?.replace("/", "-") : null
-        def short_brand = System.getenv("SHORT_BRAND")
-        def full_brand = System.getenv("BRAND")
-        def bootstrap_version = project.version
-        if (!full_brand) full_brand = "Legacy"
-
-        switch (git_branch) {
-            case null:
-                if (!short_brand) short_brand = "legacy_beta_unknown"
-                bootstrap_version += "+unknown"
-                break
-            case "master":
-                if (!short_brand) short_brand = "legacy"
-                break
-            default:
-                if (!short_brand) short_brand = "legacy_beta"
-                bootstrap_version += "+$git_branch"
-                break
-        }
-
         def meta = new JsonBuilder()
 
         meta {
-            version(bootstrap_version)
+            version(product_version)
             shortBrand(short_brand)
             brand(full_brand)
             buildDate(OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))

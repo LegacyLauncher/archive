@@ -9,6 +9,8 @@ import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
@@ -22,6 +24,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public abstract class VersionList {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     protected final Gson gson;
     protected final Map<String, Version> byName = new Hashtable();
     protected final List<Version> versions = Collections.synchronizedList(new ArrayList());
@@ -94,7 +98,7 @@ public abstract class VersionList {
             version.setVersionList(this);
         }
 
-        log("Got in", Time.stop(lock), "ms");
+        LOGGER.info("Got {} in {} ms", getClass().getSimpleName(), Time.stop(lock));
         return list;
     }
 
@@ -116,12 +120,12 @@ public abstract class VersionList {
             Entry en1 = (Entry) var3.next();
             ReleaseType releaseType = (ReleaseType) en1.getKey();
             if (releaseType == null) {
-                log("Unknown release type for latest version entry:", en1);
+                LOGGER.warn("Unknown release type for latest version entry: {}", en1);
             } else {
                 Version version = getVersion((String) en1.getValue());
 
                 if (version == null) {
-                    log("Cannot find version for latest version entry: " + en1);
+                    LOGGER.warn("Cannot find version for latest version entry: {}", en1);
                 } else {
                     latest.put(releaseType, version);
                 }
@@ -138,7 +142,7 @@ public abstract class VersionList {
         if (version.getID() == null) {
             throw new IllegalArgumentException("Cannot add blank version");
         } else if (getVersion(version.getID()) != null) {
-            log("Version \'" + version.getID() + "\' is already tracked");
+            LOGGER.warn("Version \'{}\' is already tracked", version.getID());
             return version;
         } else {
             versions.add(version);
@@ -195,9 +199,5 @@ public abstract class VersionList {
         }
 
         dependencies.add(list);
-    }
-
-    void log(Object... obj) {
-        U.log("[" + getClass().getSimpleName() + "]", obj);
     }
 }

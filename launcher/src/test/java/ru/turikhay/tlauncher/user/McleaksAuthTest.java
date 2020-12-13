@@ -22,9 +22,9 @@ public class McleaksAuthTest {
         } catch(McleaksAltTokenExpired expired) {
             return;
         }
-        U.log(user);
+        System.out.println(user);
         auth.validate(user);
-        U.log(user);
+        System.out.println(user);
         //assertEquals(user.getDisplayName(), "");
     }
 

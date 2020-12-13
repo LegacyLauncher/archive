@@ -2,7 +2,7 @@ package ru.turikhay.tlauncher.ui.support;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CharSequenceInputStream;
-import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
@@ -11,9 +11,8 @@ import ru.turikhay.util.*;
 import ru.turikhay.tlauncher.pasta.PastaResult;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> {
 
@@ -41,7 +40,7 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
             @Override
             protected SendInfoResponse get() throws Exception {
                 Pasta pasta = new Pasta();
-                pasta.setContent(TLauncher.getInstance().getLogger().getOutput());
+                pasta.setLogFile(Log4j2ContextHelper.getCurrentLogFile());
 
                 PastaResult result = pasta.paste();
 
@@ -72,8 +71,6 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
     protected void onFailed(Process process, Exception e) {
         super.onFailed(process, e);
 
-        U.log("Error sending diagnostic data", e);
-
         if (Alert.showLocQuestion("support.sending.error")) {
             Exception error;
 
@@ -95,14 +92,17 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
 
                 if (explorer.getSelectedFile() != null) {
                     File file = explorer.getSelectedFile();
-                    FileOutputStream out = null;
-                    try {
-                        IOUtils.copy(new CharSequenceInputStream(TLauncher.getInstance().getLogger().getOutput(), FileUtil.DEFAULT_CHARSET), out = new FileOutputStream(file));
+                    try(
+                            InputStreamReader reader = Log4j2ContextHelper.getCurrentLogFile().read();
+                            OutputStreamWriter writer = new OutputStreamWriter(
+                                    new FileOutputStream(file),
+                                    StandardCharsets.UTF_8
+                            )
+                    ) {
+                        IOUtils.copy(reader, writer);
                     } catch (Exception e0) {
                         error = e0;
                         break savingFile;
-                    } finally {
-                        U.close(out);
                     }
 
                     Alert.showLocMessage("support.saving.success", file);

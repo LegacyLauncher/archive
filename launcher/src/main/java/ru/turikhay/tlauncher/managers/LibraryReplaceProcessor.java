@@ -10,6 +10,8 @@ import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import net.minecraft.launcher.versions.json.PatternTypeAdapter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
@@ -18,6 +20,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class LibraryReplaceProcessor extends InterruptibleComponent {
+    private static final Logger LOGGER = LogManager.getLogger(LibraryReplaceProcessor.class);
+
     private final double VERSION = 1.0;
 
     private final List<LibraryReplaceProcessorListener> listeners = Collections.synchronizedList(new ArrayList<LibraryReplaceProcessorListener>());
@@ -118,10 +122,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
     }
 
     public CompleteVersion process(CompleteVersion original, Account.AccountType type) {
-        log("Processing version:", original.getID(), "for", type);
+        LOGGER.debug("Processing version {} for account of type {}", original.getID(), type);
 
         if (original.isProceededFor(type, true)) {
-            log("... already proceeded");
+            LOGGER.debug("... already proceeded");
             return original;
         }
 
@@ -130,10 +134,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
         List<LibraryReplace> libraries = getLibraries(original, type);
         for (LibraryReplace lib : libraries) {
-            log("Now processing:", lib.getName());
+            LOGGER.debug("Now processing: {}", lib.getName());
 
             if (modified.getLibraries().contains(lib)) {
-                log("... already contains");
+                LOGGER.debug("... already contains");
                 continue;
             }
 
@@ -145,7 +149,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
                     Library replaceable = i.next();
 
                     if (pattern.matcher(replaceable.getName()).matches()) {
-                        log("... replacing", replaceable.getName());
+                        LOGGER.debug("... removing {}", replaceable.getName());
                         i.remove();
                     }
                 }
@@ -161,7 +165,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
                     for (Library compare : lib.getRequirementList()) {
                         if (plainName.equals(compare.getPlainName())) {
-                            log("... required library", plainName, "exists, removing...");
+                            LOGGER.debug("... required library {} exists, removing", plainName);
                             i.remove();
                         }
                     }
@@ -199,7 +203,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
             return true;
         }
 
-        log("Refreshing libraries...");
+        LOGGER.debug("Refreshing libraries...");
 
         for (LibraryReplaceProcessorListener l : listeners) {
             l.onLibraryReplaceRefreshing(this);
@@ -208,7 +212,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         try {
             refreshDirectly();
         } catch (Exception e) {
-            log("Ely refresh failed", e);
+            LOGGER.warn("Ely refresh failed", e);
             return false;
         } finally {
             for (LibraryReplaceProcessorListener l : listeners) {
@@ -216,7 +220,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
             }
         }
 
-        log("Refreshed successfully", libraries);
+        LOGGER.debug("Refreshed successfully");
         return true;
     }
 

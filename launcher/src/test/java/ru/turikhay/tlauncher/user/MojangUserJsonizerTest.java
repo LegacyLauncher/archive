@@ -21,7 +21,7 @@ public class MojangUserJsonizerTest {
     @Test
     public void testSerialize() throws Exception {
         MojangUser user = MojangAuthTest.authorize(new MojangAuth());
-        U.log(gson.toJson(user));
+        System.out.println(gson.toJson(user));
     }
 
     @Test
@@ -30,7 +30,7 @@ public class MojangUserJsonizerTest {
                 "\"uuid\":\"1f52be97476e44c3b3dd8a8be8b3bbb4\",\"displayName\":\"AlexNick02GR\"," +
                 "\"clientToken\":\"5513ed60e2cf4552ab8160401bb70a25\",\"username\":\"alex.paokarath4@gmail.com\"}";
 
-        U.log(gson.fromJson(text, MojangUser.class));
+        System.out.println(gson.fromJson(text, MojangUser.class));
     }
 
 }

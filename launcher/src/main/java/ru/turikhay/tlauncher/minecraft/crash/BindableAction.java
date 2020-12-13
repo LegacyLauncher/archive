@@ -5,11 +5,9 @@ import ru.turikhay.util.U;
 
 public abstract class BindableAction {
     private final String name;
-    private final String logPrefix;
 
     public BindableAction(String name) {
         this.name = StringUtil.requireNotBlank(name);
-        logPrefix = "[BindAction][" + name + "]";
     }
 
     public final String getName() {
@@ -33,9 +31,5 @@ public abstract class BindableAction {
         public void execute() throws Exception {
             BindableAction.this.execute(arg);
         }
-    }
-
-    protected void log(Object... o) {
-        U.log(logPrefix, o);
     }
 }

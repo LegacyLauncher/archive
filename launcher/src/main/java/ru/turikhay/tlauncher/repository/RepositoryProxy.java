@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.repository;
 
-import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.DataBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
@@ -17,7 +17,7 @@ public class RepositoryProxy {
     };
     private static final String[] PROXIES = new String[] {
             "https://u.tlauncher.ru/proxy.php?url=",
-            "https://turikhay.ru/proxy.php?url=",
+            "https://mcproxy.tlaun.ch/proxy.php?url="
     };
     private static boolean PROXY_WORKED = false;
 
@@ -30,15 +30,12 @@ public class RepositoryProxy {
     }
 
     public static class ProxyRepo implements IRepo {
-        private final String proxyPrefix, logPrefix;
+        private static final Logger LOGGER = LogManager.getLogger(ProxyRepo.class);
+
+        private final String proxyPrefix;
 
         public ProxyRepo(String proxy) {
             this.proxyPrefix = StringUtil.requireNotBlank(proxy);
-            try {
-                logPrefix = "[" + getClass().getSimpleName() + ":"+ new URL(proxy).getHost() +"]";
-            } catch(Exception e) {
-                throw new Error(e);
-            }
         }
 
         @Override
@@ -51,18 +48,17 @@ public class RepositoryProxy {
 
             IOException ioE = new IOException("not a first attempt; failed");
             if(attempt == 1) {
-                log("First attempt: without proxyfying: " + path);
+                LOGGER.debug("First attempt, no proxy: {}", originalUrl);
                 try {
                     return openHttpConnection(originalUrl, proxy, timeout);
                 } catch(IOException ioE1) {
                     ioE = ioE1;
-                    log("Failed to open connection: " + path, ioE);
+                    LOGGER.warn("Failed to open connection to {}; error: {}", originalUrl, ioE.toString());
+                    LOGGER.debug(ioE);
                 }
             } else {
-                log("Skipping attempt without proxyfying: " + path);
+                LOGGER.debug("Using proxy: {}", path);
             }
-
-            DataBuilder dataBuilder = DataBuilder.create("url", originalUrl).add("ioE", ioE);
 
             boolean accepted = false;
             for (String acceptedHost : PROXIFIED_HOSTS) {
@@ -71,7 +67,6 @@ public class RepositoryProxy {
                     break;
                 }
             }
-            dataBuilder.add("accepted", accepted);
 
             String hostIp;
             try {
@@ -79,28 +74,27 @@ public class RepositoryProxy {
             } catch(Exception e) {
                 hostIp = e.toString();
             }
-            log("Host: " + originalUrl.getHost() + ", IP: " + hostIp);
-            dataBuilder.add("host", originalUrl.getHost()).add("hostIp", hostIp);
+            LOGGER.info("Resolved host {}: {}", originalUrl.getHost(), hostIp);
 
             if(!accepted) {
-                log("Host is not whitelisted: " + originalUrl.getHost());
-                Sentry.sendWarning(RepositoryProxy.class, "host is not whitelisted: " + originalUrl.getHost(), dataBuilder);
+                LOGGER.warn("Host is not whitelisted to use proxy: {}", originalUrl.getHost());
                 throw ioE;
             }
 
-            log("Proxyfying request: " + originalUrl);
+            String proxyRequestUrl = proxyPrefix + encodeUrl(originalUrl);
+            LOGGER.debug("Proxying request to {}: {}", originalUrl, proxyRequestUrl);
+
             HttpURLConnection connection;
             try {
-                connection = openHttpConnection(proxyPrefix + encodeUrl(originalUrl), proxy, timeout);
+                connection = openHttpConnection(proxyRequestUrl, proxy, timeout);
             } catch(IOException oneMoreIOE) {
-                log("Proxy failed too!", oneMoreIOE);
-                dataBuilder.add("proxy_ioE", oneMoreIOE);
-                Sentry.sendError(RepositoryProxy.class, "proxyfying failed", oneMoreIOE, dataBuilder);
+                LOGGER.error("Proxying request failed! URL: {}", proxyRequestUrl);
                 throw oneMoreIOE;
             }
 
+            LOGGER.warn("Using proxy ({}) to: {}", connection.getURL().getHost(), originalUrl);
+
             if(!PROXY_WORKED) {
-                Sentry.sendWarning(RepositoryProxy.class, "proxy is being used", dataBuilder);
                 PROXY_WORKED = true;
             }
 
@@ -145,10 +139,6 @@ public class RepositoryProxy {
             } catch (UnsupportedEncodingException e) {
                 throw new Error("UTF-8 not supported?");
             }
-        }
-
-        private void log(Object... obj) {
-            U.log(logPrefix, obj);
         }
     }
 

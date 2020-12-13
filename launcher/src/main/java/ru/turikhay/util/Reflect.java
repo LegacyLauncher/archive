@@ -1,5 +1,7 @@
 package ru.turikhay.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.exceptions.ParseException;
 
 import java.lang.reflect.Field;
@@ -10,6 +12,7 @@ import java.lang.reflect.Field;
  * @author turikhay
  */
 public class Reflect {
+    private static final Logger LOGGER = LogManager.getLogger(Reflect.class);
 
     public static Field getField0(Class<?> clazz, String name) throws NoSuchFieldException, SecurityException {
         if (clazz == null)
@@ -25,7 +28,7 @@ public class Reflect {
         try {
             return getField0(clazz, name);
         } catch (Exception e) {
-            U.log("Error getting field", name, "from", clazz, e);
+            LOGGER.warn("Error getting field {} in {}", name, clazz);
         }
         return null;
     }
@@ -57,7 +60,7 @@ public class Reflect {
         try {
             return getValue0(field, classOfT, parent);
         } catch (Exception e) {
-            U.log("Cannot get value of", field, "from", classOfT, parent, e);
+            LOGGER.warn("Couldn't get value of field {} in {} (class: {})", field, parent, classOfT);
         }
         return null;
     }

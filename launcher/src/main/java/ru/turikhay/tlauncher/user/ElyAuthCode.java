@@ -1,11 +1,12 @@
 package ru.turikhay.tlauncher.user;
 
-import com.getsentry.raven.util.Base64;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
@@ -18,9 +19,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 
 public final class ElyAuthCode {
+    private static final Logger LOGGER = LogManager.getLogger(ElyAuthCode.class);
+
     static final String API_BASE = ElyAuth.ACCOUNT_BASE + "/api";
     static final String ACCOUNT_INFO = API_BASE + "/account/v1/info";
     static final String TOKEN_EXCHANGE = API_BASE + "/oauth2/v1/token";
@@ -40,7 +45,7 @@ public final class ElyAuthCode {
 
         this.gson = new GsonBuilder()/*.registerTypeAdapter(ElyUser.class, new ElyUserJsonizer())*/.create();
 
-        log("Created with:", code, redirect_uri, state);
+        LOGGER.info("Created with: code {}, redirect_uri {}, state {}", code, redirect_uri, state);
     }
 
     public ElyUser getUser() throws IOException, AuthException {
@@ -57,19 +62,19 @@ public final class ElyAuthCode {
     }
 
     CodeExchangePayload exchangeCode() throws IOException, AuthException {
-        log("Exchanging code...");
+        LOGGER.debug("Exchanging code...");
 
         CodeExchangePayload payload = readResponse(setupExchangeConnection(), CodeExchangePayload.class);
 
-        log("Checking payload consistency...");
+        LOGGER.debug("Checking payload consistency...");
         payload.checkConsistency();
 
-        log("Done");
+        LOGGER.debug("Done");
         return payload;
     }
 
     ElyUserJsonizer.ElySerialize getRawUser(CodeExchangePayload payload) throws IOException, AuthException {
-        log("Getting user using payload...");
+        LOGGER.debug("Getting user using payload...");
         ElyUserJsonizer.ElySerialize serialize = readResponse(setupInfoConnection(payload), ElyUserJsonizer.ElySerialize.class);
 
         serialize.accessToken = payload.access_token;
@@ -82,14 +87,14 @@ public final class ElyAuthCode {
                 throw new IllegalArgumentException("Cannot determine token lifetime. The token is " + payload.access_token);
             }
 
-            byte[] decoded = Base64.decode(jwtTokenParts[1], Base64.URL_SAFE | Base64.NO_PADDING);
+            byte[] decoded = Base64.getUrlDecoder().decode(jwtTokenParts[1].getBytes(StandardCharsets.UTF_8));
             JWTPayload jwtPayload = parse(new ByteArrayInputStream(decoded), JWTPayload.class);
             if (jwtPayload.exp != 0) {
                 serialize.expiryTime = jwtPayload.exp * 1000L;
             }
         }
 
-        log("User:", gson.toJson(serialize));
+        LOGGER.debug("User: {}", gson.toJson(serialize));
         return serialize;
     }
 
@@ -132,7 +137,7 @@ public final class ElyAuthCode {
     }
 
     HttpURLConnection setupExchangeConnection() throws IOException {
-        log("Setting up exchange connection...");
+        LOGGER.debug("Setting up exchange connection...");
 
         String request = TokenReplacingReader.resolveVars(TOKEN_EXCHANGE_REQUEST, new MapTokenResolver(new HashMap<String, String>(){
             {
@@ -143,14 +148,14 @@ public final class ElyAuthCode {
                 put("redirect_uri", redirect_uri);
             }
         }));
-        log("Request:", request);
+        LOGGER.debug("Request: {}", request);
 
         HttpURLConnection connection = setupConnection("POST", TOKEN_EXCHANGE);
 
         connection.setDoOutput(true);
-        log("Writing request...");
+        LOGGER.debug("Writing request...");
         IOUtils.write(request, connection.getOutputStream(), FileUtil.getCharset());
-        log("Done, reading response");
+        LOGGER.debug("Done, reading response");
 
         return connection;
     }
@@ -171,11 +176,6 @@ public final class ElyAuthCode {
         urlConnection.setConnectTimeout(U.getConnectionTimeout());
 
         return urlConnection;
-    }
-
-    private final String logPrefix = "[" + getClass().getSimpleName() + "]";
-    private void log(Object...o) {
-        U.log(logPrefix, o);
     }
 
     private static class CodeExchangePayload {

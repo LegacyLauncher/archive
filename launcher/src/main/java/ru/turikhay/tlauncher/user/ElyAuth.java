@@ -1,12 +1,14 @@
 package ru.turikhay.tlauncher.user;
 
-import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.DataBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.U;
 
 import java.io.IOException;
 
 public final class ElyAuth implements Auth<ElyUser> {
+    private static final Logger LOGGER = LogManager.getLogger(ElyAuth.class);
+
     static final String CLIENT_ID = "tlauncher";
     static final String CLIENT_SECRET = "SbOVmJHBCjMV1NsewphGgA2SbyrVjN7IBcOte6b1HR7JGup2";
 
@@ -30,13 +32,13 @@ public final class ElyAuth implements Auth<ElyUser> {
     private ElyAuthCode fetchCodeImpl(ElyAuthFlow flow) throws Exception {
         U.requireNotNull(flow);
 
-        log("Try to get code with", flow);
+        LOGGER.debug("Trying to get code using {}", flow);
         try {
             return flow.call();
         } catch (InterruptedException interrupted) {
             throw interrupted;
         } catch(Exception e) {
-            Sentry.sendError(ElyAuth.class, "could not get code with " + flow.getClass().getSimpleName(), e, null);
+            LOGGER.error("Couldn't fetch code", e);
             throw e;
         }
     }
@@ -48,13 +50,8 @@ public final class ElyAuth implements Auth<ElyUser> {
         try {
             validator.validateUser();
         } catch(IOException e) {
-            Sentry.sendError(ElyAuth.class, "Ely soft exception", e, DataBuilder.create("user", user));
+            LOGGER.warn("Ely returned error", e);
             throw AuthException.soft(new AuthUnavailableException(e));
         }
-    }
-
-    private final String logPrefix = "[" + getClass().getSimpleName() + "]";
-    private void log(Object...o) {
-        U.log(logPrefix, o);
     }
 }

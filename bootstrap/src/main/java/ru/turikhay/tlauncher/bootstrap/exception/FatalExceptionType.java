@@ -4,8 +4,6 @@ import ru.turikhay.tlauncher.bootstrap.launcher.LauncherNotFoundException;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public enum FatalExceptionType {
@@ -31,26 +29,21 @@ public enum FatalExceptionType {
             SocketTimeoutException.class,
             UnknownServiceException.class,
             LauncherNotFoundException.class
-    );
+    ),
+
+    UNKNOWN(new AnyOther());
 
     private final TypeAssertion assertion;
-    private final List<Class> classList;
-
-    FatalExceptionType(final Class... exceptionTypes) {
-        this.assertion = null;
-        this.classList = new ArrayList<Class>() {
-            {
-                Collections.addAll(this, exceptionTypes);
-            }
-        };
-    }
 
     FatalExceptionType(TypeAssertion assertion) {
         this.assertion = assertion;
-        this.classList = null;
     }
 
-    boolean ensure(Throwable t) {
+    FatalExceptionType(Class<?>... classes) {
+        this(new ClassList(classes));
+    }
+
+    private boolean ensure(Throwable t) {
         if (t == null) {
             return false;
         }
@@ -60,30 +53,19 @@ public enum FatalExceptionType {
             if (list.isEmpty()) {
                 return false;
             }
-
-            boolean allNulls = true;
+            boolean allUnknown = true;
             for (Exception e : list) {
                 FatalExceptionType type = getType(e);
-                allNulls &= type == null;
-                if (type == null || type == this) {
+                allUnknown &= (type == UNKNOWN);
+                if (type == UNKNOWN || type == this) {
                     continue;
                 }
                 return false;
             }
-            return !allNulls;
+            return !allUnknown;
         }
 
-        if (classList != null) {
-            Class clazz = t.getClass();
-            for (Class checkClazz : classList) {
-                if (checkClazz.isAssignableFrom(clazz)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        return assertion != null && assertion.ensure(t);
+        return assertion.ensure(t);
     }
 
     public String nameLowerCase() {
@@ -96,10 +78,36 @@ public enum FatalExceptionType {
                 return type;
             }
         }
-        return null;
+        return UNKNOWN;
     }
 
     interface TypeAssertion {
         boolean ensure(Throwable t);
+    }
+
+    static class ClassList implements TypeAssertion {
+        private final Class<?>[] classList;
+
+        ClassList(Class<?>... classList) {
+            this.classList = classList;
+        }
+
+        @Override
+        public boolean ensure(Throwable t) {
+            Class<?> clazz = t.getClass();
+            for (Class<?> checkClazz : classList) {
+                if (checkClazz.isAssignableFrom(clazz)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    static class AnyOther implements TypeAssertion {
+        @Override
+        public boolean ensure(Throwable t) {
+            return true;
+        }
     }
 }

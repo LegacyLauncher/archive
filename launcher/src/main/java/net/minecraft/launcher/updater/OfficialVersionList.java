@@ -1,10 +1,15 @@
 package net.minecraft.launcher.updater;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.connection.ConnectionHelper;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
 
@@ -13,6 +18,8 @@ import java.io.InputStreamReader;
 import java.util.Iterator;
 
 public class OfficialVersionList extends RemoteVersionList {
+    private static final Logger LOGGER = LogManager.getLogger(OfficialVersionList.class);
+
     public OfficialVersionList() {
     }
 
@@ -28,11 +35,16 @@ public class OfficialVersionList extends RemoteVersionList {
                 version.setVersionList(this);
             }
 
-            log("Got in", Time.stop(lock), "ms");
+            LOGGER.info("Got {} in {}", getClass().getSimpleName(), Time.stop(lock));
             return list;
         } catch(Exception e) {
             if(ConnectionHelper.fixCertException(e, "official-repo") == -1) {
-                Sentry.sendError(OfficialVersionList.class, "official repo is not reachable", e, null);
+                LOGGER.warn("Official repo is not reachable", e);
+                Sentry.capture(new EventBuilder()
+                        .withLevel(Event.Level.WARNING)
+                        .withMessage("official repo not reachable")
+                        .withSentryInterface(new ExceptionInterface(e))
+                );
             }
             if(e instanceof IOException) {
                 throw e;

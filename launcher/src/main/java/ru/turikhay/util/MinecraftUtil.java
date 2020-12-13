@@ -1,5 +1,7 @@
 package ru.turikhay.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
@@ -9,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class MinecraftUtil {
+    private static final Logger LOGGER = LogManager.getLogger(MinecraftUtil.class);
+
     private static FileExplorer explorer;
     private static JFrame parent;
 
@@ -24,7 +28,7 @@ public class MinecraftUtil {
             FileUtil.createFolder(directory);
             if (checkDirectory(directory)) return directory;
         } catch (IOException e) {
-            U.log("Got error trying to create directory");
+            LOGGER.warn("Got error trying to create directory", e);
         }
 
         // so we can't create directory
@@ -36,24 +40,24 @@ public class MinecraftUtil {
             FileUtil.createFolder(defaultDirectory);
             preferredDirectory = defaultDirectory;
         } catch (IOException e) {
-            U.log("Can't even create default folder. AM I IN HELL? AAAAAAAAAA!", e);
+            LOGGER.warn("Can't even create default folder", e);
             preferredDirectory = new File(System.getProperty("user.home", "/"));
         }
 
         do {
-            U.log("Current directory is unwritable", directory);
+            LOGGER.info("Current directory cannot be written to: {}", directory);
             Alert.showLocError("version.dir.noaccess", directory);
             directory = showExplorer(preferredDirectory);
             if (directory == null) {
-                U.log("No directory selected, killing launcher. Good bye!");
+                LOGGER.info("No directory selected, killing launcher. Good bye!");
                 System.exit(0);
             }
-            U.log("User selected directory, checking...", directory);
+            LOGGER.info("User selected directory: {}", directory);
         } while (!checkDirectory(directory));
 
         // User asked for "please remove default directory if it is empty and not used for launcher"
         if (defaultDirectory != directory && defaultDirectory.isDirectory() && defaultDirectory.length() == 0) {
-            U.log("Default game folder is exists, is empty and is not used. Deleting...");
+            LOGGER.info("Default game folder is exists, is empty and is not used. Deleting");
             defaultDirectory.delete();
         }
 

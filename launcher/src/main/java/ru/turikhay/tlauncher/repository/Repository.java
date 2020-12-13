@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.repository;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
@@ -19,6 +21,7 @@ public enum Repository {
     SERVERLIST_REPO(TLauncher.getServerList()),
     PROXIFIED_REPO(RepositoryProxy.getProxyRepoList());
 
+    private static final Logger LOGGER = LogManager.getLogger(Repository.class);
     public static final Repository[] VERSION_REPOS = new Repository[]{LOCAL_VERSION_REPO, OFFICIAL_VERSION_REPO, EXTRA_VERSION_REPO};
 
     private final RepoList defaultRepoList;
@@ -59,7 +62,7 @@ public enum Repository {
 
     private void update(List<String> repoList) {
         if(repoList == null) {
-            U.log("[Repo]", "[" + name() + "]", "repoList is null; won't be updated");
+            LOGGER.debug("repoList passed to is null; {} update discarded", name());
             return;
         }
         this.repoList = new AppenderRepoList(name(), repoList);
@@ -67,7 +70,7 @@ public enum Repository {
 
     public static void updateList(Map<String, List<String>> repoMap) {
         if(repoMap == null) {
-            U.log("[Repo]", "repoMap is null; won't be updated");
+            LOGGER.debug("repoMap is null; update discarded");
             return;
         }
 
