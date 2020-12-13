@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.minecraft.launcher;
 
 import com.google.gson.Gson;
-import com.sun.java.swing.plaf.windows.resources.windows;
 import io.sentry.Sentry;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
@@ -529,7 +528,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         LOGGER.trace("Args: {}", programArgs);
 
         windowSize = settings.getClientWindowSize();
-        LOGGER.trace("Window size: {}", windows::new);
+        LOGGER.trace("Window size: {}", windowSize);
         if (windowSize[0] < 1) {
             throw new IllegalArgumentException("Invalid window width!");
         } else if (windowSize[1] < 1) {
