@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.118.1'
+version '1.118.2'
 
 apply from: '../gradle/brand.gradle'
 
@@ -171,6 +171,7 @@ task copyJarAndRenameToSha256(type: Copy) {
 
 task generateSources(type: Copy) {
     from "src/main/java"
+    from "$rootDir/jWMI/src/main/java"
     into "$buildDir/generated"
     filter(ReplaceTokens, tokens: [
             'tl_short_brand': short_brand,
