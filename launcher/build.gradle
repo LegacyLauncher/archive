@@ -12,11 +12,13 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.117.1'
+version '1.118.0'
+
+apply from: '../gradle/brand.gradle'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 configurations {
@@ -31,9 +33,9 @@ dependencies {
     tlRuntime("com.google.guava:guava:14.0")
     tlRuntime("org.apache.logging.log4j:log4j-api:2.8.1")
     tlRuntime("org.apache.logging.log4j:log4j-core:2.8.1")
-    tlRuntime("com.getsentry.raven:raven:7.8.1")
+    tlRuntime("io.sentry:sentry:1.7.30")
     tlRuntime("org.slf4j:slf4j-api:1.7.21")
-    tlRuntime("com.fasterxml.jackson.core:jackson-core:2.7.3")
+    tlRuntime("com.fasterxml.jackson.core:jackson-core:2.12.0")
     tlRuntime("com.github.zafarkhaja:java-semver:0.9.0")
     tlRuntime("com.google.code.gson:gson:2.6.2")
     tlRuntime("commons-io:commons-io:2.5")
@@ -43,6 +45,9 @@ dependencies {
     tlRuntime("org.jdom:jdom:2.0.2")
     tlRuntime("org.apache.commons:commons-lang3:3.4")
     tlRuntime("com.timgroup:java-statsd-client:3.1.0")
+    tlRuntime("org.apache.logging.log4j:log4j-api:2.14.0")
+    tlRuntime("org.apache.logging.log4j:log4j-core:2.14.0")
+    annotationProcessor("org.apache.logging.log4j:log4j-core:2.14.0")
     implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
     implementation(project(":jWMI"))
@@ -104,27 +109,6 @@ static def generateChecksum(File file) {
     }
 }
 
-ext {
-    git_branch = grgit.branch.current()?.name?.replace("/", "-")
-    short_brand = System.getenv("SHORT_BRAND")
-    bootstrap_version = project.version
-    full_brand = System.getenv("BRAND") ?: "Legacy"
-}
-
-switch (git_branch) {
-    case null:
-        if (!short_brand) short_brand = "legacy_beta+unknown"
-        bootstrap_version += "+unknown"
-        break
-    case "master":
-        if (!short_brand) short_brand = "legacy"
-        break
-    default:
-        if (!short_brand) short_brand = "legacy_beta"
-        bootstrap_version += "+$git_branch"
-        break
-}
-
 task generateMeta {
     doLast {
         def main_class = System.getenv("MAIN_CLASS")
@@ -140,7 +124,7 @@ task generateMeta {
         def meta = new JsonBuilder()
 
         meta {
-            version(bootstrap_version)
+            version(product_version)
             shortBrand(short_brand)
             brand(full_brand)
             buildDate(OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
@@ -162,13 +146,13 @@ task generateUpdateJson {
                 "https://tlauncherrepo.com/",
                 "https://u.tlauncher.ru/",
                 "https://tlaun.ch/",
-                "http://cdn.turikhay.ru/tlauncher/"
+                "https://cdn.turikhay.ru/tlauncher/"
         ].collect {
             urlPrefix -> urlPrefix + short_brand + "/launcher/" + jarFileChecksum + ".jar"
         }
 
         meta {
-            version bootstrap_version
+            version product_version
             shortBrand short_brand
             checksum jarFileChecksum
             downloads downloadUrlList

@@ -26,7 +26,6 @@ public abstract class ArgsAction extends BindableAction {
 
     @Override
     public void execute(String args) throws Exception {
-        log("Args passed: \"" + args + "\"");
         OptionSet set = parser.parse(StringUtils.split(args, ' '));
         execute(set);
     }

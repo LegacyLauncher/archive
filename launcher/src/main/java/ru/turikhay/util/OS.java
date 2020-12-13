@@ -1,6 +1,9 @@
 package ru.turikhay.util;
 
 import com.sun.management.OperatingSystemMXBean;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 import java.awt.*;
@@ -15,6 +18,8 @@ public enum OS {
     OSX("mac"),
     SOLARIS("solaris", "sunos"),
     UNKNOWN("unknown");
+
+    private static final Logger LOGGER = LogManager.getLogger(OS.class);
 
     public static final String NAME;
     public static final String VERSION;
@@ -80,8 +85,8 @@ public enum OS {
         } catch (Exception e) {
             version = JavaVersion.create(1, 6, 0, 45);
 
-            log("Could not determine Java version:", System.getProperty("java.version"));
-            log("Assuming it is 1.6.0_45");
+            LOGGER.warn("Could not parse Java version: {}", System.getProperty("java.version"));
+            LOGGER.warn("Assuming it is 1.6.0_45");
         }
 
         return version;
@@ -138,7 +143,7 @@ public enum OS {
         try {
             url = new URL(_url);
         } catch (Exception e) {
-            log("Failed to parse link", _url, e);
+            LOGGER.warn("Failed to parse link: \"{}\"", _url, e);
 
             if (alertError) {
                 Alert.showLocError("ui.error.openlink", _url);
@@ -155,13 +160,14 @@ public enum OS {
     }
 
     public static boolean openLink(URI uri, boolean alertError) {
-        log("Trying to open link with default browser:", uri);
+        LOGGER.info("Opening the link using Desktop.browse: \"{}\"", uri);
 
         try {
             Desktop.getDesktop().browse(uri);
             return true;
         } catch (Throwable var3) {
-            log("Failed to open link with default browser:", uri, var3);
+            LOGGER.log(alertError? Level.ERROR : Level.WARN,
+                    "Opening the link using Desktop.browse failed: \"{}\"", uri, var3);
             if (alertError) {
                 Alert.showLocError("ui.error.openlink", uri);
             }
@@ -175,12 +181,12 @@ public enum OS {
     }
 
     public static boolean openLink(URL url, boolean alertError) {
-        log("Trying to open URL with default browser:", url);
         URI uri = null;
 
         try {
             uri = url.toURI();
         } catch (Exception var4) {
+            LOGGER.warn("Couldn't convert URL to URI: {}", url, var4);
         }
 
         return openLink(uri, alertError);
@@ -195,16 +201,16 @@ public enum OS {
     }
 
     public static boolean openFolder(File folder, boolean alertError) {
-        log("Trying to open folder:", folder);
+        LOGGER.info("Trying to open folder: {}", folder);
         if (!folder.isDirectory()) {
-            log("This path is not a directory, sorry.");
+            LOGGER.warn("This path is not a directory, sorry.");
             return false;
         } else {
             try {
                 openPath(folder);
                 return true;
             } catch (Throwable var3) {
-                log("Failed to open folder:", var3);
+                LOGGER.log(alertError? Level.ERROR : Level.WARN, "Failed to open folder: {}", folder, var3);
                 if (alertError) {
                     Alert.showLocError("ui.error.openfolder", folder);
                 }
@@ -219,16 +225,16 @@ public enum OS {
     }
 
     public static boolean openFile(File file, boolean alertError) {
-        log("Trying to open file:", file);
+        LOGGER.info("Trying to open file: {}", file);
         if (!file.isFile()) {
-            log("This path is not a file, sorry.");
+            LOGGER.warn("This path is not a file, sorry.");
             return false;
         } else {
             try {
                 openPath(file);
                 return true;
             } catch (Throwable var3) {
-                log("Failed to open file:", var3);
+                LOGGER.log(alertError? Level.ERROR : Level.WARN,"Failed to open file: {}", file, var3);
                 if (alertError) {
                     Alert.showLocError("ui.error.openfolder", file);
                 }
@@ -240,10 +246,6 @@ public enum OS {
 
     public static boolean openFile(File file) {
         return openFile(file, true);
-    }
-
-    protected static void log(Object... o) {
-        U.log("[OS]", o);
     }
 
     public enum Arch {
@@ -313,7 +315,7 @@ public enum OS {
             try {
                 return ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getTotalPhysicalMemorySize();
             } catch (Throwable var1) {
-                U.log("[ERROR] Cannot allocate total physical memory size!", var1);
+                LOGGER.warn("Cannot query total physical memory size!", var1);
                 return 0L;
             }
         }
@@ -322,7 +324,7 @@ public enum OS {
             try {
                 return ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getAvailableProcessors();
             } catch (Throwable var1) {
-                U.log("[ERROR] Cannot determine available processors", var1);
+                LOGGER.warn("Cannot query the number of available processors", var1);
                 return 1;
             }
         }

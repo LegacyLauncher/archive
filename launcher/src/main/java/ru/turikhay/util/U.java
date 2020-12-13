@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.stream.InputStringStream;
 
@@ -23,40 +25,8 @@ import java.util.Map.Entry;
 public class U {
     public static final String PROGRAM_PACKAGE = "ru.turikhay";
     public static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
-    private static final int ST_TOTAL = 100;
-    private static final int ST_PROGRAM = 10;
-    private static String PREFIX;
-    public static final Object lock = new Object();
 
-    public static void setPrefix(String prefix) {
-        PREFIX = prefix;
-    }
-
-    public static String getPrefix() {
-        return PREFIX;
-    }
-
-    public static void linelog(Object what) {
-        Object var1 = lock;
-        synchronized (lock) {
-            System.out.print(what);
-        }
-    }
-
-    public static void log(Object... what) {
-        hlog(PREFIX, what);
-    }
-
-    public static void plog(Object... what) {
-        hlog(null, what);
-    }
-
-    private static void hlog(String prefix, Object[] append) {
-        Object var2 = lock;
-        synchronized (lock) {
-            System.out.println(toLog(prefix, append));
-        }
-    }
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static String toLog(String prefix, Object... append) {
         StringBuilder b = new StringBuilder();
@@ -539,9 +509,9 @@ public class U {
     }
 
     public static void gc() {
-        log("Starting garbage collector: " + memoryStatus());
+        LOGGER.info("Starting garbage collector: " + memoryStatus());
         System.gc();
-        log("Garbage collector completed: " + memoryStatus());
+        LOGGER.info("Garbage collector completed: " + memoryStatus());
     }
 
     public static void sleepFor(long millis, boolean throwIfInterrupted) {

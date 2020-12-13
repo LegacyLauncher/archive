@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.repository;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.exceptions.IOExceptionList;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
@@ -16,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RepoList {
+    private static final Logger LOGGER = LogManager.getLogger(RepoList.class);
+
     private static final int FILE_BUFFER = 1024 * 8; // 8 kb
     private static final long GLOBAL_BUFFER_MAX = 1024 * 1024 * 10; // 10 mb
     private static final AtomicLong GLOBAL_BUFFER = new AtomicLong();
@@ -32,7 +36,6 @@ public class RepoList {
         }
 
         this.name = name;
-        prefix = "[" + name + "]";
     }
 
     public final String getName() {
@@ -55,7 +58,7 @@ public class RepoList {
         Object total = new Object();
         Time.start(total);
 
-        log(String.format("Fetching: \"%s\", timeout: %d, proxy: %s", path, timeout / 1000, proxy));
+        LOGGER.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path,timeout / 1000, proxy);
         int attempt = 0;
 
         for (IRepo repo : l) {
@@ -77,10 +80,12 @@ public class RepoList {
             try {
                 InputStream result = read(connect(repo, path, timeout, proxy, attempt));
                 long[] deltas = Time.stop(total, current);
-                log(String.format("Fetched successfully: \"%s\"; attempt: %d ms; total: %d ms, attempt: %d", _path, deltas[1], deltas[0], attempt));
+                LOGGER.debug("Fetched successfully from {}: \"{}\": {} ms; total: {} ms, attempt: {}",
+                        name, _path, deltas[1], deltas[0], attempt);
                 return result;
             } catch (IOException ioE) {
-                log(String.format("Failed to fetch \"%s\": %s, attempt: %d", _path, ioE, attempt));
+                LOGGER.error("Failed to fetch from {}: \"{}\": attempt: {}, exception: {}",
+                        name, _path, attempt, ioE.toString());
                 exList.add(ioE);
             }
         }
@@ -114,7 +119,7 @@ public class RepoList {
         try {
             return readIntoFile(in);
         } catch (BufferException repoException) {
-            log("Could not read into file", repoException);
+            LOGGER.error("Could not read into file from {}", name, repoException);
         }
 
         //log("Reading directly", in);
@@ -218,12 +223,6 @@ public class RepoList {
 
     protected RelevantRepoList makeRelevantRepoList() {
         return new RelevantRepoList();
-    }
-
-    private final String prefix;
-
-    protected final void log(Object... o) {
-        U.log(prefix, o);
     }
 
     private class BufferException extends Exception {

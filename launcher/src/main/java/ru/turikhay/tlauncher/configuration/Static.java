@@ -2,6 +2,9 @@ package ru.turikhay.tlauncher.configuration;
 
 import ru.turikhay.util.U;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+
 public final class Static {
     private static final String SETTINGS = "tlauncher/"+ (isLegacy()? "legacy" : "@tl_short_brand@") +".properties";
     private static final String BRAND = "@tl_brand@";
@@ -12,12 +15,30 @@ public final class Static {
     private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/", "https://u.tlauncher.ru/repo/libraries/", "https://tlaun.ch/repo/libraries/", "https://tlauncherrepo.com/repo/libraries/"};
     private static final String[] ASSETS_REPO = {"https://resources.download.minecraft.net/"};
     private static final String[] SERVER_LIST = {};
-    private static final String[] LANG_LIST = isLegacy() ?
-            new String[]{"en_US", "ru_RU", "uk_UA"}
-            : new String[]{"en_US", "pt_BR", "vi", "in_ID", "de_DE", "pl_PL", "ro_RO", "fr_FR", "it_IT", "tr_TR", "zh_CN"};
+    private static final String[] LANG_LIST = generateLangList();
 
     private static boolean isLegacy() {
         return getShortBrand().startsWith("legacy");
+    }
+
+    private static boolean isAUR() {
+        return getShortBrand().startsWith("aur");
+    }
+
+    private static String[] generateLangList() {
+        LinkedHashSet<String> legacy_langs = new LinkedHashSet<>(Arrays.asList("en_US", "ru_RU", "uk_UA"));
+        LinkedHashSet<String> default_langs = new LinkedHashSet<>((Arrays.asList("en_US", "pt_BR", "vi", "in_ID", "de_DE", "pl_PL", "ro_RO", "fr_FR", "it_IT", "tr_TR", "zh_CN")));
+
+        if (isLegacy()) {
+            return legacy_langs.toArray(new String[0]);
+        }
+
+        if (isAUR()) {
+            default_langs.addAll(legacy_langs);
+            return default_langs.toArray(new String[0]);
+        }
+
+        return default_langs.toArray(new String[0]);
     }
 
     public static String getSettings() {

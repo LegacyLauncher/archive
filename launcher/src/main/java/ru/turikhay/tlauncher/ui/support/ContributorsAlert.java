@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
@@ -18,6 +20,8 @@ import java.util.List;
 import java.util.Locale;
 
 public final class ContributorsAlert {
+    private static final Logger LOGGER = LogManager.getLogger(ContributorsAlert.class);
+
     private static JsonObject contributors;
     private static SimpleConfiguration proofreaders;
 
@@ -51,7 +55,6 @@ public final class ContributorsAlert {
             JsonArray contribArray = (JsonArray) contributors.get(locale.toString());
 
             if (contribArray == null) {
-                U.log("No contributors found", locale);
                 return;
             }
 
@@ -64,7 +67,6 @@ public final class ContributorsAlert {
             }
 
             if (contributorList.isEmpty()) {
-                U.log("Contributor list for", locale, "is empty");
                 return;
             }
 
@@ -109,7 +111,7 @@ public final class ContributorsAlert {
         try {
             showIt();
         } catch(Exception e) {
-            U.log("[ContribAlert]", e);
+            LOGGER.error("Couldn't show window", e);
         }
     }
 

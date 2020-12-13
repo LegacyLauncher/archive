@@ -3,10 +3,9 @@ package ru.turikhay.tlauncher.bootstrap;
 import com.getsentry.raven.DefaultRavenFactory;
 import com.getsentry.raven.Raven;
 import com.getsentry.raven.dsn.Dsn;
-import com.getsentry.raven.event.Breadcrumb;
-import com.getsentry.raven.event.BreadcrumbBuilder;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
+import com.getsentry.raven.event.helper.EventBuilderHelper;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
@@ -37,7 +36,9 @@ import java.io.IOException;
 import java.util.*;
 
 public final class Bootstrap {
-    private static final Raven raven = new DefaultRavenFactory().createRavenInstance(new Dsn("https://fe7b0410e04848019449cb8de9c9bc22:5c3a7bd40c9348dea0bc6858715570eb@sentry.ely.by/4?"));
+    public static final Raven SENTRY = new DefaultRavenFactory().createRavenInstance(
+            new Dsn("https://3ece46580a3c4d4e900f41d20397d229:8fbceaeb066e4fcab40f9740d04eebab@sentry.ely.by/45")
+    );
 
     static Bootstrap createBootstrap() {
         log("Starting bootstrap...");
@@ -105,6 +106,8 @@ public final class Bootstrap {
         if (bootstrap.getPackageMode()) {
             bootstrap.setIgnoreSelfUpdate(true);
             bootstrap.setIgnoreUpdate(true);
+            log("Package mode: Ignore self update set to", bootstrap.getIgnoreSelfUpdate());
+            log("Package mode: Ignore update set to", bootstrap.getIgnoreUpdate());
         }
 
         try {
@@ -119,7 +122,6 @@ public final class Bootstrap {
             throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
         }
 
-        recordBreadcrumb("createBootstrap", DataBuilder.create("localBootstrapMeta", localBootstrapMeta).add("targetJar", bootstrap.getTargetJar()).add("targetLibFolder", bootstrap.getTargetLibFolder()));
         return bootstrap;
     }
 
@@ -134,8 +136,6 @@ public final class Bootstrap {
                 log("Found JVM arg: ", key, " ", value);
             }
         }
-
-        recordBreadcrumb("parseJvmArgs", DataBuilder.create("list", jvmArgs));
 
         return parser.parse(U.toArray(jvmArgs, String.class));
     }
@@ -161,11 +161,6 @@ public final class Bootstrap {
             handleFatalError(bootstrap, bootBridgeRef.getObject(), e, true);
             System.exit(-1);
         }
-
-        if(recordedError) {
-            bootstrap.sendEvent(bootstrap.prepareEvent(Event.Level.WARNING, null).withMessage("recorded error"));
-        }
-
         System.exit(0);
     }
 
@@ -175,27 +170,16 @@ public final class Bootstrap {
         if(sendSentry) {
             LocalBootstrapMeta localBootstrapMeta = bootstrap == null? null : bootstrap.getMeta();
             EventBuilder b = new EventBuilder()
-                    .withEnvironment(System.getProperty("os.name"))
+                    .withMessage("fatal error")
                     .withLevel(Event.Level.FATAL)
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withRelease(localBootstrapMeta == null ? null : String.valueOf(localBootstrapMeta.getVersion()));
-
-            if (exceptionType != null) {
-                b.withTag("type", exceptionType.name());
-            }
-
-            if(bridge != null && bridge.getClient() != null) {
-                b.withSentryInterface(new com.getsentry.raven.event.interfaces.UserInterface(
-                        bridge.getClient().toString(), null, null, null
-                ));
-            }
-
+                    .withSentryInterface(new ExceptionInterface(e));
+            initEvent(b, localBootstrapMeta);
+            b.withTag("type", exceptionType.name());
             avList:
             {
                 if(!OS.WINDOWS.isCurrent()) {
                     break avList;
                 }
-
                 List<String> avList;
                 try {
                     avList = WMI.getAVSoftwareList();
@@ -203,51 +187,17 @@ public final class Bootstrap {
                     log("Could not get AV list", e0);
                     break avList;
                 }
-
-                int count = 0;
-                for(String av : avList) {
-                    if("Windows Defender".equals(av)) {
-                        continue;
-                    }
-
-                    if(count > 1) {
-                        b.withTag("av" + String.valueOf(count), av);
-                    } else {
-                        b.withTag("av", av);
-                    }
-
-                    count++;
-                }
+                b.withExtra("avList", avList);
             }
-
-            raven.sendEvent(b);
+            SENTRY.sendEvent(b);
         }
 
         if(bootstrap != null) {
             bootstrap.getUserInterface().dispose();
         }
 
-        if(UserInterface.getResourceBundle() != null) {
-            ResourceBundle resourceBundle = UserInterface.getResourceBundle();
-
-            final String supportLink = resourceBundle.getString("support");
-
-            if (exceptionType == null) {
-                UserInterface.showError(resourceBundle.getString("error.fatal") + "\n" + supportLink, RedirectPrintStream.getBuffer().toString());
-            } else {
-                StringBuilder message = new StringBuilder();
-                message.append(resourceBundle.getString("error." + exceptionType.nameLowerCase()));
-
-                if (resourceBundle.containsKey("error." + exceptionType.nameLowerCase() + "." + OS.CURRENT.nameLowerCase())) {
-                    message.append(' ').append(resourceBundle.getString("error." + exceptionType.nameLowerCase() + "." + OS.CURRENT.nameLowerCase()));
-                }
-
-                message.append("\n\n");
-                message.append(supportLink);
-
-                UserInterface.showError(message.toString(), U.toString(e));
-            }
-        }
+        UserInterface.showFatalError(exceptionType,
+                bridge == null || bridge.getClient() == null? null : bridge.getClient().toString());
     }
 
     private final InternalLauncher internal;
@@ -265,6 +215,13 @@ public final class Bootstrap {
             throw new Error("could not load meta", e);
         }
 
+        SENTRY.addBuilderHelper(new EventBuilderHelper() {
+            @Override
+            public void helpBuildingEvent(EventBuilder eventBuilder) {
+                initEvent(eventBuilder, meta);
+            }
+        });
+
         InternalLauncher internal;
         try {
             internal = new InternalLauncher();
@@ -276,8 +233,6 @@ public final class Bootstrap {
 
         setTargetJar(targetJar);
         setTargetLibFolder(targetLibFolder);
-
-        recordBreadcrumb("initBootstrap", new DataBuilder().add("ui", ui).add("internalLauncher", String.valueOf(internal)).add("targetJar", targetJar).add("targetLibFolder", targetLibFolder));
     }
 
     public Bootstrap() {
@@ -381,6 +336,11 @@ public final class Bootstrap {
         log("Local bootstrap version: " + meta.getVersion());
         log("Remote bootstrap version: " + remoteMeta.getVersion());
 
+        if(meta.getVersion().greaterThan(remoteMeta.getVersion())) {
+            log("Local bootstrap version is newer than remote one");
+            return null;
+        }
+
         String localBootstrapChecksum;
         try {
             localBootstrapChecksum = U.getSHA256(U.getJar(Bootstrap.class));
@@ -399,7 +359,6 @@ public final class Bootstrap {
             return null;
         }
 
-        recordBreadcrumb("getBootstrapUpdate", null);
         return remoteMeta.getDownload();
     }
 
@@ -411,7 +370,6 @@ public final class Bootstrap {
             taskList.submit(library.download(libDir));
         }
 
-        recordBreadcrumb("downloadLibraries", DataBuilder.create("taskList", taskList));
         return taskList;
     }
 
@@ -427,7 +385,6 @@ public final class Bootstrap {
         });
         List<String> argsList = new ArrayList<String>();
         Collections.addAll(argsList, args);
-        recordBreadcrumb("createBridge", DataBuilder.create("args", argsList.toString()).add("options", options));
         return bridge;
     }
 
@@ -437,14 +394,12 @@ public final class Bootstrap {
             protected LocalLauncherTask execute() throws Exception {
                 RemoteLauncher remoteLauncher = updateMeta == null? null : new RemoteLauncher(updateMeta.getLauncher());
                 log("Remote launcher: " + remoteLauncher);
-                recordBreadcrumb("remoteLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
 
                 LocalLauncherTask localLauncherTask = bindTo(getLocalLauncher(remoteLauncher), .0, .25);
                 LocalLauncher localLauncher = localLauncherTask.getLauncher();
                 LocalLauncherMeta localLauncherMeta = localLauncher.getMeta();
                 log("Local launcher: " + localLauncher);
                 printVersion(localLauncherMeta);
-                recordBreadcrumb("localLauncher", DataBuilder.create("value", String.valueOf(remoteLauncher)));
 
                 log("Downloading libraries...");
                 bindTo(downloadLibraries(localLauncherMeta), .25, 1.);
@@ -459,7 +414,6 @@ public final class Bootstrap {
             @Override
             protected Void execute() throws Exception {
                 log("Starting launcher...");
-                recordBreadcrumb("startingLauncher", null);
 
                 bridge.addListener(new BootListenerAdapter() {
                     @Override
@@ -502,8 +456,11 @@ public final class Bootstrap {
                     }
                 } catch(ExceptionList list) {
                     log("Could not retrieve update meta:", list);
-                    sendError(list, DataBuilder.create("type", FatalExceptionType.getType(list)));
-
+                    SENTRY.sendEvent(new EventBuilder()
+                            .withLevel(Event.Level.ERROR)
+                            .withMessage("update meta not available")
+                            .withSentryInterface(new ExceptionInterface(list))
+                    );
                     updateMeta = null;
                 }
 
@@ -648,90 +605,17 @@ public final class Bootstrap {
                     if(local == null) {
                         throw ioE;
                     }
-                    recordBreadcrumbError(Bootstrap.class, "could not download update", ioE, null);
+                    SENTRY.sendEvent(new EventBuilder()
+                            .withLevel(Event.Level.ERROR)
+                            .withMessage("couldn't download remote launcher")
+                            .withSentryInterface(new ExceptionInterface(ioE))
+                    );
                     return new LocalLauncherTask(local);
                 }
 
                 return new LocalLauncherTask(fromRemote, true);
             }
         };
-    }
-
-    private static boolean recordedError;
-
-    public static void recordBreadcrumbError(Class<?> clazz, String name, Throwable t, DataBuilder b) {
-        recordedError = true;
-        recordBreadcrumb(name, "error", "class:" + clazz.getSimpleName(), b.add("exception", U.toString(t)));
-    }
-
-    public static void recordBreadcrumb(Class<?> clazz, String name, DataBuilder data) {
-        recordBreadcrumb(name, "info", "class:" + clazz.getSimpleName(), data);
-    }
-
-    private static void recordBreadcrumb(String name, DataBuilder data) {
-        recordBreadcrumb(name, "info", "general", data);
-    }
-
-    private static EventBuilder prepareEvent(Event.Level level, DataBuilder b, LocalBootstrapMeta meta, BootBridge bridge) {
-        EventBuilder builder = new EventBuilder()
-                .withEnvironment(System.getProperty("os.name"))
-                .withLevel(level)
-                .withRelease(meta == null ? null : String.valueOf(meta.getVersion()));
-
-        builder.withTag("java", JavaVersion.getCurrent().getVersion());
-        if(bridge != null && bridge.getClient() != null) {
-            builder.withSentryInterface(new com.getsentry.raven.event.interfaces.UserInterface(
-                    bridge.getClient().toString(), null, null, null
-            ));
-        }
-        if(b != null) {
-            for(Map.Entry<String, String> entry : b.build().entrySet()) {
-                builder.withExtra(entry.getKey(), entry.getValue());
-            }
-        }
-        return builder;
-    }
-
-    private EventBuilder prepareEvent(Event.Level level, DataBuilder b) {
-        return prepareEvent(level, b, getMeta(), bootBridge);
-    }
-
-    private void sendEvent(EventBuilder builder) {
-        Event event = builder.build();
-        raven.sendEvent(event);
-        log("Event sent:", DataBuilder.create("event", event)
-                .add("environment", event.getEnvironment())
-                .add("level", event.getLevel())
-                .add("interfaces", event.getSentryInterfaces())
-                .build()
-        );
-    }
-
-    private void sendError(Throwable t, DataBuilder b) {
-        EventBuilder builder = prepareEvent(Event.Level.ERROR, b)
-                .withSentryInterface(new ExceptionInterface(t));
-        sendEvent(builder);
-    }
-
-    private static void recordBreadcrumb(String name, String level, String category, DataBuilder data) {
-        BreadcrumbBuilder b = new BreadcrumbBuilder();
-        b.setLevel(level);
-        b.setCategory(category);
-        b.setMessage(name);
-        if(data != null) {
-            b.setData(data.build());
-        }
-
-        Breadcrumb breadcrumb = b.build();
-        raven.getContext().recordBreadcrumb(breadcrumb);
-
-        log("Breadcrumb recorded:", DataBuilder.create("breadcrumb", breadcrumb)
-            .add("level", level)
-            .add("category", category)
-            .add("message", name)
-            .add("data", data == null? null : data.build())
-            .build()
-        );
     }
 
     private static RedirectPrintStream.Redirector out, err;
@@ -743,13 +627,18 @@ public final class Bootstrap {
         if (err != null) {
             err.disableRecording();
         }
-        recordBreadcrumb("disableRedirectRecording", null);
     }
 
     private static void checkRunningConditions() {
-        JavaVersion supported = JavaVersion.create(1, 7, 0, 25);
+        JavaVersion supported = JavaVersion.create(1, 8, 0, 45);
 
         if(JavaVersion.getCurrent().compareTo(supported) < 0) {
+            SENTRY.sendEvent(initStaticEvent()
+                    .withLevel(Event.Level.ERROR)
+                    .withMessage("old java version")
+                    .withExtra("rawVersion", System.getProperty("java.version"))
+                    .withExtra("version", JavaVersion.getCurrent().getVersion())
+            );
             String message =
                     "Your Java version is not supported. Please install at least " + supported.getVersion() + " from Java.com" +
                     "\n" +
@@ -854,5 +743,18 @@ public final class Bootstrap {
 
     private static void log(Object... o) {
         U.log("[Bootstrap]", o);
+    }
+
+    private static void initEvent(EventBuilder eventBuilder, LocalBootstrapMeta meta) {
+        eventBuilder
+                .withServerName(OS.CURRENT.name())
+                .withRelease(meta == null? "unknown" : meta.getVersion().getNormalVersion())
+                .withEnvironment(meta == null? "unknown" : meta.getShortBrand());
+    }
+
+    private static EventBuilder initStaticEvent() {
+        EventBuilder eventBuilder = new EventBuilder();
+        initEvent(eventBuilder, null);
+        return eventBuilder;
     }
 }

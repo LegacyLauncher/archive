@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.ui.login;
 
 import net.minecraft.launcher.versions.ReleaseType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ProfileManager;
 import ru.turikhay.tlauncher.managers.ProfileManagerListener;
@@ -25,6 +27,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 public class AccountComboBox extends ExtendedComboBox<Account> implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
+    private static final Logger LOGGER = LogManager.getLogger(AccountComboBox.class);
+
     private static final long serialVersionUID = 6618039863712810645L;
     private static final Account EMPTY;
     private static final Account MANAGE;
@@ -76,7 +80,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                         try {
                             TLauncher.getInstance().getProfileManager().saveProfiles();
                         } catch (IOException e1) {
-                            U.log(e1);
+                            LOGGER.warn("Could not save profiles", e1);
                         }
                     }
                 }

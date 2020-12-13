@@ -1,26 +1,25 @@
 package ru.turikhay.util.windows.wmi;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.nio.charset.Charset;
+
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Codepage {
     private final int codepage;
+    private final String charsetName;
     private final Charset charset;
 
-    private Codepage(int codepage, Charset charset) {
-        if (charset == null) {
-            throw new NullPointerException("charset");
-        }
-
+    private Codepage(int codepage, String charsetName, Charset charset) {
         this.codepage = codepage;
+        this.charsetName = charsetName;
         this.charset = charset;
     }
 
@@ -28,54 +27,79 @@ public final class Codepage {
         return codepage;
     }
 
-    public Charset getCharset() {
+    public Charset getCharset() throws UnsupportedCharsetException {
+        if(charset == null) {
+            throw new UnsupportedCharsetException(charsetName);
+        }
         return charset;
     }
 
     public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("codepage", codepage)
-                .append("charset", charset)
-                .build();
+        ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("codepage", codepage);
+        if(charset == null) {
+            b.append("charsetName", charsetName);
+        } else {
+            b.append("charset", charset);
+        }
+        return b.build();
     }
 
-    private static final List<Codepage> pages = new ArrayList<Codepage>();
-    private static Codepage detectedCodepage;
-    private static CodepageDetectorThread thread = new CodepageDetectorThread();
+    private static final Map<Integer, Codepage> knownCodepages = new HashMap<Integer, Codepage>();
+    private static Codepage instance;
 
-    public static Codepage get() throws InterruptedException {
-        if (thread == null || Thread.currentThread() == thread) {
-            return detectedCodepage;
+    public static Codepage get() throws CodepageException {
+        if(instance == null) {
+            instance = doDetect();
         }
-
-        if (!thread.isAlive()) {
-            thread.start();
-        }
-
-        thread.join();
-
-        return detectedCodepage;
+        return instance;
     }
 
-    private static Codepage get(int cp) {
-        for (Codepage codepage : pages) {
-            if (codepage.codepage == cp) {
-                return codepage;
+    public static Codepage getCodepage(int codepage) {
+        return knownCodepages.get(codepage);
+    }
+
+    private static Codepage doDetect() throws CodepageException {
+        String chcpResponse = queryChcp();
+        Matcher matcher = Pattern.compile(".*: ([\\d]+)").matcher(chcpResponse);
+        if (matcher.matches() && matcher.groupCount() == 1) {
+            int cp;
+            try {
+                cp = Integer.parseInt(matcher.group(1));
+            } catch (Exception e) {
+                throw new RuntimeException("could not parse chcp: \"" + matcher.group(1) + "\"", e);
             }
+            Codepage codepage = getCodepage(cp);
+            if(codepage == null) {
+                throw new CodepageException("chcp returned unknown codepage: " + cp);
+            }
+            return codepage;
         }
-        return null;
+        throw new CodepageException("chcp returned unexpected response; lines: \""+ chcpResponse +"\"");
+    }
+
+    private static String queryChcp() throws CodepageException {
+        String system32 = System.getenv("WINDIR") + "\\system32\\";
+        List<String> result;
+        try {
+            result = WMI.execute(new String[]{system32 + "chcp.com"}, Charset.forName("ASCII"));
+        } catch (Exception e) {
+            throw new CodepageException("Couldn't run chcp.com", e);
+        }
+        if(result.isEmpty()) {
+            throw new CodepageException("chcp returned no lines");
+        }
+        return result.get(result.size() - 1); // lastLine
     }
 
     private static void add(int codepage, String charsetName) {
         Charset charset;
-
         try {
             charset = Charset.forName(charsetName);
         } catch (RuntimeException rE) {
-            return;
+            charset = null;
         }
-
-        pages.add(new Codepage(codepage, charset));
+        knownCodepages.put(codepage, new Codepage(codepage, charsetName, charset));
     }
 
     static {
@@ -180,43 +204,4 @@ public final class Codepage {
         add(65001, "utf-8");
     }
 
-    private static class CodepageDetectorThread extends Thread {
-        @Override
-        public void run() {
-            try {
-                detect();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
-
-        private void detect() throws Exception {
-            String system32 = System.getenv("WINDIR") + "\\system32\\";
-
-            List<String> result = WMI.execute(new String[]{system32 + "chcp.com"}, Charset.forName("ASCII"));
-            String lastLine = result.isEmpty()? null : result.get(result.size() - 1);
-
-            if (StringUtils.isBlank(lastLine)) {
-                throw new RuntimeException("last line is blank");
-            }
-
-            Matcher matcher = Pattern.compile(".*: ([\\d]+)").matcher(lastLine);
-            if (matcher.matches() && matcher.groupCount() == 1) {
-                int cp;
-                try {
-                    cp = Integer.parseInt(matcher.group(1));
-                } catch (Exception e) {
-                    throw new RuntimeException("could not parse chcp: \"" + matcher.group(1) + "\"", e);
-                }
-
-                Codepage codepage = get(cp);
-                if (codepage == null) {
-                    throw new UnsupportedCharsetException(String.valueOf(cp));
-                }
-
-                detectedCodepage = codepage;
-            }
-        }
-    }
 }

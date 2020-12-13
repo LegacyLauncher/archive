@@ -2,9 +2,11 @@ package ru.turikhay.tlauncher.minecraft.crash;
 
 import org.apache.commons.io.input.CharSequenceInputStream;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import ru.turikhay.tlauncher.minecraft.launcher.ChildProcessLogger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -30,24 +32,25 @@ public class PatternEntry extends CrashEntry {
             return false;
         }
 
-        Scanner scanner = getScanner();
-        while (scanner.hasNextLine()) {
-            Matcher matcher = pattern.matcher(scanner.nextLine());
-            if (matcher.matches()) {
-                match = matcher;
-                getManager().getCrash().addExtra("pattern:" + pattern.toString(), matcher.toString());
-                return true;
+        try(Scanner scanner = getScanner()) {
+            while (scanner.hasNextLine()) {
+                Matcher matcher = pattern.matcher(scanner.nextLine());
+                if (matcher.matches()) {
+                    match = matcher;
+                    getManager().getCrash().addExtra("pattern:" + pattern.toString(), matcher.toString());
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    Scanner getScanner() {
-        return getScanner(getManager().getOutput());
+    Scanner getScanner() throws IOException {
+        return getScanner(getManager().getProcessLogger());
     }
 
-    static Scanner getScanner(CharSequence output) {
-        return new Scanner(new CharSequenceInputStream(output, FileUtil.DEFAULT_CHARSET));
+    static Scanner getScanner(ChildProcessLogger processLogger) throws IOException {
+        return new Scanner(processLogger.getLogFile().read());
     }
 
     static boolean matchPatterns(Scanner scanner, List<Pattern> patterns, ArrayList<String> matches) {

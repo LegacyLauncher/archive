@@ -1,7 +1,11 @@
 package ru.turikhay.util.async;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public abstract class LoopedThread extends ExtendedThread {
     protected static final String LOOPED_BLOCK = "iteration";
+
+    private final AtomicBoolean working = new AtomicBoolean(true);
 
     public LoopedThread(String name) {
         super(name);
@@ -32,10 +36,15 @@ public abstract class LoopedThread extends ExtendedThread {
     }
 
     public final void run() {
-        while (true) {
+        while (working.get()) {
             lockThread("iteration");
             iterateOnce();
         }
+    }
+
+    public final void dispose() {
+        working.set(false);
+        unlockThread("iteration");
     }
 
     protected abstract void iterateOnce();

@@ -22,7 +22,7 @@ import java.util.*;
 public class UpdateMeta {
     private static final List<String> UPDATE_URL_LIST = new ArrayList<String>() {
         {
-            add("http://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
+            add("https://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
             Collections.addAll(this, U.shuffle(
                     "https://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
                     "https://u.tlauncher.ru/%s/bootstrap.json.mgz.signed",
@@ -80,22 +80,10 @@ public class UpdateMeta {
 
                             updateProgress(1.);
                             log("Success!");
-
-                            Bootstrap.recordBreadcrumb(UpdateMeta.class, "fetch_success",
-                                    DataBuilder.create("url", url)
-                                            .add("delta_ms", System.currentTimeMillis() - time)
-                                            .add("attempt", attempt)
-                            );
-
                             return meta;
                         } catch (Exception e) {
                             e.printStackTrace();
                             eList.add(e);
-
-                            Bootstrap.recordBreadcrumbError(UpdateMeta.class, "fetch_failed", e, DataBuilder.create("url", _url)
-                                    .add("delta_ms", System.currentTimeMillis() - time)
-                                    .add("attempt", attempt)
-                            );
                         } finally {
                             if(stream != null) {
                                 U.close(stream);

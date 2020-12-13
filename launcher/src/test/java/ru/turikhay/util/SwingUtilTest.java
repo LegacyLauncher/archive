@@ -17,6 +17,6 @@ public class SwingUtilTest {
         frame.pack();
         frame.setVisible(true);
         l.setText("biiiiiiiiiiiiiiiiiiiiiiiiig dick");
-        U.log(SwingUtil.fitString(l.getFontMetrics(l.getFont()), l.getText().toCharArray(), 50));
+        System.out.println(SwingUtil.fitString(l.getFontMetrics(l.getFont()), l.getText().toCharArray(), 50));
     }
 }

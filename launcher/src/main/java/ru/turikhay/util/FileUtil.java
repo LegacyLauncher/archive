@@ -1,6 +1,8 @@
 package ru.turikhay.util;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -14,6 +16,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class FileUtil {
+    private static final Logger LOGGER = LogManager.getLogger(FileUtil.class);
+
     public static final String DEFAULT_CHARSET = "UTF-8";
 
     public static Charset getCharset() {
@@ -232,7 +236,7 @@ public class FileUtil {
             }
         } else {
             if (fileExists(file)) {
-                log("Could not delete file:", path, new RuntimeException());
+                LOGGER.warn("Could not delete file: {}", path, new RuntimeException());
             }
         }
     }
@@ -366,9 +370,9 @@ public class FileUtil {
                 String fileName = ze.getName();
                 File newFile = new File(folder, fileName);
                 if (!replace && newFile.isFile()) {
-                    log("[UnZip] File exists:", newFile.getAbsoluteFile());
+                    LOGGER.debug("[UnZip] File exists: {}", newFile.getAbsoluteFile());
                 } else {
-                    log("[UnZip]", newFile.getAbsoluteFile());
+                    LOGGER.debug("[UnZip] {}", newFile.getAbsoluteFile());
                     createFile(newFile);
                     BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(newFile));
 
@@ -458,9 +462,5 @@ public class FileUtil {
             bOut.write(buffer, 0, read);
 
         return bOut.toByteArray();
-    }
-
-    private static void log(Object... o) {
-        U.log("[Files]", o);
     }
 }

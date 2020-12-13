@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.ui.background;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.U;
@@ -16,6 +18,8 @@ import java.util.Objects;
 import java.util.Random;
 
 public class OldAnimatedBackground extends JComponent implements ISwingBackground {
+    private static final Logger LOGGER = LogManager.getLogger(OldAnimatedBackground.class);
+
     private static final long ONE_TICK_IN_MS = 1000;
     private static final short DAY_CYCLE_IN_TICKS = 1200;
 
@@ -59,7 +63,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             }
         });
         tickTimer.execute();
-        U.log("Tick worker started");
+        LOGGER.debug("Tick worker started");
     }
 
     private void stopTickWorker() {
@@ -68,7 +72,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         }
         tickTimer.cancel(true);
         tickTimer = null;
-        U.log("Tick worker stopped");
+        LOGGER.debug("Tick worker stopped");
     }
 
     @Override
@@ -569,7 +573,6 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             }
             int index = timeOfDay / DaySegment.SEGMENT_LENGTH_IN_TICKS;
             if(index > VALUES.length - 1) {
-                U.log(VALUES.length - 1);
                 return VALUES.length - 1;
             }
             return index;
@@ -603,7 +606,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         @Override
         protected Void doInBackground() throws Exception {
             try {
-                U.log("First tick:", dayCycle);
+                LOGGER.debug("First tick: {}", dayCycle);
                 lastDayCycleUpdate = System.currentTimeMillis();
                 while (!isCancelled()) {
                     updateDayCycle();
@@ -611,11 +614,11 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
                     Thread.sleep(ONE_TICK_IN_MS);
                 }
             } catch (InterruptedException in) {
-                U.log("interrupted");
+                LOGGER.debug("interrupted");
             } catch(Exception e) {
                 e.printStackTrace();
             }
-            U.log("cancelled");
+            LOGGER.debug("cancelled");
             return null;
         }
 

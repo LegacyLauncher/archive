@@ -11,13 +11,12 @@ import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.U;
 import ru.turikhay.util.json.ExposeExclusion;
 
 import java.io.File;
@@ -28,6 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CompleteVersion implements Version, Cloneable {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     String id;
     String jar;
     String url;
@@ -205,7 +206,6 @@ public class CompleteVersion implements Version, Cloneable {
             return true;
         }
         if(proceededFor != null && require) {
-            Sentry.sendError(CompleteVersion.class, "already proceeded", null, DataBuilder.create("version", this).add("expectedFor", type).add("alreadyFor", proceededFor));
             throw new IllegalStateException("already proceeded for another type: " + proceededFor);
         }
         return false;
@@ -280,7 +280,7 @@ public class CompleteVersion implements Version, Cloneable {
         while (var3.hasNext()) {
             Library library = (Library) var3.next();
             if(library.getName().startsWith("com.mojang:patchy:") && matcher.hasFeature("delete_patchy", null)) {
-                U.log("Not including com.mojang:patchy library. Disable this feature in config file if you want.");
+                LOGGER.info("Not including com.mojang:patchy library. Disable this feature in config file if you want.");
                 continue;
             }
             if (library.appliesToCurrentEnvironment(matcher)) {
@@ -618,11 +618,6 @@ public class CompleteVersion implements Version, Cloneable {
             }
         }
         return result;
-    }
-
-
-    private void log(Object... o) {
-        U.log("[Version:" + id + "]", o);
     }
 
     protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");

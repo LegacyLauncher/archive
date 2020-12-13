@@ -5,18 +5,19 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.properties.PropertyMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.managers.AccountManager;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.user.ElyLegacyUser;
 import ru.turikhay.tlauncher.user.MojangUser;
 import ru.turikhay.tlauncher.user.User;
-import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
 
 import java.util.*;
 
 public class AccountMigrator {
+    private static final Logger LOGGER = LogManager.getLogger(AccountMigrator.class);
+
     private final String clientToken;
     private final Gson gson;
 
@@ -60,16 +61,11 @@ public class AccountMigrator {
                         continue;
                 }
             } catch(Exception e) {
-                log("Could not migrate", account, e);
-                Sentry.sendError(AccountMigrator.class, "could not migrate account", e, DataBuilder.create("account", account).add("output", output));
+                LOGGER.error("Could not migrate {}", account, e);
                 continue;
             }
             migrated.add(user);
         }
         return migrated;
-    }
-
-    private void log(Object...o) {
-        U.log("[AccountMigrator]", o);
     }
 }

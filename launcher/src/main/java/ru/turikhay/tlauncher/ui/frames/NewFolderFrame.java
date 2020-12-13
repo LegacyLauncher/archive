@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.frames;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ProfileManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -20,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class NewFolderFrame extends VActionFrame {
+    private static final Logger LOGGER = LogManager.getLogger(NewFolderFrame.class);
+
     private final TLauncher t;
 
     public NewFolderFrame(final TLauncher t, File file) {
@@ -114,7 +118,7 @@ public class NewFolderFrame extends VActionFrame {
         }
 
         t.getSettings().set("minecraft.gamedir", folder.getAbsolutePath());
-        U.log("Changed folder with NewFolderFrame:", folder);
+        LOGGER.info("User selected new game folder using NewFolderFrame: {}", folder);
         dispose();
     }
 
@@ -127,7 +131,7 @@ public class NewFolderFrame extends VActionFrame {
             try {
                 FileUtil.createFolder(currentDir);
             } catch (Exception e) {
-                U.log(currentDir, "is not accessible");
+                LOGGER.warn("Not accessible: {}", currentDir);
                 currentDir.delete();
                 return true;
             }
@@ -135,14 +139,14 @@ public class NewFolderFrame extends VActionFrame {
         }
 
         if (!(currentDir.canRead() && currentDir.canWrite() && currentDir.canExecute())) {
-            U.log(currentDir, "is not readable/writable/executable");
+            LOGGER.warn("Is either not readable/writable/executable: {}", currentDir);
             return true;
         }
 
         File[] list = currentDir.listFiles();
 
         if (list == null) {
-            U.log(currentDir, "has null listing?!");
+            LOGGER.warn("Couldn't list files (returned null) in {}", currentDir);
             return true;
         }
 
@@ -151,8 +155,11 @@ public class NewFolderFrame extends VActionFrame {
         }
 
         File profileFile = new File(currentDir, ProfileManager.DEFAULT_PROFILE_FILENAME);
-        U.log(currentDir, "has profile file:", profileFile.isFile());
-        return !profileFile.isFile();
+        if(profileFile.isFile()) {
+            LOGGER.warn("Contains profile file: {}", profileFile);
+            return false;
+        }
+        return true;
     }
 
     public static File selectDestination() {

@@ -88,7 +88,6 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
 
             parent.setLocation(x, y);
             config.set(key, new IntegerArray(x, y));
-            U.log(Integer.valueOf(x), Integer.valueOf(y));
         }
     }
 
@@ -135,7 +134,6 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
                 while (var3.hasNext()) {
                     SoftReference dragger = (SoftReference) var3.next();
                     if (dragger.get() == null) {
-                        U.log("dragger has been deleted :(");
                     } else {
                         ((Dragger) dragger.get()).ready();
                     }
@@ -151,7 +149,6 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
         while (var1.hasNext()) {
             SoftReference dragger = (SoftReference) var1.next();
             if (dragger.get() == null) {
-                U.log("dragger has been deleted :(");
             } else {
                 ((Dragger) dragger.get()).updateCoords();
             }

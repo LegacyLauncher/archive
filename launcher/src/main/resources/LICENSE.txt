@@ -10,10 +10,10 @@ This software includes projects licensed under a Apache License 2.0:
 - Apache Commons IO (© 2002-2012 The Apache Software Foundation)
 - Apache Commons Lang (© 2001-2014 The Apache Software Foundation)
 - Google Gson
-Legal code can be found at: http://www.apache.org/licenses/LICENSE-2.0
+Legal code can be found at: https://www.apache.org/licenses/LICENSE-2.0
 
 This software includes JOpt Simple which is licensed under The MIT License,
-which legal code can be found at: http://opensource.org/licenses/mit-license.php
+which legal code can be found at: https://opensource.org/licenses/mit-license.php
 
 This software includes content made by Mojang and licensed under Minecraft EULA,
 which can be found at: https://account.mojang.com/documents/minecraft_eula
@@ -23,4 +23,4 @@ This software uses Hamburg icon pack (by former pc.de Team) and WPZOOM Developer
 icon pack under CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/deed.en
 
 This software uses modified jWMI. Copyright Henry Ranch LLC 2009-2010.  All rights reserved.
-http://www.henryranch.net
+https://www.henryranch.net

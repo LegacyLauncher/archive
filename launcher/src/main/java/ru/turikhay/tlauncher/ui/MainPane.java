@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
@@ -28,6 +30,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
 public class MainPane extends ExtendedLayeredPane {
+    private static final Logger LOGGER = LogManager.getLogger(MainPane.class);
+
     private final TLauncherFrame rootFrame;
     private final boolean repaintEveryTime;
     private PseudoScene scene;
@@ -45,7 +49,7 @@ public class MainPane extends ExtendedLayeredPane {
         super(null);
         rootFrame = frame;
         repaintEveryTime = OS.LINUX.isCurrent();
-        log("Creating background...");
+        LOGGER.trace("Creating background...");
         background = new BackgroundManager(this);
         add(background);
         //service = new ServicePanel(this);
@@ -64,10 +68,10 @@ public class MainPane extends ExtendedLayeredPane {
         });
         //notifier.setSize(SwingUtil.magnify(new Dimension(32, 32)));
         //add(notifier);
-        log("Init Default scene...");
+        LOGGER.trace("Init Default scene...");
         defaultScene = new DefaultScene(this);
         add(defaultScene);
-        log("Init Account manager scene...");
+        LOGGER.trace("Init Account manager scene...");
         accountManager = new DelayedComponent<>(new DelayedComponentLoader<AccountManagerScene>() {
             @Override
             public AccountManagerScene loadComponent() {
@@ -87,7 +91,7 @@ public class MainPane extends ExtendedLayeredPane {
             }
         });
         //(accountManager);
-        log("Init Version manager scene...");
+        LOGGER.trace("Init Version manager scene...");
         versionManager = new DelayedComponent<>(new DelayedComponentLoader<VersionManagerScene>() {
             @Override
             public VersionManagerScene loadComponent() {
@@ -355,9 +359,5 @@ public class MainPane extends ExtendedLayeredPane {
         public void updateLocale() {
             Localizable.updateContainer(this);
         }
-    }
-
-    private void log(String... o) {
-        U.log("[MainPane]", o);
     }
 }

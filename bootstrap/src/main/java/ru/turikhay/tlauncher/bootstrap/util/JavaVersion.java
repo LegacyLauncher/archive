@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
+ * https://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
  */
 public final class JavaVersion implements Comparable<JavaVersion> {
     private static JavaVersion CURRENT;

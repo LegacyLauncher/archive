@@ -47,7 +47,6 @@ public class DownloadTask extends Task<Void> {
                 return null;
             } else {
                 log("File might be corrupted: ", hash);
-                Bootstrap.recordBreadcrumb(DownloadTask.class, "file_corrupted", DataBuilder.create("file", file.getAbsolutePath()).add("expected_hash", sha256).add("got_hash", hash));
             }
         }
 
@@ -64,8 +63,6 @@ public class DownloadTask extends Task<Void> {
             } catch (IOException ioE) {
                 log("Failed to download:", url, ioE);
                 ioEList.add(ioE);
-
-                Bootstrap.recordBreadcrumbError(DownloadTask.class, "error", ioE, DataBuilder.create("url", url).add("sha256", sha256));
                 continue;
             }
             return null;
@@ -156,8 +153,6 @@ public class DownloadTask extends Task<Void> {
                     tryCopy = true; // let's try again
                 }
             } while(tryCopy);
-
-            Bootstrap.recordBreadcrumb(DownloadTask.class, "success", DataBuilder.create("url", url).add("sha256", sha256));
         } finally {
             U.close(in, out);
         }

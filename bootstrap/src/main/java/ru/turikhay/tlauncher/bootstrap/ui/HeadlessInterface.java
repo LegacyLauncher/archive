@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.bootstrap.ui;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.util.U;
@@ -79,8 +80,12 @@ public final class HeadlessInterface implements IInterface {
         printEvent(new VersionEvent(bootstrapVersion, launcherVersion));
     }
 
+    static void printFatalException(FatalExceptionType type) {
+        printEvent(new FatalExceptionEvent(type));
+    }
+
     private enum EventType {
-        VERSION, TASK, ALERT, DISPOSE
+        VERSION, TASK, ALERT, FATAL_EXCEPTION, DISPOSE
     }
 
     private enum EventAlertType {
@@ -124,6 +129,14 @@ public final class HeadlessInterface implements IInterface {
             this.alertType = type;
             this.message = message;
             this.appendMessage = textarea instanceof Throwable? U.toString((Throwable)textarea) : textarea == null? null : String.valueOf(textarea);
+        }
+    }
+
+    private static class FatalExceptionEvent extends Event {
+        public final FatalExceptionType exceptionType;
+        FatalExceptionEvent(FatalExceptionType exceptionType) {
+            super(EventType.FATAL_EXCEPTION);
+            this.exceptionType = exceptionType;
         }
     }
 

@@ -7,6 +7,6 @@ import ru.turikhay.util.windows.wmi.WMI;
 public class WMITest {
     @Test
     public void test() throws Exception {
-        U.log(WMI.getAVSoftwareList());
+        System.out.println(WMI.getAVSoftwareList());
     }
 }

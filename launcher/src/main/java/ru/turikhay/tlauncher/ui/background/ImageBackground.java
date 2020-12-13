@@ -1,5 +1,11 @@
 package ru.turikhay.tlauncher.ui.background;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
@@ -15,6 +21,8 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public final class ImageBackground extends JComponent implements ISwingBackground {
+    private static final Logger LOGGER = LogManager.getLogger(ImageBackground.class);
+
     private static ImageBackground lastInstance;
 
     private Image defaultImage, currentImage, renderImage;
@@ -95,12 +103,17 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             }
 
             Image image;
-            log("Loading background", path, input);
+            LOGGER.trace("Loading background: {} -> {}", path, input);
 
             try {
                 image = ImageIO.read(input);
             } catch (Exception e) {
-                log("Could not load image", path, e);
+                LOGGER.error("Could not load image: {}", path, e);
+                Sentry.capture(new EventBuilder()
+                        .withMessage("image not found: " + path)
+                        .withLevel(Event.Level.ERROR)
+                        .withSentryInterface(new ExceptionInterface(e))
+                );
                 return;
             }
 
@@ -142,9 +155,5 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
         } catch(OutOfMemoryError oom) {
             ExceptionHandler.reduceMemory(oom);
         }
-    }
-
-    private void log(Object... o) {
-        U.log("[Background][Image]", o);
     }
 }

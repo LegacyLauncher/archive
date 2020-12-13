@@ -14,11 +14,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class Library extends ToStringBuildable {
-    private static final List<String> LIBRARY_REPO_LIST = Arrays.asList(U.shuffle(new String[]{
-            "http://u.tlauncher.ru/repo/libraries/",
-            "http://repo.tlauncher.ru/repo/libraries/",
-            "http://turikhay.ru/tlauncher/repo/libraries/"
-    }));
+    private static final List<String> LIBRARY_REPO_LIST = Arrays.asList(U.shuffle(
+            "https://u.tlauncher.ru/repo/libraries/",
+            "https://tlauncherrepo.com/repo/libraries/",
+            "https://tlaun.ch/repo/libraries/",
+            "https://cdn.turikhay.ru/tlauncher/repo/libraries/"
+    ));
 
     private String name, checksum;
 

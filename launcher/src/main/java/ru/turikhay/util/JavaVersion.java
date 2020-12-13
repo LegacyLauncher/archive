@@ -8,18 +8,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
+ * https://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
  */
-public final class JavaVersion {
+public final class JavaVersion implements Comparable<JavaVersion> {
     private final String version, identifier;
-    private final int major, minor, update;
+    private final int epoch, major, minor, update;
     private final boolean ea;
 
+    private final double d;
+
     private JavaVersion(String version, String identifier, int epoch, int major, int minor, int update) {
-        this.version = StringUtil.requireNotBlank(version, "version");
+        if(StringUtils.isBlank(version)) {
+            throw new IllegalArgumentException("version");
+        }
+        this.version = version;
         this.identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
         if(epoch == 1) {
+            this.epoch = epoch;
             this.major = ifPositive(major, "major");
             this.minor = ifNotNegative(minor, "minor");
 
@@ -27,12 +33,71 @@ public final class JavaVersion {
                 update = -1;
             }
             this.update = ifNotSmallerMinusOne(update, "update");
-        } else {
+        } else if(epoch == 0 && ifPositive(major, "major") > 0) {
+            this.epoch = 1;
             this.major = major;
             this.minor = ifNotNegative(minor, "minor (java 9+)");
-            this.update = ifNotSmallerMinusOne(update, "update (java 9+)");
+            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
+        } else {
+            this.epoch = 1;
+            this.major = ifPositive(epoch, "major (java 9+)");
+            this.minor = ifNotNegative(major, "minor (java 9+)");
+            this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
         }
         ea = version.contains("-ea");
+        d = Double.parseDouble(this.epoch + "." + this.major);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JavaVersion that = (JavaVersion) o;
+        return version.equals(that.version);
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = version != null ? version.hashCode() : 0;
+        result = 31 * result + (identifier != null ? identifier.hashCode() : 0);
+        result = 31 * result + epoch;
+        result = 31 * result + major;
+        result = 31 * result + minor;
+        result = 31 * result + update;
+        result = 31 * result + (ea ? 1 : 0);
+        temp = Double.doubleToLongBits(d);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
+    public int compareTo(JavaVersion o) {
+        U.requireNotNull(o, "version");
+
+        int epochCompare = compare(getEpoch(), o.getEpoch());
+        if(epochCompare != 0) {
+            return epochCompare;
+        }
+
+        int majorCompare = compare(getMajor(), o.getMajor());
+        if(majorCompare != 0) {
+            return majorCompare;
+        }
+
+        int minorCompare = compare(getMinor(), o.getMinor());
+        if(minorCompare != 0) {
+            return minorCompare;
+        }
+
+        int updateCompare = compare(getUpdate(), o.getUpdate());
+        if(updateCompare != 0) {
+            return updateCompare;
+        }
+
+        int currentRelease = boolToInt(isRelease()), compareRelease = boolToInt(o.isRelease());
+        return currentRelease - compareRelease; // 00,11 = 0; 01 = -1; 10 = 1
     }
 
     public String getVersion() {
@@ -41,6 +106,14 @@ public final class JavaVersion {
 
     public String getIdentifier() {
         return identifier;
+    }
+
+    public double getDouble() {
+        return d;
+    }
+
+    public int getEpoch() {
+        return epoch;
     }
 
     public int getMajor() {
@@ -68,6 +141,7 @@ public final class JavaVersion {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("version", getVersion())
                 .append("identifier", getIdentifier())
+                .append("epoch", getEpoch())
                 .append("major", getMajor())
                 .append("minor", getMinor())
                 .append("update", getUpdate())
@@ -146,5 +220,13 @@ public final class JavaVersion {
             throw new IllegalArgumentException(name + " must not be less than -1");
         }
         return num;
+    }
+
+    private static int compare(int i0, int i1) {
+        return (i0 < i1? -1 : (i0 == i1? 0 : 1));
+    }
+
+    private static int boolToInt(boolean b) {
+        return b? 1 : 0;
     }
 }

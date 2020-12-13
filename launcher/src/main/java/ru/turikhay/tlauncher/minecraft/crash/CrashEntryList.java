@@ -4,6 +4,8 @@ import com.github.zafarkhaja.semver.Version;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.OS;
@@ -19,6 +21,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public final class CrashEntryList {
+    private static final Logger LOGGER = LogManager.getLogger(CrashEntryList.class);
+
     private final List<CrashEntry> signatures = new ArrayList<CrashEntry>(), _signatures = Collections.unmodifiableList(signatures);
     private int revision;
     private Version required;
@@ -99,7 +103,7 @@ public final class CrashEntryList {
             for (Map.Entry<String, JsonElement> entry : root.get("variables").getAsJsonObject().entrySet()) {
                 String value;
                 loadedVars.put(entry.getKey(), value = getLoc(entry.getValue(), context, varsResolver));
-                log("Processing var:", entry.getKey(), value);
+                LOGGER.trace("Processing var {} = {}", entry.getKey(), value);
             }
             vars.putAll(loadedVars);
 
@@ -129,8 +133,7 @@ public final class CrashEntryList {
                 entryList.signatures.add(entry);
             }
 
-            log(entryList.signatures.size(), "crash entries were parsed");
-
+            LOGGER.trace("{} crash entries were parsed", entryList.signatures.size());
 
             Collections.sort(entryList.signatures, new Comparator<CrashEntry>() {
                 @Override
@@ -235,10 +238,6 @@ public final class CrashEntryList {
 
                 return entry;
             }
-        }
-
-        private void log(Object... o) {
-            U.log("[CrashEntryDeserializer]", o);
         }
 
         class IncompatibleEntryList extends JsonParseException {

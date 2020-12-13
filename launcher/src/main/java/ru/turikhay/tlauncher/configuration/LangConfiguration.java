@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.configuration;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.U;
 
@@ -10,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public final class LangConfiguration {
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final Locale ru_RU = U.getLocale("ru_RU");
 
     private final Map<Locale, Properties> translationsMap = new HashMap<Locale, Properties>();
@@ -131,7 +134,7 @@ public final class LangConfiguration {
         this.plurals = null;
 
         if (locale == null) {
-            log("WARNING: locale set to null");
+            LOGGER.warn("Tried to set locale to null");
             return;
         }
 
@@ -170,7 +173,7 @@ public final class LangConfiguration {
                 }
                 translations = SimpleConfiguration.loadFromStream(in);
             } catch (Exception e) {
-                log("Could not load translations for:", locale, e);
+                LOGGER.warn("Could not load translations for {}", locale, e);
                 return null;
             } finally {
                 U.close(in);
@@ -188,7 +191,7 @@ public final class LangConfiguration {
 
         String pluralFormsRaw = translations.getProperty("plural");
         if (pluralFormsRaw == null) {
-            log("Plural forms not found:", locale);
+            LOGGER.warn("Plural forms not found: {}", locale);
             return null;
         }
 
@@ -221,12 +224,12 @@ public final class LangConfiguration {
         if (ruTranslations != null) {
             for (Object key : ruTranslations.keySet()) {
                 if (!translations.containsKey(key)) {
-                    log(locale, "is missing key:", key);
+                    LOGGER.warn("{} is missing key: {}", locale, key);
                 }
             }
             for (Object key : translations.keySet()) {
                 if (!ruTranslations.containsKey(key)) {
-                    log(locale, "has redundant key:", key);
+                    LOGGER.warn("{} has redundant key: {}", locale, key);
                 }
             }
         }
@@ -245,7 +248,7 @@ public final class LangConfiguration {
         for(String locale : Static.getLangList()) {
             Locale l = U.getLocale(locale);
             if(l == null) {
-                log(locale, "is not supported");
+                LOGGER.warn("{} is not supported", locale);
             } else {
                 list.add(U.getLocale(locale));
             }
@@ -255,9 +258,5 @@ public final class LangConfiguration {
 
     public static List<Locale> getAvailableLocales() {
         return localeList;
-    }
-
-    private static void log(Object... o) {
-        U.log("[Lang]", o);
     }
 }

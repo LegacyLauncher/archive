@@ -1,27 +1,31 @@
 package net.minecraft.launcher.process;
 
+import com.google.common.primitives.Chars;
 import ru.turikhay.util.OS;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 public class JavaProcessLauncher {
+    private final Charset charset;
     private final String jvmPath;
     private final List<String> commands;
     private File directory;
     private ProcessBuilder process;
 
-    public JavaProcessLauncher(String jvmPath, String[] commands) {
+    public JavaProcessLauncher(Charset charset, String jvmPath, String[] commands) {
         if (jvmPath == null) {
             jvmPath = OS.getJavaPath();
         }
 
+        this.charset = charset;
         this.jvmPath = jvmPath;
-        this.commands = new ArrayList<String>();
+        this.commands = new ArrayList<>();
         Collections.addAll(this.commands, commands);
     }
 
@@ -30,7 +34,7 @@ public class JavaProcessLauncher {
     }
 
     public JavaProcess start() throws IOException {
-        return new JavaProcess(createProcess().start());
+        return new JavaProcess(createProcess().start(), charset);
     }
 
     public ProcessBuilder createProcess() {

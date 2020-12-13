@@ -3,6 +3,8 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import com.google.gson.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
@@ -19,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Button {
+    private static final Logger LOGGER = LogManager.getLogger(Button.class);
+
     private final List<Action> actions = new ArrayList<Action>();
 
     private final String name;
@@ -92,7 +96,7 @@ public class Button {
                         action.execute();
                     }
                 } catch (Exception ex) {
-                    entry.log(ex);
+                    LOGGER.warn("Could not perform action", ex);
                 }
                 if (blockAfter) {
                     button.setEnabled(false);

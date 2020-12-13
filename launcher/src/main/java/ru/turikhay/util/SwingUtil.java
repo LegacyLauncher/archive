@@ -1,6 +1,7 @@
 package ru.turikhay.util;
 
-import com.getsentry.raven.util.Base64;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 
@@ -18,12 +19,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.List;
 
 public class SwingUtil {
+    private static final Logger LOGGER = LogManager.getLogger(SwingUtil.class);
+
     private static final List<Image> favicons = new ArrayList();
 
     public static List<Image> getFavicons() {
@@ -45,9 +47,9 @@ public class SwingUtil {
             }
 
             if (loaded.isEmpty()) {
-                log("No favicon is loaded.");
+                LOGGER.debug("No favicon is loaded.");
             } else {
-                log("Favicons loaded:", loaded.substring(2));
+                LOGGER.debug("Favicons loaded: {}", loaded.substring(2));
             }
 
             return favicons;
@@ -66,7 +68,7 @@ public class SwingUtil {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 return true;
             } catch (Exception e) {
-                log("Can't set system look and feel.", e);
+                LOGGER.warn("Can't set system L&F", e);
                 allowSystemLookAndFeel = false;
                 return false;
             }
@@ -79,7 +81,7 @@ public class SwingUtil {
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (Exception e) {
-            log("Can't set default look and feel!", e);
+            LOGGER.warn("Can't set default L&F!", e);
         }
     }
 
@@ -110,7 +112,7 @@ public class SwingUtil {
                 }
             }
         } catch (Exception var9) {
-            log("Cannot change font sizes!", var9);
+            LOGGER.warn("Cannot change font size", var9);
         }
 
     }
@@ -150,10 +152,6 @@ public class SwingUtil {
 
     public static boolean isThiner(Dimension d1, Dimension d2) {
         return Math.min(d1.width, d2.width) == d1.width || Math.min(d1.height, d2.height) == d1.height;
-    }
-
-    private static void log(Object... o) {
-        U.log("[Swing]", o);
     }
 
     public static Dimension getPrefSize(JComponent component, int width, int height) {
@@ -221,7 +219,7 @@ public class SwingUtil {
                 }
             });
         } catch (Exception e) {
-            U.log("Could not copy", e);
+            LOGGER.warn("Could not copy to clipboard: \"{}\"", text, e);
         }
     }
 
@@ -248,7 +246,7 @@ public class SwingUtil {
 
         offset += base64e.length();
 
-        return ImageIO.read(new ByteArrayInputStream(Base64.decode(source.substring(offset).getBytes(Charset.forName("UTF-8")), Base64.DEFAULT)));
+        return ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(source.substring(offset).getBytes(StandardCharsets.UTF_8))));
     }
 
     public static Image loadImage(String source) throws IOException {

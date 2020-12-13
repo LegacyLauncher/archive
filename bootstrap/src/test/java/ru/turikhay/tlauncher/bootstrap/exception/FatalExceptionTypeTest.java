@@ -29,12 +29,12 @@ public class FatalExceptionTypeTest {
                 add(new SocketException("Address family not supported by protocol family: connect"));
             }
         })), FatalExceptionType.INTERNET_CONNECTIVITY_BLOCKED);
-        assertNull(FatalExceptionType.getType(new ExceptionList(new ArrayList<Exception>() {
+        assertEquals(FatalExceptionType.getType(new ExceptionList(new ArrayList<Exception>() {
             {
                 add(new IOException());
                 add(new Exception());
             }
-        })));
+        })), FatalExceptionType.UNKNOWN);
     }
 
 }

@@ -1,9 +1,11 @@
 package ru.turikhay.tlauncher.managers;
 
-import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.util.U;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class McleaksManager {
+    private static final Logger LOGGER = LogManager.getLogger(McleaksManager.class);
+
     private static final boolean SUPPORTED;
     private static final McleaksStatus STATUS;
     private static final McleaksConnector CONNECTOR;
@@ -13,9 +15,8 @@ public final class McleaksManager {
         try {
             ru.turikhay.app.nstweaker.NSTweaker.checkSupported();
         } catch (Throwable t) {
-            U.log("MCLeaks tweaks are not supported", t);
+            LOGGER.info("MCLeaks will not be available", t);
             supported = false;
-            Sentry.sendError(McleaksManager.class, "not supported", t, null);
         }
         SUPPORTED = supported;
         STATUS = supported? new McleaksStatus() : null;

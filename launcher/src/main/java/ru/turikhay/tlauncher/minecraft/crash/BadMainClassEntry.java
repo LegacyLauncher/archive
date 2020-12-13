@@ -1,8 +1,13 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.regex.Pattern;
 
 public class BadMainClassEntry extends PatternEntry {
+    private static final Logger LOGGER = LogManager.getLogger(BadMainClassEntry.class);
+
     public BadMainClassEntry(CrashManager manager) {
         super(manager, "bad-mainclass", Pattern.compile("^Error: Could not find or load main class (.+)$"));
         setExitCode(1);
@@ -15,7 +20,7 @@ public class BadMainClassEntry extends PatternEntry {
         }
 
         String requestedMainClass = getMatch().group(1);
-        log("Found bad main class: \""+ requestedMainClass +"\"");
+        LOGGER.info("Found bad main class: {}", requestedMainClass);
 
         if(getManager().getLauncher() != null) {
             String jvmArgs = getManager().getLauncher().getConfiguration().get("minecraft.javaargs");

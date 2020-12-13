@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.managers;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.util.async.ExtendedThread;
 
 import java.io.IOException;
@@ -22,7 +21,6 @@ class McleaksStatusThread extends ExtendedThread {
         try {
             receivePayload();
         } catch(Exception e) {
-            Sentry.sendError(McleaksStatusThread.class, "cannot receive payload", e, null);
             parent.receiveNothing();
         }
     }

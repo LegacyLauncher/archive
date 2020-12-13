@@ -13,8 +13,4 @@ public abstract class LauncherComponent {
             this.manager = manager;
         }
     }
-
-    protected void log(Object... w) {
-        U.log("[" + getClass().getSimpleName() + "]", w);
-    }
 }

@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.crash;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashEntry;
@@ -10,6 +12,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.support.PreSupportFrame;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
@@ -18,6 +21,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public final class CrashFrame extends VActionFrame {
+    private static final Logger LOGGER = LogManager.getLogger(CrashFrame.class);
+
     private final ImageIcon crashIcon = Images.getIcon("bug.png");
 
     private final PreSupportFrame supportFrame = new PreSupportFrame() {
@@ -36,13 +41,7 @@ public final class CrashFrame extends VActionFrame {
         openLogs.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (crash != null &&
-                        crash.getManager().getLauncher() != null && crash.getManager().getLauncher().getLogger() != null &&
-                        !crash.getManager().getLauncher().getLogger().isKilled()) {
-                    crash.getManager().getLauncher().getLogger().show(true);
-                } else {
-                    TLauncher.getInstance().getLogger().show(true);
-                }
+                OS.openFile(crash.getManager().getProcessLogger().getLogFile().getFile());
             }
         });
     }
@@ -80,13 +79,11 @@ public final class CrashFrame extends VActionFrame {
 
     public void setCrash(Crash crash) {
         this.crash = U.requireNotNull(crash);
-        logPrefix = "[CrashFrame]" + (crash.getEntry() == null ? "[unknown]" : "[" + crash.getEntry().getName() + "]");
 
         if (crash.getEntry() == null) {
             initOnUnknown();
         } else {
             if (crash.getEntry().isFake()) {
-                log("Crash is fake, ignoring");
                 return;
             }
             initOnCrash(crash.getEntry());
@@ -97,7 +94,7 @@ public final class CrashFrame extends VActionFrame {
     }
 
     private void initOnUnknown() {
-        log("Unknown crash proceeded");
+        LOGGER.debug("Unknown crash proceeded");
 
         setTitlePath("crash.unknown.title");
         getHead().setText("crash.unknown.title");
@@ -107,7 +104,7 @@ public final class CrashFrame extends VActionFrame {
     }
 
     private void initOnCrash(CrashEntry entry) {
-        log("Crash entry proceeded:", entry);
+        LOGGER.debug("Crash entry proceeded: {}", entry);
         setTitlePath(entry.getTitle(), entry.getTitleVars());
 
         if (entry.getImage() != null) {
@@ -117,7 +114,7 @@ public final class CrashFrame extends VActionFrame {
                 try {
                     image = SwingUtil.loadImage(entry.getImage());
                 } catch (Exception e) {
-                    log("could not load crash image", e);
+                    LOGGER.warn("could not load crash image {}", entry.getImage(), e);
                     break loadImage;
                 }
                 getHead().setIcon(new ImageIcon(image, SwingUtil.magnify(32), false));
@@ -176,11 +173,5 @@ public final class CrashFrame extends VActionFrame {
         c.weightx = 0.0;
         ++c.gridx;
         getFooter().add(buttonPanel, c);
-    }
-
-    private String logPrefix = "[]";
-
-    private void log(Object... o) {
-        U.log(logPrefix, o);
     }
 }

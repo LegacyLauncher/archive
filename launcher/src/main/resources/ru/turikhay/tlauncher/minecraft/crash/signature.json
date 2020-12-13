@@ -9,15 +9,15 @@
     "intel-bug-jre-link": "https://yadi.sk/d/dvzmBSqttQXhy/Java%208%20update%2045/Installers",
     "intel-nvidia-select-url": "https://tlaun.ch/wiki/guide:gpu-select:nvidia",
     "nvidia-driver-update": {
-      "ru_RU": "http://tlaun.ch/wiki/update:driver:nvidia",
+      "ru_RU": "https://tlaun.ch/wiki/update:driver:nvidia",
       "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
     },
     "amd-driver-update": {
-      "ru_RU": "http://tlaun.ch/wiki/update:driver:amd",
+      "ru_RU": "https://tlaun.ch/wiki/update:driver:amd",
       "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
     },
     "intel-driver-update": {
-      "ru_RU": "http://tlaun.ch/wiki/update:driver:intel",
+      "ru_RU": "https://tlaun.ch/wiki/update:driver:intel",
       "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
     }
   },
@@ -52,13 +52,13 @@
     {
       "text": "install-java64",
       "actions": [
-        "browse --www http://tlaun.ch/wiki/update:java"
+        "browse --www https://tlaun.ch/wiki/update:java"
       ]
     },
     {
       "text": "update-java",
       "actions": [
-        "browse --www http://tlaun.ch/wiki/update:java"
+        "browse --www https://tlaun.ch/wiki/update:java"
       ]
     },
     {
@@ -149,7 +149,7 @@
         {
           "text": "download",
           "actions": [
-            "browse --www http://mods.curse.com/mc-mods/minecraft/222213-codechickencore#t1:other-downloads"
+            "browse --www https://mods.curse.com/mc-mods/minecraft/222213-codechickencore#t1:other-downloads"
           ]
         }
       ]

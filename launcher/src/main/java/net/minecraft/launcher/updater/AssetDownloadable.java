@@ -1,5 +1,7 @@
 package net.minecraft.launcher.updater;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.RetryDownloadException;
 import ru.turikhay.tlauncher.managers.AssetsManager;
@@ -11,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class AssetDownloadable extends Downloadable {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final AssetIndex.AssetObject asset;
     private final File folder;
@@ -24,12 +27,6 @@ public class AssetDownloadable extends Downloadable {
         setURL(Repository.ASSETS_REPO, path);
         setDestination(new File(folder, path));
 
-        if (asset.isCompressed()) {
-            prefix = "[Asset_c:" + asset.getCompressedHash() + "]";
-        } else {
-            prefix = "[Asset:" + asset.getHash() + "]";
-        }
-
         //log("URL:", getURL(), "; destination:", getDestination());
     }
 
@@ -37,9 +34,7 @@ public class AssetDownloadable extends Downloadable {
         String expectHash = asset.hash(), gotHash = FileUtil.getDigest(getDestination(), "SHA", 40);
 
         if (expectHash.equals(gotHash)) {
-            //log("Hash is correct:", gotHash);
             if (asset.isCompressed()) {
-                log("Decompressing...");
                 try {
                     AssetsManager.decompress(getDestination(), new File(folder, asset.getHash()), asset.getHash());
                 } catch (RetryDownloadException rdE) {
@@ -49,14 +44,8 @@ public class AssetDownloadable extends Downloadable {
                 }
             }
         } else {
-            log("Invalid hash:", gotHash, "; expected:", expectHash);
+            LOGGER.error("Invalid hash: {}; expected: {}", gotHash, expectHash);
             throw new RetryDownloadException(gotHash + ';' + expectHash);
         }
-    }
-
-    private final String prefix;
-
-    private void log(Object... o) {
-        U.log(prefix, o);
     }
 }

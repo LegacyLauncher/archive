@@ -3,23 +3,29 @@ package ru.turikhay.tlauncher;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.sentry.Sentry;
+import io.sentry.SentryClient;
 import joptsimple.OptionSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
 import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
+import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
+import ru.turikhay.tlauncher.logger.LoggerBuffer;
+import ru.turikhay.tlauncher.logger.LoggerInterface;
+import ru.turikhay.tlauncher.logger.SwingLoggerAppender;
 import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.sentry.Sentry;
-import ru.turikhay.tlauncher.sentry.SentryBreadcrumb;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -28,13 +34,11 @@ import ru.turikhay.tlauncher.ui.frames.NewFolderFrame;
 import ru.turikhay.tlauncher.ui.frames.UpdateFrame;
 import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.tlauncher.ui.logger.Logger;
+import ru.turikhay.tlauncher.ui.logger.SwingLogger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.RunnableThread;
-import ru.turikhay.util.stream.MirroredLinkedOutputStringStream;
-import ru.turikhay.util.stream.PrintLogger;
 
 import javax.net.ssl.*;
 import java.io.File;
@@ -44,11 +48,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
-import java.text.DateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public final class TLauncher {
+    private static final Logger LOGGER = LogManager.getLogger(TLauncher.class);
+
     private final boolean debug, ready;
 
     private final BootBridge bridge;
@@ -58,7 +64,7 @@ public final class TLauncher {
     private final Configuration config;
     private final LangConfiguration lang;
 
-    private final Logger logger;
+    private SwingLogger loggerUI;
 
     private final ComponentManager componentManager;
     private final LibraryReplaceProcessor libraryReplaceManager;
@@ -81,7 +87,7 @@ public final class TLauncher {
 
         this.bridge = bridge;
         this.dispatcher = dispatcher;
-        U.log("Options:", bridge.getOptions() == null? null : bridge.getOptions().length());
+        LOGGER.debug("Options: {}", bridge.getOptions() == null? null : bridge.getOptions().length() + " code units");
 
         OptionSet optionSet = ArgumentParser.parseArgs(bridge.getArgs());
         debug = optionSet.has("debug");
@@ -92,14 +98,12 @@ public final class TLauncher {
         this.lang = new LangConfiguration();
         initConfig();
 
+        reloadLoggerUI();
+
         this.bootConfig = BootConfiguration.parse(bridge);
 
         Repository.updateList(bootConfig.getRepositories());
         Stats.setAllowed(bootConfig.isStatsAllowed());
-
-        dispatcher.onBootStateChanged("Loading logger", 0.15);
-        this.logger = new Logger(config, printLogger, "Logger", config.getLoggerType() == Configuration.LoggerType.GLOBAL);
-        initLogger();
 
         dispatcher.onBootStateChanged("Handling run conditions", 0.17);
         handleWorkdir();
@@ -151,8 +155,6 @@ public final class TLauncher {
             t.printStackTrace();
         }*/
 
-        SentryBreadcrumb.info(TLauncher.class, "started").data("debug", debug).data("bootstrap", bridge.getBootstrapVersion()).data("delta", Time.stop(timer)).push();
-
         if(config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
             config.set("client", UUID.randomUUID());
             String creationTime = "unknown";
@@ -161,14 +163,6 @@ public final class TLauncher {
             } catch(Exception e) {
                 // ignore
             }
-            Sentry.sendWarning(TLauncher.class, "bubble client",
-                    DataBuilder.create("new_uuid", config.getClient())
-                            .add("old_uuid", "23a9e755-046a-4250-9e03-1920baa98aeb")
-                            .add("path", new File(""))
-                            .add("home", MinecraftUtil.getWorkingDirectory())
-                            .add("configLocation", config.getFile())
-                            .add("configCreationDate", creationTime)
-            );
         }
 
         final int testIteration = 1;
@@ -191,10 +185,9 @@ public final class TLauncher {
                             if (url.endsWith("json") && !response.startsWith("{")) {
                                 throw new IOException("invalid json response");
                             }
-                            U.log("Connection OK:", url);
+                            LOGGER.debug("Connection OK: {}", url);
                         } catch (Exception e) {
-                            U.log("Test connection failed for " + url, e);
-                            Sentry.sendError(TLauncher.class, "test connection failed for " + url, e, DataBuilder.create("response", response), DataBuilder.create("fix_applied", String.valueOf(!config.getBoolean("connection.ssl"))));
+                            LOGGER.warn("Test connection to {} failed", url, e);
                         }
                     }
                     config.set("connection.testPassed", testIteration);
@@ -221,10 +214,6 @@ public final class TLauncher {
 
     public LangConfiguration getLang() {
         return lang;
-    }
-
-    public Logger getLogger() {
-        return logger;
     }
 
     public ComponentManager getManager() {
@@ -306,7 +295,7 @@ public final class TLauncher {
             } catch (Exception e) {
                 Alert.showError("Configuration error", "Could not save settings – this is not good. Please contact support if you want to solve this.", e);
             }
-            U.log("Good bye!");
+            LOGGER.info("Goodbye!");
             TLauncher.getInstance().dispatcher.requestClose();
         } else {
             System.exit(0);
@@ -317,7 +306,7 @@ public final class TLauncher {
         config.setUsingSystemLookAndFeel(config.isUsingSystemLookAndFeel() && SwingUtil.initLookAndFeel());
         TLauncherFrame.setFontSize(config.getFontSize());
         if(!config.getBoolean("connection.ssl")) {
-            U.log("Disabling SSL certificate/hostname validation");
+            LOGGER.info("Disabling SSL certificate/hostname validation");
             try {
                 SSLContext context = SSLContext.getInstance("SSL");
                 context.init(null, new X509TrustManager[]{
@@ -338,8 +327,7 @@ public final class TLauncher {
                 }, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
             } catch(Exception e) {
-                U.log("Could not ini SSLContext", e);
-                Sentry.sendError(TLauncher.class, "could not init SSLContext", e, null);
+                LOGGER.error("Could not init SSLContext", e);
             }
             HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
                 @Override
@@ -351,12 +339,56 @@ public final class TLauncher {
         reloadLocale();
     }
 
-    private void initLogger() {
-        logger.setCloseAction(Logger.CloseAction.KILL);
-        logger.frame.bottom.folder.setEnabled(true);
-        Logger.updateLocale();
+    public void reloadLoggerUI() {
+        SwingLoggerAppender swingLoggerAppender = Log4j2ContextHelper.getSwingLoggerAppender();
+        LoggerInterface li = swingLoggerAppender.getLoggerInterface();
+        boolean enableLogger = config.getLoggerType() == Configuration.LoggerType.GLOBAL;
+        if(loggerUI == null) {
+            if(!enableLogger) {
+                return;
+            }
+            loggerUI = new SwingLogger(config);
+            if(li instanceof LoggerBuffer) {
+                loggerUI.drainFrom((LoggerBuffer) li);
+            }
+            swingLoggerAppender.setLoggerInterface(loggerUI);
+            initLoggerUI();
+            LOGGER.debug("Logger initialized");
+        } else {
+            if(enableLogger) {
+                return;
+            }
+            swingLoggerAppender.setLoggerInterface(new LoggerBuffer());
+            loggerUI.dispose();
+            loggerUI = null;
+            LOGGER.debug("Logger disposed");
+        }
+    }
 
-        U.log("Logger initialized");
+    private void initLoggerUI() {
+        loggerUI.setFolderAction(() -> {
+            if(isMinecraftLauncherWorking()) {
+                OS.openFolder(getMinecraftLauncher().getGameDir());
+            } else {
+                OS.openFolder(MinecraftUtil.getWorkingDirectory());
+            }
+        });
+        loggerUI.setSaveAction(() -> {
+            OS.openFile(Log4j2ContextHelper.getCurrentLogFile().getFile());
+        });
+        updateLoggerUIActions();
+        loggerUI.show();
+    }
+
+    public void updateLoggerUIActions() {
+        if(loggerUI == null) {
+            return;
+        }
+        if(isMinecraftLauncherWorking() && getMinecraftLauncher().isMinecraftRunning()) {
+            loggerUI.setKillAction(() -> getMinecraftLauncher().killProcess());
+        } else {
+            loggerUI.setKillAction(null);
+        }
     }
 
     private void handleNoticeHiding() {
@@ -389,7 +421,7 @@ public final class TLauncher {
         new FirstRunNotice().showAndWait();
 
         File currentDir = MinecraftUtil.getWorkingDirectory(false);
-        U.log("Current dir:", currentDir);
+        LOGGER.info("Current dir: {}", currentDir);
         if (NewFolderFrame.shouldWeMoveFrom(currentDir)) {
             currentDir = NewFolderFrame.selectDestination();
             if (currentDir != null) {
@@ -437,18 +469,18 @@ public final class TLauncher {
     public void reloadLocale() {
         Locale locale = config.getLocale();
 
-        U.log("Selected locale:", locale);
+        LOGGER.info("Selected locale: {}", locale);
         lang.setLocale(locale);
 
         Localizable.setLang(lang);
         Alert.prepareLocal();
 
-        if(uiListeners != null) {
-            uiListeners.updateLocale();
+        if(loggerUI != null) {
+            loggerUI.updateLocale();
         }
 
-        if (logger != null) {
-            logger.setName(lang.get("logger"));
+        if(uiListeners != null) {
+            uiListeners.updateLocale();
         }
     }
 
@@ -459,8 +491,6 @@ public final class TLauncher {
     private static TLauncher instance;
     private static final Version SEMVER;
     private static final boolean BETA;
-
-    private static PrintLogger printLogger;
 
     public static TLauncher getInstance() {
         return instance;
@@ -537,20 +567,17 @@ public final class TLauncher {
 
         setupErrorHandler();
 
-        U.setPrefix(">>");
-        setupPrintStream();
-
-        U.log("Starting TLauncher", getBrand(), getVersion());
+        LOGGER.info("Starting TL {} {}", getBrand(), getVersion());
         if (bridge.getBootstrapVersion() != null) {
-            U.log("... from Bootstrap", bridge.getBootstrapVersion());
+            LOGGER.info("... using Bootstrap {}", bridge.getBootstrapVersion());
         }
-        U.log("Beta:", isBeta());
-        U.log("Machine info:", OS.getSummary());
-        U.log("Java version:", OS.JAVA_VERSION);
-        U.log("Startup time:", DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.LONG).format(new Date()));
-        U.log("Directory:", new File(""));
-        U.log("Executable location:", FileUtil.getRunningJar());
-        U.log("---");
+        LOGGER.info("Beta: {}", isBeta());
+        LOGGER.info("Machine info: {}", OS.getSummary());
+        LOGGER.info("Java version: {}", OS.JAVA_VERSION);
+        LOGGER.info("Startup time: {}", Instant.now());
+        LOGGER.info("Directory: {}", new File(""));
+        LOGGER.info("Executable location: {}", FileUtil.getRunningJar());
+        LOGGER.info("---");
 
         BootEventDispatcher dispatcher = bridge.setupDispatcher();
         dispatcher.onBootStarted();
@@ -560,7 +587,7 @@ public final class TLauncher {
                 new TLauncher(bridge, dispatcher);
                 break;
             } catch (Throwable t) {
-                U.log("Error launching TLauncher:", t);
+                LOGGER.fatal("Error launching TL", t);
 
                 if (!handleLookAndFeelException(t)) {
                     dispatcher.onBootErrored(t);
@@ -586,26 +613,6 @@ public final class TLauncher {
         Thread.currentThread().setUncaughtExceptionHandler(handler);
     }
 
-    private static void setupPrintStream() {
-        MirroredLinkedOutputStringStream stream = new MirroredLinkedOutputStringStream() {
-            public void flush() {
-                if (TLauncher.getInstance() == null || TLauncher.getInstance().getLogger() == null) {
-                    try {
-                        getMirror().flush();
-                    } catch (IOException ioE) {
-                        // ignore
-                    }
-                } else {
-                    super.flush();
-                }
-            }
-        };
-        stream.setMirror(System.out);
-        printLogger = new PrintLogger(stream);
-        stream.setLogger(printLogger);
-        System.setOut(printLogger);
-    }
-
     private static boolean handleLookAndFeelException(Throwable t) {
         for(StackTraceElement elem : t.getStackTrace()) {
             if (elem.toString().toLowerCase().contains("lookandfeel")) {
@@ -618,5 +625,12 @@ public final class TLauncher {
 
     static {
         System.setProperty("java.net.useSystemProxies", "true");
+    }
+
+    static {
+        SentryClient sentry = Sentry.init("https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46");
+        sentry.setRelease(getVersion().getNormalVersion());
+        sentry.setEnvironment(getShortBrand());
+        sentry.setServerName(OS.CURRENT.name());
     }
 }

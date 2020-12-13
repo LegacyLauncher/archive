@@ -3,6 +3,8 @@ package ru.turikhay.tlauncher.ui.login;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ReleaseType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
@@ -34,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener, VersionManagerListener, DownloaderListener, CrashManagerListener {
+    private static final Logger LOGGER = LogManager.getLogger(LoginForm.class);
     private final List<LoginForm.LoginStateListener> stateListeners = Collections.synchronizedList(new ArrayList());
     private final List<LoginForm.LoginProcessListener> processListeners = Collections.synchronizedList(new ArrayList());
     public final DefaultScene scene;
@@ -147,21 +150,20 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                     listener.logginingIn();
                 } catch (LoginWaitException var9) {
                     LoginWaitException loginError = var9;
-                    log("Catched a wait task from listener", listener);
+                    LOGGER.debug("Caught a wait task");
 
                     try {
                         loginError.getWaitTask().runTask();
                     } catch (LoginException var8) {
-                        log("Catched an error on a wait task.");
+                        LOGGER.error("Caught an error on a wait task of {}", listener, var8);
                         error = var8;
                     }
                 } catch (LoginException var10) {
-                    log("Catched an error on a listener", listener);
+                    LOGGER.error("Caught an error on listener {}", listener, var10);
                     error = var10;
                 }
 
                 if (error != null) {
-                    log(error);
                     success = false;
                     break;
                 }
@@ -185,7 +187,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         }
 
         if (error != null) {
-            log("Login process has ended with an error.");
+            LOGGER.warn("Login process has ended with an error.");
         } else {
             if(accounts.getAccount() != null) {
                 global.setForcefully("login.account", accounts.getAccount().getUsername(), false);
@@ -196,7 +198,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
             changeState(LoginForm.LoginState.LAUNCHING);
 
-            log("Calling Minecraft Launcher...");
+            LOGGER.debug("Calling Minecraft Launcher...");
             tlauncher.newMinecraftLauncher(requestedVersion == null? versions.getVersion().getID() : requestedVersion.getID(), server, serverId, checkbox.forceupdate.isSelected());
             //tlauncher.newMinecraftLauncher(server, force1);
             checkbox.forceupdate.setSelected(false);

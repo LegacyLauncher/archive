@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PatternLayout charset="UTF-8">
+    <MarkerPatternSelector defaultPattern="${defaultPattern}">
+        <PatternMatch key="child_stdout" pattern="${childStdOutPattern}"/>
+        <PatternMatch key="child_stderr" pattern="${childStdErrPattern}"/>
+    </MarkerPatternSelector>
+</PatternLayout>

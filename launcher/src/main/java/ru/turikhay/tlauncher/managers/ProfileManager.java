@@ -1,26 +1,29 @@
 package ru.turikhay.tlauncher.managers;
 
-import com.getsentry.raven.util.Base64;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.FileTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.component.RefreshableComponent;
 import ru.turikhay.tlauncher.minecraft.auth.AccountMigrator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import ru.turikhay.tlauncher.minecraft.auth.LegacyAccount;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
-import ru.turikhay.tlauncher.sentry.Sentry;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.user.McleaksUser;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.tlauncher.user.UserSetListener;
-import ru.turikhay.util.DataBuilder;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.U;
@@ -30,6 +33,8 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 public class ProfileManager extends RefreshableComponent {
+    private static final Logger LOGGER = LogManager.getLogger(ProfileManager.class);
+
     public static final String DEFAULT_PROFILE_NAME = "TLauncher";
     public static final String OLD_PROFILE_FILENAME = "launcher_profiles.json";
     public static final String DEFAULT_PROFILE_FILENAME = "tlauncher_profiles.json";
@@ -59,15 +64,14 @@ public class ProfileManager extends RefreshableComponent {
                         try {
                             l.onProfilesRefreshed(ProfileManager.this);
                         } catch(Exception e) {
-                            Sentry.sendError(ProfileManager.class, "ProfileManagerListener error", e, null);
-                            log(e);
+                            LOGGER.warn("Caught exception on one of profile manager listeners", e);
                         }
                     }
 
                     try {
                         saveProfiles();
                     } catch (IOException var3) {
-                        log(var3);
+                        LOGGER.warn("Could not save profiles", var3);
                     }
                 }
             });
@@ -111,7 +115,7 @@ public class ProfileManager extends RefreshableComponent {
     }
 
     private void loadProfiles() {
-        log("Refreshing profiles from:", file);
+        LOGGER.debug("Refreshing profiles from: {}", file);
         File oldFile = new File(file.getParentFile(), "launcher_profiles.json");
         OutputStreamWriter writer = null;
         if (!oldFile.isFile()) {
@@ -120,7 +124,7 @@ public class ProfileManager extends RefreshableComponent {
                 gson.toJson(new OldProfileList(), writer);
                 writer.close();
             } catch (Exception var17) {
-                log("Cannot write into", "launcher_profiles.json", var17);
+                LOGGER.warn("Cannot write into {}", oldFile, var17);
             } finally {
                 U.close(writer);
             }
@@ -136,7 +140,7 @@ public class ProfileManager extends RefreshableComponent {
             reader = new InputStreamReader(new FileInputStream(readFile), Charset.forName("UTF-8"));
             object = gson.fromJson(reader, JsonObject.class);
         } catch (Exception var15) {
-            log("Cannot read from", readFile, var15);
+            LOGGER.warn("Cannot read from {}", readFile, var15);
         } finally {
             U.close(reader);
         }
@@ -159,8 +163,13 @@ public class ProfileManager extends RefreshableComponent {
                 }
             }
         } catch(Exception e) {
-            log("Error parsing profile list", e);
-            Sentry.sendError(ProfileManager.class, "error parsing profile list", e, DataBuilder.create("object", Base64.encodeToString(outputJson.getBytes(FileUtil.getCharset()), Base64.DEFAULT)));
+            LOGGER.error("Error parsing profile list: {}", readFile, e);
+            Sentry.capture(new EventBuilder()
+                .withMessage("bad profile list")
+                .withSentryInterface(new ExceptionInterface(e))
+                .withLevel(Event.Level.ERROR)
+                .withExtra("data", object)
+            );
             saveBackup = "errored";
         }
 
@@ -172,7 +181,7 @@ public class ProfileManager extends RefreshableComponent {
                     IOUtils.write(outputJson, backupOut, FileUtil.getCharset());
                 }
             } catch(Exception e) {
-                log("Could not save backup!", e);
+                LOGGER.error("Could not save backup into {}", backupFile, e);
                 Alert.showError("Could not save profile backup. Accounts will be lost :(", e);
             }
         }

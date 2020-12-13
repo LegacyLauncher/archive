@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui;
 
+import org.apache.logging.log4j.LogManager;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
@@ -9,7 +10,6 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.frames.FeedbackFrame;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
-import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.tlauncher.ui.notice.NoticeManager;
 import ru.turikhay.tlauncher.ui.swing.Dragger;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
@@ -33,6 +33,8 @@ import java.net.URL;
 import java.util.Iterator;
 
 public class TLauncherFrame extends JFrame {
+    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(TLauncherFrame.class);
+
     public static final Dimension minSize = new Dimension(700, 600);
     public static final Dimension maxSize = new Dimension(1920, 1080);
     public static final float minFontSize = 12, maxFontSize = 18;
@@ -158,9 +160,9 @@ public class TLauncherFrame extends JFrame {
         notices = new NoticeManager(this, t.getBootConfig());
         mp = new MainPane(this);
         add(mp);
-        log("Packing main frame...");
+        LOGGER.trace("Packing main frame...");
         pack();
-        log("Resizing main pane...");
+        LOGGER.trace("Resizing main pane...");
         mp.onResize();
         mp.background.loadBackground();
         updateMaxPoint();
@@ -177,7 +179,7 @@ public class TLauncherFrame extends JFrame {
                 try {
                     setVisible(true);
                 } catch(RuntimeException rE) {
-                    log("Hidden exception on setVisible(true)", rE);
+                    LOGGER.warn("Hidden exception on setVisible(true)", rE);
                 }
                 int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
                 if (windowState == 0) {
@@ -224,11 +226,10 @@ public class TLauncherFrame extends JFrame {
         try {
             tlauncher.reloadLocale();
         } catch (Exception var2) {
-            log("Cannot reload settings!", var2);
+            LOGGER.warn("Cannot reload settings", var2);
             return;
         }
 
-        Logger.updateLocale();
         LocalizableMenuItem.updateLocales();
         updateUILocale();
         notices.updateLocale();
@@ -278,7 +279,7 @@ public class TLauncherFrame extends JFrame {
 
     private void setupUI() {
         if(OS.WINDOWS.isCurrent()) {
-            UIManager.put("FileChooser.useSystemExtensionHiding", false); // http://bugs.java.com/bugdatabase/view_bug.do?bug_id=8179014
+            UIManager.put("FileChooser.useSystemExtensionHiding", false); // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8179014
         }
 
         UIManager.put("FileChooser.newFolderErrorSeparator", ": ");
@@ -373,10 +374,6 @@ public class TLauncherFrame extends JFrame {
         return TLauncherFrame.class.getResource(uri);
     }
 
-    private static void log(Object... o) {
-        U.log("[Frame]", o);
-    }
-
     private class TitleUpdaterThread extends ExtendedThread {
         TitleUpdaterThread() {
             super("TitleUpdater");
@@ -389,8 +386,6 @@ public class TLauncherFrame extends JFrame {
                 U.sleepFor(100L);
                 setWindowTitle();
             }
-
-            TLauncherFrame.log("Title updater is shut down.");
             interrupt();
         }
     }

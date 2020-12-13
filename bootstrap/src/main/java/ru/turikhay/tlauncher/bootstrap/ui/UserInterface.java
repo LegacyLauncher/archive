@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.bootstrap.ui;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListener;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListenerAdapter;
@@ -196,6 +197,14 @@ public final class UserInterface implements IInterface {
             Alert.showWarning(message, textarea);
         } else {
             HeadlessInterface.printWarning(message, textarea);
+        }
+    }
+
+    public static void showFatalError(FatalExceptionType type, String clientId) {
+        if(isHeaded()) {
+            FatalExceptionHandler.handle(type, clientId);
+        } else {
+            HeadlessInterface.printFatalException(type);
         }
     }
 

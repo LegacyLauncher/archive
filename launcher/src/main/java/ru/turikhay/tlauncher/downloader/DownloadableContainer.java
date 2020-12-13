@@ -1,7 +1,5 @@
 package ru.turikhay.tlauncher.downloader;
 
-import ru.turikhay.tlauncher.ui.logger.Logger;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -9,7 +7,6 @@ public class DownloadableContainer {
     private final List<DownloadableContainerHandler> handlers = Collections.synchronizedList(new ArrayList());
     private final List<Throwable> errors = Collections.synchronizedList(new ArrayList());
     final List<Downloadable> list = Collections.synchronizedList(new ArrayList());
-    private Logger logger;
     private final AtomicInteger sum = new AtomicInteger();
     private boolean locked;
     private boolean aborted;
@@ -92,19 +89,6 @@ public class DownloadableContainer {
         return Collections.unmodifiableList(errors);
     }
 
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public boolean hasLogger() {
-        return logger != null;
-    }
-
-    public void setLogger(Logger logger) {
-        checkLocked();
-        this.logger = logger;
-    }
-
     public boolean isAborted() {
         return aborted;
     }
@@ -172,12 +156,6 @@ public class DownloadableContainer {
             handler.onError(this, d, e);
         }
 
-    }
-
-    void log(Object... o) {
-        if (logger != null) {
-            logger.log(o);
-        }
     }
 
     public static void removeDuplicates(DownloadableContainer a, DownloadableContainer b) {

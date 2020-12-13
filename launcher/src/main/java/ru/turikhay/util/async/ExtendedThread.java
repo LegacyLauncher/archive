@@ -96,10 +96,6 @@ public abstract class ExtendedThread extends Thread {
         }
     }
 
-    protected void threadLog(Object... o) {
-        U.log("[" + getName() + "]", o);
-    }
-
     static class ExtendedThreadCaller extends RuntimeException {
         ExtendedThreadCaller() {
         }

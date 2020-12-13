@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.configuration;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.PromotedServerDeserializer;
@@ -15,6 +17,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class BootConfiguration {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private boolean stats, ely;
     private Map<String, List<String>> repositories = new HashMap<String, List<String>>();
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
@@ -60,12 +64,10 @@ public final class BootConfiguration {
 
     public static BootConfiguration parse(BootBridge bridge) {
         try {
-            U.log("parsing bootconfig");
             return parse(bridge.getOptions());
         } catch(RuntimeException rE) {
-            U.log("could not parse bootconfig", rE);
+            LOGGER.error("Could not parse boot configuration", rE);
         }
-        U.log("returned empty bootconfig");
         return new BootConfiguration();
     }
 

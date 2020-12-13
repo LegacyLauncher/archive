@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.background;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.util.U;
@@ -8,6 +10,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 class Worker {
+    private static final Logger LOGGER = LogManager.getLogger(Worker.class);
+
     private static final float STEP = 0.025f;
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
@@ -65,14 +69,14 @@ class Worker {
             }
 
             float opacity = wrapper.cover.getOpacity(), step = opacity > targetOpacity ? -STEP : STEP, eps = Math.abs(step / 2.f);
-            log("setting opacity:", opacity, targetOpacity, step);
+            LOGGER.debug("setting opacity: {}, targetOpacity: {}, step: {}", opacity, targetOpacity, step);
 
             while (Math.abs(opacity - targetOpacity) > eps) {
                 wrapper.cover.setOpacity(opacity += step);
                 U.sleepFor(16);
             }
 
-            log("opacity set to", targetOpacity);
+            LOGGER.debug("opacity set to {}", targetOpacity);
         }
     }
 
@@ -100,7 +104,7 @@ class Worker {
                         ExceptionHandler.reduceMemory(outOfMemoryError);
                         break loadBackground;
                     } catch (Exception e) {
-                        log("Could not load background for", background, "; path:", path, e);
+                        LOGGER.error("Could not load background for {}; path: {}", background, path, e);
                         break loadBackground;
                     }
                 }
@@ -109,9 +113,4 @@ class Worker {
             showBackgroundTask.run();
         }
     }
-
-    private void log(Object... o) {
-        U.log("[Background][Worker]", o);
-    }
-
 }

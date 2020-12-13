@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
@@ -18,6 +20,8 @@ import java.net.URL;
 import java.util.HashMap;
 
 class ElyUserValidator {
+    private static final Logger LOGGER = LogManager.getLogger(ElyUserValidator.class);
+
     static final String ACCOUNT_INFO = ElyAuth.API_BASE + "/account/v1/info";
     static final String TOKEN_REFRESH_REQUEST = "grant_type=refresh_token&client_id="+ ElyAuth.CLIENT_ID +"&" +
             "client_secret="+ ElyAuth.CLIENT_SECRET +"&refresh_token=${refresh_token}";
@@ -34,11 +38,11 @@ class ElyUserValidator {
         U.requireNotNull(user, "user");
         updateUser(user);
 
-        log("user validator created for user:", user);
+        LOGGER.debug("user validator created for user: {}", user);
     }
 
     public void validateUser() throws IOException, InvalidCredentialsException {
-        log("validating user...");
+        LOGGER.debug("validating user...");
 
         Response<ElyUserJsonizer.ElySerialize> rawUserResponse = getUserInfo();
         renewToken: {
@@ -48,7 +52,7 @@ class ElyUserValidator {
 
             renewTokenBreak: {
                 if(rawUserResponse.error.isTokenExpired()) {
-                    log("token has expired. renewing");
+                    LOGGER.debug("token has expired. renewing");
                     break renewTokenBreak;
                 }
 
@@ -57,14 +61,14 @@ class ElyUserValidator {
                         break renewToken; // we cannot refresh token, so run the game with token we has
                     }
 
-                    log("token will expire in less than two hours. renewing");
+                    LOGGER.debug("token will expire in less than two hours. renewing");
                     break renewTokenBreak;
                 }
 
                 rawUserResponse = getUserInfo();
                 if(rawUserResponse.error != null) {
                     if(rawUserResponse.error.isTokenExpired() && refreshToken != null) {
-                        log("token has expired. renewing");
+                        LOGGER.debug("token has expired. renewing");
                         break renewTokenBreak;
                     } else {
                         throw new InvalidCredentialsException(rawUserResponse.error.toString());
@@ -91,7 +95,7 @@ class ElyUserValidator {
     }
 
     private TokenRefreshResponse refreshAccessToken() throws IOException, InvalidCredentialsException {
-        log("refreshing access token");
+        LOGGER.debug("refreshing access token");
 
         String request = TokenReplacingReader.resolveVars(TOKEN_REFRESH_REQUEST, new MapTokenResolver(new HashMap<String, String>() {
             {
@@ -160,7 +164,7 @@ class ElyUserValidator {
 
     private <T> T parse(InputStream input, Class<T> clazz) throws IOException {
         String response = IOUtils.toString(input, FileUtil.getCharset());
-        log("Response:", response);
+        LOGGER.debug("response: {}", response);
         try {
             return gson.fromJson(response, clazz);
         } catch(RuntimeException rE) {
@@ -253,10 +257,5 @@ class ElyUserValidator {
         Response(T response) {
             this(null, U.requireNotNull(response, "response"));
         }
-    }
-
-    private final String logPrefix = '[' + getClass().getSimpleName() + ']';
-    private void log(Object... o) {
-        U.log(logPrefix, o);
     }
 }

@@ -204,7 +204,6 @@ public class ProgressBar extends JProgressBar {
         try {
             super.update(g);
         } catch (Exception var4) {
-            U.log("Error updating progress bar:", var4.toString());
             return;
         }
 
@@ -218,7 +217,6 @@ public class ProgressBar extends JProgressBar {
         try {
             super.paint(g);
         } catch (Exception var4) {
-            U.log("Error paining progress bar:", var4.toString());
             return;
         }
 

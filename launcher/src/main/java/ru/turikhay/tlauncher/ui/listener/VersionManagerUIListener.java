@@ -9,6 +9,8 @@ import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.managers.VersionManager;
@@ -25,6 +27,8 @@ import java.io.FileWriter;
 import java.util.*;
 
 public class VersionManagerUIListener implements VersionManagerListener {
+    private static final Logger LOGGER = LogManager.getLogger(VersionManagerUIListener.class);
+
     private final TLauncher tl;
     private final Configuration settings;
 
@@ -73,18 +77,15 @@ public class VersionManagerUIListener implements VersionManagerListener {
                 try {
                     FileUtil.deleteFile(listFile);
                 } catch (Exception e) {
-                    log("Could not delete version index file:", listFile, e);
+                    LOGGER.warn("Could not delete version index file: {}", listFile, e);
                 }
             }
-            log("Version list comparing disabled.");
             return;
         }
 
-        log("Version list comparing enabled.");
-
         SimpleVersionList oldList = list == null ? fetchListFromFile() : list;
         if (oldList == null) {
-            log("Old list is empty, saving current one for the next time.");
+            LOGGER.debug("Old list is empty, saving current one for the next time.");
 
             saveList(list = fetchListFromManager(vm));
 
@@ -109,7 +110,6 @@ public class VersionManagerUIListener implements VersionManagerListener {
             List<SimpleVersion> subVersionList;
 
             if (!settings.getBoolean("gui.alerton." + version.type)) {
-                log(version, "is not interesting, ignored");
                 continue;
             }
 
@@ -132,10 +132,8 @@ public class VersionManagerUIListener implements VersionManagerListener {
         }
 
         if (newVersions.isEmpty()) {
-            log("Nothing interesting.");
             return;
         }
-
 
         StringBuilder text = new StringBuilder(Localizable.get("version.manager.alert.header.found" + (isFirstUpdate ? ".welcome" : ""))).append(" ");
 
@@ -162,9 +160,9 @@ public class VersionManagerUIListener implements VersionManagerListener {
 
                     int k = 0;
                     for (SimpleVersion version : versionList) {
-                        log("New version:", version);
+                        LOGGER.debug("New version: {}", version);
                         if (++k == 5) {
-                            log("...");
+                            LOGGER.debug("... and probably more new versions");
                             text.append(Localizable.get("version.manager.alert.more", versionList.size() - k + 1)).append('\n');
                             break;
                         }
@@ -188,7 +186,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
             gson.toJson(versionList, writer);
             return true;
         } catch (Exception e) {
-            log("Could not write version list file", listFile, e);
+            LOGGER.error("Could not write version list file: {}", listFile, e);
             throw new RuntimeException(e);
         } finally {
             U.close(writer);
@@ -201,7 +199,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
             reader = new FileReader(listFile);
             return gson.fromJson(reader, SimpleVersionList.class);
         } catch (Exception e) {
-            log("Could not read version list from file", listFile, e);
+            LOGGER.error("Could not read version list from file: {}", listFile, e);
             return null;
         } finally {
             U.close(reader);
@@ -216,7 +214,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
             }
             return versionList;
         } catch (Exception e) {
-            log("Could not fetch list from manager", e);
+            LOGGER.error("Could not fetch list from manager", e);
             throw new RuntimeException(e);
         }
     }
@@ -329,9 +327,5 @@ public class VersionManagerUIListener implements VersionManagerListener {
         public String toString() {
             return "SimpleVersion{id=" + id + ",type=" + type + ",releaseTime=" + releaseTime + ",time=" + time + "}";
         }
-    }
-
-    private void log(Object... o) {
-        U.log("[VersionManagerUI]", o);
     }
 }

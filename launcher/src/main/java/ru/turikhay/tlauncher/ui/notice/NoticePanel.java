@@ -57,8 +57,6 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
             return;
         }
 
-        log("noticeSize", noticeSize);
-
         int width = 0;
         width += insets.width;
         width += noticeSize.width;
@@ -68,7 +66,6 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         height += insets.height;
         height += noticeSize.height;
 
-        log("size:", width, height);
         setSize(width, height);
     }
 
@@ -87,10 +84,6 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         for(JMenuItem item : items) {
             noticeWrapper.buttonPane.extra.popup.registerItem(item);
         }
-    }
-
-    protected void log(Object... o) {
-        U.log("[NoticePanel]", o);
     }
 
     @Override

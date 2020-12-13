@@ -68,7 +68,6 @@ class NoticeWrapper extends BorderPanel {
 
     Dimension updateSize() {
         Dimension size = calcNoticeSize(notice);
-        log("notice size:", size);
 
         if(size.width == 0 && size.height == 0) {
             return null;
@@ -328,9 +327,5 @@ class NoticeWrapper extends BorderPanel {
             updateMenu();
             show(comp, comp.getWidth(), 0);
         }
-    }
-
-    protected void log(Object... o) {
-        U.log("[NoticeWrapper]", o);
     }
 }

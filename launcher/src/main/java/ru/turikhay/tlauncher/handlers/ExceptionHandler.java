@@ -1,15 +1,16 @@
 package ru.turikhay.tlauncher.handlers;
 
-import ru.turikhay.tlauncher.sentry.Sentry;
+import org.apache.logging.log4j.LogManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.background.ImageBackground;
-import ru.turikhay.tlauncher.ui.logger.Logger;
 import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
 public class ExceptionHandler implements UncaughtExceptionHandler {
+    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
+
     private static ExceptionHandler instance;
     private static long gcLastCall;
 
@@ -27,13 +28,12 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             if (asOOM == null || !reduceMemory(asOOM)) {
                 if (scanTrace(e) && toShowError(e)) {
                     try {
-                        Sentry.sendError(ExceptionHandler.class, "uncaughtException", e, null);
                         Alert.showError("Exception in thread " + t.getName(), e);
                     } catch (Exception var5) {
                         var5.printStackTrace();
                     }
                 } else {
-                    U.log("Hidden exception in thread " + t.getName(), e);
+                    LOGGER.debug("Hidden exception in thread {}", t.getName(), e);
                 }
             }
         } catch (Throwable t0) {
@@ -46,9 +46,8 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             return false;
         }
 
-        U.log("OutOfMemory error has occurred, solving...");
+        LOGGER.fatal("OutOfMemory error has occurred");
 
-        Logger.wipeAll();
         if(ImageBackground.getLastInstance() != null) {
             ImageBackground.getLastInstance().wipe();
         }
@@ -61,7 +60,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             U.gc();
             return true;
         } else {
-            U.log("GC is unable to reduce memory usage");
+            LOGGER.fatal("GC is unable to reduce memory usage");
             return false;
         }
     }

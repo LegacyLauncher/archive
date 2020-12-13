@@ -2,6 +2,8 @@ package ru.turikhay.util.windows;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Random;
 
 public final class DxDiag {
+    private static final Logger LOGGER = LogManager.getLogger(DxDiag.class);
     private static final long PROCESS_TIMEOUT = 120 * 1000;
 
     private final List<DisplayDevice> displayDevices = new ArrayList<DisplayDevice>(), _displayDevices = Collections.unmodifiableList(displayDevices);
@@ -53,12 +56,10 @@ public final class DxDiag {
     }
 
     private void flushToLogger() {
-        synchronized (U.lock) {
-            log("+++++++++++++");
-            log(this);
-            log("+++++++++++++");
-            log("AV list:", WMIProvider.getAvSoftwareList());
-        }
+        LOGGER.info("+++++++++++++");
+        LOGGER.info(this);
+        LOGGER.info("+++++++++++++");
+        LOGGER.info("AV list: {}", WMIProvider.getAvSoftwareList());
     }
 
     public String toString() {
@@ -76,7 +77,7 @@ public final class DxDiag {
             this.elem = elem;
 
             if (elem == null) {
-                log("[WARN]", name, "is null");
+                LOGGER.warn("section {} is null", name);
             }
         }
 
@@ -182,7 +183,7 @@ public final class DxDiag {
 
             Element displayDevices = root.getChild("DisplayDevices");
             if (displayDevices == null || root.getChild("DisplayDevices") == null) {
-                log("Could not find display device list");
+                LOGGER.warn("Could not find display device list");
             } else {
                 List<Element> dd = root.getChild("DisplayDevices").getChildren("DisplayDevice");
                 for (Element elem : dd) {
@@ -190,10 +191,6 @@ public final class DxDiag {
                 }
             }
             return dx;
-        }
-
-        private static void log(Object... o) {
-            U.log("[DxDiag][Parser]", o);
         }
     }
 
@@ -229,18 +226,17 @@ public final class DxDiag {
                 result = Parser.parse(new FileInputStream(retrieve()));
                 result.flushToLogger();
             } catch (InterruptedException inE) {
-                log("Worker interrupted.", inE);
+                LOGGER.debug("Worker interrupted.", inE);
             } catch (DxDiagFailedException dxfE) {
                 error = dxfE;
             } catch (Exception e) {
                 error = new DxDiagFailedException(e);
             } finally {
-                log("Worker done:", this);
                 if (worker == this) {
-                    log("Worker cleaned up:", this);
+                    LOGGER.debug("Worker done and cleaned up: {}", this);
                     worker = null;
                 } else {
-                    log("Worker not cleaned up:", this, "; current:", worker);
+                    LOGGER.debug("Worker done but not cleaned up: {}; current: {}", this, worker);
                 }
             }
         }
@@ -248,7 +244,7 @@ public final class DxDiag {
         private long startTime = System.currentTimeMillis();
 
         void cancel() {
-            log("Interrupting...");
+            LOGGER.debug("Interrupting...");
 
             updateSession();
             interrupt();
@@ -277,7 +273,7 @@ public final class DxDiag {
             try {
                 dontSkip = Double.parseDouble(OS.VERSION) >= 7.0;
             } catch (RuntimeException rE) {
-                log("Could not determine Windows version:", OS.VERSION);
+                LOGGER.warn("Could not determine Windows version: {}", OS.VERSION);
                 dontSkip = !OS.NAME.toLowerCase().contains("xp");
             }
 
@@ -294,7 +290,7 @@ public final class DxDiag {
             long lastTime = startTime;
             while (true) {
                 lastTime = System.currentTimeMillis();
-                log("waiting for the result...", (lastTime - startTime));
+                LOGGER.debug("waiting for the result... {}", (lastTime - startTime));
 
                 try {
                     process.exitValue();
@@ -302,7 +298,6 @@ public final class DxDiag {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException inE) {
-                        log("waiters were released by interruption. resuming...");
                         updateSession();
                     }
                     continue;
@@ -325,27 +320,21 @@ public final class DxDiag {
         private void updateSession() {
             session = new Random().nextInt();
         }
-
-        private void log(Object... o) {
-            U.log('[' + getName() + ']', o);
-        }
     }
 
     public static DxDiag get() throws DxDiagFailedException {
         UnsupportedEnvirnomentException.ensureUnder(OS.WINDOWS);
 
         if (result == null && worker == null) {
-            log("Creating new worker; old:", worker);
             (worker = new Worker()).start();
-            log("New:", worker);
         }
 
         if (worker != null) {
             long remainingTimeout = (worker.startTime + PROCESS_TIMEOUT) - System.currentTimeMillis();
 
-            log("Worker start time:", worker.startTime);
-            log("Worker stop time:", worker.startTime + PROCESS_TIMEOUT);
-            log("Delta:", remainingTimeout);
+            LOGGER.debug("Worker start time: {}", worker.startTime);
+            LOGGER.debug("Worker stop time: {}", worker.startTime + PROCESS_TIMEOUT);
+            LOGGER.debug("Delta: {}", remainingTimeout);
 
             if (remainingTimeout > 0) {
                 try {
@@ -368,7 +357,8 @@ public final class DxDiag {
     }
 
     public static void cancel() {
-        log("Interrupting worker:", new RuntimeException("interrupt trace"));
+        LOGGER.info("DxDiag cancelled");
+        LOGGER.debug(new RuntimeException("interrupt trace"));
         if (worker != null) {
             worker.cancel();
         }
@@ -376,10 +366,6 @@ public final class DxDiag {
 
     public static boolean isScannable() {
         return OS.WINDOWS.isCurrent() && (TLauncher.getInstance() == null || TLauncher.getInstance().getSettings().getBoolean("windows.dxdiag"));
-    }
-
-    private static void log(Object... o) {
-        U.log("[DxDiag]", o);
     }
 
     public static class DxDiagFailedException extends Exception {

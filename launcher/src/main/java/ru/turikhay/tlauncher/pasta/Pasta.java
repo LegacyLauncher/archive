@@ -1,14 +1,20 @@
 package ru.turikhay.tlauncher.pasta;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.CharSequenceReader;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.logger.LogFile;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.UrlEncoder;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -18,10 +24,12 @@ import java.util.Random;
 import static ru.turikhay.tlauncher.pasta.PastaResult.*;
 
 public class Pasta {
+    private static final Logger LOGGER = LogManager.getLogger(Pasta.class);
+
     private static final String APP_KEY = "kByB9b8MdAbgMq66";
     private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s";
 
-    private CharSequence content;
+    private LogFile logFile;
 
     private final ArrayList<PastaListener> listeners;
     private PastaResult result;
@@ -30,12 +38,8 @@ public class Pasta {
         listeners = new ArrayList<>();
     }
 
-    public final CharSequence getContent() {
-        return content;
-    }
-
-    public final void setContent(CharSequence content) {
-        this.content = content;
+    public void setLogFile(LogFile logFile) {
+        this.logFile = logFile;
     }
 
     public void addListener(PastaListener listener) {
@@ -53,9 +57,14 @@ public class Pasta {
 
         try {
             result = doPaste();
-        } catch (Throwable var3) {
-            U.log("Could not upload paste", var3);
-            result = new PastaFailed(this, var3);
+        } catch (Throwable e) {
+            LOGGER.error("Could not upload paste", e);
+            Sentry.capture(new EventBuilder()
+                .withMessage("pasta not sent")
+                .withLevel(Event.Level.ERROR)
+                .withSentryInterface(new ExceptionInterface(e))
+            );
+            result = new PastaFailed(this, e);
         }
 
         for (PastaListener l : listeners) {
@@ -66,9 +75,9 @@ public class Pasta {
     }
 
     private PastaUploaded doPaste() throws IOException {
-        CharSequence contentSequence = getContent();
+        final LogFile logFile = this.logFile;
 
-        if (StringUtils.isEmpty(contentSequence)) {
+        if (logFile == null || !logFile.exists()) {
             throw new IllegalArgumentException("content is empty");
         }
 
@@ -89,11 +98,11 @@ public class Pasta {
         PastaUploaded result = null;
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
-                result = makeRequest(url, contentSequence);
+                result = makeRequest(url, logFile);
                 break;
             } catch(TooManyRequests tmr) {
                 int waitTime = (attempt > 1? 61 : 31) + new Random().nextInt(10);
-                U.log("Pasta could not be sent because of the rate limit (attempt "+ attempt +", "+ waitTime +"s)");
+                LOGGER.warn("Pasta could not be sent because of the rate limit (attempt {}, wait time {}s", attempt, waitTime);
                 try {
                     Thread.sleep(waitTime * 1000);
                 } catch (InterruptedException e) {
@@ -106,11 +115,11 @@ public class Pasta {
             throw new TooManyRequests();
         }
 
-        U.log("Pasta sent:", result.getURL());
+        LOGGER.info("Pasta has been sent successfully: {}", result.getURL());
         return result;
     }
 
-    private PastaUploaded makeRequest(URL url, CharSequence contentSequence) throws IOException {
+    private PastaUploaded makeRequest(URL url, LogFile logFile) throws IOException {
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) url.openConnection(U.getProxy());
@@ -120,7 +129,7 @@ public class Pasta {
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
 
-            try(CharSequenceReader input = new CharSequenceReader(contentSequence);
+            try(InputStreamReader input = logFile.read();
                 OutputStreamWriter output = new OutputStreamWriter(
                         connection.getOutputStream(),
                         FileUtil.getCharset()
