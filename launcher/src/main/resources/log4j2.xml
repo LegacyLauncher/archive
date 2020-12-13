@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration xmlns:xi="http://www.w3.org/2001/XInclude" status="warn">
+<Configuration status="warn">
     <Properties>
         <Property name="defaultPattern">%highlight{%d{ISO8601} [%c{1}] %msg%n%throwable}{INFO=default}</Property>
         <Property name="childStdOutPattern">> %style{%msg{ansi}}{bright}%n</Property>
@@ -8,10 +8,20 @@
     </Properties>
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
-            <xi:include href="log4j2-xinclude-PatternLayout.xml" />
+            <PatternLayout charset="UTF-8">
+                <MarkerPatternSelector defaultPattern="${defaultPattern}">
+                    <PatternMatch key="child_stdout" pattern="${childStdOutPattern}"/>
+                    <PatternMatch key="child_stderr" pattern="${childStdErrPattern}"/>
+                </MarkerPatternSelector>
+            </PatternLayout>
         </Console>
         <RollingFile name="file" fileName="${logFolder}/launcher.log" filePattern="${logFolder}/launcher.log.%i">
-            <xi:include href="log4j2-xinclude-PatternLayout.xml" />
+            <PatternLayout charset="UTF-8">
+                <MarkerPatternSelector defaultPattern="${defaultPattern}">
+                    <PatternMatch key="child_stdout" pattern="${childStdOutPattern}"/>
+                    <PatternMatch key="child_stderr" pattern="${childStdErrPattern}"/>
+                </MarkerPatternSelector>
+            </PatternLayout>
             <Policies>
                 <OnStartupTriggeringPolicy />
             </Policies>
