@@ -220,11 +220,6 @@ public class MinecraftLauncher implements JavaProcessListener {
                     listener3.onMinecraftKnownError(listener2);
                 }
             } else {
-                Sentry.capture(new EventBuilder()
-                        .withMessage("minecraft launcher exception")
-                        .withSentryInterface(new ExceptionInterface(e))
-                        .withLevel(Event.Level.ERROR)
-                );
                 MinecraftListener listener;
                 Iterator listener1;
                 if (var5 instanceof MinecraftLauncher.MinecraftLauncherAborted) {
@@ -235,6 +230,12 @@ public class MinecraftLauncher implements JavaProcessListener {
                         listener.onMinecraftAbort();
                     }
                 } else {
+                    Sentry.capture(new EventBuilder()
+                            .withMessage("minecraft launcher exception")
+                            .withSentryInterface(new ExceptionInterface(e))
+                            .withLevel(Event.Level.ERROR)
+                    );
+
                     listener1 = listeners.iterator();
 
                     while (listener1.hasNext()) {

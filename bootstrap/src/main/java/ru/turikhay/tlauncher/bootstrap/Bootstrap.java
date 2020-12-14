@@ -5,6 +5,7 @@ import com.getsentry.raven.Raven;
 import com.getsentry.raven.dsn.Dsn;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
+import com.getsentry.raven.event.User;
 import com.getsentry.raven.event.helper.EventBuilderHelper;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
 import joptsimple.ArgumentAcceptingOptionSpec;
@@ -188,6 +189,14 @@ public final class Bootstrap {
                     break avList;
                 }
                 b.withExtra("avList", avList);
+            }
+            if(bridge != null && bridge.getClient() != null) {
+                SENTRY.getContext().setUser(new User(
+                        bridge.getClient().toString(),
+                        null,
+                        null,
+                        null
+                ));
             }
             SENTRY.sendEvent(b);
         }
