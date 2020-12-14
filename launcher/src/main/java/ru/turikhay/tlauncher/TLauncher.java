@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.sentry.Sentry;
 import io.sentry.SentryClient;
+import io.sentry.event.User;
 import joptsimple.OptionSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -303,6 +304,12 @@ public final class TLauncher {
     }
 
     private void initConfig() {
+        SENTRY.getContext().setUser(new User(
+                config.getClient().toString(),
+                null,
+                null,
+                null
+        ));
         config.setUsingSystemLookAndFeel(config.isUsingSystemLookAndFeel() && SwingUtil.initLookAndFeel());
         TLauncherFrame.setFontSize(config.getFontSize());
         if(!config.getBoolean("connection.ssl")) {
@@ -627,10 +634,11 @@ public final class TLauncher {
         System.setProperty("java.net.useSystemProxies", "true");
     }
 
+    private static final SentryClient SENTRY;
     static {
-        SentryClient sentry = Sentry.init("https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46");
-        sentry.setRelease(getVersion().getNormalVersion());
-        sentry.setEnvironment(getShortBrand());
-        sentry.setServerName(OS.CURRENT.name());
+        SENTRY = Sentry.init("https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46");
+        SENTRY.setRelease(getVersion().getNormalVersion());
+        SENTRY.setEnvironment(getShortBrand());
+        SENTRY.setServerName(OS.CURRENT.name());
     }
 }
