@@ -63,7 +63,7 @@ public final class BootstrapStarter {
         List<String> jvmArgs = new ArrayList<String>();
         jvmArgs.add("-Xmx128m");
         jvmArgs.add("-Dfile.encoding=UTF-8");
-        jvmArgs.add("-Dtlauncher.logFolder=" + OS.getSystemRelatedFile("tlauncher/logs"));
+        jvmArgs.add("-Dtlauncher.logFolder=" + OS.getSystemRelatedDirectory("tlauncher/logs", true));
 
         for (String propKey : System.getProperties().stringPropertyNames()) {
             if (propKey.startsWith("tlauncher.bootstrap.")) {

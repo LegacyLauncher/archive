@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.118.3'
+version '1.118.4'
 
 apply from: '../gradle/brand.gradle'
 
