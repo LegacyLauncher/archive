@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn">
     <Properties>
-        <Property name="defaultPattern">%highlight{%d{ISO8601} [%c{1}] %msg%n%throwable}{INFO=default}</Property>
+        <Property name="defaultPattern">%highlight{%d{ABSOLUTE} [%c{1}] %msg%n%throwable}{INFO=default}</Property>
         <Property name="childStdOutPattern">> %style{%msg{ansi}}{bright}%n</Property>
         <Property name="childStdErrPattern">> %style{%msg}{red}%n</Property>
         <Property name="logFolder">${sys:tlauncher.logFolder:-${sys:user.home}/.tl/logs}</Property>

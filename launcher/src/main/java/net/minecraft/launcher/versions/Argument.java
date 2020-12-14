@@ -1,6 +1,9 @@
 package net.minecraft.launcher.versions;
 
 import com.google.gson.*;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -59,6 +62,14 @@ public class Argument
             if (json.isJsonObject()) {
                 JsonObject obj = json.getAsJsonObject();
                 JsonElement value = obj.get("value");
+                if(value == null) {
+                    Sentry.capture(new EventBuilder()
+                            .withLevel(Event.Level.WARNING)
+                            .withMessage("bad value in json mc argument")
+                            .withExtra("json", json)
+                    );
+                    throw new JsonParseException("no value");
+                }
                 String[] values;
                 if (value.isJsonPrimitive()) {
                     values = new String[] { value.getAsString() };
