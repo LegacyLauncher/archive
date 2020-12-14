@@ -57,39 +57,30 @@ public class Argument
     {
         public Argument deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
         {
-            if (json.isJsonPrimitive())
-                return new Argument(new String[] { json.getAsString() }, null);
+            if (json.isJsonPrimitive()) {
+                return new Argument(new String[]{json.getAsString()}, null);
+            }
             if (json.isJsonObject()) {
                 JsonObject obj = json.getAsJsonObject();
-                JsonElement value = obj.get("value");
-                if(value == null) {
-                    Sentry.capture(new EventBuilder()
-                            .withLevel(Event.Level.WARNING)
-                            .withMessage("bad value in json mc argument")
-                            .withExtra("json", json)
-                    );
-                    throw new JsonParseException("no value");
-                }
+                JsonElement rawValues = obj.get("values");
                 String[] values;
-                if (value.isJsonPrimitive()) {
-                    values = new String[] { value.getAsString() };
+                if (rawValues.isJsonPrimitive()) {
+                    values = new String[] { rawValues.getAsString() };
                 } else {
-                    JsonArray array = value.getAsJsonArray();
+                    JsonArray array = rawValues.getAsJsonArray();
                     values = new String[array.size()];
                     for (int i = 0; i < array.size(); i++) {
                         values[i] = array.get(i).getAsString();
                     }
                 }
-
                 List<Rule> rules = null;
                 if (obj.has("rules")) {
                     rules = new ArrayList<>();
                     JsonArray array = obj.getAsJsonArray("rules");
                     for (JsonElement element : array) {
-                        rules.add((Rule)context.deserialize(element, Rule.class));
+                        rules.add(context.deserialize(element, Rule.class));
                     }
                 }
-
                 return new Argument(values, rules);
             }
             throw new JsonParseException("Invalid argument, must be object or string");
