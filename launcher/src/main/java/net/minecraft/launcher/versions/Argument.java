@@ -62,7 +62,12 @@ public class Argument
             }
             if (json.isJsonObject()) {
                 JsonObject obj = json.getAsJsonObject();
-                JsonElement rawValues = obj.get("values");
+                JsonElement rawValues;
+                if(obj.has("values")) {
+                    rawValues = obj.get("values");
+                } else {
+                    rawValues = obj.get("value");
+                }
                 String[] values;
                 if (rawValues.isJsonPrimitive()) {
                     values = new String[] { rawValues.getAsString() };
