@@ -11,8 +11,10 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.CurrentLaunchFeatureMatcher;
 import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.util.FileUtil;
@@ -76,10 +78,10 @@ public class LocalVersionList extends StreamVersionList {
                 String id = directory.getName();
                 File jsonFile = new File(directory, id + ".json");
                 if (directory.isDirectory() && jsonFile.isFile()) {
-                    JsonElement element = null;
+                    String input = null;
                     try {
-                        element = jsonParser.parse(getUrl("versions/" + id + "/" + id + ".json"));
-                        CompleteVersion ex = gson.fromJson(element, CompleteVersion.class);
+                        input = IOUtils.toString(getUrl("versions/" + id + "/" + id + ".json"));
+                        CompleteVersion ex = gson.fromJson(jsonParser.parse(input), CompleteVersion.class);
                         U.requireNotNull(ex);
                         ex.setID(id);
                         ex.setSource(Repository.LOCAL_VERSION_REPO);
@@ -91,7 +93,7 @@ public class LocalVersionList extends StreamVersionList {
                                 .withMessage("couldn't parse local version")
                                 .withSentryInterface(new ExceptionInterface(var9))
                                 .withExtra("version", id)
-                                .withExtra("element", element)
+                                .withExtra("input", Pasta.paste(input))
                                 .withLevel(Event.Level.ERROR)
                         );
                     }

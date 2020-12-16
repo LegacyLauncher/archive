@@ -642,7 +642,7 @@ public class CompleteVersion implements Version, Cloneable {
             GsonBuilder builder = new GsonBuilder();
             ExposeExclusion.setup(builder);
             builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
-            builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
+            builder.registerTypeAdapter(Date.class, new DateTypeAdapter(true));
             builder.registerTypeAdapter(Argument.class, new Argument.Serializer());
             builder.enableComplexMapKeySerialization();
             builder.setPrettyPrinting();

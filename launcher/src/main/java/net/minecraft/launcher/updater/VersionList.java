@@ -3,12 +3,17 @@ package net.minecraft.launcher.updater;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
@@ -37,7 +42,7 @@ public abstract class VersionList {
         GsonBuilder builder = new GsonBuilder();
         ExposeExclusion.setup(builder);
         builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
-        builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
+        builder.registerTypeAdapter(Date.class, new DateTypeAdapter(true));
         builder.registerTypeAdapter(CompleteVersion.class, new CompleteVersion.CompleteVersionSerializer());
         builder.enableComplexMapKeySerialization();
         builder.setPrettyPrinting();
@@ -90,7 +95,18 @@ public abstract class VersionList {
     public RawVersionList getRawList() throws IOException {
         Object lock = new Object();
         Time.start(lock);
-        RawVersionList list = gson.fromJson(getUrl("versions/versions.json"), RawVersionList.class);
+        RawVersionList list;
+        String input = IOUtils.toString(getUrl("versions/versions.json"));
+        try {
+            list = gson.fromJson(input, RawVersionList.class);
+        } catch(RuntimeException e) {
+            Sentry.capture(new EventBuilder()
+                    .withLevel(Event.Level.ERROR)
+                    .withMessage("couldn't parse remote repository")
+                    .withSentryInterface(new ExceptionInterface(e))
+            );
+            throw e;
+        }
         Iterator var4 = list.versions.iterator();
 
         while (var4.hasNext()) {

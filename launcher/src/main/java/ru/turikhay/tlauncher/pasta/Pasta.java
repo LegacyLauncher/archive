@@ -8,14 +8,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.logger.LogFile;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.U;
-import ru.turikhay.util.UrlEncoder;
+import ru.turikhay.util.*;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,7 +26,8 @@ public class Pasta {
     private static final String APP_KEY = "kByB9b8MdAbgMq66";
     private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s";
 
-    private LogFile logFile;
+    private CharsetData data;
+    private boolean ignoreTooManyRequests;
 
     private final ArrayList<PastaListener> listeners;
     private PastaResult result;
@@ -38,8 +36,12 @@ public class Pasta {
         listeners = new ArrayList<>();
     }
 
-    public void setLogFile(LogFile logFile) {
-        this.logFile = logFile;
+    public void setIgnoreTooManyRequests() {
+        this.ignoreTooManyRequests = true;
+    }
+
+    public void setData(CharsetData data) {
+        this.data = data;
     }
 
     public void addListener(PastaListener listener) {
@@ -75,10 +77,11 @@ public class Pasta {
     }
 
     private PastaUploaded doPaste() throws IOException {
-        final LogFile logFile = this.logFile;
+        final CharsetData data = this.data;
+        final boolean ignoreTmr = this.ignoreTooManyRequests;
 
-        if (logFile == null || !logFile.exists()) {
-            throw new IllegalArgumentException("content is empty");
+        if (data == null) {
+            throw new NullPointerException("data");
         }
 
         String clientId;
@@ -98,9 +101,12 @@ public class Pasta {
         PastaUploaded result = null;
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
-                result = makeRequest(url, logFile);
+                result = makeRequest(url, data);
                 break;
             } catch(TooManyRequests tmr) {
+                if(ignoreTmr) {
+                    throw tmr;
+                }
                 int waitTime = (attempt > 1? 61 : 31) + new Random().nextInt(10);
                 LOGGER.warn("Pasta could not be sent because of the rate limit (attempt {}, wait time {}s", attempt, waitTime);
                 try {
@@ -119,7 +125,7 @@ public class Pasta {
         return result;
     }
 
-    private PastaUploaded makeRequest(URL url, LogFile logFile) throws IOException {
+    private PastaUploaded makeRequest(URL url, CharsetData data) throws IOException {
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) url.openConnection(U.getProxy());
@@ -129,7 +135,7 @@ public class Pasta {
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
 
-            try(InputStreamReader input = logFile.read();
+            try(Reader input = data.read();
                 OutputStreamWriter output = new OutputStreamWriter(
                         connection.getOutputStream(),
                         FileUtil.getCharset()
@@ -165,5 +171,26 @@ public class Pasta {
                 connection.disconnect();
             }
         }
+    }
+
+    public static String paste(CharsetData data) {
+        Pasta pasta = new Pasta();
+        pasta.setData(data);
+        pasta.setIgnoreTooManyRequests();
+        PastaResult result = pasta.paste();
+        if(result instanceof PastaUploaded) {
+            return ((PastaUploaded) result).getURL().toExternalForm();
+        } else if (result instanceof PastaFailed) {
+            return ((PastaFailed) result).getError().toString();
+        } else {
+            return "not available";
+        }
+    }
+
+    public static String paste(String data) {
+        if(data == null) {
+            return "input null";
+        }
+        return paste(new StringCharsetData(data));
     }
 }
