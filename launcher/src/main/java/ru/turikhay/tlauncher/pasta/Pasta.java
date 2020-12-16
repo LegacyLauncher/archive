@@ -61,11 +61,13 @@ public class Pasta {
             result = doPaste();
         } catch (Throwable e) {
             LOGGER.error("Could not upload paste", e);
-            Sentry.capture(new EventBuilder()
-                .withMessage("pasta not sent")
-                .withLevel(Event.Level.ERROR)
-                .withSentryInterface(new ExceptionInterface(e))
-            );
+            if(!(e instanceof TooManyRequests)) {
+                Sentry.capture(new EventBuilder()
+                        .withMessage("pasta not sent")
+                        .withLevel(Event.Level.ERROR)
+                        .withSentryInterface(new ExceptionInterface(e))
+                );
+            }
             result = new PastaFailed(this, e);
         }
 
