@@ -193,7 +193,7 @@ public final class Bootstrap {
             if(bridge != null && bridge.getClient() != null) {
                 SENTRY.getContext().setUser(new User(
                         bridge.getClient().toString(),
-                        null,
+                        bridge.getClient().toString(),
                         null,
                         null
                 ));

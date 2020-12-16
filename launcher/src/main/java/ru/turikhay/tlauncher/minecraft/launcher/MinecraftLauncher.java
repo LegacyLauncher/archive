@@ -166,7 +166,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         } else {
             parentThread = Thread.currentThread();
             gson = new Gson();
-            dateAdapter = new DateTypeAdapter();
+            dateAdapter = new DateTypeAdapter(true);
             this.downloader = downloader;
             settings = configuration;
             assistants = manager.getComponentsOf(MinecraftLauncherAssistant.class);
@@ -1147,7 +1147,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                         }
                     }
 
-                    FileUtil.writeFile(new File(virtualRoot, ".lastused"), dateAdapter.toString(new Date()));
+                    FileUtil.writeFile(new File(virtualRoot, ".lastused"), dateAdapter.format(new Date()));
                     break;
                 }
             }

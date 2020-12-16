@@ -40,7 +40,7 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
             @Override
             protected SendInfoResponse get() throws Exception {
                 Pasta pasta = new Pasta();
-                pasta.setLogFile(Log4j2ContextHelper.getCurrentLogFile());
+                pasta.setData(Log4j2ContextHelper.getCurrentLogFile());
 
                 PastaResult result = pasta.paste();
 

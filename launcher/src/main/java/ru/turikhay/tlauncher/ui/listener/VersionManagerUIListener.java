@@ -43,7 +43,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
         settings = tl.getSettings();
 
         gson = new GsonBuilder()
-                .registerTypeAdapter(Date.class, new DateTypeAdapter())
+                .registerTypeAdapter(Date.class, new DateTypeAdapter(true))
                 .registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory())
                 .setPrettyPrinting().create();
 

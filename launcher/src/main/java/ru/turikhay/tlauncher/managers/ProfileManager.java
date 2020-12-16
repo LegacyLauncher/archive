@@ -78,7 +78,7 @@ public class ProfileManager extends RefreshableComponent {
 
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
-            builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
+            builder.registerTypeAdapter(Date.class, new DateTypeAdapter(true));
             builder.registerTypeAdapter(File.class, new FileTypeAdapter());
             builder.registerTypeAdapter(UserSet.class, accountManager.getTypeAdapter());
             builder.registerTypeAdapter(UUIDTypeAdapter.class, new UUIDTypeAdapter());

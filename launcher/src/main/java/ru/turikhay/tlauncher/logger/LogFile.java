@@ -1,12 +1,13 @@
 package ru.turikhay.tlauncher.logger;
 
+import ru.turikhay.util.CharsetData;
 import ru.turikhay.util.FileUtil;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-public class LogFile {
+public class LogFile implements CharsetData {
     private final File file;
     private final Charset charset;
 
@@ -21,10 +22,6 @@ public class LogFile {
 
     public Charset getCharset() {
         return charset;
-    }
-
-    public boolean exists() {
-        return file.isFile();
     }
 
     public InputStreamReader read() throws IOException {

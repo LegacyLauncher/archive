@@ -306,7 +306,7 @@ public final class TLauncher {
     private void initConfig() {
         SENTRY.getContext().setUser(new User(
                 config.getClient().toString(),
-                null,
+                config.getClient().toString(),
                 null,
                 null
         ));
