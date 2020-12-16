@@ -3,8 +3,13 @@ package ru.turikhay.tlauncher;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.sentry.DefaultSentryClientFactory;
 import io.sentry.Sentry;
 import io.sentry.SentryClient;
+import io.sentry.SentryClientFactory;
+import io.sentry.context.ContextManager;
+import io.sentry.context.SingletonContextManager;
+import io.sentry.dsn.Dsn;
 import io.sentry.event.User;
 import joptsimple.OptionSet;
 import org.apache.commons.io.IOUtils;
@@ -27,6 +32,7 @@ import ru.turikhay.tlauncher.minecraft.Server;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
+import ru.turikhay.tlauncher.sentry.SentryConfigurer;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -304,12 +310,7 @@ public final class TLauncher {
     }
 
     private void initConfig() {
-        SENTRY.getContext().setUser(new User(
-                config.getClient().toString(),
-                config.getClient().toString(),
-                null,
-                null
-        ));
+        SentryConfigurer.setUser(config.getClient());
         config.setUsingSystemLookAndFeel(config.isUsingSystemLookAndFeel() && SwingUtil.initLookAndFeel());
         TLauncherFrame.setFontSize(config.getFontSize());
         if(!config.getBoolean("connection.ssl")) {
@@ -632,13 +633,6 @@ public final class TLauncher {
 
     static {
         System.setProperty("java.net.useSystemProxies", "true");
-    }
-
-    private static final SentryClient SENTRY;
-    static {
-        SENTRY = Sentry.init("https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46");
-        SENTRY.setRelease(getVersion().getNormalVersion());
-        SENTRY.setEnvironment(getShortBrand());
-        SENTRY.setServerName(OS.CURRENT.name());
+        SentryConfigurer.configure(getVersion(), getShortBrand());
     }
 }
