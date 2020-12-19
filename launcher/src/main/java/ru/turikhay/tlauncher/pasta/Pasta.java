@@ -13,6 +13,7 @@ import ru.turikhay.util.*;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,10 +25,11 @@ public class Pasta {
     private static final Logger LOGGER = LogManager.getLogger(Pasta.class);
 
     private static final String APP_KEY = "kByB9b8MdAbgMq66";
-    private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s";
+    private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s&format=%s";
 
     private CharsetData data;
     private boolean ignoreTooManyRequests;
+    private PastaFormat format = PastaFormat.LOGS;
 
     private final ArrayList<PastaListener> listeners;
     private PastaResult result;
@@ -42,6 +44,10 @@ public class Pasta {
 
     public void setData(CharsetData data) {
         this.data = data;
+    }
+
+    public void setFormat(PastaFormat format) {
+        this.format = format;
     }
 
     public void addListener(PastaListener listener) {
@@ -64,6 +70,7 @@ public class Pasta {
             if(!(e instanceof TooManyRequests)) {
                 Sentry.capture(new EventBuilder()
                         .withMessage("pasta not sent")
+                        .withExtra("sample", getSample())
                         .withLevel(Event.Level.ERROR)
                         .withSentryInterface(new ExceptionInterface(e))
                 );
@@ -81,6 +88,7 @@ public class Pasta {
     private PastaUploaded doPaste() throws IOException {
         final CharsetData data = this.data;
         final boolean ignoreTmr = this.ignoreTooManyRequests;
+        final PastaFormat format = this.format;
 
         if (data == null) {
             throw new NullPointerException("data");
@@ -96,7 +104,8 @@ public class Pasta {
         URL url = U.makeURL(
                 String.format(CREATE_PASTE_URL,
                         UrlEncoder.encode(APP_KEY),
-                        UrlEncoder.encode(clientId)
+                        UrlEncoder.encode(clientId),
+                        UrlEncoder.encode(format.value())
                 )
         );
 
@@ -175,7 +184,19 @@ public class Pasta {
         }
     }
 
-    public static String paste(CharsetData data) {
+    private String getSample() {
+        try(Reader reader = data.read(); StringWriter writer = new StringWriter()){
+            char[] buffer = new char[256];
+            int read = reader.read(buffer);
+            writer.write(buffer, 0, read);
+            return writer.toString();
+        } catch (IOException e) {
+            LOGGER.warn("Error reading sample", e);
+            return "couldn't get sample: " + e.toString();
+        }
+    }
+
+    public static String paste(CharsetData data, PastaFormat format) {
         Pasta pasta = new Pasta();
         pasta.setData(data);
         pasta.setIgnoreTooManyRequests();
@@ -183,16 +204,20 @@ public class Pasta {
         if(result instanceof PastaUploaded) {
             return ((PastaUploaded) result).getURL().toExternalForm();
         } else if (result instanceof PastaFailed) {
-            return ((PastaFailed) result).getError().toString();
+            return "pasta: " + ((PastaFailed) result).getError().toString();
         } else {
-            return "not available";
+            return "pasta: not available";
         }
     }
 
-    public static String paste(String data) {
+    public static String paste(String data, PastaFormat format) {
         if(data == null) {
-            return "input null";
+            return "pasta: input null";
         }
-        return paste(new StringCharsetData(data));
+        return paste(new StringCharsetData(data), format);
+    }
+
+    public static String pasteJson(String json) {
+        return paste(json, PastaFormat.JSON);
     }
 }

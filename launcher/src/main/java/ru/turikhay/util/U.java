@@ -13,9 +13,9 @@ import java.awt.*;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.net.Proxy;
-import java.net.URI;
-import java.net.URL;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.text.NumberFormat;
 import java.util.List;
@@ -869,6 +869,42 @@ public class U {
         Calendar date = getUTC();
         date.setTimeInMillis(millis);
         return date;
+    }
+
+    public static String resolveHost(URL url) {
+        if(url == null) {
+            return "url is null";
+        } else {
+            return resolveHost(url.getHost());
+        }
+    }
+
+    public static String resolveHost(String host) {
+        String ip;
+        if(host == null) {
+            ip = "host is null";
+        } else {
+            try {
+                ip = InetAddress.getByName(host).getHostAddress();
+            } catch (UnknownHostException unknownHostException) {
+                ip = "unknown host: " + host;
+            }
+        }
+        return ip;
+    }
+
+    public static String readErrorResponse(HttpURLConnection connection) {
+        if(connection == null) {
+            return "connection is null";
+        }
+        if(connection.getErrorStream() == null) {
+            return "no error stream";
+        }
+        try(InputStreamReader reader = new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8)) {
+            return IOUtils.toString(reader);
+        } catch (IOException e) {
+            return "failed to read error stream: " + e.toString();
+        }
     }
 
     private static final Gson gson = new GsonBuilder().create();
