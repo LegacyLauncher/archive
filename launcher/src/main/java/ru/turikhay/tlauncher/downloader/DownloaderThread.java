@@ -1,5 +1,9 @@
 package ru.turikhay.tlauncher.downloader;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.exceptions.IOExceptionList;
@@ -184,6 +188,12 @@ public class DownloaderThread extends ExtendedThread {
                         current.getRepository().getList().markInvalid(repo);
                         exL.add(ioE);
                     } catch (Throwable var10) {
+                        Sentry.capture(new EventBuilder()
+                                .withLevel(Event.Level.ERROR)
+                                .withMessage("downloader exception: " + var10.toString())
+                                .withSentryInterface(new ExceptionInterface(var10))
+                                .withExtra("current", current)
+                        );
                         LOGGER.error("Unknown error occurred while downloading {}", current.getURL(), var10);
                         cause = var10;
                     }
@@ -203,6 +213,12 @@ public class DownloaderThread extends ExtendedThread {
                         connection == null? current.getURL() : connection.getURL(), ioE);
                 exL.add(ioE);
             } catch (Throwable var10) {
+                Sentry.capture(new EventBuilder()
+                        .withLevel(Event.Level.ERROR)
+                        .withMessage("downloader exception: " + var10.toString())
+                        .withSentryInterface(new ExceptionInterface(var10))
+                        .withExtra("current", current)
+                );
                 LOGGER.error("Unknown error occurred while downloading {}", current.getURL(), var10);
                 cause = var10;
             }

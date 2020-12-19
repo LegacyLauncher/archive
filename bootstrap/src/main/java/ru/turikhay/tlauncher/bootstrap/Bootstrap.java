@@ -41,6 +41,20 @@ public final class Bootstrap {
             new Dsn("https://3ece46580a3c4d4e900f41d20397d229:8fbceaeb066e4fcab40f9740d04eebab@sentry.ely.by/45")
     );
 
+    static {
+        SENTRY.addBuilderHelper(new EventBuilderHelper() {
+            @Override
+            public void helpBuildingEvent(EventBuilder eventBuilder) {
+                eventBuilder
+                        .withServerName(OS.CURRENT.name())
+                        .withTag("java", String.valueOf(JavaVersion.getCurrent().getMajor()))
+                        .withTag("java_version", System.getProperty("java.version"))
+                        .withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"))
+                        .withTag("os_arch", System.getProperty("os.arch"));
+            }
+        });
+    }
+
     static Bootstrap createBootstrap() {
         log("Starting bootstrap...");
 
@@ -169,13 +183,11 @@ public final class Bootstrap {
         FatalExceptionType exceptionType = FatalExceptionType.getType(e);
 
         if(sendSentry) {
-            LocalBootstrapMeta localBootstrapMeta = bootstrap == null? null : bootstrap.getMeta();
             EventBuilder b = new EventBuilder()
                     .withMessage("fatal error")
                     .withLevel(Event.Level.FATAL)
-                    .withSentryInterface(new ExceptionInterface(e));
-            initEvent(b, localBootstrapMeta);
-            b.withTag("type", exceptionType.name());
+                    .withSentryInterface(new ExceptionInterface(e))
+                    .withTag("type", exceptionType.name());
             avList:
             {
                 if(!OS.WINDOWS.isCurrent()) {
@@ -227,7 +239,9 @@ public final class Bootstrap {
         SENTRY.addBuilderHelper(new EventBuilderHelper() {
             @Override
             public void helpBuildingEvent(EventBuilder eventBuilder) {
-                initEvent(eventBuilder, meta);
+                eventBuilder
+                        .withRelease(meta.getVersion().getNormalVersion())
+                        .withEnvironment(meta.getShortBrand());
             }
         });
 
@@ -642,11 +656,9 @@ public final class Bootstrap {
         JavaVersion supported = JavaVersion.create(1, 8, 0, 45);
 
         if(JavaVersion.getCurrent().compareTo(supported) < 0) {
-            SENTRY.sendEvent(initStaticEvent()
+            SENTRY.sendEvent(new EventBuilder()
                     .withLevel(Event.Level.ERROR)
                     .withMessage("old java version")
-                    .withExtra("rawVersion", System.getProperty("java.version"))
-                    .withExtra("version", JavaVersion.getCurrent().getVersion())
             );
             String message =
                     "Your Java version is not supported. Please install at least " + supported.getVersion() + " from Java.com" +
@@ -752,18 +764,5 @@ public final class Bootstrap {
 
     private static void log(Object... o) {
         U.log("[Bootstrap]", o);
-    }
-
-    private static void initEvent(EventBuilder eventBuilder, LocalBootstrapMeta meta) {
-        eventBuilder
-                .withServerName(OS.CURRENT.name())
-                .withRelease(meta == null? "unknown" : meta.getVersion().getNormalVersion())
-                .withEnvironment(meta == null? "unknown" : meta.getShortBrand());
-    }
-
-    private static EventBuilder initStaticEvent() {
-        EventBuilder eventBuilder = new EventBuilder();
-        initEvent(eventBuilder, null);
-        return eventBuilder;
     }
 }

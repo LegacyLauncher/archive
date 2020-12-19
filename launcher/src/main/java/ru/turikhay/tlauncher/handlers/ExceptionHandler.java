@@ -1,5 +1,9 @@
 package ru.turikhay.tlauncher.handlers;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.logging.log4j.LogManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.background.ImageBackground;
@@ -27,6 +31,12 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             OutOfMemoryError asOOM = Reflect.cast(e, OutOfMemoryError.class);
             if (asOOM == null || !reduceMemory(asOOM)) {
                 if (scanTrace(e) && toShowError(e)) {
+                    Sentry.capture(new EventBuilder()
+                            .withLevel(Event.Level.ERROR)
+                            .withMessage("uncaught exception: " + e.toString())
+                            .withSentryInterface(new ExceptionInterface(e))
+                            .withExtra("thread", t.getName())
+                    );
                     try {
                         Alert.showError("Exception in thread " + t.getName(), e);
                     } catch (Exception var5) {

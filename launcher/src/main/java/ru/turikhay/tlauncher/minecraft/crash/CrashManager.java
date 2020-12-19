@@ -2,6 +2,9 @@ package ru.turikhay.tlauncher.minecraft.crash;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.sentry.Sentry;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
@@ -299,6 +302,11 @@ public final class CrashManager {
                     }
                     break executor;
                 } catch (Exception e) {
+                    Sentry.capture(new EventBuilder()
+                            .withMessage("crash manager crashed")
+                            .withSentryInterface(new ExceptionInterface(e))
+                            .withExtra("crash", crash)
+                    );
                     for (CrashManagerListener listener : listeners) {
                         listener.onCrashManagerFailed(CrashManager.this, e);
                     }

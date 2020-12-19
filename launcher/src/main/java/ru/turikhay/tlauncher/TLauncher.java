@@ -10,7 +10,10 @@ import io.sentry.SentryClientFactory;
 import io.sentry.context.ContextManager;
 import io.sentry.context.SingletonContextManager;
 import io.sentry.dsn.Dsn;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
 import io.sentry.event.User;
+import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +54,10 @@ import javax.net.ssl.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
@@ -185,16 +191,24 @@ public final class TLauncher {
                     urlList.add("https://account.ely.by/");
                     urlList.add("https://tlauncher.ru/test.txt");
                     urlList.add("https://launchermeta.mojang.com/mc/game/version_manifest.json");
-                    for (String url : urlList) {
-                        String response = null;
+                    for (String _url : urlList) {
+                        URL url = null;
+                        String response;
                         try {
-                            response = IOUtils.toString(new URL(url), "UTF-8");
-                            if (url.endsWith("json") && !response.startsWith("{")) {
+                            url = new URL(_url);
+                            response = IOUtils.toString(url, StandardCharsets.UTF_8);
+                            if (_url.endsWith("json") && !response.startsWith("{")) {
                                 throw new IOException("invalid json response");
                             }
-                            LOGGER.debug("Connection OK: {}", url);
+                            LOGGER.debug("Connection OK: {}", _url);
                         } catch (Exception e) {
-                            LOGGER.warn("Test connection to {} failed", url, e);
+                            Sentry.capture(new EventBuilder()
+                                    .withLevel(Event.Level.WARNING)
+                                    .withMessage("test connection failed: " + _url)
+                                    .withSentryInterface(new ExceptionInterface(e))
+                                    .withExtra("ip", U.resolveHost(url))
+                            );
+                            LOGGER.warn("Test connection to {} failed", _url, e);
                         }
                     }
                     config.set("connection.testPassed", testIteration);

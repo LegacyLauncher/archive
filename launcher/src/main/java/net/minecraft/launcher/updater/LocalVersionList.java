@@ -93,7 +93,7 @@ public class LocalVersionList extends StreamVersionList {
                                 .withMessage("couldn't parse local version")
                                 .withSentryInterface(new ExceptionInterface(var9))
                                 .withExtra("version", id)
-                                .withExtra("input", Pasta.paste(input))
+                                .withExtra("input", Pasta.pasteJson(input))
                                 .withLevel(Event.Level.ERROR)
                         );
                     }
