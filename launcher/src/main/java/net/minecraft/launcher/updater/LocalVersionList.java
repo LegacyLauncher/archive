@@ -12,6 +12,7 @@ import net.minecraft.launcher.versions.CurrentLaunchFeatureMatcher;
 import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.pasta.Pasta;
@@ -23,10 +24,7 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -80,7 +78,19 @@ public class LocalVersionList extends StreamVersionList {
                 if (directory.isDirectory() && jsonFile.isFile()) {
                     String input = null;
                     try {
-                        input = IOUtils.toString(getUrl("versions/" + id + "/" + id + ".json"));
+                        try(InputStreamReader reader = getUrl("versions/" + id + "/" + id + ".json")) {
+                            input = IOUtils.toString(reader);
+                        }
+                        if(input.isEmpty()) {
+                            LOGGER.warn("Json of {} is empty and is going to be deleted", id);
+                            deleteJsonFile(id, jsonFile);
+                            continue;
+                        }
+                        if(StringUtils.containsOnly(input, '\0')) {
+                            LOGGER.warn("Json of {} is corrupted and contain only zero bytes. Will try to delete it", id);
+                            deleteJsonFile(id, jsonFile);
+                            continue;
+                        }
                         CompleteVersion ex = gson.fromJson(jsonParser.parse(input), CompleteVersion.class);
                         U.requireNotNull(ex);
                         ex.setID(id);
@@ -100,6 +110,14 @@ public class LocalVersionList extends StreamVersionList {
                 }
             }
 
+        }
+    }
+
+    private void deleteJsonFile(String id, File jsonFile) {
+        if(jsonFile.delete()) {
+            LOGGER.warn("Json of {} deleted successfully", id);
+        } else {
+            LOGGER.error("Couldn't remove json of {}: {}", id, jsonFile.getAbsolutePath());
         }
     }
 
@@ -167,7 +185,10 @@ public class LocalVersionList extends StreamVersionList {
         } else if (version == null) {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
-            CompleteVersion complete = gson.fromJson(getUrl("versions/" + version.getID() + "/" + version.getID() + ".json"), CompleteVersion.class);
+            CompleteVersion complete;
+            try(InputStreamReader reader = getUrl("versions/" + version.getID() + "/" + version.getID() + ".json")) {
+                complete = gson.fromJson(reader, CompleteVersion.class);
+            }
             complete.setID(version.getID());
             complete.setVersionList(this);
             Collections.replaceAll(versions, version, complete);

@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.118.10'
+version '1.118.11'
 
 apply from: '../gradle/brand.gradle'
 
@@ -138,7 +138,7 @@ task generateMeta {
 }
 
 task generateUpdateJson {
-    dependsOn jar
+    dependsOn(jar, buildLauncherRepo)
     doLast {
         def meta = new JsonBuilder()
         def jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)

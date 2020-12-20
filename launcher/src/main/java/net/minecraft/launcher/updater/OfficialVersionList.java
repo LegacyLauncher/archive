@@ -27,7 +27,10 @@ public class OfficialVersionList extends RemoteVersionList {
         try {
             Object lock = new Object();
             Time.start(lock);
-            RawVersionList list = gson.fromJson(getUrl("version_manifest.json"), RawVersionList.class);
+            RawVersionList list;
+            try (InputStreamReader reader = getUrl("version_manifest.json")) {
+                list = gson.fromJson(reader, RawVersionList.class);
+            }
             Iterator var4 = list.versions.iterator();
 
             while (var4.hasNext()) {

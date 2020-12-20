@@ -47,7 +47,11 @@ public final class Bootstrap {
             public void helpBuildingEvent(EventBuilder eventBuilder) {
                 eventBuilder
                         .withServerName(OS.CURRENT.name())
-                        .withTag("java", String.valueOf(JavaVersion.getCurrent().getMajor()))
+                        .withTag(
+                                "java",
+                                JavaVersion.getCurrent() == JavaVersion.UNKNOWN ?
+                                        "unknown" : String.valueOf(JavaVersion.getCurrent().getMajor())
+                        )
                         .withTag("java_version", System.getProperty("java.version"))
                         .withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"))
                         .withTag("os_arch", System.getProperty("os.arch"));
@@ -654,8 +658,14 @@ public final class Bootstrap {
 
     private static void checkRunningConditions() {
         JavaVersion supported = JavaVersion.create(1, 8, 0, 45);
+        JavaVersion current = JavaVersion.getCurrent();
 
-        if(JavaVersion.getCurrent().compareTo(supported) < 0) {
+        if(current == JavaVersion.UNKNOWN) {
+            SENTRY.sendEvent(new EventBuilder()
+                    .withLevel(Event.Level.WARNING)
+                    .withMessage("unknown java version: " + System.getProperty("java.version"))
+            );
+        } else if(JavaVersion.getCurrent().compareTo(supported) < 0) {
             SENTRY.sendEvent(new EventBuilder()
                     .withLevel(Event.Level.ERROR)
                     .withMessage("old java version")
