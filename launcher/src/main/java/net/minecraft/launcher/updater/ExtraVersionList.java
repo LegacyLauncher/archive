@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.UrlEncoder;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collections;
 
 public class ExtraVersionList extends RepositoryBasedVersionList {
@@ -20,7 +21,10 @@ public class ExtraVersionList extends RepositoryBasedVersionList {
         } else if (version == null) {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
-            CompleteVersion complete = gson.fromJson(getUrl("versions/" + UrlEncoder.encode(version.getID(), true) + ".json"), CompleteVersion.class);
+            CompleteVersion complete;
+            try(InputStreamReader reader = getUrl("versions/" + UrlEncoder.encode(version.getID(), true) + ".json")) {
+                complete = gson.fromJson(reader, CompleteVersion.class);
+            }
             complete.setID(version.getID());
             complete.setVersionList(this);
             complete.setSource(Repository.EXTRA_VERSION_REPO);

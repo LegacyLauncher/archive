@@ -5,6 +5,7 @@ import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
@@ -92,6 +93,11 @@ public class Pasta {
 
         if (data == null) {
             throw new NullPointerException("data");
+        }
+
+        long length = data.length();
+        if (length == 0) {
+            throw new RuntimeException("data is empty");
         }
 
         String clientId;
@@ -188,7 +194,11 @@ public class Pasta {
         try(Reader reader = data.read(); StringWriter writer = new StringWriter()){
             char[] buffer = new char[256];
             int read = reader.read(buffer);
-            writer.write(buffer, 0, read);
+            if(read > 0) {
+                writer.write(buffer, 0, read);
+            } else {
+                return "empty sample";
+            }
             return writer.toString();
         } catch (IOException e) {
             LOGGER.warn("Error reading sample", e);
@@ -200,6 +210,7 @@ public class Pasta {
         Pasta pasta = new Pasta();
         pasta.setData(data);
         pasta.setIgnoreTooManyRequests();
+        pasta.setFormat(format);
         PastaResult result = pasta.paste();
         if(result instanceof PastaUploaded) {
             return ((PastaUploaded) result).getURL().toExternalForm();
@@ -213,6 +224,8 @@ public class Pasta {
     public static String paste(String data, PastaFormat format) {
         if(data == null) {
             return "pasta: input null";
+        } else if(StringUtils.isBlank(data)) {
+            return "pasta: input blank";
         }
         return paste(new StringCharsetData(data), format);
     }

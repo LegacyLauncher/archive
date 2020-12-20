@@ -71,7 +71,10 @@ public abstract class VersionList {
         } else if (version == null) {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
-            CompleteVersion complete = gson.fromJson(version.getUrl() == null ? getUrl("versions/" + version.getID() + "/" + version.getID() + ".json") : new InputStreamReader(new URL(version.getUrl()).openConnection(U.getProxy()).getInputStream(), FileUtil.DEFAULT_CHARSET), CompleteVersion.class);
+            CompleteVersion complete;
+            try(InputStreamReader reader = version.getUrl() == null ? getUrl("versions/" + version.getID() + "/" + version.getID() + ".json") : new InputStreamReader(new URL(version.getUrl()).openConnection(U.getProxy()).getInputStream(), FileUtil.DEFAULT_CHARSET)) {
+                complete = gson.fromJson(reader, CompleteVersion.class);
+            }
             complete.setID(version.getID());
             complete.setVersionList(this);
             Collections.replaceAll(versions, version, complete);
@@ -96,7 +99,10 @@ public abstract class VersionList {
         Object lock = new Object();
         Time.start(lock);
         RawVersionList list;
-        String input = IOUtils.toString(getUrl("versions/versions.json"));
+        String input;
+        try(InputStreamReader reader = getUrl("versions/versions.json")) {
+            input = IOUtils.toString(reader);
+        }
         try {
             list = gson.fromJson(input, RawVersionList.class);
         } catch(RuntimeException e) {

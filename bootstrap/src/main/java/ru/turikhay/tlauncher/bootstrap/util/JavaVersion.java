@@ -11,6 +11,9 @@ import java.util.regex.Pattern;
  * https://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
  */
 public final class JavaVersion implements Comparable<JavaVersion> {
+    public static final JavaVersion UNKNOWN =
+            new JavaVersion("unknown", "unknown", 1, 0, 0, 0);
+
     private static JavaVersion CURRENT;
 
     public static JavaVersion getCurrent() {
@@ -21,7 +24,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
                 version = parse(sVersion);
             } catch(RuntimeException rE) {
                 U.log("Could not parse java version:", sVersion, rE);
-                version = JavaVersion.parse("1.6.0");
+                version = UNKNOWN;
             }
             CURRENT = version;
         }
