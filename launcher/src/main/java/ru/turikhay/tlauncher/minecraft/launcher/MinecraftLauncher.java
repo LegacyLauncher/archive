@@ -154,15 +154,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         return working && minecraftWorking && !killed;
     }
 
-    private MinecraftLauncher(ComponentManager manager, Downloader downloader, Configuration configuration, boolean forceUpdate, LoggerVisibility visibility, boolean exit) {
+    private MinecraftLauncher(ComponentManager manager, Downloader downloader, Configuration configuration, boolean forceUpdate, boolean exit) {
         if (manager == null) {
             throw new NullPointerException("Ti sovsem s duba ruhnul?");
         } else if (downloader == null) {
             throw new NullPointerException("Downloader is NULL!");
         } else if (configuration == null) {
             throw new NullPointerException("Configuration is NULL!");
-        } else if (visibility == null) {
-            throw new NullPointerException("LoggerVisibility is NULL!");
         } else {
             parentThread = Thread.currentThread();
             gson = new Gson();
@@ -187,7 +185,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public MinecraftLauncher(TLauncher t, boolean forceUpdate) {
-        this(t.getManager(), t.getDownloader(), t.getSettings(), forceUpdate, t.getSettings().getLoggerType().getVisibility(), t.getSettings().getActionOnLaunch() == Configuration.ActionOnLaunch.EXIT);
+        this(t.getManager(), t.getDownloader(), t.getSettings(), forceUpdate, t.getSettings().getActionOnLaunch() == Configuration.ActionOnLaunch.EXIT);
     }
 
     public void addListener(MinecraftListener listener) {
@@ -1047,6 +1045,11 @@ public class MinecraftLauncher implements JavaProcessListener {
             launcher.addCommand(arg);
         }
 
+        if (settings.getBoolean("minecraft.deleteTlSkinCape")) {
+            LOGGER.info("Deleting TLSkinCape mod. Disable this feature in config file if you want");
+            deleteMod("tl.?skin.?cape.*\\.jar");
+        }
+
         if (fullCommand) {
             LOGGER.info("Full command (not escaped):");
             LOGGER.info(launcher.getCommandsAsString());
@@ -1093,6 +1096,23 @@ public class MinecraftLauncher implements JavaProcessListener {
 */
 
         launchMinecraft();
+    }
+
+    private void deleteMod(String... names) {
+        File[] files = new File(gameDir, "mods").listFiles(file ->
+                file.isFile()
+                        && Arrays.stream(names).anyMatch(
+                                file.getName().toLowerCase(Locale.ROOT)::matches
+                        )
+        );
+
+        if (files == null) return;
+        for (File file : files) {
+            LOGGER.debug("Removing {}", file.getName());
+            if (!file.delete()) {
+                LOGGER.error("error removing mod {}", file.getName());
+            }
+        }
     }
 
     private void readFirstBytes(File file) throws IOException {

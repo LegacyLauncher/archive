@@ -46,7 +46,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
 
         if(epoch == 1) {
             this.epoch = epoch;
-            this.major = ifPositive(major, "major");
+            this.major = ifNotNegative(major, "major");
             this.minor = ifNotNegative(minor, "minor");
 
             if (identifier != null && update == 0) {

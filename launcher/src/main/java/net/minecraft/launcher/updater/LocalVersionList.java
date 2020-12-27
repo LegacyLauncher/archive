@@ -25,6 +25,9 @@ import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -106,6 +109,9 @@ public class LocalVersionList extends StreamVersionList {
                                 .withExtra("input", Pasta.pasteJson(input))
                                 .withLevel(Event.Level.ERROR)
                         );
+                        if(var9 instanceof JsonSyntaxException) {
+                            renameJsonFile(jsonFile);
+                        }
                     }
                 }
             }
@@ -118,6 +124,19 @@ public class LocalVersionList extends StreamVersionList {
             LOGGER.warn("Json of {} deleted successfully", id);
         } else {
             LOGGER.error("Couldn't remove json of {}: {}", id, jsonFile.getAbsolutePath());
+        }
+    }
+
+    private void renameJsonFile(File jsonFile) {
+        String newName = jsonFile.getName() + ".invalid";
+        LOGGER.info("Renaming json file: {} -> {}", jsonFile.getAbsolutePath(), newName);
+
+        Path jsonFilePath = jsonFile.toPath();
+        try {
+            Files.move(jsonFilePath, jsonFilePath.resolveSibling(newName),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            LOGGER.error("Couldn't rename {}", jsonFile.getAbsolutePath(), e);
         }
     }
 

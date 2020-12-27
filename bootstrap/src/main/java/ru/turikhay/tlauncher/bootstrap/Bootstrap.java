@@ -18,6 +18,7 @@ import ru.turikhay.tlauncher.bootstrap.exception.*;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.launcher.*;
 import ru.turikhay.tlauncher.bootstrap.meta.*;
+import ru.turikhay.tlauncher.bootstrap.ssl.FixSSL;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskInterruptedException;
 import ru.turikhay.tlauncher.bootstrap.task.TaskList;
@@ -57,6 +58,7 @@ public final class Bootstrap {
                         .withTag("os_arch", System.getProperty("os.arch"));
             }
         });
+        FixSSL.addLetsEncryptCertSupportIfNeeded();
     }
 
     static Bootstrap createBootstrap() {
