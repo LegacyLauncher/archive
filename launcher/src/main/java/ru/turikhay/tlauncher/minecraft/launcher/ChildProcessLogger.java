@@ -40,8 +40,10 @@ public class ChildProcessLogger implements Closeable {
     }
 
     public void close() throws IOException {
-        writer.close();
-        writer = null;
+        if(writer != null) {
+            writer.close();
+            writer = null;
+        }
     }
 
     public static ChildProcessLogger create(Charset charset) throws IOException {

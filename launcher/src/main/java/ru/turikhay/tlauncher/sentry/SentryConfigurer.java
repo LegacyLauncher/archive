@@ -11,6 +11,7 @@ import io.sentry.event.EventBuilder;
 import io.sentry.event.User;
 import io.sentry.event.helper.EventBuilderHelper;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.windows.WMIProvider;
 
 import java.util.UUID;
 
@@ -52,6 +53,9 @@ public class SentryConfigurer {
             eventBuilder.withTag("java_version", System.getProperty("java.version"));
             eventBuilder.withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"));
             eventBuilder.withTag("os_arch", System.getProperty("os.arch"));
+            if(OS.WINDOWS.isCurrent()) {
+                eventBuilder.withExtra("av", WMIProvider.getAvSoftwareList());
+            }
         }
     }
 

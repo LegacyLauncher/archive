@@ -57,6 +57,7 @@ public final class ConfigurationDefaults {
 
         d.put("minecraft.crash", true);
         d.put("minecraft.deletePatchy", true);
+        d.put("minecraft.deleteTlSkinCape", true);
 
         d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
         d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent()? 1000 : 1200, 600));

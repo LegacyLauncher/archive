@@ -432,7 +432,6 @@ public class Configuration extends SimpleConfiguration {
 
     public enum LoggerType {
         GLOBAL,
-        MINECRAFT,
         NONE;
 
         public static boolean parse(String val) {
@@ -465,10 +464,6 @@ public class Configuration extends SimpleConfiguration {
             }
 
             return null;
-        }
-
-        public MinecraftLauncher.LoggerVisibility getVisibility() {
-            return this == GLOBAL ? MinecraftLauncher.LoggerVisibility.NONE : (this == MINECRAFT ? MinecraftLauncher.LoggerVisibility.ALWAYS : MinecraftLauncher.LoggerVisibility.ON_CRASH);
         }
 
         public String toString() {
