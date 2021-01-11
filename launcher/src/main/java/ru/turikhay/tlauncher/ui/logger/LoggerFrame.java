@@ -5,6 +5,8 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedTextArea;
@@ -197,7 +199,11 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
             @Override
             public void windowClosed(WindowEvent e) {
                 if(config.getLoggerType() == Configuration.LoggerType.GLOBAL) {
-                    TLauncher.kill();
+                    config.setLoggerType(Configuration.LoggerType.NONE);
+                    if(TLauncher.getInstance().isReady() &&
+                            TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
+                        TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
+                    }
                 }
             }
         });

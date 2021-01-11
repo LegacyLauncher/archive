@@ -191,6 +191,11 @@ public class Configuration extends SimpleConfiguration {
         return LoggerType.get(get("gui.logger"));
     }
 
+    public void setLoggerType(LoggerType loggerType) {
+        //return LoggerType.get(get("gui.logger"));
+        set("gui.logger", loggerType.toString());
+    }
+
     public int[] getClientWindowSize() {
         String plainValue = get("minecraft.size");
         int[] value = new int[2];

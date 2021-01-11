@@ -100,7 +100,7 @@ public final class CrashFrame extends VActionFrame {
         getHead().setText("crash.unknown.title");
         getHead().setIcon(Images.getIcon("bug.png", 32));
         getBodyText().setText("crash.unknown.body");
-        setButtons(true, openLogs);
+        setButtons(true);
     }
 
     private void initOnCrash(CrashEntry entry) {
@@ -144,10 +144,16 @@ public final class CrashFrame extends VActionFrame {
         c.anchor = GridBagConstraints.LINE_START;
         c.fill = GridBagConstraints.BOTH;
 
-        for (int i = 0; i < buttons.length; i++) {
+        for (ExtendedButton button : buttons) {
             ++c.gridx;
-            buttons[i].setPreferredSize(new Dimension(buttons[i].getMinimumSize().width, SwingUtil.magnify(60)));
-            getFooter().add(buttons[i], c);
+            button.setPreferredSize(new Dimension(button.getMinimumSize().width, SwingUtil.magnify(60)));
+            getFooter().add(button, c);
+        }
+
+        if(askHelp) {
+            ++c.gridx;
+            this.askHelp.setPreferredSize(new Dimension(this.askHelp.getMinimumSize().width, SwingUtil.magnify(60)));
+            getFooter().add(this.askHelp, c);
         }
 
         ExtendedPanel buttonPanel = new ExtendedPanel();
@@ -162,10 +168,8 @@ public final class CrashFrame extends VActionFrame {
         c0.anchor = GridBagConstraints.LINE_START;
         c0.fill = GridBagConstraints.BOTH;
 
-        if (askHelp) {
-            ++c0.gridy;
-            buttonPanel.add(this.askHelp, c0);
-        }
+        ++c0.gridy;
+        buttonPanel.add(openLogs, c0);
 
         ++c0.gridy;
         buttonPanel.add(exitButton, c0);

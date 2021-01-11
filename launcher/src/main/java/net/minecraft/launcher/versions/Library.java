@@ -29,6 +29,7 @@ public class Library {
     protected LibraryDownloadInfo downloads;
     protected Boolean mod;
     protected Boolean downloadOnly;
+    protected String type;
 
     static {
         HashMap<String, String> map = new HashMap<String, String>();
@@ -50,7 +51,6 @@ public class Library {
                 .append(rules, library.rules)
                 .append(natives, library.natives)
                 .append(extract, library.extract)
-                .append(mod, library.mod)
                 .isEquals();
     }
 
@@ -61,7 +61,6 @@ public class Library {
                 .append(rules)
                 .append(natives)
                 .append(extract)
-                .append(mod)
                 .toHashCode();
     }
 
@@ -108,11 +107,15 @@ public class Library {
         return deleteEntries;
     }
 
-    public boolean isMod() {
-        return mod != null && mod;
-    }
+    public LibraryType getLibraryType() {
+        if (type == null) {
+            if (mod != null && mod) return LibraryType.MODIFICATION;
+            if (downloadOnly != null && downloadOnly) return LibraryType.DOWNLOAD_ONLY;
+            return LibraryType.LIBRARY;
+        }
 
-    public boolean isDownloadOnly() { return downloadOnly != null && downloadOnly; }
+        return LibraryType.getByName(type);
+    }
 
     String getArtifactBaseDir() {
         if (name == null) {

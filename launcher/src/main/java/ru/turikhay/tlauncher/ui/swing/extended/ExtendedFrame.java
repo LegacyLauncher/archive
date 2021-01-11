@@ -16,5 +16,6 @@ public class ExtendedFrame extends JFrame {
     public void showAtCenter() {
         setVisible(true);
         setLocationRelativeTo(null);
+        requestFocus();
     }
 }

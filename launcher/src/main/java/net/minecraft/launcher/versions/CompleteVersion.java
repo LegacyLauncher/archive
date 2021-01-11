@@ -25,6 +25,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CompleteVersion implements Version, Cloneable {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -40,8 +42,8 @@ public class CompleteVersion implements Version, Cloneable {
     String jvmArguments;
     String minecraftArguments;
     String mainClass;
-    Integer minimumLauncherVersion = Integer.valueOf(0);
-    Integer tlauncherVersion = Integer.valueOf(0);
+    Integer minimumLauncherVersion = 0;
+    Integer tlauncherVersion = 0;
     List<Library> libraries;
     List<Rule> rules;
     List<String> deleteEntries;
@@ -53,6 +55,7 @@ public class CompleteVersion implements Version, Cloneable {
     Map<ArgumentType, List<Argument>> arguments;
 
     Boolean modListAbsolutePrefix;
+    String modpack;
 
     @Expose Repository source;
     @Expose Account.AccountType proceededFor;
@@ -130,8 +133,11 @@ public class CompleteVersion implements Version, Cloneable {
         }
     }
 
-    public boolean isModListAbsolutePrefix() {
-        return modListAbsolutePrefix != null && modListAbsolutePrefix;
+    public ModpackType getModpackType() {
+        if (modListAbsolutePrefix == true) // modListAbsolutePrefix can be NULL
+            return ModpackType.FORGE_LEGACY_ABSOLUTE; // backwards compatibility
+
+        return ModpackType.getByName(modpack, jar);
     }
 
     public String getJar() {
@@ -144,10 +150,6 @@ public class CompleteVersion implements Version, Cloneable {
 
     public String getJVMArguments() {
         return jvmArguments;
-    }
-
-    public void setJVMArguments(String jvmArguments) {
-        this.jvmArguments = jvmArguments;
     }
 
     public String getMinecraftArguments() {
@@ -179,11 +181,11 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public int getMinimumLauncherVersion() {
-        return minimumLauncherVersion.intValue();
+        return minimumLauncherVersion;
     }
 
     public int getMinimumCustomLauncherVersion() {
-        return tlauncherVersion.intValue();
+        return tlauncherVersion;
     }
 
     public AssetIndexInfo getAssetIndex() {
@@ -226,7 +228,7 @@ public class CompleteVersion implements Version, Cloneable {
             return false;
         } else {
             Version compare = (Version) o;
-            return compare.getID() == null ? false : compare.getID().equals(id);
+            return compare.getID() != null && compare.getID().equals(id);
         }
     }
 
@@ -256,30 +258,23 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public boolean appliesToCurrentEnvironment(Rule.FeatureMatcher matcher) {
-        if (rules == null) {
-            return true;
-        } else {
-            Iterator var2 = rules.iterator();
-
-            while (var2.hasNext()) {
-                Rule rule = (Rule) var2.next();
+        if (rules != null) {
+            for (Rule rule : rules) {
                 Rule.Action action = rule.getAppliedAction(matcher);
                 if (action == Rule.Action.DISALLOW) {
                     return false;
                 }
             }
 
-            return true;
         }
+        return true;
     }
 
     public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher) {
-        ArrayList result = new ArrayList();
-        Iterator var3 = libraries.iterator();
+        ArrayList<Library> result = new ArrayList<>();
 
-        while (var3.hasNext()) {
-            Library library = (Library) var3.next();
-            if(library.getName().startsWith("com.mojang:patchy:") && matcher.hasFeature("delete_patchy", null)) {
+        for (Library library : libraries) {
+            if (library.getName().startsWith("com.mojang:patchy:") && matcher.hasFeature("delete_patchy", null)) {
                 LOGGER.info("Not including com.mojang:patchy library. Disable this feature in config file if you want.");
                 continue;
             }
@@ -291,57 +286,44 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
+    private Stream<Library> streamLibraries(LibraryType type, Rule.FeatureMatcher matcher) {
+        return getRelevantLibraries(matcher)
+                .stream()
+                .filter(lib -> lib.getLibraryType() == type);
+    }
+
     public Collection<File> getClassPath(OS os, Rule.FeatureMatcher matcher, File base) {
-        Collection libraries = getRelevantLibraries(matcher);
-        ArrayList result = new ArrayList();
-        Iterator var6 = libraries.iterator();
-
-        while (var6.hasNext()) {
-            Library library = (Library) var6.next();
-            if(library.isMod()) {
-                continue;
-            }
-
-            if(library.isDownloadOnly()) {
-                continue;
-            }
-
-            if (library.getNatives() == null) {
-                result.add(new File(base, "libraries/" + library.getArtifactPath()));
-            }
-        }
+        List<File> result = streamLibraries(LibraryType.LIBRARY, matcher)
+                .filter(lib -> lib.getNatives() == null)
+                .map(lib -> new File(base, "libraries/" + lib.getArtifactPath()))
+                .collect(Collectors.toList());
 
         result.add(new File(base, "versions/" + getID() + "/" + getID() + ".jar"));
         return result;
+    }
+
+    public List<Library> getMods(Rule.FeatureMatcher matcher) {
+        return streamLibraries(LibraryType.MODIFICATION, matcher)
+                .collect(Collectors.toList());
+    }
+
+    public List<Library> getTransformers(Rule.FeatureMatcher matcher) {
+        return streamLibraries(LibraryType.TRANSFORMER, matcher)
+                .collect(Collectors.toList());
     }
 
     public Collection<File> getClassPath(Rule.FeatureMatcher matcher, File base) {
         return getClassPath(OS.CURRENT, matcher, base);
     }
 
-    public Collection<Library> collectMods(Rule.FeatureMatcher matcher) {
+    public Collection<String> getNatives(OS os, Rule.FeatureMatcher matcher) {
         Collection<Library> libraries = getRelevantLibraries(matcher);
-        ArrayList<Library> result = new ArrayList<>();
+        ArrayList<String> result = new ArrayList<>();
 
         for (Library library : libraries) {
-            if (library.isMod()) {
-                result.add(library);
-            }
-        }
-
-        return result;
-    }
-
-    public Collection<String> getNatives(OS os, Rule.FeatureMatcher matcher) {
-        Collection libraries = getRelevantLibraries(matcher);
-        ArrayList result = new ArrayList();
-        Iterator var5 = libraries.iterator();
-
-        while (var5.hasNext()) {
-            Library library = (Library) var5.next();
-            Map natives = library.getNatives();
+            Map<OS, String> natives = library.getNatives();
             if (natives != null && natives.containsKey(os)) {
-                result.add("libraries/" + library.getArtifactPath((String) natives.get(os)));
+                result.add("libraries/" + library.getArtifactPath(natives.get(os)));
             }
         }
 
@@ -353,11 +335,9 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public Set<String> getRequiredFiles(OS os, Rule.FeatureMatcher matcher) {
-        HashSet neededFiles = new HashSet();
-        Iterator var4 = getRelevantLibraries(matcher).iterator();
+        HashSet<String> neededFiles = new HashSet<>();
 
-        while (var4.hasNext()) {
-            Library library = (Library) var4.next();
+        for (Library library : getRelevantLibraries(matcher)) {
             if (library.getNatives() != null) {
                 String natives = library.getNatives().get(os);
                 if (natives != null) {
@@ -372,23 +352,16 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public Collection<String> getExtractFiles(OS os, Rule.FeatureMatcher matcher) {
-        Collection libraries = getRelevantLibraries(matcher);
-        ArrayList result = new ArrayList();
-        Iterator var5 = libraries.iterator();
-
-        while (var5.hasNext()) {
-            Library library = (Library) var5.next();
-            Map natives = library.getNatives();
-            if (natives != null && natives.containsKey(os)) {
-                result.add("libraries/" + library.getArtifactPath((String) natives.get(os)));
-            }
-        }
-
-        return result;
+        return getRelevantLibraries(matcher)
+                .stream()
+                .filter(lib -> lib.getNatives() != null)
+                .filter(lib -> lib.getNatives().containsKey(os))
+                .map(lib -> "libraries/" + lib.getArtifactPath(lib.getNatives().get(os)))
+                .collect(Collectors.toList());
     }
 
     public CompleteVersion resolve(VersionManager vm, boolean useLatest) throws IOException {
-        return resolve(vm, useLatest, new ArrayList());
+        return resolve(vm, useLatest, new ArrayList<>());
     }
 
     public static final String FORGE_PREFIX = "Forge-";
@@ -402,7 +375,7 @@ public class CompleteVersion implements Version, Cloneable {
         if (parent_family.startsWith(FORGE_PREFIX) || parent_family.startsWith(FABRIC_PREFIX)) {
             family = parent_family;
             return;
-        };
+        }
 
         if (id.toLowerCase().contains("forge")) {
             family = FORGE_PREFIX + parent_family;
@@ -427,7 +400,7 @@ public class CompleteVersion implements Version, Cloneable {
                     case UNKNOWN:
                     case OLD_ALPHA:
                     case SNAPSHOT:
-                        family_ = type.toString();
+                        family_ = type;
                         break;
                     default:
                         family_ = getFamilyOf(id);
@@ -515,13 +488,11 @@ public class CompleteVersion implements Version, Cloneable {
         }
 
         if (arguments != null) {
-            if (result.arguments == null) result.arguments = new java.util.EnumMap(ArgumentType.class);
+            if (result.arguments == null) result.arguments = new java.util.EnumMap<>(ArgumentType.class);
             for (Map.Entry<ArgumentType, List<Argument>> entry : this.arguments.entrySet()) {
-                List<Argument> arguments = result.arguments.get(entry.getKey());
-                if (arguments == null) {
-                    arguments = new ArrayList<>();
-                    result.arguments.put(entry.getKey(), arguments);
-                }
+                List<Argument> arguments = result.arguments
+                        .computeIfAbsent(entry.getKey(), k -> new ArrayList<>());
+
                 arguments.addAll(entry.getValue());
             }
         }
@@ -538,7 +509,7 @@ public class CompleteVersion implements Version, Cloneable {
             if (result.deleteEntries != null) {
                 result.deleteEntries.addAll(deleteEntries);
             } else {
-                result.deleteEntries = new ArrayList(deleteEntries);
+                result.deleteEntries = new ArrayList<>(deleteEntries);
             }
         }
 
@@ -733,7 +704,7 @@ public class CompleteVersion implements Version, Cloneable {
         }
 
         if(this.arguments != null) {
-            c.arguments = new java.util.EnumMap(ArgumentType.class);
+            c.arguments = new java.util.EnumMap<>(ArgumentType.class);
             for (Map.Entry<ArgumentType, List<Argument>> argsList : arguments.entrySet()) {
                 c.arguments.put(argsList.getKey(), new ArrayList<>(argsList.getValue()));
             }

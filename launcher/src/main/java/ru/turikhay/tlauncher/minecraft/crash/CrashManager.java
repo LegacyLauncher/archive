@@ -48,12 +48,15 @@ public final class CrashManager {
 
     private final Map<String, IEntry> crashEntries = new LinkedHashMap<String, IEntry>();
     private final Map<String, BindableAction> actionsMap = new HashMap<String, BindableAction>();
+    private List<String> skipFolders = new ArrayList<>();
 
     private final Entry
             generatedFilesSeekerEntry = new GeneratedFilesSeeker(),
             crashDescriptionSeeker = new CrashDescriptionSeeker(),
             dxDiagAheadProcessorEntry = DxDiag.isScannable()? new DxDiagAheadProcessor() : null,
             logFlusherEntry = new LogFlusherEntry();
+
+    private final List<String> modVersionsFilter = Arrays.asList("forge", "fabric", "rift", "liteloader");
 
     private void setupActions() {
         actionsMap.clear();
@@ -97,12 +100,14 @@ public final class CrashManager {
                 }
 
                 addAllEntries(external, "external");
+                skipFolders = external.getSkipFolders();
 
-                LOGGER.info("Using external entries, because their revision ({}) is newer than the revision" +
+                LOGGER.info("Using external entries, because their revision ({}) is newer than the revision " +
                         "of the internal ones ({})", external.getRevision(), internal.getRevision());
                 break loadLocal; // don't load internal if we have newer external
             }
             addAllEntries(internal, "internal");
+            skipFolders = internal.getSkipFolders();
         }
 
         addEntry(new GraphicsEntry(this));
@@ -688,7 +693,8 @@ public final class CrashManager {
             readFile(getCrash().getCrashFile());
             readFile(getCrash().getNativeCrashFile());
 
-            if (getLauncher() != null && getVersion().toLowerCase().contains("forge")) {
+            if (getLauncher() != null
+                    && modVersionsFilter.stream().anyMatch(getVersion().toLowerCase()::contains)) {
                 treeDir(new File(getLauncher().getGameDir(), "mods"), 2);
                 writeDelimiter();
             }
@@ -703,7 +709,7 @@ public final class CrashManager {
         }
 
         private void writeDelimiter() {
-            nlog("++++++++++++++++++++++++++++++++++");
+            LOGGER.info("++++++++++++++++++++++++++++++++++");
         }
 
         private void readFile(File file) {
@@ -711,27 +717,24 @@ public final class CrashManager {
                 return;
             }
 
-            nlog("<File", file, ">");
             try {
                 if (!file.isFile()) {
                     LOGGER.warn("File doesn't exist: {}", file);
                     return;
                 }
 
-                nlog("Reading file:", file);
-                nlog();
+                LOGGER.info("Reading file: {}", file);
 
                 try(Scanner scanner = new Scanner(
                         new InputStreamReader(new FileInputStream(file), charset)
                 )){
                     while (scanner.hasNextLine()) {
-                        nlog(scanner.nextLine());
+                        LOGGER.info(scanner.nextLine());
                     }
                 } catch (Exception e) {
                     LOGGER.warn("Could not read file: {}", file, e);
                 }
             } finally {
-                nlog("</File", file, ">");
                 writeDelimiter();
             }
         }
@@ -741,17 +744,18 @@ public final class CrashManager {
         }
 
         private void treeDir(File dir, int currentLevel, int levelLimit, StringBuilder buffer) {
+            LOGGER.info("Skip dirs: {}", skipFolders.toString());
             if(!dir.isDirectory()) {
-                plog(dir, " (not a dir)");
+                LOGGER.info("{} (not a dir)", dir);
                 return;
             }
 
             File[] list = U.requireNotNull(dir.listFiles(), "dir listing: " + dir.getAbsolutePath());
 
             if(currentLevel == 0) {
-                plog(dir);
-            } else if(list == null || list.length == 0) {
-                plog(buffer, "└ [empty]");
+                LOGGER.info("{}", dir);
+            } else if(list.length == 0) {
+                LOGGER.info("{}└ [empty]", buffer);
             }
 
             StringBuilder dirBuffer = null;
@@ -770,7 +774,7 @@ public final class CrashManager {
 
                     skipIt:
                     {
-                        for (String skipFolder : listDeserializer.getSkipFolders()) {
+                        for (String skipFolder : skipFolders) {
                             if (file.getName().equalsIgnoreCase(skipFolder)) {
                                 skipDir = true;
                                 name.append(" [skipped]");
@@ -792,7 +796,10 @@ public final class CrashManager {
                 }
 
                 boolean currentlyLatestLevel = i == list.length - 1;
-                plog(buffer, currentlyLatestLevel? "└ " : "├ ", name.toString());
+                if (currentlyLatestLevel)
+                    LOGGER.info("└ {}", name);
+                else
+                    LOGGER.info("├ {}", name);
 
                 if(file.isDirectory() && !skipDir) {
                     if(dirBuffer == null || currentlyLatestLevel) {
@@ -847,27 +854,13 @@ public final class CrashManager {
                         } else {
                             str = "[empty dir]";
                         }
-                        plog(dirBuffer, "└ ", str);
+                        LOGGER.info("{}└ {}", dirBuffer, str);
                         continue;
                     }
 
                     treeDir(file, currentLevel + 1, levelLimit, dirBuffer);
                 }
             }
-        }
-
-        private void nlog(Object... o) {
-            LOGGER.info("+", o);
-        }
-
-        private void plog(Object... objs) {
-            StringBuilder b = new StringBuilder();
-
-            for(Object o : objs) {
-                b.append(o);
-            }
-
-            nlog(b);
         }
     }
 

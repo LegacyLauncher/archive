@@ -27,6 +27,8 @@ public final class CrashEntryList {
     private int revision;
     private Version required;
 
+    private List<String> skipFolders = new ArrayList<>();
+
     private CrashEntryList() {
     }
 
@@ -42,12 +44,15 @@ public final class CrashEntryList {
         return required;
     }
 
+    public List<String> getSkipFolders() {
+        return skipFolders;
+    }
+
     public static class ListDeserializer implements JsonDeserializer<CrashEntryList> {
         private final LegacyVersionSerializer versionSerializer = new LegacyVersionSerializer();
 
         private final Map<String, String> vars;
         private final Map<String, Button> buttonMap;
-        private final List<String> skipFolders;
 
         private final MapTokenResolver varsResolver;
         private final Button.Deserializer buttonDeserializer;
@@ -62,16 +67,10 @@ public final class CrashEntryList {
             vars.put("arch", OS.Arch.CURRENT.toString());
             vars.put("locale", TLauncher.getInstance() == null? Locale.getDefault().toString() : TLauncher.getInstance().getSettings().getLocale().toString());
 
-            skipFolders = new ArrayList<>();
-
             varsResolver = new MapTokenResolver(vars);
 
             buttonMap = new HashMap<String, Button>();
             buttonDeserializer = new Button.Deserializer(manager, varsResolver);
-        }
-
-        List<String> getSkipFolders() {
-            return skipFolders;
         }
 
         Map<String, String> getVars() {
@@ -107,16 +106,20 @@ public final class CrashEntryList {
             }
             vars.putAll(loadedVars);
 
-            skipFolders.clear();
-            if(root.has("skipFolders")) {
-                JsonArray skippingFolders = root.get("skipFolders").getAsJsonArray();
-                Iterator<JsonElement> elem = skippingFolders.iterator();
-                if(elem.hasNext()) {
-                    skipFolders.add(elem.next().getAsString());
-                }
-            } else if(vars.containsKey("skipFolders")) {
-                Collections.addAll(skipFolders, StringUtils.split(vars.get("skipFolders"), ';'));
+            List<String> skipFolders = new ArrayList<>();
+
+            if(root.has("skip-folders")) {
+                JsonArray skippingFolders = root.get("skip-folders").getAsJsonArray();
+
+                skippingFolders.forEach( elem ->
+                        skipFolders.add(elem.getAsString())
+                );
+
+            } else if(vars.containsKey("skip-folders")) {
+                Collections.addAll(skipFolders, StringUtils.split(vars.get("skip-folders"), ';'));
             }
+
+            entryList.skipFolders = skipFolders;
 
             JsonArray buttons = root.get("buttons").getAsJsonArray();
             for (int i = 0; i < buttons.size(); i++) {
