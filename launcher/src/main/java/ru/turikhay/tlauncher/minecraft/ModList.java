@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.minecraft;
 
 import net.minecraft.launcher.versions.Library;
+import net.minecraft.launcher.versions.LibraryType;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
@@ -21,7 +22,7 @@ public class ModList {
     }
 
     public void addMod(Library library) {
-        if(!U.requireNotNull(library).isMod()) {
+        if(library.getLibraryType() != LibraryType.MODIFICATION) {
             throw new IllegalArgumentException("not a mod: " + library);
         }
         modRef.add(library.getName());

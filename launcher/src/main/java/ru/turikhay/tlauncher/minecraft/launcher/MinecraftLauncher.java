@@ -48,6 +48,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -57,7 +58,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private static final Logger LOGGER = LogManager.getLogger(MinecraftLauncher.class);
 
     public static final String SENTRY_CONTEXT_NAME = "minecraftLauncher", CAPABLE_WITH = "1.6.84-j";
-    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 12, MIN_WORK_TIME = 5000;
+    private static final int OFFICIAL_VERSION = 21, ALTERNATIVE_VERSION = 13, MIN_WORK_TIME = 5000;
     private boolean working;
     private boolean killed;
     private final Thread parentThread;
@@ -112,7 +113,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
 
-    private Rule.FeatureMatcher featureMatcher = createFeatureMatcher();
+    private final Rule.FeatureMatcher featureMatcher = createFeatureMatcher();
 
     private ChildProcessLogger processLogger;
 
@@ -175,8 +176,8 @@ public class MinecraftLauncher implements JavaProcessListener {
             assistLaunch = !exit;
 
 
-            listeners = Collections.synchronizedList(new ArrayList());
-            extListeners = Collections.synchronizedList(new ArrayList());
+            listeners = Collections.synchronizedList(new ArrayList<>());
+            extListeners = Collections.synchronizedList(new ArrayList<>());
             step = MinecraftLauncher.MinecraftLauncherStep.NONE;
 
             LOGGER.info("Alternative Minecraft Launcher ({}) has initialized", ALTERNATIVE_VERSION);
@@ -207,38 +208,35 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             collectInfo();
         } catch (Throwable var5) {
-            Throwable e = var5;
             LOGGER.error("Caught an exception", var5);
             if (var5 instanceof MinecraftException) {
                 MinecraftException listener2 = (MinecraftException) var5;
-                Iterator var4 = listeners.iterator();
 
-                while (var4.hasNext()) {
-                    MinecraftListener listener3 = (MinecraftListener) var4.next();
+                for (MinecraftListener listener3 : listeners) {
                     listener3.onMinecraftKnownError(listener2);
                 }
             } else {
                 MinecraftListener listener;
-                Iterator listener1;
+                Iterator<MinecraftListener> listener1;
                 if (var5 instanceof MinecraftLauncher.MinecraftLauncherAborted) {
                     listener1 = listeners.iterator();
 
                     while (listener1.hasNext()) {
-                        listener = (MinecraftListener) listener1.next();
+                        listener = listener1.next();
                         listener.onMinecraftAbort();
                     }
                 } else {
                     Sentry.capture(new EventBuilder()
                             .withMessage("minecraft launcher exception")
-                            .withSentryInterface(new ExceptionInterface(e))
+                            .withSentryInterface(new ExceptionInterface(var5))
                             .withLevel(Event.Level.ERROR)
                     );
 
                     listener1 = listeners.iterator();
 
                     while (listener1.hasNext()) {
-                        listener = (MinecraftListener) listener1.next();
-                        listener.onMinecraftError(e);
+                        listener = listener1.next();
+                        listener.onMinecraftError(var5);
                     }
                 }
             }
@@ -296,17 +294,12 @@ public class MinecraftLauncher implements JavaProcessListener {
     private void collectInfo() throws MinecraftException {
         checkStep(MinecraftLauncher.MinecraftLauncherStep.NONE, MinecraftLauncher.MinecraftLauncherStep.COLLECTING);
         LOGGER.info("Collecting info...");
-        Iterator command = listeners.iterator();
 
-        while (command.hasNext()) {
-            MinecraftListener type = (MinecraftListener) command.next();
+        for (MinecraftListener type : listeners) {
             type.onMinecraftPrepare();
         }
 
-        command = extListeners.iterator();
-
-        while (command.hasNext()) {
-            MinecraftExtendedListener type1 = (MinecraftExtendedListener) command.next();
+        for (MinecraftExtendedListener type1 : extListeners) {
             type1.onMinecraftCollecting();
         }
 
@@ -550,10 +543,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             fullCommand = settings.getBoolean("gui.logger.fullcommand");
 
 
-            Iterator var4 = assistants.iterator();
-
-            while (var4.hasNext()) {
-                MinecraftLauncherAssistant assistant = (MinecraftLauncherAssistant) var4.next();
+            for (MinecraftLauncherAssistant assistant : assistants) {
                 assistant.collectInfo();
             }
 
@@ -632,17 +622,13 @@ public class MinecraftLauncher implements JavaProcessListener {
             fastCompare = false;
         }
 
-        Iterator execContainer = extListeners.iterator();
-        while (execContainer.hasNext()) {
-            MinecraftExtendedListener assets = (MinecraftExtendedListener) execContainer.next();
+        for (MinecraftExtendedListener assets : extListeners) {
             assets.onMinecraftComparingAssets(fastCompare);
         }
 
         final List<AssetIndex.AssetObject> assets1 = compareAssets(fastCompare);
-        Iterator listenerContainer = extListeners.iterator();
 
-        while (listenerContainer.hasNext()) {
-            MinecraftExtendedListener execContainer1 = (MinecraftExtendedListener) listenerContainer.next();
+        for (MinecraftExtendedListener execContainer1 : extListeners) {
             execContainer1.onMinecraftDownloading();
         }
 
@@ -662,10 +648,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         downloader.add(versionContainer);
 
-        Iterator message = assistants.iterator();
-
-        while (message.hasNext()) {
-            MinecraftLauncherAssistant e = (MinecraftLauncherAssistant) message.next();
+        for (MinecraftLauncherAssistant e : assistants) {
             e.collectResources(downloader);
         }
 
@@ -704,13 +687,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void constructProcess() throws MinecraftException {
         checkStep(MinecraftLauncher.MinecraftLauncherStep.DOWNLOADING, MinecraftLauncher.MinecraftLauncherStep.CONSTRUCTING);
-        Iterator address = extListeners.iterator();
 
-        MinecraftExtendedListener assistant;
-        while (address.hasNext()) {
-            assistant = (MinecraftExtendedListener) address.next();
-            assistant.onMinecraftReconstructingAssets();
-        }
+        extListeners.forEach(MinecraftExtendedListener::onMinecraftReconstructingAssets);
 
         try {
             localAssetsDir = reconstructAssets();
@@ -718,12 +696,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new MinecraftException(false, "Cannot reconstruct assets!", "reconstruct-assets", var8);
         }
 
-        address = extListeners.iterator();
-
-        while (address.hasNext()) {
-            assistant = (MinecraftExtendedListener) address.next();
-            assistant.onMinecraftUnpackingNatives();
-        }
+        extListeners.forEach(MinecraftExtendedListener::onMinecraftUnpackingNatives);
 
         try {
             unpackNatives(forceUpdate);
@@ -732,12 +705,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         checkAborted();
-        address = extListeners.iterator();
 
-        while (address.hasNext()) {
-            assistant = (MinecraftExtendedListener) address.next();
-            assistant.onMinecraftDeletingEntries();
-        }
+        extListeners.forEach(MinecraftExtendedListener::onMinecraftDeletingEntries);
 
         try {
             deleteEntries();
@@ -753,12 +722,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         checkAborted();
         LOGGER.info("Constructing process...");
-        address = extListeners.iterator();
 
-        while (address.hasNext()) {
-            assistant = (MinecraftExtendedListener) address.next();
-            assistant.onMinecraftConstructing();
-        }
+        extListeners.forEach(MinecraftExtendedListener::onMinecraftConstructing);
 
         ArrayList<String> jvmArgs = new ArrayList<>(), programArgs = new ArrayList<>();
         createJvmArgs(jvmArgs);
@@ -1016,17 +981,8 @@ public class MinecraftLauncher implements JavaProcessListener {
             programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
         }
 
-        String modListFile = null;
-        try {
-            modListFile = generateModListFile();
-        } catch (IOException ioE) {
-            LOGGER.warn("Cannot generate mod list file", ioE);
-        }
-
-        if (modListFile != null) {
-            programArgs.add("--modListFile");
-            programArgs.add(modListFile);
-        }
+        // add modpack-related arguments
+        programArgs.addAll(processModpack());
 
         for (String arg : jvmArgs) {
             launcher.addCommand(arg);
@@ -1115,31 +1071,16 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }
 
-    private void readFirstBytes(File file) throws IOException {
-        FileInputStream in = null;
-        byte[] buffer = new byte[256];
-
-        try {
-            IOUtils.read(in = new FileInputStream(file), buffer);
-        } finally {
-            U.close(in);
-        }
-
-        LOGGER.debug("First bytes of {}:", file);
-        LOGGER.debug(new String(buffer, "UTF-8"));
-    }
-
     private File reconstructAssets() throws IOException, MinecraftException {
         String assetVersion = version.getAssetIndex().getId();
         File indexFile = new File(assetsIndexesDir, assetVersion + ".json");
         File virtualRoot = new File(new File(globalAssetsDir, "virtual"), assetVersion);
         if (!indexFile.isFile()) {
             LOGGER.warn("No assets index file {}; can't reconstruct assets", virtualRoot);
-            return virtualRoot;
         } else {
             AssetIndex index;
             try {
-                index = (AssetIndex) gson.fromJson(new FileReader(indexFile), (Class) AssetIndex.class);
+                index = gson.fromJson(new FileReader(indexFile), AssetIndex.class);
             } catch (Exception var9) {
                 throw new MinecraftException(false, "Cannot read index file!", "index-file", var9);
             }
@@ -1150,73 +1091,59 @@ public class MinecraftLauncher implements JavaProcessListener {
 
             if (index.isVirtual() || index.isMapToResources()) {
                 LOGGER.info("Reconstructing virtual assets folder at {}", virtualRoot);
-                Iterator var6 = index.getFileMap().entrySet().iterator();
 
-                while (true) {
-                    while (var6.hasNext()) {
-                        checkAborted();
+                for (Entry<String, AssetIndex.AssetObject> stringAssetObjectEntry : index.getFileMap().entrySet()) {
+                    checkAborted();
 
-                        Entry entry = (Entry) var6.next();
-                        File target = new File(virtualRoot, (String) entry.getKey());
-                        File original = new File(new File(assetsObjectsDir, ((AssetIndex.AssetObject) entry.getValue()).getHash().substring(0, 2)), ((AssetIndex.AssetObject) entry.getValue()).getHash());
-                        if (!original.isFile()) {
-                            LOGGER.warn("Skipped reconstructing: {}", original);
-                        } else if (forceUpdate || !target.isFile()) {
-                            FileUtils.copyFile(original, target, false);
-                            LOGGER.debug("{} -> {}", original, target);
-                        }
+                    File target = new File(virtualRoot, stringAssetObjectEntry.getKey());
+                    File original = new File(
+                            new File(assetsObjectsDir, stringAssetObjectEntry.getValue().getHash().substring(0, 2)),
+                            stringAssetObjectEntry.getValue().getHash()
+                    );
+                    if (!original.isFile()) {
+                        LOGGER.warn("Skipped reconstructing: {}", original);
+                    } else if (forceUpdate || !target.isFile()) {
+                        FileUtils.copyFile(original, target, false);
+                        LOGGER.debug("{} -> {}", original, target);
                     }
+                }
 
                     FileUtil.writeFile(new File(virtualRoot, ".lastused"), dateAdapter.format(new Date()));
-                    break;
-                }
             }
 
-            return virtualRoot;
         }
-    }
-
-    private File getAssetObject(String name) throws IOException {
-        String assetVersion = version.getAssetIndex().getId();
-        File indexFile = new File(assetsIndexesDir, assetVersion + ".json");
-        AssetIndex index = gson.fromJson(FileUtil.readFile(indexFile), AssetIndex.class);
-        if (index.getFileMap() == null) {
-            throw new IOException("Cannot get filemap!");
-        } else {
-            String hash = index.getFileMap().get(name).getHash();
-            return new File(assetsObjectsDir, hash.substring(0, 2) + "/" + hash);
-        }
+        return virtualRoot;
     }
 
     private void unpackNatives(boolean force) throws IOException {
         LOGGER.info("Unpacking natives...");
-        Collection libraries = version.getRelevantLibraries(featureMatcher);
+        Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
         OS os = OS.CURRENT;
         ZipFile zip = null;
         if (force) {
             nativeDir.delete();
         }
 
-        Iterator var7 = libraries.iterator();
+        Iterator<Library> var7 = libraries.iterator();
 
         label79:
         while (true) {
             Library library;
-            Map nativesPerOs;
+            Map<OS, String> nativesPerOs;
             do {
                 do {
                     if (!var7.hasNext()) {
                         return;
                     }
 
-                    library = (Library) var7.next();
+                    library = var7.next();
                     nativesPerOs = library.getNatives();
                 } while (nativesPerOs == null);
             } while (nativesPerOs.get(os) == null);
 
             File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String) nativesPerOs.get(os)));
             if (!file.isFile()) {
-                throw new IOException("Required archive doesn\'t exist: " + file.getAbsolutePath());
+                throw new IOException("Required archive doesn't exist: " + file.getAbsolutePath());
             }
 
             try {
@@ -1267,7 +1194,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private void deleteEntries() throws IOException {
-        List entries = version.getDeleteEntries();
+        List<String> entries = version.getDeleteEntries();
         if (entries != null && entries.size() != 0) {
             LOGGER.info("Removing entries...");
             File file = version.getFile(rootDir);
@@ -1276,11 +1203,9 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private void deleteLibraryEntries() throws IOException {
-        Iterator var2 = version.getLibraries().iterator();
 
-        while (var2.hasNext()) {
-            Library lib = (Library) var2.next();
-            List entries = lib.getDeleteEntriesList();
+        for (Library lib : version.getLibraries()) {
+            List<String> entries = lib.getDeleteEntriesList();
             if (entries != null && !entries.isEmpty()) {
                 LOGGER.debug("Processing entries of {}", lib.getName());
                 removeFrom(new File(rootDir, "libraries/" + lib.getArtifactPath()), entries);
@@ -1292,12 +1217,12 @@ public class MinecraftLauncher implements JavaProcessListener {
     private String constructClassPath(CompleteVersion version) throws MinecraftException {
         LOGGER.info("Constructing classpath...");
         StringBuilder result = new StringBuilder();
-        Collection classPath = version.getClassPath(OS.CURRENT, featureMatcher, rootDir);
+        Collection<File> classPath = version.getClassPath(OS.CURRENT, featureMatcher, rootDir);
         String separator = System.getProperty("path.separator");
 
         File file;
-        for (Iterator var6 = classPath.iterator(); var6.hasNext(); result.append(file.getAbsolutePath())) {
-            file = (File) var6.next();
+        for (Iterator<File> var6 = classPath.iterator(); var6.hasNext(); result.append(file.getAbsolutePath())) {
+            file = var6.next();
             if (!file.isFile()) {
                 throw new MinecraftException(true, "Classpath is not found: " + file, "classpath", file);
             }
@@ -1343,24 +1268,43 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }
 
-    private String generateModListFile() throws IOException {
+    private List<String> processModpack() {
         removeOldModlistFiles();
 
-        Collection<Library> collectedLibMods = version.collectMods(featureMatcher);
-        if (collectedLibMods == null || collectedLibMods.isEmpty()) {
-            return null;
+        List<Library> mods = version.getMods(featureMatcher);
+
+        if (mods.size() == 0) return Collections.emptyList();
+
+        ModpackType modpackType = version.getModpackType();
+
+        switch (modpackType) {
+            case FORGE_LEGACY:
+            case FORGE_LEGACY_ABSOLUTE:
+                ModList modList = new ModList(
+                        new File(rootDir, "libraries"),
+                        modpackType == ModpackType.FORGE_LEGACY_ABSOLUTE);
+                mods.forEach(modList::addMod);
+                String modListFilename = "tempModList-" + System.currentTimeMillis();
+                try {
+                    modList.save(new File(gameDir, modListFilename));
+                } catch (IOException e) {
+                    LOGGER.warn("Cannot generate mod list file", e);
+                    return Collections.emptyList();
+                }
+
+                return Arrays.asList("--modListFile", modListFilename);
+
+            case FORGE_1_13:
+                return Arrays.asList(
+                        "--fml.mods",
+                        mods.stream().map(Library::getName).collect(Collectors.joining(",")),
+                        "--fml.mavenRoots",
+                        settings.getBoolean("minecraft.gamedir.separate") ? "../../libraries" : "libraries"
+                );
+
+            default:
+                return Collections.emptyList();
         }
-
-        ModList modList = new ModList(new File(rootDir, "libraries"), version.isModListAbsolutePrefix());
-        for (Library collectedLibMod : collectedLibMods) {
-            modList.addMod(collectedLibMod);
-        }
-
-        String modListFilename = "tempModList-" + System.currentTimeMillis();
-        File modListFile = new File(gameDir, modListFilename);
-        modList.save(modListFile);
-
-        return modListFilename;
     }
 
     private static final String[] ARGS_LEGACY_REMOVED = new String[]{
@@ -1373,7 +1317,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private static final String[] CENSORED = new String[]{
             "not for you", "censored", "nothinginteresting", "boiiiiiiiiii",
-            "Minecraft is a lie", "vk.cc/7iPiB9"
+            "Minecraft is a lie", "vk.cc/7iPiB9", "worp-worp"
     };
 
     private static final int BLACKLIST_MODE_REMOVE = 0, BLACKLIST_MODE_CENSOR = 1;
@@ -1858,6 +1802,12 @@ public class MinecraftLauncher implements JavaProcessListener {
         map.put("version_type", version.getType());
 
         map.put("game_libraries_directory", new File(this.rootDir, "libraries").getAbsolutePath());
+        map.put("forge_transformers",
+                version.getTransformers(featureMatcher)
+                        .stream()
+                        .map(Library::getName)
+                        .collect(Collectors.joining(","))
+        );
 
         if (windowSize[0] > 0 && windowSize[1] > 0) {
             map.put("resolution_width", String.valueOf(windowSize[0]));

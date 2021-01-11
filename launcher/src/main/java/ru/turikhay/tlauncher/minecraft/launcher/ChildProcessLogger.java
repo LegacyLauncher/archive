@@ -47,7 +47,7 @@ public class ChildProcessLogger implements Closeable {
     }
 
     public static ChildProcessLogger create(Charset charset) throws IOException {
-        File tempFile = File.createTempFile("tl-logger", null);
+        File tempFile = File.createTempFile("tl-logger", ".txt");
         tempFile.deleteOnExit();
         return new ChildProcessLogger(new LogFile(tempFile, charset));
     }
