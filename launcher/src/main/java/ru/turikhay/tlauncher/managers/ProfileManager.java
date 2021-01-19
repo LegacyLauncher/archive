@@ -19,6 +19,8 @@ import ru.turikhay.tlauncher.minecraft.auth.AccountMigrator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
 import ru.turikhay.tlauncher.minecraft.auth.LegacyAccount;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
+import ru.turikhay.tlauncher.pasta.Pasta;
+import ru.turikhay.tlauncher.pasta.PastaFormat;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.user.McleaksUser;
 import ru.turikhay.tlauncher.user.User;
@@ -168,7 +170,7 @@ public class ProfileManager extends RefreshableComponent {
                 .withMessage("bad profile list")
                 .withSentryInterface(new ExceptionInterface(e))
                 .withLevel(Event.Level.ERROR)
-                .withExtra("data", object)
+                .withExtra("data", Pasta.paste(String.valueOf(object), PastaFormat.JSON))
             );
             saveBackup = "errored";
         }

@@ -134,7 +134,7 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public ModpackType getModpackType() {
-        if (modListAbsolutePrefix == true) // modListAbsolutePrefix can be NULL
+        if (modListAbsolutePrefix != null && modListAbsolutePrefix) // modListAbsolutePrefix can be NULL
             return ModpackType.FORGE_LEGACY_ABSOLUTE; // backwards compatibility
 
         return ModpackType.getByName(modpack, jar);

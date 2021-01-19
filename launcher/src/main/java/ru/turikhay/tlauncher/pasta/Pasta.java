@@ -169,6 +169,12 @@ public class Pasta {
             }
         } catch(IOException ioE) {
             if(connection != null && connection.getErrorStream() != null) {
+                switch (connection.getResponseCode()) {
+                    case 413:
+                        throw new PastaTooLong(data.length());
+                    case 429:
+                        throw new TooManyRequests(ioE);
+                }
                 if(connection.getResponseCode() == 429) {
                     throw new TooManyRequests(ioE);
                 }
