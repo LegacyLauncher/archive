@@ -695,7 +695,12 @@ public final class CrashManager {
 
             if (getLauncher() != null
                     && modVersionsFilter.stream().anyMatch(getVersion().toLowerCase()::contains)) {
-                treeDir(new File(getLauncher().getGameDir(), "mods"), 2);
+                File modsDir = new File(getLauncher().getGameDir(), "mods");
+                if(modsDir.isDirectory()) {
+                    LOGGER.info("No \"mods\" folder found");
+                } else {
+                    treeDir(modsDir, 2);
+                }
                 writeDelimiter();
             }
 
@@ -745,6 +750,12 @@ public final class CrashManager {
 
         private void treeDir(File dir, int currentLevel, int levelLimit, StringBuilder buffer) {
             LOGGER.info("Skip dirs: {}", skipFolders.toString());
+
+            if(dir == null) {
+                LOGGER.info("skipping null directory");
+                return;
+            }
+
             if(!dir.isDirectory()) {
                 LOGGER.info("{} (not a dir)", dir);
                 return;

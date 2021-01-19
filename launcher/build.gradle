@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.118.13'
+version '1.118.14'
 
 apply from: '../gradle/brand.gradle'
 
@@ -146,7 +146,8 @@ task generateUpdateJson {
                 "https://tlauncherrepo.com/",
                 "https://u.tlauncher.ru/",
                 "https://tlaun.ch/",
-                "https://cdn.turikhay.ru/tlauncher/"
+                "https://cdn.turikhay.ru/tlauncher/",
+                "http://cdn.turikhay.ru/tlauncher/"
         ].collect {
             urlPrefix -> urlPrefix + short_brand + "/launcher/" + jarFileChecksum + ".jar"
         }

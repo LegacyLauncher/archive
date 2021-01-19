@@ -117,6 +117,7 @@ public final class Codepage {
         add(858, "IBM00858");
         add(860, "IBM860");
         add(861, "ibm861");
+        add(862, "ibm862");
         add(863, "IBM863");
         add(864, "IBM864");
         add(865, "IBM865");
