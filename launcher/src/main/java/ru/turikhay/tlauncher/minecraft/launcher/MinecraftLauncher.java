@@ -1530,7 +1530,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         try {
             ProcessBuilder b = launcher.createProcess();
-            b.environment().put("_JAVA_OPTIONS", "");
+            Map<String, String> env = b.environment();
+            if(env != null) {
+                env.put("_JAVA_OPTIONS", "");
+            }
             process = new JavaProcess(b.start(), charset);
             process.safeSetExitRunnable(this);
             minecraftWorking = true;
