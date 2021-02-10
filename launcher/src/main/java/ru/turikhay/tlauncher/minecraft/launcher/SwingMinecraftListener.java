@@ -43,6 +43,6 @@ public class SwingMinecraftListener implements MinecraftListener {
 
     @Override
     public void onCrashManagerInit(CrashManager manager) {
-        SwingUtil.later(() -> listener.onCrashManagerInit(manager));
+        SwingUtil.wait(() -> listener.onCrashManagerInit(manager));
     }
 }
