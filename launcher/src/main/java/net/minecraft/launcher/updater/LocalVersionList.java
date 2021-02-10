@@ -1,6 +1,5 @@
 package net.minecraft.launcher.updater;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import io.sentry.Sentry;
@@ -17,13 +16,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
-import javax.swing.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,8 +34,6 @@ public class LocalVersionList extends StreamVersionList {
 
     private final JsonParser jsonParser = new JsonParser();
 
-    private FileExplorer explorer;
-    private JFrame parent;
     private File baseDirectory;
     private File baseVersionsDir;
 
@@ -67,7 +62,7 @@ public class LocalVersionList extends StreamVersionList {
         }
     }
 
-    public void refreshVersions() throws IOException {
+    public synchronized void refreshVersions() throws IOException {
         clearCache();
         File[] files = baseVersionsDir.listFiles();
         if (files != null) {
@@ -146,7 +141,7 @@ public class LocalVersionList extends StreamVersionList {
         FileUtil.writeFile(target, text);
     }
 
-    public void deleteVersion(String id, boolean deleteLibraries) throws IOException {
+    public synchronized void deleteVersion(String id, boolean deleteLibraries) throws IOException {
         Rule.FeatureMatcher featureMatcher = new CurrentLaunchFeatureMatcher();
         CompleteVersion version = getCompleteVersion(id);
         if (version == null) {
@@ -198,7 +193,7 @@ public class LocalVersionList extends StreamVersionList {
         return false;
     }
 
-    public CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
+    public synchronized CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
         if (version instanceof CompleteVersion) {
             return (CompleteVersion) version;
         } else if (version == null) {

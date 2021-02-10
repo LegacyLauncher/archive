@@ -167,7 +167,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
         WARNING("warning.png"),
         DANGER("danger.png");
 
-        private final String path = "settings.java.memory.hint." + toString().toLowerCase();
+        private final String path = "settings.java.memory.hint." + toString().toLowerCase(java.util.Locale.ROOT);
         private final ImageIcon icon;
 
         ValueType(String image) {

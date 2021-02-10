@@ -28,7 +28,7 @@ public class VersionManager extends InterruptibleComponent {
     private final RemoteVersionList[] remoteLists;
     private Map<ReleaseType, Version> latestVersions;
     private final List<VersionManagerListener> listeners;
-    private final Object versionFlushLock;
+    private final Object versionFlushLock, latestVersionsSync;
     private boolean hadRemote;
 
     public VersionManager(ComponentManager manager) throws Exception {
@@ -39,6 +39,7 @@ public class VersionManager extends InterruptibleComponent {
         latestVersions = new LinkedHashMap();
         listeners = Collections.synchronizedList(new ArrayList());
         versionFlushLock = new Object();
+        latestVersionsSync = new Object();
     }
 
     public void addListener(VersionManagerListener listener) {
@@ -56,7 +57,9 @@ public class VersionManager extends InterruptibleComponent {
     public Map<ReleaseType, Version> getLatestVersions() {
         Object var1 = versionFlushLock;
         synchronized (versionFlushLock) {
-            return Collections.unmodifiableMap(latestVersions);
+            synchronized (latestVersionsSync) {
+                return Collections.unmodifiableMap(new HashMap<>(latestVersions));
+            }
         }
     }
 
@@ -116,7 +119,9 @@ public class VersionManager extends InterruptibleComponent {
                 return true;
             } else {
                 if (!local) {
-                    latestVersions.clear();
+                    synchronized (latestVersionsSync) {
+                        latestVersions.clear();
+                    }
                 }
 
                 Map<ReleaseType, Version> latestVersions_ = new LinkedHashMap<ReleaseType, Version>();
@@ -135,8 +140,10 @@ public class VersionManager extends InterruptibleComponent {
                     }
                 }
 
-                latestVersions.putAll(latestVersions_);
-                latestVersions = U.sortMap(latestVersions, ReleaseType.values());
+                synchronized (latestVersionsSync) {
+                    latestVersions.putAll(latestVersions_);
+                    latestVersions = U.sortMap(latestVersions, ReleaseType.values());
+                }
 
                 LOGGER.info("Versions has been refreshed ({} ms)", Time.stop(lock1));
                 refreshList[refreshID] = false;
@@ -266,13 +273,15 @@ public class VersionManager extends InterruptibleComponent {
             if (name.startsWith("latest-")) {
                 String localVersion = name.substring(7);
                 name = null;
-                Iterator list = latestVersions.entrySet().iterator();
+                synchronized (latestVersionsSync) {
+                    Iterator list = latestVersions.entrySet().iterator();
 
-                while (list.hasNext()) {
-                    Entry remoteVersion = (Entry) list.next();
-                    if (remoteVersion.getKey().toString().equals(localVersion)) {
-                        name = ((Version) remoteVersion.getValue()).getID();
-                        break;
+                    while (list.hasNext()) {
+                        Entry remoteVersion = (Entry) list.next();
+                        if (remoteVersion.getKey().toString().equals(localVersion)) {
+                            name = ((Version) remoteVersion.getValue()).getID();
+                            break;
+                        }
                     }
                 }
 
@@ -343,14 +352,16 @@ public class VersionManager extends InterruptibleComponent {
         Version remoteList;
         Iterator var7;
         if (includeLatest) {
-            var7 = latestVersions.values().iterator();
+            synchronized (latestVersionsSync) {
+                var7 = latestVersions.values().iterator();
 
-            while (var7.hasNext()) {
-                remoteList = (Version) var7.next();
-                if (filter.satisfies(remoteList)) {
-                    LatestVersionSyncInfo syncInfo = getLatestVersionSyncInfo(remoteList);
-                    if (syncInfo != null && !result.contains(syncInfo)) {
-                        result.add(syncInfo);
+                while (var7.hasNext()) {
+                    remoteList = (Version) var7.next();
+                    if (filter.satisfies(remoteList)) {
+                        LatestVersionSyncInfo syncInfo = getLatestVersionSyncInfo(remoteList);
+                        if (syncInfo != null && !result.contains(syncInfo)) {
+                            result.add(syncInfo);
+                        }
                     }
                 }
             }

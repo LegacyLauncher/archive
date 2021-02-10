@@ -3,7 +3,7 @@ package ru.turikhay.tlauncher.ui.alert;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.util.U;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 
@@ -134,15 +134,15 @@ public class Alert {
     }
 
     private static void showMonolog(int messageType, String title, String message, Object textarea) {
-        JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), getTitle(title), messageType);
+        SwingUtil.wait(() -> JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), getTitle(title), messageType));
     }
 
     private static int showConfirmDialog(int optionType, int messageType, String title, String message, Object textarea) {
-        return JOptionPane.showConfirmDialog(null, new AlertPanel(message, textarea), getTitle(title), optionType, messageType);
+        return SwingUtil.waitAndReturn(() -> JOptionPane.showConfirmDialog(null, new AlertPanel(message, textarea), getTitle(title), optionType, messageType));
     }
 
     private static String showInputDialog(int messageType, String title, String message) {
-        return JOptionPane.showInputDialog(null, new AlertPanel(message, null), title, messageType);
+        return SwingUtil.waitAndReturn(() -> JOptionPane.showInputDialog(null, new AlertPanel(message, null), title, messageType));
     }
 
     public static void prepareLocal() {

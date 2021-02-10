@@ -6,10 +6,12 @@ import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.tlauncher.ui.login.LoginException;
 import ru.turikhay.tlauncher.user.AuthDetailedException;
 import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.tlauncher.user.AuthUnknownException;
-import ru.turikhay.util.U;
+import ru.turikhay.util.SwingException;
+import ru.turikhay.util.SwingUtil;
 
 import java.io.IOException;
 
@@ -24,14 +26,22 @@ public class AuthUIListener implements AuthenticatorListener {
 
     public void onAuthPassing(Authenticator auth) {
         if (listener != null) {
-            listener.onAuthPassing(auth);
+            SwingUtil.wait(() -> listener.onAuthPassing(auth));
         }
     }
 
     public void onAuthPassingError(Authenticator auth, Throwable e) {
         showError(auth, e);
         if (listener != null) {
-            listener.onAuthPassingError(auth, e);
+            try {
+                SwingUtil.wait(() -> listener.onAuthPassingError(auth, e));
+            } catch(SwingException swingException) {
+                Throwable t = swingException.unpackException();
+                if(t instanceof LoginException) {
+                    throw (LoginException) t;
+                }
+                throw swingException;
+            }
         }
 
     }
@@ -59,7 +69,7 @@ public class AuthUIListener implements AuthenticatorListener {
         Account.AccountType accountType = auth.getType();
         String path, description;
 
-        path = "account.manager.error."+ accountType.toString().toLowerCase() +"." + locPath + (editorOpened? ".editor" : "");
+        path = "account.manager.error."+ accountType.toString().toLowerCase(java.util.Locale.ROOT) +"." + locPath + (editorOpened? ".editor" : "");
         if(Localizable.nget(path) == null) {
             path = "account.manager.error." + locPath + (editorOpened? ".editor" : "");
         }
@@ -89,7 +99,7 @@ public class AuthUIListener implements AuthenticatorListener {
             description = "unknown";
         }
 
-        String accountType = auth.getType().toString().toLowerCase();
+        String accountType = auth.getType().toString().toLowerCase(java.util.Locale.ROOT);
         String text = null;
 
         if (editorOpened) {
@@ -113,7 +123,7 @@ public class AuthUIListener implements AuthenticatorListener {
 
     public void onAuthPassed(Authenticator auth) {
         if (listener != null) {
-            listener.onAuthPassed(auth);
+            SwingUtil.wait(() -> listener.onAuthPassed(auth));
         }
 
         saveProfiles();

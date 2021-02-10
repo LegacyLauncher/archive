@@ -31,7 +31,7 @@ public class VersionConverter extends LocalizableStringConverter<VersionSyncInfo
             String id = from.getID();
             ReleaseType type = from.getLatestVersion().getReleaseType();
             if (type != null && !type.equals(ReleaseType.UNKNOWN)) {
-                String typeF = type.toString().toLowerCase();
+                String typeF = type.toString().toLowerCase(java.util.Locale.ROOT);
                 String formatted = Localizable.get().nget("version." + typeF, id);
                 return formatted == null ? id : formatted;
             } else {

@@ -444,7 +444,7 @@ public class FileUtil {
             String s = f.getName();
             int i = s.lastIndexOf(46);
             if (i > 0 && i < s.length() - 1) {
-                ext = s.substring(i + 1).toLowerCase();
+                ext = s.substring(i + 1).toLowerCase(java.util.Locale.ROOT);
             }
 
             return ext;

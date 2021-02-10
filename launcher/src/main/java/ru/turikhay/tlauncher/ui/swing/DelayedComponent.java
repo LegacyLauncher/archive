@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.swing;
 
 import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.ui.block.Blockable;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import java.awt.*;
@@ -23,7 +24,7 @@ public class DelayedComponent<T extends Component> implements Blockable {
                 return comp;
             }
         }
-        return this.loadComponent();
+        return SwingUtil.waitAndReturn(this::loadComponent);
     }
 
     public boolean isLoaded() {

@@ -15,7 +15,7 @@ public enum OS {
     public static final OS CURRENT;
 
     static {
-        String name = System.getProperty("os.name").toLowerCase();
+        String name = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT);
         OS current = UNKNOWN;
 
         for (OS os : values()) {
@@ -108,7 +108,7 @@ public enum OS {
 
     OS(String... aliases) {
         this.aliases = aliases;
-        this.lowerCase = name().toLowerCase();
+        this.lowerCase = name().toLowerCase(java.util.Locale.ROOT);
     }
 
     public boolean isCurrent() {
@@ -146,7 +146,7 @@ public enum OS {
 
         Arch(String determiner) {
             this.determiner = determiner;
-            this.lowerCase = name().toLowerCase();
+            this.lowerCase = name().toLowerCase(java.util.Locale.ROOT);
         }
 
         public String nameLowerCase() {

@@ -55,7 +55,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
         this.mode = U.requireNotNull(m, "mode");
         this.accountType = U.requireNotNull(accountType, "accountType");
 
-        LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-" + accountType.toString().toLowerCase() + ".";
+        LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-" + accountType.toString().toLowerCase(java.util.Locale.ROOT) + ".";
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -178,7 +178,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
 
     static void removeAccountIfFound(String username, Account.AccountType type) {
         UserSet userSet = TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet();
-        User user = userSet.getByUsername(username, type.name().toLowerCase());
+        User user = userSet.getByUsername(username, type.name().toLowerCase(java.util.Locale.ROOT));
         if(user != null) {
             userSet.remove(user);
         }
@@ -210,7 +210,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
             @Override
             public void onAuthPassingError(Authenticator var1, Throwable var2) {
                 if(session == currentSession) {
-                    Stats.accountCreation(accountType.toString().toLowerCase(), "standard", "", false);
+                    Stats.accountCreation(accountType.toString().toLowerCase(java.util.Locale.ROOT), "standard", "", false);
                     Blocker.unblockComponents(StandardAccountPane.this, "user-pass");
                     progressBar.setIndeterminate(false);
                 }
@@ -227,7 +227,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
                     switch (mode) {
                         case ADD:
                             removeAccountIfFound(account.getUsername());
-                            Stats.accountCreation(accountType.toString().toLowerCase(), "standard", "", true);
+                            Stats.accountCreation(accountType.toString().toLowerCase(java.util.Locale.ROOT), "standard", "", true);
                             break;
                         case EDIT:
                             User newUser = account.getUser();
@@ -236,7 +236,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
                     }
                     TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(account.getUser());
                     StandardAccountPane.this.scene.list.select(account);
-                    StandardAccountPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase());
+                    StandardAccountPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
                 }
             }
         });
@@ -261,7 +261,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
 
     @Override
     public String multipaneName() {
-        return mode.toString().toLowerCase() + "-account-" + accountType.toString().toLowerCase();
+        return mode.toString().toLowerCase(java.util.Locale.ROOT) + "-account-" + accountType.toString().toLowerCase(java.util.Locale.ROOT);
     }
 
     @Override

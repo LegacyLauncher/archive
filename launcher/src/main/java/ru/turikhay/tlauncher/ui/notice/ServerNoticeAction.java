@@ -49,7 +49,7 @@ public class ServerNoticeAction extends NoticeAction {
             String path = L10N_PREFIX + "account." + (supportsFree ? "supported" : "required");
 
             for (Account.AccountType accountType : accountTypes) {
-                LocalizableMenuItem accountItem = new LocalizableMenuItem(path, Localizable.get("account.type." + accountType.name().toLowerCase()));
+                LocalizableMenuItem accountItem = new LocalizableMenuItem(path, Localizable.get("account.type." + accountType.name().toLowerCase(java.util.Locale.ROOT)));
                 accountItem.setEnabled(false);
                 if (accountType.getIcon() != null) {
                     accountItem.setDisabledIcon(Images.getScaledIcon(accountType.getIcon(), 16));

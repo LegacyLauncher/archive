@@ -39,7 +39,7 @@ public enum OS {
         if (aliases == null) {
             throw new NullPointerException();
         } else {
-            name = toString().toLowerCase();
+            name = toString().toLowerCase(java.util.Locale.ROOT);
             this.aliases = aliases;
         }
     }
@@ -57,7 +57,7 @@ public enum OS {
     }
 
     private static OS getCurrent() {
-        String osName = NAME.toLowerCase();
+        String osName = NAME.toLowerCase(java.util.Locale.ROOT);
         OS[] var4;
         int var3 = (var4 = values()).length;
 

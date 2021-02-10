@@ -70,7 +70,7 @@ public enum ReleaseType {
     }
 
     public String toString() {
-        return super.toString().toLowerCase();
+        return super.toString().toLowerCase(java.util.Locale.ROOT);
     }
 
     public static ReleaseType getByName(String name) {
@@ -168,7 +168,7 @@ public enum ReleaseType {
         }
 
         public String toString() {
-            return super.toString().toLowerCase();
+            return super.toString().toLowerCase(java.util.Locale.ROOT);
         }
 
         public static ReleaseType.SubType getByName(String name) {

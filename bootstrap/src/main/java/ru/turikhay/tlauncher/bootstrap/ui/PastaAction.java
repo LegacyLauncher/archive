@@ -5,7 +5,7 @@ import ru.turikhay.tlauncher.bootstrap.pasta.PastaException;
 import ru.turikhay.tlauncher.bootstrap.pasta.PastaLink;
 import ru.turikhay.tlauncher.bootstrap.ui.message.*;
 import ru.turikhay.tlauncher.bootstrap.util.U;
-import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
+import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
 
 import java.util.ResourceBundle;
 
@@ -64,6 +64,6 @@ class PastaAction implements Runnable {
     }
 
     private static String getLogsContent() {
-        return RedirectPrintStream.getBuffer().toString();
+        return OutputRedirectBuffer.getBuffer().toString();
     }
 }

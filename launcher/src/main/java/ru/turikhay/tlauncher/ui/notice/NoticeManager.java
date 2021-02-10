@@ -58,8 +58,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                     noticeList.add(notice);
 
                     NoticeTextSize textSize = new NoticeTextSize(notice);
-                    textSize.pend(new ParamPair(TLauncherFrame.getFontSize(), -1));
-                    //textSize.pend(TLauncherFrame.getFontSize() + NoticeScene.ADDED_FONT_SIZE);
+                    textSize.get(new ParamPair(TLauncherFrame.getFontSize(), -1));
 
                     cachedSizeMap.put(notice, textSize);
                 }
@@ -207,10 +206,6 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     Dimension getTextSize(Notice notice, ParamPair param) {
         return getTextSize(notice).get(param);
-    }
-
-    public void preloadNotice(Notice notice, float fontSize) {
-        getTextSize(notice).pend(new ParamPair(fontSize, -1));
     }
 
     public boolean isHidden(Notice notice) {

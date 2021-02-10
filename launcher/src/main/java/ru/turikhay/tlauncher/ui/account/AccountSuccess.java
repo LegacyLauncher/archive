@@ -29,7 +29,7 @@ public class AccountSuccess extends EditorPane implements LocalizableComponent, 
 
     @Override
     public String multipaneName() {
-        return "success-" + mode.toString().toLowerCase();
+        return "success-" + mode.toString().toLowerCase(java.util.Locale.ROOT);
     }
 
     @Override

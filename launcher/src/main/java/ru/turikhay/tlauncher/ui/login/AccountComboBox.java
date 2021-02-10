@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ProfileManager;
 import ru.turikhay.tlauncher.managers.ProfileManagerListener;
+import ru.turikhay.tlauncher.managers.SwingProfileManagerListener;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
@@ -49,7 +50,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
         loginForm = lf;
         model = getSimpleModel();
         manager = TLauncher.getInstance().getProfileManager();
-        manager.addListener(this);
+        manager.addListener(new SwingProfileManagerListener(this));
         listener = new AuthUIListener(lf) {
             @Override
             public void onAuthPassingError(Authenticator auth, Throwable e) {
@@ -58,7 +59,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
                     loginForm.pane.openAccountEditor();
                     loginForm.pane.accountManager.get().multipane.showTip("add-account-" +
                             (selectedAccount.getType() == Account.AccountType.ELY_LEGACY? "ely" :
-                            selectedAccount.getType().name().toLowerCase())
+                            selectedAccount.getType().name().toLowerCase(java.util.Locale.ROOT))
                     );
                 }
                 super.onAuthPassingError(auth, e);

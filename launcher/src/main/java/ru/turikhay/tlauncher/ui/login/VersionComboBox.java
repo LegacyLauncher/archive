@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.login;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.managers.SwingVersionManagerListener;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
@@ -51,7 +52,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
         loginForm = lf;
         model = getSimpleModel();
         manager = TLauncher.getInstance().getVersionManager();
-        manager.addListener(this);
+        manager.addListener(new SwingVersionManagerListener(this));
         addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 loginForm.buttons.play.updateState();

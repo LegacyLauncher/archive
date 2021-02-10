@@ -96,9 +96,9 @@ public class AccountElyStart extends BorderPanel implements AccountMultipaneComp
 
     private void setState(StartState state) {
         this.state = U.requireNotNull(state, "state");
-        button.setText(LOC_PREFIX + state.toString().toLowerCase() + ".button");
-        //extraButton.setText(LOC_PREFIX + state.toString().toLowerCase() + ".bottom-button");
-        content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + state.toString().toLowerCase() + ".body"), new HtmlSubstitutor()));
+        button.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".button");
+        //extraButton.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".bottom-button");
+        content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".body"), new HtmlSubstitutor()));
     }
 
     @Override

@@ -15,7 +15,7 @@ public abstract class AccountEditorPane extends ExtendedPanel implements Account
 
     AccountEditorPane(AccountManagerScene scene, Account.AccountType accountType, Mode mode) {
         this.scene = scene;
-        this.name = "account-" + accountType.toString().toLowerCase() + "-" + mode.toString().toLowerCase();
+        this.name = "account-" + accountType.toString().toLowerCase(java.util.Locale.ROOT) + "-" + mode.toString().toLowerCase(java.util.Locale.ROOT);
         this.mode = mode;
     }
 

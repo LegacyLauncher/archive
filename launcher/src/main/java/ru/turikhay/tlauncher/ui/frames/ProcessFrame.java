@@ -76,17 +76,17 @@ public class ProcessFrame<T> extends BActionFrame {
     public abstract class Process implements Runnable {
         @Override
         public void run() {
-            onProcessing(this);
+            SwingUtil.wait(() -> onProcessing(this));
 
             T result;
             try {
                 result = get();
             } catch (Exception e) {
-                onFailed(this, e);
+                SwingUtil.wait(() -> onFailed(this, e));
                 return;
             }
 
-            onSucceeded(this, result);
+            SwingUtil.wait(() -> onSucceeded(this, result));
         }
 
         protected abstract T get() throws Exception;

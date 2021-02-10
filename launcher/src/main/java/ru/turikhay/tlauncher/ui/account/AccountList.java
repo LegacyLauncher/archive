@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.account;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ProfileManager;
 import ru.turikhay.tlauncher.managers.ProfileManagerListener;
+import ru.turikhay.tlauncher.managers.SwingProfileManagerListener;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.auth.AccountListener;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorDatabase;
@@ -86,7 +87,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         edit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if(scene.list.getSelected() != null) {
-                    scene.multipane.showTip("edit-account-" + scene.list.getSelected().getType().toString().toLowerCase());
+                    scene.multipane.showTip("edit-account-" + scene.list.getSelected().getType().toString().toLowerCase(java.util.Locale.ROOT));
                 }
                 /*int index = list.getSelectedIndex();
                 Account selected = list.getSelectedValue();
@@ -120,7 +121,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         wrapper.setSouth(buttons);
         add(wrapper);
 
-        TLauncher.getInstance().getProfileManager().addListener(this);
+        TLauncher.getInstance().getProfileManager().addListener(new SwingProfileManagerListener(this));
     }
 
     public Account getSelected() {
