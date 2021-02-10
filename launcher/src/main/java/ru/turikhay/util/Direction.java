@@ -11,7 +11,7 @@ public enum Direction {
     BOTTOM,
     BOTTOM_RIGHT;
 
-    private final String lower = name().toLowerCase();
+    private final String lower = name().toLowerCase(java.util.Locale.ROOT);
 
     public String toString() {
         return lower;

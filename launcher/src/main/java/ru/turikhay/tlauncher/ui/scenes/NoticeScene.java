@@ -117,9 +117,6 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
 
             List<Notice> list = manager.getForCurrentLocale();
             if(list != null) {
-                for(Notice notice : list) {
-                    manager.preloadNotice(notice, fontSize);
-                }
                 if(manager.getSelectedNotice() == null) {
                     manager.selectNotice(list.get(0), false);
                 }

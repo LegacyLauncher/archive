@@ -694,7 +694,7 @@ public final class CrashManager {
             readFile(getCrash().getNativeCrashFile());
 
             if (getLauncher() != null
-                    && modVersionsFilter.stream().anyMatch(getVersion().toLowerCase()::contains)) {
+                    && modVersionsFilter.stream().anyMatch(getVersion().toLowerCase(java.util.Locale.ROOT)::contains)) {
                 File modsDir = new File(getLauncher().getGameDir(), "mods");
                 if(!modsDir.isDirectory()) {
                     LOGGER.info("No \"mods\" folder found");

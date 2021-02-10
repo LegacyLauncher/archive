@@ -84,7 +84,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
         c1.anchor = GridBagConstraints.LINE_START;
         //c1.insets = new Insets(SwingUtil.magnify(10), 0, 0, 0);
 
-        button = new LocalizableButton(LOC_PREFIX + "button." + mode.toString().toLowerCase(), c);
+        button = new LocalizableButton(LOC_PREFIX + "button." + mode.toString().toLowerCase(java.util.Locale.ROOT), c);
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,7 +146,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                         }
                         TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
                         scene.list.select(new Account(user));
-                        scene.multipane.showTip("success-" + mode.toString().toLowerCase());
+                        scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
                         Stats.accountCreation("mcleaks", "standard", "", true);
                     }
                 }){{editorOpened = true;}});
@@ -287,7 +287,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
 
     @Override
     public String multipaneName() {
-        return (mode == PaneMode.ADD? "process" : mode.toString().toLowerCase()) + "-account-mcleaks";
+        return (mode == PaneMode.ADD? "process" : mode.toString().toLowerCase(java.util.Locale.ROOT)) + "-account-mcleaks";
     }
 
     @Override

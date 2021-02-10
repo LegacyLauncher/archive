@@ -69,7 +69,7 @@ public enum FatalExceptionType {
     }
 
     public String nameLowerCase() {
-        return name().toLowerCase();
+        return name().toLowerCase(java.util.Locale.ROOT);
     }
 
     public static FatalExceptionType getType(Throwable t) {

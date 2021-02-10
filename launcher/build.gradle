@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.118.14'
+version '1.119.0'
 
 apply from: '../gradle/brand.gradle'
 
@@ -52,7 +52,7 @@ dependencies {
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
     implementation(project(":jWMI"))
     implementation(project(":bridge"))
-    testImplementation("org.testng:testng:6.9.10")
+    testImplementation("org.testng:testng:6.14.3")
 }
 
 task cleanLauncherRepo(type: Delete) {
@@ -187,4 +187,11 @@ compileJava {
 
 assemble {
     dependsOn(generateUpdateJson, copyJarAndRenameToSha256)
+}
+
+test {
+    useTestNG() {
+        testLogging.showStandardStreams = true
+        useDefaultListeners = true
+    }
 }

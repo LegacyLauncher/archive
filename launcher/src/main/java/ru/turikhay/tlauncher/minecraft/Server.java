@@ -113,7 +113,7 @@ public class Server {
 
     @Override
     public int hashCode() {
-        return getFullAddress().toLowerCase().hashCode();
+        return getFullAddress().toLowerCase(java.util.Locale.ROOT).hashCode();
     }
 
     public final String toString() {

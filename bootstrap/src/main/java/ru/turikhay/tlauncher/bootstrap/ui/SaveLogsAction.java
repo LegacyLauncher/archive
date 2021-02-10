@@ -7,7 +7,7 @@ import ru.turikhay.tlauncher.bootstrap.ui.message.MessageHost;
 import ru.turikhay.tlauncher.bootstrap.ui.message.SingleButtonMessage;
 import ru.turikhay.tlauncher.bootstrap.ui.message.TextAreaMessage;
 import ru.turikhay.tlauncher.bootstrap.util.U;
-import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
+import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
 
 import java.io.*;
 import java.util.ResourceBundle;
@@ -67,6 +67,6 @@ public class SaveLogsAction implements Runnable {
     }
 
     private static String getLogsContent() {
-        return RedirectPrintStream.getBuffer().toString();
+        return OutputRedirectBuffer.getBuffer().toString();
     }
 }

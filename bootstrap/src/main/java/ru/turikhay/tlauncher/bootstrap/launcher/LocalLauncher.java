@@ -50,7 +50,7 @@ public class LocalLauncher extends Launcher {
     }
 
     public static File getDefaultFileLocation(String shortBrand) {
-        return new File(getDefaultLocation(), "bin/"+ shortBrand.toLowerCase() +".jar");
+        return new File(getDefaultLocation(), "bin/"+ shortBrand.toLowerCase(java.util.Locale.ROOT) +".jar");
     }
 
     public static File getDefaultLibLocation() {

@@ -14,7 +14,7 @@ public class DirectionConverter extends LocalizableStringConverter<Direction> {
     }
 
     public String toValue(Direction from) {
-        return from == null ? null : from.toString().toLowerCase();
+        return from == null ? null : from.toString().toLowerCase(java.util.Locale.ROOT);
     }
 
     public Class<Direction> getObjectClass() {

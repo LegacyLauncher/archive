@@ -27,6 +27,7 @@ import ru.turikhay.tlauncher.bootstrap.ui.HeadlessInterface;
 import ru.turikhay.tlauncher.bootstrap.ui.IInterface;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.*;
+import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
 import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
 import ru.turikhay.util.windows.wmi.WMI;
 
@@ -83,9 +84,9 @@ public final class Bootstrap {
 
         OptionParser parser = new OptionParser();
         ArgumentAcceptingOptionSpec<File> targetFileParser =
-                parser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new FileValueConverter()).defaultsTo(defaultFile);
+                parser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
         ArgumentAcceptingOptionSpec<File> targetLibFolderParser =
-                parser.accepts("targetLibFolder", "points to the library folder").withRequiredArg().withValuesConvertedBy(new FileValueConverter()).defaultsTo(defaultLibFolder);
+                parser.accepts("targetLibFolder", "points to the library folder").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
         ArgumentAcceptingOptionSpec<String> brandParser =
                 parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class).defaultsTo(U.requireNotNull(localBootstrapMeta.getShortBrand(), "default shortBrand"));
         OptionSpecBuilder forceUpdateParser =
@@ -106,10 +107,16 @@ public final class Bootstrap {
         localBootstrapMeta.setShortBrand(U.requireNotNull(brandParser.value(parsed), "shortBrand"));
         log("Short brand: ", localBootstrapMeta.getShortBrand());
 
-        bootstrap.setTargetJar(targetFileParser.value(parsed));
+        File targetJar = targetFileParser.value(parsed);  // can be null
+        if (targetJar == null)
+            targetJar = U.requireNotNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation");
+        bootstrap.setTargetJar(targetJar);
         log("Target jar:", bootstrap.getTargetJar());
 
-        bootstrap.setTargetLibFolder(targetLibFolderParser.value(parsed));
+        File targetLibFolder = targetLibFolderParser.value(parsed); // can be null
+        if (targetLibFolder == null)
+            targetLibFolder = (bootstrap.getTargetJar().getParentFile() == null) ? new File("lib") : new File(bootstrap.getTargetJar().getParentFile().getParentFile(), "lib");
+        bootstrap.setTargetLibFolder(targetLibFolder);
         log("Target lib folder:", bootstrap.getTargetLibFolder());
 
         bootstrap.setUpdateMetaFile(targetUpdateFile.value(parsed));
@@ -164,8 +171,8 @@ public final class Bootstrap {
     public static void main(String[] args) {
         checkRunningConditions();
 
-        System.setOut(out = RedirectPrintStream.newRedirectorFor(System.out));
-        System.setErr(err = RedirectPrintStream.newRedirectorFor(System.err));
+        System.setOut(out = OutputRedirectBuffer.createRedirect(System.out));
+        System.setErr(err = OutputRedirectBuffer.createRedirect(System.err));
 
         Bootstrap bootstrap = null;
         Ref<BootBridge> bootBridgeRef = new Ref<BootBridge>();
@@ -647,7 +654,7 @@ public final class Bootstrap {
         };
     }
 
-    private static RedirectPrintStream.Redirector out, err;
+    private static RedirectPrintStream out, err;
 
     private static void disableRedirectRecording() {
         if (out != null) {
@@ -656,6 +663,7 @@ public final class Bootstrap {
         if (err != null) {
             err.disableRecording();
         }
+        OutputRedirectBuffer.clearBuffer();
     }
 
     private static void checkRunningConditions() {

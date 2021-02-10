@@ -26,7 +26,7 @@ public enum Repository {
 
     private final RepoList defaultRepoList;
     private RepoList repoList;
-    private final String lowerName = name().toLowerCase();
+    private final String lowerName = name().toLowerCase(java.util.Locale.ROOT);
 
     Repository(String[] urlList) {
         defaultRepoList = new AppenderRepoList(name(), U.requireNotNull(urlList, "defaultUrlList"));

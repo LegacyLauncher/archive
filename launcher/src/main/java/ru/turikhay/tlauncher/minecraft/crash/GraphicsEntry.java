@@ -148,13 +148,13 @@ public class GraphicsEntry extends PatternContainerEntry {
         for (String manufacturerName : manufacturers) {
             nameBuilder.append(", ").append(manufacturerName);
 
-            String manufacturer = manufacturerName.toLowerCase();
+            String manufacturer = manufacturerName.toLowerCase(java.util.Locale.ROOT);
             newButton("driver-update", new VarUrlAction(manufacturer + "-driver-update", "https://tlaun.ch/wiki/update:driver:" + manufacturer), manufacturerName);
         }
         setPath("update-driver", nameBuilder.substring(", ".length()));
 
         if (manufacturers.length == 1) {
-            setImage("manufacturer-" + manufacturers[0].toLowerCase() + ".png");
+            setImage("manufacturer-" + manufacturers[0].toLowerCase(java.util.Locale.ROOT) + ".png");
         }
 
         return true;

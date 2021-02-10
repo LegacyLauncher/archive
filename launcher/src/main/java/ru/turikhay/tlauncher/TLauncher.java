@@ -88,7 +88,7 @@ public final class TLauncher {
 
     private final UIListeners uiListeners;
 
-    private final TLauncherFrame frame;
+    private TLauncherFrame frame;
 
     private TLauncher(BootBridge bridge, BootEventDispatcher dispatcher) throws Exception {
         U.requireNotNull(bridge, "bridge");
@@ -111,7 +111,7 @@ public final class TLauncher {
         this.lang = new LangConfiguration();
         initConfig();
 
-        reloadLoggerUI();
+        SwingUtil.wait(this::reloadLoggerUI);
 
         this.bootConfig = BootConfiguration.parse(bridge);
 
@@ -120,7 +120,8 @@ public final class TLauncher {
 
         dispatcher.onBootStateChanged("Handling run conditions", 0.17);
         handleWorkdir();
-        handleUpdate();
+        if (!config.isFirstRun())
+            handleUpdate();
         handleNoticeHiding();
 
         dispatcher.onBootStateChanged("Preparing managers", 0.2);
@@ -145,28 +146,17 @@ public final class TLauncher {
         dispatcher.onBootStateChanged("Loading UI Listeners", 0.5);
         uiListeners = new UIListeners(this);
 
-        dispatcher.onBootStateChanged("Loading frame", 0.65);
-        frame = new TLauncherFrame(this);
+        SwingUtil.wait(() -> {
+            dispatcher.onBootStateChanged("Loading frame", 0.65);
+            frame = new TLauncherFrame(this);
 
-        dispatcher.onBootStateChanged("Post-init UI", 0.8);
-        initAndRefreshUI();
+            dispatcher.onBootStateChanged("Post-init UI", 0.8);
+            initAndRefreshUI();
+        });
 
         ready = true;
 
         dispatcher.onBootSucceeded();
-
-
-        /*try {
-            BootMessage message = dispatcher.getBootMessage(getSettings().getLocale().toString());
-            if (message == null) {
-                message = dispatcher.getBootMessage("en_US");
-            }
-            if (message != null) {
-                Alert.showMessage(message.getTitle(), message.getBody());
-            }
-        } catch(Throwable t) {
-            t.printStackTrace();
-        }*/
 
         if(config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
             config.set("client", UUID.randomUUID());
@@ -494,16 +484,18 @@ public final class TLauncher {
         LOGGER.info("Selected locale: {}", locale);
         lang.setLocale(locale);
 
-        Localizable.setLang(lang);
-        Alert.prepareLocal();
+        SwingUtil.wait(() -> {
+            Localizable.setLang(lang);
+            Alert.prepareLocal();
 
-        if(loggerUI != null) {
-            loggerUI.updateLocale();
-        }
+            if (loggerUI != null) {
+                loggerUI.updateLocale();
+            }
 
-        if(uiListeners != null) {
-            uiListeners.updateLocale();
-        }
+            if (uiListeners != null) {
+                uiListeners.updateLocale();
+            }
+        });
     }
 
     private TLauncher() {
@@ -637,7 +629,7 @@ public final class TLauncher {
 
     private static boolean handleLookAndFeelException(Throwable t) {
         for(StackTraceElement elem : t.getStackTrace()) {
-            if (elem.toString().toLowerCase().contains("lookandfeel")) {
+            if (elem.toString().toLowerCase(java.util.Locale.ROOT).contains("lookandfeel")) {
                 SwingUtil.resetLookAndFeel();
                 return true;
             }

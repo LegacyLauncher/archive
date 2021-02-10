@@ -2,13 +2,12 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import ru.turikhay.util.Factory;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 import ru.turikhay.util.WeakObjectPool;
 
 import java.awt.*;
-import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
-class SizeCalculator implements Callable<Dimension> {
+class SizeCalculator implements Supplier<Dimension> {
     private static final int MIN_WIDTH = 300, MIN_HEIGHT = 48, MAX_WIDTH = 450;
     private static final WeakObjectPool<NoticeEditorPane> editorPanePool = new WeakObjectPool<NoticeEditorPane>(new Factory<NoticeEditorPane>() {
         @Override
@@ -26,7 +25,7 @@ class SizeCalculator implements Callable<Dimension> {
     }
 
     @Override
-    public Dimension call() throws Exception {
+    public Dimension get() {
         WeakObjectPool<NoticeEditorPane>.ObjectRef<NoticeEditorPane> ref = editorPanePool.get();
         try {
             final NoticeEditorPane pane = ref.get();

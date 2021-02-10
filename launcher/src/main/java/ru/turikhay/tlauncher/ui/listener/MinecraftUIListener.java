@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManagerListener;
+import ru.turikhay.tlauncher.minecraft.crash.SwingCrashManagerListener;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -13,6 +14,7 @@ import ru.turikhay.tlauncher.ui.crash.CrashProcessingFrame;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
+import ru.turikhay.util.SwingUtil;
 
 public class MinecraftUIListener implements MinecraftListener, CrashManagerListener, LocalizableComponent {
     private final DelayedComponent<CrashProcessingFrame> crashFrame;
@@ -48,15 +50,17 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
 
     public void onMinecraftLaunch() {
         if (!t.getSettings().getActionOnLaunch().equals(Configuration.ActionOnLaunch.NOTHING)) {
-            t.getFrame().setVisible(false);
+            SwingUtil.later(() -> t.getFrame().setVisible(false));
         }
 
     }
 
     public void onMinecraftClose() {
         if (t.getMinecraftLauncher().isLaunchAssist()) {
-            t.getFrame().setVisible(true);
-            t.getFrame().getNotices().selectRandom();
+            SwingUtil.later(() -> {
+                t.getFrame().setVisible(true);
+                t.getFrame().getNotices().selectRandom();
+            });
         }
     }
 
@@ -70,8 +74,8 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
 
     @Override
     public void onCrashManagerInit(CrashManager manager) {
-        manager.addListener(this);
-        manager.addListener(crashFrame.get());
+        manager.addListener(new SwingCrashManagerListener(this));
+        manager.addListener(new SwingCrashManagerListener(crashFrame.get()));
     }
 
     @Override
@@ -93,8 +97,10 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
 
     @Override
     public void updateLocale() {
-        if(crashFrame.isLoaded()) {
-            crashFrame.get().updateLocale();
-        }
+        SwingUtil.later(() -> {
+            if (crashFrame.isLoaded()) {
+                crashFrame.get().updateLocale();
+            }
+        });
     }
 }

@@ -37,13 +37,13 @@ public final class DxDiag {
     }
 
     public DisplayDevice getDisplayDevice(String name) {
-        name = name.toLowerCase();
+        name = name.toLowerCase(java.util.Locale.ROOT);
 
         for (DisplayDevice device : displayDevices) {
             if (device.getCardName() == null) {
                 continue;
             }
-            if (device.getCardName().toLowerCase().contains(name)) {
+            if (device.getCardName().toLowerCase(java.util.Locale.ROOT).contains(name)) {
                 return device;
             }
         }
@@ -274,7 +274,7 @@ public final class DxDiag {
                 dontSkip = Double.parseDouble(OS.VERSION) >= 7.0;
             } catch (RuntimeException rE) {
                 LOGGER.warn("Could not determine Windows version: {}", OS.VERSION);
-                dontSkip = !OS.NAME.toLowerCase().contains("xp");
+                dontSkip = !OS.NAME.toLowerCase(java.util.Locale.ROOT).contains("xp");
             }
 
             if (dontSkip) {

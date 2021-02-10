@@ -103,9 +103,9 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
             state = StartState.GET_ALT_TOKEN;
         }
         this.state = U.requireNotNull(state, "state");
-        button.setText(LOC_PREFIX + state.toString().toLowerCase() + ".button");
+        button.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".button");
         Blocker.setBlocked("state-required", state.blockButton, buttonBlocker);
-        content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + (state == StartState.UNSUPPORTED? StartState.DESCRIPTION : state).toString().toLowerCase() + ".body"), new HtmlSubstitutor()));
+        content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + (state == StartState.UNSUPPORTED? StartState.DESCRIPTION : state).toString().toLowerCase(java.util.Locale.ROOT) + ".body"), new HtmlSubstitutor()));
     }
 
     @Override

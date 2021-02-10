@@ -39,10 +39,10 @@ public final class ConfigurationDefaults {
         d.put("minecraft.fullscreen", false);
 
         for (ReleaseType type : ReleaseType.getDefault()) {
-            d.put("minecraft.versions." + type.name().toLowerCase(), true);
+            d.put("minecraft.versions." + type.name().toLowerCase(java.util.Locale.ROOT), true);
         }
-        d.put("minecraft.versions.sub." + ReleaseType.SubType.REMOTE.name().toLowerCase(), true);
-        d.put("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE.name().toLowerCase(), true);
+        d.put("minecraft.versions.sub." + ReleaseType.SubType.REMOTE.name().toLowerCase(java.util.Locale.ROOT), true);
+        d.put("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE.name().toLowerCase(java.util.Locale.ROOT), true);
 
         d.put("minecraft.javaargs", null);
         d.put("minecraft.args", null);

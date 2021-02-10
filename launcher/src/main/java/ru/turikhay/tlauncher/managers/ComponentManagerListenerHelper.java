@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.managers;
 import ru.turikhay.tlauncher.component.LauncherComponent;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.util.SwingUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,15 +27,15 @@ public class ComponentManagerListenerHelper extends LauncherComponent implements
     }
 
     public void onVersionsRefreshing(VersionManager manager) {
-        Blocker.block(this, manager);
+        SwingUtil.later(() -> Blocker.block(this, manager));
     }
 
     public void onVersionsRefreshingFailed(VersionManager manager) {
-        Blocker.unblock(this, manager);
+        SwingUtil.later(() -> Blocker.unblock(this, manager));
     }
 
     public void onVersionsRefreshed(VersionManager manager) {
-        Blocker.unblock(this, manager);
+        SwingUtil.later(() -> Blocker.unblock(this, manager));
     }
 
     public void block(Object reason) {
@@ -42,7 +43,7 @@ public class ComponentManagerListenerHelper extends LauncherComponent implements
 
         while (var3.hasNext()) {
             ComponentManagerListener listener = (ComponentManagerListener) var3.next();
-            listener.onComponentsRefreshing(manager);
+            SwingUtil.later(() -> listener.onComponentsRefreshing(manager));
         }
 
     }
@@ -52,7 +53,7 @@ public class ComponentManagerListenerHelper extends LauncherComponent implements
 
         while (var3.hasNext()) {
             ComponentManagerListener listener = (ComponentManagerListener) var3.next();
-            listener.onComponentsRefreshed(manager);
+            SwingUtil.later(() -> listener.onComponentsRefreshed(manager));
         }
 
     }

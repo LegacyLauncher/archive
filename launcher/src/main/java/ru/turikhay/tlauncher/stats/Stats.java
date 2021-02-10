@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 public final class Stats {
     private static final Logger LOGGER = LogManager.getLogger(Stats.class);
 
-    private static final URL STATS_BASE = Http.constantURL("https://u.tlauncher.ru/stats/");
+    private static final URL STATS_BASE = Http.constantURL("https://stats.tlauncher.ru/v1/");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
     private static String lastResult;

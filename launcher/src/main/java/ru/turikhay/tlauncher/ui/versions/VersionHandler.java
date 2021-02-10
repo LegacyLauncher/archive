@@ -4,6 +4,7 @@ import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloader;
+import ru.turikhay.tlauncher.managers.SwingVersionManagerListener;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
 import ru.turikhay.tlauncher.ui.block.Blockable;
@@ -41,7 +42,7 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
         downloader = launcher.getDownloader();
         list = new VersionList(this);
         thread = new VersionHandlerThread(this);
-        vm.addListener(new VersionManagerListener() {
+        vm.addListener(new SwingVersionManagerListener(new VersionManagerListener() {
             public void onVersionsRefreshing(VersionManager manager) {
                 instance.onVersionRefreshing(manager);
             }
@@ -53,7 +54,7 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
             public void onVersionsRefreshingFailed(VersionManager manager) {
                 onVersionsRefreshed(manager);
             }
-        });
+        }));
         onVersionDeselected();
     }
 

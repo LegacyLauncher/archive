@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
+import ru.turikhay.tlauncher.managers.SwingVersionManagerListener;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
 import ru.turikhay.tlauncher.minecraft.Server;
@@ -16,6 +17,7 @@ import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManagerListener;
+import ru.turikhay.tlauncher.minecraft.crash.SwingCrashManagerListener;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftException;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.ui.MainPane;
@@ -28,6 +30,7 @@ import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.LoopedThread;
 
 import java.util.ArrayList;
@@ -129,7 +132,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         add(checkbox);
         add(del(0));
         add(buttons);
-        tlauncher.getVersionManager().addListener(this);
+        tlauncher.getVersionManager().addListener(new SwingVersionManagerListener(this));
         tlauncher.getDownloader().addListener(this);
         tlauncher.getUIListeners().registerMinecraftLauncherListener(this);
     }
@@ -199,7 +202,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             changeState(LoginForm.LoginState.LAUNCHING);
 
             LOGGER.debug("Calling Minecraft Launcher...");
-            tlauncher.newMinecraftLauncher(requestedVersion == null? versions.getVersion().getID() : requestedVersion.getID(), server, serverId, checkbox.forceupdate.isSelected());
+            AsyncThread.execute(() -> tlauncher.newMinecraftLauncher(requestedVersion == null? versions.getVersion().getID() : requestedVersion.getID(), server, serverId, checkbox.forceupdate.isSelected()));
             //tlauncher.newMinecraftLauncher(server, force1);
             checkbox.forceupdate.setSelected(false);
         }
@@ -356,7 +359,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     public void onCrashManagerInit(CrashManager manager) {
         Blocker.unblock(this, "launch");
         changeState(LoginForm.LoginState.STOPPED);
-        manager.addListener(this);
+        manager.addListener(new SwingCrashManagerListener(this));
     }
 
     @Override

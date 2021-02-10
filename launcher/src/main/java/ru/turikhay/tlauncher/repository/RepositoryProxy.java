@@ -16,7 +16,7 @@ public class RepositoryProxy {
             "libraries.minecraft.net"
     };
     private static final String[] PROXIES = new String[] {
-            "https://u.tlauncher.ru/proxy.php?url=",
+            "https://mcproxy.tlauncher.ru/proxy.php?url=",
             "https://mcproxy.tlaun.ch/proxy.php?url="
     };
     private static boolean PROXY_WORKED = false;

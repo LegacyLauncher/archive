@@ -49,15 +49,15 @@ public abstract class VersionList {
         gson = builder.create();
     }
 
-    public List<Version> getVersions() {
-        return versions;
+    public synchronized List<Version> getVersions() {
+        return new ArrayList<>(versions);
     }
 
-    public Map<ReleaseType, Version> getLatestVersions() {
-        return latest;
+    public synchronized Map<ReleaseType, Version> getLatestVersions() {
+        return new HashMap<>(latest);
     }
 
-    public Version getVersion(String name) {
+    public synchronized Version getVersion(String name) {
         if (name != null && !name.isEmpty()) {
             return byName.get(name);
         } else {
@@ -65,7 +65,7 @@ public abstract class VersionList {
         }
     }
 
-    public CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
+    public synchronized CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
         if (version instanceof CompleteVersion) {
             return (CompleteVersion) version;
         } else if (version == null) {
@@ -82,12 +82,12 @@ public abstract class VersionList {
         }
     }
 
-    public CompleteVersion getCompleteVersion(String name) throws JsonSyntaxException, IOException {
+    public synchronized CompleteVersion getCompleteVersion(String name) throws JsonSyntaxException, IOException {
         Version version = getVersion(name);
         return version == null ? null : getCompleteVersion(version);
     }
 
-    public Version getLatestVersion(ReleaseType type) {
+    public synchronized Version getLatestVersion(ReleaseType type) {
         if (type == null) {
             throw new NullPointerException();
         } else {
@@ -124,7 +124,7 @@ public abstract class VersionList {
         return list;
     }
 
-    public void refreshVersions(RawVersionList versionList) {
+    public synchronized void refreshVersions(RawVersionList versionList) {
         clearCache();
         Iterator var3 = versionList.getVersions().iterator();
 
@@ -156,11 +156,11 @@ public abstract class VersionList {
 
     }
 
-    public void refreshVersions() throws IOException {
+    public synchronized void refreshVersions() throws IOException {
         refreshVersions(getRawList());
     }
 
-    CompleteVersion addVersion(CompleteVersion version) {
+    synchronized CompleteVersion addVersion(CompleteVersion version) {
         if (version.getID() == null) {
             throw new IllegalArgumentException("Cannot add blank version");
         } else if (getVersion(version.getID()) != null) {
@@ -173,7 +173,7 @@ public abstract class VersionList {
         }
     }
 
-    void removeVersion(Version version) {
+    synchronized void removeVersion(Version version) {
         if (version == null) {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
@@ -182,7 +182,7 @@ public abstract class VersionList {
         }
     }
 
-    public void removeVersion(String name) {
+    public synchronized void removeVersion(String name) {
         Version version = getVersion(name);
         if (version != null) {
             removeVersion(version);
@@ -201,7 +201,7 @@ public abstract class VersionList {
 
     protected abstract InputStreamReader getUrl(String var1) throws IOException;
 
-    void clearCache() {
+    synchronized void clearCache() {
         byName.clear();
         versions.clear();
         latest.clear();
@@ -211,7 +211,7 @@ public abstract class VersionList {
         return Collections.unmodifiableList(dependencies);
     }
 
-    public final void addDependancy(VersionList list) {
+    public final synchronized void addDependancy(VersionList list) {
         if (U.requireNotNull(list) == this) {
             throw new IllegalArgumentException("cannot be itself");
         }

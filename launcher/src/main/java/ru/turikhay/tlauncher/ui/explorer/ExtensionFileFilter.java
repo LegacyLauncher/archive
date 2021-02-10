@@ -39,6 +39,6 @@ public class ExtensionFileFilter extends FileFilter {
     }
 
     public String getDescription() {
-        return Localizable.get("explorer.extension.format", extension.toUpperCase());
+        return Localizable.get("explorer.extension.format", extension.toUpperCase(java.util.Locale.ROOT));
     }
 }

@@ -102,7 +102,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                 User user = AccountManager.getPlainAuth().authorize(username);
                 TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
                 AccountPlainPane.this.scene.list.select(new Account(user));
-                AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase());
+                AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
             }
         });
         button.setFont(button.getFont().deriveFont(Font.BOLD));
@@ -153,7 +153,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
 
     @Override
     public String multipaneName() {
-        return mode.toString().toLowerCase() + "-account-plain";
+        return mode.toString().toLowerCase(java.util.Locale.ROOT) + "-account-plain";
     }
 
     @Override

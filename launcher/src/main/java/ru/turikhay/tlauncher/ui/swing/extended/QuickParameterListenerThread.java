@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
 import ru.turikhay.tlauncher.ui.swing.util.IntegerArrayGetter;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.LoopedThread;
 
@@ -54,7 +55,7 @@ public class QuickParameterListenerThread extends LoopedThread {
             initial = newvalue;
         } while (!equal);
 
-        runnable.run();
+        SwingUtil.wait(runnable::run);
     }
 
     private void sleep() {

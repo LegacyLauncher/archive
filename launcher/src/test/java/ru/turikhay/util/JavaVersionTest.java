@@ -5,34 +5,28 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 
 public class JavaVersionTest {
-
     @Test
-    public void testJava8() throws Exception {
-        parseVersion("1.8.0", 8, 0, 0, false);
-        parseVersion("1.8.1", 8, 1, 0, false);
-        parseVersion("1.8.0_125", 8, 0, 125, false);
-        parseVersion("1.8.1_71-ea", 8, 1, 71, true);
+    public void test() {
+        test("1.6.0", 1, 6, 0, 0, null, false);
+        test("1.7.0-ea", 1, 7, 0, -1, "ea", true);
+        test("1.8.0_60-b01", 1, 8, 0, 60, "b01", false);
+        test("9", 1, 9, 0, 0, null, false);
+        test("9.0.4", 1, 9, 0, 4, null, false);
+        test("10", 1, 10, 0, 0, null, false);
+        test("10.0.1", 1, 10, 0, 1, null, false);
+        test("11.5", 1, 11, 5, 0, null, false);
+        test("121.0.55", 1, 121, 0, 55, null, false);
+        test("11.0.1", 1, 11, 0, 1, null, false);
+        test("11.0.9.1", 1, 11, 0, 9, null, false);
     }
 
-    @Test
-    public void testJava9() throws Exception {
-        parseVersion("9", 9, 0, 0, false);
-        parseVersion("9.0.1", 9, 0, 1, false);
-        parseVersion("9.1.2", 9, 1, 2, false);
-        parseVersion("9.20.3-ea", 9, 20, 3, true);
-        parseVersion("9.20.3-ea+b255", 9, 20, 3, true);
+    private void test(String parse, int epoch, int major, int minor, int update, String identifier, boolean ea) {
+        JavaVersion javaVersion = JavaVersion.parse(parse);
+        assertEquals(javaVersion.getEpoch(), epoch, "epoch");
+        assertEquals(javaVersion.getMajor(), major, "major");
+        assertEquals(javaVersion.getMinor(), minor, "minor");
+        assertEquals(javaVersion.getUpdate(), update, "update");
+        assertEquals(javaVersion.getIdentifier(), identifier, "identifier");
+        assertEquals(javaVersion.isEarlyAccess(), ea, "earlyAccess");
     }
-
-    private void parseVersion(JavaVersion version, int major, int minor, int update, boolean ea) {
-        assertEquals(version.getMajor(), major, "major");
-        assertEquals(version.getMinor(), minor, "minor");
-        assertEquals(version.getUpdate(), update, "update");
-    }
-
-    private void parseVersion(String str, int major, int minor, int update, boolean ea) {
-        JavaVersion version = JavaVersion.parse(str);
-        parseVersion(version, major, minor, update, ea);
-        assertEquals(version.getVersion(), str);
-    }
-
 }

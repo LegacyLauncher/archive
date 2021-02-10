@@ -17,11 +17,12 @@ import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class SwingUtil {
     private static final Logger LOGGER = LogManager.getLogger(SwingUtil.class);
@@ -263,4 +264,50 @@ public class SwingUtil {
 
         return Images.getImage(source, false);
     }
+
+    public static void later(SwingRunnable r) {
+        EventQueue.invokeLater(r);
+    }
+
+    public static void wait(SwingRunnable r) {
+        if (EventQueue.isDispatchThread()) {
+            invokeNow(r);
+        } else {
+            invokeAndWait(r);
+        }
+    }
+
+    public static <V> V waitAndReturn(Callable<V> callable) {
+        Ref<V> ref = new Ref<>();
+        wait(() -> ref.setValue(callable.call()));
+        return ref.getValue();
+    }
+
+    private static void invokeNow(SwingRunnable r) {
+        try {
+            r.run();
+        } catch(Exception e) {
+            throw new SwingException(e);
+        }
+    }
+
+    private static void invokeAndWait(SwingRunnable r) {
+        try {
+            EventQueue.invokeAndWait(r);
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+        } catch (InvocationTargetException invocationTargetException) {
+            Throwable t;
+            if(invocationTargetException.getCause() != null) {
+                t = invocationTargetException.getCause();
+                if(t instanceof SuppressedSwingException) {
+                    t = t.getCause();
+                }
+            } else {
+                t = invocationTargetException;
+            }
+            throw new SwingException(t);
+        }
+    }
+
 }

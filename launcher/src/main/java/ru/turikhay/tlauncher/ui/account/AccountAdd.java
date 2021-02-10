@@ -85,7 +85,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
             c.weightx = 1.0;
             c.insets = new Insets(0, SwingUtil.magnify(10), 0, 0);
             c.fill = GridBagConstraints.HORIZONTAL;
-            grid.add(new LocalizableLabel("account.manager.multipane.add-account.type." + accountType.name().toLowerCase()), c);
+            grid.add(new LocalizableLabel("account.manager.multipane.add-account.type." + accountType.name().toLowerCase(java.util.Locale.ROOT)), c);
         }
 
         c.gridy++;

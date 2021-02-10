@@ -427,7 +427,7 @@ public class Configuration extends SimpleConfiguration {
         }
 
         public String toString() {
-            return super.toString().toLowerCase();
+            return super.toString().toLowerCase(java.util.Locale.ROOT);
         }
 
         public static Configuration.ActionOnLaunch getDefault() {
@@ -472,7 +472,7 @@ public class Configuration extends SimpleConfiguration {
         }
 
         public String toString() {
-            return super.toString().toLowerCase();
+            return super.toString().toLowerCase(java.util.Locale.ROOT);
         }
 
         public static LoggerType getDefault() {

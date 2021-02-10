@@ -1,9 +1,11 @@
 package ru.turikhay.tlauncher.ui.listener;
 
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.minecraft.launcher.MinecraftExtendedListener;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
+import ru.turikhay.tlauncher.minecraft.launcher.SwingMinecraftExtendedListener;
+import ru.turikhay.tlauncher.minecraft.launcher.SwingMinecraftListener;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
-import ru.turikhay.util.U;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +30,11 @@ public final class UIListeners implements LocalizableComponent {
     }
 
     public void registerMinecraftLauncherListener(MinecraftListener listener) {
-        this.minecraftListeners.add(U.requireNotNull(listener, "listener"));
+        this.minecraftListeners.add(new SwingMinecraftListener(listener));
+    }
+
+    public void registerMinecraftLauncherListener(MinecraftExtendedListener listener) {
+        this.minecraftListeners.add(new SwingMinecraftExtendedListener(listener));
     }
 
     public VersionManagerUIListener getVersionManagerUIListener() {

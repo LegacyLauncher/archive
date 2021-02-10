@@ -116,7 +116,7 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public Color getBorder(Border border) {
-        Color color = getColor("border." + U.requireNotNull(border, "border").name().toLowerCase(), null);
+        Color color = getColor("border." + U.requireNotNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), null);
         if(color != null) {
             return color;
         }
@@ -125,7 +125,7 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public Color getShadow(Border border) {
-        Color color = getColor("shadow." + U.requireNotNull(border, "border").name().toLowerCase(), null);
+        Color color = getColor("shadow." + U.requireNotNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), null);
         if(color != null) {
             return color;
         }
@@ -141,7 +141,7 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public int getArc(Border border) {
-        int size = getSize("arc." + U.requireNotNull(border, "border").name().toLowerCase(), SystemTheme.MAX_ARC, -1);
+        int size = getSize("arc." + U.requireNotNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), SystemTheme.MAX_ARC, -1);
 
         if(size > -1) {
             return size;

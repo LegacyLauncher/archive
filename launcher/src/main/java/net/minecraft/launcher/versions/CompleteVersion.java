@@ -377,11 +377,11 @@ public class CompleteVersion implements Version, Cloneable {
             return;
         }
 
-        if (id.toLowerCase().contains("forge")) {
+        if (id.toLowerCase(java.util.Locale.ROOT).contains("forge")) {
             family = FORGE_PREFIX + parent_family;
             return;
         }
-        if (id.toLowerCase().contains("fabric")) {
+        if (id.toLowerCase(java.util.Locale.ROOT).contains("fabric")) {
             family = FABRIC_PREFIX + parent_family;
             return;
         }
