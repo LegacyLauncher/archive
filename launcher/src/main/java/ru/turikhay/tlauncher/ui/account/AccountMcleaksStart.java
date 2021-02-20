@@ -109,6 +109,12 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
     }
 
     @Override
+    public void setMaximumSize(Dimension maximumSize) {
+        super.setMaximumSize(maximumSize);
+        content.setPreferredSize(new Dimension(0, 0));
+    }
+
+    @Override
     public void multipaneClosed() {
 
     }

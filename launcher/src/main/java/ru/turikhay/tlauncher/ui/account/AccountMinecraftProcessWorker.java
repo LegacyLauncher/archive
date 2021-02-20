@@ -153,10 +153,6 @@ class AccountMinecraftProcessWorker {
         SwingUtil.later(() -> parent.setProcessLabel(label));
     }
 
-    boolean canStart() {
-        return EmbeddedBrowserStrategy.isJavaFXWebViewSupported();
-    }
-
     void start() {
         cancel();
         currentProcess = AsyncThread.future(this::run);

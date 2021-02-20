@@ -806,9 +806,9 @@ public final class CrashManager {
 
                 boolean currentlyLatestLevel = i == list.length - 1;
                 if (currentlyLatestLevel)
-                    LOGGER.info("└ {}", name);
+                    LOGGER.info("{}└ {}", buffer, name);
                 else
-                    LOGGER.info("├ {}", name);
+                    LOGGER.info("{}├ {}", buffer, name);
 
                 if(file.isDirectory() && !skipDir) {
                     if(dirBuffer == null || currentlyLatestLevel) {

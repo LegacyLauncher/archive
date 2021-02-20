@@ -57,18 +57,8 @@ public class AccountMinecraftProcess extends BorderPanel implements AccountMulti
 
     @Override
     public void multipaneShown(boolean gotBack) {
-        if(worker.canStart()) {
-            setProcessLabel("starting");
-            worker.start();
-        } else {
-            setProcessLabel("unavailable");
-            stopProgress();
-            Alert.showLocError(
-                    LOC_PREFIX + "unavailable.alert.title",
-                    LOC_PREFIX + "unavailable.alert.message",
-                    null
-            );
-        }
+        setProcessLabel("starting");
+        worker.start();
     }
 
     @Override

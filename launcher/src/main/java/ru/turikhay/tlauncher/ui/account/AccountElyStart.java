@@ -5,6 +5,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.editor.ExtendedHTMLEditorKit;
 import ru.turikhay.tlauncher.ui.swing.editor.HyperlinkProcessor;
@@ -99,6 +100,12 @@ public class AccountElyStart extends BorderPanel implements AccountMultipaneComp
         button.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".button");
         //extraButton.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".bottom-button");
         content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".body"), new HtmlSubstitutor()));
+    }
+
+    @Override
+    public void setMaximumSize(Dimension maximumSize) {
+        super.setMaximumSize(maximumSize);
+        content.setPreferredSize(new Dimension(0, 0));
     }
 
     @Override
