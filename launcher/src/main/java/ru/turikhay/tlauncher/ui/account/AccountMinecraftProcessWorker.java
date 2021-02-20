@@ -1,0 +1,171 @@
+package ru.turikhay.tlauncher.ui.account;
+
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.minecraft.auth.Account;
+import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.user.MinecraftUser;
+import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
+import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
+import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidationException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidator;
+import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesAuthenticator;
+import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchanger;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestCancelledException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestStrategy;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.embed.EmbeddedBrowserStrategy;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.*;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd.NanoHttpdLocalServer;
+import ru.turikhay.tlauncher.user.minecraft.strategy.pconv.MinecraftProfileConverter;
+import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftOAuthProfile;
+import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftProfileRequester;
+import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
+import ru.turikhay.tlauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
+import ru.turikhay.tlauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
+import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.UrlEncoder;
+import ru.turikhay.util.async.AsyncThread;
+
+import java.util.Arrays;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
+
+class AccountMinecraftProcessWorker {
+    private static final Logger LOGGER = LogManager.getLogger(AccountMinecraftProcessWorker.class);
+
+    private final AccountMinecraftProcess parent;
+    private final String locPrefix;
+
+    private Future<?> currentProcess;
+
+    AccountMinecraftProcessWorker(AccountMinecraftProcess parent) {
+        this.parent = parent;
+        this.locPrefix = parent.LOC_PREFIX;
+    }
+
+    private void run() {
+        try {
+            doRun();
+        } catch(InterruptedException | TimeoutException e) {
+            setState("cancelled");
+            stopProgress();
+        } catch(MinecraftAuthenticationException e) {
+            stopProgress();
+            if(e instanceof GameOwnershipValidationException && ((GameOwnershipValidationException) e).isKnownNotToOwn()) {
+                LOGGER.info("User does not own Minecraft or not yet migrated their Mojang account");
+                setState("dont-own");
+                Alert.showLocError(
+                        locPrefix + "dont-own.alert.title",
+                        locPrefix + "dont-own.alert.message",
+                        null
+                );
+            } else if(e instanceof MicrosoftOAuthCodeRequestCancelledException) {
+                setState("cancelled");
+                LOGGER.info("User cancelled OAuth code request: {}", e.toString());
+            } else {
+                LOGGER.warn("Authentication failed", e);
+                showError(e);
+            }
+        } catch(Exception e) {
+            LOGGER.error("Something went wrong while authenticating", e);
+            showError(e);
+        }
+    }
+
+    private void showError(Exception e) {
+        setState("error");
+        stopProgress();
+        Sentry.capture(new EventBuilder()
+                .withLevel(Event.Level.ERROR)
+                .withMessage("microsoft auth failed")
+                .withSentryInterface(new ExceptionInterface(e))
+        );
+        if(e instanceof MinecraftAuthenticationException) {
+            String key = ((MinecraftAuthenticationException) e).getShortKey();
+            Alert.showLocError(
+                    "account.manager.error.title",
+                    "account.manager.error.minecraft." + key,
+                    e.toString()
+            );
+        } else {
+            Alert.showLocError(locPrefix + "error.title", locPrefix + "error.message", e.toString());
+        }
+    }
+
+    private void stopProgress() {
+        SwingUtil.later(parent::stopProgress);
+    }
+
+    private void doRun() throws Exception {
+        OAuthApplication application = OAuthApplication.TL;
+        setState("browser-open");
+        MicrosoftOAuthExchangeCode msftExhangeCode = initBrowser().requestMicrosoftOAuthCode();
+        setState("exchanging-code");
+        MicrosoftOAuthToken msftToken = new MicrosoftOAuthCodeExchanger(application).exchangeMicrosoftOAuthCode(msftExhangeCode);
+        setState("xbox-live-auth");
+        XboxServiceAuthenticationResponse xboxLiveToken = new XboxLiveAuthenticator(application).xboxLiveAuthenticate(msftToken.getAccessToken());
+        XboxServiceAuthenticationResponse xstsToken = new XSTSAuthenticator().xstsAuthenticate(xboxLiveToken.getToken());
+        setState("mcs-auth");
+        MinecraftServicesToken minecraftToken = new MinecraftServicesAuthenticator().minecraftServicesAuthenticate(xstsToken);
+        setState("game-ownership");
+        new GameOwnershipValidator().checkGameOwnership(minecraftToken);
+        setState("getting-profile");
+        MinecraftOAuthProfile minecraftProfile = new MinecraftProfileRequester().requestProfile(minecraftToken);
+        MinecraftUser minecraftUser = new MinecraftProfileConverter().convertToMinecraftUser(msftToken, minecraftToken, minecraftProfile);
+        SwingUtil.wait(() -> {
+            StandardAccountPane.removeAccountIfFound(minecraftUser.getUsername(), Account.AccountType.MINECRAFT);
+            TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(minecraftUser);
+            parent.scene.multipane.showTip("success-add");
+            parent.scene.list.select(new Account(minecraftUser));
+        });
+    }
+
+    private MicrosoftOAuthCodeRequestStrategy initBrowser() {
+        LocalServerUrlProducer urlProducer = new LocalServerUrlProducer();
+        return new LocalServerStrategy(
+                new DefaultExternalBrowser(),
+                urlProducer,
+                new NanoHttpdLocalServer(
+                        new OAuthUrlParser(),
+                        urlProducer
+                ),
+                new LocalServerConfiguration(
+                        "localhost",
+                        Arrays.asList(49521, 49522, 49523, 49524),
+                        "",
+                        "https://tlaun.ch/msft-auth-success" +
+                                "?tl_version=" + UrlEncoder.encode(TLauncher.getVersion().toString())
+                                + "&locale=" + UrlEncoder.encode(TLauncher.getInstance().getLang().getLocale().toString())
+                )
+        );
+    }
+
+    private void setState(String label) {
+        SwingUtil.later(() -> parent.setProcessLabel(label));
+    }
+
+    boolean canStart() {
+        return EmbeddedBrowserStrategy.isJavaFXWebViewSupported();
+    }
+
+    void start() {
+        cancel();
+        currentProcess = AsyncThread.future(this::run);
+    }
+
+    void cancel() {
+        if(currentProcess != null) {
+            currentProcess.cancel(true);
+            currentProcess = null;
+        }
+    }
+}

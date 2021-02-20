@@ -5,6 +5,8 @@ import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
@@ -17,6 +19,26 @@ public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
         com.mojang.authlib.UserAuthentication userAuthentication = createUserAuthentication(clientToken);
         userAuthentication.setUsername(username);
         userAuthentication.setPassword(password);
+
+        logIn(userAuthentication);
+
+        if(userAuthentication.getSelectedProfile() == null) {
+            throw new InvalidCredentialsException("no selected profile");
+        }
+
+        return userAuthentication;
+    }
+
+    public com.mojang.authlib.UserAuthentication authorizeWithToken(String clientToken, String uuid, String accessToken) throws AuthException, IOException {
+        StringUtil.requireNotBlank(clientToken, "clientToken");
+        StringUtil.requireNotBlank(uuid, "uuid");
+        StringUtil.requireNotBlank(accessToken, "accessToken");
+
+        com.mojang.authlib.UserAuthentication userAuthentication = createUserAuthentication(clientToken);
+        Map<String, Object> map = new HashMap<>();
+        map.put("userid", uuid);
+        map.put("accessToken", accessToken);
+        userAuthentication.loadFromStorage(map);
 
         logIn(userAuthentication);
 

@@ -24,7 +24,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     private final ExtendedPanel grid;
     private final GridBagConstraints c;
 
-    private final ExtendedButton mojang, ely, free, mcleaks, idontknow;
+    private final ExtendedButton mojang, minecraft, ely, free, mcleaks, idontknow;
 
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
@@ -38,6 +38,12 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = -1;
 
+        minecraft = addRow("microsoft.png", ACCOUNT_TYPE_PREFIX + "minecraft", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("process-account-minecraft");
+            }
+        });
         mojang = addRow("mojang.png", ACCOUNT_TYPE_PREFIX + "mojang", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -172,11 +178,11 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         if(!"idontknow".equals(var1)) {
             Blocker.blockComponents(var1, free, idontknow);
         }
-        Blocker.blockComponents(var1, mojang, ely, mcleaks);
+        Blocker.blockComponents(var1, mojang, ely, mcleaks, minecraft);
     }
 
     @Override
     public void unblock(Object var1) {
-        Blocker.unblockComponents(var1, mojang, free, ely, mcleaks, idontknow);
+        Blocker.unblockComponents(var1, mojang, free, ely, mcleaks, idontknow, minecraft);
     }
 }

@@ -1,19 +1,18 @@
 package ru.turikhay.tlauncher.bootstrap.util.stream;
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static org.testng.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ByteArrayBufferOutputStreamTest {
     private static final int COUNT = 16;
 
     ByteArrayBufferOutputStream stream;
 
-    @BeforeMethod
+    @BeforeEach
     public void setUp() {
         stream = new ByteArrayBufferOutputStream(COUNT);
     }

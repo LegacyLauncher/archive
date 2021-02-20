@@ -1,12 +1,11 @@
 package ru.turikhay.tlauncher.user;
 
-import com.mojang.authlib.UserAuthentication;
-
-public class MojangUser extends AuthlibUser {
+public class MojangUser extends MojangLikeUser {
     public static final String TYPE = "mojang";
+    public static final MojangLikeUserFactory<MojangUser> FACTORY = MojangUser::new;
 
-    MojangUser(String clientToken, String username, UserAuthentication userAuthentication) {
-        super(clientToken, username, userAuthentication);
+    MojangUser(AuthlibUserPayload payload) {
+        super(payload);
     }
 
     @Override
@@ -14,7 +13,7 @@ public class MojangUser extends AuthlibUser {
         return TYPE;
     }
 
-    public static MojangUserJsonizer getJsonizer() {
-        return new MojangUserJsonizer(new MojangAuth());
+    public static MojangLikeUserJsonizer<MojangUser> getJsonizer() {
+        return new MojangLikeUserJsonizer<>(new MojangAuth(), FACTORY);
     }
 }

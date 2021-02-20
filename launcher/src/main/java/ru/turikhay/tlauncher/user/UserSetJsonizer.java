@@ -17,6 +17,7 @@ public class UserSetJsonizer implements JsonDeserializer<UserSet>, JsonSerialize
         this.jsonizerMap = new HashMap<String, UserJsonizer>() {
             {
                 put(MojangUser.TYPE, MojangUser.getJsonizer());
+                put(MinecraftUser.TYPE, MinecraftUser.getJsonizer());
                 put(PlainUser.TYPE, PlainUser.getJsonizer());
                 put(ElyUser.TYPE, ElyUser.getJsonizer());
                 put(ElyLegacyUser.TYPE, ElyLegacyUser.getJsonizer());

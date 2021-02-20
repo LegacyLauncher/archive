@@ -1,12 +1,11 @@
 package ru.turikhay.tlauncher.bootstrap.util.stream;
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import static org.testng.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static ru.turikhay.tlauncher.bootstrap.util.stream.BufferUtils.*;
 
 public class RedirectPrintStreamTest {
@@ -17,7 +16,7 @@ public class RedirectPrintStreamTest {
     private RedirectOutputStream redirOutStream;
     private RedirectPrintStream redirPrintStream;
 
-    @BeforeMethod
+    @BeforeEach
     public void setUp() {
         sysOutBuffer = new ByteArrayOutputStream();
         sysOut = new PrintStream(sysOutBuffer);

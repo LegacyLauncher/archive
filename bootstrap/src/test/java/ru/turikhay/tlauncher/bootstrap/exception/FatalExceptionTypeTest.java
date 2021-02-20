@@ -1,15 +1,13 @@
 package ru.turikhay.tlauncher.bootstrap.exception;
 
-import org.testng.annotations.Test;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FatalExceptionTypeTest {
 

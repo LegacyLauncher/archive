@@ -17,6 +17,9 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
     private static final ImageIcon MOJANG_USER_ICON = Images.getIcon("mojang.png", SwingUtil.magnify(16));
     private static final ImageIcon MOJANG_USER_ICON_BIG = Images.getIcon("mojang.png", SwingUtil.magnify(24));
 
+    private static final ImageIcon MINECRAFT_USER_ICON = Images.getIcon("microsoft.png", SwingUtil.magnify(16));
+    private static final ImageIcon MINECRAFT_USER_ICON_BIG = Images.getIcon("microsoft.png", SwingUtil.magnify(24));
+
     private static final ImageIcon ELY_USER_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
     private static final ImageIcon ELY_USER_ICON_BIG = Images.getIcon("ely.png", SwingUtil.magnify(24));
 
@@ -73,6 +76,9 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
                         break;
                     case MOJANG:
                         icon = type == AccountCellType.EDITOR? MOJANG_USER_ICON_BIG : MOJANG_USER_ICON;
+                        break;
+                    case MINECRAFT:
+                        icon = type == AccountCellType.EDITOR? MINECRAFT_USER_ICON_BIG : MINECRAFT_USER_ICON;
                         break;
                     case PLAIN:
                         icon = type == AccountCellType.EDITOR? USER_ICON_BIG : USER_ICON;

@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.scenes;
 
+import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.account.*;
 import ru.turikhay.tlauncher.ui.block.Blocker;
@@ -8,7 +9,7 @@ import ru.turikhay.util.SwingUtil;
 import java.awt.*;
 
 public class AccountManagerScene extends PseudoScene {
-    private static final int LIST_WIDTH = 300, MULTIPANE_WIDTH = 325, HEIGHT = 300, GAP = 15;
+    private static final int LIST_WIDTH = 300, MULTIPANE_WIDTH = 325, HEIGHT = 325, GAP = 15;
 
     public final AccountList list;
     public final AccountMultipane multipane;
@@ -38,11 +39,14 @@ public class AccountManagerScene extends PseudoScene {
 
         multipane.registerTip(new AccountElyStart(this));
         multipane.registerTip(new AccountElyProcess(this));
-        multipane.registerTip(new AccountElyEdit(this));
+        multipane.registerTip(new NoAccountEdit(this, Account.AccountType.ELY));
 
         multipane.registerTip(new AccountMcleaksStart(this));
         multipane.registerTip(new AccountMcleaksPane(this, PaneMode.ADD));
         multipane.registerTip(new AccountMcleaksPane(this, PaneMode.EDIT));
+
+        multipane.registerTip(new AccountMinecraftProcess(this));
+        multipane.registerTip(new NoAccountEdit(this, Account.AccountType.MINECRAFT));
 
         //multipane.registerTip(new AccountAddMojang(this));
         //multipane.registerTip(new AccountAddEly(this));

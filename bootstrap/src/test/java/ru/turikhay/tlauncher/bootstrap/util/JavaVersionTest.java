@@ -1,8 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
-import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaVersionTest {
     @Test
