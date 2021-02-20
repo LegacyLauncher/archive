@@ -29,9 +29,11 @@ import ru.turikhay.tlauncher.user.UserSetListener;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.U;
+import ru.turikhay.util.json.InstantAdapter;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.*;
 
 public class ProfileManager extends RefreshableComponent {
@@ -81,6 +83,7 @@ public class ProfileManager extends RefreshableComponent {
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
             builder.registerTypeAdapter(Date.class, new DateTypeAdapter(true));
+            builder.registerTypeAdapter(Instant.class, new InstantAdapter());
             builder.registerTypeAdapter(File.class, new FileTypeAdapter());
             builder.registerTypeAdapter(UserSet.class, accountManager.getTypeAdapter());
             builder.registerTypeAdapter(UUIDTypeAdapter.class, new UUIDTypeAdapter());

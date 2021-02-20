@@ -65,6 +65,7 @@ public class Account {
         ELY("ely.png"),
         ELY_LEGACY("ely.png"),
         MOJANG("mojang.png"),
+        MINECRAFT("microsoft.png"),
         MCLEAKS("mcleaks.png"),
         PLAIN(null);
 

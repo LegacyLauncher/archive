@@ -26,6 +26,10 @@ public abstract class AuthlibUser extends User {
         U.requireNotNull(userAuthentication.getUserType(), "userType");
     }
 
+    AuthlibUser(AuthlibUserPayload payload) {
+        this(payload.getClientToken(), payload.getUsername(), payload.getAuthentication());
+    }
+
     String getClientToken() {
         return clientToken;
     }

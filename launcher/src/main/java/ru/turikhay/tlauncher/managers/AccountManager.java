@@ -10,6 +10,7 @@ public final class AccountManager {
     private static final ElyLegacyAuth ELY_LEGACY_AUTH = new ElyLegacyAuth();
     private static final PlainAuth PLAIN_AUTH = new PlainAuth();
     private static final McleaksAuth MCLEAKS_AUTH = new McleaksAuth();
+    private static final MinecraftAuth MINECRAFT_AUTH = new MinecraftAuth();
 
     private final ManagedListenerHelper<UserSetListener> helper = new ManagedListenerHelper<>();
     private final UserSetJsonizer jsonizer = new UserSetJsonizer(helper);
@@ -56,6 +57,10 @@ public final class AccountManager {
         return MCLEAKS_AUTH;
     }
 
+    public static MinecraftAuth getMinecraftAuth() {
+        return MINECRAFT_AUTH;
+    }
+
     public static Auth getAuthFor(User user) {
         U.requireNotNull(user, "user");
         switch (user.getType()) {
@@ -69,6 +74,8 @@ public final class AccountManager {
                 return PLAIN_AUTH;
             case McleaksUser.TYPE:
                 return MCLEAKS_AUTH;
+            case MinecraftUser.TYPE:
+                return MINECRAFT_AUTH;
         }
         throw new IllegalArgumentException("cannot find Auth for: " + user);
     }

@@ -155,11 +155,14 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                     LoginWaitException loginError = var9;
                     LOGGER.debug("Caught a wait task");
 
+                    block("wait-task");
                     try {
                         loginError.getWaitTask().runTask();
                     } catch (LoginException var8) {
                         LOGGER.error("Caught an error on a wait task of {}", listener, var8);
                         error = var8;
+                    } finally {
+                        unblock("wait-task");
                     }
                 } catch (LoginException var10) {
                     LOGGER.error("Caught an error on listener {}", listener, var10);

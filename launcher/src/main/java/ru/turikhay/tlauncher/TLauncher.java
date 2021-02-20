@@ -205,6 +205,8 @@ public final class TLauncher {
                 }
             });
         }
+
+        preloadUI();
     }
 
     public BootConfiguration getBootConfig() {
@@ -476,6 +478,10 @@ public final class TLauncher {
                 }
             }
         }).start();
+    }
+
+    private void preloadUI() {
+        frame.mp.defaultScene.settingsForm.load();
     }
 
     public void reloadLocale() {

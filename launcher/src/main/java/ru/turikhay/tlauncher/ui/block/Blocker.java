@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Blocker {
     private static final Map<Blockable, List<Object>> blockMap = new Hashtable();
-    public static final Object UNIVERSAL_UNBLOCK = "lol, nigga";
+    public static final Object UNIVERSAL_UNBLOCK = "lol, man";
     public static final Object WEAK_BLOCK = "weak";
 
     private static void add(Blockable blockable) {

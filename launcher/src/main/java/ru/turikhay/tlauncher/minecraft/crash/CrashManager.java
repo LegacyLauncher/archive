@@ -749,8 +749,6 @@ public final class CrashManager {
         }
 
         private void treeDir(File dir, int currentLevel, int levelLimit, StringBuilder buffer) {
-            LOGGER.info("Skip dirs: {}", skipFolders.toString());
-
             if(dir == null) {
                 LOGGER.info("skipping null directory");
                 return;

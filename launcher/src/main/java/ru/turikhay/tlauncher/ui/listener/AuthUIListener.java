@@ -62,7 +62,7 @@ public class AuthUIListener implements AuthenticatorListener {
             } else if(e instanceof AuthDetailedException) {
                 textarea = ((AuthDetailedException) e).getErrorContent();
             } else if(e.getCause() != null) {
-                textarea = e.getCause();
+                textarea = e.getCause().toString();
             }
         }
 
@@ -70,6 +70,10 @@ public class AuthUIListener implements AuthenticatorListener {
         String path, description;
 
         path = "account.manager.error."+ accountType.toString().toLowerCase(java.util.Locale.ROOT) +"." + locPath + (editorOpened? ".editor" : "");
+        if(editorOpened && Localizable.nget(path) == null) {
+            // try without ".editor"
+            path = "account.manager.error."+ accountType.toString().toLowerCase(java.util.Locale.ROOT) +"." + locPath;
+        }
         if(Localizable.nget(path) == null) {
             path = "account.manager.error." + locPath + (editorOpened? ".editor" : "");
         }
