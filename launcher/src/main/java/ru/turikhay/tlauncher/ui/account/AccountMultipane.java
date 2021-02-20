@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.Multipane;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.SwingUtil;
@@ -72,7 +73,9 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                multipane.setPreferredSize(new Dimension(getWidth() - getInsets().left - getInsets().right - SwingUtil.magnify(30), getHeight() - getInsets().top - getInsets().bottom - back.getHeight() - SwingUtil.magnify(40)));
+                int width = getWidth() - getInsets().left - getInsets().right - SwingUtil.magnify(30);
+                multipane.setPreferredSize(new Dimension(width, getHeight() - getInsets().top - getInsets().bottom - back.getHeight() - SwingUtil.magnify(40)));
+                byName.values().forEach(c -> c.multipaneComp().setMaximumSize(new Dimension(width, Integer.MAX_VALUE)));
             }
         });
     }
@@ -95,7 +98,10 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
 
     public void registerTip(AccountMultipaneComp comp) {
         byName.put(comp.multipaneName(), comp);
-        multipane.add(comp.multipaneComp(), comp.multipaneName());
+        ScrollPane scrollPane = new ScrollPane(comp.multipaneComp(),
+                ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.getViewport().setPreferredSize(new Dimension(150, Integer.MAX_VALUE));
+        multipane.add(scrollPane, comp.multipaneName());
     }
 
     public void showTip(String name) {
