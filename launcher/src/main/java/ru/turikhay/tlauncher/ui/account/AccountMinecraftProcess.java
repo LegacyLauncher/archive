@@ -36,7 +36,6 @@ public class AccountMinecraftProcess extends BorderPanel implements AccountMulti
 
         progressBar = new ProgressBar();
         progressBar.setPreferredSize(SwingUtil.magnify(new Dimension(1, 24)));
-        progressBar.setIndeterminate(true);
         c.gridy++;
         panel.add(progressBar, c);
 
@@ -58,11 +57,13 @@ public class AccountMinecraftProcess extends BorderPanel implements AccountMulti
     @Override
     public void multipaneShown(boolean gotBack) {
         setProcessLabel("starting");
+        progressBar.setIndeterminate(true);
         worker.start();
     }
 
     @Override
     public void multipaneClosed() {
+        progressBar.setIndeterminate(false);
         worker.cancel();
     }
 

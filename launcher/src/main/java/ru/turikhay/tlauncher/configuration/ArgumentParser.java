@@ -4,7 +4,9 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.util.OS;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -19,7 +21,7 @@ public class ArgumentParser {
     static {
         m.put("directory", "minecraft.gamedir");
         m.put("profiles", "profiles");
-        m.put("java-directory", "minecraft.javadir");
+        m.put("java-executable", "minecraft.cmd");
         m.put("version", "login.version");
         m.put("username", "login.account");
         m.put("usertype", "login.account.type");
@@ -38,7 +40,8 @@ public class ArgumentParser {
         parser.accepts("no-terminate", "Do not terminate Bootstrapper if started with it");
         parser.accepts("directory", "Specifies Minecraft directory").withRequiredArg();
         parser.accepts("profiles", "Specifies profile file").withRequiredArg();
-        parser.accepts("java-directory", "Specifies Java directory").withRequiredArg();
+        parser.accepts("java-directory", "Specifies Java directory (use java-executable instead)").withRequiredArg();
+        parser.accepts("java-executable", "Specifies Java executable").withRequiredArg();
         parser.accepts("version", "Specifies version to run").withRequiredArg();
         parser.accepts("username", "Specifies username").withRequiredArg();
         parser.accepts("usertype", "Specifies user type (if multiple with the same name)").withRequiredArg();
@@ -80,6 +83,16 @@ public class ArgumentParser {
         if (set == null) {
             return r;
         } else {
+            if(set.has("java-directory")) {
+                r.put(
+                        "java-executable",
+                        // <java dir>/bin/java[w.exe]
+                        set.valueOf("java-directory") + File.pathSeparator +
+                                "bin" + File.pathSeparator +
+                                "java" + (OS.WINDOWS.isCurrent()? "w.exe" : "")
+                );
+            }
+
             Iterator var3 = m.entrySet().iterator();
 
             while (var3.hasNext()) {
