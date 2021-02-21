@@ -98,9 +98,11 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
 
     public void registerTip(AccountMultipaneComp comp) {
         byName.put(comp.multipaneName(), comp);
-        ScrollPane scrollPane = new ScrollPane(comp.multipaneComp(),
-                ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.getViewport().setPreferredSize(new Dimension(150, Integer.MAX_VALUE));
+        ScrollPane scrollPane = new ScrollPane(
+                comp.multipaneComp(),
+                ScrollPane.ScrollBarPolicy.AS_NEEDED,
+                ScrollPane.ScrollBarPolicy.NEVER
+        );
         multipane.add(scrollPane, comp.multipaneName());
     }
 
