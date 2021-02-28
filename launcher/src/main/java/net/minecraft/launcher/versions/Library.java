@@ -1,6 +1,7 @@
 package net.minecraft.launcher.versions;
 
 import net.minecraft.launcher.updater.DownloadInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -123,7 +124,7 @@ public class Library {
         } else {
             String[] parts = name.split(":", 4);
 
-            return String.format("%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
+            return String.format(java.util.Locale.ROOT, "%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
         }
     }
 
@@ -135,7 +136,7 @@ public class Library {
         if (name == null) {
             throw new IllegalStateException("Cannot get artifact path of empty/blank artifact");
         } else {
-            return String.format("%s/%s", getArtifactBaseDir(), getArtifactFilename(classifier));
+            return String.format(java.util.Locale.ROOT, "%s/%s", getArtifactBaseDir(), getArtifactFilename(classifier));
         }
     }
 
@@ -147,16 +148,20 @@ public class Library {
             String result;
             if (classifier == null) {
                 if (parts.length == 4) {
-                    result = String.format("%s-%s-%s.jar", parts[1], parts[2], parts[3]);
+                    result = String.format(java.util.Locale.ROOT, "%s-%s-%s.jar", parts[1], parts[2], parts[3]);
                 } else {
-                    result = String.format("%s-%s.jar", parts[1], parts[2]);
+                    result = String.format(java.util.Locale.ROOT, "%s-%s.jar", parts[1], parts[2]);
                 }
             } else {
-                result = String.format("%s-%s-%s.jar", parts[1], parts[2], classifier);
+                result = String.format(java.util.Locale.ROOT, "%s-%s-%s.jar", parts[1], parts[2], classifier);
             }
 
             return SUBSTITUTOR.replace(result);
         }
+    }
+
+    public boolean hasEmptyUrl() {
+        return downloads != null && downloads.getArtifact() != null && StringUtils.isEmpty(downloads.getArtifact().getUrl());
     }
 
     public String toString() {

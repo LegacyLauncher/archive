@@ -8,6 +8,14 @@ public class BootstrapMeta extends ToStringBuildable {
     private Version version;
     private String shortBrand;
 
+    public BootstrapMeta(Version version, String shortBrand) {
+        this.version = version;
+        this.shortBrand = shortBrand;
+    }
+
+    public BootstrapMeta() {
+    }
+
     public Version getVersion() {
         return version;
     }

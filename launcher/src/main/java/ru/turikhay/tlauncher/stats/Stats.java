@@ -117,6 +117,7 @@ public final class Stats {
         return new Stats.Args()
                 .add("client", TLauncher.getInstance().getSettings().getClient().toString())
                 .add("version", String.valueOf(TLauncher.getVersion()))
+                .add("bootstrap", TLauncher.getInstance().getBootstrapVersion())
                 .add("brand", TLauncher.getShortBrand())
                 .add("os", OS.CURRENT.getName())
                 .add("locale", TLauncher.getInstance().getLang().getLocale().toString())

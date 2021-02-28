@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.crash;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashEntry;
 import ru.turikhay.tlauncher.ui.frames.VActionFrame;
@@ -19,6 +20,7 @@ import ru.turikhay.util.U;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 public final class CrashFrame extends VActionFrame {
     private static final Logger LOGGER = LogManager.getLogger(CrashFrame.class);
@@ -41,7 +43,14 @@ public final class CrashFrame extends VActionFrame {
         openLogs.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                OS.openFile(crash.getManager().getProcessLogger().getLogFile().getFile());
+                File logFile;
+                if(crash.getManager().hasProcessLogger()) {
+                    logFile = crash.getManager().getProcessLogger().getLogFile().getFile();
+                } else {
+                    LOGGER.warn("Opening logs, but CrashManager had no process logger");
+                    logFile = Log4j2ContextHelper.getCurrentLogFile().getFile();
+                }
+                OS.openFile(logFile);
             }
         });
     }

@@ -6,6 +6,8 @@ import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
+import ru.turikhay.tlauncher.bootstrap.json.RemoteBootstrapDeserializer;
+import ru.turikhay.tlauncher.bootstrap.json.RemoteLauncherDeserializer;
 import ru.turikhay.tlauncher.bootstrap.json.UpdateDeserializer;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
@@ -36,15 +38,15 @@ public class UpdateMeta {
 
     private static final int INITIAL_TIMEOUT = 1500, MAX_ATTEMPTS = 5;
 
-    public static Task<UpdateMeta> fetchFor(final String brand) throws ExceptionList {
-        U.requireNotNull(brand,  "brand");
+    public static Task<UpdateMeta> fetchFor(final String shortBrand) throws ExceptionList {
+        U.requireNotNull(shortBrand,  "brand");
 
         return new Task<UpdateMeta>("fetchUpdate") {
             @Override
             protected UpdateMeta execute() throws Exception {
-                log("Requesting update for: " + brand);
+                log("Requesting update for: " + shortBrand);
 
-                Gson gson = createGson();
+                Gson gson = createGson(shortBrand);
                 List<Exception> eList = new ArrayList<Exception>();
 
                 for(int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -57,7 +59,7 @@ public class UpdateMeta {
 
                         InputStream stream = null;
                         try {
-                            _url = String.format(UPDATE_URL_LIST.get(i), brand);
+                            _url = String.format(java.util.Locale.ROOT, UPDATE_URL_LIST.get(i), shortBrand);
                             URL url = new URL(_url);
                             log("URL: ", url);
 
@@ -97,8 +99,12 @@ public class UpdateMeta {
         };
     }
 
-    private static Gson createGson() {
-        return Json.build().registerTypeAdapter(UpdateMeta.class, new UpdateDeserializer()).create();
+    private static Gson createGson(String shortBrand) {
+        return Json.build()
+                .registerTypeAdapter(UpdateMeta.class, new UpdateDeserializer())
+                .registerTypeAdapter(RemoteLauncherMeta.class, new RemoteLauncherDeserializer(shortBrand))
+                .registerTypeAdapter(RemoteBootstrapMeta.class, new RemoteBootstrapDeserializer(shortBrand))
+                .create();
     }
 
     private static UpdateMeta fetchFrom(Gson gson, InputStream in) throws Exception {
@@ -128,8 +134,8 @@ public class UpdateMeta {
         }
     }
 
-    public static UpdateMeta fetchFrom(InputStream in) throws Exception {
-        return fetchFrom(createGson(), in);
+    public static UpdateMeta fetchFrom(InputStream in, String shortBrand) throws Exception {
+        return fetchFrom(createGson(shortBrand), in);
     }
 
     private static InputStream setupConnection(URL url, int attempt) throws IOException {
@@ -155,11 +161,20 @@ public class UpdateMeta {
     }
 
     protected long pendingUpdateUTC;
-    protected UpdateEntry update;
-    protected Map<String, String> support;
-    protected Map<String, String> description; // will be added to RemoteLauncherMeta by UpdateDeserializer
+    protected RemoteBootstrapMeta bootstrap;
+    protected RemoteLauncherMeta launcher;
     @Expose
     protected String options; // this field is handled by UpdateDeserializer
+
+    public UpdateMeta(long pendingUpdateUTC,
+                      RemoteBootstrapMeta bootstrap,
+                      RemoteLauncherMeta launcher,
+                      String options) {
+        this.pendingUpdateUTC = pendingUpdateUTC;
+        this.bootstrap = U.requireNotNull(bootstrap, "bootstrap");
+        this.launcher = U.requireNotNull(launcher, "launcher");
+        this.options = options;
+    }
 
     public boolean isOutdated() {
         if(pendingUpdateUTC < 0) {
@@ -172,35 +187,18 @@ public class UpdateMeta {
     }
 
     public RemoteBootstrapMeta getBootstrap() {
-        return update == null? null : update.bootstrap;
+        return bootstrap;
     }
 
     public RemoteLauncherMeta getLauncher() {
-        return update == null? null : update.launcher;
-    }
-
-    public Map<String, String> getSupport() {
-        return support == null ? null : Collections.unmodifiableMap(support);
-    }
-
-    public Map<String, String> getDescription() {
-        return description == null? null : Collections.unmodifiableMap(description);
+        return launcher;
     }
 
     public String getOptions() {
         return options;
     }
 
-    public void setOptions(String options) {
-        this.options = options;
-    }
-
     private static void log(Object... o) {
         U.log("[UpdateMeta]", o);
-    }
-
-    private static class UpdateEntry {
-        private RemoteBootstrapMeta bootstrap;
-        private RemoteLauncherMeta launcher;
     }
 }

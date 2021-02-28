@@ -286,8 +286,8 @@ public class SwingUtil {
     private static void invokeNow(SwingRunnable r) {
         try {
             r.run();
-        } catch(Exception e) {
-            throw new SwingException(e);
+        } catch(SuppressedSwingException e) {
+            throw new SwingException(e.getCause());
         }
     }
 

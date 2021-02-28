@@ -231,7 +231,9 @@ public class VersionSyncInfo {
                 }
                 while (!force && local1.isFile() && (library.getChecksum() == null || library.getChecksum().equals(FileUtil.getChecksum(local1, "SHA-1"))));
 
-                neededFiles.add(library.getDownloadable(source, featureMatcher, local1, os));
+                if(!library.hasEmptyUrl()) {
+                    neededFiles.add(library.getDownloadable(source, featureMatcher, local1, os));
+                }
             }
         }
     }

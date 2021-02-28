@@ -27,7 +27,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
 
     {
         Color color = Theme.getTheme().getForeground();
-        textColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        textColor = String.format(java.util.Locale.ROOT, "#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     private final HTMLPage.AboutPageTokenResolver resolver;

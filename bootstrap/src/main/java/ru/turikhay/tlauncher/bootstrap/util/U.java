@@ -7,6 +7,9 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.file.FileStore;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -195,6 +198,51 @@ public final class U {
 
     public static InputStreamReader toReader(InputStream in) {
         return new InputStreamReader(in, UTF8);
+    }
+
+    private static boolean nioAvailable = true;
+
+    public static long queryFreeSpace(File file) {
+        if(nioAvailable) {
+            try {
+                return queryFreeSpaceNIO(file);
+            } catch (Throwable t) {
+                U.log("[NIO]", "Failed to query free space using NIO", t.toString());
+                nioAvailable = false;
+            }
+        }
+        return queryFreeSpaceOldIO(file);
+    }
+
+    private static long queryFreeSpaceNIO(File file) {
+        Path path = file.toPath(); // -> NoSuchMethodError
+        FileSystem fileSystem = path.getFileSystem();
+        if(fileSystem.isReadOnly()) {
+            U.log("[NIO]", "Filesystem is read-only", file);
+            return 0;
+        }
+        FileStore fileStore;
+        try {
+            fileStore = fileSystem.provider().getFileStore(path);
+        } catch (IOException e) {
+            U.log("[NIO]", "Couldn't get file store of", file);
+            return -1;
+        }
+        if(fileStore.isReadOnly()) {
+            U.log("[NIO]", "File store is read-only", fileStore);
+            return 0;
+        }
+        try {
+            return fileStore.getUsableSpace();
+        } catch (IOException e) {
+            U.log("[NIO]", "Can't query usable space on", fileStore, e);
+            return -1;
+        }
+    }
+
+    private static long queryFreeSpaceOldIO(File file) {
+        long freeSpace = file.getFreeSpace();
+        return freeSpace <= 0 ? -1 : freeSpace;
     }
 
     private U() {

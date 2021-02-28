@@ -61,7 +61,7 @@ public final class Codepage {
 
     private static Codepage doDetect() throws CodepageException {
         String chcpResponse = queryChcp();
-        Matcher matcher = Pattern.compile(".*: ([\\d]+)").matcher(chcpResponse);
+        Matcher matcher = Pattern.compile(".*: ([\\d]+)[.]?").matcher(chcpResponse);
         if (matcher.matches() && matcher.groupCount() == 1) {
             int cp;
             try {

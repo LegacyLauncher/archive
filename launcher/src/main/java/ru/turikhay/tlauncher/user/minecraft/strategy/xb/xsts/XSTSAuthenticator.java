@@ -21,7 +21,7 @@ public class XSTSAuthenticator extends XboxServiceAuthStrategy {
         super(LOGGER, new HttpClientRequester<>(xboxLiveToken ->
                 Request.Post("https://xsts.auth.xboxlive.com/xsts/authorize")
                         .bodyString(
-                                String.format("{\"Properties\":{\"SandboxId\":\"RETAIL\",\"UserTokens\":[\"%s\"]},\"RelyingParty\": \"rp://api.minecraftservices.com/\",\"TokenType\": \"JWT\"}", xboxLiveToken),
+                                String.format(java.util.Locale.ROOT, "{\"Properties\":{\"SandboxId\":\"RETAIL\",\"UserTokens\":[\"%s\"]},\"RelyingParty\": \"rp://api.minecraftservices.com/\",\"TokenType\": \"JWT\"}", xboxLiveToken),
                                 ContentType.APPLICATION_JSON
                         ))
         );

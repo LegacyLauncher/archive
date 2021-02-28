@@ -76,7 +76,7 @@ public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Call
 
         URL url;
         try {
-            url = new URL(String.format(OAUTH2_AUTH_REQUEST, URLEncoder.encode(redirect_uri, FileUtil.getCharset().name()), state));
+            url = new URL(String.format(java.util.Locale.ROOT, OAUTH2_AUTH_REQUEST, URLEncoder.encode(redirect_uri, FileUtil.getCharset().name()), state));
         } catch(Exception e) {
             throw new Error(e);
         }

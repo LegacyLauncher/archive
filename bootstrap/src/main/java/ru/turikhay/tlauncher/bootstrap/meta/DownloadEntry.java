@@ -12,6 +12,15 @@ public class DownloadEntry {
     private final List<URL> url = new ArrayList<URL>();
     private String checksum;
 
+    public DownloadEntry(String name, List<URL> url, String checksum) {
+        this.name = name;
+        this.url.addAll(url);
+        this.checksum = checksum;
+    }
+
+    public DownloadEntry() {
+    }
+
     public String getName() {
         return name;
     }

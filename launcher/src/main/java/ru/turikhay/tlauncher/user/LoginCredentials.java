@@ -24,7 +24,7 @@ public class LoginCredentials {
         this.userType = StringUtil.requireNotBlank(userType, "userType");
         this.profileName = StringUtil.requireNotBlank(profileName, "profileName");
 
-        this.session = String.format("token:%s:%s", accessToken, UUIDTypeAdapter.fromUUID(uuid));
+        this.session = String.format(java.util.Locale.ROOT, "token:%s:%s", accessToken, UUIDTypeAdapter.fromUUID(uuid));
     }
 
     public String getUsername() {

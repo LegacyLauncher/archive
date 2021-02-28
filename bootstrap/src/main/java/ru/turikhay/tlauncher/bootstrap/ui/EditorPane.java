@@ -15,7 +15,7 @@ class EditorPane extends JEditorPane {
 
     {
         Color color = new JLabel().getForeground();
-        textColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        textColor = String.format(java.util.Locale.ROOT, "#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     public EditorPane(Font font) {

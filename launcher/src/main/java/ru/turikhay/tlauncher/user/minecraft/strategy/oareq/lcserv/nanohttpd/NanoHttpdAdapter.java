@@ -58,6 +58,9 @@ class NanoHttpdAdapter extends NanoHTTPD {
         } catch (ParseException e) {
             LOGGER.debug("Not valid request");
             return badRequest();
+        } catch(CodeRequestCancelledException e) {
+            LOGGER.info("Cancelled");
+            return handleCancel(e);
         } catch (MicrosoftOAuthCodeRequestException e) {
             LOGGER.info("Returned an error");
             return handleError(e);
@@ -68,6 +71,11 @@ class NanoHttpdAdapter extends NanoHTTPD {
     private Response handleError(MicrosoftOAuthCodeRequestException e) {
         lock.unlockWithError(e);
         return error();
+    }
+
+    private Response handleCancel(CodeRequestCancelledException e) {
+        lock.unlockWithError(e);
+        return cancelled();
     }
 
     private Response handleCode(String code) {
@@ -89,6 +97,10 @@ class NanoHttpdAdapter extends NanoHTTPD {
 
     private Response error() {
         return newResponse(Response.Status.BAD_REQUEST, "Something went wrong");
+    }
+
+    private Response cancelled() {
+        return newResponse(Response.Status.BAD_REQUEST, "Cancelled");
     }
 
     private Response badRequest() {

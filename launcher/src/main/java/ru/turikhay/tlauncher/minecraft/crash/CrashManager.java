@@ -122,7 +122,7 @@ public final class CrashManager {
                          ChildProcessLogger processLogger, Charset charset, int exitCode) {
         this.launcher = launcher;
         this.version = version;
-        this.processLogger = U.requireNotNull(processLogger, "processLogger");
+        this.processLogger = processLogger;
         this.charset = U.requireNotNull(charset, "charset");
         this.exitCode = exitCode;
 
@@ -216,7 +216,11 @@ public final class CrashManager {
     }
 
     public ChildProcessLogger getProcessLogger() {
-        return processLogger;
+        return U.requireNotNull(processLogger, "processLogger");
+    }
+
+    public boolean hasProcessLogger() {
+        return processLogger != null;
     }
 
     public int getExitCode() {
@@ -348,6 +352,11 @@ public final class CrashManager {
         }
 
         private void scan() throws CrashManagerInterrupted, CrashEntryException, IOException {
+            if(processLogger == null) {
+                LOGGER.warn("Process logger not found. Assuming it is unknown crash");
+                return;
+            }
+
             Object timer = Time.start(new Object());
 
             setupActions();

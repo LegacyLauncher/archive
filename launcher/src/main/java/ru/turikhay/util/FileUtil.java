@@ -83,7 +83,7 @@ public class FileUtil {
                 read = stream.read(ignored);
             } while (read > 0);
 
-            return String.format("%1$0" + hashLength + "x", new BigInteger(1, stream.getMessageDigest().digest()));
+            return String.format(java.util.Locale.ROOT, "%1$0" + hashLength + "x", new BigInteger(1, stream.getMessageDigest().digest()));
         } catch (Exception var9) {
         } finally {
             close(stream);
@@ -116,7 +116,7 @@ public class FileUtil {
             close(outputStream);
         }
 
-        return String.format("%1$0" + hashLength + "x", new BigInteger(1, digest.digest()));
+        return String.format(java.util.Locale.ROOT, "%1$0" + hashLength + "x", new BigInteger(1, digest.digest()));
     }
 
     private static byte[] createChecksum(File file, String algorithm) {

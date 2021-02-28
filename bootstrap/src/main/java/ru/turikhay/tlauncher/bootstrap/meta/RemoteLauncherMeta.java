@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.bootstrap.meta;
 
+import com.github.zafarkhaja.semver.Version;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.net.URL;
@@ -9,8 +10,16 @@ import java.util.Map;
 
 public class RemoteLauncherMeta extends LauncherMeta {
     private String checksum;
-    private List<URL> downloads;
+    private List<URL> url;
     private Map<String, String> description;
+
+    public RemoteLauncherMeta(Version version, String shortBrand, String checksum,
+                              List<URL> url, Map<String, String> description) {
+        super(version, shortBrand);
+        this.checksum = checksum;
+        this.url = url;
+        this.description = description;
+    }
 
     public Map<String, String> getDescription() {
         return description;
@@ -25,12 +34,12 @@ public class RemoteLauncherMeta extends LauncherMeta {
     }
 
     public List<URL> getDownloads() {
-        return downloads == null ? null : Collections.unmodifiableList(downloads);
+        return url == null ? null : Collections.unmodifiableList(url);
     }
 
     protected ToStringBuilder toStringBuilder() {
         return super.toStringBuilder()
                 .append("checksum", checksum)
-                .append("downloads", downloads);
+                .append("url", url);
     }
 }

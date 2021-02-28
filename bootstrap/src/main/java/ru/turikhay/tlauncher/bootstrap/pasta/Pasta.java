@@ -111,7 +111,7 @@ public class Pasta {
         URL url;
         try {
             url = new URL(
-                    String.format(CREATE_PASTE_URL,
+                    String.format(java.util.Locale.ROOT, CREATE_PASTE_URL,
                             URLEncoder.encode(APP_KEY, "UTF-8"),
                             URLEncoder.encode(clientId, "UTF-8")
                     )

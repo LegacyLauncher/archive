@@ -49,15 +49,15 @@ public final class Library extends ToStringBuildable {
     }
 
     private String getFilename() {
-        return String.format("%s-%s.jar", getParts()[1], getParts()[2]);
+        return String.format(java.util.Locale.ROOT, "%s-%s.jar", getParts()[1], getParts()[2]);
     }
 
     private String getBaseDir() {
-        return String.format("%s/%s/%s", StringUtils.replaceChars(getParts()[0], '.', '/'), getParts()[1], getParts()[2]);
+        return String.format(java.util.Locale.ROOT, "%s/%s/%s", StringUtils.replaceChars(getParts()[0], '.', '/'), getParts()[1], getParts()[2]);
     }
 
     public String getPath() {
-        return String.format("%s/%s", getBaseDir(), getFilename());
+        return String.format(java.util.Locale.ROOT, "%s/%s", getBaseDir(), getFilename());
     }
 
     @Expose

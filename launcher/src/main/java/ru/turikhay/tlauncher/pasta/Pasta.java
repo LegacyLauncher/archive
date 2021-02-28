@@ -108,7 +108,7 @@ public class Pasta {
         }
 
         URL url = U.makeURL(
-                String.format(CREATE_PASTE_URL,
+                String.format(java.util.Locale.ROOT, CREATE_PASTE_URL,
                         UrlEncoder.encode(APP_KEY),
                         UrlEncoder.encode(clientId),
                         UrlEncoder.encode(format.value())

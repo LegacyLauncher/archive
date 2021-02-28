@@ -20,7 +20,7 @@ public class XboxLiveAuthenticator extends XboxServiceAuthStrategy {
         super(LOGGER, new HttpClientRequester<>(accessToken ->
                 Request.Post("https://user.auth.xboxlive.com/user/authenticate")
                         .bodyString(
-                                String.format("{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"%s\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}",
+                                String.format(java.util.Locale.ROOT, "{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"%s\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}",
                                         (application.usesWeirdXboxTokenPrefix()? "d=" : "") + accessToken),
                                 ContentType.APPLICATION_JSON
                         ))

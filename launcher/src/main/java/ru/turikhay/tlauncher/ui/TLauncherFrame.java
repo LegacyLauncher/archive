@@ -241,7 +241,7 @@ public class TLauncherFrame extends JFrame {
         StringBuilder brandBuilder = new StringBuilder();
 
         if (!TLauncher.getInstance().isDebug()) {
-            brandBuilder.append(TLauncher.getVersion().getNormalVersion()).append(" ");
+            brandBuilder.append(U.getNormalVersion(TLauncher.getVersion())).append(" ");
         }
 
         brandBuilder.append("[").append(TLauncher.getBrand()).append("]");
@@ -261,9 +261,9 @@ public class TLauncherFrame extends JFrame {
         updateTitle();
         String title;
         if (TLauncher.getInstance().isDebug()) {
-            title = String.format("TL %s [%s]", brand, U.memoryStatus());
+            title = String.format(java.util.Locale.ROOT, "TL %s [%s]", brand, U.memoryStatus());
         } else {
-            title = String.format("TL %s", brand);
+            title = String.format(java.util.Locale.ROOT, "TL %s", brand);
         }
 
         setTitle(title);

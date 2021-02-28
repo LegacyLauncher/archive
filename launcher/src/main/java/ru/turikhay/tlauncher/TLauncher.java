@@ -427,7 +427,7 @@ public final class TLauncher {
             message = dispatcher.getBootMessage("en_US");
         }
         if (message != null) {
-            new UpdateFrame(getVersion().getNormalVersion(), message.getBody()).showAndWait();
+            new UpdateFrame(U.getNormalVersion(getVersion()), message.getBody()).showAndWait();
         }
     }
 
@@ -518,6 +518,10 @@ public final class TLauncher {
 
     public static Version getVersion() {
         return SEMVER;
+    }
+
+    public String getBootstrapVersion() {
+        return bridge.getBootstrapVersion();
     }
 
     public static boolean isBeta() {
