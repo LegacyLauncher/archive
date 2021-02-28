@@ -18,11 +18,10 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesAu
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchanger;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestCancelledException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.CodeRequestCancelledException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.embed.EmbeddedBrowserStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.*;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd.NanoHttpdLocalServer;
 import ru.turikhay.tlauncher.user.minecraft.strategy.pconv.MinecraftProfileConverter;
@@ -68,7 +67,7 @@ class AccountMinecraftProcessWorker {
                         locPrefix + "dont-own.alert.message",
                         null
                 );
-            } else if(e instanceof MicrosoftOAuthCodeRequestCancelledException) {
+            } else if(e instanceof CodeRequestCancelledException) {
                 setState("cancelled");
                 LOGGER.info("User cancelled OAuth code request: {}", e.toString());
             } else {

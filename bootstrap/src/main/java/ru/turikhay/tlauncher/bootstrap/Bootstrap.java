@@ -108,14 +108,28 @@ public final class Bootstrap {
         log("Short brand: ", localBootstrapMeta.getShortBrand());
 
         File targetJar = targetFileParser.value(parsed);  // can be null
-        if (targetJar == null)
-            targetJar = U.requireNotNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation");
+        if (targetJar == null) {
+            targetJar = U.requireNotNull(
+                    LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()),
+                    "defaultFileLocation"
+            );
+        }
         bootstrap.setTargetJar(targetJar);
         log("Target jar:", bootstrap.getTargetJar());
 
         File targetLibFolder = targetLibFolderParser.value(parsed); // can be null
-        if (targetLibFolder == null)
-            targetLibFolder = (bootstrap.getTargetJar().getParentFile() == null) ? new File("lib") : new File(bootstrap.getTargetJar().getParentFile().getParentFile(), "lib");
+        if (targetLibFolder == null) {
+            if(bootstrap.getTargetJar().getParentFile() == null) {
+                targetLibFolder = new File("lib");
+            } else {
+                /*
+                    .tlauncher/bin/legacy.jar ->
+                    .tlauncher/bin ->
+                    .tlauncher/bin/lib
+                 */
+                targetLibFolder = new File(bootstrap.getTargetJar().getParentFile(), "lib");
+            }
+        }
         bootstrap.setTargetLibFolder(targetLibFolder);
         log("Target lib folder:", bootstrap.getTargetLibFolder());
 
@@ -129,9 +143,9 @@ public final class Bootstrap {
         log("Ignore self update:", bootstrap.getIgnoreSelfUpdate());
 
         bootstrap.setPackageMode(parsed.has(packageMode));
-        log("Package mode:", bootstrap.getPackageMode());
+        log("Package mode:", bootstrap.isPackageMode());
 
-        if (bootstrap.getPackageMode()) {
+        if (bootstrap.isPackageMode()) {
             bootstrap.setIgnoreSelfUpdate(true);
             bootstrap.setIgnoreUpdate(true);
             log("Package mode: Ignore self update set to", bootstrap.getIgnoreSelfUpdate());
@@ -139,13 +153,13 @@ public final class Bootstrap {
         }
 
         try {
-            checkAccessible(bootstrap.getTargetJar(), false, !bootstrap.getPackageMode());
+            checkAccessible(bootstrap.getTargetJar(), false, !bootstrap.isPackageMode());
         } catch (IOException e) {
             throw new RuntimeException("error checking target jar: " + bootstrap.getTargetJar().getAbsolutePath(), e);
         }
 
         try {
-            checkAccessible(bootstrap.getTargetLibFolder(), false, !bootstrap.getPackageMode());
+            checkAccessible(bootstrap.getTargetLibFolder(), false, !bootstrap.isPackageMode());
         } catch (IOException e) {
             throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
         }
@@ -253,7 +267,14 @@ public final class Bootstrap {
             @Override
             public void helpBuildingEvent(EventBuilder eventBuilder) {
                 eventBuilder
-                        .withRelease(meta.getVersion().getNormalVersion())
+                        .withRelease(
+                                String.format(java.util.Locale.ROOT,
+                                        "%d.%d.%d",
+                                        meta.getVersion().getMajorVersion(),
+                                        meta.getVersion().getMinorVersion(),
+                                        meta.getVersion().getPatchVersion()
+                                )
+                        )
                         .withEnvironment(meta.getShortBrand());
             }
         });
@@ -337,7 +358,7 @@ public final class Bootstrap {
         this.ignoreSelfUpdate = ignoreSelfUpdate;
     }
 
-    public boolean getPackageMode() { return packageMode; }
+    public boolean isPackageMode() { return packageMode; }
 
     public void setPackageMode(boolean packageMode) {
         this.packageMode = packageMode;
@@ -366,6 +387,8 @@ public final class Bootstrap {
     DownloadEntry getBootstrapUpdate(UpdateMeta updateMeta) {
         RemoteBootstrapMeta remoteMeta = U.requireNotNull(updateMeta, "updateMeta").getBootstrap();
 
+        log("RemoteBootstrap meta", remoteMeta);
+
         U.requireNotNull(remoteMeta, "RemoteBootstrap meta");
         U.requireNotNull(remoteMeta.getDownload(), "RemoteBootstrap download URL");
 
@@ -385,11 +408,10 @@ public final class Bootstrap {
             return null;
         }
 
-        log("Current package: " + PackageType.CURRENT);
-        log("Remote bootstrap checksum of selected package: " + remoteMeta.getDownload(PackageType.CURRENT));
+        log("Remote bootstrap checksum of selected package: " + remoteMeta.getDownload());
 
         log("Local bootstrap checksum: " + localBootstrapChecksum);
-        log("Remote bootstrap checksum: " + remoteMeta.getDownload(PackageType.CURRENT).getChecksum());
+        log("Remote bootstrap checksum: " + remoteMeta.getDownload().getChecksum());
 
         if (localBootstrapChecksum.equalsIgnoreCase(remoteMeta.getDownload().getChecksum())) {
             return null;
@@ -482,7 +504,10 @@ public final class Bootstrap {
                         SignedStream signedStream = null;
                         try {
                             signedStream = new SignedStream(new FileInputStream(updateMetaFile));
-                            updateMeta = UpdateMeta.fetchFrom(Compressor.uncompressMarked(signedStream, false));
+                            updateMeta = UpdateMeta.fetchFrom(
+                                    Compressor.uncompressMarked(signedStream, false),
+                                    meta.getShortBrand()
+                            );
                             signedStream.validateSignature();
                         } finally {
                             U.close(signedStream);
@@ -776,8 +801,11 @@ public final class Bootstrap {
             NoFileAccessException.throwIfNoAccess(file, requireWritePermission);
         }
 
-        long freeSpace = file.getFreeSpace();
-        if(freeSpace != 0L && freeSpace < 1024L * 64L) {
+        long freeSpace = U.queryFreeSpace(file);
+        if(freeSpace < 0) {
+            throw new UnknownFreeSpaceException();
+        }
+        if(freeSpace < 1024L * 64L) {
             throw new InsufficientFreeSpace();
         }
     }

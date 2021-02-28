@@ -19,10 +19,9 @@ plugins {
     id 'java'
     id "com.github.johnrengelman.shadow" version "5.2.0"
     id "org.ajoberstar.grgit"
-    id 'edu.sc.seis.launch4j' version '2.4.6'
 }
 
-version '1.11.0'
+version '1.11.2'
 
 apply from: '../gradle/brand.gradle'
 
@@ -79,16 +78,6 @@ task minifiedJar(type: ProGuardTask) {
     dependsOn shadowJar
 }
 jar.finalizedBy(minifiedJar)
-
-launch4j {
-    mainClassName = "ru.turikhay.tlauncher.bootstrap.BootstrapStarter"
-    icon = "${rootProject.rootDir}/config/icon.ico"
-    jar = "lib/${shadowJar.archiveFileName.get().replace("all", "min")}"
-    outfile = "${project.name}-${project.version}.exe"
-    copyConfigurable = project.tasks.minifiedJar.outputs.files
-    xmlFileName = "${rootProject.rootDir}/config/launch4j-${launch4j_xml}.xml"
-}
-createExe.dependsOn(minifiedJar)
 
 task runDebug(type: JavaExec) {
     group = "Execution"

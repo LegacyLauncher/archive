@@ -1356,7 +1356,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             map.putAll(account.getUser().getLoginCredentials().map());
             /*map.put("auth_username", accountName);
             if (!account.isFree()) {
-                map.put("auth_session", String.format("token:%s:%s", account.getAccessToken(), account.getProfile().getId()));
+                map.put("auth_session", String.format(java.util.Locale.ROOT, "token:%s:%s", account.getAccessToken(), account.getProfile().getId()));
                 map.put("auth_access_token", account.getAccessToken());
                 map.put("user_properties", gson.toJson(account.getProperties()));
                 map.put("auth_player_name", account.getDisplayName());
@@ -1512,7 +1512,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             processLogger = ChildProcessLogger.create(charset);
         } catch (IOException e) {
-            throw new RuntimeException("Cannot create process logger", e);
+            LOGGER.warn("Cannot create process logger", e);
         }
 
         if (version.getReleaseType() != null)
@@ -1645,7 +1645,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             We don't know (yet) if there's *anything* in STDERR that
             CrashManager can make use of.
          */
-        if(streamType == PrintStreamType.OUT) {
+        if(processLogger != null && streamType == PrintStreamType.OUT) {
             processLogger.log(line);
         }
     }
@@ -1659,10 +1659,12 @@ public class MinecraftLauncher implements JavaProcessListener {
         LOGGER.info("Child process closed with exit code: {} ({})",exit, "0x" + Integer.toHexString(exit));
         exitCode = exit;
 
-        try {
-            processLogger.close();
-        } catch (IOException e) {
-            LOGGER.warn("Process logger failed to close", e);
+        if(processLogger != null) {
+            try {
+                processLogger.close();
+            } catch (IOException e) {
+                LOGGER.warn("Process logger failed to close", e);
+            }
         }
 
         if (settings.getBoolean("minecraft.crash") && !killed && (System.currentTimeMillis() - startupTime < MIN_WORK_TIME || exit != 0)) {
@@ -1773,7 +1775,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         if ((authentication.isLoggedIn()) && (authentication.canPlayOnline())) {
             if ((authentication instanceof com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication)) {
-                map.put("auth_session", String.format("token:%s:%s", new Object[] { authentication.getAuthenticatedToken(), UUIDTypeAdapter.fromUUID(authentication.getSelectedProfile().getId()) }));
+                map.put("auth_session", String.format(java.util.Locale.ROOT, "token:%s:%s", new Object[] { authentication.getAuthenticatedToken(), UUIDTypeAdapter.fromUUID(authentication.getSelectedProfile().getId()) }));
             } else {
                 map.put("auth_session", authentication.getAuthenticatedToken());
             }

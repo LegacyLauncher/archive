@@ -16,6 +16,7 @@ import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
@@ -23,6 +24,7 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.json.ExposeExclusion;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
@@ -72,8 +74,23 @@ public abstract class VersionList {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
             CompleteVersion complete;
-            try(InputStreamReader reader = version.getUrl() == null ? getUrl("versions/" + version.getID() + "/" + version.getID() + ".json") : new InputStreamReader(new URL(version.getUrl()).openConnection(U.getProxy()).getInputStream(), FileUtil.DEFAULT_CHARSET)) {
+            InputStreamReader reader = null;
+            try {
+                if(version.getUrl() == null) {
+                    reader = getUrl("versions/" + version.getID() + "/" + version.getID() + ".json");
+                } else {
+                    URL url = new URL(version.getUrl());
+                    InputStream input;
+                    if(RepositoryProxy.canBeProxied(url)) {
+                        input = RepositoryProxy.getProxyRepoList().read(url.toString());
+                    } else {
+                        input = url.openConnection().getInputStream();
+                    }
+                    reader = new InputStreamReader(input, FileUtil.DEFAULT_CHARSET);
+                }
                 complete = gson.fromJson(reader, CompleteVersion.class);
+            } finally {
+                U.close(reader);
             }
             complete.setID(version.getID());
             complete.setVersionList(this);

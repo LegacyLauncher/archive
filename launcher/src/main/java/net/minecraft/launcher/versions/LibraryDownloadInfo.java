@@ -8,6 +8,10 @@ public class LibraryDownloadInfo {
     private DownloadInfo artifact;
     private Map<String, DownloadInfo> classifiers;
 
+    public DownloadInfo getArtifact() {
+        return artifact;
+    }
+
     public DownloadInfo getDownloadInfo(String classifier) {
         if (classifier == null) {
             return this.artifact;

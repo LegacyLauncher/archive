@@ -5,11 +5,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.json.ToStringBuildable;
 
 public abstract class LauncherMeta extends ToStringBuildable {
-    private String version;
+    private Version version;
     private String shortBrand;
 
+    public LauncherMeta(Version version, String shortBrand) {
+        this.version = version;
+        this.shortBrand = shortBrand;
+    }
+
+    public LauncherMeta() {
+    }
+
     public Version getVersion() {
-        return Version.valueOf(version);
+        return version;
     }
 
     public String getShortBrand() {

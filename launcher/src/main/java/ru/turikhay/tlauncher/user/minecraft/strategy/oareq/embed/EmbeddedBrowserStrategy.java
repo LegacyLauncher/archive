@@ -56,7 +56,7 @@ public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrateg
             throw new MicrosoftOAuthCodeRequestException("url parsed an error", exception);
         }
         if(code == null) {
-            throw new MicrosoftOAuthCodeRequestCancelledException("browser closed and no code received");
+            throw new CodeRequestCancelledException("browser closed and no code received");
         }
         return code;
     }

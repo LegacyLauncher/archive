@@ -9,6 +9,7 @@ import ru.turikhay.util.U;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.util.Arrays;
 
 public class RepositoryProxy {
     public static final String[] PROXIFIED_HOSTS = new String[]{
@@ -20,6 +21,10 @@ public class RepositoryProxy {
             "https://mcproxy.tlaun.ch/proxy.php?url="
     };
     private static boolean PROXY_WORKED = false;
+
+    public static boolean canBeProxied(URL url) {
+        return Arrays.stream(PROXIFIED_HOSTS).anyMatch(host -> url.getHost().equals(host));
+    }
 
     private static ProxyRepoList proxyRepoList;
     public static ProxyRepoList getProxyRepoList() {

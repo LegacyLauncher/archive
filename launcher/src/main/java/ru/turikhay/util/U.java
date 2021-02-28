@@ -1,5 +1,6 @@
 package ru.turikhay.util;
 
+import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
@@ -905,6 +906,15 @@ public class U {
         } catch (IOException e) {
             return "failed to read error stream: " + e.toString();
         }
+    }
+
+    public static String getNormalVersion(Version version) {
+        return String.format(java.util.Locale.ROOT,
+                "%d.%d.%d",
+                version.getMajorVersion(),
+                version.getMinorVersion(),
+                version.getPatchVersion()
+        );
     }
 
     private static final Gson gson = new GsonBuilder().create();

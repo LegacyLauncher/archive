@@ -63,7 +63,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
     }
 
     private String getRedirectUri(int port) {
-        return String.format(SERVER_FULL_URL, port);
+        return String.format(java.util.Locale.ROOT, SERVER_FULL_URL, port);
     }
 
     URIWatchdog createWatchdog(int state) {

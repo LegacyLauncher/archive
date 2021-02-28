@@ -20,14 +20,27 @@ public class OAuthUrlParser {
         } catch(URISyntaxException e) {
             throw new ParseException(e);
         }
-        Optional<NameValuePair> error = pairs.stream().filter(p -> p.getName().equals("error")).findAny();
-        if(error.isPresent()) {
-            throw new MicrosoftOAuthCodeRequestException(error.get().getValue());
+        String error = findByKey(pairs, "error");
+        if(error != null) {
+            if(error.equals("access_denied")) {
+                throw new CodeRequestCancelledException("redirect page received \"access_denied\"");
+            }
+            throw new CodeRequestErrorException(error, findByKey(pairs, "error_description"));
         }
         Optional<NameValuePair> code = pairs.stream().filter(p -> p.getName().equals("code")).findAny();
         if(code.isPresent()) {
             return code.get().getValue();
         }
         throw new ParseException("no code in query");
+    }
+
+    private static String findByKey(List<NameValuePair> pairs, String key) {
+        Optional<NameValuePair> pair = pairs.stream()
+                .filter(p -> p.getName().equals(key))
+                .findAny();
+        if(!pair.isPresent()) {
+            return null;
+        }
+        return pair.get().getValue();
     }
 }

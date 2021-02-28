@@ -21,7 +21,7 @@ public class Sha256Sign {
     }
 
     public static String toString(byte[] b) {
-        return String.format("%064x", new java.math.BigInteger(1, b));
+        return String.format(java.util.Locale.ROOT, "%064x", new java.math.BigInteger(1, b));
     }
 
     public static byte[] digest(byte[] b) {

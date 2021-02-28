@@ -20,7 +20,7 @@ public class MinecraftServicesAuthenticator
         this(new HttpClientRequester<>(r ->
                 Request.Post("https://api.minecraftservices.com/authentication/login_with_xbox")
                         .bodyString(
-                                String.format("{\"identityToken\":\"XBL3.0 x=%s;%s\"}", r.getUHS(), r.getToken()),
+                                String.format(java.util.Locale.ROOT, "{\"identityToken\":\"XBL3.0 x=%s;%s\"}", r.getUHS(), r.getToken()),
                                 ContentType.APPLICATION_JSON
                         )));
     }

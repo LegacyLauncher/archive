@@ -14,6 +14,8 @@ import ru.turikhay.util.async.AsyncThread;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -45,6 +47,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
         LocalServerSelectedConfiguration selectedConfiguration = null;
         LockExchange lockExchange = null;
         NanoHttpdAdapter adapter = null;
+        List<IOException> serverStartExceptions = new ArrayList<>();
 
         for (int port : configuration.getAllowedPorts()) {
             LOGGER.debug("Starting server on {}:{}", configuration.getHost(), port);
@@ -77,6 +80,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
             } catch (IOException e) {
                 LOGGER.warn("Couldn't start local server on {}:{}",
                         configuration.getHost(), port, e);
+                serverStartExceptions.add(e);
                 adapter = null;
                 continue; // not ok
             }
@@ -84,7 +88,9 @@ public class NanoHttpdLocalServer implements ILocalServer {
             break; // ok
         }
         if(adapter == null) {
-            throw new LocalServerException("every allowed port cannot be bound to");
+            LocalServerException e = new LocalServerException("every allowed port cannot be bound to");
+            serverStartExceptions.forEach(e::addSuppressed);
+            throw e;
         } else {
             this.adapter = adapter;
             this.lockExchange = lockExchange;
