@@ -34,7 +34,18 @@ public class LogFile implements CharsetData {
     @Override
     public InputStreamReader read() throws IOException {
         createIfNotExist();
-        return new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), charset);
+        return new InputStreamReader(stream(), charset);
+    }
+
+    @Override
+    public InputStream stream() throws IOException {
+        createIfNotExist();
+        return new BufferedInputStream(new FileInputStream(file));
+    }
+
+    @Override
+    public Charset charset() {
+        return getCharset();
     }
 
     @Override

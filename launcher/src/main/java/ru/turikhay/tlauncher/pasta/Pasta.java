@@ -4,29 +4,43 @@ import io.sentry.Sentry;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.util.*;
+import ru.turikhay.util.CharsetData;
+import ru.turikhay.util.StringCharsetData;
+import ru.turikhay.util.UrlEncoder;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 
-import static ru.turikhay.tlauncher.pasta.PastaResult.*;
+import static ru.turikhay.tlauncher.pasta.PastaResult.PastaFailed;
+import static ru.turikhay.tlauncher.pasta.PastaResult.PastaUploaded;
 
 public class Pasta {
     private static final Logger LOGGER = LogManager.getLogger(Pasta.class);
 
     private static final String APP_KEY = "kByB9b8MdAbgMq66";
     private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s&format=%s";
+
+    private static final int
+            RESPONSE_OK = 201,
+            RESPONSE_ERROR_TOO_LONG = 413,
+            RESPONSE_ERROR_TOO_MANY_REQUESTS = 429;
 
     private CharsetData data;
     private boolean ignoreTooManyRequests;
@@ -100,100 +114,85 @@ public class Pasta {
             throw new RuntimeException("data is empty");
         }
 
+        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            PastaUploaded result = null;
+            for (int attempt = 1; attempt <= 2; attempt++) {
+                try {
+                    result = makeRequest(httpClient, data, format);
+                } catch(TooManyRequests tmr) {
+                    if(ignoreTmr) {
+                        throw tmr;
+                    }
+                    int waitTime = (attempt > 1? 61 : 31) + new Random().nextInt(10);
+                    LOGGER.warn("Pasta could not be sent because of the rate limit (attempt {}, wait time {}s)", attempt, waitTime);
+                    try {
+                        Thread.sleep(waitTime * 1000L);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException("interrupted", e);
+                    }
+                    continue;
+                }
+                break;
+            }
+            if(result == null) {
+                throw new TooManyRequests();
+            }
+            LOGGER.info("Pasta has been sent successfully: {}", result.getURL());
+            return result;
+        }
+    }
+
+    private PastaUploaded makeRequest(HttpClient httpClient, CharsetData data, PastaFormat format)
+            throws IOException {
         String clientId;
         if(TLauncher.getInstance() != null) {
             clientId = TLauncher.getInstance().getSettings().getClient().toString();
         } else {
             clientId = "test";
         }
-
-        URL url = U.makeURL(
-                String.format(java.util.Locale.ROOT, CREATE_PASTE_URL,
+        HttpPost httpPost = new HttpPost(
+                String.format(java.util.Locale.ROOT,
+                        CREATE_PASTE_URL,
                         UrlEncoder.encode(APP_KEY),
                         UrlEncoder.encode(clientId),
                         UrlEncoder.encode(format.value())
                 )
         );
-
-        PastaUploaded result = null;
-        for (int attempt = 1; attempt <= 2; attempt++) {
-            try {
-                result = makeRequest(url, data);
-                break;
-            } catch(TooManyRequests tmr) {
-                if(ignoreTmr) {
-                    throw tmr;
-                }
-                int waitTime = (attempt > 1? 61 : 31) + new Random().nextInt(10);
-                LOGGER.warn("Pasta could not be sent because of the rate limit (attempt {}, wait time {}s", attempt, waitTime);
-                try {
-                    Thread.sleep(waitTime * 1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException("interrupted", e);
-                }
-            }
+        httpPost.setEntity(new InputStreamEntity(
+                data.stream(),
+                data.length(),
+                ContentType.TEXT_PLAIN.withCharset(data.charset())
+        ));
+        HttpResponse response = httpClient.execute(httpPost);
+        int statusCode = response.getStatusLine().getStatusCode();
+        switch(statusCode) {
+            case RESPONSE_OK:
+                return readSuccess(response);
+            case RESPONSE_ERROR_TOO_LONG:
+                throw new PastaTooLong(data.length());
+            case RESPONSE_ERROR_TOO_MANY_REQUESTS:
+                throw new TooManyRequests();
         }
-
-        if(result == null) {
-            throw new TooManyRequests();
-        }
-
-        LOGGER.info("Pasta has been sent successfully: {}", result.getURL());
-        return result;
+        throw new PastaUnavailable(
+                statusCode,
+                EntityUtils.toString(response.getEntity())
+        );
     }
 
-    private PastaUploaded makeRequest(URL url, CharsetData data) throws IOException {
-        HttpURLConnection connection = null;
-        try {
-            connection = (HttpURLConnection) url.openConnection(U.getProxy());
-            connection.setConnectTimeout(U.getConnectionTimeout());
-            connection.setReadTimeout(U.getReadTimeout());
-            connection.setRequestProperty("Content-Type", "text/plain; charset=\""+ FileUtil.getCharset().name() +"\"");
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-
-            try(Reader input = data.read();
-                OutputStreamWriter output = new OutputStreamWriter(
-                        connection.getOutputStream(),
-                        FileUtil.getCharset()
-                );
-            ) {
-                IOUtils.copy(input, output);
+    private PastaUploaded readSuccess(HttpResponse response) throws IOException {
+        String result = EntityUtils.toString(response.getEntity());
+        if(result.startsWith("http")) {
+            URL urlLink;
+            try {
+                urlLink = new URL(result);
+            } catch(MalformedURLException e) {
+                urlLink = null;
             }
-
-            String response = IOUtils.toString(connection.getInputStream(), FileUtil.getCharset());
-            if (response.startsWith("http")) {
-                return new PastaUploaded(this, new URL(response));
-            } else {
-                throw new IOException("illegal response: \"" + response + '\"');
-            }
-        } catch(IOException ioE) {
-            if(connection != null && connection.getErrorStream() != null) {
-                switch (connection.getResponseCode()) {
-                    case 413:
-                        throw new PastaTooLong(data.length());
-                    case 429:
-                        throw new TooManyRequests(ioE);
-                }
-                if(connection.getResponseCode() == 429) {
-                    throw new TooManyRequests(ioE);
-                }
-                String error = null;
-                try {
-                    error = IOUtils.toString(connection.getErrorStream(), FileUtil.getCharset());
-                } catch(IOException e) {
-                    ioE.addSuppressed(e);
-                }
-                if(error != null) {
-                    throw new IOException("error: " + error);
-                }
-            }
-            throw ioE;
-        } finally {
-            if(connection != null) {
-                connection.disconnect();
+            if(urlLink != null) { // not malformed
+                return new PastaUploaded(this, urlLink);
             }
         }
+        throw new PastaUnavailable(response.getStatusLine().getStatusCode(), result);
     }
 
     private String getSample() {

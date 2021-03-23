@@ -63,7 +63,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class TLauncher {
     private static final Logger LOGGER = LogManager.getLogger(TLauncher.class);
@@ -89,6 +91,8 @@ public final class TLauncher {
     private final UIListeners uiListeners;
 
     private TLauncherFrame frame;
+
+    private long sessionStartTime;
 
     private TLauncher(BootBridge bridge, BootEventDispatcher dispatcher) throws Exception {
         U.requireNotNull(bridge, "bridge");
@@ -155,6 +159,7 @@ public final class TLauncher {
         });
 
         ready = true;
+        sessionStartTime = System.currentTimeMillis();
 
         dispatcher.onBootSucceeded();
 
@@ -309,6 +314,13 @@ public final class TLauncher {
                 Alert.showError("Configuration error", "Could not save settings – this is not good. Please contact support if you want to solve this.", e);
             }
             LOGGER.info("Goodbye!");
+            // "close" main window
+            TLauncher.getInstance().frame.setVisible(false);
+            // report and wait 5 seconds
+            try {
+                Stats.reportSessionDuration(getInstance().sessionStartTime).get(5, TimeUnit.SECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException ignored) {
+            }
             TLauncher.getInstance().dispatcher.requestClose();
         } else {
             System.exit(0);

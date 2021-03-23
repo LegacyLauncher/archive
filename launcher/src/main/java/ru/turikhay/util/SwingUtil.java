@@ -286,7 +286,7 @@ public class SwingUtil {
     private static void invokeNow(SwingRunnable r) {
         try {
             r.run();
-        } catch(SuppressedSwingException e) {
+        } catch(SwingRunnableException e) {
             throw new SwingException(e.getCause());
         }
     }
@@ -300,7 +300,7 @@ public class SwingUtil {
             Throwable t;
             if(invocationTargetException.getCause() != null) {
                 t = invocationTargetException.getCause();
-                if(t instanceof SuppressedSwingException) {
+                if(t instanceof SwingRunnableException) {
                     t = t.getCause();
                 }
             } else {

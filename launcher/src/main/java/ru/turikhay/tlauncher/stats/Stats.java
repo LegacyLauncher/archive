@@ -15,6 +15,7 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.EmptyFuture;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public final class Stats {
     private static final Logger LOGGER = LogManager.getLogger(Stats.class);
@@ -113,6 +115,11 @@ public final class Stats {
     public static void accountCreation(String type, String strategy, String step, boolean success) {
     }
 
+    public static Future<?> reportSessionDuration(long sessionStartTimeMillis) {
+        long durationSeconds = (System.currentTimeMillis() - sessionStartTimeMillis) / 1000L;
+        return submitDenunciation(newAction("session_duration").add("duration", String.valueOf(durationSeconds)));
+    }
+
     private static Stats.Args newAction(String name) {
         return new Stats.Args()
                 .add("client", TLauncher.getInstance().getSettings().getClient().toString())
@@ -124,9 +131,9 @@ public final class Stats {
                 .add("action", name);
     }
 
-    private static void submitDenunciation(final Stats.Args args) {
+    private static Future<?> submitDenunciation(final Stats.Args args) {
         if (allow) {
-            service.submit(new Callable() {
+            return service.submit(new Callable() {
                 public Void call() throws Exception {
                     String result = Stats.performGetRequest(Stats.STATS_BASE, Stats.toRequest(args));
 
@@ -141,6 +148,7 @@ public final class Stats {
                 }
             });
         }
+        return new EmptyFuture<>(null);
     }
 
     private static String toRequest(Stats.Args args) {

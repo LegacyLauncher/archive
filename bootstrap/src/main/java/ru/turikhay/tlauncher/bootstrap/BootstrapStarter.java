@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.bootstrap.util.stream.InputStreamCopier;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public final class BootstrapStarter {
@@ -63,6 +64,7 @@ public final class BootstrapStarter {
         List<String> jvmArgs = new ArrayList<String>();
         jvmArgs.add("-Xmx128m");
         jvmArgs.add("-Dfile.encoding=UTF-8");
+        jvmArgs.add("-Dtlauncher.systemCharset=" + Charset.defaultCharset().name());
         jvmArgs.add("-Dtlauncher.logFolder=" + OS.getSystemRelatedDirectory("tlauncher/logs", true));
 
         for (String propKey : System.getProperties().stringPropertyNames()) {
