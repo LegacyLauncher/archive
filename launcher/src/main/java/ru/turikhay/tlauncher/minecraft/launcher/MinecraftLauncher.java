@@ -15,7 +15,6 @@ import net.minecraft.launcher.versions.*;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.options.OptionsFile;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -39,13 +38,10 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.user.PlainUser;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
-import ru.turikhay.util.windows.wmi.Codepage;
-import ru.turikhay.util.windows.wmi.CodepageException;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -574,34 +570,20 @@ public class MinecraftLauncher implements JavaProcessListener {
             LOGGER.debug("I reckon it's fine to use standard UTF-8");
             return;
         }
-        LOGGER.debug("Detecting codepage...");
-        Codepage codepage;
-        try {
-            codepage = Codepage.get();
-        } catch (CodepageException e) {
-            LOGGER.warn("Couldn't detect codepage", e);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't detect codepage")
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
+        String systemCharsetName = System.getProperty("tlauncher.systemCharset");
+        if(systemCharsetName == null) {
+            LOGGER.warn("System charset is unknown");
             return;
         }
-        Charset detectedCharset;
+        Charset charset;
         try {
-            detectedCharset = codepage.getCharset();
-        } catch(UnsupportedCharsetException e) {
-            LOGGER.warn("Couldn't convert detected codepage {} to charset", codepage.getCodepage(), e);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("detected charset not supported")
-                    .withExtra("codepage", codepage)
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
-            detectedCharset = null;
+            charset = Charset.forName(systemCharsetName);
+        } catch(RuntimeException rE) {
+            LOGGER.warn("Couldn't find charset {}. It was passed as a system charset.", systemCharsetName, rE);
+            return;
         }
-        this.charset = detectedCharset;
-        LOGGER.info("Using platform charset {} (codepage {})", detectedCharset, codepage.getCodepage());
+        LOGGER.debug("Using system charset: {}", charset.name());
+        this.charset = charset;
     }
 
     public File getRootDir() {

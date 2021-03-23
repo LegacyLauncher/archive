@@ -4,11 +4,11 @@ public interface SwingRunnable extends Runnable {
     void doRun() throws Exception;
 
     @Override
-    default void run() throws SuppressedSwingException {
+    default void run() throws SwingRunnableException {
         try {
             doRun();
         } catch (Exception e) {
-            throw new SuppressedSwingException(e);
+            throw new SwingRunnableException(e);
         }
     }
 }

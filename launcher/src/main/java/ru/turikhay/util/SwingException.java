@@ -6,7 +6,7 @@ public class SwingException extends RuntimeException {
     }
 
     public Throwable unpackException() {
-        if(getCause() instanceof SuppressedSwingException) {
+        if(getCause() instanceof SwingRunnableException) {
             return getCause().getCause();
         }
         return getCause();

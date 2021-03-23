@@ -461,6 +461,10 @@ public class CompleteVersion implements Version, Cloneable {
             result.type = type;
         }
 
+        if (modpack != null) {
+            result.modpack = modpack;
+        }
+
         if (jvmArguments != null) {
             result.jvmArguments = jvmArguments;
         }

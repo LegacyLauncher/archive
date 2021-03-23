@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.120.3'
+version '1.121.0'
 
 apply from: '../gradle/brand.gradle'
 
@@ -37,7 +37,7 @@ dependencies {
     tlRuntime("org.slf4j:slf4j-api:1.7.21")
     tlRuntime("com.fasterxml.jackson.core:jackson-core:2.12.0")
     tlRuntime("com.github.zafarkhaja:java-semver:0.9.0")
-    tlRuntime("com.google.code.gson:gson:2.6.2")
+    tlRuntime("com.google.code.gson:gson:2.8.6")
     tlRuntime("commons-io:commons-io:2.5")
     tlRuntime("net.sf.jopt-simple:jopt-simple:4.9")
     tlRuntime("org.apache.commons:commons-compress:1.10")
@@ -168,6 +168,19 @@ task generateUpdateJson {
         }
 
         file("${buildDir}/update/launcher.json").write(meta.toString())
+
+        def metaModern = new JsonBuilder() // lol
+        metaModern {
+            version product_version
+            checksum jarFileChecksum
+            url downloadUrlList
+            description {
+                ru_RU ""
+                en_US ""
+            }
+        }
+
+        file("${buildDir}/update/launcher_modern.json").write(metaModern.toString())
     }
 }
 

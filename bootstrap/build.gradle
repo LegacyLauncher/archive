@@ -2,9 +2,12 @@ import groovy.json.JsonBuilder
 import org.gradle.internal.jvm.Jvm
 import proguard.gradle.ProGuardTask
 
+import java.security.DigestInputStream
+import java.security.MessageDigest
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.nio.charset.Charset
 
 buildscript {
     repositories {
@@ -89,10 +92,20 @@ task runDebug(type: JavaExec) {
         jvmArgs("-Dtlauncher.bootstrap.debug.external=true")
     }
     jvmArgs("-Dtlauncher.logFolder=${rootDir}/logs")
+    jvmArgs("-Dtlauncher.systemCharset=${Charset.defaultCharset().name()}")
     args("--debug")
 
     dependsOn(":launcher:buildLauncherRepo")
     dependsOn(":launcher:prepareLauncherDir")
+}
+
+static def generateChecksum(File file) {
+    file.withInputStream {
+        new DigestInputStream(it, MessageDigest.getInstance('SHA-256')).withStream {
+            it.eachByte {}
+            it.messageDigest.digest().encodeHex() as String
+        }
+    }
 }
 
 task generateMeta {
@@ -111,8 +124,44 @@ task generateMeta {
     }
 }
 
+task generateUpdateJson {
+    dependsOn(jar)
+    doLast {
+        def meta = new JsonBuilder()
+        def jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
+        def downloadUrlList = [
+                "https://tlauncherrepo.com/",
+                "https://u.tlauncher.ru/",
+                "https://tlaun.ch/",
+                "https://cdn.turikhay.ru/tlauncher/",
+                "http://cdn.turikhay.ru/tlauncher/"
+        ].collect {
+            urlPrefix -> urlPrefix + short_brand + "/bootstrap/" + jarFileChecksum + ".jar"
+        }
+
+        meta {
+            version product_version
+            checksum jarFileChecksum
+            url downloadUrlList
+        }
+
+        file("${buildDir}/update/bootstrap.json").write(meta.toString())
+    }
+}
+
+task copyJarAndRenameToSha256(type: Copy) {
+    dependsOn jar
+    from jar.outputs.files.singleFile
+    into "${buildDir}/update"
+    rename { generateChecksum(jar.outputs.files.singleFile) + ".jar" }
+}
+
 compileJava {
     dependsOn(generateMeta)
+}
+
+assemble {
+    dependsOn(generateUpdateJson, copyJarAndRenameToSha256)
 }
 
 test {
