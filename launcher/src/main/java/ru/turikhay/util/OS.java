@@ -83,10 +83,10 @@ public enum OS {
         try {
             version = JavaVersion.parse(System.getProperty("java.version"));
         } catch (Exception e) {
-            version = JavaVersion.create(1, 6, 0, 45);
+            version = JavaVersion.create(1, 8, 0, 45);
 
             LOGGER.warn("Could not parse Java version: {}", System.getProperty("java.version"));
-            LOGGER.warn("Assuming it is 1.6.0_45");
+            LOGGER.warn("Assuming it is 1.8.0_45");
         }
 
         return version;

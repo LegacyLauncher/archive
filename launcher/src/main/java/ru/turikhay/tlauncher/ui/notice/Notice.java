@@ -13,7 +13,7 @@ public final class Notice {
 
     private boolean promoted;
 
-    Notice(int id, int pos, String text, NoticeImage image, NoticeAction action) {
+    public Notice(int id, int pos, String text, NoticeImage image, NoticeAction action) {
         this.id = id;
         this.pos = pos;
         this.text = StringUtil.requireNotBlank(text, "text");

@@ -1,4 +1,4 @@
-package ru.turikhay.tlauncher.bootstrap.util;
+package ru.turikhay.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -23,7 +23,8 @@ public final class JavaVersion implements Comparable<JavaVersion> {
             try {
                 version = parse(sVersion);
             } catch(RuntimeException rE) {
-                U.log("Could not parse java version:", sVersion, rE);
+                System.err.println("Could not parse java version: " + sVersion);
+                rE.printStackTrace();
                 version = UNKNOWN;
             }
             CURRENT = version;
@@ -42,7 +43,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
             throw new IllegalArgumentException("version");
         }
         this.version = version;
-        this.identifier = StringUtils.isBlank(identifier) ? null : identifier;
+        identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
         if(epoch == 1) {
             this.epoch = epoch;
@@ -51,6 +52,10 @@ public final class JavaVersion implements Comparable<JavaVersion> {
 
             if (identifier != null && update == 0) {
                 update = -1;
+                if(identifier.startsWith("u") && !identifier.equals("unknown")) {
+                    update = parse(identifier.substring(1), "update in identifier");
+                    identifier = null;
+                }
             }
             this.update = ifNotSmallerMinusOne(update, "update");
         } else if(epoch == 0 && ifPositive(major, "major") > 0) {
@@ -64,6 +69,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
             this.minor = ifNotNegative(major, "minor (java 9+)");
             this.update = ifNotSmallerMinusOne(minor, "update (java 9+)");
         }
+        this.identifier = identifier;
         ea = version.contains("-ea");
         d = Double.parseDouble(this.epoch + "." + this.major);
     }
@@ -94,7 +100,9 @@ public final class JavaVersion implements Comparable<JavaVersion> {
 
     @Override
     public int compareTo(JavaVersion o) {
-        U.requireNotNull(o, "version");
+        if(o == null) {
+            throw new NullPointerException("version");
+        }
 
         int epochCompare = compare(getEpoch(), o.getEpoch());
         if(epochCompare != 0) {

@@ -37,7 +37,7 @@
         </SwingLogger>
     </Appenders>
     <Loggers>
-        <Logger name="ru.turikhay.tlauncher" level="debug" />
+        <Logger name="ru.turikhay" level="debug" />
         <Logger name="ru.turikhay.tlauncher.user.minecraft" level="trace" />
         <Root level="info">
             <AppenderRef ref="console" />

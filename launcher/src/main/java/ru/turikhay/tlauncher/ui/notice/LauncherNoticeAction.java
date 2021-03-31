@@ -23,7 +23,7 @@ public class LauncherNoticeAction extends NoticeAction {
     }
 
     @Override
-    List<? extends JMenuItem> getMenuItemList() {
+    protected List<? extends JMenuItem> getMenuItemList() {
         List<LocalizableMenuItem> list = new ArrayList<>();
         LocalizableMenuItem launchItem = new LocalizableMenuItem(L10N_PREFIX + "start", launcherName);
         launchItem.addActionListener(new ActionListener() {

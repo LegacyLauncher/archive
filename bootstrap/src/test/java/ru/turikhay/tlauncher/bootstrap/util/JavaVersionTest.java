@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
 import org.junit.jupiter.api.Test;
+import ru.turikhay.util.JavaVersion;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaVersionTest {
@@ -17,6 +19,7 @@ public class JavaVersionTest {
         test("121.0.55", 1, 121, 0, 55, null, false);
         test("11.0.1", 1, 11, 0, 1, null, false);
         test("11.0.9.1", 1, 11, 0, 9, null, false);
+        test("1.8.0-u252", 1, 8, 0, 252, null, false);
     }
 
     private void test(String parse, int epoch, int major, int minor, int update, String identifier, boolean ea) {

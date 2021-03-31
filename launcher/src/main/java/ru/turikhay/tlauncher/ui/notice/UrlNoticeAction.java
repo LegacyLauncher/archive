@@ -25,7 +25,7 @@ public class UrlNoticeAction extends NoticeAction {
     }
 
     @Override
-    List<? extends JMenuItem> getMenuItemList() {
+    protected List<? extends JMenuItem> getMenuItemList() {
         List<LocalizableMenuItem> list = new ArrayList<LocalizableMenuItem>();
 
         LocalizableMenuItem item = new LocalizableMenuItem(L10N_PREFIX + "open", name);

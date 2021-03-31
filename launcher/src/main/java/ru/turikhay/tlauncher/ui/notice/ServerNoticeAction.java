@@ -39,7 +39,7 @@ public class ServerNoticeAction extends NoticeAction {
     }
 
     @Override
-    List<? extends JMenuItem> getMenuItemList() {
+    protected List<? extends JMenuItem> getMenuItemList() {
         List<JMenuItem> list = new ArrayList<JMenuItem>();
 
         if (server.hasAccountTypeRestriction()) {

@@ -8,6 +8,7 @@ import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -60,6 +61,19 @@ public class CompleteVersion implements Version, Cloneable {
     @Expose Repository source;
     @Expose Account.AccountType proceededFor;
     @Expose VersionList list;
+
+    public CompleteVersion() {}
+    public CompleteVersion(String id, String minecraftArguments, String mainClass, String assets, String jar, Date time, Date releaseTime, Integer minimumLauncherVersion, List<Library> libraries) {
+        this.id = id;
+        this.minecraftArguments = minecraftArguments;
+        this.mainClass = mainClass;
+        this.assets = assets;
+        this.jar = jar;
+        this.time = time;
+        this.releaseTime = releaseTime;
+        this.minimumLauncherVersion = minimumLauncherVersion;
+        this.libraries = libraries;
+    }
 
     public String getID() {
         return id;
@@ -595,6 +609,15 @@ public class CompleteVersion implements Version, Cloneable {
         return result;
     }
 
+    public void validate() {
+        Validate.notNull(id, "id");
+        if(inheritsFrom != null) {
+            Validate.notNull(type, "type");
+            Validate.notNull(libraries, "libraries");
+            Validate.notNull(mainClass, "mainClass");
+        }
+    }
+
     protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");
 
     public static String getFamilyOf(String id) {
@@ -654,6 +677,8 @@ public class CompleteVersion implements Version, Cloneable {
                 if (version.time == null) {
                     version.time = new Date(0L);
                 }
+
+                version.validate();
 
                 return version;
             }

@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import pw.modder.tl.modloader.Modloader;
+import pw.modder.tl.modloader.extractor.ForgeExtractor;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.RetryDownloadException;
 import ru.turikhay.tlauncher.repository.Repository;
@@ -37,6 +39,15 @@ public class Library {
         map.put("platform", OS.CURRENT.getName());
         map.put("arch", OS.Arch.CURRENT.getBit());
         SUBSTITUTOR = new StrSubstitutor(map);
+    }
+
+    public Library() {}
+
+    public Library(String name, String url, String checksum) {
+        this.name = name;
+        this.url = url;
+        this.checksum = checksum;
+
     }
 
     @Override

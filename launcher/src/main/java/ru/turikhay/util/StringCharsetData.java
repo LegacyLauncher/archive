@@ -9,8 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class StringCharsetData implements CharsetData {
+    private static final int PRETTY_LONG_STRING = 1024 * 512;
+    private static final int SIZE_UNKNOWN = -1, SIZE_TOO_LONG = Integer.MIN_VALUE;
+
     private final String string;
-    private int size = -1;
+    private int size = -2;
 
     public StringCharsetData(String string) {
         this.string = Objects.requireNonNull(string, "string");
@@ -33,9 +36,13 @@ public class StringCharsetData implements CharsetData {
 
     @Override
     public long length() {
-        if(size == -1) {
-            size = string.getBytes(StandardCharsets.UTF_8).length;
+        if(size == SIZE_UNKNOWN) {
+            if(string.length() > PRETTY_LONG_STRING) {
+                size = SIZE_TOO_LONG;
+            } else {
+                size = string.getBytes(StandardCharsets.UTF_8).length;
+            }
         }
-        return size;
+        return size == SIZE_TOO_LONG ? SIZE_UNKNOWN : size;
     }
 }

@@ -329,6 +329,12 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new NullPointerException("Could not get complete version");
         }
 
+        try {
+            deJureVersion.validate();
+        } catch(RuntimeException rE) {
+            throw new RuntimeException("Invalid version", rE);
+        }
+
         if (deJureVersion.getReleaseType() == ReleaseType.LAUNCHER) {
             isLauncher = true;
         }
@@ -573,16 +579,44 @@ public class MinecraftLauncher implements JavaProcessListener {
         String systemCharsetName = System.getProperty("tlauncher.systemCharset");
         if(systemCharsetName == null) {
             LOGGER.warn("System charset is unknown");
-            return;
+            detectUsingCharsetDetectTool();
+        } else {
+            useSystemCharsetFromSysProp(systemCharsetName);
         }
+    }
+
+    private void useSystemCharsetFromSysProp(String systemCharsetName) {
         Charset charset;
         try {
             charset = Charset.forName(systemCharsetName);
         } catch(RuntimeException rE) {
             LOGGER.warn("Couldn't find charset {}. It was passed as a system charset.", systemCharsetName, rE);
+            Sentry.capture(new EventBuilder()
+                    .withLevel(Event.Level.ERROR)
+                    .withMessage("couldn't find system charset \"" + systemCharsetName + "\"")
+                    .withSentryInterface(new ExceptionInterface(rE))
+            );
             return;
         }
-        LOGGER.debug("Using system charset: {}", charset.name());
+        LOGGER.debug("Using system charset from system properties: {}", charset.name());
+        this.charset = charset;
+    }
+
+    private void detectUsingCharsetDetectTool() {
+        Charset charset;
+        try {
+            charset = CharsetDetect.detect(cmd);
+        } catch(RuntimeException rE) {
+            LOGGER.warn("Couldn't detect system charset using {} tool",
+                    CharsetDetect.class.getSimpleName(), rE);
+            Sentry.capture(new EventBuilder()
+                    .withLevel(Event.Level.ERROR)
+                    .withMessage("couldn't detect system charset")
+                    .withSentryInterface(new ExceptionInterface(rE))
+            );
+            return;
+        }
+        LOGGER.debug("Detected system charset: {}", charset);
         this.charset = charset;
     }
 
