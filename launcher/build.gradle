@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.121.0'
+version '1.121.1'
 
 apply from: '../gradle/brand.gradle'
 
@@ -53,7 +53,7 @@ dependencies {
     annotationProcessor("org.apache.logging.log4j:log4j-core:2.14.0")
     implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
-    implementation(project(":jWMI"))
+    implementation(project(":common"))
     implementation(project(":bridge"))
 
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.1')

@@ -10,8 +10,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
-import ru.turikhay.util.windows.DxDiag;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -81,7 +79,6 @@ public class PreSupportFrame extends VActionFrame {
 
             protected void onCancelled() {
                 super.onCancelled();
-                DxDiag.cancel();
                 PreSupportFrame.this.setVisible(true);
             }
         };

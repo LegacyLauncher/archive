@@ -3,9 +3,12 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.windows.DxDiag;
+import ru.turikhay.util.windows.dxdiag.DisplayDevice;
+import ru.turikhay.util.windows.dxdiag.DxDiag;
+import ru.turikhay.util.windows.dxdiag.DxDiagReport;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class GraphicsEntry extends PatternContainerEntry {
@@ -71,22 +74,23 @@ public class GraphicsEntry extends PatternContainerEntry {
             return true;
         }
 
-        if (!DxDiag.isScannable()) {
+        if (!DxDiag.canExecute()) {
             return true;
         }
 
-        DxDiag result;
+        DxDiagReport report;
 
         try {
-            result = DxDiag.get();
+            report = DxDiag.getInstanceTask().get();
         } catch (Exception e) {
             LOGGER.warn("Could not get DxDiag result", e);
             return true;
         }
 
         if (OS.VERSION.contains("10.")) {
-            DxDiag.DisplayDevice intelGraphics = result.getDisplayDevice("intel");
-            if (intelGraphics != null && intelWin10BugCardNamePattern.matcher(intelGraphics.getCardName()).matches()) {
+            Optional<DisplayDevice> intelGraphics = report.getDisplayDevice("intel");
+            if (intelGraphics.filter(card ->
+                    intelWin10BugCardNamePattern.matcher(card.getCardName()).matches()).isPresent()) {
                 LOGGER.info("Using DxDiag we found out that the machine is running on 1st or 2nd generation of " +
                         "Intel graphics chipset");
                 LOGGER.debug("External pattern: {}", intelWin10BugJrePattern);
@@ -107,9 +111,9 @@ public class GraphicsEntry extends PatternContainerEntry {
         }
 
         boolean
-                haveIntel = result.getDisplayDevice("intel") != null,
-                haveNvidia = result.getDisplayDevice("nvidia") != null,
-                haveAmd = result.getDisplayDevice("amd") != null || result.getDisplayDevice("ati ") != null;
+                haveIntel = report.getDisplayDevice("intel") != null,
+                haveNvidia = report.getDisplayDevice("nvidia") != null,
+                haveAmd = report.getDisplayDevice("amd") != null || report.getDisplayDevice("ati ") != null;
 
         if (haveIntel) {
             if (haveNvidia) {

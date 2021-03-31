@@ -29,6 +29,7 @@ import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.*;
 import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
 import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
+import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.windows.wmi.WMI;
 
 import javax.imageio.ImageIO;
@@ -36,7 +37,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public final class Bootstrap {
     public static final Raven SENTRY = new DefaultRavenFactory().createRavenInstance(
@@ -154,12 +158,14 @@ public final class Bootstrap {
 
         try {
             checkAccessible(bootstrap.getTargetJar(), false, !bootstrap.isPackageMode());
+        } catch(UnknownFreeSpaceException ignored) {
         } catch (IOException e) {
             throw new RuntimeException("error checking target jar: " + bootstrap.getTargetJar().getAbsolutePath(), e);
         }
 
         try {
             checkAccessible(bootstrap.getTargetLibFolder(), false, !bootstrap.isPackageMode());
+        } catch(UnknownFreeSpaceException ignored) {
         } catch (IOException e) {
             throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
         }

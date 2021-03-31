@@ -3,10 +3,10 @@ package ru.turikhay.tlauncher.ui.background;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.managers.RickrollManager;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.background.fx.MediaFxBackground;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 
@@ -84,10 +84,15 @@ public final class BackgroundManager extends ExtendedLayeredPane {
 
     public void loadBackground() {
         String path = TLauncher.getInstance().getSettings().get("gui.background");
-        if (path != null && mediaFxBackground != null && (path.endsWith(".mp4") || path.endsWith(".flv"))) {
-            worker.setBackground(mediaFxBackground, path);
+        if(RickrollManager.isEnabled()) {
+            LOGGER.info("April Fools' day!");
+            worker.setBackground(mediaFxBackground, getClass().getResource("/rickroll.mp4").toString());
         } else {
-            worker.setBackground(imageBackground, path);
+            if (path != null && mediaFxBackground != null && (path.endsWith(".mp4") || path.endsWith(".flv"))) {
+                worker.setBackground(mediaFxBackground, path);
+            } else {
+                worker.setBackground(imageBackground, path);
+            }
         }
         /*if(path == null) {
             worker.setBackground(oldAnimatedBackground, null);

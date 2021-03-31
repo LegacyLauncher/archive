@@ -16,15 +16,19 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.logger.LogFile;
 import ru.turikhay.util.CharsetData;
 import ru.turikhay.util.StringCharsetData;
 import ru.turikhay.util.UrlEncoder;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -237,5 +241,26 @@ public class Pasta {
 
     public static String pasteJson(String json) {
         return paste(json, PastaFormat.JSON);
+    }
+
+    public static String pasteFile(File file, PastaFormat format, Charset charset) {
+        if(file == null) {
+            return "pasta: file null";
+        }
+        if(file.isFile()) {
+            return "pasta: not a file: " + file.getAbsolutePath();
+        }
+        if(charset == null) {
+            charset = StandardCharsets.UTF_8;
+        }
+        return paste(new LogFile(file, charset), format);
+    }
+
+    public static String pasteFile(File file, PastaFormat format) {
+        return pasteFile(file, format, null);
+    }
+
+    public static String pasteFile(File file) {
+        return pasteFile(file, PastaFormat.PLAIN);
     }
 }

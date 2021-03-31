@@ -5,7 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
-import ru.turikhay.util.windows.DxDiag;
+import ru.turikhay.util.windows.dxdiag.DisplayDevice;
+import ru.turikhay.util.windows.dxdiag.DxDiag;
+import ru.turikhay.util.windows.dxdiag.DxDiagReport;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -212,27 +214,27 @@ public class CrashEntry extends IEntry {
         if (getGraphicsCardPattern() != null) {
             LOGGER.debug("graphics card pattern of {}: {}", getName(), getGraphicsCardPattern());
 
-            if (!DxDiag.isScannable()) {
+            if (!DxDiag.canExecute()) {
                 LOGGER.debug("{} is not capable because it requires DXDiag scanner", getName());
                 return false;
             }
 
-            DxDiag result;
+            DxDiagReport dxDiagReport;
             try {
-                result = DxDiag.get();
+                dxDiagReport = DxDiag.getInstanceTask().get();
             } catch (Exception e) {
                 LOGGER.debug("{} is not capable because DxDiag result is unavailable", getName());
                 return false;
             }
 
-            List<DxDiag.DisplayDevice> deviceList = result.getDisplayDevices();
+            List<DisplayDevice> deviceList = dxDiagReport.getDisplayDevices();
             if (deviceList == null || deviceList.isEmpty()) {
                 LOGGER.debug("{} is not capable because display devices list is unavailable: {}",
                         getName(), deviceList);
                 return false;
             }
 
-            for (DxDiag.DisplayDevice device : deviceList) {//DXDiagScanner.DXDiagScannerResult.DXDiagDisplayDevice device : deviceList) {
+            for (DisplayDevice device : deviceList) {
                 if (getGraphicsCardPattern().matcher(device.getCardName()).matches()) {
                     LOGGER.debug("{} is capable, found device: {}", getName(), device);
                     return true;
@@ -243,11 +245,11 @@ public class CrashEntry extends IEntry {
         }
 
         if (isArchIssue()) {
-            if (OS.Arch.x86.isCurrent() && DxDiag.isScannable()) {
+            if (OS.Arch.x86.isCurrent() && DxDiag.canExecute()) {
                 boolean is64Bit = false;
 
                 try {
-                    is64Bit = DxDiag.get().getSystemInfo().is64Bit();
+                    is64Bit = DxDiag.getInstanceTask().get().getSysInfo().is64Bit();
                 } catch (Exception e) {
                     LOGGER.warn("Could not detect if system is 64-bit");
                 }

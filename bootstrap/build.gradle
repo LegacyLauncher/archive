@@ -24,7 +24,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.11.2'
+version '1.12.3'
 
 apply from: '../gradle/brand.gradle'
 
@@ -35,7 +35,7 @@ java {
 
 dependencies {
     implementation(project(":bridge"))
-    implementation(project(":jWMI"))
+    implementation(project(":common"))
     implementation("com.getsentry.raven:raven:7.8.6")
     implementation("net.sf.jopt-simple:jopt-simple:4.9")
     implementation("com.timgroup:java-statsd-client:3.1.0")
@@ -125,10 +125,10 @@ task generateMeta {
 }
 
 task generateUpdateJson {
-    dependsOn(jar)
+    dependsOn(minifiedJar)
     doLast {
         def meta = new JsonBuilder()
-        def jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
+        def jarFileChecksum = generateChecksum(minifiedJar.outputs.files.singleFile)
         def downloadUrlList = [
                 "https://tlauncherrepo.com/",
                 "https://u.tlauncher.ru/",
@@ -150,10 +150,10 @@ task generateUpdateJson {
 }
 
 task copyJarAndRenameToSha256(type: Copy) {
-    dependsOn jar
-    from jar.outputs.files.singleFile
+    dependsOn minifiedJar
+    from minifiedJar.outputs.files.singleFile
     into "${buildDir}/update"
-    rename { generateChecksum(jar.outputs.files.singleFile) + ".jar" }
+    rename { generateChecksum(minifiedJar.outputs.files.singleFile) + ".jar" }
 }
 
 compileJava {

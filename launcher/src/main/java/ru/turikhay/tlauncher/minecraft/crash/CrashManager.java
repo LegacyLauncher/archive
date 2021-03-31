@@ -21,7 +21,7 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.ExtendedThread;
-import ru.turikhay.util.windows.DxDiag;
+import ru.turikhay.util.windows.dxdiag.DxDiag;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -53,7 +53,7 @@ public final class CrashManager {
     private final Entry
             generatedFilesSeekerEntry = new GeneratedFilesSeeker(),
             crashDescriptionSeeker = new CrashDescriptionSeeker(),
-            dxDiagAheadProcessorEntry = DxDiag.isScannable()? new DxDiagAheadProcessor() : null,
+            dxDiagAheadProcessorEntry = DxDiag.canExecute()? new DxDiagAheadProcessor() : null,
             logFlusherEntry = new LogFlusherEntry();
 
     private final List<String> modVersionsFilter = Arrays.asList("forge", "fabric", "rift", "liteloader");
@@ -112,7 +112,7 @@ public final class CrashManager {
 
         addEntry(new GraphicsEntry(this));
         addEntry(new BadMainClassEntry(this));
-        if(DxDiag.isScannable()) {
+        if(DxDiag.canExecute()) {
             addEntry(dxDiagAheadProcessorEntry);
         }
         addEntry(logFlusherEntry);
@@ -160,7 +160,6 @@ public final class CrashManager {
     private volatile boolean cancelled;
 
     public void cancel() {
-        DxDiag.cancel();
         cancelled = true;
     }
 
@@ -685,10 +684,7 @@ public final class CrashManager {
 
         @Override
         protected void execute() throws Exception {
-            try {
-                DxDiag.get();
-            } catch (Exception e) {
-            }
+            DxDiag.getInstance().queueTask(); // reset dxdiag if necessary
         }
     }
 
@@ -713,9 +709,9 @@ public final class CrashManager {
                 writeDelimiter();
             }
 
-            if (DxDiag.isScannable()) {
+            if (DxDiag.canExecute()) {
                 try {
-                    DxDiag.get();
+                    LOGGER.info(DxDiag.getInstanceTask().get());
                 } catch (Exception e) {
                     LOGGER.warn("Could not retrieve DxDiag", e);
                 }

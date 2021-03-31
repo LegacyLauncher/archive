@@ -11,5 +11,5 @@ rootProject.name = 'tlauncherlegacy'
 include 'bootstrap'
 include 'bridge'
 include 'launcher'
-include 'jWMI'
+include 'common'
 

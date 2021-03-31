@@ -203,6 +203,15 @@ public final class U {
     private static boolean nioAvailable = true;
 
     public static long queryFreeSpace(File file) {
+        if(!file.exists()) {
+            File parent = file.getParentFile();
+            if(parent == null) {
+                U.log("[queryFreeSpace]", "File", file.getAbsolutePath(),
+                        "does not exist and does not have a parent.");
+                // but it's *probably* okay. If not, we'll see this message in the bug report :)
+            }
+            file = parent;
+        }
         if(nioAvailable) {
             try {
                 return queryFreeSpaceNIO(file);
@@ -225,7 +234,7 @@ public final class U {
         try {
             fileStore = fileSystem.provider().getFileStore(path);
         } catch (IOException e) {
-            U.log("[NIO]", "Couldn't get file store of", file);
+            U.log("[NIO]", "Couldn't get file store of", file, e);
             return -1;
         }
         if(fileStore.isReadOnly()) {

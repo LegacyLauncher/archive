@@ -10,20 +10,23 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.user.MinecraftUser;
-import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
+import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidationException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidator;
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesAuthenticator;
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchanger;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.CodeRequestCancelledException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.*;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.DefaultExternalBrowser;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerConfiguration;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerStrategy;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerUrlProducer;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd.NanoHttpdLocalServer;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchanger;
 import ru.turikhay.tlauncher.user.minecraft.strategy.pconv.MinecraftProfileConverter;
 import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftOAuthProfile;
 import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftProfileRequester;
@@ -139,7 +142,7 @@ class AccountMinecraftProcessWorker {
                 ),
                 new LocalServerConfiguration(
                         "localhost",
-                        Arrays.asList(49521, 49522, 49523, 49524),
+                        Arrays.asList(46521, 47522, 48523, 49524),
                         "",
                         "https://tlaun.ch/msft-auth-success" +
                                 "?tl_version=" + UrlEncoder.encode(TLauncher.getVersion().toString())
