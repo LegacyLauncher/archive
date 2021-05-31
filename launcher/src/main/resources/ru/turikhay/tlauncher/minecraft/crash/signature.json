@@ -1,7 +1,7 @@
 {
-  "revision": 14,
+  "revision": 22,
   "required": "1.99.20",
-  "skip-folders": ["millenaire"],
+  "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap"],
   "variables": {
     "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
     "oom-pattern": ".*java.lang.OutOfMemoryError: .+$",
@@ -70,6 +70,195 @@
   ],
   "signatures": [
     {
+      "name": "java16",
+      "pattern": "^Exception in thread \"main\" java.lang.UnsupportedClassVersionError: net\\/minecraft\\/client\\/main\\/Main has been compiled by a more recent version of the Java Runtime \\(class file version 60.0\\), this version of the Java Runtime only recognizes class file versions up to .+$",
+      "title": {
+        "ru_RU": "Требуется Java 16",
+        "en_US": "Java 16 required"
+      },
+      "body": {
+        "ru_RU": "Новые версии Minecraft требуют как минимум Java 16. Вы можете установить её самостоятельно либо выбрать Рекомендуемую JRE в настройках лаунчера",
+        "en_US": "Recent Minecraft versions require at least Java 16. You can install it manually or select Recommended JRE in the launcher settings."
+      },
+      "buttons": [
+        "open-settings",
+        {
+          "name": "download-java16",
+          "text": {
+            "ru_RU": "Скачать Java",
+            "en_US": "Download Java"
+          },
+          "actions": [
+            "browse --www https://adoptopenjdk.net/?variant=openjdk16&jvmVariant=hotspot"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "char-png",
+      "pattern": "java\\.lang\\.SecurityException: SHA-256 digest error for (?:.+)\\.png",
+      "title": {
+        "ru_RU": "Скин меняется не так",
+        "en_US": "Skin shouldn't be changed that way"
+      },
+      "body": {
+        "ru_RU": "Minecraft крашнулся, потому что вы поменяли скин неправильно. Чтобы иметь возможность менять скин, зарегистрируйтесь на <b>Ely.by</b>, вернитесь в лаунчер и войдите в игру с использованием нового аккаунта.\nЧтобы исправить ошибку, отметьте галочку <b>«Обновить клиент»</b> в главном меню лаунчера перед тем как запустить игру ещё раз.",
+        "en_US": "Minecraft has crashed because you failed to change skin properly. We suggest you use another method: just register on <b>Ely.by</b>, return to the launcher and use your new account to launch the game.\nTo fix the crash check <b>\"Force update\"</b> in the main menu next time you try to launch the game."
+      },
+      "buttons": [
+        {
+          "name": "ely-by",
+          "text": {
+            "ru_RU": "Перейти на Ely.by",
+            "en_US": "Visit Ely.by"
+          },
+          "actions": [
+            "browse --www https://ely.by/"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "duplicated-mods-forge",
+      "pattern": "Caused by: java\\.lang\\.ClassFormatError: Duplicate (?:[a-z]+) name.+",
+      "title": {
+        "ru_RU": "Обнаружены дубликаты модов",
+        "en_US": "Duplicated mods found"
+      },
+      "body": {
+        "ru_RU": "Обнаружены моды, установленные более одного раза. Перейдите в папку модов и удалите дубликаты.",
+        "en_US": "Some mods are installed more that once. Please open mods folder and remove such mods"
+      },
+      "buttons": [
+        "open-mods"
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
+      "name": "fabric-dependencies",
+      "pattern": "net\\.fabricmc\\.loader\\.discovery\\.ModResolutionException.+",
+      "title": {
+        "ru_RU": "Ошибка загрузки модов для Fabric",
+        "en_US": "Error resolving Fabric mods"
+      },
+      "body": {
+        "ru_RU": "Перейдите в папку mods и проверьте версии и зависимости модов",
+        "en_US": "Please open mods folder and check installed mods and their dependencies"
+      },
+      "buttons": [
+        "open-mods"
+      ]
+    },
+    {
+      "name": "forge13-configs",
+      "pattern": ".*com\\.electronwill\\.nightconfig\\.core\\.io\\.ParsingException: Not enough data available.*",
+      "title": {
+        "ru_RU": "Ошибка проверки конфигурации Forge",
+        "en_US": "Error parsing Forge config files"
+      },
+      "body": {
+        "ru_RU": "Откройте папку игры и удалите в ней папку config. Попробуйте другой мир",
+        "en_US": "Remove config folder in game folder. Try other Minecraft world"
+      },
+      "buttons": [
+        {
+          "name": "open-mc",
+          "text": {
+            "ru_RU": "Открыть папку игры",
+            "en_US": "Open game folder"
+          },
+          "actions": [
+            "browse --folder ."
+          ]
+        }
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
+      "name": "stoneblock-craftpresense-issue",
+      "pattern": "Caused by: java\\.lang\\.UnsatisfiedLinkError: Unable to load library 'discord-rpc': Native library.+",
+      "title": {
+        "ru_RU": "Ошибка мода CraftPresense",
+        "en_US": "CraftPresense mod error"
+      },
+      "body": {
+        "ru_RU": "Пожалуйста, перейдите в папку с модами и удалите этот мод",
+        "en_US": "Please open mods folder and remove the mod"
+      },
+      "buttons": [
+        "open-mods"
+      ],
+      "version": "StoneBlock"
+    },
+    {
+      "name": "forge-craftpresense-issue",
+      "pattern": "Caused by: java\\.lang\\.UnsatisfiedLinkError: Unable to load library 'discord-rpc': Native library.+",
+      "title": {
+        "ru_RU": "Ошибка мода CraftPresense",
+        "en_US": "CraftPresense mod error"
+      },
+      "body": {
+        "ru_RU": "Пожалуйста, перейдите в папку с модами и удалите этот мод",
+        "en_US": "Please open mods folder and remove the mod"
+      },
+      "buttons": [
+        "open-mods"
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
+      "name": "forge-creativecore-missing",
+      "pattern": "Caused by: java\\.lang\\.ClassNotFoundException: com\\.creativemd\\.creativecore\\.transformer\\.CreativeTransformer.*",
+      "title": {
+        "ru_RU": "Требуется мод Creative Core",
+        "en_US": "Creative Core mod required"
+      },
+      "body": {
+        "ru_RU": "Пожалуйста, установите мод Creative Core",
+        "en_US": "Please install CreativeCore mod"
+      },
+      "buttons": [
+        "open-mods",
+        {
+          "name": "curse-creativecore",
+          "text": {
+            "ru_RU": "Скачать мод",
+            "en_US": "Download mod"
+          },
+          "actions": [
+            "browse --www https://www.curseforge.com/minecraft/mc-mods/creativecore/files/all"
+          ]
+        }
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
+      "name": "notenoughids-required",
+      "pattern": "java\\.lang\\.RuntimeException: Invalid id (?:[0-9]+) - maximum id range exceeded.*",
+      "title": {
+        "ru_RU": "Превышено максимальное количество предметов в игре",
+        "en_US": "Game blocks/items limit exceeded"
+      },
+      "body": {
+        "ru_RU": "Удалите часть модов или установите мод NotEnoughIDs",
+        "en_US": "Please remove some mods or install NotEnoughIDs mod"
+      },
+      "buttons": [
+        "open-mods",
+        {
+          "name": "curse-notenoughids",
+          "text": {
+            "ru_RU": "Скачать мод",
+            "en_US": "Download mod"
+          },
+          "actions": [
+            "browse --www https://www.curseforge.com/minecraft/mc-mods/notenoughids/files/all"
+          ]
+        }
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
       "name": "no-lwjgl32-on-linux",
       "pattern": "^.+Failed to locate library: liblwjgl32.so$",
       "title": {
@@ -118,9 +307,9 @@
       ]
     },
     {
-      "name": "jre9-and-above-not-supported",
+      "name": "jdk9-not-supported",
       "image": "java.png",
-      "pattern": ".+ClassLoader cannot be cast to (?:java\\.base\\/|class )?java\\.net\\.URLClassLoader.*"
+      "pattern": ".+ cannot be cast to java\\.base\\/java\\.net\\.URLClassLoader.*"
     },
     {
       "name": "unsupported-java-version",
@@ -149,7 +338,7 @@
         {
           "text": "download",
           "actions": [
-            "browse --www https://mods.curse.com/mc-mods/minecraft/222213-codechickencore#t1:other-downloads"
+            "browse --www https://www.curseforge.com/minecraft/mc-mods/codechickencore/files/all"
           ]
         }
       ]
