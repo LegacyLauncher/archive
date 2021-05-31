@@ -72,14 +72,14 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
             settingsWindow.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
-                    Blocker.unblock("settingsWindow", JREComboBox.this, sp.mcArgs);
+                    Blocker.unblock("settingsWindow", JREComboBox.this);
                     settingsWindow = null;
                     sp.updateValues();
                 }
             });
         }
         settingsWindow.showSettingsWindow();
-        Blocker.block("settingsWindow", JREComboBox.this, sp.mcArgs);
+        Blocker.block("settingsWindow", JREComboBox.this);
     }
 
     @Override
