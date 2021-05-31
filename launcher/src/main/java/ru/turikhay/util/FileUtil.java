@@ -9,9 +9,14 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -119,14 +124,12 @@ public class FileUtil {
         return String.format(java.util.Locale.ROOT, "%1$0" + hashLength + "x", new BigInteger(1, digest.digest()));
     }
 
-    private static byte[] createChecksum(File file, String algorithm) {
+    private static byte[] createChecksum(File file, String algorithm) throws IOException {
         BufferedInputStream fis = null;
-
         try {
             fis = new BufferedInputStream(new FileInputStream(file));
             byte[] e = new byte[1024];
             MessageDigest complete = MessageDigest.getInstance(algorithm);
-
             int numRead;
             do {
                 numRead = fis.read(e);
@@ -134,38 +137,36 @@ public class FileUtil {
                     complete.update(e, 0, numRead);
                 }
             } while (numRead != -1);
-
-            byte[] var7 = complete.digest();
-            return var7;
-        } catch (Exception var10) {
+            return complete.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new Error(e);
         } finally {
             close(fis);
         }
+    }
 
-        return null;
+    public static String getChecksum0(File file, String algorithm) throws IOException {
+        if(!Objects.requireNonNull(file, "file").isFile()) {
+            throw new FileNotFoundException(file.getAbsolutePath());
+        }
+        byte[] checksumBytes = createChecksum(file, algorithm);
+        StringBuilder checksumString = new StringBuilder();
+        for (byte b : checksumBytes) {
+            checksumString.append(Integer.toString((b & 255) + 256, 16).substring(1));
+        }
+        return checksumString.toString();
+    }
+
+    public static String getSha1(File file) throws IOException {
+        return getChecksum0(file, "SHA-1");
     }
 
     public static String getChecksum(File file, String algorithm) {
-        if (file == null) {
+        try {
+            return getChecksum0(file, algorithm);
+        } catch (IOException ioE) {
+            LOGGER.debug("Couldn't compute {} for {}", algorithm, file.getAbsolutePath(), ioE);
             return null;
-        } else if (!file.exists()) {
-            return null;
-        } else {
-            byte[] b = createChecksum(file, algorithm);
-            if (b == null) {
-                return null;
-            } else {
-                StringBuilder result = new StringBuilder();
-                byte[] var7 = b;
-                int var6 = b.length;
-
-                for (int var5 = 0; var5 < var6; ++var5) {
-                    byte cb = var7[var5];
-                    result.append(Integer.toString((cb & 255) + 256, 16).substring(1));
-                }
-
-                return result.toString();
-            }
         }
     }
 
@@ -462,5 +463,17 @@ public class FileUtil {
             bOut.write(buffer, 0, read);
 
         return bOut.toByteArray();
+    }
+
+    public static long getSize(File file) throws IOException {
+        Path path = file.toPath();
+        BasicFileAttributeView view = Files.getFileAttributeView(path, BasicFileAttributeView.class);
+        BasicFileAttributes attributes;
+        try {
+            attributes = view.readAttributes();
+        } catch (IOException ioE) {
+            throw new IOException("Couldn't real attributes of " + file.getAbsolutePath(), ioE);
+        }
+        return attributes.size();
     }
 }

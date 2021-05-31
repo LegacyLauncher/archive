@@ -1,8 +1,13 @@
 package ru.turikhay.util.async;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.concurrent.*;
 
 public class AsyncThread {
+    private static final Logger LOGGER = LogManager.getLogger(AsyncThread.class);
+
     private static ExecutorService service = Executors.newCachedThreadPool(new ThreadFactory() {
         public Thread newThread(Runnable r) {
             return new RunnableThread(r);
@@ -19,6 +24,45 @@ public class AsyncThread {
 
     public static <V> Future<V> future(Callable<V> c) {
         return service.submit(wrap(c));
+    }
+
+    public static <V> Future<V> timeout(long timeout, TimeUnit timeUnit, Callable<V> c) {
+        return future(() -> {
+            Future<V> f = AsyncThread.future(c);
+            try {
+                return f.get(timeout, timeUnit);
+            } catch(InterruptedException | TimeoutException e) {
+                f.cancel(true);
+                throw e;
+            }
+        });
+    }
+
+    public static <V> Future<V> timeoutSeconds(long timeout, Callable<V> c) {
+        return timeout(timeout, TimeUnit.SECONDS, c);
+    }
+
+    public static <V> Future<V> after(long timeout, TimeUnit timeUnit, Callable<V> c) {
+        return future(() -> {
+            Thread.sleep(timeUnit.toMillis(timeout));
+            return c.call();
+        });
+    }
+
+    public static <V> Future<V> afterSeconds(long timeout, Callable<V> c) {
+        return after(timeout, TimeUnit.SECONDS, c);
+    }
+
+    public static Future<?> after(long timeout, TimeUnit timeUnit, Runnable r) {
+        return future(() -> {
+            Thread.sleep(timeUnit.toMillis(timeout));
+            r.run();
+            return null; // hint to compiler to use Callable<>
+        });
+    }
+
+    public static Future<?> afterSeconds(long timeout, Runnable r) {
+        return after(timeout, TimeUnit.SECONDS, r);
     }
 
     private static Runnable wrap(final Runnable r) {

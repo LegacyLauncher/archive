@@ -37,6 +37,11 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
         setWestString("launcher.step.comparing-assets" + (fastCompare ? "" : "-long"));
     }
 
+    @Override
+    public void onMinecraftCheckingJre() {
+        setWestString("launcher.step.checking-jre");
+    }
+
     public void onMinecraftDownloading() {
         setWestString("launcher.step.downloading");
     }

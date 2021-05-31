@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.121.1'
+version '1.122.0'
 
 apply from: '../gradle/brand.gradle'
 
@@ -50,7 +50,9 @@ dependencies {
     tlRuntime("org.apache.httpcomponents:httpclient:4.5.13")
     tlRuntime("org.apache.httpcomponents:fluent-hc:4.5.13")
     tlRuntime('org.nanohttpd:nanohttpd:2.3.1')
+    tlRuntime('ru.turikhay:jvd:1.0')
     annotationProcessor("org.apache.logging.log4j:log4j-core:2.14.0")
+    implementation(files("${rootProject.rootDir}/libraries/maven/jvd-1.0.jar"))
     implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
     implementation(project(":common"))

@@ -36,7 +36,7 @@ public class FileExplorer extends JFileChooser {
         try {
             return new FileExplorer();
         } catch (Throwable var1) {
-            throw new Exception("couldn\'t create explorer");
+            throw new Exception("couldn\'t create explorer", var1);
         }
     }
 }

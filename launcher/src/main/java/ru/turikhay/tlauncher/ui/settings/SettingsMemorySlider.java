@@ -118,29 +118,25 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
     private void updateTip() {
         SettingsMemorySlider.ValueType value = null;
 
-        if (settings.cmd.getValue() == null) {
-            int intVal = inputField.getIntegerValue();
-            if (intVal < 512) {
-                value = SettingsMemorySlider.ValueType.DANGER;
-            } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
-                value = SettingsMemorySlider.ValueType.OK;
-            } else {
-                switch (OS.Arch.CURRENT) {
-                    case x86:
-                        if (OS.Arch.TOTAL_RAM_MB > 0L && (long) intVal > OS.Arch.TOTAL_RAM_MB) {
-                            value = SettingsMemorySlider.ValueType.DANGER;
-                        } else if (intVal > OS.Arch.MAX_MEMORY) {
-                            value = SettingsMemorySlider.ValueType.WARNING;
-                        }
-                        break;
-                    default:
-                        if (intVal > OS.Arch.TOTAL_RAM_MB) {
-                            value = SettingsMemorySlider.ValueType.DANGER;
-                        }
-                }
-            }
+        int intVal = inputField.getIntegerValue();
+        if (intVal < OS.Arch.MIN_MEMORY) {
+            value = SettingsMemorySlider.ValueType.DANGER;
+        } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
+            value = SettingsMemorySlider.ValueType.OK;
         } else {
-            value = null;
+            switch (OS.Arch.CURRENT) {
+                case x86:
+                    if (OS.Arch.TOTAL_RAM_MB > 0L && (long) intVal > OS.Arch.TOTAL_RAM_MB) {
+                        value = SettingsMemorySlider.ValueType.DANGER;
+                    } else if (intVal > OS.Arch.MAX_MEMORY) {
+                        value = SettingsMemorySlider.ValueType.WARNING;
+                    }
+                    break;
+                default:
+                    if (intVal > OS.Arch.TOTAL_RAM_MB) {
+                        value = SettingsMemorySlider.ValueType.DANGER;
+                    }
+            }
         }
 
         String path;

@@ -16,4 +16,14 @@ public class DownloadInfo {
     public int getSize() {
         return size;
     }
+
+
+    @Override
+    public String toString() {
+        return "DownloadInfo{" +
+                "url='" + url + '\'' +
+                ", sha1='" + sha1 + '\'' +
+                ", size=" + size +
+                '}';
+    }
 }

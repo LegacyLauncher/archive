@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.settings.JREComboBox;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
@@ -63,7 +64,10 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                     loginForm.global.store();
                     setToolTipText(selectedVersion);
                 }
-
+                if(loginForm.scene.settingsForm.isLoaded()) {
+                    ((JREComboBox) loginForm.scene.settingsForm.get().jre.getComponent())
+                            .selectedVersionChanged(selected);
+                }
             }
         });
         selectedVersion = lf.global.get("login.version");

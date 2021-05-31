@@ -10,5 +10,8 @@ allprojects {
     repositories {
         jcenter()
         mavenCentral()
+        flatDir {
+            dirs "${rootDir}/libraries/maven"
+        }
     }
 }

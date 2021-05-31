@@ -5,6 +5,8 @@ public interface MinecraftExtendedListener extends MinecraftListener {
 
     void onMinecraftComparingAssets(boolean fast);
 
+    void onMinecraftCheckingJre();
+
     void onMinecraftDownloading();
 
     void onMinecraftReconstructingAssets();

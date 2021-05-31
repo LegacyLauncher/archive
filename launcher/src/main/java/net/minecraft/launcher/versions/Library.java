@@ -5,12 +5,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import pw.modder.tl.modloader.Modloader;
-import pw.modder.tl.modloader.extractor.ForgeExtractor;
 import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.downloader.RetryDownloadException;
+import ru.turikhay.tlauncher.downloader.Sha1Downloadable;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 
 import java.io.File;
@@ -211,22 +208,21 @@ public class Library {
         return repo == null ? new Library.LibraryDownloadable(path, file) : new Library.LibraryDownloadable(repo, path, file);
     }
 
-    public class LibraryDownloadable extends Downloadable {
-        private final String checksum;
-
+    public class LibraryDownloadable extends Sha1Downloadable {
         private LibraryDownloadable(Repository repo, String path, File file) {
             super(repo, path, file);
-            this.checksum = Library.this.getChecksum();
+            this.sha1 = Library.this.getChecksum();
         }
 
         private LibraryDownloadable(String path, File file) {
             super(Repository.PROXIFIED_REPO, path, file);
-            this.checksum = Library.this.getChecksum();
+            this.sha1 = Library.this.getChecksum();
         }
 
-        private LibraryDownloadable(DownloadInfo info, File file) {
+        public LibraryDownloadable(DownloadInfo info, File file) {
             super(info.getUrl().startsWith("/")? Repository.EXTRA_VERSION_REPO : Repository.PROXIFIED_REPO, info.getUrl(), file);
-            this.checksum = info.getSha1();
+            this.sha1 = info.getSha1();
+            this.length = info.getSize();
         }
 
         public Library getDownloadableLibrary() {
@@ -235,16 +231,6 @@ public class Library {
 
         public Library getLibrary() {
             return Library.this;
-        }
-
-        @Override
-        protected void onComplete() throws RetryDownloadException {
-            if (checksum != null) {
-                String fileHash = FileUtil.getChecksum(getDestination(), "SHA-1");
-                if (fileHash != null && !fileHash.equals(checksum)) {
-                    throw new RetryDownloadException("illegal library hash. got: " + fileHash + "; expected: " + checksum);
-                }
-            }
         }
     }
 }
