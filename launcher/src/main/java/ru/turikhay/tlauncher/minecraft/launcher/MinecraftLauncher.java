@@ -660,12 +660,12 @@ public class MinecraftLauncher implements JavaProcessListener {
                     LOGGER.debug("Will use fallback recommended version: {}", javaVersion);
                 }
             }
-            if(javaVersion == null) {
-                jreType = new JavaManagerConfig.Current();
-            } else if(JavaPlatform.CURRENT_PLATFORM == null) {
+            if(JavaPlatform.CURRENT_PLATFORM == null) {
                 LOGGER.warn("Current platform is unsupported");
                 jreType = new JavaManagerConfig.Current();
                 Alert.showWarning("", Localizable.get("launcher.warning.jre-platform-unsupported"));
+            } else if(javaVersion == null) {
+                jreType = new JavaManagerConfig.Current();
             } else {
                 String jreName = javaVersion.getComponent();
                 LOGGER.debug("Will use JRE: {}", javaVersion);
@@ -675,7 +675,8 @@ public class MinecraftLauncher implements JavaProcessListener {
                 } catch (InterruptedException interruptedException) {
                     throw new MinecraftLauncherAborted(interruptedException);
                 }
-                if(latestLocalOpt.isPresent()) {
+                // reinstall JRE if forceUpdate is checked, but ignore it if version has override
+                if(latestLocalOpt.isPresent() && (latestLocalOpt.get().hasOverride() || !forceUpdate)) {
                     LOGGER.debug("Latest version of required JRE is installed");
                     jreExec = latestLocalOpt.get().getWorkingDirectory() +
                             File.separator + "bin" + File.separator + "java" + (OS.WINDOWS.isCurrent()? "w.exe" : "");
