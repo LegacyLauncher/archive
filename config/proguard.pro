@@ -22,6 +22,11 @@
     *;
 }
 
+# Keep utility classes and methods
+-keep class ru.turikhay.util.** {
+    *;
+}
+
 # Keep - Applications. Keep all application classes, along with their 'main'
 # methods.
 -keepclasseswithmembers public class ru.turikhay.** {

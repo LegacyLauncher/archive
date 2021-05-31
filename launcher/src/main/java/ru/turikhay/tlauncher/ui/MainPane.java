@@ -21,7 +21,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -140,6 +139,11 @@ public class MainPane extends ExtendedLayeredPane {
             @Override
             public void onMinecraftComparingAssets(boolean fast) {
                 progress.get().onMinecraftComparingAssets(fast);
+            }
+
+            @Override
+            public void onMinecraftCheckingJre() {
+                progress.get().onMinecraftCheckingJre();
             }
 
             @Override

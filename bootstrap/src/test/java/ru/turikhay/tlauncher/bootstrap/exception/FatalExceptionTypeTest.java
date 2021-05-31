@@ -1,13 +1,15 @@
 package ru.turikhay.tlauncher.bootstrap.exception;
 
+import org.junit.jupiter.api.Test;
+import ru.turikhay.tlauncher.bootstrap.util.OS;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FatalExceptionTypeTest {
 
@@ -22,11 +24,13 @@ public class FatalExceptionTypeTest {
                 add(new UnknownHostException());
             }
         })), FatalExceptionType.INTERNET_CONNECTIVITY);
-        assertEquals(FatalExceptionType.getType(new ExceptionList(new ArrayList<Exception>() {
-            {
-                add(new SocketException("Address family not supported by protocol family: connect"));
-            }
-        })), FatalExceptionType.INTERNET_CONNECTIVITY_BLOCKED);
+        if(OS.WINDOWS.isCurrent()) {
+            assertEquals(FatalExceptionType.getType(new ExceptionList(new ArrayList<Exception>() {
+                {
+                    add(new SocketException("Address family not supported by protocol family: connect"));
+                }
+            })), FatalExceptionType.INTERNET_CONNECTIVITY_BLOCKED);
+        }
         assertEquals(FatalExceptionType.getType(new ExceptionList(new ArrayList<Exception>() {
             {
                 add(new IOException());

@@ -5,14 +5,16 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
-import ru.turikhay.util.U;
 
+import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
+import java.util.function.Consumer;
 
 public class EditorFileField extends BorderPanel implements EditorField {
     private static final Logger LOGGER = LogManager.getLogger(EditorFileField.class);
@@ -139,6 +141,15 @@ public class EditorFileField extends BorderPanel implements EditorField {
         }
 
         return testUrl;
+    }
+
+    public void addChangeListener(Consumer<String> listener) {
+        textField.getDocument().addDocumentListener(new DocumentChangeListener() {
+            @Override
+            public void documentChanged(DocumentEvent e) {
+                listener.accept(textField.getSettingsValue());
+            }
+        });
     }
 
     /*private EditorTextField textField;

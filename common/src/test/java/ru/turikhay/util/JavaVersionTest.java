@@ -2,7 +2,7 @@ package ru.turikhay.util;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JavaVersionTest {
     @Test
@@ -19,6 +19,8 @@ public class JavaVersionTest {
         test("11.0.1", 1, 11, 0, 1, null, false);
         test("11.0.9.1", 1, 11, 0, 9, null, false);
         test("1.8.0-u252", 1, 8, 0, 252, null, false);
+        test("16.0.1.9.1", 1, 16, 0, 1, null, false);
+        test("16.0.1.9.1_3", 1, 16, 0, 1, null, false);
     }
 
     private void test(String parse, int epoch, int major, int minor, int update, String identifier, boolean ea) {

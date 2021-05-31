@@ -17,7 +17,10 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 public class DownloaderThread extends ExtendedThread {
     private static final Logger LOGGER = LogManager.getLogger(DownloaderThread.class);
@@ -256,7 +259,7 @@ public class DownloaderThread extends ExtendedThread {
 
                 String contentType = connection.getHeaderField("Content-Type");
                 LOGGER.debug("Content type: {}", contentType);
-                if ("text/html".equalsIgnoreCase(contentType)) {
+                if (!current.getURL().endsWith("html") && "text/html".equalsIgnoreCase(contentType)) {
                     throw new RetryDownloadException("requested file is html");
                 }
 

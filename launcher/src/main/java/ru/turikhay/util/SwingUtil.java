@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 public class SwingUtil {
@@ -267,6 +267,10 @@ public class SwingUtil {
 
     public static void later(SwingRunnable r) {
         EventQueue.invokeLater(r);
+    }
+
+    public static void laterRunnable(Runnable r) {
+        later(r::run);
     }
 
     public static void wait(SwingRunnable r) {

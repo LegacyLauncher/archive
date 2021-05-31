@@ -14,7 +14,11 @@ public class EditorTextField extends BorderPanel implements EditorField {
     public EditorTextField(String prompt, boolean canBeEmpty) {
         this.canBeEmpty = canBeEmpty;
 
-        textField = new LocalizableTextField(prompt);
+        textField = new LocalizableTextField(prompt) {
+            @Override
+            protected void updateStyle() {
+            }
+        };
         textField.setColumns(1);
         setCenter(textField);
     }

@@ -58,6 +58,8 @@ public class CompleteVersion implements Version, Cloneable {
     Boolean modListAbsolutePrefix;
     String modpack;
 
+    JavaVersion javaVersion;
+
     @Expose Repository source;
     @Expose Account.AccountType proceededFor;
     @Expose VersionList list;
@@ -152,6 +154,10 @@ public class CompleteVersion implements Version, Cloneable {
             return ModpackType.FORGE_LEGACY_ABSOLUTE; // backwards compatibility
 
         return ModpackType.getByName(modpack, jar);
+    }
+
+    public JavaVersion getJavaVersion() {
+        return javaVersion;
     }
 
     public String getJar() {
@@ -547,6 +553,10 @@ public class CompleteVersion implements Version, Cloneable {
             result.downloads = downloads;
         }
 
+        if(javaVersion != null) {
+            result.javaVersion = javaVersion;
+        }
+
         if (source != null) {
             result.source = source;
         }
@@ -740,5 +750,35 @@ public class CompleteVersion implements Version, Cloneable {
         }
 
         return c;
+    }
+
+    public static class JavaVersion {
+        private String component;
+        private int majorVersion;
+
+        public JavaVersion(String component, int majorVersion) {
+            this.component = component;
+            this.majorVersion = majorVersion;
+        }
+
+        public JavaVersion() {
+        }
+
+        public String getComponent() {
+            return component;
+        }
+
+        public int getMajorVersion() {
+            return majorVersion;
+        }
+
+
+        @Override
+        public String toString() {
+            return "JavaVersion{" +
+                    "component='" + component + '\'' +
+                    ", majorVersion=" + majorVersion +
+                    '}';
+        }
     }
 }

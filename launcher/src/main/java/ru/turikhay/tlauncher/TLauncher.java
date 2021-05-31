@@ -3,16 +3,9 @@ package ru.turikhay.tlauncher;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.sentry.DefaultSentryClientFactory;
 import io.sentry.Sentry;
-import io.sentry.SentryClient;
-import io.sentry.SentryClientFactory;
-import io.sentry.context.ContextManager;
-import io.sentry.context.SingletonContextManager;
-import io.sentry.dsn.Dsn;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
-import io.sentry.event.User;
 import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import org.apache.commons.io.IOUtils;
@@ -54,9 +47,7 @@ import javax.net.ssl.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -85,6 +76,7 @@ public final class TLauncher {
     private final LibraryReplaceProcessor libraryReplaceManager;
     private final VersionManager versionManager;
     private final ProfileManager profileManager;
+    private final JavaManager javaManager;
 
     private final Downloader downloader;
 
@@ -92,7 +84,7 @@ public final class TLauncher {
 
     private TLauncherFrame frame;
 
-    private long sessionStartTime;
+    private long sessionStartTime;;
 
     private TLauncher(BootBridge bridge, BootEventDispatcher dispatcher) throws Exception {
         U.requireNotNull(bridge, "bridge");
@@ -140,6 +132,11 @@ public final class TLauncher {
 
         dispatcher.onBootStateChanged("Loading Profile manager", 0.35);
         profileManager = componentManager.loadComponent(ProfileManager.class);
+
+        migrateFromOldJreConfig();
+        File jreRootDir = new File(config.get(JavaManagerConfig.class).getRootDirOrDefault());
+        FileUtil.createFolder(jreRootDir);
+        javaManager = new JavaManager(jreRootDir);
 
         dispatcher.onBootStateChanged("Loading manager listener", 0.36);
         componentManager.loadComponent(ComponentManagerListenerHelper.class);
@@ -214,6 +211,21 @@ public final class TLauncher {
         preloadUI();
     }
 
+    private void migrateFromOldJreConfig() {
+        String cmd = config.get("minecraft.cmd");
+        if(cmd == null) {
+            return;
+        }
+
+        LOGGER.info("Migrating from old JRE configuration");
+        LOGGER.info("minecraft.cmd -> {} = {}", JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
+        LOGGER.info("{} = {}", JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
+
+        config.set("minecraft.cmd", null);
+        config.set(JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
+        config.set(JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
+    }
+
     public BootConfiguration getBootConfig() {
         return bootConfig;
     }
@@ -248,6 +260,10 @@ public final class TLauncher {
 
     public ProfileManager getProfileManager() {
         return profileManager;
+    }
+
+    public JavaManager getJavaManager() {
+        return javaManager;
     }
 
     public Downloader getDownloader() {

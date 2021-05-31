@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
+import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.managers.VersionLists;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -24,7 +25,6 @@ import ru.turikhay.tlauncher.ui.login.LoginException;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.support.ContributorsAlert;
-import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.Direction;
@@ -34,7 +34,6 @@ import ru.turikhay.util.SwingUtil;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -44,16 +43,14 @@ import java.util.List;
 
 public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
     private static final Logger LOGGER = LogManager.getLogger(SettingsPanel.class);
-    private final DefaultScene scene;
+    final DefaultScene scene;
     private final TabbedEditorPanel.EditorPanelTab minecraftTab;
     public final EditorFieldHandler directory;
     public final EditorFieldHandler useSeparateDir;
     public final EditorFieldHandler resolution;
     public final EditorFieldHandler fullscreen;
-    public final EditorFieldHandler javaArgs;
+    public final EditorFieldHandler jre;
     public final EditorFieldHandler mcArgs;
-    public final EditorFieldHandler improvedArgs;
-    public final EditorFieldHandler cmd;
     public final EditorFieldHandler memory;
     public final EditorGroupHandler versionHandler;
     public final EditorFieldHandler oldVersionsHandler; // temp
@@ -172,39 +169,12 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         });
         minecraftTab.add(new EditorPair("settings.versions.label", versions));
         minecraftTab.nextPane();
-        javaArgs = new EditorFieldHandler("minecraft.javaargs", new EditorTextField("settings.java.args.jvm", true), warning);
+        jre = new EditorFieldHandler(JavaManagerConfig.PATH_JRE_TYPE, new JREComboBox(this));
+        minecraftTab.add(new EditorPair("settings.jre.type.label", jre));
         mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
-        improvedArgs = new EditorFieldHandler("minecraft.improvedargs", new EditorCheckBox("settings.java.args.improved"), new FocusListener() {
-            public void focusGained(FocusEvent e) {
-                setMessage("settings.java.args.improved.tip");
-            }
-
-            public void focusLost(FocusEvent e) {
-                setMessage(null);
-            }
-        });
-        minecraftTab.add(new EditorPair("settings.java.args.label", new EditorHandler[]{javaArgs, mcArgs, improvedArgs}));
+        minecraftTab.add(new EditorPair("settings.java.args.minecraft.label", mcArgs));
         final SettingsMemorySlider memorySlider = new SettingsMemorySlider(this);
 
-        FileExplorer fileExplorer;
-        try {
-            fileExplorer = FileExplorer.newExplorer();
-            fileExplorer.setFileSelectionMode(FileExplorer.FILES_ONLY);
-            fileExplorer.setFileHidingEnabled(false);
-        } catch (Exception e) {
-            fileExplorer = null;
-        }
-        cmd = new EditorFieldHandler("minecraft.cmd", new EditorFileField("settings.java.cmd", "settings.java.cmd.browse", fileExplorer, true, true) {
-            {
-                textField.getDocument().addDocumentListener(new DocumentChangeListener() {
-                    @Override
-                    public void documentChanged(DocumentEvent e) {
-                        memorySlider.updateInfo();
-                    }
-                });
-            }
-        }, warning);
-        minecraftTab.add(new EditorPair("settings.java.cmd.label", new EditorHandler[]{cmd}));
         minecraftTab.nextPane();
         memory = new EditorFieldHandler("minecraft.memory", memorySlider, warning);
         minecraftTab.add(new EditorPair("settings.java.memory.label", new EditorHandler[]{memory}));
@@ -348,7 +318,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         saveButton.setFont(saveButton.getFont().deriveFont(1));
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                saveValues();
+                if(!saveValues()) {
+                    return;
+                }
                 if (hideUponSave) {
                     scene.setSidePanel(null);
                 } else {

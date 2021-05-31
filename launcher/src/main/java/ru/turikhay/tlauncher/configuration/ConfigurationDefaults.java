@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.configuration;
 
 import net.minecraft.launcher.versions.ReleaseType;
+import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
@@ -44,10 +45,12 @@ public final class ConfigurationDefaults {
         d.put("minecraft.versions.sub." + ReleaseType.SubType.REMOTE.name().toLowerCase(java.util.Locale.ROOT), true);
         d.put("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE.name().toLowerCase(java.util.Locale.ROOT), true);
 
+        d.put("minecraft.jre.type", JavaManagerConfig.Recommended.TYPE);
+
         d.put("minecraft.javaargs", null);
         d.put("minecraft.args", null);
         d.put("minecraft.improvedargs", true);
-        d.put("minecraft.cmd", null);
+
         d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
 
         d.put("minecraft.servers.promoted", true);

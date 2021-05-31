@@ -11,10 +11,7 @@ import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.stream.InputStringStream;
 
 import java.awt.*;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -915,6 +912,18 @@ public class U {
                 version.getMinorVersion(),
                 version.getPatchVersion()
         );
+    }
+
+    public static void copyInterruptibly(InputStream input, OutputStream output) throws IOException {
+        byte[] b = new byte[8192];
+        int l;
+        while((l = input.read(b)) != -1) {
+            output.write(b, 0, l);
+            if(Thread.interrupted()) {
+                throw new InterruptedIOException();
+            }
+        }
+        output.flush();
     }
 
     private static final Gson gson = new GsonBuilder().create();

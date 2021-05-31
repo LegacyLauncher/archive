@@ -7,7 +7,6 @@ import net.minecraft.launcher.versions.ReleaseType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.util.*;
 
 import java.io.File;
@@ -361,6 +360,21 @@ public class Configuration extends SimpleConfiguration {
             File file1 = (File) input;
             temp.store(new FileOutputStream(file1), comments);
         }
+    }
+
+    public <C extends Configurable> C get(Class<C> configurable) {
+        C c;
+        try {
+            c = configurable.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        c.load(this);
+        return c;
+    }
+
+    public <C extends Configurable> void set(C configurable) {
+        configurable.save(this);
     }
 
     public File getFile() {
