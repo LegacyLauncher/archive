@@ -116,7 +116,11 @@ public class JavaManager {
     }
 
     public CompleteVersion.JavaVersion getFallbackRecommendedVersion(Version version) {
-        if(JavaPlatform.CURRENT_PLATFORM != null && OS.JAVA_VERSION.getMajor() > 8) {
+        if(
+                version.getReleaseTime() != null
+                && JavaPlatform.CURRENT_PLATFORM != null
+                && OS.JAVA_VERSION.getMajor() > 8
+        ) {
             // 21w19a release time (2021-05-12T11:19:15+00:00)
             Instant java16UpgradePoint = Instant.ofEpochSecond(1620818355L);
             // pre-1.17 versions definitely support Java 8, but may not support anything in Java 9 ~ 16

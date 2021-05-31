@@ -50,7 +50,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler resolution;
     public final EditorFieldHandler fullscreen;
     public final EditorFieldHandler jre;
-    public final EditorFieldHandler mcArgs;
     public final EditorFieldHandler memory;
     public final EditorGroupHandler versionHandler;
     public final EditorFieldHandler oldVersionsHandler; // temp
@@ -171,8 +170,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         minecraftTab.nextPane();
         jre = new EditorFieldHandler(JavaManagerConfig.PATH_JRE_TYPE, new JREComboBox(this));
         minecraftTab.add(new EditorPair("settings.jre.type.label", jre));
-        mcArgs = new EditorFieldHandler("minecraft.args", new EditorTextField("settings.java.args.minecraft", true), warning);
-        minecraftTab.add(new EditorPair("settings.java.args.minecraft.label", mcArgs));
         final SettingsMemorySlider memorySlider = new SettingsMemorySlider(this);
 
         minecraftTab.nextPane();

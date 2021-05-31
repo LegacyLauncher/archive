@@ -52,6 +52,8 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     private final LocalizableTextField mcArgsField;
     private final LocalizableCheckbox useOptimizedArgsCheckbox;
 
+    private boolean saveValues;
+
     public JRESettingsWindow(JREComboBox comboBox) {
         this.comboBox = comboBox;
 
@@ -116,7 +118,6 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
 
         initJvmArgs(cfgs, c);
         mcArgsField = addConfig(cfgs, c, "mc-args");
-        mcArgsField.setValue(comboBox.sp.mcArgs.getValue());
 
         add(cfgs);
 
@@ -158,6 +159,8 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private void updateSelfValues() {
+        saveValues = false;
+
         JavaManagerConfig.JreType jreType = JavaManagerConfig.createByType(comboBox.sp.jre.getValue());
         if(jreType instanceof JavaManagerConfig.Recommended) {
             recommendedRadioButton.doClick();
@@ -172,9 +175,14 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         useOptimizedArgsCheckbox.setSelected(javaManagerConfig.useOptimizedArguments());
         jvmArgsField.setValue(javaManagerConfig.getArgs().orElse(null));
         mcArgsField.setValue(javaManagerConfig.getMinecraftArgs().orElse(null));
+
+        saveValues = true;
     }
 
     private void saveSelfValues() {
+        if(!saveValues) {
+            return;
+        }
         JavaManagerConfig javaManagerConfig = comboBox.sp.global.get(JavaManagerConfig.class);
         javaManagerConfig.setArgs(jvmArgsField.getValue());
         javaManagerConfig.setMcArgs(mcArgsField.getValue());
