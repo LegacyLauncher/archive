@@ -16,6 +16,7 @@ import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.async.AsyncThread;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class JRESettingsWindow extends ExtendedFrame implements LocalizableComponent {
     private static final int WIDTH = SwingUtil.magnify(450), HALF_WIDTH = SwingUtil.magnify(300);
@@ -51,6 +53,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     private final LocalizableTextField jvmArgsField;
     private final LocalizableTextField mcArgsField;
     private final LocalizableCheckbox useOptimizedArgsCheckbox;
+    private final LocalizableLabel settingsSavedLabel;
 
     private boolean saveValues;
 
@@ -122,6 +125,23 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         add(cfgs);
 
         add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(20))));
+        add(new JSeparator(SwingConstants.HORIZONTAL));
+        add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(20))));
+
+        settingsSavedLabel = new LocalizableLabel(
+                "settings.jre.window.bottom.save");
+        settingsSavedLabel.setVisible(false);
+
+        LocalizableButton closeButton = new LocalizableButton("settings.jre.window.bottom.close");
+        closeButton.setPreferredSize(new Dimension(HALF_WIDTH / 2, SwingUtil.magnify(40)));
+        closeButton.addActionListener(e -> JRESettingsWindow.this.dispose());
+
+        BorderPanel bottomPanel = new BorderPanel();
+        bottomPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bottomPanel.setWest(settingsSavedLabel);
+        bottomPanel.setEast(closeButton);
+
+        add(bottomPanel);
 
         pack();
     }
@@ -183,11 +203,30 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         if(!saveValues) {
             return;
         }
+        JavaManagerConfig javaManagerConfigOld = comboBox.sp.global.get(JavaManagerConfig.class);
         JavaManagerConfig javaManagerConfig = comboBox.sp.global.get(JavaManagerConfig.class);
         javaManagerConfig.setArgs(jvmArgsField.getValue());
         javaManagerConfig.setMcArgs(mcArgsField.getValue());
         javaManagerConfig.setUseOptimizedArguments(useOptimizedArgsCheckbox.isSelected());
-        comboBox.sp.global.set(javaManagerConfig);
+        if(!javaManagerConfigOld.equals(javaManagerConfig)) {
+            comboBox.sp.global.set(javaManagerConfig);
+            onValuesSaved();
+        }
+    }
+
+    private final AtomicInteger saveCount = new AtomicInteger();
+    private void onValuesSaved() {
+        final int saveCount = this.saveCount.incrementAndGet();
+        AsyncThread.execute(() -> {
+            SwingUtil.later(() -> settingsSavedLabel.setVisible(true));
+            Thread.sleep(5000);
+            SwingUtil.later(() -> {
+                if (saveCount == JRESettingsWindow.this.saveCount.get()) {
+                    SwingUtil.later(() -> settingsSavedLabel.setVisible(false));
+                }
+            });
+            return null;
+        });
     }
 
     private void onRecommended() {
@@ -248,8 +287,12 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private void saveJreType(String type) {
+        if(type.equals(comboBox.sp.global.get(JavaManagerConfig.PATH_JRE_TYPE))) {
+            return;
+        }
         comboBox.sp.global.set(JavaManagerConfig.PATH_JRE_TYPE, type);
         comboBox.sp.updateValues();
+        onValuesSaved();
     }
 
     private void showPath(String name) {

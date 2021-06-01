@@ -133,6 +133,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private JavaManagerConfig.JreType jreType;
 
+    public JavaManagerConfig.JreType getJreType() {
+        return jreType;
+    }
+
     private String jreExec;
 
     public Downloader getDownloader() {
@@ -270,6 +274,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     public String getVersion() {
         return version.getID();
+    }
+
+    public CompleteVersion getCompleteVersion() {
+        return version;
     }
 
     public void setVersion(String name) {

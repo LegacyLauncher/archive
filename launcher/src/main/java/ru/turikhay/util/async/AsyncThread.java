@@ -18,6 +18,10 @@ public class AsyncThread {
         service.execute(wrap(r));
     }
 
+    public static void execute(Callable<Void> c) {
+        service.submit(c);
+    }
+
     public static Future future(Runnable r) {
         return service.submit(wrap(r));
     }

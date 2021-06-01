@@ -1,5 +1,5 @@
 {
-  "revision": 22,
+  "revision": 23,
   "required": "1.99.20",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap"],
   "variables": {
@@ -66,34 +66,15 @@
       "actions": [
         "browse --folder ./mods"
       ]
+    },
+    {
+      "text": "force-update",
+      "actions": [
+        "force-update"
+      ]
     }
   ],
   "signatures": [
-    {
-      "name": "java16",
-      "pattern": "^Exception in thread \"main\" java.lang.UnsupportedClassVersionError: net\\/minecraft\\/client\\/main\\/Main has been compiled by a more recent version of the Java Runtime \\(class file version 60.0\\), this version of the Java Runtime only recognizes class file versions up to .+$",
-      "title": {
-        "ru_RU": "Требуется Java 16",
-        "en_US": "Java 16 required"
-      },
-      "body": {
-        "ru_RU": "Новые версии Minecraft требуют как минимум Java 16. Вы можете установить её самостоятельно либо выбрать Рекомендуемую JRE в настройках лаунчера",
-        "en_US": "Recent Minecraft versions require at least Java 16. You can install it manually or select Recommended JRE in the launcher settings."
-      },
-      "buttons": [
-        "open-settings",
-        {
-          "name": "download-java16",
-          "text": {
-            "ru_RU": "Скачать Java",
-            "en_US": "Download Java"
-          },
-          "actions": [
-            "browse --www https://adoptopenjdk.net/?variant=openjdk16&jvmVariant=hotspot"
-          ]
-        }
-      ]
-    },
     {
       "name": "char-png",
       "pattern": "java\\.lang\\.SecurityException: SHA-256 digest error for (?:.+)\\.png",

@@ -66,11 +66,13 @@ public final class CrashManager {
         addAction(new GuiAction());
         addAction(new ExitAction());
         addAction(new SetOptionAction(launcher == null? new OptionsFile(new File("test.txt")) : launcher.getOptionsFile()));
+        addAction(new ForceUpdateAction());
     }
 
     private void setupEntries() {
         crashEntries.clear();
 
+        addEntry(new Java16Entry(this));
         addEntry(generatedFilesSeekerEntry);
         addEntry(crashDescriptionSeeker);
         addEntry(new ErroredModListAnalyzer());
@@ -433,12 +435,13 @@ public final class CrashManager {
             try {
                 scan();
             } catch (Exception e) {
+                LOGGER.error("Error", e);
                 error = e;
             }
         }
     }
 
-    private class CrashManagerInterrupted extends Exception {
+    private static class CrashManagerInterrupted extends Exception {
         CrashManagerInterrupted() {
         }
 
@@ -447,7 +450,7 @@ public final class CrashManager {
         }
     }
 
-    private class CrashEntryException extends Exception {
+    private static class CrashEntryException extends Exception {
         CrashEntryException(IEntry entry, Throwable cause) {
             super(entry.toString(), cause);
         }
@@ -709,7 +712,7 @@ public final class CrashManager {
                 writeDelimiter();
             }
 
-            if (DxDiag.canExecute()) {
+            if (DxDiag.canExecute() && TLauncher.getInstance() != null && !TLauncher.getInstance().isDebug()) {
                 try {
                     LOGGER.info(DxDiag.getInstanceTask().get());
                 } catch (Exception e) {
@@ -999,7 +1002,7 @@ public final class CrashManager {
         }
     }
 
-    private class ExitAction extends BindableAction {
+    private static class ExitAction extends BindableAction {
         public ExitAction() {
             super("exit");
         }
@@ -1007,6 +1010,19 @@ public final class CrashManager {
         @Override
         public void execute(String arg) throws Exception {
             TLauncher.getInstance().getUIListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
+        }
+    }
+
+    private static class ForceUpdateAction extends BindableAction {
+        public ForceUpdateAction() {
+            super("force-update");
+        }
+
+        @Override
+        public void execute(String arg) throws Exception {
+            TLauncher.getInstance().getUIListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
+            TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.checkbox.forceupdate.setSelected(true);
+            TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.startLauncher();
         }
     }
 }
