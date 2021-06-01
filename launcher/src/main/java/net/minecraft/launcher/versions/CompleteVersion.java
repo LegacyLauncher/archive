@@ -473,6 +473,10 @@ public class CompleteVersion implements Version, Cloneable {
             result.modListAbsolutePrefix = modListAbsolutePrefix;
         }
 
+        if ((result.releaseTime == null || result.releaseTime.getTime() == 0L) && releaseTime != null) {
+            result.releaseTime = releaseTime;
+        }
+
         if (time.getTime() != 0L) {
             result.time = time;
         }

@@ -23,6 +23,9 @@ public class JavaManager {
     private static final Logger LOGGER = LogManager.getLogger(JavaManager.class);
     private static final long EXTRA_SPACE = 64L * 1024L * 1024L;
 
+    // 21w19a release time (2021-05-12T11:19:15+00:00)
+    public static final Instant JAVA16_UPGRADE_POINT = Instant.ofEpochSecond(1620818355L);
+
     private final JavaRuntimeRemoteListFetcher fetcher;
     private final JavaRuntimeLocalDiscoverer discoverer;
 
@@ -116,19 +119,23 @@ public class JavaManager {
     }
 
     public CompleteVersion.JavaVersion getFallbackRecommendedVersion(Version version) {
-        if(
-                version.getReleaseTime() != null
-                && JavaPlatform.CURRENT_PLATFORM != null
-                && OS.JAVA_VERSION.getMajor() > 8
-        ) {
-            // 21w19a release time (2021-05-12T11:19:15+00:00)
-            Instant java16UpgradePoint = Instant.ofEpochSecond(1620818355L);
-            // pre-1.17 versions definitely support Java 8, but may not support anything in Java 9 ~ 16
-            if (version.getReleaseTime().toInstant().compareTo(java16UpgradePoint) < 0) {
-                return new CompleteVersion.JavaVersion("jre-legacy", 8);
-            }
+        final String id = version.getID();
+        if(JavaPlatform.CURRENT_PLATFORM == null) {
+            LOGGER.debug("Current platform is unsupported, and {} won't have fallback JRE", id);
         }
-        return null;
+        if(version.getReleaseTime() == null) {
+            LOGGER.debug("Version {} has no release time", id);
+            return null;
+        }
+        if(OS.JAVA_VERSION.getMajor() < 9) {
+            LOGGER.debug("We're running Java 8; no fallback JRE is required for {}", id);
+            return null;
+        }
+        if (version.getReleaseTime().toInstant().compareTo(JAVA16_UPGRADE_POINT) >= 0) {
+            LOGGER.debug("Version {} was released after Java 16 upgrade point; no fallback JRE for it.",
+                    id);
+        }
+        return new CompleteVersion.JavaVersion("jre-legacy", 8);
     }
 
     public boolean hasEnoughSpaceToInstall(JavaRuntimeRemote remote)

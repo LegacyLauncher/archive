@@ -122,6 +122,30 @@ public class JavaManagerConfig implements Configurable {
         configuration.set(PATH_USE_OPTIMIZED_ARGS, this.useOptimizedArguments);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JavaManagerConfig)) return false;
+
+        JavaManagerConfig that = (JavaManagerConfig) o;
+
+        if (useOptimizedArguments != that.useOptimizedArguments) return false;
+        if (!Objects.equals(rootDir, that.rootDir)) return false;
+        if (!Objects.equals(args, that.args)) return false;
+        if (!Objects.equals(mcArgs, that.mcArgs)) return false;
+        return Objects.equals(jreType, that.jreType);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = rootDir != null ? rootDir.hashCode() : 0;
+        result = 31 * result + (args != null ? args.hashCode() : 0);
+        result = 31 * result + (mcArgs != null ? mcArgs.hashCode() : 0);
+        result = 31 * result + (jreType != null ? jreType.hashCode() : 0);
+        result = 31 * result + (useOptimizedArguments ? 1 : 0);
+        return result;
+    }
+
     public static String getDefaultRootDir() {
         return MinecraftUtil.getSystemRelatedDirectory("tlauncher/mojang_jre").getAbsolutePath();
     }
