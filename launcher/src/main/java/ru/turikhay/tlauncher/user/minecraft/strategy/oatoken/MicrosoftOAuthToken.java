@@ -5,15 +5,15 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable;
 import java.time.Instant;
 import java.util.Objects;
 
-import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.*;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notNegative;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notNull;
 
 public class MicrosoftOAuthToken implements Validatable {
     private String accessToken;
     private String refreshToken;
     private int expiresIn;
 
-    // not used in json deserialization and equals/hashCode
-    private final Instant createdAt;
+    private final transient Instant createdAt;
 
     public MicrosoftOAuthToken(String accessToken, String refreshToken, int expiresIn) {
         this.accessToken = accessToken;

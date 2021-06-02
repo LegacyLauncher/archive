@@ -8,18 +8,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.logger.LogFile;
-import ru.turikhay.util.CharsetData;
-import ru.turikhay.util.StringCharsetData;
-import ru.turikhay.util.UrlEncoder;
+import ru.turikhay.util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +81,7 @@ public class Pasta {
             result = doPaste();
         } catch (Throwable e) {
             LOGGER.error("Could not upload paste", e);
-            if(!(e instanceof TooManyRequests)) {
+            if(!(e instanceof PastaException)) {
                 Sentry.capture(new EventBuilder()
                         .withMessage("pasta not sent")
                         .withExtra("sample", getSample())
@@ -118,7 +113,7 @@ public class Pasta {
             throw new RuntimeException("data is empty");
         }
 
-        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try(CloseableHttpClient httpClient = EHttpClient.createRepeatable()) {
             PastaUploaded result = null;
             for (int attempt = 1; attempt <= 2; attempt++) {
                 try {
@@ -162,11 +157,7 @@ public class Pasta {
                         UrlEncoder.encode(format.value())
                 )
         );
-        httpPost.setEntity(new InputStreamEntity(
-                data.stream(),
-                data.length(),
-                ContentType.TEXT_PLAIN.withCharset(data.charset())
-        ));
+        httpPost.setEntity(new CharsetDataHttpEntity(data));
         HttpResponse response = httpClient.execute(httpPost);
         int statusCode = response.getStatusLine().getStatusCode();
         switch(statusCode) {

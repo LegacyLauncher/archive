@@ -105,7 +105,6 @@ public final class ElyAuthCode {
         try(InputStream input = connection.getInputStream()){
             read = IOUtils.toByteArray(input);
         } catch(IOException e) {
-            U.close(connection.getInputStream());
             ioE = e;
             try(InputStream error = connection.getErrorStream()){
                 read = IOUtils.toByteArray(error);

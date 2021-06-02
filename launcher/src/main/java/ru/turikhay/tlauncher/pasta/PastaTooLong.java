@@ -1,8 +1,6 @@
 package ru.turikhay.tlauncher.pasta;
 
-import java.io.IOException;
-
-public class PastaTooLong extends IOException {
+public class PastaTooLong extends PastaException {
     public PastaTooLong(long length) {
         super(String.valueOf(length));
     }

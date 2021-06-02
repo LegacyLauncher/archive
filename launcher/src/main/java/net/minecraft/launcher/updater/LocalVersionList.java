@@ -1,5 +1,7 @@
 package net.minecraft.launcher.updater;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import io.sentry.Sentry;
@@ -19,7 +21,6 @@ import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.U;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -89,8 +90,26 @@ public class LocalVersionList extends StreamVersionList {
                             deleteJsonFile(id, jsonFile);
                             continue;
                         }
-                        CompleteVersion ex = gson.fromJson(jsonParser.parse(input), CompleteVersion.class);
-                        U.requireNotNull(ex);
+                        JsonElement jsonElement = JsonParser.parseString(input);
+                        if(!jsonElement.isJsonObject()) {
+                            LOGGER.warn("Version doesn't contain object: {}", id);
+                            continue;
+                        }
+                        JsonObject jsonObject = jsonElement.getAsJsonObject();
+                        if(jsonObject.has("modpack")) {
+                            LOGGER.debug("Ignoring modpack version: {}", id);
+                            continue;
+                        }
+                        if(!jsonObject.has("id")) {
+                            LOGGER.warn("Ignored version without id: {} (probably not a " +
+                                    "Minecraft version at all)", id);
+                            continue;
+                        }
+                        CompleteVersion ex = gson.fromJson(jsonObject, CompleteVersion.class);
+                        if(ex == null) {
+                            LOGGER.warn("Version is empty: {}", id);
+                            continue;
+                        }
                         ex.setID(id);
                         ex.setSource(Repository.LOCAL_VERSION_REPO);
                         ex.setVersionList(this);

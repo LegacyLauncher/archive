@@ -37,13 +37,13 @@ public class QuickParameterListenerThread extends LoopedThread {
     }
 
     protected void iterateOnce() {
-        int[] initial = paramGetter.getIntegerArray();
+        int[] initial = SwingUtil.waitAndReturn(paramGetter::getIntegerArray);
         boolean i = false;
 
         boolean equal;
         do {
             sleep();
-            int[] newvalue = paramGetter.getIntegerArray();
+            int[] newvalue = SwingUtil.waitAndReturn(paramGetter::getIntegerArray);
             equal = true;
 
             for (int var5 = 0; var5 < initial.length; ++var5) {

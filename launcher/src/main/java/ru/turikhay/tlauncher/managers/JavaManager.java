@@ -118,22 +118,35 @@ public class JavaManager {
         return entries.parallelStream().noneMatch(e -> e.isTamperedWithAt(workingDirectory));
     }
 
-    public CompleteVersion.JavaVersion getFallbackRecommendedVersion(Version version) {
+    public CompleteVersion.JavaVersion getFallbackRecommendedVersion(Version version, boolean debugging) {
         final String id = version.getID();
         if(JavaPlatform.CURRENT_PLATFORM == null) {
-            LOGGER.debug("Current platform is unsupported, and {} won't have fallback JRE", id);
+            if(debugging) {
+                LOGGER.debug("Current platform is unsupported, and {} won't have fallback JRE", id);
+            }
+            return null;
         }
         if(version.getReleaseTime() == null) {
-            LOGGER.debug("Version {} has no release time", id);
+            if(debugging) {
+                LOGGER.debug("Version {} has no release time", id);
+            }
             return null;
         }
         if(OS.JAVA_VERSION.getMajor() < 9) {
-            LOGGER.debug("We're running Java 8; no fallback JRE is required for {}", id);
+            if(debugging) {
+                LOGGER.debug("We're running Java 8; no fallback JRE is required for {}", id);
+            }
             return null;
         }
         if (version.getReleaseTime().toInstant().compareTo(JAVA16_UPGRADE_POINT) >= 0) {
-            LOGGER.debug("Version {} was released after Java 16 upgrade point; no fallback JRE for it.",
-                    id);
+            if(debugging) {
+                LOGGER.debug("Version {} was released after Java 16 upgrade point; no fallback" +
+                                " JRE for it.", id);
+            }
+            return null;
+        }
+        if(debugging) {
+            LOGGER.debug("Fallback JRE for {} is {}", id, "jre-legacy");
         }
         return new CompleteVersion.JavaVersion("jre-legacy", 8);
     }

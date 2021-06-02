@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -55,13 +57,13 @@ public class JavaVersionDetector {
         } catch (URISyntaxException e) {
             throw new JavaVersionNotDetectedException(e);
         }
-        ProcessBuilder b = new ProcessBuilder(
+        List<String> command = Arrays.asList(
                 javaExec,
                 "-cp",
                 file.getAbsolutePath(),
                 JavaVersionDetectorMain.class.getName()
         );
-        //b.redirectErrorStream(true);
+        ProcessBuilder b = new ProcessBuilder(command);
 
         Process process;
         try {
@@ -69,6 +71,7 @@ public class JavaVersionDetector {
         } catch (IOException e) {
             throw new JavaVersionNotDetectedException(e);
         }
+        LOGGER.debug("Started process: {}", command);
 
         try(BufferedReader input = new BufferedReader(new InputStreamReader(
                 process.getInputStream(),
@@ -79,14 +82,14 @@ public class JavaVersionDetector {
                 if(Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                LOGGER.debug("Line: {}", line);
+                LOGGER.debug("[{}] Line: {}", javaExec, line);
                 Matcher matcher = PATTERN.matcher(line);
                 if(matcher.matches()) {
-                    LOGGER.debug("Found matching line: {}", line);
+                    LOGGER.debug("[{}] Found matching line: {}", javaExec, line);
                     try {
                         return JavaVersion.parse(matcher.group(1));
                     } catch (RuntimeException e) {
-                        LOGGER.warn("Couldn't parse version line: {}", line);
+                        LOGGER.warn("[{}] Couldn't parse version line: {}", javaExec, line);
                         throw new JavaVersionNotDetectedException(line);
                     }
                 }

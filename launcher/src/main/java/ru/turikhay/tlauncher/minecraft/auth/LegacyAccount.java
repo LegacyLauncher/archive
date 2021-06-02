@@ -4,8 +4,6 @@ import com.mojang.authlib.properties.PropertyMap;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import java.util.UUID;
-
 public class LegacyAccount {
     String type;
     String username;
@@ -13,7 +11,7 @@ public class LegacyAccount {
     String displayName;
     String accessToken;
     String clientToken;
-    UUID uuid;
+    String uuid;
     PropertyMap userProperties;
 
     @Override

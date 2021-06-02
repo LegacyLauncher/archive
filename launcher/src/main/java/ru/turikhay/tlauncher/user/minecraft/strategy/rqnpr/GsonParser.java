@@ -39,16 +39,20 @@ public class GsonParser<V extends Validatable> implements Parser<V> {
         return result;
     }
 
+    private static GsonBuilder gsonBuilder() {
+        return new GsonBuilder();
+    }
+
     public static <V extends Validatable> GsonParser<V> defaultParser(Type type) {
         return new GsonParser<>(
-                new GsonBuilder().create(),
+                gsonBuilder().create(),
                 type
         );
     }
 
     public static <V extends Validatable> GsonParser<V> withDashlessUUIDAdapter(Type type) {
         return new GsonParser<>(
-                new GsonBuilder()
+                gsonBuilder()
                         .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
                         .create(),
                 type
@@ -57,7 +61,7 @@ public class GsonParser<V extends Validatable> implements Parser<V> {
 
     public static <V extends Validatable> GsonParser<V> lowerCaseWithUnderscores(Type type) {
         return new GsonParser<>(
-                new GsonBuilder()
+                gsonBuilder()
                         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                         .create(),
                 type
@@ -66,7 +70,7 @@ public class GsonParser<V extends Validatable> implements Parser<V> {
 
     public static <V extends Validatable> GsonParser<V> upperCamelCase(Type type) {
         return new GsonParser<>(
-                new GsonBuilder()
+                gsonBuilder()
                         .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
                         .create(),
                 type
@@ -75,7 +79,7 @@ public class GsonParser<V extends Validatable> implements Parser<V> {
 
     public static <V extends Validatable> GsonParser<V> withDeserializer(Type type, Object typeAdapter) {
         return new GsonParser<>(
-                new GsonBuilder()
+                gsonBuilder()
                         .registerTypeAdapter(type, typeAdapter)
                         .create(),
                 type

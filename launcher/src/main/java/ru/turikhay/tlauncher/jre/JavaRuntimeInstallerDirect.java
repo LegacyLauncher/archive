@@ -5,10 +5,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tukaani.xz.LZMAInputStream;
+import ru.turikhay.util.EHttpClient;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
@@ -100,7 +100,7 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
     private HttpClient client;
 
     private void downloadFiles() throws IOException, InterruptedException {
-        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try(CloseableHttpClient httpClient = EHttpClient.createRepeatable()) {
             this.client = httpClient;
             for (int i = 0; i < missingFiles.size(); i++) {
                 missingFiles.get(i).download();

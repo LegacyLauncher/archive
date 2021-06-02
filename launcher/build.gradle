@@ -12,7 +12,7 @@ plugins {
     id "org.ajoberstar.grgit"
 }
 
-version '1.122.3'
+version '1.122.4'
 
 apply from: '../gradle/brand.gradle'
 
@@ -37,7 +37,7 @@ dependencies {
     tlRuntime("org.slf4j:slf4j-api:1.7.21")
     tlRuntime("com.fasterxml.jackson.core:jackson-core:2.12.0")
     tlRuntime("com.github.zafarkhaja:java-semver:0.9.0")
-    tlRuntime("com.google.code.gson:gson:2.8.6")
+    tlRuntime("com.google.code.gson:gson:2.8.7")
     tlRuntime("commons-io:commons-io:2.5")
     tlRuntime("net.sf.jopt-simple:jopt-simple:4.9")
     tlRuntime("org.apache.commons:commons-compress:1.10")
@@ -47,6 +47,7 @@ dependencies {
     tlRuntime("com.timgroup:java-statsd-client:3.1.0")
     tlRuntime("org.apache.logging.log4j:log4j-api:2.14.0")
     tlRuntime("org.apache.logging.log4j:log4j-core:2.14.0")
+    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.14.0")
     tlRuntime("org.apache.httpcomponents:httpclient:4.5.13")
     tlRuntime("org.apache.httpcomponents:fluent-hc:4.5.13")
     tlRuntime('org.nanohttpd:nanohttpd:2.3.1')
@@ -81,7 +82,7 @@ task buildLauncherRepo(type: Sync) {
     destinationDir = file("${rootProject.rootDir}/lib")
     configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
         def path = artifact.moduleVersion.id.with {
-            "${group.replace('.', '/')}/${name.replace('.', '/')}/$version"
+            "${group.replace('.', '/')}/${name}/$version"
         }
         into(path) {
             from(artifact.file)

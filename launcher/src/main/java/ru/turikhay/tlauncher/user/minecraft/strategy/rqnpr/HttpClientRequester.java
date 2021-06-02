@@ -1,19 +1,26 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.util.EHttpClient;
 
 import java.io.IOException;
 import java.util.function.Function;
 
 public class HttpClientRequester<A> implements Requester<A> {
+    private final Executor requestExecutor;
     private final Function<A, Request> requestFactory;
 
-    public HttpClientRequester(Function<A, Request> requestFactory) {
+    public HttpClientRequester(Executor requestExecutor, Function<A, Request> requestFactory) {
+        this.requestExecutor = requestExecutor;
         this.requestFactory = requestFactory;
+    }
+
+    public HttpClientRequester(Function<A, Request> requestFactory) {
+        this(Executor.newInstance(EHttpClient.createRepeatable()), requestFactory);
     }
 
     @Override

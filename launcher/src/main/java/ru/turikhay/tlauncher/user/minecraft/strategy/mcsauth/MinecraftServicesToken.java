@@ -4,14 +4,14 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable;
 
 import java.time.Instant;
 
-import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.*;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notEmpty;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notNegative;
 
 public class MinecraftServicesToken implements Validatable {
     private String accessToken;
     private int expiresIn;
 
-    // not used in json deserialization and equals/hashCode
-    private final Instant createdAt;
+    private final transient Instant createdAt;
 
     public MinecraftServicesToken(String accessToken, int expiresIn) {
         this.accessToken = accessToken;

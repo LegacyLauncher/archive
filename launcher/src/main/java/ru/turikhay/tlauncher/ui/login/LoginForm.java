@@ -205,9 +205,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             changeState(LoginForm.LoginState.LAUNCHING);
 
             LOGGER.debug("Calling Minecraft Launcher...");
+            String versionName = requestedVersion == null? versions.getVersion().getID() : requestedVersion.getID();
             boolean forceUpdate = checkbox.forceupdate.isSelected();
-            AsyncThread.execute(() -> tlauncher.newMinecraftLauncher(requestedVersion == null? versions.getVersion().getID() : requestedVersion.getID(), server, serverId, forceUpdate));
-            //tlauncher.newMinecraftLauncher(server, force1);
+            AsyncThread.execute(() -> tlauncher.newMinecraftLauncher(versionName, server, serverId, forceUpdate));
             checkbox.forceupdate.setSelected(false);
         }
         requestedVersion = null;

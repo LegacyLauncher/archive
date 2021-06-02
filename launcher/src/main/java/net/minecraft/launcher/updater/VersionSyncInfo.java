@@ -1,5 +1,6 @@
 package net.minecraft.launcher.updater;
 
+import com.google.gson.JsonSyntaxException;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.Rule;
@@ -137,7 +138,14 @@ public class VersionSyncInfo {
         } else if (version.equals(remoteVersion) && completeRemote != null && completeRemote.getInheritsFrom() == null) {
             return completeRemote;
         } else {
-            CompleteVersion complete = version.getVersionList().getCompleteVersion(version).resolve(manager, latest);
+            CompleteVersion complete;
+            try {
+                complete = version.getVersionList()
+                        .getCompleteVersion(version)
+                        .resolve(manager, latest);
+            } catch(JsonSyntaxException e) {
+                throw new IOException("syntax error resolving " + version.getID(), e);
+            }
             if (version == localVersion) {
                 completeLocal = complete;
             } else if (version == remoteVersion) {
