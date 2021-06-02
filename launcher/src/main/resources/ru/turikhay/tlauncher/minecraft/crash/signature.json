@@ -1,6 +1,6 @@
 {
   "revision": 23,
-  "required": "1.99.20",
+  "required": "1.122.3",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap"],
   "variables": {
     "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
@@ -309,7 +309,10 @@
     {
       "name": "incorrent-mods-version",
       "pattern": ".+/relauncher/IFMLLoadingPlugin$",
-      "version": "${forge-pattern}"
+      "version": "${forge-pattern}",
+      "buttons": [
+        "open-mods"
+      ]
     },
     {
       "name": "codechicken-core-missing",

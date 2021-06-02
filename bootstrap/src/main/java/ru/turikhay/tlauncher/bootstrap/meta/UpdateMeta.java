@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.bootstrap.meta;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import org.apache.commons.io.IOUtils;
-import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.json.RemoteBootstrapDeserializer;
@@ -12,7 +11,6 @@ import ru.turikhay.tlauncher.bootstrap.json.UpdateDeserializer;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
 import ru.turikhay.tlauncher.bootstrap.util.Compressor;
-import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.IOException;
@@ -76,7 +74,9 @@ public class UpdateMeta {
                             }
 
                             if(meta.isOutdated()) {
-                                log("... is outdated, skipping");
+                                log("... is outdated");
+                                log("Current time:", time);
+                                log("Time in meta:", meta.getPendingUpdateUTC() * 1000L);
                                 continue;
                             }
 
@@ -184,6 +184,10 @@ public class UpdateMeta {
             return true;
         }
         return calendar().after(calendar(pendingUpdateUTC * 1000));
+    }
+
+    public long getPendingUpdateUTC() {
+        return pendingUpdateUTC;
     }
 
     public RemoteBootstrapMeta getBootstrap() {

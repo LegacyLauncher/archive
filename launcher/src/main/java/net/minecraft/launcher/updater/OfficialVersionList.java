@@ -6,9 +6,12 @@ import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.connection.ConnectionHelper;
+import ru.turikhay.tlauncher.pasta.Pasta;
+import ru.turikhay.tlauncher.pasta.PastaFormat;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
@@ -24,13 +27,14 @@ public class OfficialVersionList extends RemoteVersionList {
     }
 
     public RawVersionList getRawList() throws IOException {
+        String jsonContent = null;
         try {
             Object lock = new Object();
             Time.start(lock);
-            RawVersionList list;
             try (InputStreamReader reader = getUrl("version_manifest.json")) {
-                list = gson.fromJson(reader, RawVersionList.class);
+                jsonContent = IOUtils.toString(reader);
             }
+            RawVersionList list = gson.fromJson(jsonContent, RawVersionList.class);
             Iterator var4 = list.versions.iterator();
 
             while (var4.hasNext()) {
@@ -47,6 +51,7 @@ public class OfficialVersionList extends RemoteVersionList {
                         .withLevel(Event.Level.WARNING)
                         .withMessage("official repo not reachable")
                         .withSentryInterface(new ExceptionInterface(e))
+                        .withExtra("jsonContent", Pasta.paste(jsonContent, PastaFormat.PLAIN))
                 );
             }
             if(e instanceof IOException) {

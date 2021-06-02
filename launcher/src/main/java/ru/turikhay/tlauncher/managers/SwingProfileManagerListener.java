@@ -12,16 +12,16 @@ public class SwingProfileManagerListener implements ProfileManagerListener {
 
     @Override
     public void onProfilesRefreshed(ProfileManager var1) {
-        SwingUtil.later(() -> listener.onProfilesRefreshed(var1));
+        SwingUtil.wait(() -> listener.onProfilesRefreshed(var1));
     }
 
     @Override
     public void onProfileManagerChanged(ProfileManager var1) {
-        SwingUtil.later(() -> listener.onProfileManagerChanged(var1));
+        SwingUtil.wait(() -> listener.onProfileManagerChanged(var1));
     }
 
     @Override
     public void onAccountsRefreshed(AuthenticatorDatabase var1) {
-        SwingUtil.later(() -> listener.onAccountsRefreshed(var1));
+        SwingUtil.wait(() -> listener.onAccountsRefreshed(var1));
     }
 }

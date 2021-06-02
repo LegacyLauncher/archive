@@ -242,7 +242,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         CompleteVersion.JavaVersion javaVersion = localCompleteVersion.getJavaVersion();
         if(javaVersion == null) {
             javaVersion = TLauncher.getInstance().getJavaManager()
-                    .getFallbackRecommendedVersion(localCompleteVersion);
+                    .getFallbackRecommendedVersion(localCompleteVersion, false);
 
             if(javaVersion == null) {
                 pathMessage.setText("settings.jre.window.configure.path.recommended.current",
@@ -382,6 +382,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         recommendedPathButton.addActionListener(e -> {
             String path = recommendedPathField.getValue();
             if(path != null) {
+                JRESettingsWindow.this.setAlwaysOnTop(false);
                 OS.openFolder(new File(path));
             }
         });
@@ -395,6 +396,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         recommendedPathHint1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                JRESettingsWindow.this.setAlwaysOnTop(false);
                 OS.openLink("https://wiki.tlaun.ch/"+ (comboBox.sp.global.isUSSRLocale()? "" : "en:") +"guide:override-jre");
             }
         });

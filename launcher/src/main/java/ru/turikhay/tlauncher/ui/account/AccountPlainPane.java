@@ -85,7 +85,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                         break;
                 }
 
-                if(mode == PaneMode.EDIT) {
+                if(mode == PaneMode.EDIT && scene.list.getSelected() != null) {
                     TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(scene.list.getSelected().getUser());
                 }
 

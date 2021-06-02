@@ -5,13 +5,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.properties.PropertyMap;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.user.ElyLegacyUser;
 import ru.turikhay.tlauncher.user.MojangUser;
 import ru.turikhay.tlauncher.user.User;
-import ru.turikhay.util.StringUtil;
 
 import java.util.*;
 
@@ -22,7 +22,7 @@ public class AccountMigrator {
     private final Gson gson;
 
     public AccountMigrator(String clientToken) {
-        this.clientToken = StringUtil.requireNotBlank(clientToken);
+        this.clientToken = StringUtils.isBlank(clientToken)? String.valueOf(UUID.randomUUID()) : clientToken;
         gson = new GsonBuilder()
                 .registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer())
                 .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
@@ -55,7 +55,8 @@ public class AccountMigrator {
                         user = gson.fromJson(gson.toJson(account), MojangUser.class);
                         break;
                     case "ely":
-                        user = new ElyLegacyUser(account.username, account.uuid, account.displayName, clientToken, account.accessToken);
+                        UUID uuid = UUIDTypeAdapter.fromString(account.uuid);
+                        user = new ElyLegacyUser(account.username, uuid, account.displayName, clientToken, account.accessToken);
                         break;
                     default:
                         continue;

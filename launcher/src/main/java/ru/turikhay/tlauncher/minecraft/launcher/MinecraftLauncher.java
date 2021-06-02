@@ -342,12 +342,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         try {
             deJureVersion = versionSync.resolveCompleteVersion(vm, forceUpdate);
-        } catch (IOException var10) {
-            throw new RuntimeException("Cannot get complete version!", var10);
-        }
-
-        if (deJureVersion == null) {
-            throw new NullPointerException("Could not get complete version");
+        } catch (IOException e) {
+            throw new MinecraftException(false, "Can't resolve version", "could-not-fetch-complete-version");
         }
 
         try {
@@ -663,7 +659,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             CompleteVersion.JavaVersion javaVersion = version.getJavaVersion();
             if(javaVersion == null) {
                 LOGGER.debug("Current Minecraft version doesn't have JRE requirements");
-                javaVersion = javaManager.getFallbackRecommendedVersion(version);
+                javaVersion = javaManager.getFallbackRecommendedVersion(version, true);
                 if(javaVersion != null) {
                     LOGGER.debug("Will use fallback recommended version: {}", javaVersion);
                 }
@@ -1191,6 +1187,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private File reconstructAssets() throws IOException, MinecraftException {
         String assetVersion = version.getAssetIndex().getId();
+        if(assetVersion == null) {
+            LOGGER.warn("Asset version is unknown");
+            assetVersion = "unknown";
+        }
         File indexFile = new File(assetsIndexesDir, assetVersion + ".json");
         File virtualRoot = new File(new File(globalAssetsDir, "virtual"), assetVersion);
         if (!indexFile.isFile()) {
@@ -1198,9 +1198,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         } else {
             AssetIndex index;
             try {
-                index = gson.fromJson(new FileReader(indexFile), AssetIndex.class);
+                index = U.requireNotNull(gson.fromJson(new FileReader(indexFile), AssetIndex.class), "json response");
             } catch (Exception var9) {
-                throw new MinecraftException(false, "Cannot read index file!", "index-file", var9);
+                LOGGER.warn("Couldn't read index file", var9);
+                return virtualRoot;
             }
 
             if (index.isMapToResources()) {
@@ -1551,11 +1552,12 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         LOGGER.info("Checking assets...");
 
-        AssetsManager.ResourceChecker checker = null;
+        AssetsManager.ResourceChecker checker;
         try {
             checker = am.checkResources(version, fastCompare);
         } catch (AssetsNotFoundException e) {
             LOGGER.warn("Couldn't check resources", e);
+            return null;
         }
 
         try {
@@ -1564,7 +1566,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             AssetIndex.AssetObject lastObject = null;
             int timer = 0;
 
-            while (working && checker != null && checker.checkWorking()) {
+            while (working && checker.checkWorking()) {
                 final AssetIndex.AssetObject object = checker.getCurrent();
                 if (object != null) {
                     LOGGER.debug("Instant state on: {}", object);
@@ -1595,7 +1597,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         List<AssetIndex.AssetObject> result = checker.getAssetList();
         if (result == null) {
             LOGGER.error("Could not check assets", checker.getError());
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         LOGGER.info("Compared assets in {} ms", checker.getDelta());

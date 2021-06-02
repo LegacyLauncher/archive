@@ -178,7 +178,7 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
                 CompleteVersion.JavaVersion javaVersion = localCompleteVersion.getJavaVersion();
                 if(javaVersion == null) {
                     javaVersion = TLauncher.getInstance().getJavaManager()
-                            .getFallbackRecommendedVersion(localCompleteVersion);
+                            .getFallbackRecommendedVersion(localCompleteVersion, false);
                 }
                 return value + " ("+ Localizable.get("settings.jre.type.recommended.specific",
                         localCompleteVersion.getID(),

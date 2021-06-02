@@ -346,7 +346,7 @@ public class VersionManager extends InterruptibleComponent {
             filter = new VersionFilter();
         }
 
-        ArrayList plainResult = new ArrayList();
+        ArrayList<VersionSyncInfo> plainResult = new ArrayList<>();
         ArrayList<VersionSyncInfo> result = new ArrayList<>();
         HashMap lookup = new HashMap();
         Version remoteList;
@@ -399,24 +399,20 @@ public class VersionManager extends InterruptibleComponent {
             }
         }
 
-        Collections.sort(plainResult, new Comparator<VersionSyncInfo>() {
-            public int compare(VersionSyncInfo a, VersionSyncInfo b) {
-                Date aDate = a.getLatestVersion().getReleaseTime();
-                Date bDate = b.getLatestVersion().getReleaseTime();
-                return aDate != null && bDate != null ? bDate.compareTo(aDate) : 1;
+        plainResult.sort((a, b) -> {
+            Date aDate = a.getLatestVersion().getReleaseTime();
+            Date bDate = b.getLatestVersion().getReleaseTime();
+            if(aDate == null && bDate == null) {
+                return 0;
+            } else if(aDate == null) {
+                return 1;
+            } else if(bDate == null) {
+                return -1;
+            } else {
+                return bDate.compareTo(aDate);
             }
         });
         result.addAll(plainResult);
-
-        /*(TLauncher.getInstance() != null && !TLauncher.getInstance().isDebug()) {
-            Iterator<VersionSyncInfo> i = result.iterator();
-            while (i.hasNext()) {
-                VersionSyncInfo vs = i.next();
-                if (vs.getLatestVersion().getReleaseType() == ReleaseType.LAUNCHER) {
-                    i.remove();
-                }
-            }
-        }*/
 
         return result;
     }

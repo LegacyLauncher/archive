@@ -79,6 +79,9 @@ public class Library {
 
     public String getPlainName() {
         String[] split = name.split(":", 3);
+        if(split.length < 3) {
+            throw new IllegalArgumentException("bad library: " + name);
+        }
         return split[0] + "." + split[1];
     }
 
@@ -131,7 +134,9 @@ public class Library {
             throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
         } else {
             String[] parts = name.split(":", 4);
-
+            if(parts.length < 3) {
+                throw new IllegalArgumentException("bad library name: " + name);
+            }
             return String.format(java.util.Locale.ROOT, "%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
         }
     }
