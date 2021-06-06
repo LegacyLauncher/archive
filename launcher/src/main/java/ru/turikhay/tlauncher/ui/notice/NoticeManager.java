@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.configuration.BootConfiguration;
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
-import ru.turikhay.tlauncher.managers.RickrollManager;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
@@ -55,9 +54,6 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                     if (notice == null) {
                         LOGGER.warn("Found null selectedNotice in {}", key);
                         continue;
-                    }
-                    if(notice.getId() == RickrollManager.SPECIAL_NOTICE_ID && RickrollManager.isApril1st()) {
-                        notice = RickrollManager.getAprilFoolsNotice();
                     }
                     noticeList.add(notice);
 
@@ -283,10 +279,6 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
             List<Notice> available = new ArrayList<>();
             for(Notice notice : list) {
-                if(RickrollManager.isApril1st() && notice.getId() == RickrollManager.SPECIAL_NOTICE_ID) {
-                    selected = notice;
-                    break selecting;
-                }
                 if(isHidden(notice)) {
                     continue;
                 }

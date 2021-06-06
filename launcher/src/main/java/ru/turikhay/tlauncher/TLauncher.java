@@ -495,14 +495,14 @@ public final class TLauncher {
         new RunnableThread("Beacon", new Runnable() {
             @Override
             public void run() {
+                Stats.submitNoticeStatus(config.getBoolean("notice.enabled"));
                 while (true) {
-                    Stats.beacon();
-
                     try {
                         TimeUnit.MINUTES.sleep(30);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
+                    Stats.beacon();
                 }
             }
         }).start();

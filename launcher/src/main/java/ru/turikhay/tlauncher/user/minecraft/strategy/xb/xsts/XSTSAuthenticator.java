@@ -7,8 +7,10 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.*;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.HttpClientRequester;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.InvalidResponseException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.InvalidStatusCodeException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Requester;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 
@@ -59,6 +61,8 @@ public class XSTSAuthenticator extends XboxServiceAuthStrategy {
                 switch (code) {
                     case "2148916233":
                         return new NoXboxAccountException();
+                    case "2148916235":
+                        return new CountryNotAuthorizedException();
                     case "2148916238":
                         return new ChildAccountException();
                 }

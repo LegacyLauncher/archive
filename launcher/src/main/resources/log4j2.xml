@@ -4,6 +4,7 @@
         <Property name="defaultPattern">%highlight{%d{ABSOLUTE} [%c{1}] %msg%n%throwable}{INFO=default}</Property>
         <Property name="childStdOutPattern">> %style{%msg{ansi}}{bright}%n</Property>
         <Property name="childStdErrPattern">> %style{%msg}{red}%n</Property>
+        <Property name="logFlusherPattern">[:] %style{%msg{ansi}}%n</Property>
         <Property name="logFolder">${sys:tlauncher.logFolder:-${sys:user.home}/.tl/logs}</Property>
     </Properties>
     <Appenders>
@@ -12,6 +13,7 @@
                 <MarkerPatternSelector defaultPattern="${defaultPattern}">
                     <PatternMatch key="child_stdout" pattern="${childStdOutPattern}"/>
                     <PatternMatch key="child_stderr" pattern="${childStdErrPattern}"/>
+                    <PatternMatch key="log_flusher" pattern="${logFlusherPattern}"/>
                 </MarkerPatternSelector>
             </PatternLayout>
         </Console>
@@ -20,6 +22,7 @@
                 <MarkerPatternSelector defaultPattern="${defaultPattern}">
                     <PatternMatch key="child_stdout" pattern="${childStdOutPattern}"/>
                     <PatternMatch key="child_stderr" pattern="${childStdErrPattern}"/>
+                    <PatternMatch key="log_flusher" pattern="${logFlusherPattern}"/>
                 </MarkerPatternSelector>
             </PatternLayout>
             <Policies>
@@ -32,6 +35,7 @@
                 <MarkerPatternSelector defaultPattern="> [%c{1}] %msg%n%throwable">
                     <PatternMatch key="child_stdout" pattern=">> %msg%n"/>
                     <PatternMatch key="child_stderr" pattern="[STDERR] >> %msg%n"/>
+                    <PatternMatch key="log_flusher" pattern="[:] %msg%n"/>
                 </MarkerPatternSelector>
             </PatternLayout>
         </SwingLogger>

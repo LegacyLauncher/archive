@@ -68,11 +68,13 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         }
         if (version instanceof CompleteVersion) {
             CompleteVersion complete = (CompleteVersion) version;
-
-            for (LibraryReplace lib : list) {
-                for (Library replacingLib : complete.getLibraries()) {
-                    if (lib.replaces(replacingLib)) {
-                        return true;
+            List<Library> libraries = complete.getLibraries();
+            if(libraries != null) {
+                for (LibraryReplace lib : list) {
+                    for (Library replacingLib : libraries) {
+                        if (lib.replaces(replacingLib)) {
+                            return true;
+                        }
                     }
                 }
             }

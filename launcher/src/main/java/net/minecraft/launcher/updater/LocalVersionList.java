@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.MalformedJsonException;
 import io.sentry.Sentry;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
@@ -96,7 +97,7 @@ public class LocalVersionList extends StreamVersionList {
                             continue;
                         }
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
-                        if(jsonObject.has("modpack")) {
+                        if(jsonObject.has("modpack") && !jsonObject.get("modpack").isJsonPrimitive()) {
                             LOGGER.debug("Ignoring modpack version: {}", id);
                             continue;
                         }
@@ -114,16 +115,21 @@ public class LocalVersionList extends StreamVersionList {
                         ex.setSource(Repository.LOCAL_VERSION_REPO);
                         ex.setVersionList(this);
                         addVersion(ex);
-                    } catch (Exception var9) {
-                        LOGGER.warn("Could not parse local version \"{}\"", id, var9);
-                        Sentry.capture(new EventBuilder()
-                                .withMessage("couldn't parse local version")
-                                .withSentryInterface(new ExceptionInterface(var9))
-                                .withExtra("version", id)
-                                .withExtra("input", Pasta.pasteJson(input))
-                                .withLevel(Event.Level.ERROR)
-                        );
-                        if(var9 instanceof JsonSyntaxException) {
+                    } catch (Exception e) {
+                        if(e.getCause() instanceof MalformedJsonException
+                                || e.getCause() instanceof EOFException) {
+                            LOGGER.warn("Invalid json file {}", id, e);
+                        } else {
+                            LOGGER.warn("Could not parse local version \"{}\"", id, e);
+                            Sentry.capture(new EventBuilder()
+                                    .withMessage("couldn't parse local version")
+                                    .withSentryInterface(new ExceptionInterface(e))
+                                    .withExtra("version", id)
+                                    .withExtra("input", Pasta.pasteJson(input))
+                                    .withLevel(Event.Level.ERROR)
+                            );
+                        }
+                        if(e instanceof JsonSyntaxException) {
                             renameJsonFile(jsonFile);
                         }
                     }

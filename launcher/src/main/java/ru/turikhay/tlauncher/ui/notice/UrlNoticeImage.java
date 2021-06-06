@@ -20,7 +20,7 @@ public class UrlNoticeImage extends NoticeImage {
         this.height = height;
     }
 
-    public UrlNoticeImage(URL url) {
+    UrlNoticeImage(URL url) {
         this.url = url;
         Image image;
         try {

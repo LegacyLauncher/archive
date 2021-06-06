@@ -288,9 +288,19 @@
       ]
     },
     {
-      "name": "jdk9-not-supported",
+      "name": "old-forge-newer-java",
       "image": "java.png",
-      "pattern": ".+ cannot be cast to java\\.base\\/java\\.net\\.URLClassLoader.*"
+      "pattern": ".+ cannot be cast to (?:java\\.base\\/|class )?java\\.net\\.URLClassLoader.*",
+      "version": "${forge-pattern}",
+      "title": {
+        "ru_RU": "Старая версия Forge",
+        "en_US": "Old Forge version"
+      },
+      "body": {
+        "ru_RU": "Старые версии Forge не поддерживаются более новыми версиями Java. Для Forge, вышедших до 1.17, требуется Java 8.",
+        "en_US": "Newer Java don't support old Forge versions. Use Java 8 to run Forge versions that came out before Minecraft 1.17."
+      },
+      "buttons": []
     },
     {
       "name": "unsupported-java-version",

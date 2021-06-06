@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 
 public interface CharsetData {
+    int UNKNOWN_LENGTH = -1;
+
     Reader read() throws IOException;
 
     InputStream stream() throws IOException;
@@ -14,7 +16,7 @@ public interface CharsetData {
 
     /**
      * Requests data length
-     * @return data length in bytes, or {@code -1} if unknown.
+     * @return data length in bytes, or {@link #UNKNOWN_LENGTH}
      */
     long length();
 }
