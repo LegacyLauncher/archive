@@ -1,7 +1,6 @@
 package ru.turikhay.util;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -10,7 +9,7 @@ import java.util.Objects;
 
 public class StringCharsetData implements CharsetData {
     private static final int PRETTY_LONG_STRING = 1024 * 512;
-    private static final int SIZE_UNKNOWN = -1, SIZE_TOO_LONG = Integer.MIN_VALUE;
+    private static final int LENGTH_TOO_LONG = Integer.MIN_VALUE;
 
     private final String string;
     private int size = -2;
@@ -20,12 +19,12 @@ public class StringCharsetData implements CharsetData {
     }
 
     @Override
-    public StringReader read() throws IOException {
+    public StringReader read() {
         return new StringReader(string);
     }
 
     @Override
-    public InputStream stream() throws IOException {
+    public InputStream stream() {
         return new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -36,13 +35,13 @@ public class StringCharsetData implements CharsetData {
 
     @Override
     public long length() {
-        if(size == SIZE_UNKNOWN) {
+        if(size == UNKNOWN_LENGTH) {
             if(string.length() > PRETTY_LONG_STRING) {
-                size = SIZE_TOO_LONG;
+                size = LENGTH_TOO_LONG;
             } else {
                 size = string.getBytes(StandardCharsets.UTF_8).length;
             }
         }
-        return size == SIZE_TOO_LONG ? SIZE_UNKNOWN : size;
+        return size == LENGTH_TOO_LONG ? UNKNOWN_LENGTH : size;
     }
 }

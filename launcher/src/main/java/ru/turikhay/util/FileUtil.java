@@ -275,6 +275,10 @@ public class FileUtil {
         deleteFile(dir);
     }
 
+    public static String getMd5(File file) throws IOException {
+        return getChecksum0(file, "MD5");
+    }
+
     public byte[] getFile(File archive, String requestedFile) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ZipInputStream in = null;

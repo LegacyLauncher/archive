@@ -71,7 +71,7 @@ public class LogFile implements CharsetData {
             attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
         } catch (IOException e) {
             LOGGER.warn("Couldn't read attributes of {}", file.getAbsolutePath(), e);
-            return -1;
+            return UNKNOWN_LENGTH;
         }
         return attributes.size();
     }

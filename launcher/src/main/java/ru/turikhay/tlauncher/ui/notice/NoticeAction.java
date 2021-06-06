@@ -10,12 +10,12 @@ public abstract class NoticeAction {
     private final String type;
     protected final String L10N_PREFIX;
 
-    protected NoticeAction(String type) {
+    NoticeAction(String type) {
         this.type = type;
         L10N_PREFIX = "notice.action." + type + ".";
     }
 
-    protected abstract List<? extends JMenuItem> getMenuItemList();
+    abstract List<? extends JMenuItem> getMenuItemList();
 
     protected ToStringBuilder toStringBuilder() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);

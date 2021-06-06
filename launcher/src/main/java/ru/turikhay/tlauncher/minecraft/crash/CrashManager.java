@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
+import com.moandjiezana.toml.Toml;
 import io.sentry.Sentry;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
@@ -10,8 +10,11 @@ import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import net.minecraft.options.OptionsFile;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
 import ru.turikhay.tlauncher.minecraft.launcher.ChildProcessLogger;
@@ -25,12 +28,17 @@ import ru.turikhay.util.windows.dxdiag.DxDiag;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public final class CrashManager {
     private static final Logger LOGGER = LogManager.getLogger(CrashManager.class);
+    private static final Marker LOG_FLUSHER = MarkerManager.getMarker("log_flusher");
 
     private final ArrayList<CrashManagerListener> listeners = new ArrayList<CrashManagerListener>();
     private final Watchdog watchdog = new Watchdog();
@@ -742,7 +750,7 @@ public final class CrashManager {
                         new InputStreamReader(new FileInputStream(file), charset)
                 )){
                     while (scanner.hasNextLine()) {
-                        LOGGER.info(scanner.nextLine());
+                        LOGGER.info(LOG_FLUSHER, scanner.nextLine());
                     }
                 } catch (Exception e) {
                     LOGGER.warn("Could not read file: {}", file, e);
@@ -763,19 +771,18 @@ public final class CrashManager {
             }
 
             if(!dir.isDirectory()) {
-                LOGGER.info("{} (not a dir)", dir);
+                LOGGER.info(LOG_FLUSHER,"{} (not a dir)", dir);
                 return;
             }
 
             File[] list = U.requireNotNull(dir.listFiles(), "dir listing: " + dir.getAbsolutePath());
 
             if(currentLevel == 0) {
-                LOGGER.info("{}", dir);
+                LOGGER.info(LOG_FLUSHER,"{}", dir);
             } else if(list.length == 0) {
-                LOGGER.info("{}└ [empty]", buffer);
+                LOGGER.info(LOG_FLUSHER,"{}└ [empty]", buffer);
             }
 
-            StringBuilder dirBuffer = null;
             File file; StringBuilder name; boolean skipDir;
             File[] subList;
 
@@ -785,6 +792,8 @@ public final class CrashManager {
 
                 subList = null;
                 skipDir = false;
+
+                long length = 0L;
 
                 if(file.isDirectory()) {
                     subList = file.listFiles();
@@ -804,25 +813,53 @@ public final class CrashManager {
                         }
                     }
                 } else {
-                    long length = file.length();
-                    if(length == 0L) {
+                    length = file.length();
+                    if(length < 0L) {
+                        name.append(" [unknown size]");
+                    } else if(length == 0L) {
                         name.append(" [empty file]");
                     } else {
-                        name.append("[").append(length < 2048L ? length + " B" : (length / 1024L) + " KiB").append("]");
+                        name.append(" [").append(length < 2048L ? length + " B" : (length / 1024L) + " KiB").append("]");
                     }
                 }
 
                 boolean currentlyLatestLevel = i == list.length - 1;
                 if (currentlyLatestLevel)
-                    LOGGER.info("{}└ {}", buffer, name);
+                    LOGGER.info(LOG_FLUSHER,"{}└ {}", buffer, name);
                 else
-                    LOGGER.info("{}├ {}", buffer, name);
+                    LOGGER.info(LOG_FLUSHER,"{}├ {}", buffer, name);
 
-                if(file.isDirectory() && !skipDir) {
-                    if(dirBuffer == null || currentlyLatestLevel) {
-                        dirBuffer = new StringBuilder().append(buffer).append(currentlyLatestLevel? "  " : "│ ").append(' ');
+                StringBuilder subLevelBuffer = new StringBuilder()
+                        .append(buffer)
+                        .append(currentlyLatestLevel ? "  " : "│ ").append(' ');
+
+                if(file.isFile() && file.getName().endsWith(".jar")) {
+                    ZipFile zipFile;
+                    try {
+                        zipFile = new ZipFile(file, ZipFile.OPEN_READ);
+                    } catch(IOException ioE) {
+                        LOGGER.info(LOG_FLUSHER,"{}└ [!!!] Corrupted zip: {}", subLevelBuffer, ioE.toString());
+                        continue;
                     }
-
+                    // also compute md5 hash, just in case.
+                    // curseforge shows md5 of each file on the download page
+                    if(length > 0L) {
+                        String md5Message;
+                        try {
+                            md5Message = FileUtil.getMd5(file);
+                        } catch (IOException e) {
+                            md5Message = e.toString();
+                        }
+                        LOGGER.debug(LOG_FLUSHER, "{}├ md5 = {}", subLevelBuffer, md5Message);
+                    }
+                    boolean mcmod = false;
+                    mcmod |= tryMcModInfo(zipFile, subLevelBuffer);
+                    mcmod |= tryModsToml(zipFile, subLevelBuffer);
+                    mcmod |= tryFabricMod(zipFile, subLevelBuffer);
+                    if(!mcmod) {
+                        LOGGER.debug(LOG_FLUSHER, "{}└ [unknown mod format]", subLevelBuffer);
+                    }
+                } else if(file.isDirectory() && !skipDir) {
                     if(currentLevel == levelLimit) {
                         String str;
 
@@ -871,13 +908,245 @@ public final class CrashManager {
                         } else {
                             str = "[empty dir]";
                         }
-                        LOGGER.info("{}└ {}", dirBuffer, str);
+                        LOGGER.info(LOG_FLUSHER,"{}└ {}", subLevelBuffer, str);
                         continue;
                     }
-
-                    treeDir(file, currentLevel + 1, levelLimit, dirBuffer);
+                    treeDir(file, currentLevel + 1, levelLimit, subLevelBuffer);
                 }
             }
+        }
+
+        private boolean tryFabricMod(ZipFile zipFile, StringBuilder buffer) {
+            ZipEntry fabricModZipEntry = zipFile.getEntry("fabric.mod.json");
+            if(fabricModZipEntry == null) {
+                return false;
+            }
+            JsonElement fabricModRoot;
+            try(InputStreamReader reader = new InputStreamReader(
+                    zipFile.getInputStream(fabricModZipEntry),
+                    StandardCharsets.UTF_8))
+            {
+                fabricModRoot = Objects.requireNonNull(
+                        JsonParser.parseReader(reader), "fabricModRoot");
+            } catch (IOException | RuntimeException e) {
+                LOGGER.info(LOG_FLUSHER,"{}└ [!!!] Couldn't read fabric.mod.json: {}",
+                        buffer, e.toString());
+                return false;
+            }
+            if(!fabricModRoot.isJsonObject()) {
+                LOGGER.info(LOG_FLUSHER,"{}├ [!!!] Not a JSON object: {}", buffer,
+                        fabricModRoot);
+                return false;
+            }
+            JsonObject fabricModObj = fabricModRoot.getAsJsonObject();
+            List<String> keys = Arrays.asList(
+                    "id",
+                    "version",
+                    "depends"
+            );
+            List<Pair<String, JsonElement>> keyPairs = keys.stream()
+                    .map(key -> Pair.of(key, fabricModObj.get(key)))
+                    .filter(p -> p.getValue() != null)
+                    .collect(Collectors.toList());
+            displayKeyPairs(keyPairs, buffer);
+            return true;
+        }
+
+        private boolean tryModsToml(ZipFile zipFile, StringBuilder buffer) {
+            ZipEntry modsTomlZipEntry = zipFile.getEntry("META-INF/mods.toml");
+            if(modsTomlZipEntry == null) {
+                return false;
+            }
+            Toml toml = new Toml();
+            try(InputStreamReader reader = new InputStreamReader(
+                    zipFile.getInputStream(modsTomlZipEntry),
+                    StandardCharsets.UTF_8
+            )) {
+                toml.read(reader);
+            } catch (IOException | RuntimeException e) {
+                LOGGER.info(LOG_FLUSHER,"{}└ [!!!] Couldn't read mods.toml: {}",
+                        buffer, e.toString());
+                return false;
+            }
+            Map<String, Object> map = toml.toMap();
+            Object dependenciesObj = map.get("dependencies");
+            if(map.containsKey("mods")) {
+                Object modsObj = map.get("mods");
+                if(modsObj instanceof List) {
+                    List<Map<String, Object>> mods = (List<Map<String, Object>>) modsObj;
+                    for (Map<String, Object> mod : mods) {
+                        displayModsTomlMod(
+                                mod,
+                                findModDependenciesToml(dependenciesObj, getModId(mod)),
+                                buffer
+                        );
+                    }
+                }
+            }
+            return true;
+        }
+
+        private String getModId(Map<String, Object> mod) {
+            Object modIdObj = mod.get("modId");
+            if(modIdObj instanceof String) {
+                return (String) modIdObj;
+            }
+            return null;
+        }
+
+        private List<Map<String, Object>> findModDependenciesToml(Object dependenciesObj,
+                                                                  String modId) {
+            if(dependenciesObj == null || modId == null) {
+                return null;
+            }
+            Map dependencies = (Map) dependenciesObj;
+            Object modDependencies = dependencies.get(modId);
+            if(modDependencies instanceof List) {
+                return (List<Map<String, Object>>) modDependencies;
+            }
+            return null;
+        }
+
+        private void displayModsTomlMod(
+                                        Map<String, Object> mod,
+                                        List<Map<String, Object>> dependencies,
+                                        StringBuilder buffer) {
+            List<String> keys = Arrays.asList(
+                    "modId",
+                    "version",
+                    "displayURL"
+            );
+            List<Pair<String, Object>> keyPairs = keys.stream()
+                    .map(key -> Pair.of(key, mod.get(key)))
+                    .filter(p -> p.getValue() != null)
+                    .filter(p -> {
+                        // filter values like ${VERSION}, etc.
+                        Object v = p.getValue();
+                        if(!(v instanceof String)) {
+                            return true;
+                        }
+                        String s = (String) v;
+                        return !s.startsWith("${");
+                    })
+                    .collect(Collectors.toList());
+            if(keyPairs.isEmpty()) {
+                LOGGER.info(LOG_FLUSHER,"{}└ [no known toml keys]: {}", buffer, mod);
+            } else {
+                displayKeyPairs(keyPairs, buffer);
+                if(dependencies != null && !dependencies.isEmpty()) {
+                    List<Pair<String, Object>> depKeyPairs = dependencies.stream()
+                            .filter(d -> {
+                                Object side = d.get("side");
+                                return "BOTH".equals(side) || "CLIENT".equals(side);
+                            })
+                            .filter(d -> d.get("mandatory") == Boolean.TRUE)
+                            .filter(d -> d.containsKey("modId"))
+                            .map(d -> Pair.of(
+                                    String.valueOf(d.get("modId")),
+                                    d.getOrDefault("versionRange", "any")
+                            ))
+                            .collect(Collectors.toList());
+                    StringBuilder depBuffer = new StringBuilder(buffer).append("    ");
+                    LOGGER.info(LOG_FLUSHER,"{}└ [dependencies]", buffer);
+                    displayKeyPairs(depKeyPairs, depBuffer);
+                }
+            }
+        }
+
+        private boolean tryMcModInfo(ZipFile zipFile, StringBuilder buffer) {
+            ZipEntry mcmodZipEntry = zipFile.getEntry("mcmod.info");
+            if(mcmodZipEntry == null) {
+                return false;
+            }
+            JsonElement mcmodRoot;
+            try(InputStreamReader reader = new InputStreamReader(
+                    zipFile.getInputStream(mcmodZipEntry),
+                    StandardCharsets.UTF_8))
+            {
+                mcmodRoot = Objects.requireNonNull(
+                        JsonParser.parseReader(reader), "mcmodRoot");
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOGGER.info(LOG_FLUSHER,"{}├ [!!!] Couldn't read mcmod.info: {}",
+                        buffer, e.toString());
+                return false;
+            }
+            if(mcmodRoot.isJsonArray()) {
+                // modListVersion = 1
+                for (JsonElement mcmodEntry : mcmodRoot.getAsJsonArray()) {
+                    if(mcmodEntry.isJsonObject()) {
+                        displayMcModInfo(mcmodEntry.getAsJsonObject(), buffer);
+                    } else {
+                        LOGGER.info(LOG_FLUSHER,"{}├ [!!!] Not a JSON object: {}", buffer, mcmodRoot);
+                    }
+                }
+                return true;
+            } else if(mcmodRoot.isJsonObject()) {
+                // modListVersion > 1
+                JsonElement modListElement = mcmodRoot.getAsJsonObject().get("modList");
+                if(modListElement != null && modListElement.isJsonArray()) {
+                    for (JsonElement modListEntry : modListElement.getAsJsonArray()) {
+                        if(modListEntry.isJsonObject()) {
+                            displayMcModInfo(modListEntry.getAsJsonObject(), buffer);
+                        } else {
+                            LOGGER.info(LOG_FLUSHER,"{}├ [!!!] Not a JSON object: {}",
+                                    buffer, modListEntry);
+                        }
+                    }
+                    return true;
+                }
+            }
+            LOGGER.info(LOG_FLUSHER,"{}├ [!!!] Unknown or invalid mcmod.info: {}", buffer, mcmodRoot);
+            return false;
+        }
+
+        private void displayMcModInfo(JsonObject mcmod, StringBuilder buffer) {
+            List<String> keys = Arrays.asList(
+                    "modid",
+                    "version",
+                    "mcversion",
+                    "url",
+                    "requiredMods",
+                    "dependencies"
+            );
+            List<Pair<String, JsonElement>> keyPairs = keys.stream()
+                    .map(key -> Pair.of(key, mcmod.get(key)))
+                    .filter(p -> p.getValue() != null)
+                    .filter(p -> {
+                        // filter values like @VERSION@, etc.
+                        JsonElement v = p.getValue();
+                        if(!v.isJsonPrimitive()) {
+                            return true;
+                        }
+                        JsonPrimitive pv = v.getAsJsonPrimitive();
+                        if(!pv.isString()) {
+                            return true;
+                        }
+                        String s = pv.getAsString();
+                        return !s.startsWith("@") || !s.endsWith("@");
+                    })
+                    .collect(Collectors.toList());
+            if(keyPairs.isEmpty()) {
+                LOGGER.info(LOG_FLUSHER,"{}└ [no known mcmod keys]: {}", buffer, mcmod);
+            } else {
+                displayKeyPairs(keyPairs, buffer);
+            }
+        }
+
+        private void displayKeyPairs(List keyPairs0, StringBuilder buffer) {
+            List<Pair<String, Object>> keyPairs = keyPairs0;
+            if(keyPairs.size() > 1) {
+                LOGGER.info(LOG_FLUSHER,"{}├ {} = {}", buffer,
+                        keyPairs.get(0).getKey(), keyPairs.get(0).getValue());
+                for (int i = 1; i < keyPairs.size() - 1; i++) {
+                    Pair<String, Object> pair = keyPairs.get(i);
+                    LOGGER.info(LOG_FLUSHER,"{}├ {} = {}", buffer, pair.getKey(), pair.getValue());
+                }
+            }
+            int lastIndex = keyPairs.size() - 1;
+            LOGGER.info(LOG_FLUSHER,"{}└ {} = {}", buffer,
+                    keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
         }
     }
 

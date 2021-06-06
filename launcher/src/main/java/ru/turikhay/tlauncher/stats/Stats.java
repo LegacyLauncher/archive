@@ -120,6 +120,10 @@ public final class Stats {
         return submitDenunciation(newAction("session_duration").add("duration", String.valueOf(durationSeconds)));
     }
 
+    public static void submitNoticeStatus(boolean enabled) {
+        submitDenunciation(newAction("notices_status").add("status", (enabled? "shown" : "hidden")));
+    }
+
     private static Stats.Args newAction(String name) {
         return new Stats.Args()
                 .add("client", TLauncher.getInstance().getSettings().getClient().toString())
