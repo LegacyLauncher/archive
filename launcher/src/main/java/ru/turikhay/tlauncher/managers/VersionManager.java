@@ -266,7 +266,7 @@ public class VersionManager extends InterruptibleComponent {
         }
     }
 
-    public VersionSyncInfo getVersionSyncInfo(String name) {
+    public VersionSyncInfo getVersionSyncInfo(String name, List<String> inheritance) {
         if (name == null) {
             throw new NullPointerException("Cannot get sync info of NULL!");
         } else {
@@ -292,8 +292,11 @@ public class VersionManager extends InterruptibleComponent {
 
             Version var10 = localList.getVersion(name);
             if (var10 instanceof CompleteVersion && ((CompleteVersion) var10).getInheritsFrom() != null) {
+                if(inheritance == null) {
+                    inheritance = new ArrayList<>();
+                }
                 try {
-                    var10 = ((CompleteVersion) var10).resolve(this, false);
+                    var10 = ((CompleteVersion) var10).resolve(this, false, inheritance);
                 } catch (Exception var9) {
                     LOGGER.warn("Can't resolve version {}", var10.getID(), var9);
                     var10 = null;
@@ -315,6 +318,10 @@ public class VersionManager extends InterruptibleComponent {
 
             return var10 == null && var11 == null ? null : new VersionSyncInfo(var10, var11);
         }
+    }
+
+    public VersionSyncInfo getVersionSyncInfo(String name) {
+        return getVersionSyncInfo(name, null);
     }
 
     public LatestVersionSyncInfo getLatestVersionSyncInfo(Version version) {

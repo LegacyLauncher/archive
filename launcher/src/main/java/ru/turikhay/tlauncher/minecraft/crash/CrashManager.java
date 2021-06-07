@@ -1135,6 +1135,9 @@ public final class CrashManager {
         }
 
         private void displayKeyPairs(List keyPairs0, StringBuilder buffer) {
+            if(keyPairs0.isEmpty()) {
+                return;
+            }
             List<Pair<String, Object>> keyPairs = keyPairs0;
             if(keyPairs.size() > 1) {
                 LOGGER.info(LOG_FLUSHER,"{}├ {} = {}", buffer,
