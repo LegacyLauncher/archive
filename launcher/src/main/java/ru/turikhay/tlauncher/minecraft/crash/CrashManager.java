@@ -999,10 +999,14 @@ public final class CrashManager {
             if(dependenciesObj == null || modId == null) {
                 return null;
             }
-            Map dependencies = (Map) dependenciesObj;
-            Object modDependencies = dependencies.get(modId);
-            if(modDependencies instanceof List) {
-                return (List<Map<String, Object>>) modDependencies;
+            if(dependenciesObj instanceof Map) {
+                Map dependencies = (Map) dependenciesObj;
+                Object modDependencies = dependencies.get(modId);
+                if (modDependencies instanceof List) {
+                    return (List<Map<String, Object>>) modDependencies;
+                }
+            } else {
+                LOGGER.warn("dependenciesObj is not a Map: {}", dependenciesObj);
             }
             return null;
         }
