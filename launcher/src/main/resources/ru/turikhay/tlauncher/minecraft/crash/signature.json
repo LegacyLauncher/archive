@@ -1,7 +1,7 @@
 {
   "revision": 23,
   "required": "1.122.3",
-  "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap"],
+  "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap", "__MACOSX"],
   "variables": {
     "heap-pattern": "(?:Could not reserve enough space for (?:[0-9]+KB |)object heap)$",
     "oom-pattern": ".*java.lang.OutOfMemoryError: .+$",
@@ -333,6 +333,31 @@
           "text": "download",
           "actions": [
             "browse --www https://www.curseforge.com/minecraft/mc-mods/codechickencore/files/all"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "llibrary-missing",
+      "pattern": ".*Caused by: java.lang.ClassNotFoundException: net.ilexiconn.llibrary.+",
+      "version": "${forge-pattern}",
+      "title": {
+        "ru_RU": "Требуется LLibrary",
+        "en_US": "LLibrary is missing"
+      },
+      "body": {
+        "ru_RU": "Один из установленных модов требует мод LLibrary. Загрузите его на CurseForge и установите.",
+        "en_US": "One of the installed mods require LLibrary. Download on CurseForge and install it."
+      },
+      "buttons": [
+        {
+          "name": "download",
+          "text": {
+            "ru_RU": "Перейти на CurseForge",
+            "en_US": "Visit CurseForge"
+          },
+          "actions": [
+            "browse --www https://www.curseforge.com/minecraft/mc-mods/llibrary/files/all"
           ]
         }
       ]

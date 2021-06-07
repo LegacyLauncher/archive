@@ -409,7 +409,7 @@ public class CompleteVersion implements Version, Cloneable {
         family = parent_family;
     }
 
-    protected CompleteVersion resolve(VersionManager vm, boolean useLatest, List<String> inheristance) throws IOException {
+    public CompleteVersion resolve(VersionManager vm, boolean useLatest, List<String> inheritance) throws IOException {
         if (vm == null) {
             throw new NullPointerException("version manager");
         } else if (inheritsFrom == null) {
@@ -436,18 +436,18 @@ public class CompleteVersion implements Version, Cloneable {
                 resolveFamily(family_);
             }
             return this.clone();
-        } else if (inheristance.contains(id)) {
+        } else if (inheritance.contains(id)) {
             throw new CompleteVersion.DuplicateInheritanceException();
         } else {
             if(jar == null) {
                 jar = inheritsFrom;
             }
-            inheristance.add(id);
-            VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom);
+            inheritance.add(id);
+            VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom, inheritance);
             if (parentSyncInfo == null) {
                 throw new CompleteVersion.ParentNotFoundException();
             } else {
-                CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheristance);
+                CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheritance);
 
                 resolveFamily(result.family);
 

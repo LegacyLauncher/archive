@@ -11,21 +11,21 @@ public class SwingCrashManagerListener implements CrashManagerListener {
 
     @Override
     public void onCrashManagerProcessing(CrashManager manager) {
-        SwingUtil.later(() -> listener.onCrashManagerProcessing(manager));
+        SwingUtil.wait(() -> listener.onCrashManagerProcessing(manager));
     }
 
     @Override
     public void onCrashManagerComplete(CrashManager manager, Crash crash) {
-        SwingUtil.later(() -> listener.onCrashManagerComplete(manager, crash));
+        SwingUtil.wait(() -> listener.onCrashManagerComplete(manager, crash));
     }
 
     @Override
     public void onCrashManagerCancelled(CrashManager manager) {
-        SwingUtil.later(() -> listener.onCrashManagerCancelled(manager));
+        SwingUtil.wait(() -> listener.onCrashManagerCancelled(manager));
     }
 
     @Override
     public void onCrashManagerFailed(CrashManager manager, Exception e) {
-        SwingUtil.later(() -> listener.onCrashManagerFailed(manager, e));
+        SwingUtil.wait(() -> listener.onCrashManagerFailed(manager, e));
     }
 }
