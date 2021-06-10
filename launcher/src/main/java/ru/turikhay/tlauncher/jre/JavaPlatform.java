@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
 
+import java.util.Objects;
+
 public class JavaPlatform {
     private static final Logger LOGGER = LogManager.getLogger(JavaPlatform.class);
 
@@ -26,6 +28,20 @@ public class JavaPlatform {
             default:
                 LOGGER.warn("Current platform is unknown: {}", OS.CURRENT);
                 return null;
+        }
+    }
+
+    public static OS getOSByPlatform(String platform) {
+        Objects.requireNonNull(platform, "platform");
+
+        if(platform.startsWith("linux")) {
+            return OS.LINUX;
+        } else if(platform.startsWith("windows")) {
+            return OS.WINDOWS;
+        } else if(platform.equals("mac-os")) {
+            return OS.OSX;
+        } else {
+            throw new IllegalArgumentException("unknown platform: " + platform);
         }
     }
 }

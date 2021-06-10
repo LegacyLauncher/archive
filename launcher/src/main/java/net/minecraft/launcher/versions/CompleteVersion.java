@@ -692,6 +692,10 @@ public class CompleteVersion implements Version, Cloneable {
                     version.time = new Date(0L);
                 }
 
+                if(version.libraries == null) {
+                    version.libraries = new ArrayList<>();
+                }
+
                 version.validate();
 
                 return version;
