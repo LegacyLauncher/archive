@@ -9,6 +9,7 @@ import ru.turikhay.util.OS;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class LibraryReplace extends Library {
@@ -27,7 +28,8 @@ public class LibraryReplace extends Library {
     }
 
     public boolean replaces(Library lib) {
-        return replaces != null && replaces.matcher(lib.getName()).matches();
+        return replaces != null &&
+                replaces.matcher(Objects.requireNonNull(lib, "lib").getName()).matches();
     }
 
     public String getArgs() {

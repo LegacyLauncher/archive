@@ -682,8 +682,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 // reinstall JRE if forceUpdate is checked, but ignore it if version has override
                 if(latestLocalOpt.isPresent() && (latestLocalOpt.get().hasOverride() || !forceUpdate)) {
                     LOGGER.debug("Latest version of required JRE is installed");
-                    jreExec = latestLocalOpt.get().getWorkingDirectory() +
-                            File.separator + "bin" + File.separator + "java" + (OS.WINDOWS.isCurrent()? "w.exe" : "");
+                    jreExec = latestLocalOpt.get().getExecutableFile().getAbsolutePath();
                 } else {
                     LOGGER.debug("Will install required JRE");
                     Optional<JavaRuntimeRemote> remoteRuntimeOpt;
@@ -711,8 +710,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                                 }
                             }
                             downloader.add(jreContainer = javaManager.installVersionNow(remoteRuntime, javaRootDir, forceUpdate));
-                            jreExec = remoteRuntime.toLocal(javaRootDir).getWorkingDirectory() +
-                                    File.separator + "bin" + File.separator + "java" + (OS.WINDOWS.isCurrent() ? "w.exe" : "");
+                            jreExec = remoteRuntime.toLocal(javaRootDir).getExecutableFile().getAbsolutePath();
                         } catch(ExecutionException | TimeoutException e) {
                             LOGGER.warn("Couldn't fetch manifest", e);
                             Optional<JavaRuntimeLocal> localRuntimeOpt = javaManager.getDiscoverer().getCurrentPlatformRuntime(jreName);
@@ -721,8 +719,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                                 if(Alert.showQuestion("", Localizable.get("launcher.warning.jre-manifest-unavailable.use-local"))) {
                                     JavaRuntimeLocal localRuntime = localRuntimeOpt.get();
                                     LOGGER.info("We can continue with the local JRE: {}", localRuntime);
-                                    jreExec = localRuntime.getWorkingDirectory() +
-                                            File.separator + "bin" + File.separator + "java" + (OS.WINDOWS.isCurrent() ? "w.exe" : "");
+                                    jreExec = localRuntime.getWorkingDirectory().getAbsolutePath();
                                 } else {
                                     throw new MinecraftLauncherAborted("Couldn't fetch jre");
                                 }

@@ -54,6 +54,27 @@ public class JavaRuntimeLocal implements JavaRuntime {
         return new File(directory, name);
     }
 
+    public File getExecutableFile() {
+        Objects.requireNonNull(platform, "platform");
+        String path;
+
+        switch (JavaPlatform.getOSByPlatform(platform)) {
+            case LINUX:
+                path = "bin/java";
+                break;
+            case WINDOWS:
+                path = "bin\\javaw.exe";
+                break;
+            case OSX:
+                path = "jre.bundle/Contents/Home/bin/java";
+                break;
+            default:
+                throw new RuntimeException("unsupported OS");
+        }
+
+        return new File(getWorkingDirectory(), path);
+    }
+
     /*public List<FileIntegrityEntry> check() throws IOException {
         return getIntegrityInfo().checkEntriesResolving(getWorkingDirectory());
     }*/
