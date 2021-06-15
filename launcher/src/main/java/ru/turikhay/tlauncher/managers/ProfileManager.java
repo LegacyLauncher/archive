@@ -35,6 +35,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ProfileManager extends RefreshableComponent {
     private static final Logger LOGGER = LogManager.getLogger(ProfileManager.class);
@@ -56,7 +57,7 @@ public class ProfileManager extends RefreshableComponent {
             throw new NullPointerException();
         } else {
             this.file = file;
-            listeners = Collections.synchronizedList(new ArrayList());
+            listeners = new CopyOnWriteArrayList<>();
 
             this.accountManager  = new AccountManager();
             authDatabase = new AuthenticatorDatabase(accountManager);

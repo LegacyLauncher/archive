@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import com.google.gson.*;
 import com.moandjiezana.toml.Toml;
 import io.sentry.Sentry;
+import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
@@ -101,6 +102,11 @@ public final class CrashManager {
                     external = loadEntries(Compressor.uncompressMarked(Repository.EXTRA_VERSION_REPO.get("libraries/signature.json")), "external");
                 } catch (Exception e) {
                     LOGGER.warn("Could not load external entries", e);
+                    Sentry.capture(new EventBuilder()
+                            .withLevel(Event.Level.WARNING)
+                            .withMessage("cannot load external crash entries")
+                            .withSentryInterface(new ExceptionInterface(e))
+                    );
                     break loadExternal;
                 }
 
@@ -417,22 +423,6 @@ public final class CrashManager {
                     }
                 }
             }
-
-            String sentryMessage;
-            if(capableEntry == null) {
-                if(crash.getJavaDescription() != null) {
-                    sentryMessage = "crash:\""+  crash.getJavaDescription() +"\"";
-                } else {
-                    sentryMessage = "unknown crash";
-                }
-            } else {
-                sentryMessage = "crash:" + capableEntry.getName();
-            }
-
-            DataBuilder dataBuilder = DataBuilder.create("crash", crash)
-                    .add("exitCode", exitCode).add("description", crash.getDescription())
-                    .add("stackTrace", crash.getStackTrace()).add("javaDescription", crash.getJavaDescription())
-                    .add(crash.getExtraInfo());
 
             LOGGER.info("Done in {} ms", Time.stop(timer));
         }

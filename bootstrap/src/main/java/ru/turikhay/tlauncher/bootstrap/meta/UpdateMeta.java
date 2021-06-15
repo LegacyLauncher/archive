@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class UpdateMeta {
@@ -26,7 +27,7 @@ public class UpdateMeta {
             Collections.addAll(this, U.shuffle(
                     "https://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
                     "https://u.tlauncher.ru/%s/bootstrap.json.mgz.signed",
-                    "https://tlaun.ch/%s/bootstrap.json.mgz.signed"
+                    "https://repo.tlaun.ch/%s/bootstrap.json.mgz.signed"
             ));
         }
     };
@@ -77,6 +78,11 @@ public class UpdateMeta {
                                 log("... is outdated");
                                 log("Current time:", time);
                                 log("Time in meta:", meta.getPendingUpdateUTC() * 1000L);
+                                eList.add(new OutdatedUpdateMetaException(
+                                        _url,
+                                        format(calendar(time)),
+                                        format(calendar(meta.getPendingUpdateUTC() * 1000L))
+                                ));
                                 continue;
                             }
 
@@ -158,6 +164,15 @@ public class UpdateMeta {
         Calendar c = calendar();
         c.setTimeInMillis(millis);
         return c;
+    }
+
+    private static SimpleDateFormat FORMAT;
+
+    private static String format(Calendar calendar) {
+        if(FORMAT == null) {
+            FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
+        }
+        return FORMAT.format(calendar.getTime());
     }
 
     protected long pendingUpdateUTC;

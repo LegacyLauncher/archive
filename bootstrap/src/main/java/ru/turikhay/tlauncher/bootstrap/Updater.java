@@ -13,9 +13,11 @@ public class Updater extends Task<Void> {
 
     private final File destFile;
     private final DownloadEntry entry;
-    private final boolean exitOnFinish;
 
-    public Updater(String name, File destFile, DownloadEntry entry, boolean exitOnFinish) throws IOException {
+    private FinishAction finishAction = FinishAction.EXIT;
+    private String restartExec;
+
+    public Updater(String name, File destFile, DownloadEntry entry) throws IOException {
         super(name);
 
         this.destFile = U.requireNotNull(destFile, "destFile");
@@ -24,21 +26,25 @@ public class Updater extends Task<Void> {
         }
 
         this.entry = U.requireNotNull(entry, "downloadEntry");
-        this.exitOnFinish = exitOnFinish;
+    }
 
-
+    public void restartOnFinish(String restartExec) {
+        this.finishAction = FinishAction.RESTART;
+        this.restartExec = U.requireNotNull(restartExec, "restartExec");
     }
 
     @Override
     protected Void execute() throws Exception {
-        String randomUrl = entry.getUrl().get(new Random().nextInt(entry.getUrl().size())).toString();
+        String randomUrl = getAnyDownloadUrl();
+        final boolean restartOnFinish = finishAction == FinishAction.RESTART;
 
-        UserInterface.showWarning(
-                UserInterface.getLString("update", "Application is going to update. Please start it again manually afterwards."),
-                randomUrl
-        );
+        showUIMessage(randomUrl, restartOnFinish);
 
-        final boolean exitOnFinish = this.exitOnFinish;
+        ProcessBuilder processBuilder = null;
+
+        if(restartOnFinish) {
+            processBuilder = new ProcessBuilder(this.restartExec);
+        }
 
         doWork:
         {
@@ -49,7 +55,8 @@ public class Updater extends Task<Void> {
                 bindTo(entry.toDownloadTask(getName(), tempFile), 0., .95);
             } catch (FileLockedException lockedException) {
                 UserInterface.showError(
-                        UserInterface.getLString("update.locked", "File is locked by another process."),
+                        UserInterface.getLString("update.locked",
+                                "Update file is locked by another process."),
                         randomUrl
                 );
                 break doWork;
@@ -77,10 +84,36 @@ public class Updater extends Task<Void> {
             }
         }
 
-        if(exitOnFinish) {
-            System.exit(0);
+        if(restartOnFinish) {
+            processBuilder.start();
         }
 
+        System.exit(0);
+
         return null;
+    }
+
+    private String getAnyDownloadUrl() {
+        return entry.getUrl().get(new Random().nextInt(entry.getUrl().size())).toString();
+    }
+
+    private void showUIMessage(String randomUrl, boolean restartOnFinish) {
+        StringBuilder message = new StringBuilder();
+        if(restartOnFinish) {
+            message.append(UserInterface.getLString("update.restart.auto",
+                    "Application is going to self-update and then restart automatically."));
+        } else {
+            message.append(UserInterface.getLString("update.restart.manual",
+                    "Application is going to self-update. Please restart it manually."));
+        }
+        message.append("\n\n");
+        message.append(UserInterface.getLString("update.link",
+                "Please download and install the update manually if something goes wrong:"));
+        UserInterface.showWarning(message.toString(), randomUrl);
+    }
+
+    private enum FinishAction {
+        RESTART,
+        EXIT,
     }
 }

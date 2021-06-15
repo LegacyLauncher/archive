@@ -103,6 +103,8 @@ public final class Bootstrap {
                 parser.accepts("packageMode", "defines if bootstrap runs inside a package");
         ArgumentAcceptingOptionSpec<File> targetUpdateFile =
                 parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
+        ArgumentAcceptingOptionSpec<String> restartExec =
+                parser.accepts("restartExec", "instructs the bootstrap to run this executable after self update").withRequiredArg().ofType(String.class);
 
         OptionSet parsed = parseJvmArgs(parser);
 
@@ -148,6 +150,11 @@ public final class Bootstrap {
 
         bootstrap.setPackageMode(parsed.has(packageMode));
         log("Package mode:", bootstrap.isPackageMode());
+
+        if(parsed.has(restartExec)) {
+            bootstrap.setRestartExec(restartExec.value(parsed));
+            log("Restart exec on self update:", bootstrap.getRestartExec());
+        }
 
         if (bootstrap.isPackageMode()) {
             bootstrap.setIgnoreSelfUpdate(true);
@@ -260,6 +267,7 @@ public final class Bootstrap {
     private IInterface ui;
     private File targetJar, targetLibFolder, targetUpdateFile, updateMetaFile;
     private boolean ignoreUpdate, ignoreSelfUpdate, packageMode;
+    private String restartExec;
 
     Bootstrap(File targetJar, File targetLibFolder) {
         final String resourceName = "meta.json";
@@ -368,6 +376,14 @@ public final class Bootstrap {
 
     public void setPackageMode(boolean packageMode) {
         this.packageMode = packageMode;
+    }
+
+    public String getRestartExec() {
+        return restartExec;
+    }
+
+    public void setRestartExec(String restartExec) {
+        this.restartExec = restartExec;
     }
 
     public File getTargetUpdateFile() {
@@ -538,7 +554,10 @@ public final class Bootstrap {
                             log("Bootstrap self update ignored:", updateMeta.getBootstrap().getVersion());
                         } else {
                             Updater updater = new Updater("bootstrapUpdate",
-                                    U.getJar(Bootstrap.class), downloadEntry, true);
+                                    U.getJar(Bootstrap.class), downloadEntry);
+                            if(getRestartExec() != null) {
+                                updater.restartOnFinish(getRestartExec());
+                            }
                             bindTo(updater, .25, 1.);
                             return null;
                         }
@@ -710,6 +729,7 @@ public final class Bootstrap {
             SENTRY.sendEvent(new EventBuilder()
                     .withLevel(Event.Level.ERROR)
                     .withMessage("old java version")
+                    .withExtra("ssl_fix", FixSSL.isFixed())
             );
             String message =
                     "Your Java version is not supported. Please install at least " + supported.getVersion() + " from Java.com" +

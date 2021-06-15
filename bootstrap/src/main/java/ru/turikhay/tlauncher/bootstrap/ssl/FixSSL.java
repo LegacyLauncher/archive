@@ -3,15 +3,16 @@ package ru.turikhay.tlauncher.bootstrap.ssl;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
-
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -22,6 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FixSSL {
+
+    private static boolean IS_FIXED = false;
+
+    public static boolean isFixed() {
+        return IS_FIXED;
+    }
 
     public static void addLetsEncryptCertSupportIfNeeded() {
         try {
@@ -55,6 +62,7 @@ public class FixSSL {
         }
         KeyStore mergedStore = mergeStores(jreTrustStore, letsEncryptStore);
         useNewKeyStoreGlobally(mergedStore);
+        IS_FIXED = true;
     }
 
     private static Map<String, Certificate> loadJreTrustStore() throws Exception {

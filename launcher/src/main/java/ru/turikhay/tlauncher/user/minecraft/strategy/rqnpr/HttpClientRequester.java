@@ -27,7 +27,7 @@ public class HttpClientRequester<A> implements Requester<A> {
     public String makeRequest(Logger logger, A argument) throws InvalidResponseException, IOException {
         Request request = this.requestFactory.apply(argument);
         logger.trace("Sending request: {}", request);
-        HttpResponse httpResponse = request.execute().returnResponse();
+        HttpResponse httpResponse = this.requestExecutor.execute(request).returnResponse();
         logger.trace("Reading response");
         String response = EntityUtils.toString(httpResponse.getEntity());
         logger.trace("Response: {}", response);

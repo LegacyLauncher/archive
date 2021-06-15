@@ -21,6 +21,7 @@ public class JavaVersionTest {
         test("1.8.0-u252", 1, 8, 0, 252, null, false);
         test("16.0.1.9.1", 1, 16, 0, 1, null, false);
         test("16.0.1.9.1_3", 1, 16, 0, 1, null, false);
+        test("1.8.0_232b09", 1, 8, 0, 232, null, false);
     }
 
     private void test(String parse, int epoch, int major, int minor, int update, String identifier, boolean ea) {
