@@ -157,10 +157,10 @@ class DxDiagTask implements Callable<DxDiagReport> {
         } while (process.isAlive());
 
         int exitCode = process.exitValue();
-        LOGGER.debug("Done in {} ms with exit code {}", millis, exitCode);
+        LOGGER.debug("Done in {} ms with exit code {} (0x{})", millis, exitCode, Integer.toHexString(exitCode));
 
         if (exitCode != 0) {
-            throw new DxDiagFailedException("exit code: " + exitCode);
+            throw new DxDiagFailedException("exit code: " + exitCode + " (0x" + Integer.toHexString(exitCode) + ")");
         }
     }
 

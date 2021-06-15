@@ -17,7 +17,7 @@ public final class Library extends ToStringBuildable {
     private static final List<String> LIBRARY_REPO_LIST = Arrays.asList(U.shuffle(
             "https://u.tlauncher.ru/repo/libraries/",
             "https://tlauncherrepo.com/repo/libraries/",
-            "https://tlaun.ch/repo/libraries/",
+            "https://repo.tlaun.ch/repo/libraries/",
             "https://cdn.turikhay.ru/tlauncher/repo/libraries/"
     ));
 

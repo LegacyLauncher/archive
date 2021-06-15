@@ -1,5 +1,5 @@
 {
-  "revision": 23,
+  "revision": 24,
   "required": "1.122.3",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap", "__MACOSX"],
   "variables": {
@@ -112,6 +112,56 @@
       },
       "buttons": [
         "open-mods"
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
+      "name": "forge-world-config-crash",
+      "pattern": ".*net\\.minecraftforge\\.fml\\.config\\.ConfigFileTypeHandler\\$ConfigLoadingException: Failed loading config file .+-server\\.toml of type SERVER for .+",
+      "title": {
+        "ru_RU": "Ошибка загрузки конфигов мира",
+        "en_US": "World config loading error"
+      },
+      "body": {
+        "ru_RU": "Обнаружены один или несколько серверных конфигов в папке мира (saves/НАЗВАНИЕ МИРА/serverconfig), которые не могут быть загружены. Удалите содержимое папки serverconfig полностью.",
+        "en_US": "One or several server configs from world folder (saves/YOUR WORLD NAME/serverconfig) cannot be loaded. You may just delete whole \"serverconfig\" folder."
+      },
+      "buttons": [
+        {
+          "name": "open-game-root",
+          "text": {
+            "ru_RU": "Открыть папку игры",
+            "en_US": "Open game folder"
+          },
+          "actions": [
+            "browse --folder ."
+          ]
+        }
+      ],
+      "version": "${forge-pattern}"
+    },
+    {
+      "name": "forge-config-crash",
+      "pattern": ".*net\\.minecraftforge\\.fml\\.config\\.ConfigFileTypeHandler\\$ConfigLoadingException: Failed loading config file .+",
+      "title": {
+        "ru_RU": "Ошибка загрузки конфигов",
+        "en_US": "Config loading error"
+      },
+      "body": {
+        "ru_RU": "Обнаружены один или несколько конфигов, которые не могут быть загружены. Вы можете проверить конфиги вручную или удалить содержимое папки config полностью.",
+        "en_US": "One or several configs cannot be loaded. You can inspect them by hand, or just delete whole \"config\" folder."
+      },
+      "buttons": [
+        {
+          "name": "open-config",
+          "text": {
+            "ru_RU": "Открыть папку \"config\"",
+            "en_US": "Open \"config\" folder"
+          },
+          "actions": [
+            "browse --folder ./config"
+          ]
+        }
       ],
       "version": "${forge-pattern}"
     },

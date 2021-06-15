@@ -11,8 +11,8 @@ public final class Static {
     private static final String SHORT_BRAND = "@tl_short_brand@";
     private static final String FOLDER = "minecraft";
     private static final String[] OFFICIAL_REPO = {"https://s3.amazonaws.com/Minecraft.Download/"};
-    private static final String[] EXTRA_REPO = U.shuffle("https://u.tlauncher.ru/repo/", "https://tlaun.ch/repo/", "https://tlauncherrepo.com/repo/");
-    private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/", "https://u.tlauncher.ru/repo/libraries/", "https://tlaun.ch/repo/libraries/", "https://tlauncherrepo.com/repo/libraries/"};
+    private static final String[] EXTRA_REPO = U.shuffle("https://u.tlauncher.ru/repo/", "https://repo.tlaun.ch/repo/", "https://tlauncherrepo.com/repo/");
+    private static final String[] LIBRARY_REPO = {"https://libraries.minecraft.net/", "https://u.tlauncher.ru/repo/libraries/", "https://repo.tlaun.ch/repo/libraries/", "https://tlauncherrepo.com/repo/libraries/"};
     private static final String[] ASSETS_REPO = {"https://resources.download.minecraft.net/"};
     private static final String[] SERVER_LIST = {};
     private static final String[] LANG_LIST = generateLangList();

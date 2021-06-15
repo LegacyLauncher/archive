@@ -36,30 +36,40 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     }
 
     @Override
-    protected synchronized void onComplete() throws RetryDownloadException {
+    protected void onComplete() throws RetryDownloadException {
         super.onComplete();
         if(lzmaDestination != null) {
-            LOGGER.debug("Extracting {}", lzmaDestination.getAbsolutePath());
-            try(LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
-                    new FileInputStream(lzmaDestination)));
-                OutputStream output = new BufferedOutputStream(new FileOutputStream(destination))
-            ) {
-                IOUtils.copy(input, output);
-            } catch (IOException e) {
-                throw new RetryDownloadException("couldn't unpack file", e);
-            } finally {
-                if(OS.WINDOWS.isCurrent()) {
-                    // Windows Defender or sth like that doesn't let us remove these files right away
-                    // It is tolerable if these files are not deleted. They just take up the space.
-                    AsyncThread.afterSeconds(10, () -> FileUtil.deleteFile(lzmaDestination));
-                } else {
-                    FileUtil.deleteFile(lzmaDestination);
-                }
-            }
+            syncExtract();
         }
         if(executable) {
             LOGGER.debug("Setting as executable: {}", destination.getAbsolutePath());
             destination.setExecutable(true); // probably safe to ignore
+        }
+    }
+
+    private void syncExtract() throws RetryDownloadException {
+        synchronized (JavaRuntimeFileDownloadable.class) {
+            doExtract();
+        }
+    }
+
+    private void doExtract() throws RetryDownloadException {
+        LOGGER.debug("Extracting {}", lzmaDestination.getAbsolutePath());
+        try(LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
+                new FileInputStream(lzmaDestination)));
+            OutputStream output = new BufferedOutputStream(new FileOutputStream(destination))
+        ) {
+            IOUtils.copy(input, output);
+        } catch (IOException e) {
+            throw new RetryDownloadException("couldn't unpack file", e);
+        } finally {
+            if(OS.WINDOWS.isCurrent()) {
+                // Windows Defender or sth like that doesn't let us remove these files right away
+                // It is tolerable if these files are not deleted. They just take up the space.
+                AsyncThread.afterSeconds(10, () -> FileUtil.deleteFile(lzmaDestination));
+            } else {
+                FileUtil.deleteFile(lzmaDestination);
+            }
         }
     }
 }

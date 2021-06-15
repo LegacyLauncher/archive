@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.crash;
 
+import net.minecraft.launcher.updater.VersionSyncInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
@@ -160,9 +161,13 @@ public final class CrashFrame extends VActionFrame {
         }
 
         if(askHelp) {
-            ++c.gridx;
-            this.askHelp.setPreferredSize(new Dimension(this.askHelp.getMinimumSize().width, SwingUtil.magnify(60)));
-            getFooter().add(this.askHelp, c);
+            if(isCustomVersionCrashed()) {
+                LOGGER.info("Custom local version is crashed. Disabling help offer.");
+            } else {
+                ++c.gridx;
+                this.askHelp.setPreferredSize(new Dimension(this.askHelp.getMinimumSize().width, SwingUtil.magnify(60)));
+                getFooter().add(this.askHelp, c);
+            }
         }
 
         ExtendedPanel buttonPanel = new ExtendedPanel();
@@ -186,5 +191,23 @@ public final class CrashFrame extends VActionFrame {
         c.weightx = 0.0;
         ++c.gridx;
         getFooter().add(buttonPanel, c);
+    }
+
+    private boolean isCustomVersionCrashed() {
+        VersionSyncInfo versionSyncInfo;
+
+        try {
+            versionSyncInfo = U.requireNotNull(TLauncher.getInstance()
+                    .getVersionManager()
+                    .getVersionSyncInfo(
+                            crash.getManager().getLauncher().getVersion()
+                    ));
+        } catch(RuntimeException rE) {
+            // possible NPEs
+            LOGGER.warn("Couldn't detect if this crash is occurred in the custom version", rE);
+            return false;
+        }
+
+        return !versionSyncInfo.hasRemote(); // no remote -> is local only
     }
 }

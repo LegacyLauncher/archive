@@ -53,6 +53,9 @@ public final class OptionsFile {
 
     public void read() throws IOException {
         clear();
+        if(file.length() > 1024L * 1024L) {
+            throw new IOException("reported file size is incredibly large: " + file.length());
+        }
         try(FileInputStream in = new FileInputStream(file); Scanner scanner = new Scanner(in)) {
             while(scanner.hasNextLine()) {
                 String line = scanner.nextLine();
