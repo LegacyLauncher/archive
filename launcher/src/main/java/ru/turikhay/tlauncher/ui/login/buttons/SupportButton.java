@@ -13,7 +13,6 @@ import ru.turikhay.tlauncher.ui.support.PreSupportFrame;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
@@ -54,26 +53,18 @@ public class SupportButton extends LocalizableButton implements Blockable {
     private final HashMap<String, SupportMenu> localeMap = new HashMap<String, SupportMenu>();
 
     {
-        localeMap.put("ru_RU", new SupportMenu("info.png")
-                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/vk?from=menu"))
-                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/discord/ru?from=menu"))
+        localeMap.put("ru_RU", new SupportMenu("info-circle")
+                .add("loginform.button.support.vk", Images.getIcon16("logo-vk"), actionURL("https://tlaun.ch/vk?from=menu"))
+                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/ru?from=menu"))
                 .addSeparator()
-                .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
+                .add("loginform.button.support", Images.getIcon16("comments-o"), showSupportFrame)
         );
 
-        localeMap.put("uk_UA", new SupportMenu("comments-o.png")
-                .add("loginform.button.support.vk", Images.getIcon("vk.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/vk?from=menu"))
-                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/discord/ru?from=menu"))
-                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/fb?from=menu"))
+        localeMap.put("en_US", new SupportMenu("comments-o")
+                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/intl?from=menu"))
+                .add("loginform.button.support.fb", Images.getIcon16("logo-facebook"), actionURL("https://tlaun.ch/fb?from=menu"))
                 .addSeparator()
-                .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
-        );
-
-        localeMap.put("en_US", new SupportMenu("comments-o.png")
-                .add("loginform.button.support.discord", Images.getIcon("discord.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/discord/intl?from=menu"))
-                .add("loginform.button.support.fb", Images.getIcon("facebook.png", SwingUtil.magnify(16)), actionURL("https://tlaun.ch/fb?from=menu"))
-                .addSeparator()
-                .add("loginform.button.support", Images.getIcon("comments-o.png", SwingUtil.magnify(16)), showSupportFrame)
+                .add("loginform.button.support", Images.getIcon16("comments-o"), showSupportFrame)
         );
     }
 
@@ -115,6 +106,10 @@ public class SupportButton extends LocalizableButton implements Blockable {
     void setLocale(String locale) {
         if (menu != null) {
             menu.popup.setVisible(false);
+        }
+
+        if(locale.equals("uk_UA")) {
+            locale = "ru_RU";
         }
 
         menu = localeMap.get(locale);
@@ -177,7 +172,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
         final JPopupMenu popup = new JPopupMenu();
 
         SupportMenu(String icon) {
-            this.icon = Images.getScaledIcon(icon, 20);
+            this.icon = Images.getIcon24(icon);
         }
 
         void showPopup() {

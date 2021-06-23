@@ -431,7 +431,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         private int scale;
 
         GrassImage() {
-            this(Images.getImage("grass.png"));
+            this(Images.loadImageByName("grass.png"));
         }
 
         GrassImage(BufferedImage grassImage) {

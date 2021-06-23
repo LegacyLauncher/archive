@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.git.ITokenResolver;
 
@@ -18,7 +17,7 @@ public class HtmlSubstitutor implements ITokenResolver {
 
         switch(tokenName) {
             case "image":
-                return String.valueOf(Images.getRes(tokenValue));
+                return tokenValue; // handled by ExtendedImageView
             case "size":
                 return String.valueOf(SwingUtil.magnify(Integer.parseInt(tokenValue)));
         }

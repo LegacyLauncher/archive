@@ -27,7 +27,7 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
     SettingsButton(LoginForm loginform) {
         lf = loginform;
         setToolTipText("loginform.button.settings");
-        setIcon(Images.getScaledIcon("bars.png", 20));
+        setIcon(Images.getIcon24("bars"));
         popup = new JPopupMenu();
         settings = new LocalizableMenuItem("loginform.button.settings.launcher");
         settings.addActionListener(new ActionListener() {

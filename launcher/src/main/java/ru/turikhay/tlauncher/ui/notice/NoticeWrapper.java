@@ -7,7 +7,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
@@ -84,7 +83,7 @@ class NoticeWrapper extends BorderPanel {
             setIconWidth = 0;
             setIconHeight = size.height;
         }
-        iconLabel.setImage(image.getTask(), image.getWidth(), image.getHeight(), setIconWidth, setIconHeight);
+        iconLabel.setImage(image, setIconWidth, setIconHeight);
 
         int iconWidth = iconLabel.getIconWidth();
         if(fixedIconWidth > 0 && fixedIconWidth != iconWidth) {
@@ -133,7 +132,7 @@ class NoticeWrapper extends BorderPanel {
         ButtonPane() {
             setInsets(0, 0, 0, 0);
             this.action = new Button();
-            action.registerAction("go.png", new ActionListener() {
+            action.registerAction(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if(notice == null) {
@@ -168,9 +167,9 @@ class NoticeWrapper extends BorderPanel {
 
         void updateButton() {
             if(notice != null && notice.getAction() instanceof LauncherNoticeAction) {
-                action.updateIcon("go-launcher.png");
+                action.setGoColorIcon();
             } else {
-                action.updateIcon("go.png");
+                action.setGoIcon();
             }
         }
 
@@ -216,13 +215,12 @@ class NoticeWrapper extends BorderPanel {
     class Button extends ExtendedButton {
         final Popup popup;
         private ActionListener listener;
-        private final ru.turikhay.tlauncher.ui.images.ImageIcon icon;
 
         Button() {
             setMargin(new Insets(0, 0, 0, 0));
 
             popup = new Popup();
-            setIcon(icon = new ru.turikhay.tlauncher.ui.images.ImageIcon(Images.getImage("ellipsis-v.png"), SwingUtil.magnify(BUTTON_ICON_WIDTH), true));
+            setIcon(Images.getIcon24("ellipsis-v"));
             addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -235,26 +233,26 @@ class NoticeWrapper extends BorderPanel {
             });
         }
 
-        void updateIcon(String image) {
-            icon.setImage(Images.getImage(image), SwingUtil.magnify(BUTTON_ICON_WIDTH), true);
+        /*void updateIcon(String image) {
+            setIcon(Images.getIcon(image, BUTTON_ICON_WIDTH));
+        }*/
+
+        void setGoIcon() {
+            setIcon(Images.getIcon24("play-circle-o"));
         }
 
-        void registerAction(String image, ActionListener l) {
-            updateIcon(image);
+        void setGoColorIcon() {
+            setIcon(Images.getIcon24("play-circle-o-1"));
+        }
+
+        void registerAction(ActionListener l) {
+            setGoIcon();
             listener = l;
-        }
-
-        void unregisterAction() {
-            icon.setImage(Images.getImage("ellipsis-v.png"), SwingUtil.magnify(BUTTON_ICON_WIDTH), true);
-            listener = null;
         }
 
         Dimension updateSize(int height) {
             final int insets = SwingUtil.magnify(BUTTON_INSETS) * 2;
-            if(height < insets + icon.getHeight()) {
-                icon.setIconHeight(height - insets);
-            }
-            Dimension size = new Dimension(insets + icon.getIconWidth(), height);
+            Dimension size = new Dimension(insets + BUTTON_ICON_WIDTH, height);
             setPreferredSize(size);
             return size;
         }

@@ -34,7 +34,7 @@ public class ProcessFrame<T> extends BActionFrame {
     }
 
     public final void setIcon(String path) {
-        getBody().setWest(Images.getIcon(path, SwingUtil.magnify(32)));
+        getBody().setWest(Images.getIcon32(path));
     }
 
     public final void submit(Process process) {

@@ -5,6 +5,7 @@ import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.http.client.fluent.Request;
+import pw.modder.http.HttpClientUtils;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 
@@ -59,8 +60,7 @@ public class ForgeProcessor {
 
         for (ForgeExtractor.ProcessorLibrary library : profile.getLibraries()) {
             File target = librariesDir.resolve(library.getPath()).toFile();
-            Request.Get(library.getUrl())
-                    .execute()
+            HttpClientUtils.execute(Request.Get(library.getUrl()))
                     .saveContent(target);
 
             if (!FileUtil.getSHA(target).equals(library.getSha1()))

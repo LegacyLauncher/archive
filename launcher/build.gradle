@@ -10,11 +10,13 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'java'
     id "org.ajoberstar.grgit"
+    id "org.openjfx.javafxplugin"
 }
 
-version '1.122.9'
+version '1.123.0'
 
 apply from: '../gradle/brand.gradle'
+apply from: '../gradle/javafx.gradle'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -157,7 +159,7 @@ task generateUpdateJson {
         def downloadUrlList = [
                 "https://tlauncherrepo.com/",
                 "https://u.tlauncher.ru/",
-                "https://tlaun.ch/",
+                "https://repo.tlaun.ch/",
                 "https://cdn.turikhay.ru/tlauncher/",
                 "http://cdn.turikhay.ru/tlauncher/"
         ].collect {

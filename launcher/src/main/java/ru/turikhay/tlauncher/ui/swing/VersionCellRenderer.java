@@ -10,7 +10,6 @@ import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.theme.Theme;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
@@ -22,9 +21,9 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
     private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
     private final int averageColor = U.shiftColor(Theme.getTheme().getForeground(), -128, 64, 128).getRGB();
 
-    private static final ImageIcon ELY_ICON = Images.getIcon("ely.png", SwingUtil.magnify(16));
-    private static final ImageIcon MOJANG_ICON = Images.getIcon("mojang.png", SwingUtil.magnify(16));
-    private static final ImageIcon MCLEAKS_ICON = Images.getIcon("mcleaks.png", SwingUtil.magnify(16));
+    private static final ImageIcon ELY_ICON = Images.getIcon16("logo-ely");
+    private static final ImageIcon MOJANG_ICON = Images.getIcon16("logo-mojang");
+    private static final ImageIcon MCLEAKS_ICON = Images.getIcon16("logo-mcleaks");
 
     public Component getListCellRendererComponent(JList<? extends VersionSyncInfo> list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
         JLabel mainText = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);

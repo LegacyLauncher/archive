@@ -62,11 +62,11 @@ public class Account {
     }
 
     public enum AccountType {
-        ELY("ely.png"),
-        ELY_LEGACY("ely.png"),
-        MOJANG("mojang.png"),
-        MINECRAFT("microsoft.png"),
-        MCLEAKS("mcleaks.png"),
+        ELY("logo-ely"),
+        ELY_LEGACY("logo-ely"),
+        MOJANG("logo-mojang"),
+        MINECRAFT("logo-microsoft"),
+        MCLEAKS("logo-mcleaks"),
         PLAIN(null);
 
         private final String icon;

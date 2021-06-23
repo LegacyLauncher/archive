@@ -16,7 +16,7 @@ public class VersionListCellRenderer extends VersionCellRenderer {
 
     VersionListCellRenderer(VersionList list) {
         handler = list.handler;
-        downloading = Images.getIcon("download.png", 16, 16);
+        downloading = Images.getIcon16("download");
     }
 
     public Component getListCellRendererComponent(JList<? extends VersionSyncInfo> list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {

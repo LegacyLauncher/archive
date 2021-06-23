@@ -10,7 +10,6 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
-import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -33,7 +32,7 @@ public class VersionRemoveButton extends ExtendedButton implements VersionHandle
     private boolean libraries;
 
     VersionRemoveButton(VersionList list) {
-        setIcon(Images.getIcon("remove.png", SwingUtil.magnify(24)));
+        setIcon(Images.getIcon24("remove"));
         handler = list.handler;
         handler.addListener(this);
         menu = new JPopupMenu();
