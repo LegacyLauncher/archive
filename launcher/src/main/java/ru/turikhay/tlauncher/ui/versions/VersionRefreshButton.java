@@ -6,7 +6,6 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
-import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -65,7 +64,7 @@ public class VersionRefreshButton extends ExtendedButton implements VersionHandl
             throw new NullPointerException();
         } else {
             this.state = state;
-            setIcon(Images.getIcon(state.image, SwingUtil.magnify(24)));
+            setIcon(Images.getIcon24(state.image));
         }
     }
 
@@ -98,8 +97,8 @@ public class VersionRefreshButton extends ExtendedButton implements VersionHandl
     }
 
     enum ButtonState {
-        REFRESH("refresh.png"),
-        CANCEL("stop-circle-o.png");
+        REFRESH("refresh"),
+        CANCEL("stop-circle-o");
 
         final String image;
 

@@ -335,7 +335,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         homeButton = new ExtendedButton();
-        homeButton.setIcon(Images.getIcon("home.png", SwingUtil.magnify(20)));
+        homeButton.setIcon(Images.getIcon24("home"));
         homeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateValues();

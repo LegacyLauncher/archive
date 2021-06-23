@@ -147,7 +147,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             c.gridy = 0;
             c.fill = GridBagConstraints.VERTICAL;
 
-            prev = newButton("arrow-left.png", new ActionListener() {
+            prev = newButton("arrow-left", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     changeNotice(-1);
@@ -156,7 +156,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             c.gridx++;
             add(prev, c);
 
-            next = newButton("arrow-right.png", new ActionListener() {
+            next = newButton("arrow-right", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     changeNotice(1);
@@ -179,7 +179,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             c.gridx++;
             add(visible, c);
 
-            home = newButton("home.png", new ActionListener() {
+            home = newButton("home", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     getMainPane().openDefaultScene();
@@ -256,7 +256,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
         }
 
         private ImageIcon newImage(String iconPath) {
-            return new ImageIcon(Images.getImage(iconPath), SwingUtil.magnify(IMAGE_WIDTH), true);
+            return Images.getIcon24(iconPath);
         }
     }
 

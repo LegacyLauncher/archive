@@ -713,6 +713,13 @@ public class MinecraftLauncher implements JavaProcessListener {
                             jreExec = remoteRuntime.toLocal(javaRootDir).getExecutableFile().getAbsolutePath();
                         } catch(ExecutionException | TimeoutException e) {
                             LOGGER.warn("Couldn't fetch manifest", e);
+                            Sentry.capture(new EventBuilder()
+                                    .withLevel(Event.Level.WARNING)
+                                    .withMessage("couldn't fetch manifest")
+                                    .withSentryInterface(new ExceptionInterface(e))
+                                    .withExtra("jreName", jreName)
+                                    .withExtra("version", versionName)
+                            );
                             Optional<JavaRuntimeLocal> localRuntimeOpt = javaManager.getDiscoverer().getCurrentPlatformRuntime(jreName);
                             if(localRuntimeOpt.isPresent()) {
                                 LOGGER.info("But local JRE is found. Will use it instead.");

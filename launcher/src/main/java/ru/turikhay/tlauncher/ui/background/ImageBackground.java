@@ -9,12 +9,14 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
+import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
+import java.awt.image.BaseMultiResolutionImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -67,15 +69,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     @Override
     public void loadBackground(String path) throws Exception {
         if (defaultImage == null) {
-            Image image;
-
-            try {
-                image = Images.getImage("plains.jpg");
-            } catch (Exception e) {
-                throw new Error("could not load default image", e);
-            }
-
-            defaultImage = image;
+            defaultImage = Images.loadImageByName("plains.jpg");
         }
 
         renderImage = null;
@@ -131,8 +125,24 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             return;
         }
 
-        renderImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+        renderImage = renderImage(image);
         repaint();
+    }
+
+    private Image renderImage(Image image) {
+        if(Images.isMultiResAvailable()) {
+            return renderMultiResImage(image);
+        } else {
+            return renderScaleImage(image);
+        }
+    }
+
+    private Image renderMultiResImage(Image image) {
+        return Reflect.cast(new BaseMultiResolutionImage(image), Image.class); // trick the compiler
+    }
+
+    private Image renderScaleImage(Image image) {
+        return image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
     }
 
     @Override

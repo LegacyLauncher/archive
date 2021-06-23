@@ -1,8 +1,6 @@
 package ru.turikhay.tlauncher.ui.theme;
 
 import java.awt.*;
-import java.io.IOException;
-import java.net.URL;
 
 public abstract class ChildTheme extends Theme {
     private final SystemTheme system = SystemTheme.getSystemTheme();
@@ -57,12 +55,17 @@ public abstract class ChildTheme extends Theme {
     }
 
     @Override
+    public Color getIconColor(String iconName) {
+        return system.getIconColor(iconName);
+    }
+
+    @Override
     public int getArc(Border border) {
         return system.getArc(border);
     }
 
     @Override
-    public URL loadAsset(String name) throws IOException {
-        return system.loadAsset(name);
+    public boolean useDarkTheme() {
+        return system.useDarkTheme();
     }
 }

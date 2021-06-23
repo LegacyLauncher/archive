@@ -153,7 +153,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
             }
         });
         button.setFont(button.getFont().deriveFont(Font.BOLD));
-        button.setIcon(Images.getIcon("mcleaks.png", 24));
+        button.setIcon(Images.getIcon24("logo-mcleaks"));
         c1.gridy++;
         bottom.add(button, c1);
 

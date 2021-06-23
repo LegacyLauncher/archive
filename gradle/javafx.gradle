@@ -1,0 +1,5 @@
+javafx {
+    version = "11.0.2"
+    configuration = project.name == 'launcher' ? "implementation" : "runtimeOnly"
+    modules("javafx.base", "javafx.graphics", "javafx.media", "javafx.web", "javafx.swing")
+}
