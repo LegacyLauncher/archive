@@ -1,8 +1,17 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import ru.turikhay.util.Lazy;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Locale;
@@ -12,6 +21,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Images {
+    private static final Logger LOGGER = LogManager.getLogger(Images.class);
+
     private static final Pattern ICON_FILENAME_PATTERN = Pattern.compile("([A-Za-z-._]+)@([\\d]+)\\.png");
 
     private static final ImageResourceLocator RESOURCE_LOCATOR =
@@ -36,14 +47,33 @@ public class Images {
 
     public static Image loadIcon(String name, int size) {
         String resourceName = toIconResourceName(name);
-        URL url = findLocation(resourceName);
-        BufferedImage baseImage = loadImageByUrl(url);
+        URL url;
+        try {
+            url = findLocation(resourceName);
+        } catch (ResourceNotFoundException e) {
+            return reportMissingAndReturnEmptyImage(e);
+        }
+        BufferedImage baseImage;
+        try {
+            baseImage = loadImageByUrl(url);
+        } catch (ResourceLoadException e) {
+            return reportLoadErrorAndReturnEmptyImage(e);
+        }
         return ICON_PROCESSOR.processBaseIcon(baseImage, name, size);
     }
 
     public static BufferedImage loadImageByName(String resourceName) {
-        URL url = findLocation(resourceName);
-        return loadImageByUrl(url);
+        URL url;
+        try {
+            url = findLocation(resourceName);
+        } catch (ResourceNotFoundException e) {
+            return reportMissingAndReturnEmptyImage(e);
+        }
+        try {
+            return loadImageByUrl(url);
+        } catch (ResourceLoadException e) {
+            return reportLoadErrorAndReturnEmptyImage(e);
+        }
     }
 
     public static Image loadIconById(String id) {
@@ -58,21 +88,46 @@ public class Images {
         return loadIcon(name, size);
     }
 
-    private static URL findLocation(String resourceName) {
+    private static URL findLocation(String resourceName) throws ResourceNotFoundException {
         Optional<URL> url = RESOURCE_LOCATOR.loadResource(resourceName);
         if(!url.isPresent()) {
-            throw new Error("resource not found: " + resourceName);
+            throw new ResourceNotFoundException(resourceName);
         }
         return url.get();
     }
 
-    private static BufferedImage loadImageByUrl(URL url) {
+    private static BufferedImage loadImageByUrl(URL url) throws ResourceLoadException {
         Objects.requireNonNull(url, "url");
         try {
             return ImageIO.read(url);
-        } catch (Exception e) {
-            throw new Error("could not load the image", e);
+        } catch (IOException e) {
+            throw new ResourceLoadException(url, e);
         }
+    }
+
+    private static final Lazy<BufferedImage> ONE_PIX = Lazy.of(() ->
+            new BufferedImage(1, 1, BufferedImage.TYPE_4BYTE_ABGR)
+    );
+
+    private static BufferedImage reportMissingAndReturnEmptyImage(ResourceNotFoundException e) {
+        LOGGER.error("Missing resource", e);
+        Sentry.capture(new EventBuilder()
+                .withLevel(Event.Level.ERROR)
+                .withMessage("missing resource: " + e.getMessage())
+                .withSentryInterface(new ExceptionInterface(e))
+        );
+        return ONE_PIX.get();
+    }
+
+    private static BufferedImage reportLoadErrorAndReturnEmptyImage(ResourceLoadException e) {
+        LOGGER.error("Resource cannot be loaded", e);
+        Sentry.capture(new EventBuilder()
+                .withLevel(Event.Level.ERROR)
+                .withMessage("resource loading error")
+                .withSentryInterface(new ExceptionInterface(e))
+                .withExtra("resourceUrl", String.valueOf(e.getUrl()))
+        );
+        return ONE_PIX.get();
     }
 
     private static String toIconResourceName(String name) {

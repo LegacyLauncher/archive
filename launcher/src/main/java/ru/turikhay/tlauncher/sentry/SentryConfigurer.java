@@ -22,7 +22,8 @@ public class SentryConfigurer {
 
     public static void configure(Version version, String shortBrand) {
         SENTRY = Sentry.init(
-                null,//"https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46",
+                TLauncher.getInstance() != null && TLauncher.getInstance().isDebug()? null :
+                        "https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46",
                 new CustomClientFactory()
         );
         SENTRY.setRelease(U.getNormalVersion(version));
