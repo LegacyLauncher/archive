@@ -40,8 +40,7 @@ public class JavaRuntimeRemoteListFetcher {
                     .registerTypeAdapter(JavaRuntimeRemoteList.class, new JavaRuntimeRemoteListDeserializer())
                     .registerTypeAdapter(Date.class, new DateTypeAdapter(false))
                     .create();
-            String content = EHttpClient.execute(Request.Get(JavaRuntimeRemoteList.URL))
-                    .returnContent().toString();
+            String content = EHttpClient.toString(Request.Get(JavaRuntimeRemoteList.URL));
             JavaRuntimeRemoteList remoteList = gson.fromJson(content, JavaRuntimeRemoteList.class);
             return Objects.requireNonNull(remoteList, "remoteList");
         } catch(Exception e) {

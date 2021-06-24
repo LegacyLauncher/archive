@@ -44,7 +44,7 @@ public class JavaRuntimeRemote implements JavaRuntime {
 
     private JavaRuntimeManifest getManifestNow() throws IOException {
         JavaRuntimeManifest manifest = JavaRuntimeManifest.getGson().fromJson(
-                EHttpClient.execute(Request.Get(this.manifest.getUrl())).returnContent().asString(),
+                EHttpClient.toString(Request.Get(this.manifest.getUrl())),
                 JavaRuntimeManifest.class
         );
         return Objects.requireNonNull(manifest, "manifest");
