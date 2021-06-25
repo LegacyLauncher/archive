@@ -25,7 +25,7 @@ public class JavaRuntimeRemoteListFetcher {
 
     public Future<JavaRuntimeRemoteList> fetch() {
         if(list == null) {
-            list = AsyncThread.timeoutSeconds(30, this::doFetch);
+            list = AsyncThread.future(this::doFetch);
         }
         return list;
     }

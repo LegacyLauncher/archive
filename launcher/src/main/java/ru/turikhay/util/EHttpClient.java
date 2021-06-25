@@ -6,7 +6,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultServiceUnavailableRetryStrategy;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import ru.turikhay.util.http.HttpRequestRetryHandler;
 import ru.turikhay.util.http.RetryingRangeContentResponseHandler;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ public final class EHttpClient {
 
     public static CloseableHttpClient createRepeatable() {
         return HttpClients.custom()
-                .setRetryHandler(new StandardHttpRequestRetryHandler())
+                .setRetryHandler(new HttpRequestRetryHandler())
                 .setServiceUnavailableRetryStrategy(new DefaultServiceUnavailableRetryStrategy())
                 .build();
     }
