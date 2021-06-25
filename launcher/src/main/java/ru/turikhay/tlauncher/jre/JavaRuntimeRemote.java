@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 
 public class JavaRuntimeRemote implements JavaRuntime {
     private String name;
@@ -35,9 +34,9 @@ public class JavaRuntimeRemote implements JavaRuntime {
         return availability;
     }
 
-    public JavaRuntimeManifest getManifest() throws ExecutionException, InterruptedException, TimeoutException {
+    public JavaRuntimeManifest getManifest() throws ExecutionException, InterruptedException {
         if(manifestTimeout == null) {
-            manifestTimeout = AsyncThread.timeoutSeconds(30, this::getManifestNow);
+            manifestTimeout = AsyncThread.future(this::getManifestNow);
         }
         return manifestTimeout.get();
     }

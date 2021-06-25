@@ -711,7 +711,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                             }
                             downloader.add(jreContainer = javaManager.installVersionNow(remoteRuntime, javaRootDir, forceUpdate));
                             jreExec = remoteRuntime.toLocal(javaRootDir).getExecutableFile().getAbsolutePath();
-                        } catch(ExecutionException | TimeoutException e) {
+                        } catch(ExecutionException e) {
                             LOGGER.warn("Couldn't fetch manifest", e);
                             Sentry.capture(new EventBuilder()
                                     .withLevel(Event.Level.WARNING)
