@@ -86,7 +86,12 @@ task runDebug(type: JavaExec) {
     args("--debug")
 
     dependsOn(":launcher:buildLauncherRepo")
-    dependsOn(":launcher:prepareLauncherDir")
+
+    if (System.getenv("JRE_LEGACY") == "true") {
+        dependsOn(":launcher:prepareLauncherDirJava8")
+    } else {
+        dependsOn(":launcher:prepareLauncherDir")
+    }
 }
 
 static def generateChecksum(File file) {

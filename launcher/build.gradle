@@ -13,14 +13,23 @@ plugins {
     id "org.openjfx.javafxplugin"
 }
 
-version '1.125.0'
+version '1.126.0'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
 
-java {
+sourceSets {
+    modern
+}
+
+compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+compileModernJava {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 configurations {
@@ -32,6 +41,8 @@ def authlibVersion = "1.5.24"
 def nstweakerVersion = "1.0"
 
 dependencies {
+    modernImplementation(sourceSets.main.output)
+
     tlRuntime("com.google.guava:guava:14.0")
     tlRuntime("org.apache.logging.log4j:log4j-api:2.8.1")
     tlRuntime("org.apache.logging.log4j:log4j-core:2.8.1")
@@ -102,6 +113,23 @@ task buildLauncherRepo(type: Sync) {
 }
 
 task prepareLauncherDir(type: Sync) {
+    doFirst {
+        delete(file("build/tlRun"))
+        mkdir(file("build/tlRun"))
+    }
+
+    destinationDir = file("build/tlRun")
+    dependsOn(compileModernJava)
+
+    from(compileModernJava)
+    from(compileJava)
+    from(sourceSets.modern.resources)
+    from(sourceSets.main.resources)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task prepareLauncherDirJava8(type: Sync) {
     doFirst {
         delete(file("build/tlRun"))
         mkdir(file("build/tlRun"))
@@ -214,6 +242,18 @@ compileJava {
 
 assemble {
     dependsOn(generateUpdateJson, copyJarAndRenameToSha256)
+}
+
+jar {
+    into('META-INF/versions/11') {
+        from sourceSets.modern.output
+    }
+
+    manifest {
+        attributes (
+                'Multi-Release': true
+        )
+    }
 }
 
 test {

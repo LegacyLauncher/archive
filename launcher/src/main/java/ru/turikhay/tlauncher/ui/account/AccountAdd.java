@@ -24,7 +24,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     private final ExtendedPanel grid;
     private final GridBagConstraints c;
 
-    private final ExtendedButton mojang, minecraft, ely, free, mcleaks, idontknow;
+    private final ExtendedButton mojang, minecraft, ely, free, idontknow;
 
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
@@ -38,6 +38,12 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = -1;
 
+        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-ely");
+            }
+        });
         minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -54,18 +60,6 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
             @Override
             public void actionPerformed(ActionEvent e) {
                 AccountAdd.this.scene.multipane.showTip("add-account-plain");
-            }
-        });
-        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                AccountAdd.this.scene.multipane.showTip("add-account-ely");
-            }
-        });
-        mcleaks = addRow("logo-mcleaks", ACCOUNT_TYPE_PREFIX + "mcleaks", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                AccountAdd.this.scene.multipane.showTip("add-account-mcleaks");
             }
         });
         idontknow = addRow("info-circle", LOC_PREFIX + "hint", new ActionListener() {
@@ -142,11 +136,11 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         if(!"idontknow".equals(var1)) {
             Blocker.blockComponents(var1, free, idontknow);
         }
-        Blocker.blockComponents(var1, mojang, ely, mcleaks, minecraft);
+        Blocker.blockComponents(var1, mojang, ely, minecraft);
     }
 
     @Override
     public void unblock(Object var1) {
-        Blocker.unblockComponents(var1, mojang, free, ely, mcleaks, idontknow, minecraft);
+        Blocker.unblockComponents(var1, mojang, free, ely, idontknow, minecraft);
     }
 }

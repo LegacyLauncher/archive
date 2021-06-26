@@ -23,27 +23,15 @@ class CompatibleIconProcessor implements IconProcessor {
 
     private static CompatibleIconProcessor create(double scalingFactor) {
         IconProcessor processor;
-        if(MULTI_RES_AVAILABLE && scalingFactor != 1.0) {
-            processor = new MultiResIconProcessor(scalingFactor);
+        if(isMultiResAvailable() && scalingFactor != 1.0) {
+            processor = MultiResInterface.INSTANCE.createIconProcessor(scalingFactor);
         } else {
             processor = new PlainIconProcessor();
         }
         return new CompatibleIconProcessor(processor);
     }
 
-
-    private static final boolean MULTI_RES_AVAILABLE;
-    static {
-        boolean status = true;
-        try {
-            Class.forName("java.awt.image.MultiResolutionImage");
-        } catch (ClassNotFoundException e) {
-            status = false;
-        }
-        MULTI_RES_AVAILABLE = status;
-    }
-
     static boolean isMultiResAvailable() {
-        return MULTI_RES_AVAILABLE;
+        return MultiResInterface.INSTANCE.isEnabled();
     }
 }

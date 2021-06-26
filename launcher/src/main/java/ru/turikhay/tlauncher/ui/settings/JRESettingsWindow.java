@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.jre.JavaRuntimeLocal;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.ui.editor.EditorFileField;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.*;
 import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
@@ -73,7 +74,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         ));
         setContentPane(p);
 
-        addLabel("select");
+        addLabel("select", "check-circle-o");
 
         recommendedRadioButton = addType("recommended", WIDTH);
         recommendedRadioButton.addActionListener(e -> onRecommended());
@@ -91,7 +92,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         add(new JSeparator(SwingConstants.HORIZONTAL));
         add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(20))));
 
-        addLabel("configure");
+        addLabel("configure", "gear");
 
         ExtendedPanel cfgs = new ExtendedPanel();
         cfgs.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -130,6 +131,9 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
 
         settingsSavedLabel = new LocalizableLabel(
                 "settings.jre.window.bottom.save");
+        settingsSavedLabel.setIcon(Images.getIcon16("save-1").getDisabledInstance());
+        settingsSavedLabel.setIconTextGap(SwingUtil.magnify(15));
+        settingsSavedLabel.setForeground(Theme.getTheme().getSemiForeground());
         settingsSavedLabel.setVisible(false);
 
         LocalizableButton closeButton = new LocalizableButton("settings.jre.window.bottom.close");
@@ -492,22 +496,25 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private LocalizableRadioButton addType(String type, int width) {
-        add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(10))));
         LocalizableRadioButton b = new LocalizableRadioButton("settings.jre.window.select." + type);
         add(b);
         LocalizableHTMLLabel l = new LocalizableHTMLLabel("settings.jre.window.select." + type + ".hint");
         l.setLabelWidth(width);
         l.setForeground(Theme.getTheme().getSemiForeground());
         add(l);
+        add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(10))));
 
         return b;
     }
 
-    private LocalizableLabel addLabel(String path) {
+    private LocalizableLabel addLabel(String path, String icon) {
         LocalizableLabel l = new LocalizableLabel("settings.jre.window."+ path +".label");
         l.setFont(l.getFont().deriveFont(Font.BOLD, l.getFont().getSize2D() + 3.f));
+        l.setIconTextGap(SwingUtil.magnify(10));
         l.setForeground(Theme.getTheme().getSemiForeground());
+        l.setIcon(Images.getIcon24(icon).getDisabledInstance());
         add(l);
+        add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(20))));
         return l;
     }
 

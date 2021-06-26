@@ -18,7 +18,7 @@ public class DisabledImageIcon implements Icon {
     }
 
     public DisabledImageIcon(Icon parent) {
-        this(parent, 0.3f);
+        this(parent, 0.5f);
     }
 
     public final float getDisabledOpacity() {

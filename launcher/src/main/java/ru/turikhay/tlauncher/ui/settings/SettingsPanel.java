@@ -18,6 +18,7 @@ import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.MediaFileExplorer;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
     private static final Logger LOGGER = LogManager.getLogger(SettingsPanel.class);
@@ -502,7 +504,13 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     }
 
     public void logginingIn() throws LoginException {
-        if (!checkValues()) {
+        boolean ok;
+        if(anyChanges()) {
+            ok = askToSaveChanges();
+        } else {
+            ok = checkValues();
+        }
+        if(!ok) {
             scene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
             throw new LoginException("Invalid settings!");
         }
@@ -520,5 +528,35 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         } else {
             remove(serverTab);
         }*/
+    }
+
+    private boolean anyChanges() {
+        for (EditorHandler handler : handlers) {
+            String path = handler.getPath();
+            if (path == null) {
+                continue;
+            }
+            String value = handler.getValue();
+            String existingValue = global.get(path);
+            if(!Objects.equals(value, existingValue)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean askToSaveChanges() {
+        if(Alert.showQuestion(
+                "",
+                Localizable.get("settings.changed.confirm")
+        )) {
+            if(!saveValues()) {
+                return false;
+            }
+        } else {
+            updateValues();
+        }
+        scene.setSidePanel(null);
+        return true;
     }
 }
