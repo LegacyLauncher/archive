@@ -4,12 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.notice.NoticeImage;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.*;
-import java.awt.image.BaseMultiResolutionImage;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -106,7 +104,7 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
 
             final Image result;
 
-            if(Images.isMultiResAvailable()) {
+            if(MultiResInterface.INSTANCE.isEnabled()) {
                 result = toMultiResIcon(icon, size.width, size.height);
             } else {
                 result = scaledIcon(icon, size.width, size.height, 1.0);
@@ -155,9 +153,9 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
     }
 
     private static Image toMultiResIcon(Image icon, int width, int height) {
-        return Reflect.cast(new BaseMultiResolutionImage(
+        return MultiResInterface.INSTANCE.createImage(
                 scaledIcon(icon, width, height, 1.0),
                 scaledIcon(icon, width, height, SwingUtil.getScalingFactor())
-        ), Image.class); // trick the compiler
+        );
     }
 }

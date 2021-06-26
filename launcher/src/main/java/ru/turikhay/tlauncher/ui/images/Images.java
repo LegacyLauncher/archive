@@ -25,14 +25,15 @@ public class Images {
 
     private static final Pattern ICON_FILENAME_PATTERN = Pattern.compile("([A-Za-z-._]+)@([\\d]+)\\.png");
 
-    private static final ImageResourceLocator RESOURCE_LOCATOR =
+    private static final ImageResourceLocator RESOURCE_LOCATOR = new DuplicateAwareResourceLocator(
             new DarkThemeAwareResourceLocator(
                     new PrefixResourceLocator(
                             new ClassResourceLocator(Images.class),
                             Arrays.asList("fa/", "")
                     ),
                     "dark/"
-            );
+            )
+    );
 
     private static final IconProcessor ICON_PROCESSOR = new ThemeColorIconProcessor(CompatibleIconProcessor.create());
 
@@ -172,9 +173,5 @@ public class Images {
 
     public static Image loadIcon64(String name) {
         return loadIcon(name, 64);
-    }
-
-    public static boolean isMultiResAvailable() {
-        return CompatibleIconProcessor.isMultiResAvailable();
     }
 }

@@ -8,15 +8,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.images.MultiResInterface;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
-import java.awt.image.BaseMultiResolutionImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -130,7 +129,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     }
 
     private Image renderImage(Image image) {
-        if(Images.isMultiResAvailable()) {
+        if(MultiResInterface.INSTANCE.isEnabled()) {
             return renderMultiResImage(image);
         } else {
             return renderScaleImage(image);
@@ -138,7 +137,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     }
 
     private Image renderMultiResImage(Image image) {
-        return Reflect.cast(new BaseMultiResolutionImage(image), Image.class); // trick the compiler
+        return MultiResInterface.INSTANCE.createImage(image);
     }
 
     private Image renderScaleImage(Image image) {

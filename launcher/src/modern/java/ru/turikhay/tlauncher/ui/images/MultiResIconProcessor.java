@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.images;
 
-import java.awt.*;
 import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 
@@ -14,7 +13,7 @@ class MultiResIconProcessor implements IconProcessor {
     }
 
     @Override
-    public Image processBaseIcon(BufferedImage baseIcon, String iconName, int targetSize) {
+    public BaseMultiResolutionImage processBaseIcon(BufferedImage baseIcon, String iconName, int targetSize) {
         return new BaseMultiResolutionImage(
                 scaleIcon(baseIcon, targetSize),
                 scaleIcon(baseIcon, (int) (scalingFactor * targetSize))

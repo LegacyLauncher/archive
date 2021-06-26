@@ -887,6 +887,15 @@ public class U {
         );
     }
 
+    public static String getMinorVersion(Version version) {
+        return String.format(java.util.Locale.ROOT,
+                "%s%d.%d",
+                version.getMajorVersion() == 1 ? "" : version.getMajorVersion() + ".",
+                version.getMinorVersion(),
+                version.getPatchVersion()
+        );
+    }
+
     public static void copyInterruptibly(InputStream input, OutputStream output) throws IOException {
         byte[] b = new byte[8192];
         int l;
