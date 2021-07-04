@@ -57,7 +57,7 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
         remove = new VersionRemoveButton(this);
         buttons.add(remove);
         back = new ExtendedButton();
-        back.setIcon(Images.getIcon24("home"));
+        back.setIcon(Images.getIcon("home.png", SwingUtil.magnify(24)));
         back.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 handler.exitEditor();

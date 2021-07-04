@@ -32,7 +32,7 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
             hideNotice = new LocalizableMenuItem("notice.action.hide"),
             hidePromoted = new LocalizableMenuItem("notice.promoted.hide.here");
     {
-        Images.getIcon16("eye-slash").setup(hideNotice);
+        Images.getScaledIcon("eye-slash.png", 16).setup(hideNotice);
         hideNotice.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -45,7 +45,7 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
         });
         promotedNoticePopup.registerItem(hideNotice);
 
-        Images.getIcon16("eye-slash").setup(hidePromoted);
+        Images.getScaledIcon("eye-slash.png", 16).setup(hidePromoted);
         hidePromoted.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,7 +183,7 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
         } else {
             setEast(promotedNoticeButton);
             promotedNoticePopup.setNotice(promotedNotice);
-            promotedNoticeButton.setIcon(new DelayedIcon(promotedNotice.getImage(), 32, 32));
+            promotedNoticeButton.setIcon(new DelayedIcon(promotedNotice.getImage(), SwingUtil.magnify(32), SwingUtil.magnify(32)));
 
             Stats.noticeViewed(promotedNotice);
         }

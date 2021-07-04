@@ -104,14 +104,14 @@ public class SideNotifier extends ImagePanel {
     }*/
 
     public enum NotifierStatus {
-        FAILED("warning"),
-        FOUND("download"),
+        FAILED("warning.png"),
+        FOUND("down32.png"),
         NONE;
 
         private final Image image;
 
         NotifierStatus(String imagePath) {
-            image = imagePath == null ? null : Images.loadIcon32(imagePath);
+            image = imagePath == null ? null : Images.getImage(imagePath);
         }
 
         NotifierStatus() {

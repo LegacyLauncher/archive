@@ -1,4 +1,6 @@
 import groovy.json.JsonBuilder
+import org.gradle.internal.jvm.Jvm
+import proguard.gradle.ProGuardTask
 
 import java.security.DigestInputStream
 import java.security.MessageDigest
@@ -7,20 +9,27 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.nio.charset.Charset
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'net.sf.proguard:proguard-gradle:6.2.2'
+    }
+}
+
 plugins {
     id 'java'
-    id "com.github.johnrengelman.shadow" version "7.0.0"
+    id "com.github.johnrengelman.shadow" version "5.2.0"
     id "org.ajoberstar.grgit"
-    id "org.openjfx.javafxplugin"
 }
 
 version '1.13.0'
 
 apply from: '../gradle/brand.gradle'
-apply from: '../gradle/javafx.gradle'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_6
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
@@ -55,43 +64,39 @@ shadowJar {
     relocate("org", "shaded.org")
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
     relocate("net", "shaded.net")
-    minimize()
-
-    exclude '*.md'
-    exclude '*module-info.class'
-    exclude 'LICENSE'
-    exclude 'META-INF/LICENSE*'
-    exclude 'META-INF/NOTICE*'
-
-    dependencies {
-        exclude(dependency('org.openjfx:.*'))
-    }
 }
+
+def javaHome = Jvm.current().getJavaHome()
+
+task minifiedJar(type: ProGuardTask) {
+    injars "build/libs/${shadowJar.archiveFileName.get()}"
+    outjars "build/libs/${shadowJar.archiveFileName.get().replace("all", "min")}"
+    configuration "${rootProject.rootDir}/config/proguard.pro"
+    libraryjars "${javaHome}/lib/rt.jar"
+    libraryjars "${javaHome}/lib/ext/jfxrt.jar"
+    // КОСТЫЛЬ
+    libraryjars "${javaHome}/jre/lib/rt.jar"
+    libraryjars "${javaHome}/jre/lib/ext/jfxrt.jar"
+
+    dependsOn shadowJar
+}
+jar.finalizedBy(minifiedJar)
 
 task runDebug(type: JavaExec) {
     group = "Execution"
     description = "Run BootstrapDebug"
     classpath(sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
     maxHeapSize = "128M"
-    mainClass = "ru.turikhay.tlauncher.bootstrap.BootstrapDebug"
-    if (System.getenv("JRE_EXECUTABLE")) {
-        executable(System.getenv("JRE_EXECUTABLE"))
-    }
+    main = "ru.turikhay.tlauncher.bootstrap.BootstrapDebug"
     if (System.getenv("RUN_EXTERNAL") == "true") {
         jvmArgs("-Dtlauncher.bootstrap.debug.external=true")
     }
-//    jvmArgs("-Dsun.java2d.uiScale=1.25")
     jvmArgs("-Dtlauncher.logFolder=${rootDir}/logs")
     jvmArgs("-Dtlauncher.systemCharset=${Charset.defaultCharset().name()}")
     args("--debug")
 
     dependsOn(":launcher:buildLauncherRepo")
-
-    if (System.getenv("JRE_LEGACY") == "true") {
-        dependsOn(":launcher:prepareLauncherDirJava8")
-    } else {
-        dependsOn(":launcher:prepareLauncherDir")
-    }
+    dependsOn(":launcher:prepareLauncherDir")
 }
 
 static def generateChecksum(File file) {
@@ -120,10 +125,10 @@ task generateMeta {
 }
 
 task generateUpdateJson {
-    dependsOn shadowJar
+    dependsOn(minifiedJar)
     doLast {
         def meta = new JsonBuilder()
-        def jarFileChecksum = generateChecksum(shadowJar.outputs.files.singleFile)
+        def jarFileChecksum = generateChecksum(minifiedJar.outputs.files.singleFile)
         def downloadUrlList = [
                 "https://tlauncherrepo.com/",
                 "https://u.tlauncher.ru/",
@@ -145,10 +150,10 @@ task generateUpdateJson {
 }
 
 task copyJarAndRenameToSha256(type: Copy) {
-    dependsOn shadowJar
-    from shadowJar.outputs.files.singleFile
+    dependsOn minifiedJar
+    from minifiedJar.outputs.files.singleFile
     into "${buildDir}/update"
-    rename { generateChecksum(shadowJar.outputs.files.singleFile) + ".jar" }
+    rename { generateChecksum(minifiedJar.outputs.files.singleFile) + ".jar" }
 }
 
 compileJava {

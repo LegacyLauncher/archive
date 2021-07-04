@@ -106,13 +106,13 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
             }
         });
         button.setFont(button.getFont().deriveFont(Font.BOLD));
-        button.setIcon(Images.getIcon24("user-circle-o"));
+        button.setIcon(Images.getIcon("user-circle-o.png", 24));
         c.gridy++;
         add(button, c);
 
         if(mode == PaneMode.EDIT) {
             LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
-            removeButton.setIcon(Images.getIcon16("remove"));
+            removeButton.setIcon(Images.getIcon("remove.png", SwingUtil.magnify(16)));
             removeButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {

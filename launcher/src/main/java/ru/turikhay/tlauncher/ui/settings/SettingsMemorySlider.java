@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -158,15 +159,15 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
     }
 
     private enum ValueType {
-        OK("info-circle"),
-        WARNING("warning"),
-        DANGER("warning-2");
+        OK("info.png"),
+        WARNING("warning.png"),
+        DANGER("danger.png");
 
         private final String path = "settings.java.memory.hint." + toString().toLowerCase(java.util.Locale.ROOT);
         private final ImageIcon icon;
 
         ValueType(String image) {
-            icon = Images.getIcon16(image);
+            icon = Images.getIcon(image, SwingUtil.magnify(16), SwingUtil.magnify(16));
         }
     }
 }

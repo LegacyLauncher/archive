@@ -24,7 +24,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     private final ExtendedPanel grid;
     private final GridBagConstraints c;
 
-    private final ExtendedButton mojang, minecraft, ely, free, idontknow;
+    private final ExtendedButton mojang, minecraft, ely, free, mcleaks, idontknow;
 
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
@@ -38,36 +38,78 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = -1;
 
-        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                AccountAdd.this.scene.multipane.showTip("add-account-ely");
-            }
-        });
-        minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", new ActionListener() {
+        minecraft = addRow("microsoft.png", ACCOUNT_TYPE_PREFIX + "minecraft", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 AccountAdd.this.scene.multipane.showTip("process-account-minecraft");
             }
         });
-        mojang = addRow("logo-mojang", ACCOUNT_TYPE_PREFIX + "mojang", new ActionListener() {
+        mojang = addRow("mojang.png", ACCOUNT_TYPE_PREFIX + "mojang", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 AccountAdd.this.scene.multipane.showTip("add-account-mojang");
             }
         });
-        free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", new ActionListener() {
+        free = addRow("user-circle-o.png", ACCOUNT_TYPE_PREFIX + "free", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 AccountAdd.this.scene.multipane.showTip("add-account-plain");
             }
         });
-        idontknow = addRow("info-circle", LOC_PREFIX + "hint", new ActionListener() {
+        ely = addRow("ely.png", ACCOUNT_TYPE_PREFIX + "ely", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-ely");
+            }
+        });
+        mcleaks = addRow("mcleaks.png", ACCOUNT_TYPE_PREFIX + "mcleaks", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-mcleaks");
+            }
+        });
+        idontknow = addRow("info.png", LOC_PREFIX + "hint", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Blocker.toggle(AccountAdd.this, "idontknow");
             }
         });
+
+        /*for(Account.AccountType accountType : Account.AccountType.values()) {
+            c.gridy++;
+
+            ExtendedButton button = new ExtendedButton();
+            button.setPreferredSize(SwingUtil.magnify(new Dimension(48, 48)));
+            button.setIcon(Images.getIcon(accountType.getIcon() == null? "plus.png" : accountType.getIcon(), 32));
+            c.gridx = 0;
+            c.weightx = 0;
+            c.insets = new Insets(SwingUtil.magnify(5), 0, 0, 0);
+            c.fill = GridBagConstraints.NONE;
+            grid.add(button, c);
+
+            c.gridx = 1;
+            c.weightx = 1.0;
+            c.insets = new Insets(0, SwingUtil.magnify(10), 0, 0);
+            c.fill = GridBagConstraints.HORIZONTAL;
+            grid.add(new LocalizableLabel("account.manager.multipane.add-account.type." + accountType.name().toLowerCase(java.util.Locale.ROOT)), c);
+        }
+
+        c.gridy++;
+
+        ExtendedButton button = new ExtendedButton();
+        button.setPreferredSize(SwingUtil.magnify(new Dimension(48, 48)));
+        button.setIcon(Images.getIcon("info.png", 32));
+        c.gridx = 0;
+        c.weightx = 0;
+        c.insets = new Insets(SwingUtil.magnify(5), 0, 0, 0);
+        c.fill = GridBagConstraints.NONE;
+        grid.add(button, c);
+
+        c.gridx = 1;
+        c.weightx = 1.0;
+        c.insets = new Insets(0, SwingUtil.magnify(10), 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        grid.add(new LocalizableLabel("account.manager.multipane.add-account.hint"), c);*/
 
         c.gridy++;
         c.gridx = 1;
@@ -87,7 +129,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         button.setIconTextGap(SwingUtil.magnify(16));
         button.addActionListener(action);
         //button.setPreferredSize(SwingUtil.magnify(new Dimension(48, 48)));
-        button.setIcon(Images.getIcon32(image));
+        button.setIcon(Images.getIcon(image, 32));
         c.gridx = 0;
         //c.weightx = 0;
         c.weightx = 1.0;
@@ -136,11 +178,11 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         if(!"idontknow".equals(var1)) {
             Blocker.blockComponents(var1, free, idontknow);
         }
-        Blocker.blockComponents(var1, mojang, ely, minecraft);
+        Blocker.blockComponents(var1, mojang, ely, mcleaks, minecraft);
     }
 
     @Override
     public void unblock(Object var1) {
-        Blocker.unblockComponents(var1, mojang, free, ely, idontknow, minecraft);
+        Blocker.unblockComponents(var1, mojang, free, ely, mcleaks, idontknow, minecraft);
     }
 }

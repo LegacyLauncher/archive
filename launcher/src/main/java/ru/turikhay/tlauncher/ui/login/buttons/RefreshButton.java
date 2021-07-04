@@ -19,9 +19,7 @@ public class RefreshButton extends LocalizableButton implements Blockable, Compo
     private static final int TYPE_CANCEL = 1;
     private LoginForm lf;
     private int type;
-    private final ImageIcon
-            refresh = Images.getIcon24("refresh"),
-            cancel = Images.getIcon24("remove");
+    private final ImageIcon refresh = Images.getScaledIcon("refresh.png", 20), cancel = Images.getScaledIcon("remove.png", 20);
 
     private RefreshButton(LoginForm loginform, int type) {
         lf = loginform;

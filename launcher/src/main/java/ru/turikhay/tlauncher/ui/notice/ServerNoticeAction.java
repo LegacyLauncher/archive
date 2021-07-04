@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.notice;
 
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.ReleaseType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
@@ -31,7 +32,7 @@ public class ServerNoticeAction extends NoticeAction {
         this.server = U.requireNotNull(server, "server");
         this.serverId = serverId;
 
-        installedVersion = Images.getIcon16("check-square");
+        installedVersion = Images.getScaledIcon("check-square.png", 16);
     }
 
     protected ToStringBuilder toStringBuilder() {
@@ -52,14 +53,14 @@ public class ServerNoticeAction extends NoticeAction {
                 LocalizableMenuItem accountItem = new LocalizableMenuItem(path, Localizable.get("account.type." + accountType.name().toLowerCase(java.util.Locale.ROOT)));
                 accountItem.setEnabled(false);
                 if (accountType.getIcon() != null) {
-                    accountItem.setDisabledIcon(Images.getIcon16(accountType.getIcon()));
+                    accountItem.setDisabledIcon(Images.getScaledIcon(accountType.getIcon(), 16));
                 }
                 list.add(accountItem);
             }
         }
 
         LocalizableMenuItem selectItem = new LocalizableMenuItem(L10N_PREFIX + "choose-version", server.getName());
-        selectItem.setDisabledIcon(Images.getIcon16("play-circle-o"));
+        selectItem.setDisabledIcon(Images.getScaledIcon("go.png", 16));
         selectItem.setEnabled(false);
         list.add(selectItem);
 
@@ -159,6 +160,9 @@ public class ServerNoticeAction extends NoticeAction {
             for (VersionSyncInfo syncInfo : syncInfoList) {
                 String currentFamily;
 
+                if(syncInfo.getAvailableVersion().getReleaseType() == ReleaseType.SNAPSHOT) {
+                    continue;
+                }
                 if (family.equals(syncInfo.getID())) {
                     currentFamily = family;
                 } else if (syncInfo.getLocalCompleteVersion() != null) {

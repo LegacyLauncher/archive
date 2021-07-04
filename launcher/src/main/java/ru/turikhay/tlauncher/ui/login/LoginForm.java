@@ -29,7 +29,6 @@ import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.user.AuthException;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.LoopedThread;
@@ -235,28 +234,17 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void startLauncher(VersionSyncInfo requestedVersion, Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
-            LOGGER.debug("Starting launcher: {}", requestedVersion);
-            Blocker.block(this, "starting");
-            AsyncThread.execute(() -> {
-                while (tlauncher.getLibraryManager().isRefreshing()) {
-                    LOGGER.debug("Waiting for library manager...");
-                    U.sleepFor(500L);
-                }
-                SwingUtil.later(() -> {
-                    try {
-                        this.requestedVersion = requestedVersion;
-                        if (requestedVersion != null) {
-                            versions.setSelectedValue(requestedVersion);
-                        }
-                        this.server = server;
-                        this.serverId = serverId;
-                        autologin.setActive(false);
-                        startThread.iterate();
-                    } finally {
-                        Blocker.unblock(this, "starting");
-                    }
-                });
-            });
+            while (tlauncher.getLibraryManager().isRefreshing()) {
+                U.sleepFor(500L);
+            }
+            this.requestedVersion = requestedVersion;
+            if(requestedVersion != null) {
+                versions.setSelectedValue(requestedVersion);
+            }
+            this.server = server;
+            this.serverId = serverId;
+            autologin.setActive(false);
+            startThread.iterate();
         }
     }
 

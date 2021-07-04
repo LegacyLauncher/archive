@@ -172,7 +172,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             panel.add(comp);
         }
 
-        setSize(SwingUtil.magnify(600), page.height + SwingUtil.magnify(75));
+        setSize(SwingUtil.magnify(600), Math.min(page.height + SwingUtil.magnify(75), workHeight));
 
         validate();
         repaint();
@@ -229,7 +229,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             popup.add(promotedItem);
             refreshPromoted();
 
-            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.restore", "refresh", new ActionListener() {
+            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.restore", "refresh.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     noticeManager.restoreHidden();
@@ -238,14 +238,14 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
 
             popup.addSeparator();
 
-            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.hide", "compress", new ActionListener() {
+            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.hide", "collapse.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     scene.setNoticeSidePanelEnabled(false);
                 }
             }));
 
-            controlButton = newButton("bars", new ActionListener() {
+            controlButton = newButton("bars.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     refreshPromoted();
@@ -265,7 +265,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             c.weighty = 1.0;
 
             c.gridx++;
-            pageButtons.add(left = newButton("arrow-left", new ActionListener() {
+            pageButtons.add(left = newButton("arrow-left.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     renderPage(pageNumber - 1);
@@ -273,7 +273,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             }), c);
 
             c.gridx++;
-            pageButtons.add(right = newButton("arrow-right", new ActionListener() {
+            pageButtons.add(right = newButton("arrow-right.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     renderPage(pageNumber + 1);
@@ -284,7 +284,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         }
 
         BlockableButton newButton(String path, ActionListener listener) {
-            BlockableButton button = new BlockableButton(Images.getIcon24(path));
+            BlockableButton button = new BlockableButton(Images.getIcon(path, SwingUtil.magnify(BUTTON_IMAGE_SIZE)));
             button.addActionListener(listener);
             return button;
         }
@@ -300,13 +300,33 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             String path = "notice.promoted.", image;
             if(enabled) {
                 path += "hide";
-                image = "eye-slash";
+                image = "eye-slash.png";
             } else {
                 path += "restore";
-                image = "eye";
+                image = "eye.png";
             }
             promotedItem.setText(path);
-            promotedItem.setIcon(Images.getIcon16(image));
+            promotedItem.setIcon(Images.getIcon(image, 16));
         }
+
+        /*private void togglePromoted() {
+            boolean current = TLauncher.getInstance().getSettings().getBoolean("minecraft.servers.promoted");
+            TLauncher.getInstance().getSettings().set("minecraft.servers.promoted", !current);
+            refreshPromoted();
+        }
+
+        private void refreshPromoted() {
+            boolean enabled = TLauncher.getInstance().getSettings().getBoolean("minecraft.servers.promoted");
+            String path = "notice.sidepanel.control.promoted.", image;
+            if(enabled) {
+                path += "disable";
+                image = "eye-slash.png";
+            } else {
+                path += "enable";
+                image = "eye.png";
+            }
+            promotedItem.setText(path);
+            promotedItem.setIcon(Images.getIcon(image, 16));
+        }*/
     }
 }

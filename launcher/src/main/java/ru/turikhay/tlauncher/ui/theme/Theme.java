@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 public abstract class Theme {
     private static Theme theme;
@@ -44,8 +45,7 @@ public abstract class Theme {
     public abstract Color getBorder(Border border);
     public abstract Color getShadow(Border border);
     public abstract int getArc(Border border);
-    public abstract Color getIconColor(String iconName);
-    public abstract boolean useDarkTheme();
+    public abstract URL loadAsset(String name) throws IOException;
 
     public enum Border {
         MAIN_PANEL,

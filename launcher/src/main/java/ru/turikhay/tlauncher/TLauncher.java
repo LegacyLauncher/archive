@@ -455,7 +455,7 @@ public final class TLauncher {
             message = dispatcher.getBootMessage("en_US");
         }
         if (message != null) {
-            new UpdateFrame(U.getMinorVersion(getVersion()), message.getBody()).showAndWait();
+            new UpdateFrame(U.getNormalVersion(getVersion()), message.getBody()).showAndWait();
         }
     }
 

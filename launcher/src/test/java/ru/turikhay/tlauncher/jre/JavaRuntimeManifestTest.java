@@ -10,12 +10,13 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 class JavaRuntimeManifestTest {
 
     @Test
     @Disabled
-    void realTest() throws ExecutionException, InterruptedException, IOException {
+    void realTest() throws ExecutionException, InterruptedException, TimeoutException, IOException {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(JavaRuntimeRemoteList.class, new JavaRuntimeRemoteListDeserializer())
                 .registerTypeAdapter(JavaRuntimeManifest.class, new JavaRuntimeManifestDeserializer())

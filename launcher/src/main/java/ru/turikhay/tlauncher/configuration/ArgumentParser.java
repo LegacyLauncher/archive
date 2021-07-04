@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.configuration;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.OS;
 
@@ -32,7 +31,6 @@ public class ArgumentParser {
         m.put("background", "gui.background");
         m.put("fullscreen", "minecraft.fullscreen");
         m.put("theme", "gui.theme");
-        m.put("jre-dir", JavaManagerConfig.PATH_ROOT_DIR);
         m.put("-block-settings", "gui.settings.blocked");
 
         parser = new OptionParser();
@@ -54,7 +52,6 @@ public class ArgumentParser {
         parser.accepts("background", "Specifies background image. URL links, JPEG and PNG formats are supported.").withRequiredArg();
         parser.accepts("fullscreen", "Specifies whether fullscreen mode enabled or not").withRequiredArg();
         parser.accepts("theme", "Specifies theme file").withRequiredArg();
-        parser.accepts("jre-dir", "Specifies where Mojang JRE is saved").withRequiredArg();
         parser.accepts("block-settings", "Disables settings and folder buttons");
     }
 

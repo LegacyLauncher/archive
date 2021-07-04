@@ -18,7 +18,7 @@ public class AccountElyLegacyPane extends StandardAccountPane<ElyLegacyAuth, Ely
 
     @Override
     protected String accountIcon() {
-        return "logo-ely";
+        return "ely.png";
     }
 
     @Override

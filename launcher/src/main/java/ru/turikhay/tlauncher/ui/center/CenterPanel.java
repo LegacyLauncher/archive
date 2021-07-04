@@ -14,13 +14,10 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.UnblockablePanel;
 import ru.turikhay.tlauncher.ui.swing.extended.VPanel;
 import ru.turikhay.tlauncher.ui.theme.Theme;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RoundRectangle2D;
 
 public class CenterPanel extends VPanel implements Blockable {
     public static final CenterPanelTheme defaultTheme = new DefaultCenterPanelTheme();
@@ -75,52 +72,49 @@ public class CenterPanel extends VPanel implements Blockable {
     }
 
     public void paintComponent(Graphics g0) {
-        final double borderSize = Theme.getTheme().getBorderSize();
-        final double sf = SwingUtil.getScalingFactor();
-        final double step = 1 / sf;
-
         Graphics2D g = (Graphics2D) g0;
+        byte x = 0;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
         g.setColor(getBackground());
-        if(theme.getArc() > 0) {
-            g.fillRoundRect(0, 0, getWidth(), getHeight(), theme.getArc(), theme.getArc());
-        } else {
-            g.fillRect(0, 0, getWidth(), getHeight());
-        }
 
+        if(theme.getArc() > 0) {
+            g.fillRoundRect(x, x, getWidth(), getHeight(), theme.getArc(), theme.getArc());
+        } else {
+            g.fillRect(x, x, getWidth(), getHeight());
+        }
         g.setColor(theme.getBorder());
-        for (double xy = step; xy < borderSize; xy += step) {
-            drawRect(g, xy);
+
+        int var5;
+        for (var5 = 1; var5 <= Theme.getTheme().getBorderSize(); ++var5) {
+            if(theme.getArc() > 0) {
+                g.drawRoundRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1);
+            } else {
+                g.drawRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1);
+            }
         }
 
         if(theme.getShadow() != null) {
             Color shadow = theme.getShadow();
-            for (double xy = borderSize; ; xy+= step) {
-                shadow = U.shiftAlpha(shadow, (int) (-10. / sf));
-                if (shadow.getAlpha() <= 0) {
+            var5 = Theme.getTheme().getBorderSize();
+
+            while (true) {
+                shadow = U.shiftAlpha(shadow, -10);
+                if (shadow.getAlpha() == 0) {
                     break;
                 }
+
                 g.setColor(shadow);
-                drawRect(g, xy);
+                if (theme.getArc() > 0) {
+                    g.drawRoundRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1, theme.getArc() - 2 * var5 + 1);
+                } else {
+                    g.drawRect(var5 - 1, var5 - 1, getWidth() - 2 * var5 + 1, getHeight() - 2 * var5 + 1);
+                }
+                ++var5;
             }
         }
+
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         super.paintComponent(g);
-    }
-
-    private void drawRect(Graphics2D g, double xy) {
-        double ii = 2 * xy;
-        double w = getWidth() - ii;
-        double h = getHeight() - ii;
-        Shape shape;
-        if (theme.getArc() > 0) {
-            double arc = theme.getArc() - ii;
-            shape = new RoundRectangle2D.Double(xy, xy, w, h, arc, arc);
-        } else {
-            shape = new Rectangle2D.Double(xy, xy, w, h);
-        }
-        g.draw(shape);
     }
 
     public CenterPanelTheme getTheme() {

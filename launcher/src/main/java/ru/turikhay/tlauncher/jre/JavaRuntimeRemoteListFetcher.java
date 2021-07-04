@@ -10,7 +10,6 @@ import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.util.EHttpClient;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.util.Date;
@@ -25,7 +24,7 @@ public class JavaRuntimeRemoteListFetcher {
 
     public Future<JavaRuntimeRemoteList> fetch() {
         if(list == null) {
-            list = AsyncThread.future(this::doFetch);
+            list = AsyncThread.timeoutSeconds(30, this::doFetch);
         }
         return list;
     }
@@ -40,7 +39,7 @@ public class JavaRuntimeRemoteListFetcher {
                     .registerTypeAdapter(JavaRuntimeRemoteList.class, new JavaRuntimeRemoteListDeserializer())
                     .registerTypeAdapter(Date.class, new DateTypeAdapter(false))
                     .create();
-            String content = EHttpClient.toString(Request.Get(JavaRuntimeRemoteList.URL));
+            String content = Request.Get(JavaRuntimeRemoteList.URL).execute().returnContent().toString();
             JavaRuntimeRemoteList remoteList = gson.fromJson(content, JavaRuntimeRemoteList.class);
             return Objects.requireNonNull(remoteList, "remoteList");
         } catch(Exception e) {

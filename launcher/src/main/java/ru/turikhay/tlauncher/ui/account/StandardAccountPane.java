@@ -137,7 +137,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
             }
         });
         authButton.setFont(authButton.getFont().deriveFont(Font.BOLD));
-        authButton.setIcon(Images.getIcon24(accountIcon()));
+        authButton.setIcon(Images.getIcon(accountIcon(), 24));
         c.insets = new Insets(SwingUtil.magnify(15), 0, 0, 0);
         c.gridy++;
         c.anchor = GridBagConstraints.LINE_START;
@@ -150,7 +150,7 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
 
         if(mode == PaneMode.EDIT) {
             LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
-            removeButton.setIcon(Images.getIcon16("remove"));
+            removeButton.setIcon(Images.getIcon("remove.png", SwingUtil.magnify(16)));
             removeButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
