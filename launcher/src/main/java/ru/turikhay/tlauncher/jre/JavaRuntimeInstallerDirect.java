@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
     private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeInstallerDirect.class);
@@ -51,7 +52,7 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
         LOGGER.debug("Getting manifest");
         try {
             manifest = runtimeInfo.getManifest();
-        } catch (ExecutionException e) {
+        } catch (ExecutionException | TimeoutException e) {
             throw new IOException("Couldn't fetch manifest", e);
         }
         runtimeFiles = manifest.getFiles();

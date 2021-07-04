@@ -75,7 +75,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         ++c.gridy;
         buttons.add(firstLineButtons, c);
 
-        add = new LocalizableButton(Images.getIcon24("plus-square"), "account.button.add");
+        add = new LocalizableButton(Images.getScaledIcon("plus.png", 24), "account.button.add");
         add.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AccountList.this.scene.multipane.showTip("add-account");
@@ -83,7 +83,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         });
         firstLineButtons.add(add);
 
-        edit = new LocalizableButton(Images.getIcon24("pencil-square"), "account.button.remove");
+        edit = new LocalizableButton(Images.getScaledIcon("pencil.png", 24), "account.button.remove");
         edit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if(scene.list.getSelected() != null) {
@@ -110,7 +110,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         });
         firstLineButtons.add(edit);
 
-        back = new LocalizableButton(Images.getIcon24("home"), "account.button.home");
+        back = new LocalizableButton(Images.getScaledIcon("home.png", 24), "account.button.home");
         back.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 TLauncher.getInstance().getFrame().mp.openDefaultScene();

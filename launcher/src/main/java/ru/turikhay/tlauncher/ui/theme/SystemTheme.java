@@ -1,10 +1,13 @@
 package ru.turikhay.tlauncher.ui.theme;
 
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +26,8 @@ public final class SystemTheme extends Theme {
     private final Color
             success = new Color(78, 196, 78),
             failure = new Color(179, 0, 0),
-            shadow, semiForeground, panelBackground;
+            shadow = U.shiftAlpha(Color.gray, -155),
+            semiForeground, panelBackground;
 
     private SystemTheme() {
         super("system");
@@ -38,7 +42,6 @@ public final class SystemTheme extends Theme {
 
         this.semiForeground = U.shiftColor(getForeground(), 96, 64, 192);
         this.panelBackground = U.shiftAlpha(getBackground(), -176, 64, 192);
-        this.shadow = U.shiftAlpha(useDarkTheme() ? U.shiftColor(getForeground(), -96) : getBackground(), -150);
     }
 
     @Override
@@ -92,20 +95,37 @@ public final class SystemTheme extends Theme {
     }
 
     @Override
-    public Color getIconColor(String iconName) {
-        return useColorfulIcons() ? ColorfulIcons.getColor(iconName) : getForeground();
-    }
+    public URL loadAsset(String name) throws IOException {
+        URL resource;
+        selectResouce:
+        {
+            Color background = getBackground();
+            String subFolder = null;
 
-    @Override
-    public boolean useDarkTheme() {
-        return !useColorfulIcons();
-    }
+            selectSubFolder:
+            {
+                if (background.getRed() < BLACK_MIN && background.getGreen() < BLACK_MIN && background.getBlue() < BLACK_MIN) {
+                    Color foreground = getForeground();
+                    if(foreground.equals(Color.WHITE)) {
+                        subFolder = "white";
+                    } else {
+                        subFolder = "gray";
+                    }
+                    break selectSubFolder;
+                }
+                subFolder = "colorized";
+            }
 
-    private boolean useColorfulIcons() {
-        if(Boolean.getBoolean("tlauncher.ui.nightTheme")) {
-            return false;
+            resource = Images.class.getResource(subFolder + "/" + name);
+            if(resource != null) {
+                break selectResouce;
+            }
+
+            resource = Images.class.getResource(name);
         }
-        Color background = getBackground();
-        return background.getRed() > BLACK_MIN || background.getGreen() > BLACK_MIN || background.getBlue() > BLACK_MIN;
+        if(resource == null) {
+            throw new IOException("can't find resource: " + name);
+        }
+        return resource;
     }
 }

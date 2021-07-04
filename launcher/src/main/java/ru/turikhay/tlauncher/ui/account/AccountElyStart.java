@@ -5,6 +5,7 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
+import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.editor.ExtendedHTMLEditorKit;
 import ru.turikhay.tlauncher.ui.swing.editor.HyperlinkProcessor;
@@ -68,7 +69,7 @@ public class AccountElyStart extends BorderPanel implements AccountMultipaneComp
                 }
             }
         });
-        button.setIcon(Images.getIcon24("logo-ely"));
+        button.setIcon(Images.getIcon("ely.png", 24));
         button.setFont(button.getFont().deriveFont(Font.BOLD));
         c.gridy++;
         panel.add(button, c);

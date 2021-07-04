@@ -25,7 +25,7 @@ public class ImagePanel extends ExtendedPanel {
     private boolean animating;
 
     public ImagePanel(String image, float activeOpacity, float nonActiveOpacity, boolean shown, boolean antiAlias) {
-        this(Images.loadIcon32(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
+        this(Images.getImage(image), activeOpacity, nonActiveOpacity, shown, antiAlias);
     }
 
     public ImagePanel(String image) {

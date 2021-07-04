@@ -25,7 +25,7 @@ public class NewFeaturesFrame extends VActionFrame {
     public NewFeaturesFrame(final TLauncherFrame frame) {
         super(SwingUtil.magnify(500));
 
-        getHead().setIcon(Images.getIcon32("plus-square"));
+        getHead().setIcon(Images.getIcon("plus.png", SwingUtil.magnify(32)));
         getHead().setText("newfeatures.title");
 
         getBodyText().setText("newfeatures.body");

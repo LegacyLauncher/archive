@@ -4,6 +4,7 @@ import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.async.ExtendedThread;
@@ -269,16 +270,16 @@ public class U {
         return (short) (new Random(System.currentTimeMillis())).nextInt(32767);
     }
 
-    public static double doubleRandom(){
-        return new Random(System.currentTimeMillis()).nextDouble();
+    public static double doubleRandom() {
+        return (new Random(System.currentTimeMillis())).nextDouble();
     }
 
-    public static int random(int s, int e){
-        return new Random(System.currentTimeMillis()).nextInt(e - s) + s;
+    public static int random(int s, int e) {
+        return (new Random(System.currentTimeMillis())).nextInt(e - s) + s;
     }
 
-    public static boolean ok(int d){
-        return new Random(System.currentTimeMillis()).nextInt(d) == 0;
+    public static boolean ok(int d) {
+        return (new Random(System.currentTimeMillis())).nextInt(d) == 0;
     }
 
     public static double getAverage(double[] d) {
@@ -302,18 +303,23 @@ public class U {
         }
     }
 
-    public static double getAverage(double[] d, int max){
-        double a = 0; int k = 0;
+    public static double getAverage(double[] d, int max) {
+        double a = 0.0D;
+        int k = 0;
+        double[] var9 = d;
+        int var8 = d.length;
 
-        for(double curd : d){
-            a += curd; ++k;
-            if(k == max) break;
+        for (int var7 = 0; var7 < var8; ++var7) {
+            double curd = var9[var7];
+            a += curd;
+            ++k;
+            if (k == max) {
+                break;
+            }
         }
 
-        if(k == 0) return 0;
-        return a / k;
+        return k == 0 ? 0.0D : a / (double) k;
     }
-
 
     public static int getAverage(int[] d) {
         int a = 0;
@@ -336,83 +342,104 @@ public class U {
         }
     }
 
-    public static int getAverage(int[] d, int max){
-        int a = 0, k = 0;
+    public static int getAverage(int[] d, int max) {
+        int a = 0;
+        int k = 0;
+        int[] var7 = d;
+        int var6 = d.length;
 
-        for(int curd : d){
-            a += curd; ++k;
-            if(k == max) break;
+        for (int var5 = 0; var5 < var6; ++var5) {
+            int curd = var7[var5];
+            a += curd;
+            ++k;
+            if (k == max) {
+                break;
+            }
         }
 
-        if(k == 0) return 0;
-        return Math.round(a / k);
+        return k == 0 ? 0 : Math.round((float) (a / k));
     }
 
-
-    public static int getSum(int[] d){
+    public static int getSum(int[] d) {
         int a = 0;
+        int[] var5 = d;
+        int var4 = d.length;
 
-        for(int curd : d) a += curd;
+        for (int var3 = 0; var3 < var4; ++var3) {
+            int curd = var5[var3];
+            a += curd;
+        }
+
         return a;
     }
 
-    public static double getSum(double[] d){
-        double a = 0;
+    public static double getSum(double[] d) {
+        double a = 0.0D;
+        double[] var7 = d;
+        int var6 = d.length;
 
-        for(double curd : d) a += curd;
+        for (int var5 = 0; var5 < var6; ++var5) {
+            double curd = var7[var5];
+            a += curd;
+        }
+
         return a;
     }
 
+    public static int getMaxMultiply(int i, int max) {
+        if (i <= max) {
+            return 1;
+        } else {
+            for (int x = max; x > 1; --x) {
+                if (i % x == 0) {
+                    return x;
+                }
+            }
 
-    public static int getMaxMultiply(int i, int max){
-        if(i <= max) return 1;
-        for(int x=max;x>1;x--)
-            if(i % x == 0) return x;
-        return (int) Math.ceil(i / max);
+            return (int) Math.ceil((double) (i / max));
+        }
     }
-
 
     /**
      * @deprecated
      */
     @Deprecated
-    public static String r(String string, int max){
-        if(string == null) return null;
+    public static String r(String string, int max) {
+        if (string == null) {
+            return null;
+        } else {
+            int len = string.length();
+            if (len <= max) {
+                return string;
+            } else {
+                String[] words = string.split(" ");
+                String ret = "";
+                int remaining = max + 1;
 
-        int len = string.length();
-        if(len <= max) return string;
+                for (int x = 0; x < words.length; ++x) {
+                    String curword = words[x];
+                    int curlen = curword.length();
+                    if (curlen >= remaining) {
+                        if (x == 0) {
+                            ret = ret + " " + curword.substring(0, remaining - 1);
+                        }
+                        break;
+                    }
 
-        String[] words = string.split(" ");
-        String ret = ""; int remaining = max + 1;
+                    ret = ret + " " + curword;
+                    remaining -= curlen + 1;
+                }
 
-        for(int x=0;x<words.length;x++){
-            String curword = words[x];
-            int curlen = curword.length();
-
-            if(curlen < remaining){
-                ret += " " + curword;
-                remaining -= curlen + 1;
-
-                continue;
+                return ret.length() == 0 ? "" : ret.substring(1) + "...";
             }
-
-            if(x == 0)
-                ret += " " + curword.substring(0, remaining - 1);
-            break;
         }
-
-        if(ret.length() == 0) return "";
-        return ret.substring(1) + "...";
     }
 
-
-    public static String setFractional(double d, int fractional){
+    public static String setFractional(double d, int fractional) {
         NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits(fractional);
-
-        return nf.format(d).replace(",", ".");
+        return StringUtils.replaceChars(nf.format(d), ',', '.');
     }
-
 
     public static StringBuilder stackTrace(Throwable e) {
         StringBuilder trace = rawStackTrace(e);
@@ -882,15 +909,6 @@ public class U {
         return String.format(java.util.Locale.ROOT,
                 "%d.%d.%d",
                 version.getMajorVersion(),
-                version.getMinorVersion(),
-                version.getPatchVersion()
-        );
-    }
-
-    public static String getMinorVersion(Version version) {
-        return String.format(java.util.Locale.ROOT,
-                "%s%d.%d",
-                version.getMajorVersion() == 1 ? "" : version.getMajorVersion() + ".",
                 version.getMinorVersion(),
                 version.getPatchVersion()
         );

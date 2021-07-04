@@ -54,7 +54,7 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
                 goBack();
             }
         });
-        back.setIcon(Images.getIcon16("arrow-left"));
+        back.setIcon(Images.getIcon("arrow-left.png", SwingUtil.magnify(16)));
         titlePanel.setWest(back);
 
         this.title = new LocalizableLabel();

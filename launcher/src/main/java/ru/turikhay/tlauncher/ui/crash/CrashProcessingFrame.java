@@ -37,7 +37,7 @@ public class CrashProcessingFrame extends BActionFrame implements CrashManagerLi
         progress.setPreferredSize(new Dimension(1, SwingUtil.magnify(32)));
         progress.setIndeterminate(true);
         getBody().setCenter(progress);
-        getBody().setWest(Images.getIcon32("lightbulb-o"));
+        getBody().setWest(Images.getIcon("lightbulb.png", 32));
     }
 
     public CrashFrame getCrashFrame() {

@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.loc;
 
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -66,7 +67,7 @@ public class LocalizableMenuItem extends JMenuItem implements LocalizableCompone
     public static LocalizableMenuItem newItem(String path, String image, ActionListener action) {
         LocalizableMenuItem item = new LocalizableMenuItem(path);
         if(image != null) {
-            item.setIcon(Images.getIcon16(image));
+            item.setIcon(Images.getIcon(image, SwingUtil.magnify(16)));
         }
         item.addActionListener(action);
         return item;

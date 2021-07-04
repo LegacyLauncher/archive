@@ -76,7 +76,7 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
                 }
             }
         });
-        button.setIcon(Images.getIcon24("logo-mcleaks"));
+        button.setIcon(Images.getIcon("mcleaks.png", 24));
         button.setFont(button.getFont().deriveFont(Font.BOLD));
         c.gridy++;
         panel.add(button, c);

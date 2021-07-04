@@ -4,9 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import pw.modder.http.HttpClientUtils;
-import pw.modder.serialization.EnumSerializer;
 import pw.modder.serialization.InstantSerializer;
+import pw.modder.serialization.EnumSerializer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +26,8 @@ public class CurseClient {
 
     public static AddonInfo getAddon(int id) throws IOException {
         return GSON.fromJson(
-                HttpClientUtils.execute(Request.Get(BASE_URL + "/addon/" + id))
+                Request.Get(BASE_URL + "/addon/" + id)
+                        .execute()
                         .returnContent().asString(StandardCharsets.UTF_8),
                 AddonInfo.class
         );
@@ -35,17 +35,18 @@ public class CurseClient {
 
     public static List<AddonInfo> getAddons(int ...ids) throws IOException {
         return GSON.fromJson(
-                HttpClientUtils.execute(
-                        Request.Get(BASE_URL + "/addon")
-                        .bodyString(Arrays.toString(ids), ContentType.APPLICATION_JSON)
-                ).returnContent().asString(StandardCharsets.UTF_8),
+                Request.Get(BASE_URL + "/addon")
+                    .bodyString(Arrays.toString(ids), ContentType.APPLICATION_JSON)
+                    .execute()
+                    .returnContent().asString(StandardCharsets.UTF_8),
                 List.class
         );
     }
 
     public static AddonFile getAddonFile(int addonId, int fileId) throws IOException {
         return GSON.fromJson(
-                HttpClientUtils.execute(Request.Get(BASE_URL + "/addon/" + addonId + "/files/" + fileId))
+                Request.Get(BASE_URL + "/addon/" + addonId + "/files/" + fileId)
+                        .execute()
                         .returnContent().asString(StandardCharsets.UTF_8),
                 AddonFile.class
         );
@@ -53,15 +54,16 @@ public class CurseClient {
 
     public static List<AddonFile> getAddonFiles(int addonId) throws IOException {
         return GSON.fromJson(
-                HttpClientUtils.execute(Request.Get(BASE_URL + "/addon/" + addonId + "/files"))
+                Request.Get(BASE_URL + "/addon/" + addonId + "/files")
+                        .execute()
                         .returnContent().asString(StandardCharsets.UTF_8),
                 List.class
         );
     }
 
     public static String getAddonFileDownloadURL(int addonId, int fileId) throws IOException {
-        return HttpClientUtils.execute(
-                Request.Get(BASE_URL + "/addon/" + addonId + "/files/" + fileId + "/download-url")
-        ).returnContent().asString(StandardCharsets.UTF_8);
+        return Request.Get(BASE_URL + "/addon/" + addonId + "/files/" + fileId + "/download-url")
+                .execute()
+                .returnContent().asString(StandardCharsets.UTF_8);
     }
 }

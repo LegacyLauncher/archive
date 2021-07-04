@@ -1,132 +1,92 @@
 package ru.turikhay.tlauncher.ui.images;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.notice.NoticeImage;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
-import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.*;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
-    private static final Logger LOGGER = LogManager.getLogger(DelayedIcon.class);
-
-    private Image icon;
-    private Dimension size;
-
-    private volatile IconLoader loader;
-
-    public DelayedIcon(NoticeImage image, int targetWidth, int targetHeight) {
-        this();
-        setImage(image, targetWidth, targetHeight, false);
-    }
+    private Image image, i;
+    private int imageWidth, imageHeight, width, height;
+    private DelayedIconLoader loader;
 
     public DelayedIcon() {
         setIcon(this);
         setDisabledIcon(getDisabledInstance());
     }
 
-    @Override
-    public void paintIcon(Component c, Graphics g, int x, int y) {
-        if(icon != null) {
-            g.drawImage(icon, x, y, null);
-        }
+    public DelayedIcon(NoticeImage noticeImage, int width, int height) {
+        this();
+        setImage(noticeImage.getTask(), noticeImage.getWidth(), noticeImage.getHeight(), width, height);
     }
 
-    public void setImage(Future<Image> icon,
-                         int iconWidth, int iconHeight,
-                         int targetWidth, int targetHeight,
-                         boolean repaint) {
-        this.icon = null;
-        this.size = computeSize(iconWidth, iconHeight, targetWidth, targetHeight);
-        AsyncThread.future(loader = new IconLoader(icon, size));
-        if(repaint) {
-            repaint();
-        }
+    public void setImage(Image image, int width, int height) {
+        this.image = image;
+        this.imageWidth = image == null ? 0 : image.getWidth(null);
+        this.imageHeight = image == null ? 0 : image.getHeight(null);
+        setIconSize(width, height);
     }
 
-    public void setImage(NoticeImage image, int targetWidth, int targetHeight, boolean repaint) {
-        setImage(image.getTask(), image.getWidth(), image.getHeight(), targetWidth, targetHeight, repaint);
+    public void setImage(Future<Image> image, int imageWidth, int imageHeight, int width, int height) {
+        this.image = null;
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        setIconSize(width, height);
+
+        AsyncThread.future(loader = new DelayedIconLoader(image));
     }
 
-    public void setImage(NoticeImage image, int targetWidth, int targetHeight) {
-        setImage(image.getTask(), image.getWidth(), image.getHeight(), targetWidth, targetHeight, true);
-    }
-
-    private void iconLoaded(Image icon) {
-        this.icon = icon;
-        repaint();
+    public Dimension getIconSize() {
+        return new Dimension(width, height);
     }
 
     @Override
     public int getIconWidth() {
-        return size == null ? 0 : size.width;
+        return width;
     }
 
     @Override
     public int getIconHeight() {
-        return size == null ? 0 : size.height;
+        return height;
     }
-
-    private final DisabledImageIcon disabledInstance = new DisabledImageIcon(this);
 
     @Override
     public DisabledImageIcon getDisabledInstance() {
-        return disabledInstance;
+        return new DisabledImageIcon(this);
     }
 
-    private class IconLoader implements Runnable {
-        private final Future<Image> task;
-        private final Dimension size;
+    @Override
+    public void setIconSize(int width, int height) {
+        Dimension d = getSize(imageWidth, imageHeight, width, height);
 
-        IconLoader(Future<Image> task, Dimension size) {
-            this.task = Objects.requireNonNull(task);
-            this.size = size;
+        this.width = d.width;
+        this.height = d.height;
+
+        if (image == null) {
+            i = null;
+        } else {
+            i = image.getScaledInstance(this.width, this.height, Image.SCALE_SMOOTH);
         }
 
-        @Override
-        public void run() {
-            Image icon;
+        repaint();
+    }
 
-            try {
-                icon = task.get();
-            } catch (InterruptedException interruptedException) {
-                LOGGER.warn("Interrupted while waiting for icon");
-                return;
-            } catch (ExecutionException e) {
-                LOGGER.warn("Icon loading failed", e);
-                return;
-            }
-
-            final Image result;
-
-            if(MultiResInterface.INSTANCE.isEnabled()) {
-                result = toMultiResIcon(icon, size.width, size.height);
-            } else {
-                result = scaledIcon(icon, size.width, size.height, 1.0);
-            }
-
-            if(DelayedIcon.this.loader == this) {
-                SwingUtil.later(() -> iconLoaded(result));
-            } else {
-                LOGGER.debug("Icon loader result discarded");
-            }
+    @Override
+    public void paintIcon(Component c, Graphics g, int x, int y) {
+        if (i != null) {
+            g.drawImage(i, x, y, null);
         }
     }
 
-    private static Dimension computeSize(
-            int iconWidth, int iconHeight,
-            int targetWidth, int targetHeight)
-    {
+    private static Dimension getSize(int originalWidth, int originalHeight, int targetWidth, int targetHeight) {
         if (targetWidth == 0 && targetHeight == 0) {
-            return new Dimension(iconWidth, iconHeight);
+            return new Dimension(originalWidth, originalHeight);
         }
 
-        double ratio = (double) iconWidth / iconHeight;
+        double ratio = (double) originalWidth / originalHeight;
         int width, height;
 
         if (targetHeight == 0) {
@@ -143,19 +103,22 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
         return new Dimension(width, height);
     }
 
-    private static Image scaledIcon(Image icon, int width, int height, double scale) {
-        final int hints = Image.SCALE_SMOOTH;
-        if(scale == 1.0) {
-            return icon.getScaledInstance(width, height, hints);
-        } else {
-            return icon.getScaledInstance((int) (scale * width), (int) (scale * height), hints);
-        }
-    }
+    private class DelayedIconLoader implements Callable<Void> {
+        private Future<Image> imageTask;
 
-    private static Image toMultiResIcon(Image icon, int width, int height) {
-        return MultiResInterface.INSTANCE.createImage(
-                scaledIcon(icon, width, height, 1.0),
-                scaledIcon(icon, width, height, SwingUtil.getScalingFactor())
-        );
+        DelayedIconLoader(Future<Image> image) {
+            this.imageTask = image;
+        }
+
+        @Override
+        public Void call() throws Exception {
+            Image image = imageTask.get();
+
+            if (this == loader) {
+                setImage(image, width, height);
+            }
+
+            return null;
+        }
     }
 }

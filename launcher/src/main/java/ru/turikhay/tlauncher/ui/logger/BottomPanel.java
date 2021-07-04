@@ -7,14 +7,15 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
+import java.util.function.Supplier;
 
 class BottomPanel extends BorderPanel {
     private final Button folder, save, kill;
 
     BottomPanel() {
-        folder = new Button("folder-open");
-        save = new Button("save");
-        kill = new Button("stop-circle-o");
+        folder = new Button("folder-open.png");
+        save = new Button("save.png");
+        kill = new Button("stop-circle-o.png");
 
         ExtendedPanel buttonPanel = new ExtendedPanel();
         buttonPanel.add(folder, save, kill);
@@ -45,7 +46,7 @@ class BottomPanel extends BorderPanel {
                     action.run();
                 }
             });
-            setIcon(Images.getIcon24(path));
+            setIcon(Images.getIcon(path, SwingUtil.magnify(22), SwingUtil.magnify(22)));
             setPreferredSize(new Dimension(SwingUtil.magnify(32), SwingUtil.magnify(32)));
             setEnabled(false);
         }

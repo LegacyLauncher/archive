@@ -11,6 +11,8 @@ import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.TabbedPane;
+import ru.turikhay.tlauncher.ui.swing.extended.WinTabbedPane;
+import ru.turikhay.util.OS;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +34,20 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
 
         TabbedPane tabbedPane;
         initTabbedPane: {
+            if(OS.WINDOWS.isCurrent()) {
+                try {
+                    tabbedPane = new WinTabbedPane() {
+                        @Override
+                        public void onTabChange(int index) {
+                            super.onTabChange(index);
+                            TabbedEditorPanel.this.onTabChange(index);
+                        }
+                    };
+                    break initTabbedPane;
+                } catch(Throwable t) {
+                    LOGGER.warn("Unable to initialize WinTabbedPane: {}", t.toString());
+                }
+            }
             tabbedPane = new TabbedPane() {
                 @Override
                 public void onTabChange(int index) {

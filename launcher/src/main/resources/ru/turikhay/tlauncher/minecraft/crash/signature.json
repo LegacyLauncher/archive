@@ -1,5 +1,5 @@
 {
-  "revision": 25,
+  "revision": 24,
   "required": "1.122.3",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap", "__MACOSX"],
   "variables": {
@@ -339,7 +339,7 @@
     },
     {
       "name": "old-forge-newer-java",
-      "image": "logo-duke",
+      "image": "java.png",
       "pattern": ".+ cannot be cast to (?:java\\.base\\/|class )?java\\.net\\.URLClassLoader.*",
       "version": "${forge-pattern}",
       "title": {
@@ -354,7 +354,7 @@
     },
     {
       "name": "unsupported-java-version",
-      "image": "logo-duke",
+      "image": "java.png",
       "pattern": ".*java\\.lang\\.UnsupportedClassVersionError: .+ : Unsupported major.minor version .+",
       "buttons": [
         "update-java"
@@ -488,22 +488,6 @@
       ]
     },
     {
-      "name": "system-oom",
-      "pattern": "^# There is insufficient memory for the Java Runtime Environment to continue\\.$",
-      "title": {
-        "ru_RU": "Недостаточно памяти",
-        "en_US": "Insufficient memory"
-      },
-      "body": {
-        "ru_RU": "В системе закончилась оперативная память. Закройте все остальные приложения. Уменьшите объем выделенной памяти под Minecraft в настройках.",
-        "en_US": "There was insufficient memory for Minecraft to continue. Close all other applications on the system. Decrease memory amount in the launcher settings."
-      },
-      "buttons": [
-        "fix-heap"
-      ],
-      "permitHelp": false
-    },
-    {
       "name": "invalid-username",
       "pattern": "^[\\s]*at org.apache.logging.log4j.util.PropertiesUtil.<init>\\(PropertiesUtil.java:[0-9]+\\)$",
       "os": [
@@ -542,7 +526,7 @@
     },
     {
       "name": "arch",
-      "image": "logo-duke",
+      "image": "java.png",
       "archIssue": true,
       "buttons": [
         "install-java64"

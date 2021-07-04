@@ -35,7 +35,7 @@ public class NoAccountEdit extends ExtendedPanel implements AccountMultipaneComp
         c.anchor = GridBagConstraints.LINE_START;
 
         LocalizableLabel label = new LocalizableLabel(LOC_PREFIX + "label");
-        label.setIcon(Images.getIcon24(type.getIcon()));
+        label.setIcon(Images.getIcon(type.getIcon(), 24));
         c.gridy++;
         add(label, c);
 
@@ -47,7 +47,7 @@ public class NoAccountEdit extends ExtendedPanel implements AccountMultipaneComp
         add(field, c);
 
         LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
-        removeButton.setIcon(Images.getIcon16("remove"));
+        removeButton.setIcon(Images.getIcon("remove.png", SwingUtil.magnify(16)));
         removeButton.addActionListener(e -> {
             Account selected = scene.list.getSelected();
             if(selected != null && selected.getType() == type) {

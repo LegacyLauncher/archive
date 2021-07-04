@@ -158,7 +158,7 @@ public class GraphicsEntry extends PatternContainerEntry {
         setPath("update-driver", nameBuilder.substring(", ".length()));
 
         if (manufacturers.length == 1) {
-            setImage("logo-" + manufacturers[0].toLowerCase(java.util.Locale.ROOT) + "@32");
+            setImage("manufacturer-" + manufacturers[0].toLowerCase(java.util.Locale.ROOT) + ".png");
         }
 
         return true;

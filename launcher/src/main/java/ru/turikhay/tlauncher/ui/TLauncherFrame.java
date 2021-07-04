@@ -241,7 +241,7 @@ public class TLauncherFrame extends JFrame {
         StringBuilder brandBuilder = new StringBuilder();
 
         if (!TLauncher.getInstance().isDebug()) {
-            brandBuilder.append(U.getMinorVersion(TLauncher.getVersion())).append(" ");
+            brandBuilder.append(U.getNormalVersion(TLauncher.getVersion())).append(" ");
         }
 
         brandBuilder.append("[").append(TLauncher.getBrand()).append("]");

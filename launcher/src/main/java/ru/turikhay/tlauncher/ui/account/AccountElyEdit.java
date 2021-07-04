@@ -35,7 +35,7 @@ public class AccountElyEdit extends ExtendedPanel implements AccountMultipaneCom
         c.anchor = GridBagConstraints.LINE_START;
 
         LocalizableLabel label = new LocalizableLabel(LOC_PREFIX + "label");
-        label.setIcon(Images.getIcon24("logo-ely"));
+        label.setIcon(Images.getIcon("ely.png", 24));
         c.gridy++;
         add(label, c);
 
@@ -47,7 +47,7 @@ public class AccountElyEdit extends ExtendedPanel implements AccountMultipaneCom
         add(field, c);
 
         LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
-        removeButton.setIcon(Images.getIcon16("remove"));
+        removeButton.setIcon(Images.getIcon("remove.png", SwingUtil.magnify(16)));
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

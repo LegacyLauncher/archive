@@ -29,7 +29,7 @@ public class FeedbackFrame extends VActionFrame {
             }
         });
 
-        getHead().setIcon(Images.getIcon32("warning"));
+        getHead().setIcon(Images.getIcon("warning.png", SwingUtil.magnify(32)));
         getHead().setText("feedback.title");
 
         getBodyText().setText("feedback.body");
@@ -45,7 +45,7 @@ public class FeedbackFrame extends VActionFrame {
                 dispose();
             }
         });
-        Images.getIcon24("plus-square").setup(okayButton);
+        Images.getIcon("plus.png", SwingUtil.magnify(24)).setup(okayButton);
         getFooter().add(okayButton, "Center");
 
         pack();

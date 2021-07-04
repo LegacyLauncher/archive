@@ -26,7 +26,7 @@ public class PreSupportFrame extends VActionFrame {
                 OS.openLink(Localizable.get("support.pre.diag.url"));
             }
         });
-        whatIsDiagnosticLabel.setIcon(Images.getIcon24("lightbulb-o"));
+        whatIsDiagnosticLabel.setIcon(Images.getIcon("lightbulb.png", SwingUtil.magnify(24)));
         whatIsDiagnosticLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
@@ -69,7 +69,7 @@ public class PreSupportFrame extends VActionFrame {
             {
                 setTitlePath("loginform.button.support.processing.title");
                 getHead().setText("loginform.button.support.processing.head");
-                setIcon("comments-o");
+                setIcon("comments-o.png");
                 pack();
             }
 
@@ -91,7 +91,7 @@ public class PreSupportFrame extends VActionFrame {
         });
 
         setTitlePath("support.pre.title");
-        getHead().setIcon(Images.getIcon24("comments-o"));
+        getHead().setIcon(Images.getIcon("comments-o.png", SwingUtil.magnify(32)));
         getHead().setText("support.pre.title");
 
         getBodyText().setText("support.pre.body");
