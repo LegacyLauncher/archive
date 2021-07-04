@@ -8,7 +8,10 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.util.*;
+import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.MinecraftUtil;
+import ru.turikhay.util.OS;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.async.AsyncThread;
 
 import javax.swing.*;
@@ -45,7 +48,7 @@ public class FolderButton extends LocalizableButton implements Unblockable {
     FolderButton(LoginForm loginform) {
         lf = loginform;
         setToolTipText("loginform.button.folder");
-        setIcon(Images.getIcon("folder-open.png", SwingUtil.magnify(20), SwingUtil.magnify(20)));
+        setIcon(Images.getIcon24("folder-open"));
 
         addActionListener(new ActionListener() {
             @Override

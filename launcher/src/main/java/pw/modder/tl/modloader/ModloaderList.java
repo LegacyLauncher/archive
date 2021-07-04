@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import net.minecraft.launcher.versions.Library;
 import org.apache.http.client.fluent.Request;
+import pw.modder.http.HttpClientUtils;
 import ru.turikhay.util.U;
 
 import java.io.IOException;
@@ -44,14 +45,12 @@ public interface ModloaderList {
         @Override
         public void fetch() throws IOException {
             versions = U.getGson().fromJson(
-                    Request.Get(FORGE_MAVEN_METADATA_URL)
-                            .execute()
+                    HttpClientUtils.execute(Request.Get(FORGE_MAVEN_METADATA_URL))
                             .returnContent().asString(StandardCharsets.UTF_8),
                     METADATA_TYPE
             );
             promotions = U.getGson().fromJson(
-                    Request.Get(FORGE_PROMOTIONS_URL)
-                            .execute()
+                    HttpClientUtils.execute(Request.Get(FORGE_PROMOTIONS_URL))
                             .returnContent().asString(StandardCharsets.UTF_8),
                     Promotions.class
             );
@@ -108,8 +107,7 @@ public interface ModloaderList {
         @Override
         public void fetch() throws IOException {
             U.getGson().fromJson(
-                    Request.Get(VERSIONS_LIST_URL)
-                            .execute()
+                    HttpClientUtils.execute(Request.Get(VERSIONS_LIST_URL))
                             .returnContent().asString(),
                     Versions.class
             );
@@ -229,8 +227,7 @@ public interface ModloaderList {
         @Override
         public void fetch() throws IOException {
             versions = U.getGson().fromJson(
-                    Request.Get(FABRIC_LIST_URL)
-                            .execute()
+                    HttpClientUtils.execute(Request.Get(FABRIC_LIST_URL))
                             .returnContent().asString(StandardCharsets.UTF_8),
                     METADATA_TYPE
             );

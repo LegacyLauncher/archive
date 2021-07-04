@@ -55,7 +55,7 @@ public abstract class AbstractEditorPanel extends CenterPanel {
     protected JComponent createTip(String label, boolean warning) {
         LocalizableLabel tip = new LocalizableLabel(label);
         if (warning) {
-            ImageIcon.setup(tip, Images.getIcon("warning.png", 16, 16));
+            ImageIcon.setup(tip, Images.getIcon16("warning"));
         }
 
         return tip;

@@ -2,6 +2,7 @@ package pw.modder.tl.modloader;
 
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.http.client.fluent.Request;
+import pw.modder.http.HttpClientUtils;
 import pw.modder.tl.modloader.extractor.ForgeExtractor;
 import pw.modder.tl.modloader.extractor.ForgeProcessor;
 import ru.turikhay.util.U;
@@ -40,8 +41,7 @@ public interface Modloader {
         @Override
         public CompleteVersion install(String versionName, String versionFamily, File versionsDir, File librariesDir) throws IOException {
             File tempFile = File.createTempFile("forge", ".jar");
-            Request.Get(url)
-                    .execute()
+            HttpClientUtils.execute(Request.Get(url))
                     .saveContent(tempFile);
 
             ForgeProcessor fpr = ForgeExtractor.ExtractProfile(tempFile, librariesDir, versionsDir);
@@ -113,8 +113,7 @@ public interface Modloader {
         @Override
         public CompleteVersion install(String versionName, String versionFamily, File versionsDir, File librariesDir) throws IOException {
             CompleteVersion completeVersion = U.getGson().fromJson(
-                    Request.Get(String.format(API_META_URL, minecraft, version))
-                            .execute()
+                    HttpClientUtils.execute(Request.Get(String.format(API_META_URL, minecraft, version)))
                             .returnContent().asString(),
                     CompleteVersion.class
             );

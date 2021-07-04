@@ -13,7 +13,7 @@ public class AccountMojangPane extends StandardAccountPane<MojangAuth, MojangUse
 
     @Override
     protected String accountIcon() {
-        return "mojang.png";
+        return "logo-mojang";
     }
 
     @Override

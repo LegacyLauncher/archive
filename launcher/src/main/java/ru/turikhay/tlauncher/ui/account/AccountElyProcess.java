@@ -93,7 +93,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
                 menu.show(button, 0, button.getHeight());
             }
         });
-        button.setIcon(Images.getIcon("danger.png", SwingUtil.magnify(24)));
+        button.setIcon(Images.getIcon24("warning-2"));
         button.setIconTextGap(SwingUtil.magnify(10));
         button.setText(LOC_PREFIX + "failed");
         setSouth(button);

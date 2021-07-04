@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListener;
 import ru.turikhay.tlauncher.bootstrap.task.TaskListenerAdapter;
+import ru.turikhay.tlauncher.bootstrap.ui.swing.SwingImageIcon;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 import ru.turikhay.tlauncher.bootstrap.util.UTF8Control;
 
@@ -14,10 +15,12 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class UserInterface implements IInterface {
     public static final String DEFAULT_LOCALE = "en_US";
-    static final int BORDER_SIZE = 5, TASK_DEPTH = 2;
+    static final int BORDER_SIZE = 20, TASK_DEPTH = 2;
 
     private static final ResourceBundle resourceBundle;
     static {
@@ -42,25 +45,29 @@ public final class UserInterface implements IInterface {
         }
 
         this.frame = new JFrame();
-        try {
-            frame.setType(Window.Type.UTILITY);
-        } catch(Error incompatibleError) {
-            // ignore
-        }
+        frame.setIconImages(
+                Stream.of("16", "64", "128", "256")
+                        .map(r -> getClass().getResource("icon-" + r + ".png"))
+                        .map(SwingImageIcon::loadImage)
+                        .collect(Collectors.toList())
+        );
+        frame.setResizable(false);
 
         JPanel panel = new JPanel();
         panel.setOpaque(false);
         frame.getContentPane().add(panel);
 
         BorderLayout layout = new BorderLayout();
-        layout.setHgap(BORDER_SIZE / 2);
-        layout.setVgap(BORDER_SIZE / 2);
+        layout.setHgap(BORDER_SIZE);
+        layout.setVgap(BORDER_SIZE);
         panel.setLayout(layout);
         panel.setBorder(BorderFactory.createEmptyBorder(BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE));
 
         this.iconLabel = new JLabel();
-        iconLabel.setIcon(new ImageIcon(getClass().getResource("icon.png")));
+        iconLabel.setIcon(SwingImageIcon.loadIcon(getClass().getResource("icon-256.png"), 48, 48));
         iconLabel.setOpaque(false);
+        iconLabel.setPreferredSize(new Dimension(48, 48));
+        iconLabel.setVerticalAlignment(SwingConstants.TOP);
         panel.add(iconLabel, BorderLayout.WEST);
 
         this.progressBar = new JProgressBar();

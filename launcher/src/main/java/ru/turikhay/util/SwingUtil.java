@@ -14,10 +14,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -27,34 +29,20 @@ import java.util.concurrent.Callable;
 public class SwingUtil {
     private static final Logger LOGGER = LogManager.getLogger(SwingUtil.class);
 
-    private static final List<Image> favicons = new ArrayList();
+    private static final Lazy<List<Image>> favicons = Lazy.of(() -> {
+        ArrayList<Image> favicons = new ArrayList<>();
+        final int[] sizes = new int[]{256, 128, 96, 64, 48, 32, 24, 16};
+        for (int size : sizes) {
+            Image image = Images.loadIcon("logo-tl", size);
+            if (image != null) {
+                favicons.add(image);
+            }
+        }
+        return Collections.unmodifiableList(favicons);
+    });
 
     public static List<Image> getFavicons() {
-        if (!favicons.isEmpty()) {
-            return Collections.unmodifiableList(favicons);
-        } else {
-            int[] sizes = new int[]{256, 128, 96, 64, 48, 32, 24, 16};
-            String loaded = "";
-            int[] var5 = sizes;
-            int var4 = sizes.length;
-
-            for (int var3 = 0; var3 < var4; ++var3) {
-                int i = var5[var3];
-                Image image = Images.getImage("fav" + i + ".png", false);
-                if (image != null) {
-                    loaded = loaded + ", " + i + "px";
-                    favicons.add(image);
-                }
-            }
-
-            if (loaded.isEmpty()) {
-                LOGGER.debug("No favicon is loaded.");
-            } else {
-                LOGGER.debug("Favicons loaded: {}", loaded.substring(2));
-            }
-
-            return favicons;
-        }
+        return favicons.get();
     }
 
     public static void setFavicons(JFrame frame) {
@@ -253,16 +241,15 @@ public class SwingUtil {
     public static Image loadImage(String source) throws IOException {
         try {
             return SwingUtil.base64ToImage(source);
-        } catch (IllegalArgumentException ile) {
-            // ignore
+        } catch (IllegalArgumentException ignored) {
         }
 
-        URL src = U.makeURL(source);
-        if (src != null) {
-            return Images.loadMagnifiedImage(src);
+        try {
+            return ImageIO.read(new URL(source));
+        } catch(MalformedURLException ignored) {
         }
 
-        return Images.getImage(source, false);
+        return Images.loadIconById(source);
     }
 
     public static void later(SwingRunnable r) {
@@ -311,6 +298,30 @@ public class SwingUtil {
                 t = invocationTargetException;
             }
             throw new SwingException(t);
+        }
+    }
+
+    private static Lazy<Double> SCALING_FACTOR = Lazy.of(SwingUtil::queryScalingFactor);
+
+    public static double getScalingFactor() {
+        return SCALING_FACTOR.value().orElse(1.0);
+    }
+
+    private static double queryScalingFactor() throws Exception {
+        try {
+            GraphicsDevice graphicsDevice = GraphicsEnvironment
+                    .getLocalGraphicsEnvironment()
+                    .getDefaultScreenDevice();
+            GraphicsConfiguration graphicsConfig = graphicsDevice
+                    .getDefaultConfiguration();
+
+            AffineTransform tx = graphicsConfig.getDefaultTransform();
+            double scaleX = tx.getScaleX();
+            double scaleY = tx.getScaleY();
+
+            return Math.max(scaleX, scaleY);
+        } catch(NoClassDefFoundError | NoSuchMethodError t) {
+            throw new Exception(t);
         }
     }
 

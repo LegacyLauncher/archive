@@ -13,7 +13,6 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
-import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -86,7 +85,7 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
             throw new NullPointerException();
         } else {
             this.state = state;
-            setIcon(Images.getIcon(state.image, SwingUtil.magnify(24)));
+            setIcon(Images.getIcon24(state.image));
         }
     }
 
@@ -270,8 +269,8 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
     }
 
     public enum ButtonState {
-        DOWNLOAD("download.png"),
-        STOP("stop-circle-o.png");
+        DOWNLOAD("download"),
+        STOP("stop-circle-o");
 
         final String image;
 

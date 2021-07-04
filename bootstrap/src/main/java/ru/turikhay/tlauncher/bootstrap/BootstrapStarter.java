@@ -10,7 +10,9 @@ import ru.turikhay.tlauncher.bootstrap.util.stream.InputStreamCopier;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public final class BootstrapStarter {
@@ -105,31 +107,38 @@ public final class BootstrapStarter {
         }
 
         if (externalArgsFile != null) {
-            load:
-            {
-
-                log("Loading arguments from file:", externalArgsFile);
-
-                final String content;
-                FileInputStream in = null;
-                try {
-                    content = IOUtils.toString(in = new FileInputStream(externalArgsFile), U.UTF8);
-                } catch (IOException ioE) {
-                    log("Cannot load arguments from file:", externalArgsFile, ioE);
-                    break load;
-                } finally {
-                    U.close(in);
-                }
-
-                return new ArrayList<String>() {
-                    {
-                        Collections.addAll(this, StringUtils.split(content, ' '));
-                    }
-                };
+            log("Loading arguments from file:", externalArgsFile);
+            try {
+                return loadArgsFromFile(externalArgsFile);
+            } catch (IOException ioE) {
+                log("Cannot load arguments from file:", externalArgsFile, ioE);
             }
         }
+        return Collections.emptyList();
+    }
 
-        return Collections.EMPTY_LIST;
+    private static List<String> loadArgsFromFile(File file) throws IOException {
+        List<String> lines;
+        try(InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            lines = IOUtils.readLines(reader);
+        }
+        // remove all blank lines
+        lines.removeIf(StringUtils::isBlank);
+        switch (lines.size()) {
+            case 0:
+                // ???
+                throw new IOException("no lines found");
+            case 1:
+                // only one line: old args file format
+                return Arrays.asList(StringUtils.split(lines.get(0), ' '));
+            default:
+                // 2+ lines: new args file format
+
+                // remove all comments
+                lines.removeIf(line -> line.startsWith("#"));
+
+                return lines;
+        }
     }
 
     private static void log(Object... o) {

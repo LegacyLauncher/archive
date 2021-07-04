@@ -7,11 +7,8 @@ import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.U;
 
 import java.awt.*;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Properties;
 
 public final class ExternalTheme extends ChildTheme {
@@ -77,6 +74,11 @@ public final class ExternalTheme extends ChildTheme {
         }
 
         return intVal;
+    }
+
+    private boolean getBoolean(String key, boolean defaultValue) {
+        String value = properties.getProperty(key);
+        return value == null? defaultValue : Boolean.parseBoolean(value);
     }
 
     @Override
@@ -151,29 +153,12 @@ public final class ExternalTheme extends ChildTheme {
     }
 
     @Override
-    public URL loadAsset(String name) throws IOException {
-        String path = properties.getProperty("images");
+    public Color getIconColor(String iconName) {
+        return getColor("icon.color." + iconName, getColor("icon.defaultColor", super.getIconColor(iconName)));
+    }
 
-        if(path != null) {
-            File dir = new File(path);
-            if(dir.isDirectory()) {
-                File file = new File(dir, name);
-                if(file.isFile()) {
-                    return file.toURI().toURL();
-                }
-            }
-            throw new FileNotFoundException("not a directory: " + dir.getAbsolutePath());
-        }
-
-        String subFolder = properties.getProperty("images.subFolder");
-        if(subFolder != null) {
-            try {
-                return U.requireNotNull(super.loadAsset(subFolder + "/" + name));
-            } catch(Exception e) {
-                // ignore
-            }
-        }
-
-        return super.loadAsset(name);
+    @Override
+    public boolean useDarkTheme() {
+        return getBoolean("nightTheme.enabled", super.useDarkTheme());
     }
 }
