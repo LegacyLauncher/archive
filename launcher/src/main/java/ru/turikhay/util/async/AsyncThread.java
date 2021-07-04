@@ -8,26 +8,24 @@ import java.util.concurrent.*;
 public class AsyncThread {
     private static final Logger LOGGER = LogManager.getLogger(AsyncThread.class);
 
-    private static ExecutorService service = Executors.newCachedThreadPool(new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            return new RunnableThread(r);
-        }
-    });
+    public static final ExecutorService SHARED_SERVICE = Executors.newCachedThreadPool(
+            RunnableThread::new
+    );
 
     public static void execute(Runnable r) {
-        service.execute(wrap(r));
+        SHARED_SERVICE.execute(wrap(r));
     }
 
     public static void execute(Callable<Void> c) {
-        service.submit(c);
+        SHARED_SERVICE.submit(c);
     }
 
     public static Future future(Runnable r) {
-        return service.submit(wrap(r));
+        return SHARED_SERVICE.submit(wrap(r));
     }
 
     public static <V> Future<V> future(Callable<V> c) {
-        return service.submit(wrap(c));
+        return SHARED_SERVICE.submit(wrap(c));
     }
 
     public static <V> Future<V> timeout(long timeout, TimeUnit timeUnit, Callable<V> c) {

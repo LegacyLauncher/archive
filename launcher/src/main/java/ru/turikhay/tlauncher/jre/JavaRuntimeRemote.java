@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.jre;
 
 import net.minecraft.launcher.updater.DownloadInfo;
 import org.apache.http.client.fluent.Request;
+import ru.turikhay.util.EHttpClient;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.io.File;
@@ -10,7 +11,6 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 
 public class JavaRuntimeRemote implements JavaRuntime {
     private String name;
@@ -34,16 +34,16 @@ public class JavaRuntimeRemote implements JavaRuntime {
         return availability;
     }
 
-    public JavaRuntimeManifest getManifest() throws ExecutionException, InterruptedException, TimeoutException {
+    public JavaRuntimeManifest getManifest() throws ExecutionException, InterruptedException {
         if(manifestTimeout == null) {
-            manifestTimeout = AsyncThread.timeoutSeconds(30, this::getManifestNow);
+            manifestTimeout = AsyncThread.future(this::getManifestNow);
         }
         return manifestTimeout.get();
     }
 
     private JavaRuntimeManifest getManifestNow() throws IOException {
         JavaRuntimeManifest manifest = JavaRuntimeManifest.getGson().fromJson(
-                Request.Get(this.manifest.getUrl()).execute().returnContent().asString(),
+                EHttpClient.toString(Request.Get(this.manifest.getUrl())),
                 JavaRuntimeManifest.class
         );
         return Objects.requireNonNull(manifest, "manifest");

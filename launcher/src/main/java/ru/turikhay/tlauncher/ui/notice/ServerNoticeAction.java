@@ -32,7 +32,7 @@ public class ServerNoticeAction extends NoticeAction {
         this.server = U.requireNotNull(server, "server");
         this.serverId = serverId;
 
-        installedVersion = Images.getScaledIcon("check-square.png", 16);
+        installedVersion = Images.getIcon16("check-square");
     }
 
     protected ToStringBuilder toStringBuilder() {
@@ -53,14 +53,14 @@ public class ServerNoticeAction extends NoticeAction {
                 LocalizableMenuItem accountItem = new LocalizableMenuItem(path, Localizable.get("account.type." + accountType.name().toLowerCase(java.util.Locale.ROOT)));
                 accountItem.setEnabled(false);
                 if (accountType.getIcon() != null) {
-                    accountItem.setDisabledIcon(Images.getScaledIcon(accountType.getIcon(), 16));
+                    accountItem.setDisabledIcon(Images.getIcon16(accountType.getIcon()));
                 }
                 list.add(accountItem);
             }
         }
 
         LocalizableMenuItem selectItem = new LocalizableMenuItem(L10N_PREFIX + "choose-version", server.getName());
-        selectItem.setDisabledIcon(Images.getScaledIcon("go.png", 16));
+        selectItem.setDisabledIcon(Images.getIcon16("play-circle-o"));
         selectItem.setEnabled(false);
         list.add(selectItem);
 

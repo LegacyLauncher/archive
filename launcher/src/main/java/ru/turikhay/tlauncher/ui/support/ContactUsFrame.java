@@ -24,12 +24,12 @@ public class ContactUsFrame extends VActionFrame {
             cisOnly("discord", "https://tlaun.ch/support/discord/ru"),
             any("facebook", "https://tlaun.ch/support/fb"),
             notCis("discord", "https://tlaun.ch/support/discord/intl"),
-            any("mail", "mailto:" + TLauncher.getSupportEmail())
+            any("mail", "envelope-open", "mailto:" + TLauncher.getSupportEmail())
     );
 
     public ContactUsFrame() {
         setTitlePath("support.contact.title");
-        getHead().setIcon(Images.getIcon("pencil.png", SwingUtil.magnify(32)));
+        getHead().setIcon(Images.getIcon32("pencil-square"));
         getHead().setText("support.contact.title");
         getBodyText().setText("support.contact.body");
 
@@ -88,19 +88,20 @@ public class ContactUsFrame extends VActionFrame {
     }
 
     private static class SupportService {
-        final String name;
+        final String name, icon;
         final URL url;
         final LangValidator lang;
 
-        SupportService(String name, String url, LangValidator lang) {
+        SupportService(String name, String icon, String url, LangValidator lang) {
             this.name = name;
+            this.icon = icon;
             this.url = U.makeURL(url, true);
             this.lang = lang;
         }
 
         LocalizableButton createButton() {
             LocalizableButton b = new LocalizableButton("support.contact.buttons." + name);
-            b.setIcon(Images.getIcon(name + ".png", SwingUtil.magnify(24)));
+            b.setIcon(Images.getIcon24(icon));
             b.setPreferredSize(new Dimension(1, SwingUtil.magnify(50)));
             b.addActionListener(new ActionListener() {
                 @Override
@@ -117,14 +118,18 @@ public class ContactUsFrame extends VActionFrame {
     }
 
     static SupportService cisOnly(String name, String url) {
-        return new SupportService(name, url, LangValidator.ONLY_CIS);
+        return new SupportService(name, "logo-" + name, url, LangValidator.ONLY_CIS);
     }
 
     static SupportService notCis(String name, String url) {
-        return new SupportService(name, url, LangValidator.NOT_CIS);
+        return new SupportService(name, "logo-" + name, url, LangValidator.NOT_CIS);
+    }
+
+    static SupportService any(String name, String icon, String url) {
+        return new SupportService(name, icon, url, LangValidator.ANY);
     }
 
     static SupportService any(String name, String url) {
-        return new SupportService(name, url, LangValidator.ANY);
+        return new SupportService(name, "logo-" + name, url, LangValidator.ANY);
     }
 }

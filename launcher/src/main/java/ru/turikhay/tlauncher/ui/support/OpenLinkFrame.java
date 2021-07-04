@@ -18,7 +18,7 @@ public class OpenLinkFrame extends VActionFrame {
 
     public OpenLinkFrame(final String link) {
         setTitlePath("support.open_link.title");
-        getHead().setIcon(Images.getIcon("check-square.png", SwingUtil.magnify(32)));
+        getHead().setIcon(Images.getIcon32("check-square"));
         getHead().setText("support.open_link.title");
         getBodyText().setText("support.open_link.body");
 

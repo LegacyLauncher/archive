@@ -75,10 +75,6 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         }
     }
 
-    protected void registerExtraAction(String image, ActionListener listener) {
-        noticeWrapper.buttonPane.extra.registerAction(image, listener);
-    }
-
     protected void registerExtraItems(JMenuItem... items) {
         noticeWrapper.buttonPane.extra.popup.clearMenu();
         for(JMenuItem item : items) {

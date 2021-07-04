@@ -29,6 +29,7 @@ import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.user.AuthException;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.LoopedThread;
@@ -115,7 +116,8 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                 if(local.getReleaseType() != ReleaseType.OLD_ALPHA &&
                         local.getReleaseType() != ReleaseType.OLD_BETA &&
                         !ReleaseType.SubType.OLD_RELEASE.isSubType(local) &&
-                        local.getAssetIndex().getId().equals("legacy"))
+                        local.getAssetIndex() != null &&
+                        "legacy".equals(local.getAssetIndex().getId()))
                 {
                     if(Alert.showLocQuestion("versions.damaged-json")) {
                         checkbox.forceupdate.setSelected(true);
@@ -234,17 +236,28 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void startLauncher(VersionSyncInfo requestedVersion, Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
-            while (tlauncher.getLibraryManager().isRefreshing()) {
-                U.sleepFor(500L);
-            }
-            this.requestedVersion = requestedVersion;
-            if(requestedVersion != null) {
-                versions.setSelectedValue(requestedVersion);
-            }
-            this.server = server;
-            this.serverId = serverId;
-            autologin.setActive(false);
-            startThread.iterate();
+            LOGGER.debug("Starting launcher: {}", requestedVersion);
+            Blocker.block(this, "starting");
+            AsyncThread.execute(() -> {
+                while (tlauncher.getLibraryManager().isRefreshing()) {
+                    LOGGER.debug("Waiting for library manager...");
+                    U.sleepFor(500L);
+                }
+                SwingUtil.later(() -> {
+                    try {
+                        this.requestedVersion = requestedVersion;
+                        if (requestedVersion != null) {
+                            versions.setSelectedValue(requestedVersion);
+                        }
+                        this.server = server;
+                        this.serverId = serverId;
+                        autologin.setActive(false);
+                        startThread.iterate();
+                    } finally {
+                        Blocker.unblock(this, "starting");
+                    }
+                });
+            });
         }
     }
 

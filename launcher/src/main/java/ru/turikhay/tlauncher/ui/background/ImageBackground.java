@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.images.MultiResInterface;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.U;
 
@@ -67,15 +68,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     @Override
     public void loadBackground(String path) throws Exception {
         if (defaultImage == null) {
-            Image image;
-
-            try {
-                image = Images.getImage("plains.jpg");
-            } catch (Exception e) {
-                throw new Error("could not load default image", e);
-            }
-
-            defaultImage = image;
+            defaultImage = Images.loadImageByName("plains.jpg");
         }
 
         renderImage = null;
@@ -131,8 +124,24 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             return;
         }
 
-        renderImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+        renderImage = renderImage(image);
         repaint();
+    }
+
+    private Image renderImage(Image image) {
+        if(MultiResInterface.INSTANCE.isEnabled()) {
+            return renderMultiResImage(image);
+        } else {
+            return renderScaleImage(image);
+        }
+    }
+
+    private Image renderMultiResImage(Image image) {
+        return MultiResInterface.INSTANCE.createImage(image);
+    }
+
+    private Image renderScaleImage(Image image) {
+        return image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
     }
 
     @Override

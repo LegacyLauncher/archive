@@ -16,7 +16,7 @@ public class LoadingFrame extends JFrame {
         progress = new ProgressBar();
         progress.setPreferredSize(new Dimension(250, 0));
         add(progress, "Center");
-        add(new JLabel(Images.getIcon("fav32.png")), "West");
+        add(Images.getIcon32("logo-tl"), "West");
         setType(Type.UTILITY);
 
         pack();

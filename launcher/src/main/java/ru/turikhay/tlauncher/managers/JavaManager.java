@@ -16,8 +16,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class JavaManager {
     private static final Logger LOGGER = LogManager.getLogger(JavaManager.class);
@@ -64,10 +62,7 @@ public class JavaManager {
 
         Optional<JavaRuntimeRemote> remoteRuntimeOpt;
         try {
-            remoteRuntimeOpt = fetcher.fetch().get(30, TimeUnit.SECONDS).getCurrentPlatformLatestRuntime(name);
-        } catch(TimeoutException timeout) {
-            LOGGER.warn("Timed out waiting for the remote list. Assuming {} is the latest version", name);
-            return localRuntimeOpt;
+            remoteRuntimeOpt = fetcher.fetch().get().getCurrentPlatformLatestRuntime(name);
         } catch (ExecutionException e) {
             LOGGER.warn("Couldn't fetch the remote list. Assuming {} is the latest version", name);
             return localRuntimeOpt;
@@ -93,9 +88,6 @@ public class JavaManager {
                 manifest = remoteRuntime.getManifest();
             } catch (ExecutionException e) {
                 LOGGER.debug("Couldn't fetch manifest. Assuming the version {} is latest", name, e);
-                return localRuntimeOpt;
-            } catch (TimeoutException e) {
-                LOGGER.debug("Couldn't fetch manifest in reasonable time. Assuming the version {} is latest", name);
                 return localRuntimeOpt;
             }
             File workingDirectory = localRuntime.getWorkingDirectory();
@@ -152,7 +144,7 @@ public class JavaManager {
     }
 
     public boolean hasEnoughSpaceToInstall(JavaRuntimeRemote remote)
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, InterruptedException {
         long usableSpace = discoverer.getRootDir().getUsableSpace();
         if(usableSpace < 1L) {
             LOGGER.warn("Couldn't query usable space left on {}. Result is {}. Probably has no space left.",
@@ -169,13 +161,13 @@ public class JavaManager {
     }
 
     public DownloadableContainer installVersionNow(JavaRuntimeRemote remote, File rootDir, boolean forceDownload)
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, InterruptedException {
         return new JreDownloadableContainer(remote, rootDir, forceDownload);
     }
 
     private static class JreDownloadableContainer extends DownloadableContainer {
         JreDownloadableContainer(JavaRuntimeRemote remote, File rootDir, boolean forceDownload)
-                throws ExecutionException, InterruptedException, TimeoutException {
+                throws ExecutionException, InterruptedException {
             addAll(remote.getManifest().toDownloadableList(remote.getWorkingDir(rootDir), forceDownload));
             addHandler(new DownloadableContainerHandler() {
                 @Override

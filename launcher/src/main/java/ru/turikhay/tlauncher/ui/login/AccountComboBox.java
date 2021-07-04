@@ -19,7 +19,6 @@ import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.tlauncher.user.InvalidCredentialsException;
-import ru.turikhay.util.U;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -171,7 +170,7 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     }
 
     public void updateLocale() {
-        refreshAccounts(manager.getAuthDatabase(), null);
+        refreshAccounts(manager.getAuthDatabase(), getSelectedValue());
     }
 
     public void onAccountsRefreshed(AuthenticatorDatabase db) {

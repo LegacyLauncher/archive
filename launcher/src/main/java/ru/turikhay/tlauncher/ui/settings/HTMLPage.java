@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.settings;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
@@ -100,9 +99,10 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
         }
 
         public String resolveToken(String token) {
-            if (token.equals("width"))
+            if (token.equals("width")) {
                 return String.valueOf(SwingUtil.magnify(525));
-            return token.startsWith("image:") ? Images.getRes(token.substring("image:".length())).toExternalForm() : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? textColor : token));
+            }
+            return token.startsWith("image:") ? token.substring("image:".length()) /* handled by ExtendedImageView */ : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? textColor : token));
         }
     }
 }

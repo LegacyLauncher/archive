@@ -26,7 +26,7 @@ import java.io.File;
 public final class CrashFrame extends VActionFrame {
     private static final Logger LOGGER = LogManager.getLogger(CrashFrame.class);
 
-    private final ImageIcon crashIcon = Images.getIcon("bug.png");
+    private final ImageIcon crashIcon = Images.getIcon32("bug");
 
     private final PreSupportFrame supportFrame = new PreSupportFrame() {
         @Override
@@ -108,7 +108,7 @@ public final class CrashFrame extends VActionFrame {
 
         setTitlePath("crash.unknown.title");
         getHead().setText("crash.unknown.title");
-        getHead().setIcon(Images.getIcon("bug.png", 32));
+        getHead().setIcon(crashIcon);
         getBodyText().setText("crash.unknown.body");
         setButtons(true);
     }
@@ -127,7 +127,7 @@ public final class CrashFrame extends VActionFrame {
                     LOGGER.warn("could not load crash image {}", entry.getImage(), e);
                     break loadImage;
                 }
-                getHead().setIcon(new ImageIcon(image, SwingUtil.magnify(32), false));
+                getHead().setIcon(new javax.swing.ImageIcon(image));
             }
         } else {
             getHead().setIcon(crashIcon);

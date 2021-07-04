@@ -6,7 +6,6 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
 import ru.turikhay.tlauncher.ui.swing.ResizeableComponent;
-import ru.turikhay.util.U;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -21,7 +20,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
 
     private final LocalizableMenuItem hideNotice = new LocalizableMenuItem("notice.action.hide");
     {
-        Images.getScaledIcon("eye-slash.png", 16).setup(hideNotice);
+        Images.getIcon16("eye-slash").setup(hideNotice);
         hideNotice.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -35,7 +34,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
 
     private final LocalizableMenuItem hideAllNotices = new LocalizableMenuItem("notice.action.hide-all");
     {
-        Images.getScaledIcon("remove.png", 16).setup(hideAllNotices);
+        Images.getIcon16("remove").setup(hideAllNotices);
         hideAllNotices.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -47,7 +46,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
 
     private final LocalizableMenuItem openNoticeScene = new LocalizableMenuItem("notice.action.scene");
     {
-        Images.getScaledIcon("expand.png", 16).setup(openNoticeScene);
+        Images.getIcon16("expand").setup(openNoticeScene);
         openNoticeScene.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
