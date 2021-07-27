@@ -448,7 +448,7 @@ public class VersionManager extends InterruptibleComponent {
         Rule.FeatureMatcher featureMatcher = new CurrentLaunchFeatureMatcher();
         VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
 
-        CompleteVersion completeVersion = syncInfo.resolveCompleteVersion(this, false);
+        CompleteVersion completeVersion = syncInfo.resolveCompleteVersion(this, force);
         /*if (syncInfo.getLocal() == completeVersion) {
             syncInfo.setLocal(completeVersion);
         } else {
