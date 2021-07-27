@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.Reflect;
-import ru.turikhay.util.U;
 
 import java.util.*;
 
@@ -16,6 +15,7 @@ public enum ReleaseType {
     OLD_BETA("old-beta", true, false),
     OLD_ALPHA("old-alpha", true, false),
     LAUNCHER("launcher", true, false),
+    PENDING("pending", true, true),
     UNKNOWN("unknown", false, false);
 
     private static final Logger LOGGER = LogManager.getLogger();

@@ -1930,7 +1930,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         map.put("version_type", version.getType());
 
-        map.put("game_libraries_directory", new File(this.rootDir, "libraries").getAbsolutePath());
+        String libraryDirPath = new File(this.rootDir, "libraries").getAbsolutePath();
+        map.put("library_directory", libraryDirPath);
+
+        map.put("game_libraries_directory", libraryDirPath);
         map.put("forge_transformers",
                 version.getTransformers(featureMatcher)
                         .stream()
