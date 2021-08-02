@@ -539,6 +539,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             String value = handler.getValue();
             String existingValue = global.get(path);
             if(!Objects.equals(value, existingValue)) {
+                LOGGER.debug("Found changes: {}", path);
                 return true;
             }
         }
