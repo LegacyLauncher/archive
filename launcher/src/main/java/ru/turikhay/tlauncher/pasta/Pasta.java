@@ -238,7 +238,7 @@ public class Pasta {
         if(file == null) {
             return "pasta: file null";
         }
-        if(file.isFile()) {
+        if(!file.isFile()) {
             return "pasta: not a file: " + file.getAbsolutePath();
         }
         if(charset == null) {
