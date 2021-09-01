@@ -58,7 +58,7 @@ public class Server {
     }
 
     public String getFullAddress() {
-        return address + ":" + port;
+        return address + (port == DEFAULT_PORT ? "" : ":" + port);
     }
 
     protected void setFullAddress(String fullAddress) {

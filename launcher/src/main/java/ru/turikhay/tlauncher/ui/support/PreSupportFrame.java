@@ -69,7 +69,7 @@ public class PreSupportFrame extends VActionFrame {
             {
                 setTitlePath("loginform.button.support.processing.title");
                 getHead().setText("loginform.button.support.processing.head");
-                setIcon("comments-o");
+                setIcon("life-ring");
                 pack();
             }
 
@@ -91,7 +91,7 @@ public class PreSupportFrame extends VActionFrame {
         });
 
         setTitlePath("support.pre.title");
-        getHead().setIcon(Images.getIcon24("comments-o"));
+        getHead().setIcon(Images.getIcon24("life-ring"));
         getHead().setText("support.pre.title");
 
         getBodyText().setText("support.pre.body");

@@ -33,7 +33,9 @@ class ColorfulIcons {
         register("folder-open", ORANGE);
         register("home", DARKER_ORANGE);
         register("info-circle", BLUE);
+        register("life-ring", BLUE);
         register("lightbulb-o", ORANGE);
+        register("minus", RED);
         register("pencil-square", BLUE);
         register("play-circle-o-1", BLUE);
         register("plus-square", GREEN);

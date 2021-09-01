@@ -37,13 +37,7 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
             return;
         }
 
-        String value = Localizable.get(path);
-
-        for (int i = 0; i < variables.length; ++i) {
-            value = value.replace("%" + i, variables[i]);
-        }
-
-        setRawText(value);
+        setRawText(Localizable.get(path, vars));
     }
 
     public void setText(String path) {

@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
@@ -37,14 +36,15 @@ public class NanoHttpdLocalServer implements ILocalServer {
         this.urlProducer = urlProducer;
     }
 
+    LocalServerSelectedConfiguration selectedConfiguration;
+
     @Override
     public LocalServerSelectedConfiguration start(LocalServerConfiguration configuration)
             throws LocalServerException {
         if(!invoked.compareAndSet(false, true)) {
-            throw new IllegalStateException("start has already been called");
+            return selectedConfiguration;
         }
 
-        LocalServerSelectedConfiguration selectedConfiguration = null;
         LockExchange lockExchange = null;
         NanoHttpdAdapter adapter = null;
         List<IOException> serverStartExceptions = new ArrayList<>();

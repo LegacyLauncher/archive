@@ -29,17 +29,19 @@ import java.util.concurrent.Callable;
 public class SwingUtil {
     private static final Logger LOGGER = LogManager.getLogger(SwingUtil.class);
 
-    private static final Lazy<List<Image>> favicons = Lazy.of(() -> {
+    private static final Lazy<List<Image>> favicons = Lazy.of(() -> createFaviconList("logo-tl"));
+
+    public static List<Image> createFaviconList(String iconName) {
         ArrayList<Image> favicons = new ArrayList<>();
         final int[] sizes = new int[]{256, 128, 96, 64, 48, 32, 24, 16};
         for (int size : sizes) {
-            Image image = Images.loadIcon("logo-tl", size);
+            Image image = Images.loadIcon(iconName, size);
             if (image != null) {
                 favicons.add(image);
             }
         }
         return Collections.unmodifiableList(favicons);
-    });
+    }
 
     public static List<Image> getFavicons() {
         return favicons.get();

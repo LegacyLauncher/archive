@@ -10,6 +10,8 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.user.MinecraftUser;
+import ru.turikhay.tlauncher.user.MojangUser;
+import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
 import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidationException;
@@ -20,10 +22,7 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.CodeRequestCancelledE
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.DefaultExternalBrowser;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerConfiguration;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerStrategy;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerUrlProducer;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.*;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd.NanoHttpdLocalServer;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchanger;
@@ -110,7 +109,14 @@ class AccountMinecraftProcessWorker {
     private void doRun() throws Exception {
         OAuthApplication application = OAuthApplication.TL;
         setState("browser-open");
-        MicrosoftOAuthExchangeCode msftExhangeCode = initBrowser().requestMicrosoftOAuthCode();
+        MicrosoftOAuthCodeRequestStrategy requestStrategy = initBrowser();
+        if(requestStrategy instanceof LocalServerStrategy) {
+            LocalServerSelectedConfiguration selectedConfig = ((LocalServerStrategy) requestStrategy).startServer();
+            String loginUrl = urlProducer.buildLoginUrl(selectedConfig);
+            SwingUtil.later(() -> parent.setButtonLink(loginUrl));
+        }
+        MicrosoftOAuthExchangeCode msftExhangeCode = requestStrategy.requestMicrosoftOAuthCode();
+        SwingUtil.later(() -> parent.setButtonLink(null));
         setState("exchanging-code");
         MicrosoftOAuthToken msftToken = new MicrosoftOAuthCodeExchanger(application).exchangeMicrosoftOAuthCode(msftExhangeCode);
         setState("xbox-live-auth");
@@ -125,14 +131,19 @@ class AccountMinecraftProcessWorker {
         MinecraftUser minecraftUser = new MinecraftProfileConverter().convertToMinecraftUser(msftToken, minecraftToken, minecraftProfile);
         SwingUtil.wait(() -> {
             StandardAccountPane.removeAccountIfFound(minecraftUser.getUsername(), Account.AccountType.MINECRAFT);
-            TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(minecraftUser);
+            UserSet userSet = TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet();
+            userSet.add(minecraftUser);
+            userSet.getSet().stream().filter(u ->
+                    u.getType().equals(MojangUser.TYPE) && u.getUUID().equals(minecraftUser.getUUID())
+            ).findAny().ifPresent(userSet::remove);
             parent.scene.multipane.showTip("success-add");
             parent.scene.list.select(new Account(minecraftUser));
         });
     }
 
+    private final LocalServerUrlProducer urlProducer = new LocalServerUrlProducer();
+
     private MicrosoftOAuthCodeRequestStrategy initBrowser() {
-        LocalServerUrlProducer urlProducer = new LocalServerUrlProducer();
         return new LocalServerStrategy(
                 new DefaultExternalBrowser(),
                 urlProducer,

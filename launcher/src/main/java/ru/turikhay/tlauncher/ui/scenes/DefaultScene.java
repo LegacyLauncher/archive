@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.scenes;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.MainPane;
-import ru.turikhay.tlauncher.ui.SideNotifier;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.notice.MainNoticePanel;
 import ru.turikhay.tlauncher.ui.notice.Notice;
@@ -20,28 +19,18 @@ import java.awt.*;
 public class DefaultScene extends PseudoScene {
     public static final Dimension LOGIN_SIZE = new Dimension(285, 240);
     public static final Dimension SETTINGS_SIZE = new Dimension(600, 550);
-    public static final int EDGE_INSETS = 10;
-    public static final int INSETS = 15;
-    public final DelayedComponent<SideNotifier> notifier;
+
     public final LoginForm loginForm;
     public final DelayedComponent<SettingsPanel> settingsForm;
     public final DelayedComponent<NoticeSidePanel> noticeSidePanel;
     private DefaultScene.SidePanel sidePanel;
     private ExtendedPanel sidePanelComp;
     private Direction lfDirection;
-    //public final NoticePanel infoPanel;
     public final DelayedComponent<MainNoticePanel> noticePanel;
-
-    // $FF: synthetic field
-    private static int[] $SWITCH_TABLE$ru$turikhay$util$Direction;
-    // $FF: synthetic field
-    private static int[] $SWITCH_TABLE$ru$turikhay$tlauncher$ui$scenes$DefaultScene$SidePanel;
-
-    private boolean sceneLoaded;
+    public final SideNotifier sideNotifier;
 
     public DefaultScene(MainPane main) {
         super(main);
-        notifier = main.notifier;
         settingsForm = new DelayedComponent<>(new DelayedComponentLoader<SettingsPanel>() {
             @Override
             public SettingsPanel loadComponent() {
@@ -86,17 +75,10 @@ public class DefaultScene extends PseudoScene {
                 updateSidePanel();
             }
         });
-        //noticeSidePanel.setVisible(false);
-        //add(noticeSidePanel);
-        //infoPanel = new NoticePanel(this);
-        //add(infoPanel);
+        this.sideNotifier = new SideNotifier();
+        add(sideNotifier);
+
         updateDirection();
-
-        sceneLoaded = true;
-
-        /*if(isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
-            setSidePanel(null);
-        }*/
     }
 
     private void updateSidePanel() {
@@ -150,7 +132,7 @@ public class DefaultScene extends PseudoScene {
                 case TOP_LEFT:
                 case CENTER_LEFT:
                 case BOTTOM_LEFT:
-                    lf_x = 10;
+                    lf_x = margin;
                     break;
                 case TOP:
                 case CENTER:
@@ -246,25 +228,22 @@ public class DefaultScene extends PseudoScene {
             }
             sidePanelComp.setLocation(sp_x, sp_y);
         }
-
-        byte n_y1 = 10;
-        switch (lfDirection) {
-            case TOP_LEFT:
-            case CENTER_LEFT:
-            case BOTTOM_LEFT:
-                n_x = getMainPane().getWidth() - margin - (notifier.isLoaded()? notifier.get().getWidth() : 0);
-                break;
-            default:
-                n_x = margin;
-        }
-
-        if(notifier.isLoaded()) {
-            notifier.get().setLocation(n_x, n_y1);
-        }
         loginForm.setLocation(lf_x, lf_y);
         if(noticePanel.isLoaded()) {
             noticePanel.get().onResize();
         }
+
+        int sn_y;
+        switch (lfDirection) {
+            case TOP_LEFT:
+            case TOP:
+            case TOP_RIGHT:
+                sn_y = getHeight() - sideNotifier.height;
+                break;
+            default:
+                sn_y = 0;
+        }
+        sideNotifier.setBounds(0, sn_y, getWidth(), sideNotifier.height);
     }
 
     public DefaultScene.SidePanel getSidePanel() {

@@ -77,6 +77,7 @@ public final class TLauncher {
     private final VersionManager versionManager;
     private final ProfileManager profileManager;
     private final JavaManager javaManager;
+    private final MigrationManager migrationManager;
 
     private final Downloader downloader;
 
@@ -137,6 +138,8 @@ public final class TLauncher {
         File jreRootDir = new File(config.get(JavaManagerConfig.class).getRootDirOrDefault());
         FileUtil.createFolder(jreRootDir);
         javaManager = new JavaManager(jreRootDir);
+
+        migrationManager = new MigrationManager(this);
 
         dispatcher.onBootStateChanged("Loading manager listener", 0.36);
         componentManager.loadComponent(ComponentManagerListenerHelper.class);
@@ -209,6 +212,8 @@ public final class TLauncher {
         }
 
         preloadUI();
+
+        migrationManager.queueMigrationCheck();
     }
 
     private void migrateFromOldJreConfig() {
@@ -264,6 +269,10 @@ public final class TLauncher {
 
     public JavaManager getJavaManager() {
         return javaManager;
+    }
+
+    public MigrationManager getMigrationManager() {
+        return migrationManager;
     }
 
     public Downloader getDownloader() {
@@ -528,6 +537,10 @@ public final class TLauncher {
 
             if (uiListeners != null) {
                 uiListeners.updateLocale();
+            }
+
+            if(migrationManager != null && migrationManager.getFrame() != null) {
+                migrationManager.getFrame().updateLocale();
             }
         });
     }
