@@ -3,6 +3,8 @@ package ru.turikhay.tlauncher.ui.account;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
@@ -21,6 +23,7 @@ public class AccountMinecraftProcess extends BorderPanel implements AccountMulti
 
     private final ProgressBar progressBar;
     private final LocalizableLabel label;
+    private final LocalizableButton button;
 
     public AccountMinecraftProcess(final AccountManagerScene scene) {
         this.scene = scene;
@@ -44,14 +47,32 @@ public class AccountMinecraftProcess extends BorderPanel implements AccountMulti
         panel.add(label, c);
 
         setCenter(panel);
+
+        button = new LocalizableButton(LOC_PREFIX + "link.open");
+        button.addActionListener(e -> {
+            if(buttonLink != null) {
+                Alert.showLocMessage(LOC_PREFIX + "link.open.alert", buttonLink);
+            }
+        });
+        button.setIconTextGap(SwingUtil.magnify(10));
+        button.setIcon(Images.getIcon24("share"));
+        setSouth(button);
     }
 
     void setProcessLabel(String label) {
         this.label.setText(LOC_PREFIX + label);
     }
 
+    private String buttonLink;
+
+    void setButtonLink(String link) {
+        this.buttonLink = link;
+        button.setVisible(link != null);
+    }
+
     void stopProgress() {
         progressBar.setIndeterminate(false);
+        button.setVisible(false);
     }
 
     @Override

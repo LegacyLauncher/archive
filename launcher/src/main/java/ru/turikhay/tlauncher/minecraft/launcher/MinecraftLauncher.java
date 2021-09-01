@@ -1096,7 +1096,9 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         if (!isLauncher && server != null) {
             programArgs.addAll(Arrays.asList("--server", server.getAddress()));
-            programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
+            if(server.getPort() != Server.DEFAULT_PORT) {
+                programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
+            }
         }
 
         // add modpack-related arguments

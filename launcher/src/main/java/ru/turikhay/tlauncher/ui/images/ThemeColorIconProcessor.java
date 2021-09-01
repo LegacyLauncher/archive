@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.ui.images;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.theme.Theme;
 
 import java.awt.*;
@@ -10,6 +12,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class ThemeColorIconProcessor implements IconProcessor {
+    private static final Logger LOGGER = LogManager.getLogger(ThemeColorIconProcessor.class);
 
     private final IconProcessor parentProcessor;
     private final Supplier<Theme> themeSupplier;
@@ -35,7 +38,7 @@ public class ThemeColorIconProcessor implements IconProcessor {
     @Override
     public Image processBaseIcon(BufferedImage baseIcon, String iconName, int targetSize) {
         BufferedImage icon;
-        if(canPaintColor(baseIcon)) {
+        if(canPaintColor(baseIcon, iconName)) {
             int targetColor = requestIconColor(iconName);
             icon = paintIcon(baseIcon, targetColor);
         } else {
@@ -70,8 +73,12 @@ public class ThemeColorIconProcessor implements IconProcessor {
         return iconColor.getRGB();
     }
 
-    private static boolean canPaintColor(BufferedImage icon) {
+    private static boolean canPaintColor(BufferedImage icon, String iconName) {
         ColorModel colorModel = icon.getColorModel();
+        if(colorModel == null) {
+            LOGGER.warn("Unknown color model of icon {}", iconName);
+            return false;
+        }
         int type = colorModel.getColorSpace().getType();
         return type == ColorSpace.TYPE_GRAY;
     }

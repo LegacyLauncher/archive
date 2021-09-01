@@ -70,6 +70,14 @@ public final class Lazy<T> implements Callable<T> {
         return Optional.ofNullable(value);
     }
 
+    public Optional<T> valueIfInitialized() {
+        if(isInitialized()) {
+            return value();
+        } else {
+            return Optional.empty();
+        }
+    }
+
     public static <T> Lazy<T> of(Callable<T> callable) {
         return new Lazy<>(Objects.requireNonNull(callable));
     }

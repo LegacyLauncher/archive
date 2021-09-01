@@ -23,6 +23,7 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
     private final LocalizableMenuItem versionManager;
     private final LocalizableMenuItem settings;
     private final LocalizableMenuItem notices;
+    private final LocalizableMenuItem migrationStatus;
 
     SettingsButton(LoginForm loginform) {
         lf = loginform;
@@ -59,6 +60,11 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
             }
         });
         updateNoticeEntry();
+        migrationStatus = LocalizableMenuItem.newItem("mojang-migration.button", "migration-icon", e ->
+                lf.scene.getMainPane().getRootFrame().getLauncher().getMigrationManager().showMigrationFrame()
+        );
+        popup.addSeparator();
+        popup.add(migrationStatus);
         setPreferredSize(new Dimension(30, getHeight()));
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

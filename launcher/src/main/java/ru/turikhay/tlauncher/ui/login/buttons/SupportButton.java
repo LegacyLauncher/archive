@@ -57,14 +57,14 @@ public class SupportButton extends LocalizableButton implements Blockable {
                 .add("loginform.button.support.vk", Images.getIcon16("logo-vk"), actionURL("https://tlaun.ch/vk?from=menu"))
                 .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/ru?from=menu"))
                 .addSeparator()
-                .add("loginform.button.support", Images.getIcon16("comments-o"), showSupportFrame)
+                .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
         );
 
         localeMap.put("en_US", new SupportMenu("comments-o")
                 .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/intl?from=menu"))
                 .add("loginform.button.support.fb", Images.getIcon16("logo-facebook"), actionURL("https://tlaun.ch/fb?from=menu"))
                 .addSeparator()
-                .add("loginform.button.support", Images.getIcon16("comments-o"), showSupportFrame)
+                .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
         );
     }
 

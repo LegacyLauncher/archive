@@ -20,7 +20,6 @@ import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -40,9 +39,7 @@ public class MainPane extends ExtendedLayeredPane {
     public final DelayedComponent<AccountManagerScene> accountManager;
     public final DelayedComponent<VersionManagerScene> versionManager;
     public final DelayedComponent<NoticeScene> noticeScene;
-    public final DelayedComponent<SideNotifier> notifier;
     public final DelayedComponent<RevertFontSize> revertFont;
-    //final ServicePanel service;
 
     MainPane(final TLauncherFrame frame) {
         super(null);
@@ -51,22 +48,6 @@ public class MainPane extends ExtendedLayeredPane {
         LOGGER.trace("Creating background...");
         background = new BackgroundManager(this);
         add(background);
-        //service = new ServicePanel(this);
-        notifier = new DelayedComponent<>(new DelayedComponentLoader<SideNotifier>() {
-            @Override
-            public SideNotifier loadComponent() {
-                return new SideNotifier();
-            }
-
-            @Override
-            public void onComponentLoaded(SideNotifier loaded) {
-                loaded.setSize(SwingUtil.magnify(new Dimension(32, 32)));
-                MainPane.this.add(loaded);
-                defaultScene.onResize();
-            }
-        });
-        //notifier.setSize(SwingUtil.magnify(new Dimension(32, 32)));
-        //add(notifier);
         LOGGER.trace("Init Default scene...");
         defaultScene = new DefaultScene(this);
         add(defaultScene);
@@ -224,6 +205,7 @@ public class MainPane extends ExtendedLayeredPane {
                 onResize();
             }
         });
+
         if (shouldShowRevertFont())
             revertFont.load();
 

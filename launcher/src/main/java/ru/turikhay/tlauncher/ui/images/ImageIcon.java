@@ -5,15 +5,19 @@ import ru.turikhay.util.Lazy;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Objects;
 
 public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
-    private final Image image;
+    private Image image;
     private final int size;
 
-    ImageIcon(Image image, int size) {
-        this.image = Objects.requireNonNull(image, "image");
+    protected ImageIcon(Image image, int size) {
+        this.image = image;
         this.size = size;
+    }
+
+    protected void setImage(Image image) {
+        this.image = image;
+        repaint();
     }
 
     private final Lazy<DisabledImageIcon> disabledInstance = Lazy.of(() -> new DisabledImageIcon(this));
@@ -24,7 +28,9 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
 
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
-        g.drawImage(image, x, y, null);
+        if(image != null) {
+            g.drawImage(image, x, y, null);
+        }
     }
 
     @Override

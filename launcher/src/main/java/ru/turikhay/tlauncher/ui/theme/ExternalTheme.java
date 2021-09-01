@@ -159,6 +159,6 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public boolean useDarkTheme() {
-        return getBoolean("nightTheme.enabled", super.useDarkTheme());
+        return getBoolean("darkTheme.enabled", super.useDarkTheme());
     }
 }

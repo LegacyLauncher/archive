@@ -8,6 +8,8 @@ public class LocalServerConfiguration {
     private final String path;
     private final String redirectOnSuccess;
 
+    private LocalServerSelectedConfiguration selectedConfiguration;
+
     public LocalServerConfiguration(String host, List<Integer> allowedPorts, String path, String redirectOnSuccess) {
         this.host = host;
         this.allowedPorts = allowedPorts;
@@ -29,5 +31,13 @@ public class LocalServerConfiguration {
 
     public String getRedirectOnSuccess() {
         return redirectOnSuccess;
+    }
+
+    public LocalServerSelectedConfiguration getSelectedConfiguration() {
+        return selectedConfiguration;
+    }
+
+    public void setSelectedConfiguration(LocalServerSelectedConfiguration selectedConfiguration) {
+        this.selectedConfiguration = selectedConfiguration;
     }
 }

@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
@@ -35,6 +34,7 @@ public class LocalServerStrategy implements MicrosoftOAuthCodeRequestStrategy {
             throws MicrosoftOAuthCodeRequestException, InterruptedException, TimeoutException {
         LOGGER.trace("Starting local server");
         LocalServerSelectedConfiguration selectedConfiguration = startServer();
+        this.serverConfiguration.setSelectedConfiguration(selectedConfiguration);
         try {
             openExternalBrowser(selectedConfiguration);
             return waitForCode(time, timeUnit);
@@ -43,7 +43,7 @@ public class LocalServerStrategy implements MicrosoftOAuthCodeRequestStrategy {
         }
     }
 
-    private LocalServerSelectedConfiguration startServer() throws MicrosoftOAuthCodeRequestException {
+    public LocalServerSelectedConfiguration startServer() throws MicrosoftOAuthCodeRequestException {
         try {
             return localServer.start(serverConfiguration);
         } catch (LocalServerException e) {

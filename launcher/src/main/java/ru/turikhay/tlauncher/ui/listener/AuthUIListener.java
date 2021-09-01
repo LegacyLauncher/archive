@@ -77,52 +77,12 @@ public class AuthUIListener implements AuthenticatorListener {
         if(Localizable.nget(path) == null) {
             path = "account.manager.error." + locPath + (editorOpened? ".editor" : "");
         }
-        description = Localizable.get(path, (Object[]) locVars);
+        if(editorOpened && Localizable.nget(path) == null) {
+            path = "account.manager.error." + locPath;
+        }
+        description = Localizable.get(path, locVars);
 
         Alert.showLocError(title, description, textarea);
-        /*String description = null;
-        Object textarea = e;
-
-        /*if (e instanceof AuthenticatorException) {
-            AuthenticatorException ae = (AuthenticatorException) e;
-
-            if (ae.getMessage() != null) {
-                description = ae.getMessage();
-            }
-
-            /*if (e instanceof KnownAuthenticatorException) {
-                textarea = null;
-
-                /*if (e instanceof ServiceUnavailableException) {
-                    textarea = e.getMessage();
-                }
-            }
-        }
-
-        if (description == null) {
-            description = "unknown";
-        }
-
-        String accountType = auth.getType().toString().toLowerCase(java.util.Locale.ROOT);
-        String text = null;
-
-        if (editorOpened) {
-            text = Localizable.nget("auth.error." + description + "." + accountType + ".editor");
-
-            if (text == null) {
-                text = Localizable.nget("auth.error." + description + ".editor");
-            }
-        }
-
-        if (text == null) {
-            text = Localizable.nget("auth.error." + description + "." + accountType);
-
-            if (text == null) {
-                text = Localizable.nget("auth.error." + description);
-            }
-        }
-
-        Alert.showError(Localizable.get("auth.error.title"), text, textarea);*/
     }
 
     public void onAuthPassed(Authenticator auth) {
