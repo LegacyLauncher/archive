@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.PromotedServerDeserializer;
 import ru.turikhay.tlauncher.ui.notice.Notice;
@@ -62,16 +61,7 @@ public final class BootConfiguration {
         return allowNoticeDisable;
     }
 
-    public static BootConfiguration parse(BootBridge bridge) {
-        try {
-            return parse(bridge.getOptions());
-        } catch(RuntimeException rE) {
-            LOGGER.error("Could not parse boot configuration", rE);
-        }
-        return new BootConfiguration();
-    }
-
-    private static BootConfiguration parse(String options) {
+    public static BootConfiguration parse(String options) {
         U.requireNotNull(options, "options");
 
         Gson gson = new GsonBuilder()

@@ -52,6 +52,7 @@ public class BootstrapDebug {
                 return UpdateMeta.fetchFor(brand).call().getOptions();
             } catch(Exception e) {
                 e.printStackTrace();
+                return null;
             }
         }
         return IOUtils.toString(BootstrapDebug.class.getResourceAsStream("options.json"), U.UTF8);

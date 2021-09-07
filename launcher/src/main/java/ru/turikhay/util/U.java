@@ -914,9 +914,15 @@ public class U {
         }
     }
 
-    private static final Gson gson = new GsonBuilder().create();
+    // Generic exceptions are unchecked
+    @SuppressWarnings("unchecked")
+    public static <T, E extends Exception> T throwChecked(Exception e) throws E {
+        throw (E) e;
+    }
+
+    private static final Lazy<Gson> gson = Lazy.of(() -> new GsonBuilder().create());
 
     public static Gson getGson() {
-        return gson;
+        return gson.get();
     }
 }
