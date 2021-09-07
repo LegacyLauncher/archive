@@ -38,12 +38,13 @@ public class LocalizableHTMLLabel extends LocalizableLabel {
         return labelWidth;
     }
 
-    public void setLabelWidth(int width) {
+    public LocalizableHTMLLabel setLabelWidth(int width) {
         if (width < 0) {
             throw new IllegalArgumentException();
         }
         labelWidth = width;
         setText(path, variables);
+        return this;
     }
 
     public void setText(String path, Object... vars) {

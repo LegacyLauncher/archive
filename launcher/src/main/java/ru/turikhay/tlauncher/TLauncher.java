@@ -39,6 +39,7 @@ import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.SwingLogger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
+import ru.turikhay.tlauncher.user.ElyUser;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.RunnableThread;
@@ -54,9 +55,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static ru.turikhay.tlauncher.managers.ConnectivityManager.*;
 
 public final class TLauncher {
     private static final Logger LOGGER = LogManager.getLogger(TLauncher.class);
@@ -66,6 +70,7 @@ public final class TLauncher {
     private final BootBridge bridge;
     private final BootEventDispatcher dispatcher;
     private final BootConfiguration bootConfig;
+    private final boolean bootConfigEmpty;
 
     private final Configuration config;
     private final LangConfiguration lang;
@@ -78,6 +83,7 @@ public final class TLauncher {
     private final ProfileManager profileManager;
     private final JavaManager javaManager;
     private final MigrationManager migrationManager;
+    private final ConnectivityManager connectivityManager;
 
     private final Downloader downloader;
 
@@ -85,7 +91,10 @@ public final class TLauncher {
 
     private TLauncherFrame frame;
 
-    private long sessionStartTime;;
+    private long sessionStartTime;
+
+    private final Object onReadySync = new Object();
+    private Queue<Runnable> onReadyJobs = new ConcurrentLinkedQueue<>();
 
     private TLauncher(BootBridge bridge, BootEventDispatcher dispatcher) throws Exception {
         U.requireNotNull(bridge, "bridge");
@@ -110,7 +119,17 @@ public final class TLauncher {
 
         SwingUtil.wait(this::reloadLoggerUI);
 
-        this.bootConfig = BootConfiguration.parse(bridge);
+        BootConfiguration bootConfig;
+        boolean bootConfigEmpty = false;
+        try {
+            bootConfig = BootConfiguration.parse(bridge.getOptions());
+        } catch(RuntimeException rE) {
+            LOGGER.warn("Couldn't parse boot config: {}", bridge.getOptions(), rE);
+            bootConfig = new BootConfiguration();
+            bootConfigEmpty = true;
+        }
+        this.bootConfig = bootConfig;
+        this.bootConfigEmpty = bootConfigEmpty;
 
         Repository.updateList(bootConfig.getRepositories());
         Stats.setAllowed(bootConfig.isStatsAllowed());
@@ -140,6 +159,8 @@ public final class TLauncher {
         javaManager = new JavaManager(jreRootDir);
 
         migrationManager = new MigrationManager(this);
+        connectivityManager = initConnectivityManager();
+        connectivityManager.queueChecks();
 
         dispatcher.onBootStateChanged("Loading manager listener", 0.36);
         componentManager.loadComponent(ComponentManagerListenerHelper.class);
@@ -214,6 +235,56 @@ public final class TLauncher {
         preloadUI();
 
         migrationManager.queueMigrationCheck();
+
+        if(elyByCheckEntry != null && profileManager.getAccountManager().getUserSet().getSet().stream().anyMatch(u ->
+                u.getType().equals(ElyUser.TYPE))) {
+            // show notification if Ely accounts are not available
+            elyByCheckEntry.withPriority(500);
+            connectivityManager.showNotificationOnceIfNeeded();
+        }
+
+        executeOnReadyJobs();
+    }
+
+    private static final String PONG_RESPONSE = "Pong!\n";
+    private static final String LAUNCHERMETA = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+    private Entry elyByCheckEntry;
+
+    private ConnectivityManager initConnectivityManager() {
+        List<ConnectivityManager.Entry> entries = new ArrayList<>();
+        if(bootConfigEmpty) {
+            entries.add(
+                    forceFailed("boot").withPriority(Integer.MAX_VALUE)
+            );
+        }
+        entries.add(checkByValidJson(
+                "official_repo",
+                LAUNCHERMETA
+        ).withPriority(1000));
+        elyByCheckEntry = checkByValidJson(
+                "account.ely.by",
+                "https://account.ely.by/api/minecraft/session/profile/ffb3378cd561502fa78a08494be68811"
+        ).withPriority(-500); // will be set to 500 if ely accounts are presented
+        entries.add(elyByCheckEntry);
+        entries.add(checkRepoByValidJson(
+                        "repo",
+                        Repository.EXTRA_VERSION_REPO,
+                        "versions/versions.json"
+        ));
+        for(String pingDomain : Arrays.asList("tlaun.ch", "tlauncher.ru", "cdn.turikhay.ru")) {
+            entries.add(checkByContent(
+                    pingDomain,
+                    String.format(Locale.ROOT, "https://%s/ping.txt", pingDomain),
+                    PONG_RESPONSE
+            ));
+        }
+        // entries with negative priority are pretty much ignored, and only shown when there are other
+        // entries that are not available
+        entries.add(
+                checkRepoByValidJson("official_repo_proxy", Repository.PROXIFIED_REPO, LAUNCHERMETA)
+                .withPriority(-1000)
+        );
+        return new ConnectivityManager(this, entries);
     }
 
     private void migrateFromOldJreConfig() {
@@ -229,6 +300,21 @@ public final class TLauncher {
         config.set("minecraft.cmd", null);
         config.set(JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
         config.set(JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
+    }
+
+    private void executeOnReadyJobs() {
+        synchronized (onReadySync) {
+            Objects.requireNonNull(onReadyJobs, "onReadyJobs");
+            Runnable job;
+            while ((job = onReadyJobs.poll()) != null) {
+                try {
+                    job.run();
+                } catch (Exception e) {
+                    LOGGER.error("OnReadyJob failed: {}", job, e);
+                }
+            }
+            onReadyJobs = null;
+        }
     }
 
     public BootConfiguration getBootConfig() {
@@ -543,6 +629,16 @@ public final class TLauncher {
                 migrationManager.getFrame().updateLocale();
             }
         });
+    }
+
+    public void executeWhenReady(Runnable r) {
+        synchronized (onReadySync) {
+            if(onReadyJobs == null) {
+                r.run();
+            } else {
+                onReadyJobs.offer(r);
+            }
+        }
     }
 
     private TLauncher() {

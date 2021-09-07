@@ -1,5 +1,5 @@
 ext {
-    git_branch = grgit.branch.current()?.name?.replaceAll("[^0-9A-Za-z\\-]", "-")
+    git_branch = grgit?.branch?.current()?.name?.replaceAll("[^0-9A-Za-z\\-]", "-")
     short_brand = System.getenv("SHORT_BRAND")
     product_version = project.version
     full_brand = System.getenv("BRAND") ?: "Legacy"

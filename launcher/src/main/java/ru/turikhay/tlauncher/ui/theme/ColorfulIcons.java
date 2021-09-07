@@ -44,6 +44,7 @@ class ColorfulIcons {
         register("stop-circle-o", RED);
         register("warning", ORANGE);
         register("warning-1", RED);
+        register("plug-1", ORANGE);
     }
 
     private static void register(String iconName, Color color) {
