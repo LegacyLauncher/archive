@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.user;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.authlib.exceptions.AuthenticationException;
 import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +30,12 @@ public class MojangUser extends MojangLikeUser {
     }
 
     private final Lazy<CompletableFuture<MojangUserMigrationStatus>> migrateQueryJob = Lazy.of(() -> CompletableFuture.supplyAsync(() -> {
+        try {
+            getMojangUserAuthentication().logIn();
+        } catch (AuthenticationException e) {
+            LOGGER.warn("Couldn't log in {} before checking the migration status", getDisplayName(), e);
+            return new MojangUserMigrationStatus(e);
+        }
         JsonElement elem;
         try {
             elem = JsonParser.parseString(
