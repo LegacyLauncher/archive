@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui;
 
-import org.apache.http.client.HttpResponseException;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.FixedSizeImage;
@@ -211,37 +210,25 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                         ExtendedPanel bp = new ExtendedPanel();
                         bp.setAlignmentX(Component.RIGHT_ALIGNMENT);
                         bp.setLayout(new BoxLayout(bp, BoxLayout.X_AXIS));
-                        if(status.getError() instanceof HttpResponseException && ((HttpResponseException) status.getError()).getStatusCode() == 401) {
-                            bp.add(new LocalizableHTMLLabel("mojang-migration.your-accounts.list.probably-migrated"));
-                            bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
-                            LocalizableButton yes = new LocalizableButton("mojang-migration.your-accounts.list.probably-migrated.yes");
-                            yes.addActionListener(e -> {
-                                if(Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.yes.remove")) {
-                                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(u);
-                                }
-                            });
-                            bp.add(yes);
-                            bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
-                            LocalizableButton no = new LocalizableButton("mojang-migration.your-accounts.list.probably-migrated.no");
-                            no.addActionListener(e -> {
-                                if(Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.no.open-manager")) {
-                                    TLauncher.getInstance().getFrame().mp.openAccountEditor();
-                                    TLauncher.getInstance().getFrame().mp.accountManager.get().multipane.showTip("add-account-mojang");
-                                    MigrationFrame.this.dispose();
-                                }
-                            });
-                            bp.add(no);
-                        } else {
-                            bp.add(new LocalizableHTMLLabel("mojang-migration.your-accounts.list.error"));
-                            bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
-                            LocalizableButton db = new LocalizableButton("mojang-migration.your-accounts.list.remove.button");
-                            db.addActionListener(e -> {
-                                if(Alert.showLocQuestion("mojang-migration.your-accounts.list.remove")) {
-                                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(u);
-                                }
-                            });
-                            bp.add(db);
-                        }
+                        bp.add(new LocalizableHTMLLabel("mojang-migration.your-accounts.list.probably-migrated"));
+                        bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
+                        LocalizableButton yes = new LocalizableButton("mojang-migration.your-accounts.list.probably-migrated.yes");
+                        yes.addActionListener(e -> {
+                            if(Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.yes.remove")) {
+                                TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(u);
+                            }
+                        });
+                        bp.add(yes);
+                        bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
+                        LocalizableButton no = new LocalizableButton("mojang-migration.your-accounts.list.probably-migrated.no");
+                        no.addActionListener(e -> {
+                            if(Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.no.open-manager")) {
+                                TLauncher.getInstance().getFrame().mp.openAccountEditor();
+                                TLauncher.getInstance().getFrame().mp.accountManager.get().multipane.showTip("add-account-mojang");
+                                MigrationFrame.this.dispose();
+                            }
+                        });
+                        bp.add(no);
                         p.setEast(bp);
                     }
                 }

@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.ui.ConnectivityWarning;
-import ru.turikhay.tlauncher.ui.scenes.SideNotifier;
+import ru.turikhay.tlauncher.ui.notification.Notification;
 import ru.turikhay.util.Lazy;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
@@ -56,9 +56,9 @@ public class ConnectivityManager {
             return;
         }
         launcher.executeWhenReady(() -> SwingUtil.later(() ->
-            launcher.getFrame().mp.defaultScene.sideNotifier.addNotification(
+            launcher.getFrame().mp.defaultScene.notificationPanel.addNotification(
                     NOTIFICATION_ID,
-                    new SideNotifier.Notification("warning", this::showWarningWindow)
+                    new Notification("warning", this::showWarningWindow)
             )
         ));
     }
@@ -87,7 +87,7 @@ public class ConnectivityManager {
         } else {
             warningWindow.requestFocus();
         }
-        launcher.getFrame().mp.defaultScene.sideNotifier.removeNotification(NOTIFICATION_ID);
+        launcher.getFrame().mp.defaultScene.notificationPanel.removeNotification(NOTIFICATION_ID);
     }
 
     private void updateWarningWindow() {

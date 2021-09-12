@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.notice.MainNoticePanel;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeSidePanel;
+import ru.turikhay.tlauncher.ui.notification.NotificationPanel;
 import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
@@ -27,7 +28,7 @@ public class DefaultScene extends PseudoScene {
     private ExtendedPanel sidePanelComp;
     private Direction lfDirection;
     public final DelayedComponent<MainNoticePanel> noticePanel;
-    public final SideNotifier sideNotifier;
+    public final NotificationPanel notificationPanel;
 
     public DefaultScene(MainPane main) {
         super(main);
@@ -75,8 +76,8 @@ public class DefaultScene extends PseudoScene {
                 updateSidePanel();
             }
         });
-        this.sideNotifier = new SideNotifier();
-        add(sideNotifier);
+        this.notificationPanel = new NotificationPanel();
+        add(notificationPanel);
 
         updateDirection();
     }
@@ -238,12 +239,12 @@ public class DefaultScene extends PseudoScene {
             case TOP_LEFT:
             case TOP:
             case TOP_RIGHT:
-                sn_y = getHeight() - sideNotifier.height;
+                sn_y = getHeight() - notificationPanel.height;
                 break;
             default:
                 sn_y = 0;
         }
-        sideNotifier.setBounds(0, sn_y, getWidth(), sideNotifier.height);
+        notificationPanel.setBounds(0, sn_y, getWidth(), notificationPanel.height);
     }
 
     public DefaultScene.SidePanel getSidePanel() {

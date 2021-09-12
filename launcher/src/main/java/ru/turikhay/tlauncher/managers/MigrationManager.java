@@ -13,7 +13,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.MigrationFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.ui.scenes.SideNotifier;
+import ru.turikhay.tlauncher.ui.notification.Notification;
 import ru.turikhay.tlauncher.user.*;
 import ru.turikhay.util.Lazy;
 import ru.turikhay.util.MinecraftUtil;
@@ -127,7 +127,7 @@ public class MigrationManager {
         if(this.frame != null) {
             return;
         }
-        SideNotifier.Notification notification = new SideNotifier.Notification(
+        Notification notification = new Notification(
                 manifest.value()
                         .filter(m -> m.data.hasForcedMigrationDate())
                         .map(m -> "migration-icon-clock")
@@ -135,12 +135,12 @@ public class MigrationManager {
                 this::showMigrationFrame
         );
         SwingUtil.later(() ->
-                l.getFrame().mp.defaultScene.sideNotifier.addNotification("mojang-migration", notification)
+                l.getFrame().mp.defaultScene.notificationPanel.addNotification("mojang-migration", notification)
         );
     }
 
     private void removeMigrationNotification() {
-        l.getFrame().mp.defaultScene.sideNotifier.removeNotification("mojang-migration");
+        l.getFrame().mp.defaultScene.notificationPanel.removeNotification("mojang-migration");
     }
 
     public MigrationFrame getFrame() {

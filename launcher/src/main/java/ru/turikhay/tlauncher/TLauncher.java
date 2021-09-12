@@ -3,12 +3,7 @@ package ru.turikhay.tlauncher;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +36,6 @@ import ru.turikhay.tlauncher.ui.logger.SwingLogger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.user.ElyUser;
 import ru.turikhay.util.*;
-import ru.turikhay.util.async.AsyncThread;
 import ru.turikhay.util.async.RunnableThread;
 
 import javax.net.ssl.*;
@@ -49,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
@@ -192,44 +185,6 @@ public final class TLauncher {
             } catch(Exception e) {
                 // ignore
             }
-        }
-
-        final int testIteration = 1;
-        if(config.getInteger("connection.testPassed") != testIteration) {
-            AsyncThread.execute(new Runnable() {
-                @Override
-                public void run() {
-                    Set<String> urlList = new LinkedHashSet<>();
-                    urlList.add("https://s3.amazonaws.com/Minecraft.Download/versions/versions.json");
-                    for (String extraRepo : Static.getExtraRepo()) {
-                        urlList.add(extraRepo + "versions/versions.json");
-                    }
-                    urlList.add("https://account.ely.by/");
-                    urlList.add("https://tlauncher.ru/test.txt");
-                    urlList.add("https://launchermeta.mojang.com/mc/game/version_manifest.json");
-                    for (String _url : urlList) {
-                        URL url = null;
-                        String response;
-                        try {
-                            url = new URL(_url);
-                            response = IOUtils.toString(url, StandardCharsets.UTF_8);
-                            if (_url.endsWith("json") && !response.startsWith("{")) {
-                                throw new IOException("invalid json response");
-                            }
-                            LOGGER.debug("Connection OK: {}", _url);
-                        } catch (Exception e) {
-                            Sentry.capture(new EventBuilder()
-                                    .withLevel(Event.Level.WARNING)
-                                    .withMessage("test connection failed: " + _url)
-                                    .withSentryInterface(new ExceptionInterface(e))
-                                    .withExtra("ip", U.resolveHost(url))
-                            );
-                            LOGGER.warn("Test connection to {} failed", _url, e);
-                        }
-                    }
-                    config.set("connection.testPassed", testIteration);
-                }
-            });
         }
 
         preloadUI();

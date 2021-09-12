@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.tlauncher.minecraft.PromotedServerDeserializer;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeDeserializer;
+import ru.turikhay.tlauncher.ui.notification.UrlNotificationObject;
 import ru.turikhay.util.U;
 
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public final class BootConfiguration {
     private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
     private Map<String, List<PromotedServer>> promotedServers = new HashMap<>(), outdatedPromotedServers = new HashMap<>();
     private Map<String, String> feedback = new HashMap<>();
+    private Map<String, UrlNotificationObject> notifications = new HashMap<>();
     private int allowNoticeDisable;
 
     public boolean isStatsAllowed() {
@@ -51,6 +53,10 @@ public final class BootConfiguration {
 
     public Map<String, String> getFeedback() {
         return feedback;
+    }
+
+    public Map<String, UrlNotificationObject> getNotifications() {
+        return notifications;
     }
 
     public boolean isAllowNoticeDisable(UUID userId) {
