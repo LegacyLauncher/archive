@@ -26,8 +26,8 @@ public final class Static {
     }
 
     private static String[] generateLangList() {
-        LinkedHashSet<String> legacy_langs = new LinkedHashSet<>(Arrays.asList("en_US", "ru_RU", "uk_UA"));
-        LinkedHashSet<String> default_langs = new LinkedHashSet<>((Arrays.asList("en_US", "pt_BR", "vi", "in_ID", "de_DE", "pl_PL", "ro_RO", "fr_FR", "it_IT", "tr_TR", "zh_CN")));
+        LinkedHashSet<String> legacy_langs = new LinkedHashSet<>(Arrays.asList("en_US", "ru_RU", "uk_UA", "id_ID"));
+        LinkedHashSet<String> default_langs = new LinkedHashSet<>((Arrays.asList("en_US", "pt_BR", "vi", "id_ID", "de_DE", "pl_PL", "ro_RO", "fr_FR", "it_IT", "tr_TR", "zh_CN")));
 
         if (isLegacy()) {
             return legacy_langs.toArray(new String[0]);

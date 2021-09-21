@@ -7,6 +7,9 @@ import java.util.Locale;
 
 public class LocaleConverter implements StringConverter<Locale> {
     public String toString(Locale from, Locale format) {
+        if(from == null) {
+            return null;
+        }
         String displayLang;
         try {
             displayLang = from.getDisplayLanguage(format);
@@ -15,7 +18,7 @@ public class LocaleConverter implements StringConverter<Locale> {
         } catch (Exception e) {
             displayLang = from.getDisplayLanguage(Locale.US);
         }
-        return from == null ? null : displayLang + " (" + from + ")";
+        return displayLang + " (" + from + ")";
     }
 
     public String toString(Locale from) {

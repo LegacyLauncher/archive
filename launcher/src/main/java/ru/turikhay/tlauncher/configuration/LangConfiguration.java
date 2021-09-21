@@ -157,23 +157,28 @@ public final class LangConfiguration {
         }
     }
 
-    private Properties getTranslations(Locale locale) {
-        if (locale == null) {
+    private Properties getTranslations(Locale localeObj) {
+        if (localeObj == null) {
             return null;
         }
 
-        Properties translations = translationsMap.get(locale);
+        String localeStr = localeObj.toString();
+        if(localeStr.equals("id_ID")) {
+            localeStr = "in_ID";
+        }
+
+        Properties translations = translationsMap.get(localeObj);
 
         if (translations == null) {
             InputStream in = null;
             try {
-                in = LangConfiguration.class.getResourceAsStream("/lang/lang_" + locale + ".properties");
+                in = LangConfiguration.class.getResourceAsStream("/lang/lang_" + localeStr + ".properties");
                 if (in == null) {
-                    throw new NullPointerException("could not find translations for " + locale);
+                    throw new NullPointerException("could not find translations for " + localeStr);
                 }
                 translations = SimpleConfiguration.loadFromStream(in);
             } catch (Exception e) {
-                LOGGER.warn("Could not load translations for {}", locale, e);
+                LOGGER.warn("Could not load translations for {}", localeStr, e);
                 return null;
             } finally {
                 U.close(in);
