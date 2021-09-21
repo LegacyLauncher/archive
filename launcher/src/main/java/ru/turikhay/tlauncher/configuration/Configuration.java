@@ -1,6 +1,9 @@
 package ru.turikhay.tlauncher.configuration;
 
 import com.github.zafarkhaja.semver.Version;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
 import joptsimple.OptionSet;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -19,7 +22,7 @@ import java.util.Map.Entry;
 
 public class Configuration extends SimpleConfiguration {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final List<Locale> DEFAULT_LOCALES = getDefaultLocales();
+    private static final Lazy<List<Locale>> DEFAULT_LOCALES = Lazy.of(Configuration::getDefaultLocales);
 
     private ConfigurationDefaults defaults;
     private Map<String, Object> constants;
@@ -129,10 +132,10 @@ public class Configuration extends SimpleConfiguration {
             locale = Locale.getDefault();
         }
 
-        if (!DEFAULT_LOCALES.contains(locale)) {
+        if (!DEFAULT_LOCALES.get().contains(locale)) {
             LOGGER.debug("We don't have localization for {}", locale);
 
-            if (isUSSRLocale(locale.toString()) && DEFAULT_LOCALES.contains(LangConfiguration.ru_RU)) {
+            if (isUSSRLocale(locale.toString()) && DEFAULT_LOCALES.get().contains(LangConfiguration.ru_RU)) {
                 locale = LangConfiguration.ru_RU;
             } else {
                 locale = Locale.US;
@@ -179,7 +182,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public Locale[] getLocales() {
-        return DEFAULT_LOCALES.toArray(new Locale[DEFAULT_LOCALES.size()]);
+        return DEFAULT_LOCALES.get().toArray(new Locale[0]);
     }
 
     public Configuration.ActionOnLaunch getActionOnLaunch() {
@@ -382,12 +385,16 @@ public class Configuration extends SimpleConfiguration {
     }
 
     private static List<Locale> getDefaultLocales() {
-        ArrayList l = new ArrayList();
+        ArrayList<Locale> l = new ArrayList<>();
         String[] ll = Static.getLangList();
         for (String locale : ll) {
             Locale loc = U.getLocale(locale);
             if (loc == null) {
-                throw new NullPointerException("unknown locale: " + locale);
+                LOGGER.warn("Default locale is unavailable: {}", locale);
+                Sentry.capture(new EventBuilder()
+                        .withLevel(Event.Level.WARNING)
+                        .withMessage("default locale is unavailable: " + locale)
+                );
             }
             l.add(loc);
         }

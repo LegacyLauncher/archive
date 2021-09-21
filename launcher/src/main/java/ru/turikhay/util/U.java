@@ -4,6 +4,7 @@ import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.async.ExtendedThread;
@@ -814,14 +815,12 @@ public class U {
         if(tag == null) {
             return null;
         }
-
-        for(Locale locale : Locale.getAvailableLocales()) {
-            if(tag.equalsIgnoreCase(locale.toString())) {
-                return locale;
-            }
+        try {
+            return LocaleUtils.toLocale(tag);
+        } catch(RuntimeException e) {
+            LOGGER.warn("Couldn't parse locale: {}", tag, e);
+            return null;
         }
-
-        return null;
     }
 
     public static <T> List<T> asListOf(Class<T> of, Object... objects) {
