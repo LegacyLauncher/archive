@@ -13,7 +13,7 @@ plugins {
     id "org.openjfx.javafxplugin"
 }
 
-version '1.130.1'
+version '1.130.2'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
