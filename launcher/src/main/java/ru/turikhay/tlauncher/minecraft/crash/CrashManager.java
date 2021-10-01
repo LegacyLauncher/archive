@@ -177,6 +177,9 @@ public final class CrashManager {
 
     public void cancel() {
         cancelled = true;
+        if(watchdog.executor != null) {
+            watchdog.executor.interrupt();
+        }
     }
 
     private void addAction(BindableAction action) {
@@ -710,7 +713,7 @@ public final class CrashManager {
                 writeDelimiter();
             }
 
-            if (DxDiag.canExecute() && TLauncher.getInstance() != null && !TLauncher.getInstance().isDebug()) {
+            if (DxDiag.canExecute() && TLauncher.getInstance() != null /*&& !TLauncher.getInstance().isDebug()*/) {
                 try {
                     LOGGER.info(DxDiag.getInstanceTask().get());
                 } catch (Exception e) {

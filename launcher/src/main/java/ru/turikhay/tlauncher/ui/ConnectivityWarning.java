@@ -2,11 +2,9 @@ package ru.turikhay.tlauncher.ui;
 
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.ConnectivityManager;
+import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
-import ru.turikhay.tlauncher.ui.loc.LocalizableHTMLLabel;
-import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import ru.turikhay.tlauncher.ui.loc.*;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
@@ -31,7 +29,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
     private final EditorPane body;
     private final ExtendedPanel entriesPanel;
 
-    private boolean noConnection;
+    private boolean tlaunchNotAvailable, noConnection;
 
     public ConnectivityWarning() {
         setIconImages(SwingUtil.createFaviconList("warning"));
@@ -82,6 +80,12 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
     public void updateEntries(List<ConnectivityManager.Entry> entries) {
         entriesPanel.removeAll();
 
+        List<String> hosts = entries.stream()
+                .flatMap(e -> e.getHosts().stream())
+                .sorted()
+                .collect(Collectors.toList());
+
+        tlaunchNotAvailable = entries.stream().anyMatch(e -> e.getName().equals("tlaun.ch") && !e.isReachable());
         noConnection = entries.stream().allMatch(e -> e.isDone() && !e.isReachable());
         List<ConnectivityManager.Entry> unreachableEntries = entries.stream()
                 .filter(e -> !e.isReachable())
@@ -97,9 +101,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
-        if(noConnection || unreachableEntries.isEmpty()) {
-            updateLocale();
-        } else {
+        if (!noConnection && !unreachableEntries.isEmpty()) {
             c.gridy++;
             entriesPanel.add(new JSeparator(), c);
             c.gridy++;
@@ -173,8 +175,21 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
             // make the contents stick to the top
             c.weighty = 1.0;
             c.gridy++;
-            entriesPanel.add(Box.createRigidArea(new Dimension(1, 1)), c);
+            if(hosts.isEmpty()) {
+                entriesPanel.add(Box.createRigidArea(new Dimension(1, 1)), c);
+            } else {
+                entriesPanel.add(Box.createRigidArea(new Dimension(1, BORDER)), c);
+                c.weighty = 0.0;
+                c.gridy++;
+
+                BorderPanel hostsPanel = new BorderPanel();
+                LocalizableButton hostsButton = new LocalizableButton("connectivity.warning.hosts.button");
+                hostsButton.addActionListener(e -> Alert.showMessage("", "", String.join("\n", hosts)));
+                hostsPanel.setEast(hostsButton);
+                entriesPanel.add(hostsPanel, c);
+            }
         }
+        updateLocale();
         SwingUtil.later(() -> {
             revalidate();
             repaint();
@@ -184,22 +199,28 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
     @Override
     public void updateLocale() {
         setTitle(Localizable.get("connectivity.warning.title"));
-        if(noConnection) {
-            body.setText(String.format(Locale.ROOT, "%s <a href=\"%s\">%s</a>",
-                    Localizable.get("connectivity.warning.body.empty"),
-                    TLauncher.getInstance().getSettings().isUSSRLocale() ?
-                            "https://tlaun.ch/support/noconnectivity/ru" : "https://tlaun.ch/support/noconnectivity",
-                    Localizable.get("connectivity.warning.body.link")
-            ));
-        } else {
-            body.setText(String.format(Locale.ROOT, "%s <a href=\"%s\">%s</a>",
-                    Localizable.get("connectivity.warning.body.text"),
-                    TLauncher.getInstance().getSettings().isUSSRLocale() ?
-                            "https://tlaun.ch/support/connectivity/ru" : "https://tlaun.ch/support/connectivity",
-                    Localizable.get("connectivity.warning.body.link")
-            ));
-        }
+
+        final ConnectivityType type = noConnection ? ConnectivityType.NONE : ConnectivityType.SOME;
+        final String bodySuffix = noConnection ? "empty" : "text";
+
+        body.setText(String.format(Locale.ROOT, "%s <a href=\"%s\">%s</a>",
+                Localizable.get("connectivity.warning.body." + bodySuffix),
+                generateConnectivityLink(type),
+                Localizable.get("connectivity.warning.body.link")
+        ));
         body.setPreferredSize(new Dimension(WIDTH_BORDERED, SwingUtil.getPrefHeight(body, WIDTH_BORDERED)));
         body.setMaximumSize(new Dimension(WIDTH_BORDERED, SwingUtil.getPrefHeight(body, WIDTH_BORDERED)));
+    }
+
+    private enum ConnectivityType { SOME, NONE }
+    private String generateConnectivityLink(ConnectivityType type) {
+        final String wikiLangPrefix = TLauncher.getInstance().getSettings().isUSSRLocale() ? "" : "en:";
+        final String linkPrefix = tlaunchNotAvailable ? "https://web.archive.org/web/" : "";
+        return String.format(Locale.ROOT,
+                "%shttps://wiki.tlaun.ch/%sconnectivity:%s",
+                linkPrefix,
+                wikiLangPrefix,
+                type.name().toLowerCase(Locale.ROOT)
+        );
     }
 }
