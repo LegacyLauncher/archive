@@ -919,6 +919,17 @@ public class U {
         throw (E) e;
     }
 
+    public static String parseHost(String url) {
+        if(url == null) {
+            return null;
+        }
+        try {
+            return new URL(url).getHost();
+        } catch (MalformedURLException e) {
+            return null;
+        }
+    }
+
     private static final Lazy<Gson> gson = Lazy.of(() -> new GsonBuilder().create());
 
     public static Gson getGson() {

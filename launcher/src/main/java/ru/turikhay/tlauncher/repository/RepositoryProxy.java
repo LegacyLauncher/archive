@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class RepositoryProxy {
     public static final String[] PROXIFIED_HOSTS = new String[]{
@@ -46,6 +48,11 @@ public class RepositoryProxy {
         @Override
         public URLConnection get(String path, int timeout, Proxy proxy) throws IOException {
             return get(path, timeout, proxy, 1);
+        }
+
+        @Override
+        public List<String> getHosts() {
+            return Collections.singletonList(U.parseHost(proxyPrefix));
         }
 
         public URLConnection get(String path, int timeout, Proxy proxy, int attempt) throws IOException {

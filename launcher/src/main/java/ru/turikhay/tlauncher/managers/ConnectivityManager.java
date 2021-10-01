@@ -19,12 +19,12 @@ import ru.turikhay.util.async.AsyncThread;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.security.SecureRandom;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ConnectivityManager {
     private static final Logger LOGGER = LogManager.getLogger(ConnectivityManager.class);
@@ -197,20 +197,34 @@ public class ConnectivityManager {
 
     public static class Entry {
         private final String name;
+        private final Set<String> hosts;
         private final Lazy<CompletableFuture<Boolean>> future;
 
-        private Entry(String name, EntryChecker checker) {
+        private Entry(String name, Collection<String> hosts, EntryChecker checker) {
             this.name = name;
+            this.hosts = Collections.unmodifiableSet(new LinkedHashSet<>(hosts));
             this.future = Lazy.of(() ->
                     CompletableFuture.supplyAsync(
-                            checker::checkConnection,
+                            () -> new SecureRandom().nextInt(2) == 1? Boolean.FALSE : Boolean.TRUE, //checker::checkConnection,
                             AsyncThread.SHARED_SERVICE
                     )
             );
         }
 
+        private Entry(String name, Stream<String> hostStream, EntryChecker checker) {
+            this(name, hostStream.collect(Collectors.toList()), checker);
+        }
+
+        private Entry(String name, String host, EntryChecker checker) {
+            this(name, Collections.singletonList(host), checker);
+        }
+
         public String getName() {
             return name;
+        }
+
+        public Set<String> getHosts() {
+            return hosts;
         }
 
         public boolean isDone() {
@@ -241,19 +255,23 @@ public class ConnectivityManager {
     }
 
     public static Entry checkByContent(String name, String url, String expectedContent) {
-        return new Entry(name, new HttpContentChecker(url, expectedContent));
+        return new Entry(name, U.parseHost(url), new HttpContentChecker(url, expectedContent));
     }
 
     public static Entry checkByValidJson(String name, String url) {
-        return new Entry(name, new JsonContentChecker(url));
+        return new Entry(name, U.parseHost(url), new JsonContentChecker(url));
     }
 
     public static Entry checkRepoByValidJson(String name, Repository repository, String path) {
-        return new Entry(name, new RepoEntryJsonChecker(repository, path));
+        return new Entry(
+                name,
+                repository.getList().getRelevant().getList().stream().flatMap(l -> l.getHosts().stream()),
+                new RepoEntryJsonChecker(repository, path)
+        );
     }
 
     public static Entry forceFailed(String name) {
-        return new Entry(name, () -> Boolean.FALSE);
+        return new Entry(name, Collections.emptyList(), () -> Boolean.FALSE);
     }
 
 }
