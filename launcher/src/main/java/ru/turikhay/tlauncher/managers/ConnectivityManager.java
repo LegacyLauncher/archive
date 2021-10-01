@@ -19,7 +19,6 @@ import ru.turikhay.util.async.AsyncThread;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -205,7 +204,7 @@ public class ConnectivityManager {
             this.hosts = Collections.unmodifiableSet(new LinkedHashSet<>(hosts));
             this.future = Lazy.of(() ->
                     CompletableFuture.supplyAsync(
-                            () -> new SecureRandom().nextInt(2) == 1? Boolean.FALSE : Boolean.TRUE, //checker::checkConnection,
+                            checker::checkConnection,
                             AsyncThread.SHARED_SERVICE
                     )
             );
