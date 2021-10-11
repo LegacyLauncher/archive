@@ -8,14 +8,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.images.MultiResInterface;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
+import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -129,19 +130,28 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     }
 
     private Image renderImage(Image image) {
-        if(MultiResInterface.INSTANCE.isEnabled()) {
+        /*if(MultiResInterface.INSTANCE.isEnabled()) {
             return renderMultiResImage(image);
-        } else {
+        } else {*/
             return renderScaleImage(image);
-        }
-    }
-
-    private Image renderMultiResImage(Image image) {
-        return MultiResInterface.INSTANCE.createImage(image);
+        //}
     }
 
     private Image renderScaleImage(Image image) {
-        return image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+        double  realWidth = getWidth() * SwingUtil.getScalingFactor(),
+                realHeight = getHeight() * SwingUtil.getScalingFactor();
+        BufferedImage scaledImage = new BufferedImage((int) realWidth, (int) realHeight, BufferedImage.TYPE_3BYTE_BGR);
+        Graphics2D g = (Graphics2D) scaledImage.getGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        try {
+            g.drawImage(image, 0, 0, scaledImage.getWidth(), scaledImage.getHeight(), null);
+        } catch (OutOfMemoryError oom) {
+            scaledImage = null;
+            g = null;
+            ExceptionHandler.reduceMemory(oom);
+            return Images.ONE_PIX.get();
+        }
+        return scaledImage;
     }
 
     @Override

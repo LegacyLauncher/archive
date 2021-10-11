@@ -66,7 +66,14 @@ public class Configuration extends SimpleConfiguration {
         LOGGER.info("Reading configuration from: {}", file);
 
         Configuration config = new Configuration(file, set);
-        config.firstRun = doesntExist;
+        if (doesntExist) {
+            config.firstRun = true;
+        } else {
+            if(config.getBoolean("firstRun")) {
+                config.firstRun = true;
+                config.set("firstRun", null);
+            }
+        }
         return config;
     }
 

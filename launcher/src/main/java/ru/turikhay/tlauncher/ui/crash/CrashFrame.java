@@ -22,6 +22,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Locale;
 
 public final class CrashFrame extends VActionFrame {
     private static final Logger LOGGER = LogManager.getLogger(CrashFrame.class);
@@ -161,7 +162,7 @@ public final class CrashFrame extends VActionFrame {
         }
 
         if(askHelp) {
-            if(isCustomVersionCrashed()) {
+            if(isProbablyBadVersionCrashed()) {
                 LOGGER.info("Custom local version is crashed. Disabling help offer.");
             } else {
                 ++c.gridx;
@@ -193,21 +194,24 @@ public final class CrashFrame extends VActionFrame {
         getFooter().add(buttonPanel, c);
     }
 
-    private boolean isCustomVersionCrashed() {
+    private boolean isProbablyBadVersionCrashed() {
+        String versionId = crash.getManager().getLauncher().getVersion();
+
+        if(versionId.toLowerCase(Locale.ROOT).contains("forge")
+                || versionId.toLowerCase(Locale.ROOT).contains("fabric")) {
+            return false; // force or fabric? probably ok
+        }
         VersionSyncInfo versionSyncInfo;
 
         try {
             versionSyncInfo = U.requireNotNull(TLauncher.getInstance()
                     .getVersionManager()
-                    .getVersionSyncInfo(
-                            crash.getManager().getLauncher().getVersion()
-                    ));
+                    .getVersionSyncInfo(versionId));
         } catch(RuntimeException rE) {
-            // possible NPEs
             LOGGER.warn("Couldn't detect if this crash is occurred in the custom version", rE);
-            return false;
+            return false; // possible NPEs, fallback to ok
         }
 
-        return !versionSyncInfo.hasRemote(); // no remote -> is local only
+        return !versionSyncInfo.hasRemote(); // local only -> probably not ok
     }
 }
