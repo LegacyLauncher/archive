@@ -13,7 +13,7 @@ plugins {
     id "org.openjfx.javafxplugin"
 }
 
-version '1.131.1'
+version '1.132.0'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
@@ -73,11 +73,11 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":bridge"))
 
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.1')
-    testImplementation('org.mockito:mockito-core:3.7.7')
-    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.7.1')
-    testRuntimeOnly('org.mockito:mockito-junit-jupiter:3.7.7')
-    testRuntimeOnly('org.mockito:mockito-inline:3.7.7')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.8.1')
+    testImplementation('org.mockito:mockito-core:3.12.4')
+    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.8.1')
+    testRuntimeOnly('org.mockito:mockito-junit-jupiter:3.12.4')
+    testRuntimeOnly('org.mockito:mockito-inline:3.12.4')
 }
 
 task cleanLauncherRepo(type: Delete) {

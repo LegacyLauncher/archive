@@ -106,7 +106,7 @@ public class Images {
         }
     }
 
-    private static final Lazy<BufferedImage> ONE_PIX = Lazy.of(() ->
+    public static final Lazy<BufferedImage> ONE_PIX = Lazy.of(() ->
             new BufferedImage(1, 1, BufferedImage.TYPE_4BYTE_ABGR)
     );
 
