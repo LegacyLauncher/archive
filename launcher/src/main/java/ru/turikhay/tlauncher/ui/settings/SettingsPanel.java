@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
 import ru.turikhay.tlauncher.ui.converter.DirectionConverter;
 import ru.turikhay.tlauncher.ui.converter.LoggerTypeConverter;
+import ru.turikhay.tlauncher.ui.converter.SeparateDirsConverter;
 import ru.turikhay.tlauncher.ui.editor.*;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
@@ -140,7 +141,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                 }
             }
         });
-        useSeparateDir = new EditorFieldHandler("minecraft.gamedir.separate", new EditorCheckBox("settings.client.gamedir.separate"));
+        useSeparateDir = new EditorFieldHandler("minecraft.gamedir.separate", new EditorComboBox<>(new SeparateDirsConverter(true), Configuration.SeparateDirs.values()));
         minecraftTab.add(new EditorPair("settings.client.gamedir.label", new EditorHandler[]{directory, useSeparateDir}));
         resolution = new EditorFieldHandler("minecraft.size", new EditorResolutionField("settings.client.resolution.width", "settings.client.resolution.height", global.getDefaultClientWindowSize(), false));
         fullscreen = new EditorFieldHandler("minecraft.fullscreen", new EditorCheckBox("settings.client.resolution.fullscreen"));
@@ -505,7 +506,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
     public void logginingIn() throws LoginException {
         boolean ok;
-        if(anyChanges()) {
+        if(!tlauncher.getSettings().isFirstRun() && anyChanges()) {
             ok = askToSaveChanges();
         } else {
             ok = checkValues();

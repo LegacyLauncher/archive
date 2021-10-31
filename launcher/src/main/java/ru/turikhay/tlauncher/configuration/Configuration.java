@@ -205,6 +205,14 @@ public class Configuration extends SimpleConfiguration {
         set("gui.logger", loggerType.toString());
     }
 
+    public SeparateDirs getSeparateDirs() {
+        return SeparateDirs.get(get("minecraft.gamedir.separate"));
+    }
+
+    public void setSeparateDirs(SeparateDirs separateDirs) {
+        set("minecraft.gamedir.separate", separateDirs.toString());
+    }
+
     public int[] getClientWindowSize() {
         String plainValue = get("minecraft.size");
         int[] value = new int[2];
@@ -505,6 +513,46 @@ public class Configuration extends SimpleConfiguration {
 
         public static LoggerType getDefault() {
             return NONE;
+        }
+    }
+
+    public enum SeparateDirs {
+        FAMILY,
+        VERSION,
+        NONE;
+
+        public static boolean parse(String val) {
+            if (val != null) {
+                SeparateDirs[] var4;
+                int var3 = (var4 = values()).length;
+
+                for (int var2 = 0; var2 < var3; ++var2) {
+                    SeparateDirs cur = var4[var2];
+                    if (cur.toString().equalsIgnoreCase(val)) {
+                        return true;
+                    }
+                }
+
+                return val.equals("true") || val.equals("false");
+            }
+            return false;
+        }
+
+        public static SeparateDirs get(String val) {
+            SeparateDirs[] var4;
+            int var3 = (var4 = values()).length;
+
+            for (int var2 = 0; var2 < var3; ++var2) {
+                SeparateDirs cur = var4[var2];
+                if (cur.toString().equalsIgnoreCase(val)) {
+                    return cur;
+                }
+            }
+
+            if (val.equals("true")) return SeparateDirs.FAMILY;
+            else if (val.equals("false")) return SeparateDirs.NONE;
+
+            return null;
         }
     }
 }

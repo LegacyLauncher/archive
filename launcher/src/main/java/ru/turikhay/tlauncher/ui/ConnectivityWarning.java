@@ -80,7 +80,8 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
     public void updateEntries(List<ConnectivityManager.Entry> entries) {
         entriesPanel.removeAll();
 
-        List<String> hosts = entries.stream()
+        List<String> unavailableHosts = entries.stream()
+                .filter(e -> !e.isReachable())
                 .flatMap(e -> e.getHosts().stream())
                 .sorted()
                 .collect(Collectors.toList());
@@ -175,7 +176,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
             // make the contents stick to the top
             c.weighty = 1.0;
             c.gridy++;
-            if(hosts.isEmpty()) {
+            if(unavailableHosts.isEmpty()) {
                 entriesPanel.add(Box.createRigidArea(new Dimension(1, 1)), c);
             } else {
                 entriesPanel.add(Box.createRigidArea(new Dimension(1, BORDER)), c);
@@ -184,7 +185,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
 
                 BorderPanel hostsPanel = new BorderPanel();
                 LocalizableButton hostsButton = new LocalizableButton("connectivity.warning.hosts.button");
-                hostsButton.addActionListener(e -> Alert.showMessage("", "", String.join("\n", hosts)));
+                hostsButton.addActionListener(e -> Alert.showMessage("", "", String.join("\n", unavailableHosts)));
                 hostsPanel.setEast(hostsButton);
                 entriesPanel.add(hostsPanel, c);
             }

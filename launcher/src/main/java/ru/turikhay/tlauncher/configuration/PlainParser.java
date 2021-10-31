@@ -34,6 +34,10 @@ class PlainParser {
                         if (!Configuration.LoggerType.parse(value)) {
                             throw new ParseException("Cannot parse LoggerType");
                         }
+                    } else if (defaultValue instanceof Configuration.SeparateDirs) {
+                        if (!Configuration.SeparateDirs.parse(value)) {
+                            throw new ParseException("Cannot parse SeparateDirs");
+                        }
                     } else if (defaultValue instanceof UUID) {
                         U.requireNotNull(UUID.fromString(value), "uuid");
                     }

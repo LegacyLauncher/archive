@@ -1,5 +1,5 @@
 {
-  "revision": 25,
+  "revision": 26,
   "required": "1.122.3",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap", "__MACOSX"],
   "variables": {
@@ -75,6 +75,40 @@
     }
   ],
   "signatures": [
+    {
+      "name": "fabric-api",
+      "pattern": "^net\\.fabricmc\\.loader\\.discovery\\.ModResolutionException: Could not find required mod: .+ requires \\{fabric @ \\[\\*\\]\\}$",
+      "title": {
+        "ru_RU": "Установите Fabric API",
+        "en_US": "Fabric API is missing"
+      },
+      "body": {
+        "ru_RU": "Для большинства модов Fabric нужно установить отдельный мод: Fabric API. Установите его с CurseForge или Modrinth. Выберите версию, которая совпадает с вашим Minecraft.",
+        "en_US": "Fabric mods require Fabric API mod to be installed separately. You can find it on CurseForge or Modrinth. Don't forget you need to pick one that matches your Minecraft version."
+      },
+      "buttons": [
+        {
+          "name": "curseforge",
+          "text": {
+            "ru_RU": "CurseForge",
+            "en_US": "CurseForge"
+          },
+          "actions": [
+            "browse --www https://www.curseforge.com/minecraft/mc-mods/fabric-api/files"
+          ]
+        },
+        {
+          "name": "modrinth",
+          "text": {
+            "ru_RU": "Modrinth",
+            "en_US": "Modrinth"
+          },
+          "actions": [
+            "browse --www https://modrinth.com/mod/fabric-api/versions"
+          ]
+        }
+      ]
+    },
     {
       "name": "char-png",
       "pattern": "java\\.lang\\.SecurityException: SHA-256 digest error for (?:.+)\\.png",
