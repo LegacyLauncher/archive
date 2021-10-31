@@ -140,10 +140,12 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     private Image renderScaleImage(Image image) {
         double  realWidth = getWidth() * SwingUtil.getScalingFactor(),
                 realHeight = getHeight() * SwingUtil.getScalingFactor();
-        BufferedImage scaledImage = new BufferedImage((int) realWidth, (int) realHeight, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics2D g = (Graphics2D) scaledImage.getGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        BufferedImage scaledImage;
+        Graphics2D g;
         try {
+            scaledImage = new BufferedImage((int) realWidth, (int) realHeight, BufferedImage.TYPE_3BYTE_BGR);
+            g = (Graphics2D) scaledImage.getGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g.drawImage(image, 0, 0, scaledImage.getWidth(), scaledImage.getHeight(), null);
         } catch (OutOfMemoryError oom) {
             scaledImage = null;

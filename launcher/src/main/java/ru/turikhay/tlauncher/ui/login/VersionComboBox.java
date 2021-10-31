@@ -67,6 +67,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                 if(loginForm.scene.settingsForm.isLoaded()) {
                     ((JREComboBox) loginForm.scene.settingsForm.get().jre.getComponent())
                             .selectedVersionChanged(selected);
+                    loginForm.scene.settingsForm.get().useSeparateDir.getComponent().repaint();
                 }
             }
         });

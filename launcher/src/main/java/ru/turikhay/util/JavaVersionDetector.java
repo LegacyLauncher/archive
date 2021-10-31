@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -99,7 +100,19 @@ public class JavaVersionDetector {
         } finally {
             process.destroy();
         }
-        throw new JavaVersionNotDetectedException();
+        int exitCode;
+        try {
+            exitCode = process.exitValue();
+        } catch (IllegalThreadStateException e) {
+            throw new JavaVersionNotDetectedException("output closed");
+        }
+        if (exitCode == 0) {
+            throw new JavaVersionNotDetectedException("no result");
+        } else {
+            throw new JavaVersionNotDetectedException(String.format(Locale.ROOT,
+                    "exit code: 0x%08X (%d)", exitCode, exitCode
+            ));
+        }
     }
 
 }

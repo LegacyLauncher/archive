@@ -442,10 +442,10 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new MinecraftException(true, "Insufficient space " + rootDir.getAbsolutePath() + "(" + freeSpace + ")", "free-space", rootDir);
         }
 
-        if (settings.getBoolean("minecraft.gamedir.separate")) {
-            gameDir = new File(rootDir, "home/" + family);
-        } else {
-            gameDir = rootDir;
+        switch (settings.getSeparateDirs()) {
+            case NONE: gameDir = rootDir; break;
+            case FAMILY: gameDir = new File(rootDir, "home/" + family); break;
+            case VERSION: gameDir = new File(rootDir, "home/" + version.getID()); break;
         }
 
 
@@ -1424,7 +1424,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                         "--fml.mods",
                         mods.stream().map(Library::getName).collect(Collectors.joining(",")),
                         "--fml.mavenRoots",
-                        settings.getBoolean("minecraft.gamedir.separate") ? "../../libraries" : "libraries"
+                        settings.getSeparateDirs() == Configuration.SeparateDirs.NONE ? "libraries" : "../../libraries"
                 );
 
             default:

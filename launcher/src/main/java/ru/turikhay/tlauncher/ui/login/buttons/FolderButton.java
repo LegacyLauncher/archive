@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.ui.login.buttons;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.lang3.StringUtils;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.block.Unblockable;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
@@ -81,16 +82,22 @@ public class FolderButton extends LocalizableButton implements Unblockable {
     }
 
     private File getFamilyFolder() {
-        if(!lf.global.getBoolean("minecraft.gamedir.separate")) {
-            return null;
-        }
+        Configuration.SeparateDirs separateDirs = lf.global.getSeparateDirs();
 
         CompleteVersion complete = getSelectedVersion();
-        if(complete == null || StringUtils.isEmpty(complete.getFamily())) {
+        if(complete == null) {
             return null;
         }
 
-        return new File(MinecraftUtil.getWorkingDirectory(false), "home/" + complete.getFamily());
+        String dirName = null;
+        switch (separateDirs) {
+            case FAMILY: dirName = complete.getFamily(); break;
+            case VERSION: dirName = complete.getID(); break;
+        }
+
+        if (dirName != null && !StringUtils.isEmpty(dirName))
+            return new File(MinecraftUtil.getWorkingDirectory(false), "home/" + dirName);
+        else return null;
     }
 
     private void openFolder(final File folder) {

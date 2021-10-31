@@ -34,7 +34,7 @@ public final class ConfigurationDefaults {
         d.put("settings.version", VERSION);
 
         d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
-        d.put("minecraft.gamedir.separate", false);
+        d.put("minecraft.gamedir.separate", Configuration.SeparateDirs.NONE);
 
         d.put("minecraft.size", new IntegerArray(925, 530));
         d.put("minecraft.fullscreen", false);
