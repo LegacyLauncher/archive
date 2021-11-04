@@ -157,6 +157,11 @@ public class Configuration extends SimpleConfiguration {
             set("gui.font.old", getInteger("gui.font"));
         }
 
+        String separateDirsValue = get("minecraft.gamedir.separate");
+        if("false".equals(separateDirsValue) || "true".equals(separateDirsValue)) {
+            setSeparateDirs(getBoolean("minecraft.gamedir.separate") ? SeparateDirs.FAMILY : SeparateDirs.NONE);
+        }
+
         LOGGER.debug("Using configuration: {}", properties);
 
         if (isSaveable()) {
@@ -210,7 +215,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public void setSeparateDirs(SeparateDirs separateDirs) {
-        set("minecraft.gamedir.separate", separateDirs.toString());
+        set("minecraft.gamedir.separate", separateDirs.toString().toLowerCase(Locale.ROOT));
     }
 
     public int[] getClientWindowSize() {
@@ -541,17 +546,12 @@ public class Configuration extends SimpleConfiguration {
         public static SeparateDirs get(String val) {
             SeparateDirs[] var4;
             int var3 = (var4 = values()).length;
-
             for (int var2 = 0; var2 < var3; ++var2) {
                 SeparateDirs cur = var4[var2];
                 if (cur.toString().equalsIgnoreCase(val)) {
                     return cur;
                 }
             }
-
-            if (val.equals("true")) return SeparateDirs.FAMILY;
-            else if (val.equals("false")) return SeparateDirs.NONE;
-
             return null;
         }
     }
