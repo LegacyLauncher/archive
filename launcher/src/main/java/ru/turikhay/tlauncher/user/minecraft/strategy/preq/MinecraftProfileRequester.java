@@ -1,9 +1,10 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.preq;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.*;
 
@@ -34,6 +35,11 @@ public class MinecraftProfileRequester
         try {
             return requestAndParse(token);
         } catch (InvalidResponseException e) {
+            JsonObject response = e.getResponseAsJson();
+            JsonElement errorElement = response.get("error");
+            if(errorElement != null && errorElement.isJsonPrimitive() && "NOT_FOUND".equals(errorElement.getAsString())) {
+                throw new ProfileNotCreatedException(e);
+            }
             throw new MinecraftProfileRequestException(e);
         }
     }
