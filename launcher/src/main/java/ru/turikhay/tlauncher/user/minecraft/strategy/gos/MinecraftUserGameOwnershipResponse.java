@@ -5,7 +5,8 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable;
 import java.util.List;
 import java.util.Objects;
 
-import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.*;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notEmpty;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notNull;
 
 public class MinecraftUserGameOwnershipResponse implements Validatable {
     private List<Item> items;
@@ -52,7 +53,7 @@ public class MinecraftUserGameOwnershipResponse implements Validatable {
     }
 
     public static class Item implements Validatable {
-        private String name, signature;
+        private String name;
 
         public String getName() {
             return name;
@@ -66,13 +67,12 @@ public class MinecraftUserGameOwnershipResponse implements Validatable {
             Item item = (Item) o;
 
             if (!name.equals(item.name)) return false;
-            return signature.equals(item.signature);
+            return true;
         }
 
         @Override
         public int hashCode() {
             int result = name.hashCode();
-            result = 31 * result + signature.hashCode();
             return result;
         }
 
@@ -80,14 +80,12 @@ public class MinecraftUserGameOwnershipResponse implements Validatable {
         public String toString() {
             return "Item{" +
                     "name='" + name + '\'' +
-                    ", signature='" + signature + '\'' +
                     '}';
         }
 
         @Override
         public void validate() {
             notEmpty(name, "name");
-            notEmpty(signature, "signature");
         }
     }
 }
