@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.user.MinecraftUser;
 import ru.turikhay.tlauncher.user.MojangUser;
 import ru.turikhay.tlauncher.user.UserSet;
@@ -29,6 +30,10 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftO
 import ru.turikhay.tlauncher.user.minecraft.strategy.pconv.MinecraftProfileConverter;
 import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftOAuthProfile;
 import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftProfileRequester;
+import ru.turikhay.tlauncher.user.minecraft.strategy.preq.ProfileNotCreatedException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.preq.create.MinecraftProfileCreator;
+import ru.turikhay.tlauncher.user.minecraft.strategy.preq.create.ProfileCreationAbortedException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.preq.create.ProfileCreatorUserInterface;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
@@ -36,6 +41,7 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.UrlEncoder;
 import ru.turikhay.util.async.AsyncThread;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -127,7 +133,13 @@ class AccountMinecraftProcessWorker {
         setState("game-ownership");
         new GameOwnershipValidator().checkGameOwnership(minecraftToken);
         setState("getting-profile");
-        MinecraftOAuthProfile minecraftProfile = new MinecraftProfileRequester().requestProfile(minecraftToken);
+        MinecraftOAuthProfile minecraftProfile;
+        try {
+            minecraftProfile = new MinecraftProfileRequester().requestProfile(minecraftToken);
+        } catch(ProfileNotCreatedException e) {
+            LOGGER.info("User starts Minecraft for the first time");
+            minecraftProfile = handleProfileCreation(minecraftToken);
+        }
         MinecraftUser minecraftUser = new MinecraftProfileConverter().convertToMinecraftUser(msftToken, minecraftToken, minecraftProfile);
         SwingUtil.wait(() -> {
             StandardAccountPane.removeAccountIfFound(minecraftUser.getUsername(), Account.AccountType.MINECRAFT);
@@ -160,6 +172,32 @@ class AccountMinecraftProcessWorker {
                                 + "&locale=" + UrlEncoder.encode(TLauncher.getInstance().getLang().getLocale().toString())
                 )
         );
+    }
+
+    private MinecraftOAuthProfile handleProfileCreation(MinecraftServicesToken token) throws IOException, ProfileCreationAbortedException {
+        return new MinecraftProfileCreator(
+                new ProfileCreatorUserInterface() {
+                    final String prefix = locPrefix + "profile-create.";
+                    boolean showHead = true;
+
+                    @Override
+                    public String requestProfileName() {
+                        boolean showHead = this.showHead;
+                        this.showHead = false;
+                        return Alert.showInputQuestion(
+                                "",
+                                (showHead ? Localizable.get(prefix + "question.head") + "\n\n" : "") +
+                                        Localizable.get(prefix + "question.body")
+                        );
+                    }
+
+                    @Override
+                    public void showProfileUnavailableMessage(String profileName) {
+                        LOGGER.info("Profile is not available: {}", profileName);
+                        Alert.showError("", Localizable.get(locPrefix + "unavailable"));
+                    }
+                }
+        ).createProfile(token);
     }
 
     private void setState(String label) {
