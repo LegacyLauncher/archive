@@ -28,7 +28,6 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
-import ru.turikhay.tlauncher.downloader.Sha1Downloadable;
 import ru.turikhay.tlauncher.jre.JavaPlatform;
 import ru.turikhay.tlauncher.jre.JavaRuntimeLocal;
 import ru.turikhay.tlauncher.jre.JavaRuntimeRemote;
@@ -36,7 +35,6 @@ import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.*;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
-import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -116,8 +114,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
-    private CompleteVersion.LoggingConfiguration logConfig;
-    private File logConfigFile;
 
     private final Rule.FeatureMatcher featureMatcher = createFeatureMatcher();
 
@@ -558,17 +554,6 @@ public class MinecraftLauncher implements JavaProcessListener {
 
             fullCommand = settings.getBoolean("gui.logger.fullcommand");
 
-            if(version.getLogging() == null ||
-                    version.getLogging().get("client") == null ||
-                    !version.getLogging().get("client").isValid()
-            ) {
-                LOGGER.debug("No logging configuration");
-            } else {
-                this.logConfig = version.getLogging().get("client");
-                this.logConfigFile = new File(globalAssetsDir, "log_configs/" + logConfig.getFile().getId());
-                LOGGER.debug("Logging config: {}", logConfig);
-            }
-
 
             for (MinecraftLauncherAssistant assistant : assistants) {
                 assistant.collectInfo();
@@ -799,13 +784,6 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         downloader.add(versionContainer);
-
-        if(logConfig != null) {
-            Sha1Downloadable logConfigDownload = new Sha1Downloadable(Repository.PROXIFIED_REPO, logConfig.getFile().getUrl(), logConfigFile);
-            logConfigDownload.setLength(logConfig.getFile().getSize());
-            logConfigDownload.setSha1(logConfig.getFile().getSha1());
-            downloader.add(logConfigDownload);
-        }
 
         for (MinecraftLauncherAssistant e : assistants) {
             e.collectResources(downloader);
@@ -1114,15 +1092,40 @@ public class MinecraftLauncher implements JavaProcessListener {
             assistant2.constructProgramArguments();
         }*/
 
-        if(logConfig != null && logConfigFile.isFile()) {
-            // mitigate vulnerability
-            patchLoggingConfiguration();
-
-            HashMap<String, String> logConfigArgumentLookup = new HashMap<>();
-            logConfigArgumentLookup.put("path", logConfigFile.getAbsolutePath());
-            StrSubstitutor s = new StrSubstitutor(logConfigArgumentLookup);
-            jvmArgs.add(s.replace(logConfig.getArgument()));
+        if(loggingConfigurationNeedsPatching()) {
+            try (ZipFile zipFile = new ZipFile(version.getJarFile(rootDir))) {
+                ZipEntry log4j2Entry = zipFile.getEntry("log4j2.xml");
+                if(log4j2Entry == null) {
+                    throw new FileNotFoundException("no log4j2.xml entry in version jar");
+                }
+                File loggingFile = new File(globalAssetsDir, "log_configs/patched-" + version.getID() + ".xml");
+                try (InputStream log4j2EntryStream = zipFile.getInputStream(log4j2Entry);
+                     FileOutputStream loggingFileStream = new FileOutputStream(loggingFile)) {
+                    patchLoggingConfiguration(log4j2EntryStream, loggingFileStream);
+                }
+                jvmArgs.add("-Dlog4j.configurationFile=" + loggingFile.getAbsolutePath());
+            } catch (IOException ioE) {
+                LOGGER.warn("Log4j2 configuration patch failure", ioE);
+            }
         }
+        /*InputStream loggingInput = getClass().getResourceAsStream("/log4j2-minecraft.xml");
+        writeLoggingFile:
+        {
+            if (loggingInput == null) {
+                break writeLoggingFile;
+            }
+            File loggingFile = new File(globalAssetsDir, "log_configs/simple.xml");
+            try (
+                    ) {
+                IOUtils.copy(loggingInput, loggingOutput);
+            } catch (IOException ioE) {
+                LOGGER.warn("Couldn't logging file: {}", loggingFile.getAbsolutePath());
+                break writeLoggingFile;
+            } finally {
+                U.close(loggingInput);
+            }
+            jvmArgs.add("-Dlog4j.configurationFile=" + loggingFile.getAbsolutePath());
+        }*/
 
         StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
@@ -2086,7 +2089,8 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private static final String LOG4J_CORE = "org.apache.logging.log4j:log4j-core:";
-    private void patchLoggingConfiguration() {
+
+    private boolean loggingConfigurationNeedsPatching() {
         Optional<Library> log4jLibrary = version.getLibraries()
                 .stream()
                 .filter(l -> l.getName().startsWith(LOG4J_CORE))
@@ -2100,7 +2104,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 int minor = Integer.parseInt(matcher.group("minor"));
                 if(major != 2 || minor > 15) {
                     LOGGER.info("Version uses safe log4j version ({}), no need for a patch", libraryVersion);
-                    return;
+                    return false;
                 }
                 LOGGER.info("Version uses vulnerable log4j version ({}). Applying a patch", libraryVersion);
             } else {
@@ -2112,30 +2116,30 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         } else {
             LOGGER.warn("log4j-core library not found");
+            return false;
         }
+        return true;
+    }
+
+    private void patchLoggingConfiguration(
+            InputStream versionLoggingFileStream,
+            OutputStream patchedLoggingFileStream) throws IOException
+    {
         final String ls = System.getProperty("line.separator");
         final Pattern pattern = Pattern.compile("%msg(?!\\{)");
-        StringBuilder patchedLogFileContents = new StringBuilder();
-        try(Scanner scanner = new Scanner(new InputStreamReader(new FileInputStream(logConfigFile), StandardCharsets.UTF_8))) {
-            while(scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String patchedLine = pattern.matcher(line).replaceAll("%msg{nolookups}");
-                if(!line.equals(patchedLine)) {
-                    LOGGER.debug("Patched line:");
-                    LOGGER.debug(line);
-                    LOGGER.debug(patchedLine);
-                }
-                patchedLogFileContents.append(patchedLine).append(ls);
+        Scanner scanner = new Scanner(new InputStreamReader(versionLoggingFileStream, StandardCharsets.UTF_8));
+        OutputStreamWriter writer = new OutputStreamWriter(patchedLoggingFileStream, StandardCharsets.UTF_8);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            String patchedLine = pattern.matcher(line).replaceAll("%msg{nolookups}");
+            if (!line.equals(patchedLine)) {
+                LOGGER.debug("Patched line:");
+                LOGGER.debug(line);
+                LOGGER.debug(patchedLine);
             }
-        } catch (IOException ioE) {
-            LOGGER.warn("Couldn't read log file contents from {}", logConfigFile.getAbsolutePath(), ioE);
-            return;
+            writer.append(patchedLine).append(ls);
         }
-        try {
-            FileUtils.write(logConfigFile, patchedLogFileContents, StandardCharsets.UTF_8);
-        } catch(IOException ioE) {
-            LOGGER.warn("Couldn't write log file contents into {}", logConfigFile.getAbsolutePath(), ioE);
-        }
+        writer.flush();
     }
 
     public enum LoggerVisibility {
