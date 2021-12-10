@@ -32,14 +32,6 @@ public class Sha1Downloadable extends Downloadable {
         super(url, destination);
     }
 
-    public void setLength(long length) {
-        this.length = length;
-    }
-
-    public void setSha1(String sha1) {
-        this.sha1 = sha1;
-    }
-
     @Override
     protected void onComplete() throws RetryDownloadException {
         if(length > 0L) {
