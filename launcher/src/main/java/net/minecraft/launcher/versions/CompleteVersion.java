@@ -60,6 +60,8 @@ public class CompleteVersion implements Version, Cloneable {
 
     JavaVersion javaVersion;
 
+    Map<String, LoggingConfiguration> logging;
+
     @Expose Repository source;
     @Expose Account.AccountType proceededFor;
     @Expose VersionList list;
@@ -569,6 +571,10 @@ public class CompleteVersion implements Version, Cloneable {
             result.source = source;
         }
 
+        if(logging != null) {
+            result.logging = logging;
+        }
+
         result.list = list;
         return result;
     }
@@ -625,6 +631,10 @@ public class CompleteVersion implements Version, Cloneable {
             }
         }
         return result;
+    }
+
+    public Map<String, LoggingConfiguration> getLogging() {
+        return logging;
     }
 
     public void validate() {
@@ -790,6 +800,46 @@ public class CompleteVersion implements Version, Cloneable {
             return "JavaVersion{" +
                     "component='" + component + '\'' +
                     ", majorVersion=" + majorVersion +
+                    '}';
+        }
+    }
+
+    public static class LoggingConfiguration {
+        private String argument;
+        private LoggingDownloadInfo file;
+        private String type;
+
+        public String getArgument() {
+            return argument;
+        }
+
+        public LoggingDownloadInfo getFile() {
+            return file;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public boolean isValid() {
+            return argument != null && file != null && "log4j2-xml".equals(type);
+        }
+    }
+
+    public static class LoggingDownloadInfo extends DownloadInfo {
+        private String id;
+
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return "LoggingDownloadInfo{" +
+                    "url='" + url + '\'' +
+                    ", sha1='" + sha1 + '\'' +
+                    ", size=" + size +
+                    ", id='" + id + '\'' +
                     '}';
         }
     }
