@@ -15,6 +15,7 @@ import net.minecraft.launcher.versions.*;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.options.OptionsFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -35,6 +36,8 @@ import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.*;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.pasta.Pasta;
+import ru.turikhay.tlauncher.pasta.PastaFormat;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -1092,47 +1095,57 @@ public class MinecraftLauncher implements JavaProcessListener {
             assistant2.constructProgramArguments();
         }*/
 
-        if(loggingConfigurationNeedsPatching()) {
-            try (ZipFile zipFile = new ZipFile(version.getJarFile(rootDir))) {
-                ZipEntry log4j2Entry = zipFile.getEntry("log4j2.xml");
-                if(log4j2Entry == null) {
-                    throw new FileNotFoundException("no log4j2.xml entry in version jar");
+        Library log4jLibrary = findLog4j2Library();
+        if(log4jLibrary == null) {
+            LOGGER.info("Version doesn't use log4j2 library");
+        } else {
+            Log4jVersion log4jVersion = parseLog4jVersion(log4jLibrary);
+            if(log4jVersion != null && log4jVersion.major != 2) {
+                LOGGER.info("Log4j version is not 2.x.x, it's {}", log4jVersion);
+            } else {
+                int minor = log4jVersion == null ? 0 : log4jVersion.minor;
+                try {
+                    if (minor >= 15) {
+                        // 2.15.0+
+                        LOGGER.info("No vulnerability fix is required. Library version is 2.15.0+: {}", log4jVersion);
+                    } else if (minor >= 10) {
+                        // 2.10.0+
+                        LOGGER.info("Setting JVM argument: -Dlog4j2.formatMsgNoLookups=true");
+                        jvmArgs.add("-Dlog4j2.formatMsgNoLookups=true");
+                    } else {
+                        String patchedLog4j2ConfigVariant;
+                        if(minor >= 7) {
+                            // 2.7.0+
+                            patchedLog4j2ConfigVariant = "7";
+                        } else {
+                            // 2.0.0+ or unknown
+                            patchedLog4j2ConfigVariant = "0";
+                        }
+                        File logConfigsDir = new File(globalAssetsDir, "log_configs");
+                        String patchedLogFilePath;
+                        FileUtil.createFolder(logConfigsDir);
+                        LOGGER.info("Using patched log4j config variant: {}", patchedLog4j2ConfigVariant);
+                        patchedLogFilePath = savePatchedConfiguration(logConfigsDir, patchedLog4j2ConfigVariant);
+                        LOGGER.debug("Log4j2 configuration file: {}", patchedLogFilePath);
+                        jvmArgs.add("-Dlog4j.configurationFile=" + patchedLogFilePath);
+                    }
+                } catch(Exception e) {
+                    LOGGER.warn("Vulnerable logging configuration patch failure", e);
+                    Sentry.capture(new EventBuilder()
+                            .withLevel(Event.Level.WARNING)
+                            .withMessage("vulnerable logging configuration patch failure")
+                            .withSentryInterface(new ExceptionInterface(e))
+                            .withExtra("versionJson",
+                                    Pasta.pasteFile(
+                                            new File(rootDir, "versions/" + version.getID() + "/" + version.getID() + ".json"),
+                                            PastaFormat.JSON
+                                    )
+                            )
+                    );
+                    throw new RuntimeException(e);
                 }
-                File logConfigsDir = new File(globalAssetsDir, "log_configs");
-                FileUtil.createFolder(logConfigsDir);
-                File loggingFile = new File(logConfigsDir, "patched-" + version.getID() + ".xml");
-                try (InputStream log4j2EntryStream = zipFile.getInputStream(log4j2Entry);
-                     FileOutputStream loggingFileStream = new FileOutputStream(loggingFile)) {
-                    patchLoggingConfiguration(log4j2EntryStream, loggingFileStream);
-                }
-                jvmArgs.add("-Dlog4j.configurationFile=" + loggingFile.getAbsolutePath());
-            } catch (IOException ioE) {
-                LOGGER.warn("Log4j2 configuration patch failure", ioE);
-                Sentry.capture(new EventBuilder()
-                        .withMessage("log4j2 configuration patch failure")
-                        .withSentryInterface(new ExceptionInterface(ioE))
-                );
-                throw new RuntimeException(ioE);
             }
         }
-        /*InputStream loggingInput = getClass().getResourceAsStream("/log4j2-minecraft.xml");
-        writeLoggingFile:
-        {
-            if (loggingInput == null) {
-                break writeLoggingFile;
-            }
-            File loggingFile = new File(globalAssetsDir, "log_configs/simple.xml");
-            try (
-                    ) {
-                IOUtils.copy(loggingInput, loggingOutput);
-            } catch (IOException ioE) {
-                LOGGER.warn("Couldn't logging file: {}", loggingFile.getAbsolutePath());
-                break writeLoggingFile;
-            } finally {
-                U.close(loggingInput);
-            }
-            jvmArgs.add("-Dlog4j.configurationFile=" + loggingFile.getAbsolutePath());
-        }*/
 
         StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
@@ -1557,36 +1570,91 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }*/
 
+    private void addCMSOptimizedArguments(List<String> args) {
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+        args.add("-XX:-UseParallelGC"); // disable Parallel GC
+        args.add("-XX:+UseConcMarkSweepGC"); // enable CMS
+        args.add("-XX:-UseAdaptiveSizePolicy");
+        args.add("-XX:+CMSParallelRemarkEnabled");
+        args.add("-XX:+CMSClassUnloadingEnabled");
+        args.add("-XX:+UseCMSInitiatingOccupancyOnly");
+        args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2)); // we don't have Parallel anymore
+    }
+
+    private void addG1OptimizedArguments(List<String> args) {
+        args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
+        args.add("-XX:-UseParallelGC"); // disable old GCs
+        args.add("-XX:+UseG1GC"); // enable G1
+        args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
+        args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
+        args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
+        args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+        args.add("-XX:+AlwaysPreTouch");
+        args.add("-XX:+ParallelRefProcEnabled");
+    }
+
+    private void addZGCOptimizedArguments(List<String> args) {
+        // https://github.com/Obydux/MC-ZGC-Flags
+        args.add("-XX:+UnlockExperimentalVMOptions");
+        args.add("-XX:-UseParallelGC"); // disable old GCs
+        args.add("-XX:-UseG1GC");
+        args.add("-XX:+UseZGC"); // enable ZGC
+        args.add("-XX:-ZUncommit"); // Unstable feature, disable
+        args.add("-XX:ZCollectionInterval=5");
+        args.add("-XX:ZAllocationSpikeTolerance=2.0");
+        args.add("-XX:+AlwaysPreTouch"); // AlwaysPreTouch gets the memory setup and reserved at process start ensuring
+                                         // it is contiguous, improving the efficiency of it more. This improves
+                                         // the operating systems memory access speed. Mandatory to use Transparent Huge Pages
+        args.add("-XX:+ParallelRefProcEnabled"); // Optimizes the GC process to use multiple threads for weak reference checking
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+    }
+
+    private void addOptimizedArguments(List<String> args) {
+        int jreMajorVersion = getJreMajorVersion();
+
+        // Consider any unknown Java as Java 8
+        if(jreMajorVersion == 0) {
+            jreMajorVersion = 8;
+        }
+
+        // I want Kotlin's when {}
+        // Is enough power and Java 15+ => ZGC
+        // ZGC requires A LOT of heap on start
+        if (jreMajorVersion >= 15 && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192) {
+            addZGCOptimizedArguments(args);
+            return;
+        }
+
+        // Is enough power and Java 8+ => G1
+        // Java 11+ => G1 for all PCs
+        if(jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
+            addG1OptimizedArguments(args);
+            return;
+        }
+
+        // Junk PCs or old Java => CMS
+        addCMSOptimizedArguments(args);
+    }
+
     private void createJvmArgs(List<String> args) {
         javaManagerConfig.getArgs().ifPresent(s ->
                 args.addAll(Arrays.asList(StringUtils.split(s, ' ')))
         );
         if (javaManagerConfig.useOptimizedArguments()) {
-            if (getJreMajorVersion() == 0 || getJreMajorVersion() >= 9 || ramSize >= 3072) {
-                args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
-                args.add("-XX:+UseG1GC");
-                args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
-                args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
-                args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
-                args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
-                args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 4));
-                args.add("-XX:ParallelGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
-            } else {
-                args.add("-XX:+UseConcMarkSweepGC");
-                args.add("-XX:-UseAdaptiveSizePolicy");
-                args.add("-XX:+CMSParallelRemarkEnabled");
-                args.add("-XX:+ParallelRefProcEnabled");
-                args.add("-XX:+CMSClassUnloadingEnabled");
-                args.add("-XX:+UseCMSInitiatingOccupancyOnly");
-            }
+            addOptimizedArguments(args);
         }
+
+        args.add("-Xms" + Math.min(ramSize, 2048) + "M"); // Pre-allocate some heap
         args.add("-Xmx" + ramSize + "M");
+
         if (librariesForType == Account.AccountType.MCLEAKS) {
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
             args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.mainclass=" + oldMainclass);
         }
+
         if (!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
             args.add("-Dfile.encoding=" + charset.name());
         }
@@ -1936,6 +2004,9 @@ public class MinecraftLauncher implements JavaProcessListener {
     private StrSubstitutor createArgumentsSubstitutor() throws MinecraftException {
         Map<String, String> map = new HashMap<>();
 
+        // TODO fetch xuid somehow from xbox? empty values don't break anything yet, so...
+        map.put("clientid", "");
+        map.put("auth_xuid", "");
 
         map.putAll(account.getUser().getLoginCredentials().map());
 
@@ -2039,56 +2110,59 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private static final String LOG4J_CORE = "org.apache.logging.log4j:log4j-core:";
 
-    private boolean loggingConfigurationNeedsPatching() {
-        Optional<Library> log4jLibrary = version.getLibraries()
+    private Library findLog4j2Library() {
+        return version.getLibraries()
                 .stream()
                 .filter(l -> l.getName().startsWith(LOG4J_CORE))
-                .findAny();
-        if(log4jLibrary.isPresent()) {
-            final Pattern log4jVersionPattern = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)");
-            String libraryVersion = log4jLibrary.get().getName().substring(LOG4J_CORE.length());
-            Matcher matcher = log4jVersionPattern.matcher(libraryVersion);
-            if(matcher.matches()) {
-                int major = Integer.parseInt(matcher.group("major"));
-                int minor = Integer.parseInt(matcher.group("minor"));
-                if(major != 2 || minor > 15) {
-                    LOGGER.info("Version uses safe log4j version ({}), no need for a patch", libraryVersion);
-                    return false;
-                }
-                LOGGER.info("Version uses vulnerable log4j version ({}). Applying a patch", libraryVersion);
-            } else {
-                LOGGER.warn("Unknown log4j2 version: {}", libraryVersion);
-                Sentry.capture(new EventBuilder()
-                        .withLevel(Event.Level.WARNING)
-                        .withMessage("unknown log4j2 version: " + libraryVersion)
-                );
-            }
-        } else {
-            LOGGER.warn("log4j-core library not found");
-            return false;
-        }
-        return true;
+                .findAny()
+                .orElse(null);
     }
 
-    private void patchLoggingConfiguration(
-            InputStream versionLoggingFileStream,
-            OutputStream patchedLoggingFileStream) throws IOException
-    {
-        final String ls = System.getProperty("line.separator");
-        final Pattern pattern = Pattern.compile("%msg(?!\\{)");
-        Scanner scanner = new Scanner(new InputStreamReader(versionLoggingFileStream, StandardCharsets.UTF_8));
-        OutputStreamWriter writer = new OutputStreamWriter(patchedLoggingFileStream, StandardCharsets.UTF_8);
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            String patchedLine = pattern.matcher(line).replaceAll("%msg{nolookups}");
-            if (!line.equals(patchedLine)) {
-                LOGGER.debug("Patched line:");
-                LOGGER.debug(line);
-                LOGGER.debug(patchedLine);
-            }
-            writer.append(patchedLine).append(ls);
+    private Log4jVersion parseLog4jVersion(Library log4jLibrary) {
+        final Pattern log4jVersionPattern = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?:-.+)?");
+        String libraryVersion = log4jLibrary.getName().substring(LOG4J_CORE.length());
+        Matcher matcher = log4jVersionPattern.matcher(libraryVersion);
+        if(matcher.matches()) {
+            int major = Integer.parseInt(matcher.group("major"));
+            int minor = Integer.parseInt(matcher.group("minor"));
+            return new Log4jVersion(major, minor);
+        } else {
+            LOGGER.warn("Unknown log4j2 version: {}", libraryVersion);
+            Sentry.capture(new EventBuilder()
+                    .withLevel(Event.Level.WARNING)
+                    .withMessage("unknown log4j2 version: " + libraryVersion)
+            );
         }
-        writer.flush();
+        return null;
+    }
+
+    private static class Log4jVersion {
+        int major;
+        int minor;
+
+        public Log4jVersion(int major, int minor) {
+            this.major = major;
+            this.minor = minor;
+        }
+
+        @Override
+        public String toString() {
+            return major + "." + minor;
+        }
+    }
+
+    private String savePatchedConfiguration(File logConfigsDir, String variant) throws IOException {
+        InputStream loggingFileStream = getClass().getResourceAsStream("logging/log4j2-" + variant + ".xml");
+        if(loggingFileStream == null) {
+            throw new IOException("patched logging file not found: " + variant);
+        }
+        File file = new File(logConfigsDir, "patched-variant-2." + variant + ".xml");
+        try(FileOutputStream outputStream = new FileOutputStream(file)) {
+            IOUtils.copy(loggingFileStream, outputStream);
+        } finally {
+            U.close(loggingFileStream);
+        }
+        return file.getAbsolutePath();
     }
 
     public enum LoggerVisibility {
