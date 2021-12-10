@@ -1550,91 +1550,36 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }*/
 
-    private void addCMSOptimizedArguments(List<String> args) {
-        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-        args.add("-XX:-UseParallelGC"); // disable Parallel GC
-        args.add("-XX:+UseConcMarkSweepGC"); // enable CMS
-        args.add("-XX:-UseAdaptiveSizePolicy");
-        args.add("-XX:+CMSParallelRemarkEnabled");
-        args.add("-XX:+CMSClassUnloadingEnabled");
-        args.add("-XX:+UseCMSInitiatingOccupancyOnly");
-        args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2)); // we don't have Parallel anymore
-    }
-
-    private void addG1OptimizedArguments(List<String> args) {
-        args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
-        args.add("-XX:-UseParallelGC"); // disable old GCs
-        args.add("-XX:+UseG1GC"); // enable G1
-        args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
-        args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
-        args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
-        args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
-        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-        args.add("-XX:+AlwaysPreTouch");
-        args.add("-XX:+ParallelRefProcEnabled");
-    }
-
-    private void addZGCOptimizedArguments(List<String> args) {
-        // https://github.com/Obydux/MC-ZGC-Flags
-        args.add("-XX:+UnlockExperimentalVMOptions");
-        args.add("-XX:-UseParallelGC"); // disable old GCs
-        args.add("-XX:-UseG1GC");
-        args.add("-XX:+UseZGC"); // enable ZGC
-        args.add("-XX:-ZUncommit"); // Unstable feature, disable
-        args.add("-XX:ZCollectionInterval=5");
-        args.add("-XX:ZAllocationSpikeTolerance=2.0");
-        args.add("-XX:+AlwaysPreTouch"); // AlwaysPreTouch gets the memory setup and reserved at process start ensuring
-                                         // it is contiguous, improving the efficiency of it more. This improves
-                                         // the operating systems memory access speed. Mandatory to use Transparent Huge Pages
-        args.add("-XX:+ParallelRefProcEnabled"); // Optimizes the GC process to use multiple threads for weak reference checking
-        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-    }
-
-    private void addOptimizedArguments(List<String> args) {
-        int jreMajorVersion = getJreMajorVersion();
-
-        // Consider any unknown Java as Java 8
-        if(jreMajorVersion == 0) {
-            jreMajorVersion = 8;
-        }
-
-        // I want Kotlin's when {}
-        // Is enough power and Java 15+ => ZGC
-        // ZGC requires A LOT of heap on start
-        if (jreMajorVersion >= 15 && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192) {
-            addZGCOptimizedArguments(args);
-            return;
-        }
-
-        // Is enough power and Java 8+ => G1
-        // Java 11+ => G1 for all PCs
-        if(jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
-            addG1OptimizedArguments(args);
-            return;
-        }
-
-        // Junk PCs or old Java => CMS
-        addCMSOptimizedArguments(args);
-    }
-
     private void createJvmArgs(List<String> args) {
         javaManagerConfig.getArgs().ifPresent(s ->
                 args.addAll(Arrays.asList(StringUtils.split(s, ' ')))
         );
         if (javaManagerConfig.useOptimizedArguments()) {
-            addOptimizedArguments(args);
+            if (getJreMajorVersion() == 0 || getJreMajorVersion() >= 9 || ramSize >= 3072) {
+                args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
+                args.add("-XX:+UseG1GC");
+                args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
+                args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
+                args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
+                args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
+                args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 4));
+                args.add("-XX:ParallelGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
+            } else {
+                args.add("-XX:+UseConcMarkSweepGC");
+                args.add("-XX:-UseAdaptiveSizePolicy");
+                args.add("-XX:+CMSParallelRemarkEnabled");
+                args.add("-XX:+ParallelRefProcEnabled");
+                args.add("-XX:+CMSClassUnloadingEnabled");
+                args.add("-XX:+UseCMSInitiatingOccupancyOnly");
+            }
         }
-
-        args.add("-Xms" + Math.min(ramSize, 2048) + "M"); // Pre-allocate some heap
         args.add("-Xmx" + ramSize + "M");
-
         if (librariesForType == Account.AccountType.MCLEAKS) {
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
             args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.mainclass=" + oldMainclass);
         }
-
         if (!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
             args.add("-Dfile.encoding=" + charset.name());
         }
@@ -1984,9 +1929,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     private StrSubstitutor createArgumentsSubstitutor() throws MinecraftException {
         Map<String, String> map = new HashMap<>();
 
-        // TODO fetch xuid somehow from xbox? empty values don't break anything yet, so...
-        map.put("clientid", "");
-        map.put("auth_xuid", "");
 
         map.putAll(account.getUser().getLoginCredentials().map());
 
