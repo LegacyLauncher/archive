@@ -66,9 +66,6 @@ public class LocalVersionList extends StreamVersionList {
 
     public synchronized void refreshVersions() throws IOException {
         clearCache();
-        if(!baseVersionsDir.isDirectory()) {
-            FileUtil.createFolder(baseVersionsDir);
-        }
         File[] files = baseVersionsDir.listFiles();
         if (files != null) {
             File[] var5 = files;
