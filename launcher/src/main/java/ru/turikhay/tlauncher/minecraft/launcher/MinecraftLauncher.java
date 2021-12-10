@@ -28,6 +28,7 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
+import ru.turikhay.tlauncher.downloader.Sha1Downloadable;
 import ru.turikhay.tlauncher.jre.JavaPlatform;
 import ru.turikhay.tlauncher.jre.JavaRuntimeLocal;
 import ru.turikhay.tlauncher.jre.JavaRuntimeRemote;
@@ -35,6 +36,7 @@ import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.*;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -50,6 +52,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -112,6 +116,8 @@ public class MinecraftLauncher implements JavaProcessListener {
     private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
     private JavaProcess process;
+    private CompleteVersion.LoggingConfiguration logConfig;
+    private File logConfigFile;
 
     private final Rule.FeatureMatcher featureMatcher = createFeatureMatcher();
 
@@ -552,6 +558,17 @@ public class MinecraftLauncher implements JavaProcessListener {
 
             fullCommand = settings.getBoolean("gui.logger.fullcommand");
 
+            if(version.getLogging() == null ||
+                    version.getLogging().get("client") == null ||
+                    !version.getLogging().get("client").isValid()
+            ) {
+                LOGGER.debug("No logging configuration");
+            } else {
+                this.logConfig = version.getLogging().get("client");
+                this.logConfigFile = new File(globalAssetsDir, "log_configs/" + logConfig.getFile().getId());
+                LOGGER.debug("Logging config: {}", logConfig);
+            }
+
 
             for (MinecraftLauncherAssistant assistant : assistants) {
                 assistant.collectInfo();
@@ -782,6 +799,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         downloader.add(versionContainer);
+
+        if(logConfig != null) {
+            Sha1Downloadable logConfigDownload = new Sha1Downloadable(Repository.PROXIFIED_REPO, logConfig.getFile().getUrl(), logConfigFile);
+            logConfigDownload.setLength(logConfig.getFile().getSize());
+            logConfigDownload.setSha1(logConfig.getFile().getSha1());
+            downloader.add(logConfigDownload);
+        }
 
         for (MinecraftLauncherAssistant e : assistants) {
             e.collectResources(downloader);
@@ -1089,6 +1113,16 @@ public class MinecraftLauncher implements JavaProcessListener {
             assistant2 = (MinecraftLauncherAssistant) address.next();
             assistant2.constructProgramArguments();
         }*/
+
+        if(logConfig != null && logConfigFile.isFile()) {
+            // mitigate vulnerability
+            patchLoggingConfiguration();
+
+            HashMap<String, String> logConfigArgumentLookup = new HashMap<>();
+            logConfigArgumentLookup.put("path", logConfigFile.getAbsolutePath());
+            StrSubstitutor s = new StrSubstitutor(logConfigArgumentLookup);
+            jvmArgs.add(s.replace(logConfig.getArgument()));
+        }
 
         StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
@@ -1513,36 +1547,91 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }*/
 
+    private void addCMSOptimizedArguments(List<String> args) {
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+        args.add("-XX:-UseParallelGC"); // disable Parallel GC
+        args.add("-XX:+UseConcMarkSweepGC"); // enable CMS
+        args.add("-XX:-UseAdaptiveSizePolicy");
+        args.add("-XX:+CMSParallelRemarkEnabled");
+        args.add("-XX:+CMSClassUnloadingEnabled");
+        args.add("-XX:+UseCMSInitiatingOccupancyOnly");
+        args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2)); // we don't have Parallel anymore
+    }
+
+    private void addG1OptimizedArguments(List<String> args) {
+        args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
+        args.add("-XX:-UseParallelGC"); // disable old GCs
+        args.add("-XX:+UseG1GC"); // enable G1
+        args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
+        args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
+        args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
+        args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+        args.add("-XX:+AlwaysPreTouch");
+        args.add("-XX:+ParallelRefProcEnabled");
+    }
+
+    private void addZGCOptimizedArguments(List<String> args) {
+        // https://github.com/Obydux/MC-ZGC-Flags
+        args.add("-XX:+UnlockExperimentalVMOptions");
+        args.add("-XX:-UseParallelGC"); // disable old GCs
+        args.add("-XX:-UseG1GC");
+        args.add("-XX:+UseZGC"); // enable ZGC
+        args.add("-XX:-ZUncommit"); // Unstable feature, disable
+        args.add("-XX:ZCollectionInterval=5");
+        args.add("-XX:ZAllocationSpikeTolerance=2.0");
+        args.add("-XX:+AlwaysPreTouch"); // AlwaysPreTouch gets the memory setup and reserved at process start ensuring
+                                         // it is contiguous, improving the efficiency of it more. This improves
+                                         // the operating systems memory access speed. Mandatory to use Transparent Huge Pages
+        args.add("-XX:+ParallelRefProcEnabled"); // Optimizes the GC process to use multiple threads for weak reference checking
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+    }
+
+    private void addOptimizedArguments(List<String> args) {
+        int jreMajorVersion = getJreMajorVersion();
+
+        // Consider any unknown Java as Java 8
+        if(jreMajorVersion == 0) {
+            jreMajorVersion = 8;
+        }
+
+        // I want Kotlin's when {}
+        // Is enough power and Java 15+ => ZGC
+        // ZGC requires A LOT of heap on start
+        if (jreMajorVersion >= 15 && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192) {
+            addZGCOptimizedArguments(args);
+            return;
+        }
+
+        // Is enough power and Java 8+ => G1
+        // Java 11+ => G1 for all PCs
+        if(jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
+            addG1OptimizedArguments(args);
+            return;
+        }
+
+        // Junk PCs or old Java => CMS
+        addCMSOptimizedArguments(args);
+    }
+
     private void createJvmArgs(List<String> args) {
         javaManagerConfig.getArgs().ifPresent(s ->
                 args.addAll(Arrays.asList(StringUtils.split(s, ' ')))
         );
         if (javaManagerConfig.useOptimizedArguments()) {
-            if (getJreMajorVersion() == 0 || getJreMajorVersion() >= 9 || ramSize >= 3072) {
-                args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
-                args.add("-XX:+UseG1GC");
-                args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
-                args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
-                args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
-                args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
-                args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 4));
-                args.add("-XX:ParallelGCThreads=" + OS.Arch.AVAILABLE_PROCESSORS);
-            } else {
-                args.add("-XX:+UseConcMarkSweepGC");
-                args.add("-XX:-UseAdaptiveSizePolicy");
-                args.add("-XX:+CMSParallelRemarkEnabled");
-                args.add("-XX:+ParallelRefProcEnabled");
-                args.add("-XX:+CMSClassUnloadingEnabled");
-                args.add("-XX:+UseCMSInitiatingOccupancyOnly");
-            }
+            addOptimizedArguments(args);
         }
+
+        args.add("-Xms" + Math.min(ramSize, 2048) + "M"); // Pre-allocate some heap
         args.add("-Xmx" + ramSize + "M");
+
         if (librariesForType == Account.AccountType.MCLEAKS) {
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
             args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
             args.add("-Dru.turikhay.mcleaks.nstweaker.mainclass=" + oldMainclass);
         }
+
         if (!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
             args.add("-Dfile.encoding=" + charset.name());
         }
@@ -1892,6 +1981,9 @@ public class MinecraftLauncher implements JavaProcessListener {
     private StrSubstitutor createArgumentsSubstitutor() throws MinecraftException {
         Map<String, String> map = new HashMap<>();
 
+        // TODO fetch xuid somehow from xbox? empty values don't break anything yet, so...
+        map.put("clientid", "");
+        map.put("auth_xuid", "");
 
         map.putAll(account.getUser().getLoginCredentials().map());
 
@@ -1991,6 +2083,59 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
         return javaVersion.getMajor();
+    }
+
+    private static final String LOG4J_CORE = "org.apache.logging.log4j:log4j-core:";
+    private void patchLoggingConfiguration() {
+        Optional<Library> log4jLibrary = version.getLibraries()
+                .stream()
+                .filter(l -> l.getName().startsWith(LOG4J_CORE))
+                .findAny();
+        if(log4jLibrary.isPresent()) {
+            final Pattern log4jVersionPattern = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)");
+            String libraryVersion = log4jLibrary.get().getName().substring(LOG4J_CORE.length());
+            Matcher matcher = log4jVersionPattern.matcher(libraryVersion);
+            if(matcher.matches()) {
+                int major = Integer.parseInt(matcher.group("major"));
+                int minor = Integer.parseInt(matcher.group("minor"));
+                if(major != 2 || minor > 15) {
+                    LOGGER.info("Version uses safe log4j version ({}), no need for a patch", libraryVersion);
+                    return;
+                }
+                LOGGER.info("Version uses vulnerable log4j version ({}). Applying a patch", libraryVersion);
+            } else {
+                LOGGER.warn("Unknown log4j2 version: {}", libraryVersion);
+                Sentry.capture(new EventBuilder()
+                        .withLevel(Event.Level.WARNING)
+                        .withMessage("unknown log4j2 version: " + libraryVersion)
+                );
+            }
+        } else {
+            LOGGER.warn("log4j-core library not found");
+        }
+        final String ls = System.getProperty("line.separator");
+        final Pattern pattern = Pattern.compile("%msg(?!\\{)");
+        StringBuilder patchedLogFileContents = new StringBuilder();
+        try(Scanner scanner = new Scanner(new InputStreamReader(new FileInputStream(logConfigFile), StandardCharsets.UTF_8))) {
+            while(scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String patchedLine = pattern.matcher(line).replaceAll("%msg{nolookups}");
+                if(!line.equals(patchedLine)) {
+                    LOGGER.debug("Patched line:");
+                    LOGGER.debug(line);
+                    LOGGER.debug(patchedLine);
+                }
+                patchedLogFileContents.append(patchedLine).append(ls);
+            }
+        } catch (IOException ioE) {
+            LOGGER.warn("Couldn't read log file contents from {}", logConfigFile.getAbsolutePath(), ioE);
+            return;
+        }
+        try {
+            FileUtils.write(logConfigFile, patchedLogFileContents, StandardCharsets.UTF_8);
+        } catch(IOException ioE) {
+            LOGGER.warn("Couldn't write log file contents into {}", logConfigFile.getAbsolutePath(), ioE);
+        }
     }
 
     public enum LoggerVisibility {
