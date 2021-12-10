@@ -1,5 +1,5 @@
-import org.apache.tools.ant.filters.ReplaceTokens
 import groovy.json.JsonBuilder
+import org.apache.tools.ant.filters.ReplaceTokens
 
 import java.security.DigestInputStream
 import java.security.MessageDigest
@@ -13,7 +13,7 @@ plugins {
     id "org.openjfx.javafxplugin"
 }
 
-version '1.134.1'
+version '1.135.0'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
@@ -44,8 +44,6 @@ dependencies {
     modernImplementation(sourceSets.main.output)
 
     tlRuntime("com.google.guava:guava:14.0")
-    tlRuntime("org.apache.logging.log4j:log4j-api:2.8.1")
-    tlRuntime("org.apache.logging.log4j:log4j-core:2.8.1")
     tlRuntime("io.sentry:sentry:1.7.30")
     tlRuntime("org.slf4j:slf4j-api:1.7.21")
     tlRuntime("com.fasterxml.jackson.core:jackson-core:2.12.0")
@@ -58,15 +56,15 @@ dependencies {
     tlRuntime("org.jdom:jdom:2.0.2")
     tlRuntime("org.apache.commons:commons-lang3:3.4")
     tlRuntime("com.timgroup:java-statsd-client:3.1.0")
-    tlRuntime("org.apache.logging.log4j:log4j-api:2.14.0")
-    tlRuntime("org.apache.logging.log4j:log4j-core:2.14.0")
-    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.14.0")
+    tlRuntime("org.apache.logging.log4j:log4j-api:2.15.0")
+    tlRuntime("org.apache.logging.log4j:log4j-core:2.15.0")
+    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.15.0")
     tlRuntime("org.apache.httpcomponents:httpclient:4.5.13")
     tlRuntime("org.apache.httpcomponents:fluent-hc:4.5.13")
     tlRuntime('org.nanohttpd:nanohttpd:2.3.1')
     tlRuntime('ru.turikhay:jvd:1.0')
     tlRuntime('com.moandjiezana.toml:toml4j:0.7.2')
-    annotationProcessor("org.apache.logging.log4j:log4j-core:2.14.0")
+    annotationProcessor("org.apache.logging.log4j:log4j-core:2.15.0")
     implementation(files("${rootProject.rootDir}/libraries/maven/jvd-1.0.jar"))
     implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
