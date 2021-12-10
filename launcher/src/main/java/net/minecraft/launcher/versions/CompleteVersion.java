@@ -320,8 +320,12 @@ public class CompleteVersion implements Version, Cloneable {
                 .map(lib -> new File(base, "libraries/" + lib.getArtifactPath()))
                 .collect(Collectors.toList());
 
-        result.add(new File(base, "versions/" + getID() + "/" + getID() + ".jar"));
+        result.add(getJarFile(base));
         return result;
+    }
+
+    public File getJarFile(File base) {
+        return new File(base, "versions/" + getID() + "/" + getID() + ".jar");
     }
 
     public List<Library> getMods(Rule.FeatureMatcher matcher) {
