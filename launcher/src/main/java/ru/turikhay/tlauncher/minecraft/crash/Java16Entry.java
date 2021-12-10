@@ -1,24 +1,20 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
 import net.minecraft.launcher.versions.CompleteVersion;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.JavaManager;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
-import ru.turikhay.tlauncher.ui.loc.Localizable;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class Java16Entry extends PatternEntry {
-    private static final Logger LOGGER = LogManager.getLogger(Java16Entry.class);
-
     public Java16Entry(CrashManager manager) {
         super(manager, "java16",
                 Pattern.compile("^Exception in thread \"main\" java.lang.UnsupportedClassVersionError" +
                         ": .+ has been compiled by a more recent version" +
-                        " of the Java Runtime \\(class file version (?<classFileVersion>.+)\\), this " +
-                        "version of the Java Runtime only recognizes class file versions up to .+$")
+                        " of the Java Runtime \\(class file version .+\\), this version of the Java Runtime" +
+                        " only recognizes class file versions up to .+$")
         );
     }
 
@@ -30,12 +26,10 @@ public class Java16Entry extends PatternEntry {
 
         CompleteVersion version = getManager().getLauncher().getCompleteVersion();
 
-        final String requiredJavaVersion;
-        if(getMatch() == null) {
-            requiredJavaVersion = "???";
-        } else {
-            requiredJavaVersion = guessJavaVersionFromClassFileVersion(getMatch().group("classFileVersion"));
-        }
+        String requiredJava = Optional.ofNullable(version.getJavaVersion())
+                .map(CompleteVersion.JavaVersion::getMajorVersion)
+                .map(String::valueOf)
+                .orElse("16+");
 
         String jreType = TLauncher.getInstance().getSettings()
                 .get(JavaManagerConfig.class).getJreTypeOrDefault().getType();
@@ -61,11 +55,11 @@ public class Java16Entry extends PatternEntry {
             } else {
                 // but the version released before the upgrade point
                 // => ???
-                setPath("old-java", requiredJavaVersion);
+                setPath("old-java", requiredJava);
             }
         } else {
             // => user probably has no idea what they're doing
-            setPath("change-to-recommended", requiredJavaVersion);
+            setPath("change-to-recommended", requiredJava);
             newButton("retry-with-recommended", () -> {
                 TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get()
                         .jre.setValue(JavaManagerConfig.Recommended.TYPE);
@@ -78,33 +72,5 @@ public class Java16Entry extends PatternEntry {
             setPermitHelp(false);
         }
         return true;
-    }
-
-    private String guessJavaVersionFromClassFileVersion(String input) {
-        double classFileVersion;
-        try {
-            classFileVersion = Double.parseDouble(input);
-            if(classFileVersion < 52) {
-                throw new RuntimeException("class file version is too old: " + classFileVersion);
-            }
-        } catch(Exception e) {
-            LOGGER.warn("Can't parse class file version: {}", input, e);
-            return Localizable.get(getLocPath("version.unknown"));
-        }
-        /*
-            Latest known Java is Java 18. Its classes use version 62.0.
-            Every major release that came before Java 18 incremented its class version compared to previous release.
-            I mean 1.8 uses 52.0, 9 uses 53.0, 10 uses 54.0 and so on.
-            I believe this trend will continue with every major release that will come after Java 18:
-            Java 19 will use 63.0, Java 20 - 64.0 and so on.
-            Difference between major Java release and its class version is 44.
-            With this in mind we can guess what Java version the class requires.
-            Reference: https://javaalmanac.io/bytecode/versions/
-         */
-        return String.format(
-                "%.0f%s", // -> "8", "18", "19 (probably)", "20 (probably)", ...
-                classFileVersion - 44.,
-                classFileVersion > 62 ? " " + Localizable.get(getLocPath("version.guessed")) : ""
-        );
     }
 }
