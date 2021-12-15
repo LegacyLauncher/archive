@@ -13,7 +13,7 @@ plugins {
     id "org.openjfx.javafxplugin"
 }
 
-version '1.135.3'
+version '1.135.5'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
@@ -43,39 +43,39 @@ def nstweakerVersion = "1.0"
 dependencies {
     modernImplementation(sourceSets.main.output)
 
-    tlRuntime("com.google.guava:guava:14.0")
+    tlRuntime('com.google.guava:guava:31.0.1-jre')
     tlRuntime("io.sentry:sentry:1.7.30")
-    tlRuntime("org.slf4j:slf4j-api:1.7.21")
-    tlRuntime("com.fasterxml.jackson.core:jackson-core:2.12.0")
+    tlRuntime('org.slf4j:slf4j-api:1.7.32')
+    tlRuntime('com.fasterxml.jackson.core:jackson-core:2.13.0')
     tlRuntime("com.github.zafarkhaja:java-semver:0.9.0")
-    tlRuntime("com.google.code.gson:gson:2.8.7")
-    tlRuntime("commons-io:commons-io:2.5")
-    tlRuntime("net.sf.jopt-simple:jopt-simple:4.9")
-    tlRuntime("org.apache.commons:commons-compress:1.10")
-    tlRuntime("org.tukaani:xz:1.5")
+    tlRuntime('com.google.code.gson:gson:2.8.9')
+    tlRuntime('commons-io:commons-io:2.11.0')
+    tlRuntime('net.sf.jopt-simple:jopt-simple:5.0.4')
+    tlRuntime('org.apache.commons:commons-compress:1.21')
+    tlRuntime('org.tukaani:xz:1.9')
     tlRuntime("org.jdom:jdom:2.0.2")
-    tlRuntime("org.apache.commons:commons-lang3:3.4")
+    tlRuntime('org.apache.commons:commons-lang3:3.12.0')
     tlRuntime("com.timgroup:java-statsd-client:3.1.0")
-    tlRuntime("org.apache.logging.log4j:log4j-api:2.15.0")
-    tlRuntime("org.apache.logging.log4j:log4j-core:2.15.0")
-    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.15.0")
+    tlRuntime("org.apache.logging.log4j:log4j-api:2.16.0")
+    tlRuntime("org.apache.logging.log4j:log4j-core:2.16.0")
+    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.16.0")
     tlRuntime("org.apache.httpcomponents:httpclient:4.5.13")
     tlRuntime("org.apache.httpcomponents:fluent-hc:4.5.13")
     tlRuntime('org.nanohttpd:nanohttpd:2.3.1')
     tlRuntime('ru.turikhay:jvd:1.0')
     tlRuntime('com.moandjiezana.toml:toml4j:0.7.2')
-    annotationProcessor("org.apache.logging.log4j:log4j-core:2.15.0")
+    annotationProcessor("org.apache.logging.log4j:log4j-core:2.16.0")
     implementation(files("${rootProject.rootDir}/libraries/maven/jvd-1.0.jar"))
     implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))
     implementation(project(":common"))
     implementation(project(":bridge"))
 
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.8.1')
-    testImplementation('org.mockito:mockito-core:3.12.4')
-    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.8.1')
-    testRuntimeOnly('org.mockito:mockito-junit-jupiter:3.12.4')
-    testRuntimeOnly('org.mockito:mockito-inline:3.12.4')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.8.2')
+    testImplementation('org.mockito:mockito-core:4.1.0')
+    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.8.2')
+    testRuntimeOnly('org.mockito:mockito-junit-jupiter:4.1.0')
+    testRuntimeOnly('org.mockito:mockito-inline:4.1.0')
 }
 
 task cleanLauncherRepo(type: Delete) {
