@@ -196,8 +196,8 @@ public class VersionSyncInfo {
         HashSet neededFiles = new HashSet();
 
         CompleteVersion version0 = getCompleteVersion(force), version;
-        if (type != null && !version0.isProceededFor(type, true)) {
-            version = TLauncher.getInstance().getLibraryManager().process(version0, type);
+        if (type != null && !version0.isProceededFor(type.toString())) {
+            version = TLauncher.getInstance().getLibraryManager().process(version0, type.toString());
         } else {
             version = version0;
         }

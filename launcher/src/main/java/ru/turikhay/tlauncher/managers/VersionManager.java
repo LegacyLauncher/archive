@@ -456,7 +456,7 @@ public class VersionManager extends InterruptibleComponent {
         }*/
 
         if (type != null) {
-            completeVersion = manager.getComponent(LibraryReplaceProcessor.class).process(completeVersion, type);
+            completeVersion = manager.getComponent(LibraryReplaceProcessor.class).process(completeVersion, type.toString());
         }
 
         File baseDirectory = localList.getBaseDirectory();

@@ -40,7 +40,8 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
             String label = getLabelFor(value);
             int width = mainText.getFontMetrics(mainText.getFont()).stringWidth(label);
 
-            if (getShowVersionsFor() != null && TLauncher.getInstance().getLibraryManager().hasLibraries(value, getShowVersionsFor())) {
+            if (getShowVersionsFor() != null && TLauncher.getInstance().getLibraryManager()
+                    .hasLibrariesExplicitly(value, getShowVersionsFor().toString())) {
                 ImageIcon icon = null;
                 switch(getShowVersionsFor()) {
                     case ELY:

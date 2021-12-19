@@ -17,8 +17,6 @@ public class CurrentLaunchFeatureMatcher implements Rule.FeatureMatcher {
                         return true;
                     }
                     break;
-                case "delete_patchy":
-                    return TLauncher.getInstance().getSettings().getBoolean("minecraft.deletePatchy");
                 case "is_demo_user":
                     return false;
             }

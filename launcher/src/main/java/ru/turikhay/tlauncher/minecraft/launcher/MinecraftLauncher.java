@@ -415,12 +415,10 @@ public class MinecraftLauncher implements JavaProcessListener {
             LOGGER.debug("Looking up replacement libraries for {}", librariesForType = lookupLibrariesForType);
 
             TLauncher.getInstance().getLibraryManager().refreshComponent();
-            if (TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, librariesForType)) {
-
-                version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType);
+            if (TLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, librariesForType.toString())) {
+                version = TLauncher.getInstance().getLibraryManager().process(deJureVersion, librariesForType.toString());
                 LOGGER.info("Some libraries will be replaced");
             } else {
-
                 version = deJureVersion;
                 LOGGER.info("No library will be replaced");
             }
@@ -1769,8 +1767,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             ProcessBuilder b = launcher.createProcess();
             Map<String, String> env = b.environment();
+            LOGGER.debug("Found global _JAVA_OPTIONS=\"" + Optional.ofNullable(System.getenv("_JAVA_OPTIONS")).orElse("null") + "\"");
             if(env != null) {
-                env.put("_JAVA_OPTIONS", "");
+                Optional<String> old = Optional.ofNullable(env.put("_JAVA_OPTIONS", ""));
+                LOGGER.debug("Replaced process _JAVA_OPTIONS=\"" + old.orElse("null") + "\" with nothing");
             }
             process = new JavaProcess(b.start(), charset);
             process.safeSetExitRunnable(this);
