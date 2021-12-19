@@ -21,11 +21,12 @@ import java.util.regex.Pattern;
 
 public class LibraryReplaceProcessor extends InterruptibleComponent {
     private static final Logger LOGGER = LogManager.getLogger(LibraryReplaceProcessor.class);
+    private static final String PATCHY_TYPE = "patchy";
 
     private final double VERSION = 1.0;
 
     private final List<LibraryReplaceProcessorListener> listeners = Collections.synchronizedList(new ArrayList<LibraryReplaceProcessorListener>());
-    private final Map<Account.AccountType, List<LibraryReplace>> libraries = Collections.synchronizedMap(new HashMap<Account.AccountType, List<LibraryReplace>>());
+    private final Map<String, List<LibraryReplace>> libraries = Collections.synchronizedMap(new HashMap<String, List<LibraryReplace>>());
 
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Pattern.class, new PatternTypeAdapter())
@@ -46,23 +47,19 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         this.allowElyEverywhere = allowElyEverywhere;
     }
 
-    private List<LibraryReplace> forAccount(Account.AccountType type) {
-        return libraries.get(type);
+    public boolean hasLibraries(Version version, String type) {
+        return hasLibrariesExplicitly(version, type) || hasLibrariesExplicitly(version, PATCHY_TYPE);
     }
 
-    public boolean hasForAccount(Account.AccountType type) {
-        return forAccount(type) != null;
+    public boolean hasLibrariesExplicitly(VersionSyncInfo version, String type) {
+        return version.isInstalled() && hasLibrariesExplicitly(version.getLocal(), type) || version.hasRemote() && hasLibrariesExplicitly(version.getRemote(), type);
     }
 
-    public boolean hasLibraries(VersionSyncInfo version, Account.AccountType type) {
-        return version.isInstalled() && hasLibraries(version.getLocal(), type) || version.hasRemote() && hasLibraries(version.getRemote(), type);
-    }
-
-    public boolean hasLibraries(Version version, Account.AccountType type) {
-        if (hasLibraries(version.getID(), type)) {
+    public boolean hasLibrariesExplicitly(Version version, String type) {
+        if (hasLibrariesExplicitly(version.getID(), type)) {
             return true;
         }
-        List<LibraryReplace> list = forAccount(type);
+        List<LibraryReplace> list = forType(type);
         if(list == null) {
             return false;
         }
@@ -83,8 +80,8 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         return false;
     }
 
-    private boolean hasLibraries(String version, Account.AccountType type) {
-        List<LibraryReplace> list = forAccount(type);
+    private boolean hasLibrariesExplicitly(String version, String type) {
+        List<LibraryReplace> list = forType(type);
         if(list == null) {
             return false;
         }
@@ -96,10 +93,14 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         return false;
     }
 
-    private List<LibraryReplace> getLibraries(CompleteVersion complete, Account.AccountType type) {
+    private List<LibraryReplace> forType(String type) {
+        return libraries.get(type);
+    }
+
+    private List<LibraryReplace> getLibraries(CompleteVersion complete, String type) {
         String id = complete.getID();
         ArrayList<LibraryReplace> result = new ArrayList<LibraryReplace>();
-        List<LibraryReplace> list = forAccount(type);
+        List<LibraryReplace> list = forType(type);
         if(list == null) {
             return result;
         }
@@ -123,10 +124,16 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         return result;
     }
 
-    public CompleteVersion process(CompleteVersion original, Account.AccountType type) {
-        LOGGER.debug("Processing version {} for account of type {}", original.getID(), type);
+    public CompleteVersion process(CompleteVersion original, String type) {
+        CompleteVersion result = processExplicitly(original, type);
+        result = processExplicitly(result, PATCHY_TYPE);
+        return result;
+    }
 
-        if (original.isProceededFor(type, true)) {
+    private CompleteVersion processExplicitly(CompleteVersion original, String type) {
+        LOGGER.debug("Processing version {} for type {}", original.getID(), type);
+
+        if (original.isProceededFor(type)) {
             LOGGER.debug("... already proceeded");
             return original;
         }
@@ -237,8 +244,8 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         synchronized (libraries) {
             libraries.clear();
             libraries.putAll(resp.libraries);
-            if(!libraries.containsKey(Account.AccountType.ELY_LEGACY) && resp.libraries.containsKey(Account.AccountType.ELY)) {
-                libraries.put(Account.AccountType.ELY_LEGACY, resp.libraries.get(Account.AccountType.ELY));
+            if(!libraries.containsKey(Account.AccountType.ELY_LEGACY.toString()) && resp.libraries.containsKey(Account.AccountType.ELY.toString())) {
+                libraries.put(Account.AccountType.ELY_LEGACY.toString(), resp.libraries.get(Account.AccountType.ELY.toString()));
             }
         }
 
@@ -252,6 +259,6 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
     private static class Payload {
         private double version;
         private boolean allowElyEveywhere;
-        private Map<Account.AccountType, List<LibraryReplace>> libraries;
+        private Map<String, List<LibraryReplace>> libraries;
     }
 }

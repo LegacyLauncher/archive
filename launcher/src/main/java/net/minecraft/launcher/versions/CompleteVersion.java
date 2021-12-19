@@ -15,7 +15,6 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.managers.VersionManager;
-import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.json.ExposeExclusion;
@@ -63,7 +62,7 @@ public class CompleteVersion implements Version, Cloneable {
     Map<String, LoggingConfiguration> logging;
 
     @Expose Repository source;
-    @Expose Account.AccountType proceededFor;
+    @Expose Set<String> proceededFor = new HashSet<>();
     @Expose VersionList list;
 
     public CompleteVersion() {}
@@ -225,18 +224,12 @@ public class CompleteVersion implements Version, Cloneable {
         return downloads.get(type);
     }
 
-    public boolean isProceededFor(Account.AccountType type, boolean require) {
-        if(proceededFor == type) {
-            return true;
-        }
-        if(proceededFor != null && require) {
-            throw new IllegalStateException("already proceeded for another type: " + proceededFor);
-        }
-        return false;
+    public boolean isProceededFor(String type) {
+        return proceededFor.contains(type);
     }
 
-    public void setProceededFor(Account.AccountType type) {
-        this.proceededFor = type;
+    public void setProceededFor(String type) {
+        this.proceededFor.add(type);
     }
 
     public boolean equals(Object o) {
@@ -296,10 +289,6 @@ public class CompleteVersion implements Version, Cloneable {
         ArrayList<Library> result = new ArrayList<>();
 
         for (Library library : libraries) {
-            if (library.getName().startsWith("com.mojang:patchy:") && matcher.hasFeature("delete_patchy", null)) {
-                LOGGER.info("Not including com.mojang:patchy library. Disable this feature in config file if you want.");
-                continue;
-            }
             if (library.appliesToCurrentEnvironment(matcher)) {
                 result.add(library);
             }
