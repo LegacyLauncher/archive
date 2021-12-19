@@ -13,7 +13,7 @@ plugins {
     id "org.openjfx.javafxplugin"
 }
 
-version '1.136.0'
+version '1.136.1'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
@@ -56,15 +56,15 @@ dependencies {
     tlRuntime("org.jdom:jdom:2.0.2")
     tlRuntime('org.apache.commons:commons-lang3:3.12.0')
     tlRuntime("com.timgroup:java-statsd-client:3.1.0")
-    tlRuntime("org.apache.logging.log4j:log4j-api:2.16.0")
-    tlRuntime("org.apache.logging.log4j:log4j-core:2.16.0")
-    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.16.0")
+    tlRuntime("org.apache.logging.log4j:log4j-api:2.17.0")
+    tlRuntime("org.apache.logging.log4j:log4j-core:2.17.0")
+    tlRuntime("org.apache.logging.log4j:log4j-1.2-api:2.17.0")
     tlRuntime("org.apache.httpcomponents:httpclient:4.5.13")
     tlRuntime("org.apache.httpcomponents:fluent-hc:4.5.13")
     tlRuntime('org.nanohttpd:nanohttpd:2.3.1')
     tlRuntime('ru.turikhay:jvd:1.0')
     tlRuntime('com.moandjiezana.toml:toml4j:0.7.2')
-    annotationProcessor("org.apache.logging.log4j:log4j-core:2.16.0")
+    annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
     implementation(files("${rootProject.rootDir}/libraries/maven/jvd-1.0.jar"))
     implementation(files("${rootProject.rootDir}/libraries/nstweaker-${nstweakerVersion}.jar"))
     implementation(files("${rootProject.rootDir}/libraries/authlib-${authlibVersion}.jar"))

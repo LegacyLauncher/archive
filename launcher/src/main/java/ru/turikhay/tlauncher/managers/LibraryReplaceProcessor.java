@@ -12,6 +12,7 @@ import net.minecraft.launcher.versions.json.PatternTypeAdapter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Unbox;
 import ru.turikhay.tlauncher.component.InterruptibleComponent;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.repository.Repository;
@@ -138,71 +139,71 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
             return original;
         }
 
-        CompleteVersion modified = original.copyInto(new CompleteVersion());
-        modified.setProceededFor(type);
+        CompleteVersion target = original.copyInto(new CompleteVersion());
+        target.setProceededFor(type);
 
         List<LibraryReplace> libraries = getLibraries(original, type);
-        for (LibraryReplace lib : libraries) {
-            LOGGER.debug("Now processing: {}", lib.getName());
+        for (LibraryReplace replacementLib : libraries) {
+            LOGGER.debug("Now processing: {}", replacementLib.getName());
 
-            if (modified.getLibraries().contains(lib)) {
+            if (target.getLibraries().contains(replacementLib)) {
                 LOGGER.debug("... already contains");
                 continue;
             }
 
-            if (lib.getPattern() != null) {
-                Pattern pattern = lib.getPattern();
-
-                Iterator<Library> i = modified.getLibraries().iterator();
-                while (i.hasNext()) {
-                    Library replaceable = i.next();
-
-                    if (pattern.matcher(replaceable.getName()).matches()) {
-                        LOGGER.debug("... removing {}", replaceable.getName());
-                        i.remove();
-                    }
-                }
-            }
-
-            if (lib.getRequirementList() != null) {
-                List<Library> versionLibraries = modified.getLibraries();
-                Iterator<Library> i = versionLibraries.iterator();
-
-                while (i.hasNext()) {
-                    Library required = i.next();
-                    String plainName = required.getPlainName();
-
-                    for (Library compare : lib.getRequirementList()) {
-                        if (plainName.equals(compare.getPlainName())) {
-                            LOGGER.debug("... required library {} exists, removing", plainName);
-                            i.remove();
+            if (replacementLib.getRequirementList() != null) {
+                List<Library> requiredLibs = new ArrayList<>(replacementLib.getRequirementList());
+                for (int i = 0; i < target.getLibraries().size(); i++) {
+                    Library library = target.getLibraries().get(i);
+                    Iterator<Library> requiredIterator = requiredLibs.iterator();
+                    while (requiredIterator.hasNext()) {
+                        Library requiredLib = requiredIterator.next();
+                        if (library.getPlainName().equals(requiredLib.getPlainName())) {
+                            LOGGER.debug("... replacing required at index {}: {} -> {}",
+                                    Unbox.box(i), library.getName(), requiredLib.getName());
+                            target.getLibraries().set(i, requiredLib);
+                            requiredIterator.remove();
                         }
                     }
                 }
-
-                modified.getLibraries().addAll(lib.getRequirementList());
+                if (!requiredLibs.isEmpty()) {
+                    LOGGER.debug("... prepending required: {}", requiredLibs);
+                    target.getLibraries().addAll(0, requiredLibs);
+                }
             }
 
-            if (StringUtils.isNotBlank(lib.getArgs())) {
-                String args = modified.getMinecraftArguments();
+            if (replacementLib.getPattern() != null) {
+                Pattern pattern = replacementLib.getPattern();
+                for (int i = 0; i < target.getLibraries().size(); i++) {
+                    Library library = target.getLibraries().get(i);
+                    if (pattern.matcher(library.getName()).matches()) {
+                        LOGGER.debug("... replacing at index {}: {}", Unbox.box(i), library.getName());
+                        target.getLibraries().set(i, replacementLib);
+                    }
+                }
+            } else {
+                LOGGER.debug("... prepending: {}", replacementLib.getName());
+                target.getLibraries().add(0, replacementLib);
+            }
+
+            if (StringUtils.isNotBlank(replacementLib.getArgs())) {
+                String args = target.getMinecraftArguments();
 
                 if (StringUtils.isBlank(args)) {
-                    args = lib.getArgs();
+                    args = replacementLib.getArgs();
                 } else {
-                    args = args + ' ' + lib.getArgs();
+                    args = args + ' ' + replacementLib.getArgs();
                 }
 
-                modified.setMinecraftArguments(args);
+                target.setMinecraftArguments(args);
             }
 
-            if (StringUtils.isNotBlank(lib.getMainClass())) {
-                modified.setMainClass(lib.getMainClass());
+            if (StringUtils.isNotBlank(replacementLib.getMainClass())) {
+                target.setMainClass(replacementLib.getMainClass());
             }
-
-            modified.getLibraries().add(lib);
         }
 
-        return modified;
+        return target;
     }
 
     @Override
