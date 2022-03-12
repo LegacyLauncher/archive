@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
@@ -16,7 +15,7 @@ public class VPanel extends ExtendedPanel {
     private VPanel(boolean isDoubleBuffered) {
         super(isDoubleBuffered);
         setMagnifyGaps(true);
-        setLayout(new BoxLayout(this, 3));
+        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     }
 
     public VPanel() {
@@ -46,9 +45,9 @@ public class VPanel extends ExtendedPanel {
     }
 
     public final void setLayout(LayoutManager mgr) {
-        if (mgr != null && (mgr instanceof BoxLayout)) {
-            int axis = Reflect.cast(mgr, BoxLayout.class).getAxis();
-            if (axis != 3 && axis != 1) {
+        if (mgr instanceof BoxLayout) {
+            int axis = ((BoxLayout) mgr).getAxis();
+            if (axis != BoxLayout.PAGE_AXIS && axis != BoxLayout.Y_AXIS) {
                 throw new IllegalArgumentException("Illegal BoxLayout axis!");
             }
             super.setLayout(mgr);
@@ -56,7 +55,7 @@ public class VPanel extends ExtendedPanel {
     }
 
     private boolean magnify;
-    private final Hashtable<Component, Gap> emptyPanelMap = new Hashtable<Component, Gap>();
+    private final Hashtable<Component, Gap> emptyPanelMap = new Hashtable<>();
 
     public final boolean getMagnifyGaps() {
         return magnify;
@@ -68,8 +67,7 @@ public class VPanel extends ExtendedPanel {
     }
 
     protected final void checkMagnifyGaps() {
-        HashMap<Component, Gap> searching = new HashMap<Component, Gap>();
-        searching.putAll(emptyPanelMap);
+        HashMap<Component, Gap> searching = new HashMap<>(emptyPanelMap);
 
         if (magnify) {
             Iterator<Component> compI = searching.keySet().iterator();
@@ -96,7 +94,7 @@ public class VPanel extends ExtendedPanel {
         Gap(Component comp) {
             emptyPanelMap.put(comp, this);
 
-            this.comp = new WeakReference<Component>(comp);
+            this.comp = new WeakReference<>(comp);
             setOpaque(false);
             //setBackground(Color.green);
 

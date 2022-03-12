@@ -21,7 +21,7 @@ public class VActionFrame extends ActionFrame {
     private final VPanel body;
     private final VActionBody bodyText;
 
-    protected int labelWidth;
+    protected final int labelWidth;
 
     private final ExtendedPanel footer;
 

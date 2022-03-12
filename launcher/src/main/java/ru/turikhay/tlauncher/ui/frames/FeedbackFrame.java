@@ -10,8 +10,6 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -37,13 +35,10 @@ public class FeedbackFrame extends VActionFrame {
         getFooter().setLayout(new BorderLayout());
 
         LocalizableButton okayButton = new LocalizableButton("feedback.button.okay");
-        okayButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Stats.feedbackStarted();
-                OS.openLink(url);
-                dispose();
-            }
+        okayButton.addActionListener(e -> {
+            Stats.feedbackStarted();
+            OS.openLink(url);
+            dispose();
         });
         Images.getIcon24("plus-square").setup(okayButton);
         getFooter().add(okayButton, "Center");

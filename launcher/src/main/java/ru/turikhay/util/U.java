@@ -3,27 +3,22 @@ package ru.turikhay.util;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.async.ExtendedThread;
-import ru.turikhay.util.stream.InputStringStream;
 
 import java.awt.*;
-import java.io.*;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.text.NumberFormat;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
 import java.util.List;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class U {
-    public static final String PROGRAM_PACKAGE = "ru.turikhay";
-    public static final int DEFAULT_CONNECTION_TIMEOUT = 15000;
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static String toLog(String prefix, Object... append) {
@@ -35,11 +30,7 @@ public class U {
         }
 
         if (append != null) {
-            Object[] var7 = append;
-            int var6 = append.length;
-
-            for (int var5 = 0; var5 < var6; ++var5) {
-                Object e = var7[var5];
+            for (Object e : append) {
                 if (e != null) {
                     if (e.getClass().isArray()) {
                         if (!first) {
@@ -76,18 +67,18 @@ public class U {
                             b.append(File.separator);
                         }
                     } else if (e instanceof Iterator) {
-                        Iterator var10 = (Iterator) e;
+                        Iterator<?> var10 = (Iterator<?>) e;
 
                         while (var10.hasNext()) {
                             b.append(" ");
-                            b.append(toLog(new Object[]{var10.next()}));
+                            b.append(toLog(var10.next()));
                         }
                     } else if (e instanceof Enumeration) {
-                        Enumeration var11 = (Enumeration) e;
+                        Enumeration<?> var11 = (Enumeration<?>) e;
 
                         while (var11.hasMoreElements()) {
                             b.append(" ");
-                            b.append(toLog(new Object[]{var11.nextElement()}));
+                            b.append(toLog(var11.nextElement()));
                         }
                     } else {
                         if (!first) {
@@ -266,160 +257,33 @@ public class U {
         }
     }
 
-    public static short shortRandom() {
-        return (short) (new Random(System.currentTimeMillis())).nextInt(32767);
-    }
-
-    public static double doubleRandom(){
-        return new Random(System.currentTimeMillis()).nextDouble();
-    }
-
-    public static int random(int s, int e){
-        return new Random(System.currentTimeMillis()).nextInt(e - s) + s;
-    }
-
-    public static boolean ok(int d){
-        return new Random(System.currentTimeMillis()).nextInt(d) == 0;
-    }
-
-    public static double getAverage(double[] d) {
-        double a = 0.0D;
+    public static double getAverage(double[] d, int max) {
+        double a = 0;
         int k = 0;
-        double[] var8 = d;
-        int var7 = d.length;
 
-        for (int var6 = 0; var6 < var7; ++var6) {
-            double curd = var8[var6];
-            if (curd != 0.0D) {
-                a += curd;
-                ++k;
-            }
+        for (double curd : d) {
+            a += curd;
+            ++k;
+            if (k == max) break;
         }
 
-        if (k == 0) {
-            return 0.0D;
-        } else {
-            return a / (double) k;
-        }
-    }
-
-    public static double getAverage(double[] d, int max){
-        double a = 0; int k = 0;
-
-        for(double curd : d){
-            a += curd; ++k;
-            if(k == max) break;
-        }
-
-        if(k == 0) return 0;
+        if (k == 0) return 0;
         return a / k;
     }
 
 
-    public static int getAverage(int[] d) {
-        int a = 0;
-        int k = 0;
-        int[] var6 = d;
-        int var5 = d.length;
-
-        for (int var4 = 0; var4 < var5; ++var4) {
-            int curd = var6[var4];
-            if (curd != 0) {
-                a += curd;
-                ++k;
-            }
-        }
-
-        if (k == 0) {
-            return 0;
-        } else {
-            return Math.round((float) (a / k));
-        }
-    }
-
-    public static int getAverage(int[] d, int max){
-        int a = 0, k = 0;
-
-        for(int curd : d){
-            a += curd; ++k;
-            if(k == max) break;
-        }
-
-        if(k == 0) return 0;
-        return Math.round(a / k);
-    }
-
-
-    public static int getSum(int[] d){
-        int a = 0;
-
-        for(int curd : d) a += curd;
-        return a;
-    }
-
-    public static double getSum(double[] d){
-        double a = 0;
-
-        for(double curd : d) a += curd;
-        return a;
-    }
-
-
-    public static int getMaxMultiply(int i, int max){
-        if(i <= max) return 1;
-        for(int x=max;x>1;x--)
-            if(i % x == 0) return x;
+    public static int getMaxMultiply(int i, int max) {
+        if (i <= max) return 1;
+        for (int x = max; x > 1; x--)
+            if (i % x == 0) return x;
         return (int) Math.ceil(i / max);
     }
 
-
-    /**
-     * @deprecated
-     */
-    @Deprecated
-    public static String r(String string, int max){
-        if(string == null) return null;
-
-        int len = string.length();
-        if(len <= max) return string;
-
-        String[] words = string.split(" ");
-        String ret = ""; int remaining = max + 1;
-
-        for(int x=0;x<words.length;x++){
-            String curword = words[x];
-            int curlen = curword.length();
-
-            if(curlen < remaining){
-                ret += " " + curword;
-                remaining -= curlen + 1;
-
-                continue;
-            }
-
-            if(x == 0)
-                ret += " " + curword.substring(0, remaining - 1);
-            break;
-        }
-
-        if(ret.length() == 0) return "";
-        return ret.substring(1) + "...";
-    }
-
-
-    public static String setFractional(double d, int fractional){
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMaximumFractionDigits(fractional);
-
-        return nf.format(d).replace(",", ".");
-    }
-
-
     public static StringBuilder stackTrace(Throwable e) {
         StringBuilder trace = rawStackTrace(e);
-        ExtendedThread currentAsExtended = getAs(Thread.currentThread(), ExtendedThread.class);
-        if (currentAsExtended != null) {
-            trace.append("\nThread called by: ").append(rawStackTrace(currentAsExtended.getCaller()));
+        Thread thread = Thread.currentThread();
+        if (thread instanceof ExtendedThread) {
+            trace.append("\nThread called by: ").append(rawStackTrace(((ExtendedThread) thread).getCaller()));
         }
 
         return trace;
@@ -434,11 +298,8 @@ public class U {
             int totalElements = 0;
             StringBuilder builder = new StringBuilder();
             builder.append(e);
-            StackTraceElement[] var8 = elems;
-            int var7 = elems.length;
 
-            for (int var6 = 0; var6 < var7; ++var6) {
-                StackTraceElement cause = var8[var6];
+            for (StackTraceElement cause : elems) {
                 ++totalElements;
                 String description = cause.toString();
                 if (description.startsWith("ru.turikhay")) {
@@ -480,19 +341,17 @@ public class U {
         return getUsingSpace() + " / " + getTotalSpace() + " MB";
     }
 
-    public static void gc() {
-        LOGGER.info("Starting garbage collector: " + memoryStatus());
-        System.gc();
-        LOGGER.info("Garbage collector completed: " + memoryStatus());
-    }
-
     public static void sleepFor(long millis, boolean throwIfInterrupted) {
         try {
             Thread.sleep(millis);
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             if (throwIfInterrupted) {
                 throw new RuntimeException(e);
             }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -503,9 +362,9 @@ public class U {
     public static URL makeURL(String p, boolean assertValid) {
         try {
             return new URL(p);
-        } catch (Exception var2) {
+        } catch (MalformedURLException e) {
             if (assertValid) {
-                throw new RuntimeException(var2);
+                throw new RuntimeException(e);
             }
         }
         return null;
@@ -515,36 +374,8 @@ public class U {
         return makeURL(p, false);
     }
 
-    public static URI makeURI(URL url) {
-        try {
-            return url.toURI();
-        } catch (Exception var2) {
-            return null;
-        }
-    }
-
-    public static URI makeURI(String p) {
-        return makeURI(makeURL(p));
-    }
-
-    private static boolean interval(int min, int max, int num, boolean including) {
-        return including ? num >= min && num <= max : num > max && num < max;
-    }
-
-    public static boolean interval(int min, int max, int num) {
-        return interval(min, max, num, true);
-    }
-
-    public static int fitInterval(int val, int min, int max) {
-        return val > max ? max : (val < min ? min : val);
-    }
-
-    public static long m() {
-        return System.currentTimeMillis();
-    }
-
-    public static long n() {
-        return System.nanoTime();
+    public static int clamp(int val, int min, int max) {
+        return Math.min(max, Math.max(val, min));
     }
 
     public static int getReadTimeout() {
@@ -559,28 +390,23 @@ public class U {
         return Proxy.NO_PROXY;
     }
 
-    public static <T> T getRandom(T[] array) {
-        return array == null ? null : (array.length == 0 ? null : (array.length == 1 ? array[0] : array[(new Random()).nextInt(array.length)]));
+    public static <T> T getRandom(List<? extends T> col) {
+        if (col == null || col.size() == 0) return null;
+        return col.size() == 1 ? col.get(0) : col.get(ThreadLocalRandom.current().nextInt(col.size()));
     }
 
-    public static <K, E> LinkedHashMap<K, E> sortMap(Map<K, E> map, K[] sortedKeys) {
+    public static <K, E> Map<K, E> sortMap(Map<K, E> map, K[] sortedKeys) {
         if (map == null) {
             return null;
         } else if (sortedKeys == null) {
             throw new NullPointerException("Keys cannot be NULL!");
         } else {
-            LinkedHashMap result = new LinkedHashMap();
-            Object[] var6 = sortedKeys;
-            int var5 = sortedKeys.length;
+            Map<K, E> result = new LinkedHashMap<>();
 
-            for (int var4 = 0; var4 < var5; ++var4) {
-                Object key = var6[var4];
-                Iterator var8 = map.entrySet().iterator();
-
-                while (var8.hasNext()) {
-                    Entry entry = (Entry) var8.next();
-                    Object entryKey = entry.getKey();
-                    Object value = entry.getValue();
+            for (K key : sortedKeys) {
+                for (Entry<K, E> entry : map.entrySet()) {
+                    K entryKey = entry.getKey();
+                    E value = entry.getValue();
                     if (key == null && entryKey == null) {
                         result.put(null, value);
                         break;
@@ -597,20 +423,15 @@ public class U {
         }
     }
 
-    public static Color randomColor() {
-        Random random = new Random();
-        return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
-    }
-
     public static Color shiftColor(Color color, int bits, int min, int max) {
         if (color == null) {
             return null;
         } else if (bits == 0) {
             return color;
         } else {
-            int newRed = fitInterval(color.getRed() + bits, min, max);
-            int newGreen = fitInterval(color.getGreen() + bits, min, max);
-            int newBlue = fitInterval(color.getBlue() + bits, min, max);
+            int newRed = clamp(color.getRed() + bits, min, max);
+            int newGreen = clamp(color.getGreen() + bits, min, max);
+            int newBlue = clamp(color.getBlue() + bits, min, max);
             return new Color(newRed, newGreen, newBlue, color.getAlpha());
         }
     }
@@ -625,7 +446,7 @@ public class U {
         } else if (bits == 0) {
             return color;
         } else {
-            int newAlpha = fitInterval(color.getAlpha() + bits, min, max);
+            int newAlpha = clamp(color.getAlpha() + bits, min, max);
             return new Color(color.getRed(), color.getGreen(), color.getBlue(), newAlpha);
         }
     }
@@ -634,201 +455,16 @@ public class U {
         return shiftAlpha(color, bits, 0, 255);
     }
 
-    /**
-     * @deprecated
-     */
-    @Deprecated
-    public static <T> T getAs(Object o, Class<T> classOfT) {
-        return Reflect.cast(o, classOfT);
-    }
-
-    public static boolean equal(Object a, Object b) {
-        return a == b ? true : (a != null ? a.equals(b) : false);
-    }
-
-    public static String[] extend(String[] a0, String[] a1) {
-        String[] newArray = new String[a0.length + a1.length];
-        System.arraycopy(a0, 0, newArray, 0, a0.length);
-        System.arraycopy(a1, 0, newArray, a0.length, a1.length);
-        return newArray;
-    }
-
-    public static void close(Closeable... c) {
-        if (c == null) {
-            return;
-        }
-        for (Closeable close : c) {
-            try {
-                close.close();
-            } catch (Throwable var2) {
-            }
-        }
-    }
-
-    public static <T> boolean is(T obj, T... equal) {
-        if (equal == null) {
-            throw new NullPointerException("comparsion array");
-        } else {
-            Object compare;
-            int var3;
-            int var4;
-            Object[] var5;
-            if (obj == null) {
-                var5 = equal;
-                var4 = equal.length;
-
-                for (var3 = 0; var3 < var4; ++var3) {
-                    compare = var5[var3];
-                    if (compare == null) {
-                        return true;
-                    }
-                }
-            } else {
-                var5 = equal;
-                var4 = equal.length;
-
-                for (var3 = 0; var3 < var4; ++var3) {
-                    compare = var5[var3];
-                    if (obj.equals(compare)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-    }
-
-    public static <T> int find(T obj, T[] array) {
-        int i;
-        if (obj == null) {
-            for (i = 0; i < array.length; ++i) {
-                if (array[i] == null) {
-                    return i;
-                }
-            }
-        } else {
-            for (i = 0; i < array.length; ++i) {
-                if (obj.equals(array[i])) {
-                    return i;
-                }
-            }
-        }
-
-        return -1;
-    }
-
-    private static void swap(List list, int i, int j) {
-        Object tmp = list.get(i);
-        list.set(i, list.get(j));
-        list.set(j, tmp);
-    }
-
-    private static void swap(Object[] arr, int i, int j) {
-        Object tmp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = tmp;
-    }
-
-    private static final SecureRandom rnd = new SecureRandom();
-
-    public static <T> List<T> shuffle(List<T> list) {
-        int size = list.size();
-
-        for (int i = size; i > 1; i--)
-            swap(list, i - 1, rnd.nextInt(i));
-
-        return list;
-    }
-
-    public static <T> T[] shuffle(T... arr) {
-        int size = arr.length;
-
-        // Shuffle array
-        for (int i = size; i > 1; i--)
-            swap(arr, i - 1, rnd.nextInt(i));
-
-        return arr;
-    }
-
-    public static String reverse(String s) {
-        StringBuilder b = new StringBuilder();
-        b.append(s);
-        b.reverse();
-        return b.toString();
-    }
-
-    public static byte[] toByteArray(String s) {
-        try {
-            return IOUtils.toByteArray(new InputStringStream(s));
-        } catch (IOException ioE) {
-            throw new RuntimeException("i/o exception while reading string", ioE);
-        }
-    }
-
-    public static boolean equal(byte[] b1, byte[] b2) {
-        if (b1 == b2) {
-            return true;
-        }
-
-        if (b1.length == b2.length) {
-            for (int i = 0; i < b1.length; i++) {
-                if (b1[i] != b2[i])
-                    return false;
-            }
-            return true;
-        }
-
-        return false;
-    }
-
-    public static <T> T requireNotNull(T obj, String name) {
-        if (obj == null) {
-            throw new NullPointerException(name);
-        }
-        return obj;
-    }
-
-    public static <T> T requireNotNull(T obj) {
-        return requireNotNull(obj, null);
-    }
-
-    public static <T extends Collection> T requireNotContainNull(T collection, String name) {
-        for (Object o : U.requireNotNull(collection, name)) {
-            if (o == null) {
-                throw new NullPointerException(name);
-            }
-        }
-        return collection;
-    }
-
-    public static <T> T[] requireNotContainNull(T[] array, String name) {
-        for (Object o : U.requireNotNull(array, name)) {
-            if (o == null) {
-                throw new NullPointerException(name);
-            }
-        }
-        return array;
-    }
-
     public static Locale getLocale(String tag) {
-        if(tag == null) {
+        if (tag == null) {
             return null;
         }
         try {
             return LocaleUtils.toLocale(tag);
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             LOGGER.warn("Couldn't parse locale: {}", tag, e);
             return null;
         }
-    }
-
-    public static <T> List<T> asListOf(Class<T> of, Object... objects) {
-        List<T> list = new ArrayList<T>(objects.length);
-        for(Object o : objects) {
-            list.add((T) o);
-        }
-        return list;
     }
 
     public static Calendar getUTC() {
@@ -839,42 +475,6 @@ public class U {
         Calendar date = getUTC();
         date.setTimeInMillis(millis);
         return date;
-    }
-
-    public static String resolveHost(URL url) {
-        if(url == null) {
-            return "url is null";
-        } else {
-            return resolveHost(url.getHost());
-        }
-    }
-
-    public static String resolveHost(String host) {
-        String ip;
-        if(host == null) {
-            ip = "host is null";
-        } else {
-            try {
-                ip = InetAddress.getByName(host).getHostAddress();
-            } catch (UnknownHostException unknownHostException) {
-                ip = "unknown host: " + host;
-            }
-        }
-        return ip;
-    }
-
-    public static String readErrorResponse(HttpURLConnection connection) {
-        if(connection == null) {
-            return "connection is null";
-        }
-        if(connection.getErrorStream() == null) {
-            return "no error stream";
-        }
-        try(InputStreamReader reader = new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8)) {
-            return IOUtils.toString(reader);
-        } catch (IOException e) {
-            return "failed to read error stream: " + e.toString();
-        }
     }
 
     public static String getNormalVersion(Version version) {
@@ -895,32 +495,8 @@ public class U {
         );
     }
 
-    public static void copyInterruptibly(InputStream input, OutputStream output) throws IOException {
-        byte[] b = new byte[8192];
-        int l;
-        while((l = input.read(b)) != -1) {
-            output.write(b, 0, l);
-            if(Thread.interrupted()) {
-                throw new InterruptedIOException();
-            }
-        }
-        output.flush();
-    }
-
-    public static void checkInterrupted() throws InterruptedException {
-        if(Thread.interrupted()) {
-            throw new InterruptedException();
-        }
-    }
-
-    // Generic exceptions are unchecked
-    @SuppressWarnings("unchecked")
-    public static <T, E extends Exception> T throwChecked(Exception e) throws E {
-        throw (E) e;
-    }
-
     public static String parseHost(String url) {
-        if(url == null) {
+        if (url == null) {
             return null;
         }
         try {

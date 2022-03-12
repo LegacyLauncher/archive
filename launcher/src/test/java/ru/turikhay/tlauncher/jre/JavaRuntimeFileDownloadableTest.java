@@ -21,7 +21,7 @@ class JavaRuntimeFileDownloadableTest {
         tempFile.deleteOnExit();
         Request.Get("https://launcher.mojang.com/v1/objects/2130fec1b55591562f1fe8366875adbd37eb2107/" +
                 "logging.properties").execute().saveContent(tempFile);
-        try(LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(new FileInputStream(tempFile)));
+        try (LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(new FileInputStream(tempFile)))
         ) {
             System.out.println(IOUtils.toString(input, StandardCharsets.UTF_8));
         }

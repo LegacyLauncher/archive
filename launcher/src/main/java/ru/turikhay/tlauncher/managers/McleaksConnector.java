@@ -4,16 +4,16 @@ import ru.turikhay.app.nstweaker.IsolatedTweakedConnector;
 import ru.turikhay.app.nstweaker.TweakHostname;
 import ru.turikhay.app.nstweaker.TweakHostnameService;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class McleaksConnector {
-    private static String[] HOSTS = {"authserver.mojang.com", "sessionserver.mojang.com"};
+    private static final String[] HOSTS = {"authserver.mojang.com", "sessionserver.mojang.com"};
 
     private List<TweakHostname> hostnameList;
     private IsolatedTweakedConnector connector;
@@ -26,8 +26,8 @@ public class McleaksConnector {
     }
 
     public HttpsURLConnection setupHttpsConnection(URL url) throws IOException {
-        U.requireNotNull(url, "url");
-        if(connector == null) {
+        Objects.requireNonNull(url, "url");
+        if (connector == null) {
             throw new IllegalStateException("connector is not available");
         }
         return connector.setupHttpsConnection(url);
@@ -41,7 +41,7 @@ public class McleaksConnector {
 
     private static List<TweakHostname> createHostnameList(String ip) {
         List<TweakHostname> hostnameList = new ArrayList<>();
-        for(String host : HOSTS) {
+        for (String host : HOSTS) {
             hostnameList.add(TweakHostname.ipv4(ip, host));
         }
         return hostnameList;

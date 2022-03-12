@@ -4,7 +4,7 @@ import java.io.PrintStream;
 
 public final class OutputRedirectBuffer {
     private static final ToStringBufferOutputStream buffer = new ByteArrayBufferOutputStream();
-    
+
     public static String getBuffer() {
         return buffer.getBuffer();
     }

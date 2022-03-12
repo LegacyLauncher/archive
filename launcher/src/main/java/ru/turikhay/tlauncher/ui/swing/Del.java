@@ -12,9 +12,9 @@ public class Del extends ExtendedPanel {
     public static final int CENTER = 0;
     private static final int BOTTOM = 1;
     private static final long serialVersionUID = -2252007533187803762L;
-    private int size;
-    private int aligment;
-    private Color color;
+    private final int size;
+    private final int aligment;
+    private final Color color;
 
     public Del(int size, int aligment, Color color) {
         this.size = SwingUtil.magnify(size);

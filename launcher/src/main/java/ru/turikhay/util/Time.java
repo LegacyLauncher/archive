@@ -7,7 +7,7 @@ import java.util.Iterator;
 import static ru.turikhay.util.Time.NotBoolean.*;
 
 public final class Time {
-    private static final ArrayList<TimeHolder> holders = new ArrayList<TimeHolder>();
+    private static final ArrayList<TimeHolder> holders = new ArrayList<>();
 
     public static <T> T start(T object) {
         synchronized (holders) {
@@ -43,8 +43,7 @@ public final class Time {
                 }
             }
         }
-
-        throw new IllegalStateException("object is not being held");
+        return Long.MIN_VALUE;
     }
 
     public static long stop(Object object) {
@@ -81,7 +80,7 @@ public final class Time {
                 throw new NullPointerException();
             }
 
-            ref = new WeakReference<Object>(o);
+            ref = new WeakReference<>(o);
             timestamp = System.currentTimeMillis();
         }
 
@@ -95,7 +94,7 @@ public final class Time {
     }
 
     enum NotBoolean {
-        FALSE, TRUE, UNDEFINED;
+        FALSE, TRUE, UNDEFINED
     }
 
     private Time() {

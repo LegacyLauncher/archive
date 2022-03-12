@@ -41,9 +41,9 @@ public class SwingLoggerAppender extends AbstractAppender {
 
     @PluginFactory
     public static SwingLoggerAppender createAppender(@PluginAttribute("name") String name,
-                                              @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
-                                              @PluginElement("Layout") Layout<? extends Serializable> layout,
-                                              @PluginElement("Filters") Filter filter) {
+                                                     @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
+                                                     @PluginElement("Layout") Layout<? extends Serializable> layout,
+                                                     @PluginElement("Filters") Filter filter) {
 
         if (name == null) {
             LOGGER.error("No name provided for StubAppender");

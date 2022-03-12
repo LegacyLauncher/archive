@@ -7,14 +7,16 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 public final class WeakObjectPool<T> {
-    private final Factory<T> factory;
-    private final List<ObjectRef<T>> objects = new ArrayList<ObjectRef<T>>();
+    private final Supplier<T> factory;
+    private final List<ObjectRef<T>> objects = new ArrayList<>();
 
-    public WeakObjectPool(Factory<T> factory) {
-        this.factory = U.requireNotNull(factory, "factory");
+    public WeakObjectPool(Supplier<T> factory) {
+        this.factory = Objects.requireNonNull(factory, "factory");
     }
 
     public synchronized ObjectRef<T> get() {
@@ -22,47 +24,47 @@ public final class WeakObjectPool<T> {
         while (i.hasNext()) {
             ObjectRef<T> ref = i.next();
 
-            if(ref.trySetUsable()) {
+            if (ref.trySetUsable()) {
                 return ref;
             }
 
-            if(ref.ref.get() == null) {
+            if (ref.ref.get() == null) {
                 i.remove();
             }
         }
 
-        ObjectRef<T> newRef = new ObjectRef<T>(U.requireNotNull(factory.createNew(), "newObj"));
+        ObjectRef<T> newRef = new ObjectRef<>(Objects.requireNonNull(factory.get(), "newObj"));
         objects.add(newRef);
 
         return newRef;
     }
 
-    public final class ObjectRef<T> {
+    public static final class ObjectRef<T> {
         private final WeakReference<T> ref;
         private T strongRef;
         private final AtomicBoolean inUse = new AtomicBoolean(true); // ObjectRefs are created on demand, it means that they must be set "in use"
 
         private ObjectRef(T obj) {
-            this.ref = new WeakReference<T>(U.requireNotNull(obj, "object"));
+            this.ref = new WeakReference<>(Objects.requireNonNull(obj, "object"));
         }
 
         public T get() {
-            if(inUse.get()) {
+            if (inUse.get()) {
                 return ref.get();
             }
-            throw new IllegalStateException("object "+ ref +" is not intended to be used");
+            throw new IllegalStateException("object " + ref + " is not intended to be used");
         }
 
         public void free() {
-            if(inUse.compareAndSet(true, false)) {
+            if (inUse.compareAndSet(true, false)) {
                 strongRef = null;
             } else {
-                throw new IllegalStateException("object "+ ref +" was not in use");
+                throw new IllegalStateException("object " + ref + " was not in use");
             }
         }
 
         private boolean trySetUsable() {
-            if(inUse.compareAndSet(false, true)) {
+            if (inUse.compareAndSet(false, true)) {
                 strongRef = ref.get();
                 return strongRef != null;
             }
@@ -70,22 +72,19 @@ public final class WeakObjectPool<T> {
         }
 
         public boolean equals(Object o) {
-            if(o == null) {
+            if (o == null) {
                 return false;
             }
-            if(super.equals(o)) {
+            if (super.equals(o)) {
                 return true;
             }
-            if(!(o instanceof ObjectRef)) {
+            if (!(o instanceof ObjectRef)) {
                 return false;
             }
 
-            final Object obj = get(), compare = ((ObjectRef) o).get();
+            final Object obj = get(), compare = ((ObjectRef<?>) o).get();
 
-            if(obj == null) {
-                return compare == null;
-            }
-            return obj.equals(compare);
+            return Objects.equals(obj, compare);
         }
 
         public String toString() {

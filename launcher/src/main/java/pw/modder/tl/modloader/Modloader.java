@@ -12,8 +12,11 @@ import java.io.IOException;
 
 public interface Modloader {
     CompleteVersion install(String versionName, String versionFamily, File versionsDir, File librariesDir) throws IOException;
+
     ModloaderFamily getFamily();
+
     String getMinecraftVersion();
+
     String getModloaderVersion();
 
     class Forge implements Modloader {

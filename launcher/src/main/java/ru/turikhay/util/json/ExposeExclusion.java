@@ -9,7 +9,7 @@ public final class ExposeExclusion implements ExclusionStrategy {
     private static ExposeExclusion instance;
 
     private static ExposeExclusion getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new ExposeExclusion();
         }
         return instance;

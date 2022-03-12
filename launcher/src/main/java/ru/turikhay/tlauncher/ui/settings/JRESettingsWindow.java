@@ -47,7 +47,6 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
 
     private final EditorFileField customPathField;
     private final LocalizableLabel customPathHint;
-    private final LocalizableTextField currentPathField;
     private final LocalizableLabel recommendedPathHint0;
     private final LocalizableTextField recommendedPathField;
     private final LocalizableHTMLLabel pathMessage;
@@ -108,7 +107,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         pathCards = new CardLayout();
         pathPanel.setLayout(pathCards);
 
-        currentPathField = initCurrentPath();
+        LocalizableTextField currentPathField = initCurrentPath();
         customPathHint = createCustomPathHint();
         customPathField = initCustomPath();
         recommendedPathHint0 = createRecommendedPathHint();
@@ -157,7 +156,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     void selectedVersionChanged(VersionSyncInfo versionSyncInfo) {
-        if(recommendedRadioButton.isSelected()) {
+        if (recommendedRadioButton.isSelected()) {
             onRecommended();
         }
     }
@@ -165,7 +164,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     void javaVersionCallback() {
         String settingsValue = customPathField.getSettingsValue();
         Future<JavaVersion> f = comboBox.javaVersionCache.get(settingsValue);
-        if(!f.isDone()) {
+        if (!f.isDone()) {
             return;
         }
         JavaVersion javaVersion;
@@ -186,11 +185,11 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         saveValues = false;
 
         JavaManagerConfig.JreType jreType = JavaManagerConfig.createByType(comboBox.sp.jre.getValue());
-        if(jreType instanceof JavaManagerConfig.Recommended) {
+        if (jreType instanceof JavaManagerConfig.Recommended) {
             recommendedRadioButton.doClick();
-        } else if(jreType instanceof JavaManagerConfig.Current) {
+        } else if (jreType instanceof JavaManagerConfig.Current) {
             currentRadioButton.doClick();
-        } else if(jreType instanceof JavaManagerConfig.Custom) {
+        } else if (jreType instanceof JavaManagerConfig.Custom) {
             customRadioButton.doClick();
         } else {
             throw new RuntimeException("unknown jreType");
@@ -204,7 +203,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private void saveSelfValues() {
-        if(!saveValues) {
+        if (!saveValues) {
             return;
         }
         JavaManagerConfig javaManagerConfigOld = comboBox.sp.global.get(JavaManagerConfig.class);
@@ -212,13 +211,14 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         javaManagerConfig.setArgs(jvmArgsField.getValue());
         javaManagerConfig.setMcArgs(mcArgsField.getValue());
         javaManagerConfig.setUseOptimizedArguments(useOptimizedArgsCheckbox.isSelected());
-        if(!javaManagerConfigOld.equals(javaManagerConfig)) {
+        if (!javaManagerConfigOld.equals(javaManagerConfig)) {
             comboBox.sp.global.set(javaManagerConfig);
             onValuesSaved();
         }
     }
 
     private final AtomicInteger saveCount = new AtomicInteger();
+
     private void onValuesSaved() {
         final int saveCount = this.saveCount.incrementAndGet();
         AsyncThread.execute(() -> {
@@ -237,18 +237,18 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         saveJreType(JavaManagerConfig.Recommended.TYPE);
 
         VersionSyncInfo version = comboBox.sp.scene.loginForm.versions.getVersion();
-        if(version == null || !version.isInstalled()) {
+        if (version == null || !version.isInstalled()) {
             pathMessage.setText("settings.jre.window.configure.path.recommended.unknown");
             showPath("pathMessage");
             return;
         }
         CompleteVersion localCompleteVersion = version.getLocalCompleteVersion();
         CompleteVersion.JavaVersion javaVersion = localCompleteVersion.getJavaVersion();
-        if(javaVersion == null) {
+        if (javaVersion == null) {
             javaVersion = TLauncher.getInstance().getJavaManager()
                     .getFallbackRecommendedVersion(localCompleteVersion, false);
 
-            if(javaVersion == null) {
+            if (javaVersion == null) {
                 pathMessage.setText("settings.jre.window.configure.path.recommended.current",
                         localCompleteVersion.getID());
                 showPath("pathMessage");
@@ -258,7 +258,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
 
         Optional<JavaRuntimeLocal> localRuntimeOpt = TLauncher.getInstance().getJavaManager().getDiscoverer()
                 .getCurrentPlatformRuntime(javaVersion.getComponent());
-        if(!localRuntimeOpt.isPresent()) {
+        if (!localRuntimeOpt.isPresent()) {
             pathMessage.setText("settings.jre.window.configure.path.recommended.not-installed",
                     localCompleteVersion.getID(), javaVersion.getComponent());
             showPath("pathMessage");
@@ -291,7 +291,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private void saveJreType(String type) {
-        if(type.equals(comboBox.sp.global.get(JavaManagerConfig.PATH_JRE_TYPE))) {
+        if (type.equals(comboBox.sp.global.get(JavaManagerConfig.PATH_JRE_TYPE))) {
             return;
         }
         comboBox.sp.global.set(JavaManagerConfig.PATH_JRE_TYPE, type);
@@ -318,7 +318,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private void setCustomPathHint(boolean isError, String path, Object... vars) {
-        if(isError) {
+        if (isError) {
             customPathHint.setForeground(Theme.getTheme().getFailure());
         } else {
             customPathHint.setForeground(Theme.getTheme().getForeground());
@@ -334,16 +334,16 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
             fileExplorer = null;
         }
         EditorFileField customPathField = new EditorFileField(
-                "settings.jre.window.configure.path.custom.placeholder" + (OS.WINDOWS.isCurrent()? ".windows" : ""),
+                "settings.jre.window.configure.path.custom.placeholder" + (OS.WINDOWS.isCurrent() ? ".windows" : ""),
                 "settings.jre.window.configure.path.custom.browse",
                 fileExplorer, true, false);
         customPathField.addChangeListener(s -> {
-            if(s != null) {
+            if (s != null) {
                 File file = new File(s);
-                if(file.isFile()) {
+                if (file.isFile()) {
                     comboBox.sp.global.set(new JavaManagerConfig.Custom(s));
                     Future<JavaVersion> future = comboBox.javaVersionCache.get(s);
-                    if(future.isDone()) {
+                    if (future.isDone()) {
                         javaVersionCallback();
                         comboBox.sp.jre.getComponent().repaint();
                     } else {
@@ -385,7 +385,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
                 "settings.jre.window.configure.path.recommended.actual.open");
         recommendedPathButton.addActionListener(e -> {
             String path = recommendedPathField.getValue();
-            if(path != null) {
+            if (path != null) {
                 JRESettingsWindow.this.setAlwaysOnTop(false);
                 OS.openFolder(new File(path));
             }
@@ -401,7 +401,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
             @Override
             public void mouseClicked(MouseEvent e) {
                 JRESettingsWindow.this.setAlwaysOnTop(false);
-                OS.openLink("https://wiki.tlaun.ch/"+ (comboBox.sp.global.isUSSRLocale()? "" : "en:") +"guide:override-jre");
+                OS.openLink("https://wiki.tlaun.ch/" + (comboBox.sp.global.isUSSRLocale() ? "" : "en:") + "guide:override-jre");
             }
         });
         ExtendedPanel recommendedPathHint = new ExtendedPanel();
@@ -480,7 +480,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private LocalizableTextField addConfig(ExtendedPanel p, GridBagConstraints c, String path) {
-        LocalizableTextField textField = new LocalizableTextField("settings.jre.window.configure."+ path +".hint") {
+        LocalizableTextField textField = new LocalizableTextField("settings.jre.window.configure." + path + ".hint") {
             @Override
             protected void updateStyle() {
             }
@@ -508,7 +508,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private LocalizableLabel addLabel(String path, String icon) {
-        LocalizableLabel l = new LocalizableLabel("settings.jre.window."+ path +".label");
+        LocalizableLabel l = new LocalizableLabel("settings.jre.window." + path + ".label");
         l.setFont(l.getFont().deriveFont(Font.BOLD, l.getFont().getSize2D() + 3.f));
         l.setIconTextGap(SwingUtil.magnify(10));
         l.setForeground(Theme.getTheme().getSemiForeground());

@@ -3,7 +3,8 @@ package ru.turikhay.tlauncher.ui.notice;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
+
+import java.util.Objects;
 
 public final class Notice {
     private final int id, pos;
@@ -17,7 +18,7 @@ public final class Notice {
         this.id = id;
         this.pos = pos;
         this.text = StringUtil.requireNotBlank(text, "text");
-        this.image = U.requireNotNull(image, "image");
+        this.image = Objects.requireNonNull(image, "image");
         this.action = action;
     }
 
@@ -53,7 +54,7 @@ public final class Notice {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("id", id)
                 .append("pos", pos)
-                .append("text", text.length() > 30? text.substring(0, 27) + "..." : text)
+                .append("text", text.length() > 30 ? text.substring(0, 27) + "..." : text)
                 .append("image", image)
                 .append("action", action)
                 .build();

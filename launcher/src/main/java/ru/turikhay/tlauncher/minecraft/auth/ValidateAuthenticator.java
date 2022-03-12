@@ -2,20 +2,21 @@ package ru.turikhay.tlauncher.minecraft.auth;
 
 import ru.turikhay.tlauncher.user.Auth;
 import ru.turikhay.tlauncher.user.AuthException;
-import ru.turikhay.util.U;
+import ru.turikhay.tlauncher.user.User;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class ValidateAuthenticator extends Authenticator {
-    private final Account account;
-    private final Auth auth;
+public class ValidateAuthenticator<U extends User> extends Authenticator<U> {
+    private final Account<U> account;
+    private final Auth<U> auth;
 
-    ValidateAuthenticator(Account account, Auth auth) {
-        this.account = U.requireNotNull(account, "account");
-        this.auth = U.requireNotNull(auth, "auth");
+    ValidateAuthenticator(Account<U> account, Auth<U> auth) {
+        this.account = Objects.requireNonNull(account, "account");
+        this.auth = Objects.requireNonNull(auth, "auth");
     }
 
-    public final Account getAccount() {
+    public final Account<U> getAccount() {
         return account;
     }
 

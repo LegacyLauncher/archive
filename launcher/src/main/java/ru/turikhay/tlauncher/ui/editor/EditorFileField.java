@@ -25,7 +25,7 @@ public class EditorFileField extends BorderPanel implements EditorField {
     private final LocalizableButton explorerButton;
     private final FileExplorer explorer;
 
-    private boolean permitUrl;
+    private final boolean permitUrl;
 
     public EditorFileField(String prompt, String buttonPath, FileExplorer exp, boolean canBeEmpty, boolean permitUrl) {
         this.permitUrl = permitUrl;
@@ -102,7 +102,7 @@ public class EditorFileField extends BorderPanel implements EditorField {
         try {
             testUrl = new URL(value);
         } catch (Exception e) {
-            return value;
+            return FileExplorer.normalize(value);
         }
 
         return testUrl.toString();

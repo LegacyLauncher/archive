@@ -2,17 +2,16 @@ package ru.turikhay.tlauncher.minecraft.crash;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
+
+import java.util.Objects;
 
 public class IEntry {
     private final CrashManager manager;
     private final String name;
 
     public IEntry(CrashManager manager, String name) {
-        this.manager = U.requireNotNull(manager);
+        this.manager = Objects.requireNonNull(manager);
         this.name = StringUtil.requireNotBlank(name, "name");
     }
 

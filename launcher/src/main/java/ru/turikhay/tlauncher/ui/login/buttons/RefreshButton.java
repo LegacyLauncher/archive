@@ -11,13 +11,11 @@ import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class RefreshButton extends LocalizableButton implements Blockable, ComponentManagerListener, LibraryReplaceProcessorListener {
     private static final int TYPE_REFRESH = 0;
     private static final int TYPE_CANCEL = 1;
-    private LoginForm lf;
+    private final LoginForm lf;
     private int type;
     private final ImageIcon
             refresh = Images.getIcon24("refresh"),
@@ -26,11 +24,7 @@ public class RefreshButton extends LocalizableButton implements Blockable, Compo
     private RefreshButton(LoginForm loginform, int type) {
         lf = loginform;
         setType(type, false);
-        addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onPressButton();
-            }
-        });
+        addActionListener(e -> onPressButton());
 
         TLauncher.getInstance().getManager().getComponent(ComponentManagerListenerHelper.class).addListener(this);
     }

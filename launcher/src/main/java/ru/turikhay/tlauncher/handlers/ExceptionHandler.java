@@ -7,7 +7,6 @@ import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.logging.log4j.LogManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.background.ImageBackground;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -27,13 +26,14 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
     }
 
     public void uncaughtException(Thread t, Throwable e) {
+        if (!(e instanceof OutOfMemoryError)) return;
         try {
-            OutOfMemoryError asOOM = Reflect.cast(e, OutOfMemoryError.class);
-            if (asOOM == null || !reduceMemory(asOOM)) {
+            OutOfMemoryError asOOM = (OutOfMemoryError) e;
+            if (!reduceMemory(asOOM)) {
                 if (scanTrace(e) && toShowError(e)) {
                     Sentry.capture(new EventBuilder()
                             .withLevel(Event.Level.ERROR)
-                            .withMessage("uncaught exception: " + e.toString())
+                            .withMessage("uncaught exception: " + e)
                             .withSentryInterface(new ExceptionInterface(e))
                             .withExtra("thread", t.getName())
                     );
@@ -58,7 +58,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
 
         LOGGER.fatal("OutOfMemory error has occurred");
 
-        if(ImageBackground.getLastInstance() != null) {
+        if (ImageBackground.getLastInstance() != null) {
             ImageBackground.getLastInstance().wipe();
         }
 
@@ -67,7 +67,9 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
 
         if (diff > 5000L) {
             gcLastCall = currentTime;
-            U.gc();
+            LOGGER.info("Starting garbage collector: " + U.memoryStatus());
+            System.gc();
+            LOGGER.info("Garbage collector completed: " + U.memoryStatus());
             return true;
         } else {
             LOGGER.fatal("GC is unable to reduce memory usage");
@@ -76,12 +78,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
     }
 
     private static boolean scanTrace(Throwable e) {
-        StackTraceElement[] elements = e.getStackTrace();
-        StackTraceElement[] var5 = elements;
-        int var4 = elements.length;
-
-        for (int var3 = 0; var3 < var4; ++var3) {
-            StackTraceElement element = var5[var3];
+        for (StackTraceElement element : e.getStackTrace()) {
             if (element.getClassName().startsWith("ru.turikhay")) {
                 return true;
             }
@@ -90,7 +87,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
         return false;
     }
 
-    private static String[] lastMessages = new String[10];
+    private static final String[] lastMessages = new String[10];
     private static int lastWrittenMessage = -1;
 
     private synchronized static boolean toShowError(Throwable t) {
@@ -100,13 +97,13 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
 
         String message = t.toString();
 
-        for (int i = 0; i < lastMessages.length; i++) {
-            if (message.equals(lastMessages[i])) {
+        for (String lastMessage : lastMessages) {
+            if (message.equals(lastMessage)) {
                 return false;
             }
         }
 
-        lastWrittenMessage = (lastWrittenMessage == lastMessages.length - 1) ? 0 : lastWrittenMessage + 1;
+        lastWrittenMessage = (lastWrittenMessage + 1) % lastMessages.length;
         lastMessages[lastWrittenMessage] = message;
 
         return true;

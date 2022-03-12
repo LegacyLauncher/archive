@@ -21,16 +21,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class SettingsMemorySlider extends BorderPanel implements EditorField {
-    private final SettingsPanel settings;
     private final JSlider slider = new JSlider();
-    private EditorIntegerField inputField;
-    private final LocalizableLabel mb;
+    private final EditorIntegerField inputField;
     private final LocalizableLabel hint;
 
     SettingsMemorySlider(SettingsPanel s) {
-        settings = s;
         slider.setOpaque(false);
-        slider.setMinimum(OS.Arch.x64.isCurrent()? 1024 : 512);
+        slider.setMinimum(OS.Arch.x64.isCurrent() ? 1024 : 512);
         slider.setMaximum(OS.Arch.MAX_MEMORY);
         slider.setMinorTickSpacing(OS.Arch.x64.isCurrent() ? 1024 : 256);
         slider.setMajorTickSpacing(OS.Arch.x64.isCurrent() ? (OS.Arch.MAX_MEMORY > 8196 ? OS.Arch.MAX_MEMORY / 4096 * 1024 : 1024) : 512);
@@ -45,7 +42,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
         setCenter(slider);
         inputField = new EditorIntegerField();
         inputField.textField.setColumns(4);
-        mb = new LocalizableLabel("settings.java.memory.mb");
+        LocalizableLabel mb = new LocalizableLabel("settings.java.memory.mb");
         ExtendedPanel panel = new ExtendedPanel();
         panel.add(inputField, mb);
         setEast(panel);
@@ -102,7 +99,7 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
     }
 
     private void onSliderUpdate() {
-        inputField.textField.setValue(Integer.valueOf(slider.getValue()));
+        inputField.textField.setValue(slider.getValue());
         updateTip();
     }
 

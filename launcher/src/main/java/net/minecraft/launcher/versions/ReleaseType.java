@@ -4,8 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.Reflect;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public enum ReleaseType {
@@ -27,10 +27,17 @@ public enum ReleaseType {
     private final boolean isDefinable;
     private final boolean isDefault;
 
+    private static final Collection<ReleaseType> VALUES = Arrays.asList(values());
+
+    @Nullable
+    public static ReleaseType parse(String name) {
+        return VALUES.stream().filter(e -> e.name().equalsIgnoreCase(name)).findAny().orElse(null);
+    }
+
     static {
-        HashMap types = new HashMap(values().length);
-        ArrayList deflTypes = new ArrayList();
-        ArrayList defnTypes = new ArrayList();
+        Map<String, ReleaseType> types = new HashMap<>(values().length);
+        List<ReleaseType> deflTypes = new ArrayList<>();
+        List<ReleaseType> defnTypes = new ArrayList<>();
         ReleaseType[] var6;
         int var5 = (var6 = values()).length;
 
@@ -100,18 +107,18 @@ public enum ReleaseType {
             }
 
             public boolean isSubType(Version version) {
-                if(version.getReleaseType().toString().startsWith("old")) {
+                if (version.getReleaseType().toString().startsWith("old")) {
                     return false;
                 }
 
                 Date date = version.getReleaseTime();
-                if(date == null) {
+                if (date == null) {
                     LOGGER.warn("release time null: {}", version.getID());
                     return false;
                 }
 
-                if(date.getTime() <= 0) {
-                    if(StringUtils.containsIgnoreCase(version.getID(), "forge")) {
+                if (date.getTime() <= 0) {
+                    if (StringUtils.containsIgnoreCase(version.getID(), "forge")) {
                         date = version.getUpdatedTime();
                     } else {
                         return false;
@@ -133,8 +140,8 @@ public enum ReleaseType {
         private final boolean isDefault;
 
         static {
-            HashMap subTypes = new HashMap(values().length);
-            ArrayList defSubTypes = new ArrayList();
+            Map<String, ReleaseType.SubType> subTypes = new HashMap<>(values().length);
+            List<ReleaseType.SubType> defSubTypes = new ArrayList<>();
             ReleaseType.SubType[] var5;
             int var4 = (var5 = values()).length;
 
@@ -184,7 +191,7 @@ public enum ReleaseType {
         }
 
         public static List<ReleaseType.SubType> get(Version version) {
-            ArrayList<ReleaseType.SubType> result = new ArrayList<SubType>();
+            ArrayList<ReleaseType.SubType> result = new ArrayList<>();
             ReleaseType.SubType[] var4;
             int var3 = (var4 = values()).length;
 
@@ -202,7 +209,7 @@ public enum ReleaseType {
     }
 
     public static ReleaseType of(String input) {
-        ReleaseType value = Reflect.parseEnum(ReleaseType.class, input);
-        return value == null? ReleaseType.UNKNOWN : value;
+        ReleaseType value = ReleaseType.parse(input);
+        return value == null ? ReleaseType.UNKNOWN : value;
     }
 }

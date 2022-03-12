@@ -7,13 +7,12 @@ import ru.turikhay.util.SwingUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 public class ComponentManagerListenerHelper extends LauncherComponent implements Blockable, VersionManagerListener {
-    private final List<ComponentManagerListener> listeners = Collections.synchronizedList(new ArrayList());
+    private final List<ComponentManagerListener> listeners = Collections.synchronizedList(new ArrayList<>());
 
-    public ComponentManagerListenerHelper(ComponentManager manager) throws Exception {
+    public ComponentManagerListenerHelper(ComponentManager manager) {
         super(manager);
         manager.getComponent(VersionManager.class).addListener(this);
     }
@@ -39,20 +38,16 @@ public class ComponentManagerListenerHelper extends LauncherComponent implements
     }
 
     public void block(Object reason) {
-        Iterator var3 = listeners.iterator();
 
-        while (var3.hasNext()) {
-            ComponentManagerListener listener = (ComponentManagerListener) var3.next();
+        for (ComponentManagerListener listener : listeners) {
             SwingUtil.later(() -> listener.onComponentsRefreshing(manager));
         }
 
     }
 
     public void unblock(Object reason) {
-        Iterator var3 = listeners.iterator();
 
-        while (var3.hasNext()) {
-            ComponentManagerListener listener = (ComponentManagerListener) var3.next();
+        for (ComponentManagerListener listener : listeners) {
             SwingUtil.later(() -> listener.onComponentsRefreshed(manager));
         }
 

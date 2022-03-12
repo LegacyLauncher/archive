@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public class CharsetDataHttpEntity extends AbstractHttpEntity {
     private final CharsetData data;
-    private int attempt = 0;
+    private final int attempt = 0;
 
     public CharsetDataHttpEntity(CharsetData data) {
         this.data = Objects.requireNonNull(data, "data");
@@ -36,7 +36,7 @@ public class CharsetDataHttpEntity extends AbstractHttpEntity {
     @Override
     public void writeTo(OutputStream outStream) throws IOException {
         Objects.requireNonNull(outStream, "outStream");
-        try(InputStream inputStream = data.stream()) {
+        try (InputStream inputStream = data.stream()) {
             IOUtils.copy(inputStream, outStream);
         }
     }

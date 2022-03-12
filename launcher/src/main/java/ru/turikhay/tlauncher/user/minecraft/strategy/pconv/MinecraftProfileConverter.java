@@ -1,6 +1,6 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.pconv;
 
-import ru.turikhay.tlauncher.user.*;
+import ru.turikhay.tlauncher.user.MinecraftUser;
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.preq.MinecraftOAuthProfile;
@@ -16,7 +16,7 @@ public class MinecraftProfileConverter {
                     microsoftToken,
                     minecraftToken
             );
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             throw new MinecraftProfileConversionException(rE);
         }
     }

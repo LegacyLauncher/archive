@@ -1,14 +1,14 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.oareq;
 
-import ru.turikhay.util.U;
+import java.util.Objects;
 
 public class MicrosoftOAuthExchangeCode {
     private final String code;
     private final RedirectUrl redirectUrl;
 
     public MicrosoftOAuthExchangeCode(String code, RedirectUrl redirectUrl) {
-        this.code = U.requireNotNull(code, "code");
-        this.redirectUrl = U.requireNotNull(redirectUrl, "redirectUrl");
+        this.code = Objects.requireNonNull(code, "code");
+        this.redirectUrl = Objects.requireNonNull(redirectUrl, "redirectUrl");
     }
 
     @Override

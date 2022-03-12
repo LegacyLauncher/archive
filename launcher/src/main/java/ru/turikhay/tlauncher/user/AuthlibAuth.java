@@ -6,6 +6,7 @@ import ru.turikhay.util.U;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
@@ -21,7 +22,7 @@ public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
 
         logIn(userAuthentication);
 
-        if(userAuthentication.getSelectedProfile() == null) {
+        if (userAuthentication.getSelectedProfile() == null) {
             throw new InvalidCredentialsException("no selected profile");
         }
 
@@ -41,7 +42,7 @@ public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
 
         logIn(userAuthentication);
 
-        if(userAuthentication.getSelectedProfile() == null) {
+        if (userAuthentication.getSelectedProfile() == null) {
             throw new InvalidCredentialsException("no selected profile");
         }
 
@@ -49,12 +50,12 @@ public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
     }
 
     public void validate(T user) throws AuthException, IOException {
-        logIn(U.requireNotNull(user, "user").getMojangUserAuthentication());
+        logIn(Objects.requireNonNull(user, "user").getMojangUserAuthentication());
     }
 
     protected void logIn(com.mojang.authlib.UserAuthentication userAuthentication) throws AuthException, IOException {
         try {
-            U.requireNotNull(userAuthentication, "user").logIn();
+            Objects.requireNonNull(userAuthentication, "user").logIn();
         } catch (com.mojang.authlib.exceptions.UserMigratedException userMigrated) {
             throw new AuthException(userMigrated, "migrated");
         } catch (com.mojang.authlib.exceptions.InvalidCredentialsException invalidCredentials) {

@@ -16,18 +16,18 @@ public class FixedSizeImage extends JComponent {
         Graphics2D g = (Graphics2D) g0;
 
         Image image = imageRef.get();
-        if(image == null) {
+        if (image == null) {
             return;
         }
 
         int compWidth = getWidth(), compHeight = getHeight();
-        if(compWidth <= 0 || compHeight <= 0) {
+        if (compWidth <= 0 || compHeight <= 0) {
             return;
         }
 
         double
                 imgWidth = image.getWidth(this),
-                imgHeight = image.getHeight(this) ,
+                imgHeight = image.getHeight(this),
                 ratio = Math.min(imgWidth / compWidth, imgHeight / compHeight),
                 width = imgWidth / ratio,
                 height = imgHeight / ratio,

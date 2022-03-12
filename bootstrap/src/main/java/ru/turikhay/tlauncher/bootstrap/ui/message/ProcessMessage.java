@@ -19,12 +19,9 @@ public class ProcessMessage extends TextMessage {
     }
 
     public ProcessMessage(String text, final Runnable r) {
-        this(text, new Callable<Void>() {
-            @Override
-            public Void call() {
-                r.run();
-                return null;
-            }
+        this(text, () -> {
+            r.run();
+            return null;
         });
     }
 
