@@ -6,7 +6,6 @@ import com.getsentry.raven.dsn.Dsn;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
 import com.getsentry.raven.event.User;
-import com.getsentry.raven.event.helper.EventBuilderHelper;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
@@ -14,7 +13,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
-import ru.turikhay.tlauncher.bootstrap.exception.*;
+import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.launcher.*;
 import ru.turikhay.tlauncher.bootstrap.meta.*;
@@ -28,19 +27,15 @@ import ru.turikhay.tlauncher.bootstrap.ui.IInterface;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
 import ru.turikhay.tlauncher.bootstrap.util.*;
 import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
-import ru.turikhay.tlauncher.bootstrap.util.stream.RedirectPrintStream;
 import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.windows.wmi.WMI;
 
-import javax.imageio.ImageIO;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 public final class Bootstrap {
     public static final Raven SENTRY = new DefaultRavenFactory().createRavenInstance(
@@ -48,29 +43,38 @@ public final class Bootstrap {
     );
 
     static {
-        SENTRY.addBuilderHelper(new EventBuilderHelper() {
-            @Override
-            public void helpBuildingEvent(EventBuilder eventBuilder) {
-                eventBuilder
-                        .withServerName(OS.CURRENT.name())
-                        .withTag(
-                                "java",
-                                JavaVersion.getCurrent() == JavaVersion.UNKNOWN ?
-                                        "unknown" : String.valueOf(JavaVersion.getCurrent().getMajor())
-                        )
-                        .withTag("java_version", System.getProperty("java.version"))
-                        .withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"))
-                        .withTag("os_arch", System.getProperty("os.arch"));
-            }
-        });
+        SENTRY.addBuilderHelper(eventBuilder -> eventBuilder
+                .withServerName(OS.CURRENT.name())
+                .withTag(
+                        "java",
+                        JavaVersion.getCurrent() == JavaVersion.UNKNOWN ?
+                                "unknown" : String.valueOf(JavaVersion.getCurrent().getMajor())
+                )
+                .withTag("java_version", System.getProperty("java.version"))
+                .withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"))
+                .withTag("os_arch", System.getProperty("os.arch")));
         FixSSL.addLetsEncryptCertSupportIfNeeded();
     }
 
-    static Bootstrap createBootstrap() {
+    static Bootstrap createBootstrap(String[] rawArgs) {
         log("Starting bootstrap...");
 
-        Bootstrap bootstrap = new Bootstrap();
-        LocalBootstrapMeta localBootstrapMeta = bootstrap.getMeta();
+        SplitArgs args;
+        try {
+            args = SplitArgs.splitArgs(rawArgs);
+        } catch (RuntimeException rE) {
+            throw new RuntimeException("couldn't split args: " + Arrays.toString(rawArgs), rE);
+        }
+
+        Path bootstrapJar;
+        try {
+            bootstrapJar = Paths.get(Bootstrap.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to determine bootstrap jar location", e);
+        }
+
+        Bootstrap bootstrap = new Bootstrap(args.getLauncher(), bootstrapJar);
+        LocalBootstrapMeta localBootstrapMeta = LocalBootstrapMeta.getInstance();
 
         log("Version: " + localBootstrapMeta.getVersion());
 
@@ -82,17 +86,17 @@ public final class Bootstrap {
         LocalBootstrapMeta localBootstrapMeta = bootstrap.getMeta();
         log("Version: " + localBootstrapMeta.getVersion());*/
 
-        File
-            defaultFile = U.requireNotNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation"),
-            defaultLibFolder = defaultFile.getParentFile() == null? new File("lib") : new File(defaultFile.getParentFile(), "lib");
+        Path
+                defaultFile = Objects.requireNonNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation"),
+                defaultLibFolder = defaultFile.getParent() == null ? Paths.get("lib") : defaultFile.getParent().resolve("lib");
 
         OptionParser parser = new OptionParser();
-        ArgumentAcceptingOptionSpec<File> targetFileParser =
-                parser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
-        ArgumentAcceptingOptionSpec<File> targetLibFolderParser =
-                parser.accepts("targetLibFolder", "points to the library folder").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
+        ArgumentAcceptingOptionSpec<Path> targetFileParser =
+                parser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
+        ArgumentAcceptingOptionSpec<Path> targetLibFolderParser =
+                parser.accepts("targetLibFolder", "points to the library folder").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> brandParser =
-                parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class).defaultsTo(U.requireNotNull(localBootstrapMeta.getShortBrand(), "default shortBrand"));
+                parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class).defaultsTo(Objects.requireNonNull(localBootstrapMeta.getShortBrand(), "default shortBrand"));
         OptionSpecBuilder forceUpdateParser =
                 parser.accepts("ignoreUpdate", "defines if bootstrap should ignore launcher update processes");
         OptionSpecBuilder ignoreSelfUpdateParser =
@@ -101,45 +105,45 @@ public final class Bootstrap {
                 parser.accepts("headlessMode", "defines if bootstrap should run without UI");
         OptionSpecBuilder packageMode =
                 parser.accepts("packageMode", "defines if bootstrap runs inside a package");
-        ArgumentAcceptingOptionSpec<File> targetUpdateFile =
-                parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new FileValueConverter());
+        ArgumentAcceptingOptionSpec<Path> targetUpdateFile =
+                parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> restartExec =
                 parser.accepts("restartExec", "instructs the bootstrap to run this executable after self update").withRequiredArg().ofType(String.class);
 
-        OptionSet parsed = parseJvmArgs(parser);
+        CombinedOptionSet parsed = new CombinedOptionSet(parseJvmArgs(parser), parser.parse(args.getBootstrap()));
+
+        RunningConditionsResult runningConditions = checkRunningConditions(bootstrapJar);
+        runningConditions.showErrorIfNeeded();
 
         bootstrap.setupUserInterface(parsed.has(forceHeadlessMode));
 
-        localBootstrapMeta.setShortBrand(U.requireNotNull(brandParser.value(parsed), "shortBrand"));
+        localBootstrapMeta.setShortBrand(Objects.requireNonNull(parsed.valueOf(brandParser), "shortBrand"));
         log("Short brand: ", localBootstrapMeta.getShortBrand());
 
-        File targetJar = targetFileParser.value(parsed);  // can be null
+        Path targetJar = parsed.valueOf(targetFileParser); // can be null
         if (targetJar == null) {
-            targetJar = U.requireNotNull(
-                    LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()),
-                    "defaultFileLocation"
-            );
+            targetJar = Objects.requireNonNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation");
         }
         bootstrap.setTargetJar(targetJar);
         log("Target jar:", bootstrap.getTargetJar());
 
-        File targetLibFolder = targetLibFolderParser.value(parsed); // can be null
+        Path targetLibFolder = parsed.valueOf(targetLibFolderParser); // can be null
         if (targetLibFolder == null) {
-            if(bootstrap.getTargetJar().getParentFile() == null) {
-                targetLibFolder = new File("lib");
+            if (bootstrap.getTargetJar().getParent() == null) {
+                targetLibFolder = Paths.get("lib");
             } else {
                 /*
                     .tlauncher/bin/legacy.jar ->
                     .tlauncher/bin ->
                     .tlauncher/bin/lib
                  */
-                targetLibFolder = new File(bootstrap.getTargetJar().getParentFile(), "lib");
+                targetLibFolder = bootstrap.getTargetJar().getParent().resolve("lib");
             }
         }
         bootstrap.setTargetLibFolder(targetLibFolder);
         log("Target lib folder:", bootstrap.getTargetLibFolder());
 
-        bootstrap.setUpdateMetaFile(targetUpdateFile.value(parsed));
+        bootstrap.setUpdateMetaFile(parsed.valueOf(targetUpdateFile));
         log("Update meta file:", bootstrap.getUpdateMetaFile());
 
         bootstrap.setIgnoreUpdate(parsed.has(forceUpdateParser));
@@ -151,8 +155,8 @@ public final class Bootstrap {
         bootstrap.setPackageMode(parsed.has(packageMode));
         log("Package mode:", bootstrap.isPackageMode());
 
-        if(parsed.has(restartExec)) {
-            bootstrap.setRestartExec(restartExec.value(parsed));
+        if (parsed.has(restartExec)) {
+            bootstrap.setRestartExec(parsed.valueOf(restartExec));
             log("Restart exec on self update:", bootstrap.getRestartExec());
         }
 
@@ -163,86 +167,81 @@ public final class Bootstrap {
             log("Package mode: Ignore update set to", bootstrap.getIgnoreUpdate());
         }
 
-        try {
-            checkAccessible(bootstrap.getTargetJar(), false, !bootstrap.isPackageMode());
-        } catch(UnknownFreeSpaceException ignored) {
-        } catch (IOException e) {
-            throw new RuntimeException("error checking target jar: " + bootstrap.getTargetJar().getAbsolutePath(), e);
+        FileStat bootstrapStat = fileStat(bootstrapJar);
+        if (!bootstrapStat.writeable && !bootstrap.getIgnoreSelfUpdate()) {
+            log("Bootstrap jar not writeable, disable self updating");
+            bootstrap.setIgnoreSelfUpdate(true);
         }
 
-        try {
-            checkAccessible(bootstrap.getTargetLibFolder(), false, !bootstrap.isPackageMode());
-        } catch(UnknownFreeSpaceException ignored) {
-        } catch (IOException e) {
-            throw new RuntimeException("error checking target lib folder: " + bootstrap.getTargetLibFolder().getAbsolutePath(), e);
+        FileStat launcherStat = fileStat(bootstrap.getTargetJar());
+        if (!launcherStat.writeable && !bootstrap.getIgnoreUpdate()) {
+            log("Launcher jar not writeable, disable updating");
+            bootstrap.setIgnoreUpdate(true);
+        }
+
+        FileStat libStat = fileStat(bootstrap.getTargetLibFolder());
+        if (!libStat.writeable && !bootstrap.getIgnoreUpdate()) {
+            log("Libs directory not writeable, disable updating");
+            bootstrap.setIgnoreUpdate(true);
         }
 
         return bootstrap;
     }
 
     private static OptionSet parseJvmArgs(OptionParser parser) {
-        List<String> jvmArgs = new ArrayList<String>();
+        List<String> jvmArgs = new ArrayList<>();
 
-        for(String key : parser.recognizedOptions().keySet()) {
+        for (String key : parser.recognizedOptions().keySet()) {
             String value = System.getProperty("tlauncher.bootstrap." + key);
-            if(value != null) {
+            if (value != null) {
                 jvmArgs.add("--" + key);
                 jvmArgs.add(value);
                 log("Found JVM arg: ", key, " ", value);
             }
         }
 
-        return parser.parse(U.toArray(jvmArgs, String.class));
+        return parser.parse(jvmArgs.toArray(new String[0]));
     }
 
     public static void main(String[] args) {
-        checkRunningConditions();
-
-        System.setOut(out = OutputRedirectBuffer.createRedirect(System.out));
-        System.setErr(err = OutputRedirectBuffer.createRedirect(System.err));
+        System.setOut(OutputRedirectBuffer.createRedirect(System.out));
+        System.setErr(OutputRedirectBuffer.createRedirect(System.err));
 
         Bootstrap bootstrap = null;
-        Ref<BootBridge> bootBridgeRef = new Ref<BootBridge>();
 
         try {
-            bootstrap = createBootstrap();
-            bootstrap.defTask(args, bootBridgeRef).call();
-        } catch(TaskInterruptedException interrupted) {
+            bootstrap = createBootstrap(args);
+            bootstrap.defTask().call();
+        } catch (TaskInterruptedException interrupted) {
             log("Default task was interrupted");
-        } catch(InterruptedException interrupted) {
+        } catch (InterruptedException interrupted) {
             log("Interrupted");
         } catch (Exception e) {
             e.printStackTrace();
-            handleFatalError(bootstrap, bootBridgeRef.getObject(), e, true);
+            handleFatalError(bootstrap, e, true);
             System.exit(-1);
         }
         System.exit(0);
     }
 
-    static void handleFatalError(Bootstrap bootstrap, BootBridge bridge, Throwable e, boolean sendSentry) {
+    static void handleFatalError(Bootstrap bootstrap, Throwable e, boolean sendSentry) {
         FatalExceptionType exceptionType = FatalExceptionType.getType(e);
+        BootBridge bridge = bootstrap == null ? null : bootstrap.bootBridge;
 
-        if(sendSentry) {
+        if (sendSentry) {
             EventBuilder b = new EventBuilder()
                     .withMessage("fatal error")
                     .withLevel(Event.Level.FATAL)
                     .withSentryInterface(new ExceptionInterface(e))
                     .withTag("type", exceptionType.name());
-            avList:
-            {
-                if(!OS.WINDOWS.isCurrent()) {
-                    break avList;
-                }
-                List<String> avList;
+            if (OS.WINDOWS.isCurrent()) {
                 try {
-                    avList = WMI.getAVSoftwareList();
-                } catch (Exception e0) {
-                    log("Could not get AV list", e0);
-                    break avList;
+                    b.withExtra("avList", WMI.getAVSoftwareList());
+                } catch (Exception eAV) {
+                    log("Could not get AV list", eAV);
                 }
-                b.withExtra("avList", avList);
             }
-            if(bridge != null && bridge.getClient() != null) {
+            if (bridge != null && bridge.getClient() != null) {
                 SENTRY.getContext().setUser(new User(
                         bridge.getClient().toString(),
                         bridge.getClient().toString(),
@@ -253,85 +252,95 @@ public final class Bootstrap {
             SENTRY.sendEvent(b);
         }
 
-        if(bootstrap != null) {
+        if (bootstrap != null) {
             bootstrap.getUserInterface().dispose();
         }
 
         UserInterface.showFatalError(exceptionType,
-                bridge == null || bridge.getClient() == null? null : bridge.getClient().toString());
+                bridge == null || bridge.getClient() == null ? null : bridge.getClient().toString());
     }
 
     private final InternalLauncher internal;
-    private final LocalBootstrapMeta meta;
+    private final BootBridge bootBridge;
+//    private final TargetConfig config;
 
     private IInterface ui;
-    private File targetJar, targetLibFolder, targetUpdateFile, updateMetaFile;
+    private final Path bootstrapJar;
+    private Path targetJar;
+    private Path targetLibFolder;
+    private Path targetUpdateFile;
+    private Path updateMetaFile;
     private boolean ignoreUpdate, ignoreSelfUpdate, packageMode;
     private String restartExec;
 
-    Bootstrap(File targetJar, File targetLibFolder) {
-        final String resourceName = "meta.json";
+    Bootstrap(String[] launcherArgs, Path bootstrapJar, Path targetJar, Path targetLibFolder) {
+        this.bootstrapJar = bootstrapJar;
+
+        TargetConfig config;
         try {
-            meta = Json.parse(U.requireNotNull(getClass().getResourceAsStream(resourceName), resourceName), LocalBootstrapMeta.class);
-        } catch (Exception e) {
-            throw new Error("could not load meta", e);
+            config = TargetConfig.readConfigUsingContext(BuildConfig.SHORT_BRAND, launcherArgs);
+        } catch (IOException e) {
+            log("Couldn't read launcher config", e);
+            config = new TargetConfig();
         }
 
-        SENTRY.addBuilderHelper(new EventBuilderHelper() {
-            @Override
-            public void helpBuildingEvent(EventBuilder eventBuilder) {
-                eventBuilder
-                        .withRelease(
-                                String.format(java.util.Locale.ROOT,
-                                        "%d.%d.%d",
-                                        meta.getVersion().getMajorVersion(),
-                                        meta.getVersion().getMinorVersion(),
-                                        meta.getVersion().getPatchVersion()
-                                )
+        String client = config.getClient();
+        if (client != null) {
+            SENTRY.getContext().setUser(new User(
+                    client,
+                    client,
+                    null,
+                    null
+            ));
+        }
+        SENTRY.addBuilderHelper(eventBuilder -> eventBuilder
+                .withRelease(
+                        String.format(java.util.Locale.ROOT,
+                                "%d.%d.%d",
+                                LocalBootstrapMeta.getInstance().getVersion().getMajorVersion(),
+                                LocalBootstrapMeta.getInstance().getVersion().getMinorVersion(),
+                                LocalBootstrapMeta.getInstance().getVersion().getPatchVersion()
                         )
-                        .withEnvironment(meta.getShortBrand());
-            }
-        });
+                )
+                .withEnvironment(LocalBootstrapMeta.getInstance().getShortBrand()));
 
-        InternalLauncher internal;
+        InternalLauncher internal = null;
         try {
             internal = new InternalLauncher();
         } catch (LauncherNotFoundException e) {
             log("Internal launcher is not located in the classpath");
-            internal = null;
         }
         this.internal = internal;
 
         setTargetJar(targetJar);
         setTargetLibFolder(targetLibFolder);
+
+        this.bootBridge = new BootBridge(LocalBootstrapMeta.getInstance().getVersion().toString(), launcherArgs);
     }
 
-    public Bootstrap() {
-        this(null, null);
+    public Bootstrap(String[] launcherArgs, Path bootstrapJar) {
+        this(launcherArgs, bootstrapJar, null, null);
     }
 
     public void setupUserInterface(boolean forceHeadlessMode) {
-        if(ui != null) {
+        if (ui != null) {
             return;
         }
-        log("Setting up user interface");
-        loadSwing:
-        {
-            if(forceHeadlessMode) {
-                log("Forcing headless mode");
-                break loadSwing;
-            }
 
+        log("Setting up user interface");
+        if (forceHeadlessMode) {
+            log("Forcing headless mode");
+        } else {
             log("Trying to load user interface");
             try {
                 ui = new UserInterface();
+                log("UI loaded");
+                return;
             } catch (RuntimeException rE) {
                 log("User interface is not loaded:", rE);
-                break loadSwing;
             }
-            log("UI loaded");
-            return;
         }
+
         ui = new HeadlessInterface();
         log("Headless mode loaded");
     }
@@ -340,19 +349,19 @@ public final class Bootstrap {
         return ui;
     }
 
-    public File getTargetJar() {
+    public Path getTargetJar() {
         return targetJar;
     }
 
-    private void setTargetJar(File file) {
+    private void setTargetJar(Path file) {
         this.targetJar = file;
     }
 
-    public File getTargetLibFolder() {
+    public Path getTargetLibFolder() {
         return targetLibFolder;
     }
 
-    private void setTargetLibFolder(File targetLibFolder) {
+    private void setTargetLibFolder(Path targetLibFolder) {
         this.targetLibFolder = targetLibFolder;
     }
 
@@ -372,7 +381,9 @@ public final class Bootstrap {
         this.ignoreSelfUpdate = ignoreSelfUpdate;
     }
 
-    public boolean isPackageMode() { return packageMode; }
+    public boolean isPackageMode() {
+        return packageMode;
+    }
 
     public void setPackageMode(boolean packageMode) {
         this.packageMode = packageMode;
@@ -386,45 +397,45 @@ public final class Bootstrap {
         this.restartExec = restartExec;
     }
 
-    public File getTargetUpdateFile() {
+    public Path getTargetUpdateFile() {
         return targetUpdateFile;
     }
 
-    private void setTargetUpdateFile(File targetUpdateFile) {
+    private void setTargetUpdateFile(Path targetUpdateFile) {
         this.targetUpdateFile = targetUpdateFile;
     }
 
-    public File getUpdateMetaFile() {
+    public Path getUpdateMetaFile() {
         return updateMetaFile;
     }
 
-    private void setUpdateMetaFile(File updateMetaFile) {
+    private void setUpdateMetaFile(Path updateMetaFile) {
         this.updateMetaFile = updateMetaFile;
     }
 
-    public LocalBootstrapMeta getMeta() {
-        return meta;
+    BootBridge getBootBridge() {
+        return bootBridge;
     }
 
     DownloadEntry getBootstrapUpdate(UpdateMeta updateMeta) {
-        RemoteBootstrapMeta remoteMeta = U.requireNotNull(updateMeta, "updateMeta").getBootstrap();
+        RemoteBootstrapMeta remoteMeta = Objects.requireNonNull(updateMeta, "updateMeta").getBootstrap();
 
         log("RemoteBootstrap meta", remoteMeta);
 
-        U.requireNotNull(remoteMeta, "RemoteBootstrap meta");
-        U.requireNotNull(remoteMeta.getDownload(), "RemoteBootstrap download URL");
+        Objects.requireNonNull(remoteMeta, "RemoteBootstrap meta");
+        Objects.requireNonNull(remoteMeta.getDownload(), "RemoteBootstrap download URL");
 
-        log("Local bootstrap version: " + meta.getVersion());
+        log("Local bootstrap version: " + LocalBootstrapMeta.getInstance().getVersion());
         log("Remote bootstrap version: " + remoteMeta.getVersion());
 
-        if(meta.getVersion().greaterThan(remoteMeta.getVersion())) {
+        if (LocalBootstrapMeta.getInstance().getVersion().greaterThan(remoteMeta.getVersion())) {
             log("Local bootstrap version is newer than remote one");
             return null;
         }
 
         String localBootstrapChecksum;
         try {
-            localBootstrapChecksum = U.getSHA256(U.getJar(Bootstrap.class));
+            localBootstrapChecksum = Sha256Sign.calc(bootstrapJar);
         } catch (Exception e) {
             log("Could not get local bootstrap checksum", e);
             return null;
@@ -444,7 +455,7 @@ public final class Bootstrap {
 
     TaskList downloadLibraries(LocalLauncherMeta localLauncherMeta) {
         TaskList taskList = new TaskList("downloadLibraries", 4);
-        File libDir = getTargetLibFolder();
+        Path libDir = getTargetLibFolder();
 
         for (Library library : localLauncherMeta.getLibraries()) {
             taskList.submit(library.download(libDir));
@@ -453,64 +464,53 @@ public final class Bootstrap {
         return taskList;
     }
 
-    private BootBridge bootBridge;
-
-    private BootBridge createBridge(String[] args, String options) {
-        BootBridge bridge = BootBridge.create(meta.getVersion().toString(), args, options);
-        bridge.addListener(new BootListenerAdapter() {
-            @Override
-            public void onBootSucceeded() {
-                disableRedirectRecording();
-            }
-        });
-        List<String> argsList = new ArrayList<String>();
-        Collections.addAll(argsList, args);
-        return bridge;
-    }
-
     Task<LocalLauncherTask> prepareLauncher(final UpdateMeta updateMeta) {
         return new Task<LocalLauncherTask>("prepareLauncher") {
             @Override
             protected LocalLauncherTask execute() throws Exception {
-                RemoteLauncher remoteLauncher = updateMeta == null? null : new RemoteLauncher(updateMeta.getLauncher());
+                RemoteLauncher remoteLauncher = updateMeta == null ? null : new RemoteLauncher(updateMeta.getLauncher());
                 log("Remote launcher: " + remoteLauncher);
 
-                LocalLauncherTask localLauncherTask = bindTo(getLocalLauncher(remoteLauncher), .0, .25);
+                final boolean ignoreUpdate = getIgnoreUpdate();
+
+                LocalLauncherTask localLauncherTask = bindTo(getLocalLauncher(remoteLauncher), .0, ignoreUpdate ? 1. : .25);
                 LocalLauncher localLauncher = localLauncherTask.getLauncher();
                 LocalLauncherMeta localLauncherMeta = localLauncher.getMeta();
                 log("Local launcher: " + localLauncher);
                 printVersion(localLauncherMeta);
 
-                log("Downloading libraries...");
-                bindTo(downloadLibraries(localLauncherMeta), .25, 1.);
+                if (!ignoreUpdate) {
+                    log("Downloading libraries...");
+                    bindTo(downloadLibraries(localLauncherMeta), .25, 1.);
+                }
 
                 return localLauncherTask;
             }
         };
     }
 
-    Task<Void> startLauncher(final LocalLauncher localLauncher, final BootBridge bridge) {
+    Task<Void> startLauncher(final LocalLauncher localLauncher) {
         return new Task<Void>("startLauncher") {
             @Override
             protected Void execute() throws Exception {
                 log("Starting launcher...");
 
-                bridge.addListener(new BootListenerAdapter() {
+                bootBridge.addListener(new BootListenerAdapter() {
                     @Override
                     public void onBootStateChanged(String stepName, double percentage) {
                         updateProgress(percentage);
                     }
                 });
 
-                return bindTo(ClassLoaderStarter.start(localLauncher, bridge), 0., 1.);
+                return bindTo(ClassLoaderStarter.start(localLauncher, bootBridge), 0., 1.);
             }
         };
     }
 
-    private Task<Void> defTask(final String[] args, final Ref<BootBridge> bootBridgeRef) {
+    private Task<Void> defTask() {
         return new Task<Void>("defTask") {
             {
-                if(ui != null) {
+                if (ui != null) {
                     ui.bindToTask(this);
                 }
             }
@@ -520,42 +520,34 @@ public final class Bootstrap {
                 printVersion(null);
                 UpdateMeta updateMeta;
 
-                try {
-                    if(updateMetaFile != null) {
-                        Compressor.init();
-                        SignedStream signedStream = null;
-                        try {
-                            signedStream = new SignedStream(new FileInputStream(updateMetaFile));
-                            updateMeta = UpdateMeta.fetchFrom(
-                                    Compressor.uncompressMarked(signedStream, false),
-                                    meta.getShortBrand()
-                            );
-                            signedStream.validateSignature();
-                        } finally {
-                            U.close(signedStream);
-                        }
-                    } else {
-                        updateMeta = bindTo(UpdateMeta.fetchFor(meta.getShortBrand()), .0, .25);
+                if (updateMetaFile != null) {
+                    Compressor.init();
+                    try (SignedStream signedStream = new SignedStream(Files.newInputStream(updateMetaFile))) {
+                        updateMeta = UpdateMeta.fetchFrom(
+                                Compressor.uncompressMarked(signedStream, false),
+                                LocalBootstrapMeta.getInstance().getShortBrand()
+                        );
+                        signedStream.validateSignature();
                     }
-                } catch(ExceptionList list) {
-                    log("Could not retrieve update meta:", list);
-                    SENTRY.sendEvent(new EventBuilder()
-                            .withLevel(Event.Level.ERROR)
-                            .withMessage("update meta not available")
-                            .withSentryInterface(new ExceptionInterface(list))
+                } else {
+                    updateMeta = bindTo(
+                            UpdateMeta.fetchFor(
+                                    LocalBootstrapMeta.getInstance().getShortBrand(),
+                                    createInterrupter()
+                            ),
+                            .0,
+                            .25
                     );
-                    updateMeta = null;
                 }
 
-                if(updateMeta != null) {
+                if (updateMeta != null) {
                     DownloadEntry downloadEntry = getBootstrapUpdate(updateMeta);
-                    if(downloadEntry != null) {
-                        if(getIgnoreSelfUpdate()) {
+                    if (downloadEntry != null) {
+                        if (getIgnoreSelfUpdate()) {
                             log("Bootstrap self update ignored:", updateMeta.getBootstrap().getVersion());
                         } else {
-                            Updater updater = new Updater("bootstrapUpdate",
-                                    U.getJar(Bootstrap.class), downloadEntry);
-                            if(getRestartExec() != null) {
+                            Updater updater = new Updater("bootstrapUpdate", bootstrapJar, downloadEntry);
+                            if (getRestartExec() != null) {
                                 updater.restartOnFinish(getRestartExec());
                             }
                             bindTo(updater, .25, 1.);
@@ -568,38 +560,45 @@ public final class Bootstrap {
                 LocalLauncherTask localLauncherTask = bindTo(prepareLauncher(updateMeta), .25, .75);
                 LocalLauncher localLauncher = localLauncherTask.getLauncher();
 
-                BootBridge bridge = createBridge(args, updateMeta == null? null : updateMeta.getOptions());
-                bootBridge = bridge;
-                if(localLauncherTask.isUpdated() && updateMeta != null) {
-                    addUpdateMessage(bridge, updateMeta.getLauncher());
+                if (updateMeta != null) {
+                    bootBridge.setOptions(updateMeta.getOptions());
                 }
-                bootBridgeRef.setObject(bridge);
+                if (localLauncherTask.isUpdated() && updateMeta != null) {
+                    addUpdateMessage(updateMeta.getLauncher());
+                }
 
-                bindTo(startLauncher(localLauncher, bridge), 0.75, 1.);
+                bindTo(startLauncher(localLauncher), 0.75, 1.);
 
                 checkInterrupted();
 
                 log("Idle state: Waiting for launcher the close");
-                bridge.waitUntilClose();
+                bootBridge.waitUntilClose();
 
                 return null;
             }
         };
     }
 
-    private void addUpdateMessage(BootBridge bridge, RemoteLauncherMeta remoteLauncherMeta) {
+    private UpdateMeta.ConnectionInterrupter createInterrupter() {
+        if (ui instanceof UserInterface) {
+            return ((UserInterface) ui).createInterrupter();
+        }
+        return null;
+    }
+
+    private void addUpdateMessage(RemoteLauncherMeta remoteLauncherMeta) {
         Map<String, String> description = remoteLauncherMeta.getDescription();
-        if(description == null) {
+        if (description == null) {
             return;
         }
         String updateTitle = UserInterface.getLString("update.launcher.title", "Launcher was updated");
-        for(Map.Entry<String, String> entry : description.entrySet()) {
-            bridge.addMessage(entry.getKey(), updateTitle, entry.getValue());
+        for (Map.Entry<String, String> entry : description.entrySet()) {
+            bootBridge.addMessage(entry.getKey(), updateTitle, entry.getValue());
         }
     }
 
     private void printVersion(LocalLauncherMeta localLauncherMeta) {
-        HeadlessInterface.printVersion(getMeta().getVersion().toString(), localLauncherMeta == null? null : localLauncherMeta.getVersion().toString());
+        HeadlessInterface.printVersion(LocalBootstrapMeta.getInstance().getVersion().toString(), localLauncherMeta == null ? null : localLauncherMeta.getVersion().toString());
     }
 
     private Task<LocalLauncherTask> getLocalLauncher(final RemoteLauncher remote) {
@@ -609,7 +608,7 @@ public final class Bootstrap {
                 updateProgress(0.);
                 log("Getting local launcher...");
 
-                RemoteLauncherMeta remoteLauncherMeta = remote == null? null : U.requireNotNull(remote.getMeta(), "RemoteLauncherMeta");
+                RemoteLauncherMeta remoteLauncherMeta = remote == null ? null : Objects.requireNonNull(remote.getMeta(), "RemoteLauncherMeta");
 
                 LocalLauncher local;
                 try {
@@ -625,10 +624,10 @@ public final class Bootstrap {
                     }
                 }
 
-                File file = local != null? local.getFile() : getTargetJar();
+                Path file = local != null ? local.getFile() : getTargetJar();
 
-                if(local != null) {
-                    if(remote == null) {
+                if (local != null) {
+                    if (remote == null) {
                         log("We have local launcher, but have no remote.");
                         return new LocalLauncherTask(local);
                     }
@@ -636,7 +635,7 @@ public final class Bootstrap {
                     LocalLauncherMeta localLauncherMeta;
 
                     try {
-                        localLauncherMeta = U.requireNotNull(local.getMeta(), "LocalLauncherMeta");
+                        localLauncherMeta = Objects.requireNonNull(local.getMeta(), "LocalLauncherMeta");
                     } catch (IOException ioE) {
                         log("Could not get local launcher meta:", ioE);
                         localLauncherMeta = null;
@@ -644,51 +643,50 @@ public final class Bootstrap {
 
                     updateProgress(.2);
 
-                    replaceSelect:
-                    {
-                        if (localLauncherMeta == null) {
-                            break replaceSelect;
-                        }
+                    boolean doUpdate = false;
 
-                        U.requireNotNull(localLauncherMeta.getShortBrand(), "LocalLauncher shortBrand");
-                        U.requireNotNull(localLauncherMeta.getBrand(), "LocalLauncher brand");
-                        U.requireNotNull(localLauncherMeta.getMainClass(), "LocalLauncher mainClass");
+                    if (localLauncherMeta != null) {
+                        Objects.requireNonNull(localLauncherMeta.getShortBrand(), "LocalLauncher shortBrand");
+                        Objects.requireNonNull(localLauncherMeta.getBrand(), "LocalLauncher brand");
+                        Objects.requireNonNull(localLauncherMeta.getMainClass(), "LocalLauncher mainClass");
 
-                        if(!localLauncherMeta.getVersion().equals(remote.getMeta().getVersion())) {
+                        if (!localLauncherMeta.getVersion().equals(remote.getMeta().getVersion())) {
                             log("Local version doesn't match remote");
-                            if(getIgnoreUpdate()) {
+                            if (getIgnoreUpdate()) {
                                 log("... nevermind");
                             } else {
-                                break replaceSelect;
+                                doUpdate = true;
                             }
-                        } else if(!getIgnoreUpdate()) {
-                            String localLauncherHash = U.getSHA256(local.getFile());
+                        } else if (!getIgnoreUpdate()) {
+                            String localLauncherHash = Sha256Sign.calc(local.getFile());
                             log("Local SHA256: " + localLauncherHash);
                             log("Remote SHA256: " + remoteLauncherMeta.getChecksum());
 
                             if (!localLauncherHash.equalsIgnoreCase(remoteLauncherMeta.getChecksum())) {
                                 log("... local SHA256 checksum is not the same as remote");
-                                break replaceSelect;
+                                doUpdate = true;
+                            } else {
+                                log("All done, local launcher is up to date.");
                             }
-
-                            log("All done, local launcher is up to date.");
                         }
 
-                        return new LocalLauncherTask(local);
+                        if (!doUpdate) {
+                            return new LocalLauncherTask(local);
+                        }
                     }
 
                     updateProgress(.5);
                 }
 
-                if(remote == null) {
+                if (remote == null) {
                     throw new LauncherNotFoundException("could not retrieve any launcher");
                 }
 
                 LocalLauncher fromRemote;
                 try {
                     fromRemote = bindTo(remote.toLocalLauncher(file, getTargetLibFolder()), .5, 1.);
-                } catch(IOException ioE) {
-                    if(local == null) {
+                } catch (IOException ioE) {
+                    if (local == null) {
                         throw ioE;
                     }
                     SENTRY.sendEvent(new EventBuilder()
@@ -704,136 +702,118 @@ public final class Bootstrap {
         };
     }
 
-    private static RedirectPrintStream out, err;
+    private static class RunningConditionsResult {
+        public boolean javaVersionUnsupported = false;
+        public Path brokenPath = null;
+        public boolean tempDirUnwriteable = false;
+        public boolean tempDirNotEnoughSpace = false;
 
-    private static void disableRedirectRecording() {
-        if (out != null) {
-            out.disableRecording();
+        public String formatMessage() {
+            StringBuilder message = new StringBuilder();
+            if (javaVersionUnsupported) {
+                appendLine(message, "Your Java version is not supported. Please install at least " + SUPPORTED_JAVA_VERSION.getVersion() + " from Java.com");
+                appendLine(message, "Ваша версия Java не поддерживается. Пожалуйста, установите как минимум " + SUPPORTED_JAVA_VERSION.getVersion() + " с сайта Java.com");
+            }
+            if (brokenPath != null) {
+                appendLine(message, "Please do not run (any) Java application which path contains folder name that ends with «!»");
+                appendLine(message, "Не запускайте Java-приложения в директориях, чей путь содержит «!». Переместите TLauncher в другую папку.");
+            }
+            if (tempDirUnwriteable) {
+                appendLine(message, "Could not access temporary folder. Please check your hard drive.");
+                appendLine(message, "Не удалось создать временный файл. Проверьте диск на наличие ошибок.");
+            }
+            if (tempDirNotEnoughSpace) {
+                appendLine(message, "Insufficient disk space on partition storing temporary folder.");
+                appendLine(message, "Недостаточно места на системном диске. Пожалуйста, освободите место и попробуйте снова.");
+            }
+            return message.toString();
         }
-        if (err != null) {
-            err.disableRecording();
+
+        private static void appendLine(StringBuilder buffer, String line) {
+            if (buffer.length() != 0) {
+                buffer.append("\n");
+            }
+            buffer.append(line);
         }
-        OutputRedirectBuffer.clearBuffer();
+
+        public void showErrorIfNeeded() {
+            String message = formatMessage();
+            if (!message.isEmpty()) {
+                UserInterface.showError(message, brokenPath);
+                throw new RuntimeException("precodintions failed");
+            }
+        }
     }
 
-    private static void checkRunningConditions() {
-        JavaVersion supported = JavaVersion.create(1, 8, 0, 45);
+    private static final JavaVersion SUPPORTED_JAVA_VERSION = JavaVersion.create(1, 8, 0, 45);
+
+    private static RunningConditionsResult checkRunningConditions(Path bootstrapJar) {
+        RunningConditionsResult result = new RunningConditionsResult();
+
         JavaVersion current = JavaVersion.getCurrent();
 
-        if(current == JavaVersion.UNKNOWN) {
+        if (current == JavaVersion.UNKNOWN) {
             SENTRY.sendEvent(new EventBuilder()
                     .withLevel(Event.Level.WARNING)
                     .withMessage("unknown java version: " + System.getProperty("java.version"))
             );
-        } else if(JavaVersion.getCurrent().compareTo(supported) < 0) {
+        } else if (current.compareTo(SUPPORTED_JAVA_VERSION) < 0) {
             SENTRY.sendEvent(new EventBuilder()
                     .withLevel(Event.Level.ERROR)
                     .withMessage("old java version")
                     .withExtra("ssl_fix", FixSSL.isFixed())
             );
-            String message =
-                    "Your Java version is not supported. Please install at least " + supported.getVersion() + " from Java.com" +
-                    "\n" +
-                    "Ваша версия Java не поддерживается. Пожалуйста установите как минимум " + supported.getVersion() + " с сайта Java.com";
-            UserInterface.showError(message, null);
-            throw new Error(message);
+            result.javaVersionUnsupported = true;
+            return result;
         }
 
-        String message = null;
-        IOException ioE = null;
-        File file = null;
+        if (bootstrapJar.toAbsolutePath().toString().contains("!" + File.separatorChar)) {
+            result.brokenPath = bootstrapJar;
+        }
 
-        findProblem:
-        {
-            File jar = U.getJar(Bootstrap.class);
-            String path = jar.getAbsolutePath();
-
-            if (path.contains("!" + File.separatorChar)) {
-                message =
-                        "Please do not run (any) Java application which path contains folder name that ends with «!»" +
-                                "\n" +
-                                "Не запускайте Java-приложения в директориях, чей путь содержит «!». Переместите TLauncher в другую папку." +
-                                "\n\n" + path;
-                break findProblem;
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("bootstrap", null);
+            FileStat tempFileStat = fileStat(tempFile);
+            if (!tempFileStat.writeable) {
+                result.tempDirUnwriteable = true;
             }
-
-            try {
-                checkAccessible(jar, false, false);
-            } catch (IOException jarException) {
-                file = jar;
-
-                if (jarException instanceof UnknownFreeSpaceException) {
-                    message =
-                            "Could not determine free space on partition storing Bootstrap. Please check your hard drive.\n" +
-                                    "\n" +
-                                    "Не удалось определить свободное место. Проверьте диск на наличие ошибок.";
-                } else if (jarException instanceof InsufficientFreeSpace) {
-                    message =
-                            "Insufficient disk space on partition storing JAR file.\n" +
-                                    "\n" +
-                                    "Недостаточно места на диске. с которого запускается JAR-файл. Пожалуйста, освбодите место и попробуйте снова.";
-                } else {
-                    message =
-                            "Could not access JAR file.\n" +
-                                    "\n" +
-                                    "Не удалось получить доступ к JAR-файлу.";
+            if (!tempFileStat.enoughSpace) {
+                result.tempDirNotEnoughSpace = true;
+            }
+        } catch (IOException e) {
+            result.tempDirUnwriteable = true;
+        } finally {
+            if (tempFile != null) {
+                try {
+                    Files.delete(tempFile);
+                } catch (IOException ignored) {
                 }
-                ioE = jarException;
-                break findProblem;
-            }
-
-            File tempFile;
-            try {
-                tempFile = File.createTempFile("bootstrap", null);
-                checkAccessible(tempFile, true, true);
-            } catch (IOException tempFileException) {
-                if (tempFileException instanceof UnknownFreeSpaceException) {
-                    message =
-                            "Could not determine free space on partition storing temporary folder. Please check your hard drive.\n" +
-                                    "\n" +
-                                    "Не удалось определить свободное место на системном диске. Либо он полон, либо содержит ошибки.";
-                } else if (tempFileException instanceof InsufficientFreeSpace) {
-                    message =
-                            "Insufficient disk space on partition storing temporary folder.\n" +
-                                    "\n" +
-                                    "Недостаточно места на системном диске. Пожалуйста, освободите место и попробуйте снова.";
-                } else {
-                    message =
-                            "Could not access temporary folder. Please check your hard drive.\n" +
-                                    "\n" +
-                                    "Не удалось создать временный файл. Проверьте диск на наличие ошибок.";
-                }
-                ioE = tempFileException;
-                break findProblem;
-            }
-
-            if(tempFile.getParentFile() != null && tempFile.isDirectory()) {
-                ImageIO.setCacheDirectory(tempFile.getParentFile());
             }
         }
 
-        if(message != null) {
-            UserInterface.showError(message, file == null? null : file.getAbsolutePath());
-            throw new Error(message, ioE);
+        return result;
+    }
+
+    private static class FileStat {
+        public final boolean exists;
+        public final boolean readable;
+        public final boolean writeable;
+        public final boolean enoughSpace;
+
+        private FileStat(boolean exists, boolean readable, boolean writeable, boolean enoughSpace) {
+            this.exists = exists;
+            this.readable = readable;
+            this.writeable = writeable;
+            this.enoughSpace = enoughSpace;
         }
     }
 
-    private static void checkAccessible(File file, boolean requireExistance, boolean requireWritePermission) throws IOException {
-        if(!file.exists()) {
-            if(requireExistance) {
-                throw new FileNotFoundException(file.getAbsolutePath());
-            }
-        } else {
-            NoFileAccessException.throwIfNoAccess(file, requireWritePermission);
-        }
-
-        long freeSpace = U.queryFreeSpace(file);
-        if(freeSpace < 0) {
-            throw new UnknownFreeSpaceException();
-        }
-        if(freeSpace < 1024L * 64L) {
-            throw new InsufficientFreeSpace();
-        }
+    private static FileStat fileStat(Path path) {
+        final boolean readable = Files.isReadable(path);
+        final boolean writeable = Files.isWritable(path);
+        final boolean enoughSpace = U.queryFreeSpace(path) > 64 * 1024L;
+        return new FileStat(Files.exists(path), readable, writeable, enoughSpace);
     }
 
     private static void log(Object... o) {

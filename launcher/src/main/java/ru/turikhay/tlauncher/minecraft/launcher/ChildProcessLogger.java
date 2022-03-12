@@ -4,7 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.logger.LogFile;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.Charset;
 
 public class ChildProcessLogger implements Closeable {
@@ -23,7 +26,7 @@ public class ChildProcessLogger implements Closeable {
     }
 
     public void log(String line) {
-        if(writer == null) {
+        if (writer == null) {
             LOGGER.warn("Tried to log after closing: {}", line);
             return;
         }
@@ -31,7 +34,7 @@ public class ChildProcessLogger implements Closeable {
             writer.write(line);
             writer.write('\n');
         } catch (IOException e) {
-            if(LOGGER.isDebugEnabled()) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Couldn't write into logger", e);
             } else {
                 LOGGER.warn("Couldn't write into logger: {}", e.toString());
@@ -40,7 +43,7 @@ public class ChildProcessLogger implements Closeable {
     }
 
     public void close() throws IOException {
-        if(writer != null) {
+        if (writer != null) {
             writer.close();
             writer = null;
         }

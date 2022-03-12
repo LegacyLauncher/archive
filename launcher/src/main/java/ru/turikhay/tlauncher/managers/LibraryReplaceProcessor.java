@@ -19,15 +19,14 @@ import ru.turikhay.tlauncher.repository.Repository;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LibraryReplaceProcessor extends InterruptibleComponent {
     private static final Logger LOGGER = LogManager.getLogger(LibraryReplaceProcessor.class);
     private static final String PATCHY_TYPE = "patchy";
 
-    private final double VERSION = 1.0;
-
-    private final List<LibraryReplaceProcessorListener> listeners = Collections.synchronizedList(new ArrayList<LibraryReplaceProcessorListener>());
-    private final Map<String, List<LibraryReplace>> libraries = Collections.synchronizedMap(new HashMap<String, List<LibraryReplace>>());
+    private final List<LibraryReplaceProcessorListener> listeners = Collections.synchronizedList(new ArrayList<>());
+    private final Map<String, List<LibraryReplace>> libraries = Collections.synchronizedMap(new HashMap<>());
 
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Pattern.class, new PatternTypeAdapter())
@@ -61,13 +60,13 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
             return true;
         }
         List<LibraryReplace> list = forType(type);
-        if(list == null) {
+        if (list == null) {
             return false;
         }
         if (version instanceof CompleteVersion) {
             CompleteVersion complete = (CompleteVersion) version;
             List<Library> libraries = complete.getLibraries();
-            if(libraries != null) {
+            if (libraries != null) {
                 for (LibraryReplace lib : list) {
                     for (Library replacingLib : libraries) {
                         if (lib.replaces(replacingLib)) {
@@ -83,7 +82,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
     private boolean hasLibrariesExplicitly(String version, String type) {
         List<LibraryReplace> list = forType(type);
-        if(list == null) {
+        if (list == null) {
             return false;
         }
         for (LibraryReplace lib : list) {
@@ -100,29 +99,13 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
     private List<LibraryReplace> getLibraries(CompleteVersion complete, String type) {
         String id = complete.getID();
-        ArrayList<LibraryReplace> result = new ArrayList<LibraryReplace>();
         List<LibraryReplace> list = forType(type);
-        if(list == null) {
-            return result;
+        if (list == null) {
+            return Collections.emptyList();
         }
-        for (LibraryReplace lib : list) {
-            add:
-            {
-                if (lib.supports(id)) {
-                    break add;
-                }
-
-                for (Library replacingLib : complete.getLibraries()) {
-                    if (lib.replaces(replacingLib)) {
-                        break add;
-                    }
-                }
-
-                continue;
-            }
-            result.add(lib);
-        }
-        return result;
+        return list.stream()
+                .filter(lib -> lib.supports(id) || complete.getLibraries().stream().anyMatch(lib::replaces))
+                .collect(Collectors.toList());
     }
 
     public CompleteVersion process(CompleteVersion original, String type) {
@@ -208,7 +191,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
     @Override
     protected boolean refresh(int session) {
-        if(refreshed) {
+        if (refreshed) {
             //log("Already refreshed");
             return true;
         }
@@ -238,6 +221,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         //U.sleepFor(10 * 60 * 1000);
         Payload resp = gson.fromJson(Repository.EXTRA_VERSION_REPO.read("libraries/replace.json"), Payload.class);
 
+        double VERSION = 1.0;
         if (resp.version != VERSION) {
             throw new IllegalArgumentException("incompatible version; required: " + VERSION + ", got: " + resp.version);
         }
@@ -245,7 +229,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         synchronized (libraries) {
             libraries.clear();
             libraries.putAll(resp.libraries);
-            if(!libraries.containsKey(Account.AccountType.ELY_LEGACY.toString()) && resp.libraries.containsKey(Account.AccountType.ELY.toString())) {
+            if (!libraries.containsKey(Account.AccountType.ELY_LEGACY.toString()) && resp.libraries.containsKey(Account.AccountType.ELY.toString())) {
                 libraries.put(Account.AccountType.ELY_LEGACY.toString(), resp.libraries.get(Account.AccountType.ELY.toString()));
             }
         }

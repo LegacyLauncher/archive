@@ -5,7 +5,6 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.managers.McleaksManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.minecraft.auth.AuthExecutor;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.stats.Stats;
@@ -22,15 +21,14 @@ import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.TextPopup;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.tlauncher.user.McleaksUser;
+import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.Random;
 
 public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneCompCloseable, Blockable {
@@ -40,7 +38,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
     private final AccountManagerScene scene;
 
     private final LocalizableTextField username, oldToken, newToken;
-    private final LocalizableButton button, removeButton;
+    private final LocalizableButton button;
     private final ProgressBar progressBar;
 
     private final Blockable buttonBlocker = new Blockable() {
@@ -91,19 +89,14 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                 final int session = new Random().nextInt();
                 currentSession = session;
                 final String altToken = newToken.getValue();
-                if(StringUtils.isBlank(altToken)) {
+                if (StringUtils.isBlank(altToken)) {
                     Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
                     return;
                 }
-                Authenticator.instanceFor(new AuthExecutor() {
+                Authenticator.instanceFor(() -> new Account<>(AccountManager.getMcleaksAuth().authorize(altToken)), Account.AccountType.MCLEAKS).asyncPass(new AuthUIListener<McleaksUser>(new AuthenticatorListener<McleaksUser>() {
                     @Override
-                    public Account pass() throws AuthException, IOException {
-                        return new Account(AccountManager.getMcleaksAuth().authorize(altToken));
-                    }
-                }, Account.AccountType.MCLEAKS).asyncPass(new AuthUIListener(new AuthenticatorListener() {
-                    @Override
-                    public void onAuthPassing(Authenticator var1) {
-                        if(currentSession != session) {
+                    public void onAuthPassing(Authenticator<? extends McleaksUser> var1) {
+                        if (currentSession != session) {
                             return;
                         }
                         Blocker.blockComponents(AccountMcleaksPane.this, "mcleaks-auth");
@@ -111,8 +104,8 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                     }
 
                     @Override
-                    public void onAuthPassingError(Authenticator var1, Throwable var2) {
-                        if(currentSession != session) {
+                    public void onAuthPassingError(Authenticator<? extends McleaksUser> var1, Throwable var2) {
+                        if (currentSession != session) {
                             return;
                         }
                         Blocker.unblockComponents(AccountMcleaksPane.this, "mcleaks-auth");
@@ -121,35 +114,37 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                     }
 
                     @Override
-                    public void onAuthPassed(Authenticator var1) {
-                        if(currentSession != session) {
+                    public void onAuthPassed(Authenticator<? extends McleaksUser> var1) {
+                        if (currentSession != session) {
                             return;
                         }
                         Blocker.unblockComponents(AccountMcleaksPane.this, "mcleaks-auth");
                         McleaksUser oldUser = null;
-                        if(mode == PaneMode.EDIT) {
-                            Account acc = scene.list.getSelected();
-                            if(acc != null && acc.getType() == Account.AccountType.MCLEAKS) {
+                        if (mode == PaneMode.EDIT) {
+                            Account<? extends User> acc = scene.list.getSelected();
+                            if (acc != null && acc.getType() == Account.AccountType.MCLEAKS) {
                                 oldUser = (McleaksUser) acc.getUser();
                             }
                         }
                         progressBar.setIndeterminate(false);
-                        McleaksUser user = (McleaksUser) var1.getAccount().getUser();
-                        if(oldUser != null) {
-                            if(oldUser.equals(user)) {
+                        McleaksUser user = var1.getAccount().getUser();
+                        if (oldUser != null) {
+                            if (oldUser.equals(user)) {
                                 oldUser.setAltToken(user.getAltToken());
                             } else {
-                                if(Alert.showLocQuestion(LOC_PREFIX + "overwrite", (Object) user.getUsername())) {
+                                if (Alert.showLocQuestion(LOC_PREFIX + "overwrite", (Object) user.getUsername())) {
                                     TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(oldUser);
                                 }
                             }
                         }
                         TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
-                        scene.list.select(new Account(user));
+                        scene.list.select(new Account<>(user));
                         scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
                         Stats.accountCreation("mcleaks", "standard", "", true);
                     }
-                }){{editorOpened = true;}});
+                }) {{
+                    editorOpened = true;
+                }});
             }
         });
         button.setFont(button.getFont().deriveFont(Font.BOLD));
@@ -157,7 +152,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
         c1.gridy++;
         bottom.add(button, c1);
 
-        if(McleaksManager.isUnsupported()) {
+        if (McleaksManager.isUnsupported()) {
             Blocker.block(buttonBlocker, "mcleaks-unsupported");
         }
 
@@ -165,7 +160,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
             case ADD:
                 username = null;
                 oldToken = null;
-                removeButton = null;
+                LocalizableButton removeButton;
 
                 c.gridy++;
                 content.add(new LocalizableLabel(LOC_PREFIX + "token"), c);
@@ -177,12 +172,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                 content.add(newToken, c);
 
                 LocalizableButton getTokenButton = new LocalizableButton(LOC_PREFIX + "button.get-token");
-                getTokenButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        OS.openLink("https://mcleaks.net/get");
-                    }
-                });
+                getTokenButton.addActionListener(e -> OS.openLink("https://mcleaks.net/get"));
                 c1.gridy++;
                 bottom.add(getTokenButton, c1);
 
@@ -217,25 +207,17 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                 panel.setCenter(newToken);
 
                 LocalizableButton b = new LocalizableButton(LOC_PREFIX + "newToken.renew");
-                b.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        OS.openLink("https://mcleaks.net/renew");
-                    }
-                });
+                b.addActionListener(e -> OS.openLink("https://mcleaks.net/renew"));
                 panel.setEast(b);
                 c.gridy++;
                 content.add(panel, c);
 
-                removeButton = new LocalizableButton( "account.manager.multipane.remove-account");
-                removeButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Account account = scene.list.getSelected();
-                        if(account != null && account.getType().equals(Account.AccountType.MCLEAKS)) {
-                            TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(account.getUser());
-                            scene.multipane.showTip("welcome");
-                        }
+                removeButton = new LocalizableButton("account.manager.multipane.remove-account");
+                removeButton.addActionListener(e -> {
+                    Account<? extends User> account = scene.list.getSelected();
+                    if (account != null && account.getType().equals(Account.AccountType.MCLEAKS)) {
+                        TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(account.getUser());
+                        scene.multipane.showTip("welcome");
                     }
                 });
                 c1.gridy++;
@@ -258,13 +240,13 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
 
     @Override
     public void multipaneShown(boolean gotBack) {
-        switch(mode) {
+        switch (mode) {
             case ADD:
                 newToken.setValue(null);
                 break;
             case EDIT:
-                Account account = scene.list.getSelected();
-                if(account == null || account.getType() != Account.AccountType.MCLEAKS) {
+                Account<? extends User> account = scene.list.getSelected();
+                if (account == null || account.getType() != Account.AccountType.MCLEAKS) {
                     return;
                 }
                 username.setValue(account.getUsername());
@@ -287,7 +269,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
 
     @Override
     public String multipaneName() {
-        return (mode == PaneMode.ADD? "process" : mode.toString().toLowerCase(java.util.Locale.ROOT)) + "-account-mcleaks";
+        return (mode == PaneMode.ADD ? "process" : mode.toString().toLowerCase(java.util.Locale.ROOT)) + "-account-mcleaks";
     }
 
     @Override

@@ -4,7 +4,7 @@ import ru.turikhay.tlauncher.managers.ComponentManager;
 import ru.turikhay.util.async.AsyncThread;
 
 public abstract class RefreshableComponent extends LauncherComponent {
-    public RefreshableComponent(ComponentManager manager) throws Exception {
+    public RefreshableComponent(ComponentManager manager) {
         super(manager);
     }
 
@@ -13,11 +13,7 @@ public abstract class RefreshableComponent extends LauncherComponent {
     }
 
     public void asyncRefresh() {
-        AsyncThread.execute(new Runnable() {
-            public void run() {
-                refresh();
-            }
-        });
+        AsyncThread.execute(this::refresh);
     }
 
     protected abstract boolean refresh();

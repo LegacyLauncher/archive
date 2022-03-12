@@ -17,7 +17,6 @@ public final class BackgroundManager extends ExtendedLayeredPane {
     final Cover cover;
 
     private final ImageBackground imageBackground;
-    private final OldAnimatedBackground oldAnimatedBackground;
     private final FXWrapper<MediaFxBackground> mediaFxBackground;
 
     private IBackground background;
@@ -31,11 +30,11 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         add(cover, COVER_INDEX);
 
         imageBackground = new ImageBackground();
-        oldAnimatedBackground = null;//new OldAnimatedBackground();
+        OldAnimatedBackground oldAnimatedBackground = null;//new OldAnimatedBackground();
         FXWrapper<MediaFxBackground> _mediaFxBackground = null;
         try {
-            _mediaFxBackground = new FXWrapper<MediaFxBackground>(MediaFxBackground.class);
-        } catch(Throwable t) {
+            _mediaFxBackground = new FXWrapper<>(MediaFxBackground.class);
+        } catch (Throwable t) {
             LOGGER.info("MediaFxBackground will not be available: {}", t.toString());
             LOGGER.debug("Detailed exception", t);
         }

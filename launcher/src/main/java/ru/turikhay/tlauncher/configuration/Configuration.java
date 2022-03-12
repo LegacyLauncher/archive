@@ -26,7 +26,8 @@ public class Configuration extends SimpleConfiguration {
 
     private ConfigurationDefaults defaults;
     private Map<String, Object> constants;
-    private boolean firstRun, externalLocation;
+    private boolean firstRun;
+    private final boolean externalLocation;
 
     private Configuration(URL url, OptionSet set) throws IOException {
         super(url);
@@ -69,7 +70,7 @@ public class Configuration extends SimpleConfiguration {
         if (doesntExist) {
             config.firstRun = true;
         } else {
-            if(config.getBoolean("firstRun")) {
+            if (config.getBoolean("firstRun")) {
                 config.firstRun = true;
                 config.set("firstRun", null);
             }
@@ -91,13 +92,13 @@ public class Configuration extends SimpleConfiguration {
         LOGGER.debug("Constants: {}", constants);
         set(constants, false);
 
-        if(externalLocation) {
+        if (externalLocation) {
             LOGGER.debug("Using configuration from an external location");
 
             File defFile = getDefaultFile();
             SimpleConfiguration backConfig = new SimpleConfiguration(defFile);
 
-            if(defFile.isFile()) {
+            if (defFile.isFile()) {
                 //log("Default file exists, backing up some values...");
             } else {
                 LOGGER.debug("Default file doesn't exist, oops...");
@@ -158,7 +159,7 @@ public class Configuration extends SimpleConfiguration {
         }
 
         String separateDirsValue = get("minecraft.gamedir.separate");
-        if("false".equals(separateDirsValue) || "true".equals(separateDirsValue)) {
+        if ("false".equals(separateDirsValue) || "true".equals(separateDirsValue)) {
             setSeparateDirs(getBoolean("minecraft.gamedir.separate") ? SeparateDirs.FAMILY : SeparateDirs.NONE);
         }
 
@@ -228,7 +229,7 @@ public class Configuration extends SimpleConfiguration {
                 IntegerArray arr = IntegerArray.parseIntegerArray(plainValue);
                 value[0] = arr.get(0);
                 value[1] = arr.get(1);
-            } catch (Exception var4) {
+            } catch (Exception ignored) {
             }
 
             return value;
@@ -245,7 +246,7 @@ public class Configuration extends SimpleConfiguration {
                 IntegerArray arr = IntegerArray.parseIntegerArray(plainValue);
                 value[0] = arr.get(0);
                 value[1] = arr.get(1);
-            } catch (Exception var4) {
+            } catch (Exception ignored) {
             }
             return value;
         }
@@ -263,21 +264,15 @@ public class Configuration extends SimpleConfiguration {
 
     public VersionFilter getVersionFilter() {
         VersionFilter filter = new VersionFilter();
-        Iterator var3 = ReleaseType.getDefinable().iterator();
 
-        while (var3.hasNext()) {
-            ReleaseType type = (ReleaseType) var3.next();
+        for (ReleaseType type : ReleaseType.getDefinable()) {
             boolean include = getBoolean("minecraft.versions." + type);
             if (!include) {
                 filter.exclude(type);
             }
         }
 
-        ReleaseType.SubType[] var5;
-        int var9 = (var5 = ReleaseType.SubType.values()).length;
-
-        for (int var8 = 0; var8 < var9; ++var8) {
-            ReleaseType.SubType var7 = var5[var8];
+        for (ReleaseType.SubType var7 : ReleaseType.SubType.values()) {
             boolean include1 = getBoolean("minecraft.versions.sub." + var7);
             if (!include1) {
                 filter.exclude(var7);
@@ -288,7 +283,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public Direction getDirection(String key) {
-        return Reflect.parseEnum(Direction.class, get(key));
+        return Direction.parse(get(key));
     }
 
     public Proxy getProxy() {
@@ -310,10 +305,11 @@ public class Configuration extends SimpleConfiguration {
     }
 
     private final Version zeroVersion = Version.forIntegers(0, 0, 0);
+
     public Version getVersion(String path) {
         try {
             return Version.valueOf(get(path));
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             return zeroVersion;
         }
     }
@@ -373,10 +369,8 @@ public class Configuration extends SimpleConfiguration {
             throw new UnsupportedOperationException();
         } else {
             Properties temp = copyProperties(properties);
-            Iterator var3 = constants.keySet().iterator();
 
-            while (var3.hasNext()) {
-                String file = (String) var3.next();
+            for (String file : constants.keySet()) {
                 temp.remove(file);
             }
 
@@ -406,8 +400,7 @@ public class Configuration extends SimpleConfiguration {
 
     private static List<Locale> getDefaultLocales() {
         ArrayList<Locale> l = new ArrayList<>();
-        String[] ll = Static.getLangList();
-        for (String locale : ll) {
+        for (String locale : Static.getLangList()) {
             Locale loc = U.getLocale(locale);
             if (loc == null) {
                 LOGGER.warn("Default locale is unavailable: {}", locale);
@@ -438,19 +431,19 @@ public class Configuration extends SimpleConfiguration {
         public static boolean parse(String val) {
             if (val == null) {
                 return false;
-            } else {
-                Configuration.ActionOnLaunch[] var4;
-                int var3 = (var4 = values()).length;
-
-                for (int var2 = 0; var2 < var3; ++var2) {
-                    Configuration.ActionOnLaunch cur = var4[var2];
-                    if (cur.toString().equalsIgnoreCase(val)) {
-                        return true;
-                    }
-                }
-
-                return false;
             }
+
+            Configuration.ActionOnLaunch[] var4;
+            int var3 = (var4 = values()).length;
+
+            for (int var2 = 0; var2 < var3; ++var2) {
+                Configuration.ActionOnLaunch cur = var4[var2];
+                if (cur.toString().equalsIgnoreCase(val)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static Configuration.ActionOnLaunch get(String val) {
@@ -483,19 +476,19 @@ public class Configuration extends SimpleConfiguration {
         public static boolean parse(String val) {
             if (val == null) {
                 return false;
-            } else {
-                LoggerType[] var4;
-                int var3 = (var4 = values()).length;
-
-                for (int var2 = 0; var2 < var3; ++var2) {
-                    LoggerType cur = var4[var2];
-                    if (cur.toString().equalsIgnoreCase(val)) {
-                        return true;
-                    }
-                }
-
-                return false;
             }
+
+            LoggerType[] var4;
+            int var3 = (var4 = values()).length;
+
+            for (int var2 = 0; var2 < var3; ++var2) {
+                LoggerType cur = var4[var2];
+                if (cur.toString().equalsIgnoreCase(val)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static LoggerType get(String val) {

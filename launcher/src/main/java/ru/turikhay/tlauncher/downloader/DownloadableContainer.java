@@ -1,12 +1,15 @@
 package ru.turikhay.tlauncher.downloader;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DownloadableContainer {
-    private final List<DownloadableContainerHandler> handlers = Collections.synchronizedList(new ArrayList());
-    private final List<Throwable> errors = Collections.synchronizedList(new ArrayList());
-    final List<Downloadable> list = Collections.synchronizedList(new ArrayList());
+    private final List<DownloadableContainerHandler> handlers = Collections.synchronizedList(new ArrayList<>());
+    private final List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
+    final List<Downloadable> list = Collections.synchronizedList(new ArrayList<>());
     private final AtomicInteger sum = new AtomicInteger();
     private boolean locked;
     private boolean aborted;
@@ -52,11 +55,8 @@ public class DownloadableContainer {
             throw new NullPointerException();
         } else {
             int i = -1;
-            Iterator var4 = coll.iterator();
 
-            while (var4.hasNext()) {
-                Downloadable d = (Downloadable) var4.next();
-
+            for (Downloadable d : coll) {
                 ++i;
                 if (d == null) {
                     throw new NullPointerException("Downloadable at" + i + " is NULL!");
@@ -104,32 +104,20 @@ public class DownloadableContainer {
     }
 
     void onStart() {
-        Iterator var2 = handlers.iterator();
 
-        while (var2.hasNext()) {
-            DownloadableContainerHandler handler = (DownloadableContainerHandler) var2.next();
+        for (DownloadableContainerHandler handler : handlers) {
             handler.onStart(this);
         }
 
     }
 
     void onComplete(Downloadable d) throws RetryDownloadException {
-        Iterator var3 = handlers.iterator();
-
-        DownloadableContainerHandler handler;
-        while (var3.hasNext()) {
-            handler = (DownloadableContainerHandler) var3.next();
+        for (DownloadableContainerHandler handler : handlers) {
             handler.onComplete(this, d);
         }
 
-        if (sum.decrementAndGet() <= 0) {
-            var3 = handlers.iterator();
-
-            while (var3.hasNext()) {
-                handler = (DownloadableContainerHandler) var3.next();
-                handler.onFullComplete(this);
-            }
-
+        for (DownloadableContainerHandler handler : handlers) {
+            handler.onFullComplete(this);
         }
     }
 
@@ -137,10 +125,8 @@ public class DownloadableContainer {
         aborted = true;
         errors.add(d.getError());
         if (sum.decrementAndGet() <= 0) {
-            Iterator var3 = handlers.iterator();
 
-            while (var3.hasNext()) {
-                DownloadableContainerHandler handler = (DownloadableContainerHandler) var3.next();
+            for (DownloadableContainerHandler handler : handlers) {
                 handler.onAbort(this);
             }
 
@@ -149,10 +135,8 @@ public class DownloadableContainer {
 
     void onError(Downloadable d, Throwable e) {
         errors.add(e);
-        Iterator var4 = handlers.iterator();
 
-        while (var4.hasNext()) {
-            DownloadableContainerHandler handler = (DownloadableContainerHandler) var4.next();
+        for (DownloadableContainerHandler handler : handlers) {
             handler.onError(this, d, e);
         }
 
@@ -168,24 +152,18 @@ public class DownloadableContainer {
             b.locked = true;
 
             try {
-                List aList = a.list;
-                List bList = b.list;
-                ArrayList deleteList = new ArrayList();
-                Iterator var6 = aList.iterator();
+                List<Downloadable> deleteList = new ArrayList<>();
 
-                while (var6.hasNext()) {
-                    Downloadable aDownloadable = (Downloadable) var6.next();
-                    Iterator var8 = bList.iterator();
+                for (Downloadable aDownloadable : a.list) {
 
-                    while (var8.hasNext()) {
-                        Downloadable bDownloadable = (Downloadable) var8.next();
+                    for (Downloadable bDownloadable : b.list) {
                         if (aDownloadable.equals(bDownloadable)) {
                             deleteList.add(bDownloadable);
                         }
                     }
                 }
 
-                bList.removeAll(deleteList);
+                b.list.removeAll(deleteList);
             } finally {
                 a.locked = false;
                 b.locked = false;

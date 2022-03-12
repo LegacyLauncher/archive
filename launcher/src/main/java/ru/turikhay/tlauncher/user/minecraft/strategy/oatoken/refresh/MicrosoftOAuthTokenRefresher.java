@@ -4,8 +4,6 @@ import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.*;

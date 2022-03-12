@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class ConnectivityWarning extends ExtendedFrame implements LocalizableComponent {
     private final static int WIDTH = SwingUtil.magnify(500);
     private static final int BORDER = SwingUtil.magnify(20);
-    private final static int WIDTH_BORDERED = WIDTH - 2*BORDER;
+    private final static int WIDTH_BORDERED = WIDTH - 2 * BORDER;
     private static final int HALF_BORDER = BORDER / 2;
 
     private final EditorPane body;
@@ -152,15 +152,14 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
                     } else {
                         path = "connectivity.warning.list.hint." + entry.getName();
                         if (entry.getChecker() instanceof AuthServerChecker &&
-                                ((AuthServerChecker) entry.getChecker()).getDetectedThirdPartyAuthenticator() != null)
-                        {
+                                ((AuthServerChecker) entry.getChecker()).getDetectedThirdPartyAuthenticator() != null) {
                             path += ".third_party";
                             String thirdPartyAuthenticatorName =
                                     ((AuthServerChecker) entry.getChecker()).getDetectedThirdPartyAuthenticator().getName();
                             if (thirdPartyAuthenticatorName == null) {
                                 path += ".unknown";
                             } else {
-                                vars = new Object[]{ thirdPartyAuthenticatorName };
+                                vars = new Object[]{thirdPartyAuthenticatorName};
                             }
                         }
                     }
@@ -192,7 +191,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
             // make the contents stick to the top
             c.weighty = 1.0;
             c.gridy++;
-            if(unavailableHosts.isEmpty()) {
+            if (unavailableHosts.isEmpty()) {
                 entriesPanel.add(Box.createRigidArea(new Dimension(1, 1)), c);
             } else {
                 entriesPanel.add(Box.createRigidArea(new Dimension(1, BORDER)), c);
@@ -229,7 +228,8 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
         body.setMaximumSize(new Dimension(WIDTH_BORDERED, SwingUtil.getPrefHeight(body, WIDTH_BORDERED)));
     }
 
-    private enum ConnectivityType { SOME, NONE }
+    private enum ConnectivityType {SOME, NONE}
+
     private String generateConnectivityLink(ConnectivityType type) {
         final String wikiLangPrefix = TLauncher.getInstance().getSettings().isUSSRLocale() ? "" : "en:";
         final String linkPrefix = tlaunchNotAvailable ? "https://web.archive.org/web/" : "";

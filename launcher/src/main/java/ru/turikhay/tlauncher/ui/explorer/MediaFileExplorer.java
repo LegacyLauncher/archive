@@ -15,6 +15,10 @@ public class MediaFileExplorer extends FilteredFileExplorer {
     }
 
     public static MediaFileExplorer newExplorer() throws Exception {
-        return new MediaFileExplorer();
+        try {
+            return new MediaFileExplorer();
+        } catch (Throwable var1) {
+            throw new Exception("couldn't create explorer", var1);
+        }
     }
 }

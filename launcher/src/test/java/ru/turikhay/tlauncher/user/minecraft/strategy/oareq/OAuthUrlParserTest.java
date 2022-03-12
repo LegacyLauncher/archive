@@ -2,7 +2,8 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OAuthUrlParserTest {
 
@@ -22,9 +23,7 @@ public class OAuthUrlParserTest {
 
     @Test
     void cancelledTest() {
-        assertThrows(MicrosoftOAuthCodeRequestException.class, () -> {
-            p.parseAndValidate("https://login.live.com/oauth20_desktop.srf?error=access_denied&error_description=The%20user%20has%20denied%20access%20to%20the%20scope%20requested%20by%20the%20client%20application.&lc=1033");
-        });
+        assertThrows(MicrosoftOAuthCodeRequestException.class, () -> p.parseAndValidate("https://login.live.com/oauth20_desktop.srf?error=access_denied&error_description=The%20user%20has%20denied%20access%20to%20the%20scope%20requested%20by%20the%20client%20application.&lc=1033"));
     }
 
 }

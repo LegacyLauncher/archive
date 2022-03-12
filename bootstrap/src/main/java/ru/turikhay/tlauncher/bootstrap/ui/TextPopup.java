@@ -7,6 +7,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeListener;
@@ -14,7 +15,7 @@ import java.beans.PropertyChangeListener;
 class TextPopup extends MouseAdapter {
 
     public void mouseClicked(MouseEvent e) {
-        if (e.getModifiers() == 4) {
+        if (e.getModifiers() == InputEvent.META_MASK) {
             Object source = e.getSource();
             if (source instanceof JTextComponent) {
                 JPopupMenu popup = getPopup(e, (JTextComponent) source);
@@ -30,7 +31,7 @@ class TextPopup extends MouseAdapter {
             return null;
         }
 
-        if(!comp.isFocusOwner()) {
+        if (!comp.isFocusOwner()) {
             comp.requestFocus();
         }
 

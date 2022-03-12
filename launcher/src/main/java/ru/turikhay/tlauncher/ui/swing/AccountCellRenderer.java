@@ -4,13 +4,14 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
+import ru.turikhay.tlauncher.user.User;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class AccountCellRenderer implements ListCellRenderer<Account> {
-    public static final Account EMPTY = Account.randomAccount();
-    public static final Account MANAGE = Account.randomAccount();
+public class AccountCellRenderer implements ListCellRenderer<Account<? extends User>> {
+    public static final Account<?> EMPTY = Account.randomAccount();
+    public static final Account<?> MANAGE = Account.randomAccount();
     private static final ImageIcon MANAGE_ICON = Images.getIcon16("gear");
 
     private static final ImageIcon MOJANG_USER_ICON = Images.getIcon16("logo-mojang");
@@ -56,7 +57,7 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
         }
     }
 
-    public Component getListCellRendererComponent(JList<? extends Account> list, Account value, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<? extends Account<? extends User>> list, Account<? extends User> value, int index, boolean isSelected, boolean cellHasFocus) {
         JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         renderer.setAlignmentY(0.5F);
         if (value != null && value != EMPTY) {
@@ -67,26 +68,26 @@ public class AccountCellRenderer implements ListCellRenderer<Account> {
                 ImageIcon icon = null;
                 switch (value.getType()) {
                     case MCLEAKS:
-                        icon = type == AccountCellType.EDITOR? MCLEAKS_USER_ICON_BIG : MCLEAKS_USER_ICON;
+                        icon = type == AccountCellType.EDITOR ? MCLEAKS_USER_ICON_BIG : MCLEAKS_USER_ICON;
                         break;
                     case ELY:
                     case ELY_LEGACY:
-                        icon = type == AccountCellType.EDITOR? ELY_USER_ICON_BIG : ELY_USER_ICON;
+                        icon = type == AccountCellType.EDITOR ? ELY_USER_ICON_BIG : ELY_USER_ICON;
                         break;
                     case MOJANG:
-                        icon = type == AccountCellType.EDITOR? MOJANG_USER_ICON_BIG : MOJANG_USER_ICON;
+                        icon = type == AccountCellType.EDITOR ? MOJANG_USER_ICON_BIG : MOJANG_USER_ICON;
                         break;
                     case MINECRAFT:
-                        icon = type == AccountCellType.EDITOR? MINECRAFT_USER_ICON_BIG : MINECRAFT_USER_ICON;
+                        icon = type == AccountCellType.EDITOR ? MINECRAFT_USER_ICON_BIG : MINECRAFT_USER_ICON;
                         break;
                     case PLAIN:
-                        icon = type == AccountCellType.EDITOR? USER_ICON_BIG : USER_ICON;
+                        icon = type == AccountCellType.EDITOR ? USER_ICON_BIG : USER_ICON;
                         break;
                 }
 
                 if (icon != null) {
                     ImageIcon.setup(renderer, icon);
-                    renderer.setFont(renderer.getFont().deriveFont(1));
+                    renderer.setFont(renderer.getFont().deriveFont(Font.BOLD));
                 } else {
                     renderer.setIcon(null);
                     renderer.setDisabledIcon(null);

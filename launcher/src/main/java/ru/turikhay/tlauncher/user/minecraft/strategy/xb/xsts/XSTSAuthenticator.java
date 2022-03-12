@@ -38,12 +38,12 @@ public class XSTSAuthenticator extends XboxServiceAuthStrategy {
         try {
             return requestAndParse(xboxLiveToken);
         } catch (InvalidResponseException e) {
-            if(e instanceof InvalidStatusCodeException) {
-                if(((InvalidStatusCodeException) e).getStatusCode() == 401) {
+            if (e instanceof InvalidStatusCodeException) {
+                if (((InvalidStatusCodeException) e).getStatusCode() == 401) {
                     JsonObject response = e.getResponseAsJson();
                     if (response != null) {
                         XSTSAuthenticationException e1 = parseXErr(response);
-                        if(e1 != null) {
+                        if (e1 != null) {
                             throw e1;
                         }
                     }
@@ -54,9 +54,9 @@ public class XSTSAuthenticator extends XboxServiceAuthStrategy {
     }
 
     private static XSTSAuthenticationException parseXErr(JsonObject response) {
-        if(response.has("XErr")) {
+        if (response.has("XErr")) {
             JsonElement xErr = response.get("XErr");
-            if(xErr instanceof JsonPrimitive) {
+            if (xErr instanceof JsonPrimitive) {
                 String code = xErr.getAsString();
                 switch (code) {
                     case "2148916233":

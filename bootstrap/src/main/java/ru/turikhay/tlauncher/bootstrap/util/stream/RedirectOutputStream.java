@@ -32,7 +32,7 @@ class RedirectOutputStream extends OutputStream {
         if (enableRecording) {
             buffer.write(b);
         }
-        targetStream.write(b);
+        targetStream.write(b, 0, b.length);
     }
 
     @Override
@@ -48,7 +48,7 @@ class RedirectOutputStream extends OutputStream {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         targetStream.close();
     }
 }

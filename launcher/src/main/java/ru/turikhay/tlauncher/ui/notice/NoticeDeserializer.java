@@ -6,9 +6,9 @@ import ru.turikhay.tlauncher.minecraft.PromotedServer;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
-import java.awt.image.BufferedImage;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.util.Objects;
 
 public class NoticeDeserializer implements JsonDeserializer<Notice> {
 
@@ -18,7 +18,7 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
 
         int id = root.get("id").getAsInt();
         int pos;
-        if(root.has("pos")) {
+        if (root.has("pos")) {
             pos = root.get("pos").getAsInt();
         } else {
             pos = -1;
@@ -34,7 +34,7 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         NoticeAction action = parseAction(id, root, context);
 
         Notice notice = new Notice(id, pos, text, image, action);
-        if(root.has("promoted") && root.get("promoted").getAsBoolean()) {
+        if (root.has("promoted") && root.get("promoted").getAsBoolean()) {
             notice.setPromoted(true);
         }
 
@@ -42,83 +42,56 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
     }
 
     private NoticeImage parseImage(JsonObject root, JsonDeserializationContext context) {
-        JsonElement elem = U.requireNotNull(root.get("image"));
+        JsonElement elem = Objects.requireNonNull(root.get("image"));
 
-        if(elem.isJsonObject()) {
+        if (elem.isJsonObject()) {
             return parseImageObject(elem.getAsJsonObject(), context);
         }
 
         String imageSrc = elem.getAsString();
         NoticeImage image;
 
-        createImage:
-        {
-            base64: {
-                BufferedImage base64Image;
-                try {
-                    base64Image = SwingUtil.base64ToImage(imageSrc);
-                } catch (Exception e) {
-                    break base64;
-                }
-                image = new DirectNoticeImage(base64Image);
-                break createImage;
-            }
-
-            lookIfPredefined: {
-                NoticeImage temp = UrlNoticeImage.definedImages.get(imageSrc);
-                if(temp == null) {
-                    break lookIfPredefined;
-                }
-                image = temp;
-                break createImage;
-            }
-
-            /*createUrl: {
-                URL url;
-                try {
-                    url = new URL(imageSrc);
-                } catch(Exception e) {
-                    break createUrl;
-                }
-                image = new UrlNoticeImage(url, false);
-                break createImage;
-            }*/
-
-            throw new IllegalArgumentException("could not parse image: \""+ imageSrc +"\"");
+        try {
+            return new DirectNoticeImage(SwingUtil.base64ToImage(imageSrc));
+        } catch (Exception ignored) {
         }
 
-        return image;
+        image = UrlNoticeImage.getDefinedImages().get(imageSrc);
+        if (image != null) {
+            return image;
+        }
+
+        throw new IllegalArgumentException("could not parse image: \"" + imageSrc + "\"");
     }
 
     private NoticeImage parseImageObject(JsonObject object, JsonDeserializationContext context) {
-        URL url = U.requireNotNull((URL) context.deserialize(object.get("url"), URL.class));
+        URL url = Objects.requireNonNull(context.deserialize(object.get("url"), URL.class));
         int width = object.get("width").getAsInt(), height = object.get("height").getAsInt();
         return new UrlNoticeImage(url, width, height);
     }
 
     private NoticeAction parseAction(int noticeId, JsonObject root, JsonDeserializationContext context) {
         JsonObject actionObject = root.getAsJsonObject("action");
-        if(actionObject == null) {
+        if (actionObject == null) {
             return null;
         }
 
         String type = actionObject.get("type").getAsString();
 
-        if("url".equals(type)) {
+        if ("url".equals(type)) {
             return new UrlNoticeAction(actionObject.get("name").getAsString(), U.makeURL(actionObject.get("url").getAsString(), true));
         }
 
-        if("server".equals(type)) {
-            return new ServerNoticeAction((PromotedServer) context.deserialize(actionObject.getAsJsonObject("server"), PromotedServer.class), noticeId);
+        if ("server".equals(type)) {
+            return new ServerNoticeAction(context.deserialize(actionObject.getAsJsonObject("server"), PromotedServer.class), noticeId);
         }
 
-        if("launcher".equals(type)) {
-            return new LauncherNoticeAction(actionObject.get("launcher").getAsString(), actionObject.has("url")?actionObject.get("url").getAsString() : null);
+        if ("launcher".equals(type)) {
+            return new LauncherNoticeAction(actionObject.get("launcher").getAsString(), actionObject.has("url") ? actionObject.get("url").getAsString() : null);
         }
 
         throw new IllegalArgumentException("unknown action type: " + type);
     }
-
 
 
 }

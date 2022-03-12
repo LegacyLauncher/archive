@@ -15,12 +15,9 @@ import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneCompCloseable {
     private static final String[] DISALLOWED = {"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay", "ErickSkrauch"};
-    private final String LOC_PREFIX;
 
     private final AccountManagerScene scene;
     private final LocalizableTextField field;
@@ -33,7 +30,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         this.scene = scene;
         this.mode = mode;
 
-        LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-plain.";
+        String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-plain.";
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -55,73 +52,67 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         c.gridy++;
         add(field, c);
 
-        final LocalizableButton button = new LocalizableButton(LOC_PREFIX + (mode == PaneMode.EDIT? "edit" : "save"));
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = field.getValue();
+        final LocalizableButton button = new LocalizableButton(LOC_PREFIX + (mode == PaneMode.EDIT ? "edit" : "save"));
+        button.addActionListener(e -> {
+            String username = field.getValue();
 
-                if("разблокировать".equalsIgnoreCase(username)) {
-                    field.setValue(null);
-                    unlocked = true;
-                    return;
-                }
-
-                if(StringUtils.isBlank(username)) {
-                    Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
-                    return;
-                }
-
-                String checkUsername = null;
-                switch (mode) {
-                    case ADD:
-                        checkUsername = username;
-                        break;
-                    case EDIT:
-                        String oldUsername = scene.list.getSelected() != null && scene.list.getSelected().getType() == Account.AccountType.PLAIN? scene.list.getSelected().getUsername() : null;
-                        if(!username.equalsIgnoreCase(oldUsername)) {
-                            checkUsername = username;
-                        }
-                        break;
-                }
-
-                if(mode == PaneMode.EDIT && scene.list.getSelected() != null) {
-                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(scene.list.getSelected().getUser());
-                }
-
-                if(checkUsername != null) {
-                    StandardAccountPane.removeAccountIfFound(checkUsername, Account.AccountType.PLAIN);
-                }
-
-                if(!unlocked) {
-                    for (String disallowed : DISALLOWED)
-                        if (disallowed.equalsIgnoreCase(username))
-                            return;
-                }
-
-                User user = AccountManager.getPlainAuth().authorize(username);
-                TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
-                AccountPlainPane.this.scene.list.select(new Account(user));
-                AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
+            if ("разблокировать".equalsIgnoreCase(username)) {
+                field.setValue(null);
+                unlocked = true;
+                return;
             }
+
+            if (StringUtils.isBlank(username)) {
+                Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
+                return;
+            }
+
+            String checkUsername = null;
+            switch (mode) {
+                case ADD:
+                    checkUsername = username;
+                    break;
+                case EDIT:
+                    String oldUsername = scene.list.getSelected() != null && scene.list.getSelected().getType() == Account.AccountType.PLAIN ? scene.list.getSelected().getUsername() : null;
+                    if (!username.equalsIgnoreCase(oldUsername)) {
+                        checkUsername = username;
+                    }
+                    break;
+            }
+
+            if (mode == PaneMode.EDIT && scene.list.getSelected() != null) {
+                TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(scene.list.getSelected().getUser());
+            }
+
+            if (checkUsername != null) {
+                StandardAccountPane.removeAccountIfFound(checkUsername, Account.AccountType.PLAIN);
+            }
+
+            if (!unlocked) {
+                for (String disallowed : DISALLOWED)
+                    if (disallowed.equalsIgnoreCase(username))
+                        return;
+            }
+
+            User user = AccountManager.getPlainAuth().authorize(username);
+            TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
+            AccountPlainPane.this.scene.list.select(new Account<>(user));
+            AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
         });
         button.setFont(button.getFont().deriveFont(Font.BOLD));
         button.setIcon(Images.getIcon24("user-circle-o"));
         c.gridy++;
         add(button, c);
 
-        if(mode == PaneMode.EDIT) {
+        if (mode == PaneMode.EDIT) {
             LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
             removeButton.setIcon(Images.getIcon16("remove"));
-            removeButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Account selected = scene.list.getSelected();
-                    if(selected != null && selected.getType() == Account.AccountType.PLAIN) {
-                        TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
-                    }
-                    scene.multipane.goBack();
+            removeButton.addActionListener(e -> {
+                Account<? extends User> selected = scene.list.getSelected();
+                if (selected != null && selected.getType() == Account.AccountType.PLAIN) {
+                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
                 }
+                scene.multipane.goBack();
             });
 
             c.insets = new Insets(SwingUtil.magnify(12), 0, 0, 0);
@@ -130,13 +121,10 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
             add(removeButton, c);
         }
 
-        field.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                button.doClick();
-                if (unlocked) {
-                    field.grabFocus();
-                }
+        field.addActionListener(e -> {
+            button.doClick();
+            if (unlocked) {
+                field.grabFocus();
             }
         });
     }
@@ -165,9 +153,9 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
     public void multipaneShown(boolean gotBack) {
         field.setValue(null);
 
-        if(mode == PaneMode.EDIT) {
-            Account selected = scene.list.getSelected();
-            if(selected != null && selected.getType() == Account.AccountType.PLAIN) {
+        if (mode == PaneMode.EDIT) {
+            Account<? extends User> selected = scene.list.getSelected();
+            if (selected != null && selected.getType() == Account.AccountType.PLAIN) {
                 field.setValue(selected.getUsername());
             }
         }

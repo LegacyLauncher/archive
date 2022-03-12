@@ -13,7 +13,6 @@ import ru.turikhay.tlauncher.ui.support.PreSupportFrame;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.DelayedComponentLoader;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -50,7 +49,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
         }
     };
 
-    private final HashMap<String, SupportMenu> localeMap = new HashMap<String, SupportMenu>();
+    private final HashMap<String, SupportMenu> localeMap = new HashMap<>();
 
     {
         localeMap.put("ru_RU", new SupportMenu("info-circle")
@@ -72,19 +71,16 @@ public class SupportButton extends LocalizableButton implements Blockable {
 
     SupportButton(LoginForm loginForm) {
         setToolTipText("loginform.button.support");
-        addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (menu != null) {
-                    menu.showPopup();
-                }
+        addActionListener(e -> {
+            if (menu != null) {
+                menu.showPopup();
             }
         });
         updateLocale();
     }
 
     private void loadSupportFrame() {
-        PreSupportFrame oldSupportFrame = supportFrame == null? null : supportFrame.get();
+        PreSupportFrame oldSupportFrame = supportFrame == null ? null : supportFrame.get();
         supportFrame = new DelayedComponent<>(new DelayedComponentLoader<PreSupportFrame>() {
             @Override
             public PreSupportFrame loadComponent() {
@@ -108,7 +104,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
             menu.popup.setVisible(false);
         }
 
-        if(locale.equals("uk_UA")) {
+        if (locale.equals("uk_UA")) {
             locale = "ru_RU";
         }
 
@@ -151,7 +147,7 @@ public class SupportButton extends LocalizableButton implements Blockable {
             }
         };*/
 
-        if(supportFrame != null && supportFrame.isLoaded()) {
+        if (supportFrame != null && supportFrame.isLoaded()) {
             loadSupportFrame();
         }
 
@@ -182,24 +178,6 @@ public class SupportButton extends LocalizableButton implements Blockable {
 
         SupportMenu add(JMenuItem item) {
             popup.add(item);
-            return this;
-        }
-
-        public SupportMenu add(final String[] russianTitles, final String key, ImageIcon icon, ActionListener listener) {
-            LocalizableMenuItem item = new LocalizableMenuItem(null) {
-                @Override
-                public void updateLocale() {
-                    super.updateLocale();
-                    if(TLauncher.getInstance() != null && "ru_RU".equals(TLauncher.getInstance().getSettings().getLocale().toString())) {
-                        setText(U.getRandom(russianTitles));
-                    } else {
-                        setText(key);
-                    }
-                }
-            };
-            item.setIcon(icon);
-            if (listener != null) item.addActionListener(listener);
-            add(item);
             return this;
         }
 
@@ -239,20 +217,10 @@ public class SupportButton extends LocalizableButton implements Blockable {
 
         final URL url = tryURL;
 
-        return new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                OS.openLink(url);
-            }
-        };
+        return e -> OS.openLink(url);
     }
 
     private static ActionListener actionAlert(final String msgPath, final Object textArea) {
-        return new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Alert.showLocMessage(msgPath, textArea);
-            }
-        };
+        return e -> Alert.showLocMessage(msgPath, textArea);
     }
 }

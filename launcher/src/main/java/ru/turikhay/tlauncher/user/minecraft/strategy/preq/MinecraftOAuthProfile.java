@@ -5,7 +5,8 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable;
 import java.util.Objects;
 import java.util.UUID;
 
-import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.*;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notEmpty;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notNull;
 
 public class MinecraftOAuthProfile implements Validatable {
     private UUID id;

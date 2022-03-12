@@ -21,14 +21,14 @@ public final class ConfigurationDefaults {
 
         if (ref == null || (instance = ref.get()) == null) {
             instance = new ConfigurationDefaults();
-            ref = new WeakReference<ConfigurationDefaults>(instance);
+            ref = new WeakReference<>(instance);
         }
 
         return instance;
     }
 
     private static final int VERSION = 3;
-    private final HashMap<String, Object> d = new HashMap<String, Object>();
+    private final HashMap<String, Object> d = new HashMap<>();
 
     private ConfigurationDefaults() {
         d.put("settings.version", VERSION);
@@ -62,7 +62,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.deleteTlSkinCape", true);
 
         d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
-        d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent()? 1000 : 1200, 600));
+        d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent() ? 1000 : 1200, 600));
         d.put("gui.systemlookandfeel", true);
 
         d.put("gui.background", null);

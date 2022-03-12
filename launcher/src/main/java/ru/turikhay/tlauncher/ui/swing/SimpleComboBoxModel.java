@@ -2,20 +2,19 @@ package ru.turikhay.tlauncher.ui.swing;
 
 import javax.swing.*;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 public class SimpleComboBoxModel<E> extends DefaultComboBoxModel<E> {
     private static final long serialVersionUID = 5950434966721171811L;
-    protected Vector<E> objects;
+    protected final Vector<E> objects;
     protected Object selectedObject;
 
     public SimpleComboBoxModel() {
-        objects = new Vector();
+        objects = new Vector<>();
     }
 
     public SimpleComboBoxModel(E[] items) {
-        objects = new Vector(items.length);
+        objects = new Vector<>(items.length);
         int i = 0;
 
         for (int c = items.length; i < c; ++i) {
@@ -79,10 +78,8 @@ public class SimpleComboBoxModel<E> extends DefaultComboBoxModel<E> {
             objects.addAll(list);
             fireIntervalAdded(this, index0, index1);
             if (selectedObject == null) {
-                Iterator iterator = list.iterator();
 
-                while (iterator.hasNext()) {
-                    Object elem = iterator.next();
+                for (E elem : list) {
                     if (elem != null) {
                         setSelectedItem(elem);
                         break;

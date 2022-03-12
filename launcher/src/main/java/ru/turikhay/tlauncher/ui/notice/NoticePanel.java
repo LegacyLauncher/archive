@@ -5,11 +5,9 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.center.CenterPanel;
 import ru.turikhay.tlauncher.ui.swing.MagnifiedInsets;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 
 public class NoticePanel extends CenterPanel implements Blockable, NoticeManagerListener {
     private final NoticeWrapper noticeWrapper;
@@ -52,7 +50,7 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
                 insets = new Dimension(getInsets().left + getInsets().right, getInsets().top + getInsets().bottom),
                 noticeSize = noticeWrapper.updateSize();
 
-        if(noticeSize == null) {
+        if (noticeSize == null) {
             setSize(0, 0);
             return;
         }
@@ -77,7 +75,7 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
 
     protected void registerExtraItems(JMenuItem... items) {
         noticeWrapper.buttonPane.extra.popup.clearMenu();
-        for(JMenuItem item : items) {
+        for (JMenuItem item : items) {
             noticeWrapper.buttonPane.extra.popup.registerItem(item);
         }
     }

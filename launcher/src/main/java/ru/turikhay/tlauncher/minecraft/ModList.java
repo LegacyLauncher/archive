@@ -17,19 +17,19 @@ public class ModList {
     private final List<String> modRef;
 
     public ModList(File repositoryRoot, boolean absolutePrefix) {
-        this.repositoryRoot = (absolutePrefix? "absolute:" : "") +  repositoryRoot.getAbsolutePath();
+        this.repositoryRoot = (absolutePrefix ? "absolute:" : "") + repositoryRoot.getAbsolutePath();
         this.modRef = new ArrayList<>();
     }
 
     public void addMod(Library library) {
-        if(library.getLibraryType() != LibraryType.MODIFICATION) {
+        if (library.getLibraryType() != LibraryType.MODIFICATION) {
             throw new IllegalArgumentException("not a mod: " + library);
         }
         modRef.add(library.getName());
     }
 
     public void save(File file) throws IOException {
-        try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), FileUtil.getCharset())) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), FileUtil.getCharset())) {
             U.getGson().toJson(this, writer);
         }
     }

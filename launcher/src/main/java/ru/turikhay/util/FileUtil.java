@@ -1,6 +1,5 @@
 package ru.turikhay.util;
 
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,6 +8,7 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -36,44 +36,16 @@ public class FileUtil {
     public static void writeFile(File file, String text) throws IOException {
         createFile(file);
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-        OutputStreamWriter ow = new OutputStreamWriter(os, "UTF-8");
+        OutputStreamWriter ow = new OutputStreamWriter(os, StandardCharsets.UTF_8);
         ow.write(text);
         ow.close();
         os.close();
-    }
-
-    private static String readFile(File file, String charset) throws IOException {
-        if (file == null) {
-            throw new NullPointerException("File is NULL!");
-        } else if (!file.exists()) {
-            return null;
-        } else {
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-            InputStreamReader reader = new InputStreamReader(bis, charset);
-            StringBuilder b = new StringBuilder();
-
-            while (reader.ready()) {
-                b.append((char) reader.read());
-            }
-
-            reader.close();
-            bis.close();
-            return b.toString();
-        }
-    }
-
-    public static String readFile(File file) throws IOException {
-        return readFile(file, "UTF-8");
     }
 
     public static String getFilename(String path) {
         String[] folders = path.split("/");
         int size = folders.length;
         return size == 0 ? "" : folders[size - 1];
-    }
-
-    public static String getFilename(URL url) {
-        return getFilename(url.getPath());
     }
 
     public static String getDigest(File file, String algorithm, int hashLength) {
@@ -89,7 +61,7 @@ public class FileUtil {
             } while (read > 0);
 
             return String.format(java.util.Locale.ROOT, "%1$0" + hashLength + "x", new BigInteger(1, stream.getMessageDigest().digest()));
-        } catch (Exception var9) {
+        } catch (Exception ignored) {
         } finally {
             close(stream);
         }
@@ -146,7 +118,7 @@ public class FileUtil {
     }
 
     public static String getChecksum0(File file, String algorithm) throws IOException {
-        if(!Objects.requireNonNull(file, "file").isFile()) {
+        if (!Objects.requireNonNull(file, "file").isFile()) {
             throw new FileNotFoundException(file.getAbsolutePath());
         }
         byte[] checksumBytes = createChecksum(file, algorithm);
@@ -196,25 +168,13 @@ public class FileUtil {
             createFile(dest);
         }
 
-        BufferedInputStream is = null;
-        BufferedOutputStream os = null;
-
-        try {
-            is = new BufferedInputStream(new FileInputStream(source));
-            os = new BufferedOutputStream(new FileOutputStream(dest));
+        try (BufferedInputStream is = new BufferedInputStream(new FileInputStream(source));
+             BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(dest))) {
             byte[] buffer = new byte[1024];
 
             int length;
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
-            }
-        } finally {
-            if (is != null) {
-                is.close();
-            }
-
-            if (os != null) {
-                os.close();
             }
         }
 
@@ -242,10 +202,6 @@ public class FileUtil {
         }
     }
 
-    public static void deleteFile(String path) {
-        deleteFile(new File(path));
-    }
-
     public static void deleteDirectory(File dir) {
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Specified path is not a directory: " + dir.getAbsolutePath());
@@ -271,7 +227,6 @@ public class FileUtil {
             }
         }
 
-        String path = dir.getAbsolutePath();
         deleteFile(dir);
     }
 
@@ -280,11 +235,9 @@ public class FileUtil {
     }
 
     public byte[] getFile(File archive, String requestedFile) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ZipInputStream in = null;
 
-        try {
-            in = new ZipInputStream(new FileInputStream(archive));
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+             ZipInputStream in = new ZipInputStream(new FileInputStream(archive))) {
 
             while (true) {
                 ZipEntry entry;
@@ -301,12 +254,6 @@ public class FileUtil {
                     out.write(buf, 0, len);
                 }
             }
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-
-            out.close();
         }
     }
 
@@ -324,16 +271,8 @@ public class FileUtil {
         }
     }
 
-    public static boolean createFolder(String dir) throws IOException {
-        return dir != null && createFolder(new File(dir));
-    }
-
     public static boolean folderExists(File folder) {
         return folder != null && folder.isDirectory() && folder.exists();
-    }
-
-    public static boolean folderExists(String path) {
-        return path != null && folderExists(new File(path));
     }
 
     public static boolean fileExists(File file) {
@@ -364,38 +303,6 @@ public class FileUtil {
         createFile(new File(file));
     }
 
-    public static void unZip(File zip, File folder, boolean replace) throws IOException {
-        createFolder(folder);
-        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zip)));
-        byte[] buffer = new byte[1024];
-
-        while (true) {
-            ZipEntry ze;
-            while ((ze = zis.getNextEntry()) != null) {
-                String fileName = ze.getName();
-                File newFile = new File(folder, fileName);
-                if (!replace && newFile.isFile()) {
-                    LOGGER.debug("[UnZip] File exists: {}", newFile.getAbsoluteFile());
-                } else {
-                    LOGGER.debug("[UnZip] {}", newFile.getAbsoluteFile());
-                    createFile(newFile);
-                    BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(newFile));
-
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-
-                    fos.close();
-                }
-            }
-
-            zis.closeEntry();
-            zis.close();
-            return;
-        }
-    }
-
     public static String getResource(URL resource, String charset) throws IOException {
         BufferedInputStream is = new BufferedInputStream(resource.openStream());
         InputStreamReader reader = new InputStreamReader(is, charset);
@@ -411,21 +318,6 @@ public class FileUtil {
 
     public static String getResource(URL resource) throws IOException {
         return getResource(resource, "UTF-8");
-    }
-
-    public static String getFolder(URL url, String separator) {
-        String[] folders = url.toString().split(separator);
-        String s = "";
-
-        for (int i = 0; i < folders.length - 1; ++i) {
-            s = s + folders[i] + separator;
-        }
-
-        return s;
-    }
-
-    public static String getFolder(URL url) {
-        return getFolder(url, "/");
     }
 
     private static File getNeighborFile(File file, String filename) {
@@ -454,19 +346,6 @@ public class FileUtil {
 
             return ext;
         }
-    }
-
-    public static byte[] gzipUncompress(InputStream in) throws IOException {
-        GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
-        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-
-        byte[] buffer = new byte[2048];
-        int read;
-
-        while ((read = gzipIn.read(buffer)) != -1)
-            bOut.write(buffer, 0, read);
-
-        return bOut.toByteArray();
     }
 
     public static long getSize(File file) throws IOException {

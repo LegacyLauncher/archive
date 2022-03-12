@@ -3,7 +3,8 @@ package ru.turikhay.tlauncher.minecraft;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import ru.turikhay.util.U;
+
+import java.util.Objects;
 
 public class Server {
     public static final int DEFAULT_PORT = 25565;
@@ -25,7 +26,7 @@ public class Server {
     }
 
     protected void setName(String name) {
-        this.name = U.requireNotNull(name, "name");
+        this.name = Objects.requireNonNull(name, "name");
     }
 
     public final String getAddress() {
@@ -51,7 +52,7 @@ public class Server {
         int parsedPort;
         try {
             parsedPort = Integer.parseInt(port);
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             throw new RuntimeException("could not parse port: " + port, rE);
         }
         setPort(parsedPort);
@@ -78,7 +79,7 @@ public class Server {
             setPort(port);
             return;
         }
-        switch(StringUtils.countMatches(fullAddress, ':')) {
+        switch (StringUtils.countMatches(fullAddress, ':')) {
             case 0:
                 // ipv4 without port
                 setAddress(fullAddress);
@@ -86,7 +87,7 @@ public class Server {
                 break;
             case 1:
                 // ipv4 with port
-                if(fullAddress.startsWith(":")) {
+                if (fullAddress.startsWith(":")) {
                     setAddress("");
                     setPort(fullAddress.substring(1));
                 } else {
@@ -104,7 +105,7 @@ public class Server {
     }
 
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof Server)) {
+        if (!(o instanceof Server)) {
             return false;
         }
         Server s = (Server) o;

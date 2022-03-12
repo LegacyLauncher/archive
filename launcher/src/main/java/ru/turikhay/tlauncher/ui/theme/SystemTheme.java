@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class SystemTheme extends Theme {
     static final int MAX_ARC = 64, MAX_BORDER = 24, BLACK_MIN = 64, WHITE_MAX = 192;
@@ -29,7 +30,7 @@ public final class SystemTheme extends Theme {
         super("system");
         this.component = new JLabel();
 
-        this.borderColorMap = new HashMap<Border, Color>();
+        this.borderColorMap = new HashMap<>();
         borderColorMap.put(Border.MAIN_PANEL, new Color(28, 128, 28, 255));
         borderColorMap.put(Border.ADDITIONAL_PANEL, new Color(255, 177, 177));
         borderColorMap.put(Border.SETTINGS_PANEL, OS.VERSION.startsWith("10.") ? new Color(217, 217, 217, 255) : new Color(172, 172, 172, 255));
@@ -78,7 +79,7 @@ public final class SystemTheme extends Theme {
 
     @Override
     public Color getBorder(Border border) {
-        return borderColorMap.get(U.requireNotNull(border, "border"));
+        return borderColorMap.get(Objects.requireNonNull(border, "border"));
     }
 
     @Override
@@ -88,7 +89,7 @@ public final class SystemTheme extends Theme {
 
     @Override
     public int getArc(Border border) {
-        return border == Border.SETTINGS_PANEL? 16 : 24;
+        return border == Border.SETTINGS_PANEL ? 16 : 24;
     }
 
     @Override
@@ -102,7 +103,7 @@ public final class SystemTheme extends Theme {
     }
 
     private boolean useColorfulIcons() {
-        if(Boolean.getBoolean("tlauncher.ui.noColorfulIcons")) {
+        if (Boolean.getBoolean("tlauncher.ui.noColorfulIcons")) {
             return false;
         }
         Color background = getBackground();

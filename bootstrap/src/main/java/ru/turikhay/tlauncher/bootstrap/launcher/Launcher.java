@@ -15,6 +15,7 @@ public abstract class Launcher extends ToStringBuildable {
     public abstract LauncherMeta getMeta() throws IOException, JsonSyntaxException;
 
     private final String logPrefix = '[' + getClass().getSimpleName() + ']';
+
     protected void log(String s) {
         U.log(logPrefix, s);
     }

@@ -12,14 +12,17 @@ import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 public class ExtendedHTMLEditorKit extends HTMLEditorKit {
     public static final ExtendedHTMLEditorKit.ExtendedHTMLFactory extendedFactory = new ExtendedHTMLEditorKit.ExtendedHTMLFactory();
     public final ExtendedHTMLEditorKit.ExtendedLinkController linkController = new ExtendedHTMLEditorKit.ExtendedLinkController();
     private HyperlinkProcessor hlProc;
     private boolean processPopup;
-    private static final Cursor HAND = Cursor.getPredefinedCursor(12);
+    private static final Cursor HAND = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
     private String popupHref;
     private final JPopupMenu popup;
 
@@ -28,18 +31,10 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
         processPopup = true;
         popup = new JPopupMenu();
         LocalizableMenuItem copy = new LocalizableMenuItem("browser.hyperlink.popup.copy");
-        copy.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(popupHref), null);
-            }
-        });
+        copy.addActionListener(e -> Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(popupHref), null));
         popup.add(copy);
         LocalizableMenuItem show = new LocalizableMenuItem("browser.hyperlink.popup.show");
-        show.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Alert.showMessage(Localizable.get("browser.hyperlink.popup.show.alert.title"), "", popupHref);
-            }
-        });
+        show.addActionListener(e -> Alert.showMessage(Localizable.get("browser.hyperlink.popup.show.alert.title"), "", popupHref));
         popup.add(show);
     }
 
@@ -50,7 +45,7 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
     public void install(JEditorPane pane) {
         super.install(pane);
 
-        for(MouseListener listener : pane.getMouseListeners()) {
+        for (MouseListener listener : pane.getMouseListeners()) {
             if (listener instanceof LinkController || listener instanceof ExtendedLinkController) {
                 pane.removeMouseListener(listener);
                 pane.removeMouseMotionListener((MouseMotionListener) listener);
@@ -96,10 +91,10 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
             Tag tag = getTag(elem);
             if (tag == Tag.CONTENT) {
                 Object anchorAttr = elem.getAttributes().getAttribute(Tag.A);
-                if (anchorAttr != null && anchorAttr instanceof AttributeSet) {
+                if (anchorAttr instanceof AttributeSet) {
                     AttributeSet anchor = (AttributeSet) anchorAttr;
                     Object hrefObject = anchor.getAttribute(Attribute.HREF);
-                    if (hrefObject != null && hrefObject instanceof String) {
+                    if (hrefObject instanceof String) {
                         return (String) hrefObject;
                     }
                 }

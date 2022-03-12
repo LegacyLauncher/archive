@@ -39,8 +39,8 @@ public class ConnectivityManager {
 
     public void queueChecks() {
         entries.stream()
-            .filter(Entry::isNormalPriority)
-            .forEach(this::queueCheck);
+                .filter(Entry::isNormalPriority)
+                .forEach(this::queueCheck);
     }
 
     public void queueCheck(Entry entry) {
@@ -63,22 +63,22 @@ public class ConnectivityManager {
     private final AtomicBoolean showFailedNotification = new AtomicBoolean();
 
     public void showNotificationOnceIfNeeded() {
-        if(entries.stream().filter(Entry::isDone).allMatch(e -> e.isReachable() || e.isLowPriority())) {
+        if (entries.stream().filter(Entry::isDone).allMatch(e -> e.isReachable() || e.isLowPriority())) {
             return;
         }
-        if(!showFailedNotification.compareAndSet(false, true)) {
+        if (!showFailedNotification.compareAndSet(false, true)) {
             return;
         }
         launcher.executeWhenReady(() -> SwingUtil.later(() ->
-            launcher.getFrame().mp.defaultScene.notificationPanel.addNotification(
-                    NOTIFICATION_ID,
-                    new Notification("warning", this::showWarningWindow)
-            )
+                launcher.getFrame().mp.defaultScene.notificationPanel.addNotification(
+                        NOTIFICATION_ID,
+                        new Notification("warning", this::showWarningWindow)
+                )
         ));
     }
 
     private void notifyIfFailed(boolean failed) {
-        if(failed) {
+        if (failed) {
             queueLowPriorityChecks();
             showNotificationOnceIfNeeded();
         }
@@ -92,7 +92,7 @@ public class ConnectivityManager {
     private ConnectivityWarning warningWindow;
 
     private void showWarningWindow() {
-        if(warningWindow == null) {
+        if (warningWindow == null) {
             warningWindow = new ConnectivityWarning();
             warningWindow.addWindowListener(new WindowAdapter() {
                 @Override
@@ -110,13 +110,13 @@ public class ConnectivityManager {
     }
 
     private void updateWarningWindow() {
-        if(warningWindow != null) {
+        if (warningWindow != null) {
             warningWindow.updateEntries(Collections.unmodifiableList(entries));
         }
     }
 
     public interface EntryChecker {
-        Boolean checkConnection();
+        Boolean checkConnection() throws Exception;
     }
 
     private static class RepoEntryJsonChecker implements EntryChecker {
@@ -129,7 +129,7 @@ public class ConnectivityManager {
         }
 
         @Override
-        public Boolean checkConnection() {
+        public Boolean checkConnection() throws IOException {
             try {
                 String content = IOUtils.toString(repo.read(path));
                 try {
@@ -139,7 +139,7 @@ public class ConnectivityManager {
                 }
             } catch (IOException e) {
                 LOGGER.warn("Connectivity check to {} (using {}) failed", path, repo.name(), e);
-                U.throwChecked(e);
+                throw e;
             }
             return Boolean.TRUE;
         }
@@ -156,9 +156,9 @@ public class ConnectivityManager {
         public final Boolean checkConnection() {
             try {
                 checkResponse(Request.Get(url).execute());
-            } catch(IOException e) {
+            } catch (IOException e) {
                 LOGGER.warn("Connectivity check to {} failed", url, e);
-                U.throwChecked(e);
+                throw new RuntimeException(e);
             }
             return Boolean.TRUE;
         }
@@ -177,7 +177,7 @@ public class ConnectivityManager {
         @Override
         protected void checkResponse(Response response) throws IOException {
             String actualContent = response.returnContent().asString();
-            if(!expectedContent.equals(actualContent)) {
+            if (!expectedContent.equals(actualContent)) {
                 throw new ContentMismatchException(expectedContent, actualContent);
             }
         }
@@ -202,7 +202,7 @@ public class ConnectivityManager {
             String content = response.returnContent().asString();
             try {
                 JsonParser.parseString(content);
-            } catch(JsonSyntaxException e) {
+            } catch (JsonSyntaxException e) {
                 throw new InvalidJsonException(content, e);
             }
         }
@@ -228,7 +228,15 @@ public class ConnectivityManager {
             this.completion = Lazy.of(CompletableFuture::new);
             this.future = Lazy.of(() -> {
                 CompletableFuture<Boolean> f = CompletableFuture.supplyAsync(
-                        checker::checkConnection,
+                        () -> {
+                            try {
+                                return checker.checkConnection();
+                            } catch (RuntimeException e) {
+                                throw e;
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        },
                         AsyncThread.SHARED_SERVICE
                 );
                 f.whenCompleteAsync((r, e) -> {

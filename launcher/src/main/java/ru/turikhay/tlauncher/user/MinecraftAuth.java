@@ -4,12 +4,10 @@ import io.sentry.Sentry;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
+import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidationException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidator;
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesAuthenticationException;
@@ -35,7 +33,7 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
 
     @Override
     public void validate(MinecraftUser user) throws AuthException, IOException {
-        if(user.getMinecraftToken().isExpired()) {
+        if (user.getMinecraftToken().isExpired()) {
             refreshMinecraftAccessToken(user);
         }
         MinecraftProfileRequester requester = new MinecraftProfileRequester();
@@ -52,7 +50,7 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
     }
 
     private void refreshMinecraftAccessToken(MinecraftUser user) throws AuthException, IOException {
-        if(user.getMicrosoftToken().isExpired()) {
+        if (user.getMicrosoftToken().isExpired()) {
             refreshMicrosoftAccessToken(user);
         }
         XboxServiceAuthenticationResponse xstsToken = authenticateOnXboxServices(user);

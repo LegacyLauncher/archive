@@ -21,9 +21,9 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     private final TLauncherFrame frame;
 
-    private final List<NoticeManagerListener> listeners = new ArrayList<NoticeManagerListener>();
-    private final Map<Locale, List<Notice>> byLocaleMap = new HashMap<Locale, List<Notice>>();
-    private final Map<Notice, NoticeTextSize> cachedSizeMap = new HashMap<Notice, NoticeTextSize>();
+    private final List<NoticeManagerListener> listeners = new ArrayList<>();
+    private final Map<Locale, List<Notice>> byLocaleMap = new HashMap<>();
+    private final Map<Notice, NoticeTextSize> cachedSizeMap = new HashMap<>();
 
     private Notice selectedNotice, promotedNotice;
     private boolean forceSelected;
@@ -31,7 +31,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     NoticeManager(TLauncherFrame frame, Map<String, List<Notice>> config) {
         this.frame = frame;
 
-        if(!config.isEmpty()) {
+        if (!config.isEmpty()) {
             for (Map.Entry<String, List<Notice>> entry : config.entrySet()) {
                 String key = entry.getKey();
                 Locale locale = U.getLocale(entry.getKey());
@@ -49,7 +49,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                     continue;
                 }
 
-                List<Notice> noticeList = new ArrayList<Notice>();
+                List<Notice> noticeList = new ArrayList<>();
                 for (Notice notice : entry.getValue()) {
                     if (notice == null) {
                         LOGGER.warn("Found null selectedNotice in {}", key);
@@ -63,17 +63,17 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                     cachedSizeMap.put(notice, textSize);
                 }
 
-                U.shuffle(noticeList);
+                Collections.shuffle(noticeList);
 
                 List<Notice> noticesThatMadeMeReplaceOthersDamnIHateIt = new ArrayList<>();
                 for (int i = 0; i < noticeList.size(); i++) {
                     Notice notice = noticeList.get(i);
-                    if(noticesThatMadeMeReplaceOthersDamnIHateIt.contains(notice)) {
+                    if (noticesThatMadeMeReplaceOthersDamnIHateIt.contains(notice)) {
                         continue;
                     }
                     int pos = notice.getPos();
-                    if(pos > -1) {
-                        if(pos >= noticeList.size()) {
+                    if (pos > -1) {
+                        if (pos >= noticeList.size()) {
                             pos = noticeList.size() - 1;
                         }
                         Notice replacement = noticeList.get(pos);
@@ -82,7 +82,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
                         noticesThatMadeMeReplaceOthersDamnIHateIt.add(notice);
 
-                        i =- 1; // redo the position
+                        i = -1; // redo the position
                     }
                 }
 
@@ -90,18 +90,16 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                 LOGGER.debug("Added {} notices for {}", noticeList.size(), locale);
             }
 
-            if(frame != null){
+            if (frame != null) {
                 Locale ruRU = U.getLocale("ru_RU"), ukUA = U.getLocale("uk_UA");
-                if(ruRU != null && ukUA != null && byLocaleMap.get(ruRU) != null && byLocaleMap.get(ukUA) == null) {
+                if (ruRU != null && ukUA != null && byLocaleMap.get(ruRU) != null && byLocaleMap.get(ukUA) == null) {
                     byLocaleMap.put(ukUA, byLocaleMap.get(ruRU));
                 }
 
                 List<Notice> globalNoticeList = byLocaleMap.get(Locale.US);
-                if(globalNoticeList != null) {
-                    for(Locale locale : LangConfiguration.getAvailableLocales()) {
-                        if(byLocaleMap.get(locale) == null) {
-                            byLocaleMap.put(locale, globalNoticeList);
-                        }
+                if (globalNoticeList != null) {
+                    for (Locale locale : LangConfiguration.getAvailableLocales()) {
+                        byLocaleMap.putIfAbsent(locale, globalNoticeList);
                     }
                 }
                 /*Locale current = frame.getLauncher().getLang().getLocale(), enUS = Locale.US;
@@ -135,9 +133,9 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     }
 
     public void addListener(NoticeManagerListener l, boolean updateImmidiately) {
-        listeners.add(U.requireNotNull(l, "listener"));
+        listeners.add(Objects.requireNonNull(l, "listener"));
         l.onNoticeSelected(selectedNotice);
-        if(promotedNotice != null) {
+        if (promotedNotice != null) {
             final Notice promoted = promotedNotice;
             l.onNoticePromoted(promoted);
         }
@@ -152,7 +150,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     }
 
     public List<Notice> getForCurrentLocale() {
-        if(frame == null) {
+        if (frame == null) {
             return null;
         }
         Locale currentLocale = frame.getLauncher().getLang().getLocale();
@@ -160,24 +158,24 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     }
 
     public List<Notice> getForLocale(Locale locale) {
-        return byLocaleMap.get(U.requireNotNull(locale, "locale"));
+        return byLocaleMap.get(Objects.requireNonNull(locale, "locale"));
     }
 
     public void selectNotice(Notice notice, boolean forceSet) {
-        if(this.forceSelected && !forceSet) {
+        if (this.forceSelected && !forceSet) {
             return;
         }
 
         this.selectedNotice = notice;
         this.forceSelected = notice != null && forceSet;
-        for(NoticeManagerListener l :listeners) {
+        for (NoticeManagerListener l : listeners) {
             l.onNoticeSelected(notice);
         }
     }
 
     public void setPromoted(Notice promoted) {
         this.promotedNotice = promoted;
-        for(NoticeManagerListener l :listeners) {
+        for (NoticeManagerListener l : listeners) {
             l.onNoticePromoted(promoted);
         }
     }
@@ -188,7 +186,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     public void setPromotedAllowed(boolean allowPromoted) {
         frame.getLauncher().getSettings().set("notice.promoted", allowPromoted);
-        if(allowPromoted) {
+        if (allowPromoted) {
             pickPromoted(getForCurrentLocale());
         } else {
             setPromoted(null);
@@ -196,9 +194,9 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     }
 
     private NoticeTextSize getTextSize(Notice notice) {
-        U.requireNotNull(notice, "notice");
+        Objects.requireNonNull(notice, "notice");
         NoticeTextSize cachedSize = cachedSizeMap.get(notice);
-        if(cachedSize == null) {
+        if (cachedSize == null) {
             cachedSizeMap.put(notice, cachedSize = new NoticeTextSize(notice));
         }
         return cachedSize;
@@ -209,11 +207,11 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     }
 
     public boolean isHidden(Notice notice) {
-        if(notice == null) {
+        if (notice == null) {
             return false;
         }
         long expiryDate = frame.getLauncher().getSettings().getLong("notice.id." + notice.getId());
-        if(System.currentTimeMillis() > expiryDate) {
+        if (System.currentTimeMillis() > expiryDate) {
             setHidden(notice, false, false);
             return false;
         }
@@ -221,18 +219,18 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     }
 
     private void setHidden(Notice notice, boolean hidden, boolean notify) {
-        if(notify) {
+        if (notify) {
             if (hidden) {
                 Stats.noticeHiddenByUser(notice);
             } else {
                 Stats.noticeShownByUser(notice);
             }
         }
-        frame.getLauncher().getSettings().set("notice.id." + notice.getId(), hidden? System.currentTimeMillis() + HIDDEN_DELAY : null);
-        if(hidden && selectedNotice == notice) {
+        frame.getLauncher().getSettings().set("notice.id." + notice.getId(), hidden ? System.currentTimeMillis() + HIDDEN_DELAY : null);
+        if (hidden && selectedNotice == notice) {
             selectNotice(null, true);
         }
-        if(hidden && promotedNotice == notice) {
+        if (hidden && promotedNotice == notice) {
             setPromoted(null);
         }
     }
@@ -243,10 +241,10 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     private void setAllHidden(boolean hidden) {
         List<Notice> noticeList = getForCurrentLocale();
-        if(noticeList == null || noticeList.isEmpty()) {
+        if (noticeList == null || noticeList.isEmpty()) {
             return;
         }
-        for(Notice notice : noticeList) {
+        for (Notice notice : noticeList) {
             setHidden(notice, hidden, false);
         }
     }
@@ -268,27 +266,17 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     public void selectRandom() {
         Notice selected = null;
         List<Notice> list = getForCurrentLocale();
-        selecting: {
-            if(frame.getLauncher().isNoticeDisabled()) {
-                break selecting;
-            }
-
-            if(list == null) {
-                break selecting;
-            }
-
+        if (!frame.getLauncher().isNoticeDisabled() && list != null) {
             List<Notice> available = new ArrayList<>();
-            for(Notice notice : list) {
-                if(isHidden(notice)) {
+            for (Notice notice : list) {
+                if (isHidden(notice)) {
                     continue;
                 }
                 available.add(notice);
             }
-            if(available.isEmpty()) {
-                break selecting;
+            if (!available.isEmpty()) {
+                selected = available.get(new Random().nextInt(available.size()));
             }
-
-            selected = available.get(new Random().nextInt(available.size()));
         }
         pickPromoted(list);
         selectNotice(selected, false);
@@ -297,12 +285,12 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     private void pickPromoted(List<Notice> list) {
         Notice promoted = null;
         boolean promotedAllowed = isPromotedAllowed();
-        if(promotedAllowed && list != null) {
-            for(Notice notice : list) {
-                if(!notice.isPromoted()) {
+        if (promotedAllowed && list != null) {
+            for (Notice notice : list) {
+                if (!notice.isPromoted()) {
                     continue;
                 }
-                if(isHidden(notice)) {
+                if (isHidden(notice)) {
                     continue;
                 }
                 promoted = notice;
@@ -311,7 +299,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
         }
         this.promotedNotice = promoted;
 
-        for(NoticeManagerListener l :listeners) {
+        for (NoticeManagerListener l : listeners) {
             l.onNoticePromoted(promoted);
         }
     }

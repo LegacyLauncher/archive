@@ -5,30 +5,34 @@ import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.meta.LauncherMeta;
 import ru.turikhay.tlauncher.bootstrap.meta.LocalLauncherMeta;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
-import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class LocalLauncher extends Launcher {
 
-    private final File file, libFolder;
+    public static final String ENTRY_NAME = "ru/turikhay/tlauncher/meta.json";
+    private final Path file, libFolder;
     private LocalLauncherMeta meta;
 
-    public LocalLauncher(File file, File libFolder) throws LauncherNotFoundException {
-        this.file = U.requireNotNull(file, "file");
-        if(!file.exists()) {
+    public LocalLauncher(Path file, Path libFolder) throws LauncherNotFoundException {
+        this.file = Objects.requireNonNull(file, "file");
+        if (!Files.exists(file)) {
             throw new LauncherNotFoundException("local");
         }
-        this.libFolder = U.requireNotNull(libFolder, "libFolder");
+        this.libFolder = Objects.requireNonNull(libFolder, "libFolder");
     }
 
-    public final File getFile() {
+    public final Path getFile() {
         return file;
     }
 
-    public final File getLibFolder() {
+    public final Path getLibFolder() {
         return libFolder;
     }
 
@@ -41,49 +45,44 @@ public class LocalLauncher extends Launcher {
     protected ToStringBuilder toStringBuilder() {
         return super.toStringBuilder()
                 .append("meta", meta)
-                .append("file", file == null ? null : file.getAbsolutePath())
-                .append("libFolder", libFolder == null ? null : libFolder.getAbsolutePath());
+                .append("file", file == null ? null : file.toAbsolutePath())
+                .append("libFolder", libFolder == null ? null : libFolder.toAbsolutePath());
     }
 
-    private static File getDefaultLocation() {
-        return OS.getSystemRelatedDirectory("tlauncher", true);
+    public static Path getDefaultFileLocation(String shortBrand) {
+        return OS.getDefaultFolder().resolve("bin").resolve(shortBrand.toLowerCase(java.util.Locale.ROOT) + ".jar");
     }
 
-    public static File getDefaultFileLocation(String shortBrand) {
-        return new File(getDefaultLocation(), "bin/"+ shortBrand.toLowerCase(java.util.Locale.ROOT) +".jar");
+    public static Path getDefaultLibLocation() {
+        return OS.getDefaultFolder().resolve("lib");
     }
 
-    public static File getDefaultLibLocation() {
-        return new File(getDefaultLocation(), "lib");
-    }
+    static <T extends LauncherMeta> T findMetaEntry(Path file, Class<T> clazz) throws IOException {
 
-    static <T extends LauncherMeta> T findMetaEntry(File file, Class<T> clazz) throws IOException {
-        final String entryName = "ru/turikhay/tlauncher/meta.json";
-
-        if(!file.exists()) {
+        if (!Files.exists(file)) {
             throw new FileNotFoundException();
         }
 
         InputStream input;
-        if(file.isFile()) {
-            input = getZipEntry(file, entryName);
+        if (Files.isRegularFile(file)) {
+            input = getZipEntry(file);
         } else {
-            file = new File(file, entryName);
-            if(!file.isFile()) {
-                throw new FileNotFoundException("target entry is not found: " + file.getAbsolutePath());
+            file = file.resolve(ENTRY_NAME);
+            if (!Files.isRegularFile(file)) {
+                throw new FileNotFoundException("target entry is not found: " + file.toAbsolutePath());
             }
-            input = new FileInputStream(file);
+            input = Files.newInputStream(file);
         }
 
-        return Json.get().fromJson(new InputStreamReader(input, U.UTF8), clazz);
+        return Json.get().fromJson(new InputStreamReader(input, StandardCharsets.UTF_8), clazz);
     }
 
-    private static InputStream getZipEntry(File file, String entryName) throws IOException {
-        final ZipFile zip = new ZipFile(file);
-        ZipEntry metaEntry = zip.getEntry(entryName);
+    private static InputStream getZipEntry(Path file) throws IOException {
+        final ZipFile zip = new ZipFile(file.toFile());
+        ZipEntry metaEntry = zip.getEntry(ENTRY_NAME);
 
         if (metaEntry == null) {
-            throw new IOException("could not find entry: " + entryName);
+            throw new IOException("could not find entry: " + ENTRY_NAME);
         }
 
         return new FilterInputStream(zip.getInputStream(metaEntry)) {

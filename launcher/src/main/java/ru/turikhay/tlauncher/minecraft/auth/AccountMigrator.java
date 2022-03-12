@@ -22,7 +22,7 @@ public class AccountMigrator {
     private final Gson gson;
 
     public AccountMigrator(String clientToken) {
-        this.clientToken = StringUtils.isBlank(clientToken)? String.valueOf(UUID.randomUUID()) : clientToken;
+        this.clientToken = StringUtils.isBlank(clientToken) ? String.valueOf(UUID.randomUUID()) : clientToken;
         gson = new GsonBuilder()
                 .registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer())
                 .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
@@ -30,18 +30,18 @@ public class AccountMigrator {
                 .create();
     }
 
-    private String output;
     public Map<String, LegacyAccount> parse(JsonObject object) {
-        Map<String, LegacyAccount> map = gson.fromJson(object, new TypeToken<Map<String, LegacyAccount>>(){}.getType());
-        output = gson.toJson(map);
+        Map<String, LegacyAccount> map = gson.fromJson(object, new TypeToken<Map<String, LegacyAccount>>() {
+        }.getType());
+        String output = gson.toJson(map);
         return map;
     }
 
     public List<User> migrate(Collection<LegacyAccount> unmigratedList) {
         ArrayList<User> migrated = new ArrayList<>();
 
-        for(LegacyAccount account : unmigratedList) {
-            if(account.type == null) {
+        for (LegacyAccount account : unmigratedList) {
+            if (account.type == null) {
                 account.type = "free";
             }
             User user;
@@ -61,7 +61,7 @@ public class AccountMigrator {
                     default:
                         continue;
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 LOGGER.error("Could not migrate {}", account, e);
                 continue;
             }

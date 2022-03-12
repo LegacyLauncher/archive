@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.util.EHttpClient;
-import ru.turikhay.util.U;
 import sun.security.validator.ValidatorException;
 
 import javax.net.ssl.SSLException;
@@ -39,18 +38,14 @@ public class AuthServerChecker implements ConnectivityManager.EntryChecker {
     }
 
     @Override
-    public Boolean checkConnection() {
+    public Boolean checkConnection() throws Exception {
         DetectedThirdPartyAuthenticatorInfo detectedAuthenticator = null;
         List<Callable<DetectedThirdPartyAuthenticatorInfo>> validators = Arrays.asList(
                 this::queryDns,
                 this::queryJsonStatus
         );
         for (Callable<DetectedThirdPartyAuthenticatorInfo> validator : validators) {
-            try {
-                detectedAuthenticator = validator.call();
-            } catch (Exception e) {
-                U.throwChecked(e);
-            }
+            detectedAuthenticator = validator.call();
             if (detectedAuthenticator != null) {
                 break;
             }
