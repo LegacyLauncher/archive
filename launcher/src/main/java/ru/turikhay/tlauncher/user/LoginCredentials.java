@@ -5,9 +5,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
 
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 public class LoginCredentials {
@@ -18,9 +18,9 @@ public class LoginCredentials {
                      String playerName, UUID uuid, String userType, String profileName) {
         this.username = StringUtil.requireNotBlank(username, "username");
         this.accessToken = StringUtil.requireNotBlank(accessToken, "accessToken");
-        this.properties = StringUtils.isBlank(properties)? "{}" : properties;
+        this.properties = StringUtils.isBlank(properties) ? "{}" : properties;
         this.playerName = StringUtil.requireNotBlank(playerName, "playerName");
-        this.uuid = U.requireNotNull(uuid, "uuid");
+        this.uuid = Objects.requireNonNull(uuid, "uuid");
         this.userType = StringUtil.requireNotBlank(userType, "userType");
         this.profileName = StringUtil.requireNotBlank(profileName, "profileName");
 

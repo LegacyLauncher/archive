@@ -1,7 +1,5 @@
 package ru.turikhay.tlauncher.ui.swing.extended;
 
-import ru.turikhay.tlauncher.ui.swing.util.IntegerArrayGetter;
-
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -18,25 +16,11 @@ public abstract class ExtendedComponentListener implements ComponentListener {
             throw new NullPointerException();
         } else {
             comp = component;
-            resizeListener = new QuickParameterListenerThread(new IntegerArrayGetter() {
-                public int[] getIntegerArray() {
-                    return new int[]{comp.getWidth(), comp.getHeight()};
-                }
-            }, new Runnable() {
-                public void run() {
-                    onComponentResized(lastResizeEvent);
-                }
-            }, tick);
-            moveListener = new QuickParameterListenerThread(new IntegerArrayGetter() {
-                public int[] getIntegerArray() {
-                    Point location = comp.getLocation();
-                    return new int[]{location.x, location.y};
-                }
-            }, new Runnable() {
-                public void run() {
-                    onComponentMoved(lastMoveEvent);
-                }
-            }, tick);
+            resizeListener = new QuickParameterListenerThread(() -> new int[]{comp.getWidth(), comp.getHeight()}, () -> onComponentResized(lastResizeEvent), tick);
+            moveListener = new QuickParameterListenerThread(() -> {
+                Point location = comp.getLocation();
+                return new int[]{location.x, location.y};
+            }, () -> onComponentMoved(lastMoveEvent), tick);
         }
     }
 
@@ -58,13 +42,25 @@ public abstract class ExtendedComponentListener implements ComponentListener {
         return resizeListener.isIterating() || moveListener.isIterating();
     }
 
-    public abstract void onComponentResizing(ComponentEvent var1);
+    @Override
+    public void componentShown(ComponentEvent e) {
+    }
 
-    public abstract void onComponentResized(ComponentEvent var1);
+    @Override
+    public void componentHidden(ComponentEvent e) {
+    }
 
-    public abstract void onComponentMoving(ComponentEvent var1);
+    public void onComponentResizing(ComponentEvent e) {
+    }
 
-    public abstract void onComponentMoved(ComponentEvent var1);
+    public void onComponentResized(ComponentEvent e) {
+    }
+
+    public void onComponentMoving(ComponentEvent e) {
+    }
+
+    public void onComponentMoved(ComponentEvent e) {
+    }
 
     public void dispose() {
         moveListener.dispose();

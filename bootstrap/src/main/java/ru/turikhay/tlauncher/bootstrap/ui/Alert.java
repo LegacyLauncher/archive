@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.ui;
 
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.tlauncher.bootstrap.util.U;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,7 +43,7 @@ class Alert {
                 ++c.gridy;
                 add(Box.createRigidArea(new Dimension(width, 5)), c);
 
-                String strContent = content instanceof Throwable ? U.toString((Throwable) content) : String.valueOf(content);
+                String strContent = content instanceof Throwable ? ExceptionUtils.getStackTrace((Throwable) content) : String.valueOf(content);
 
                 JTextArea textarea = new JTextArea();
                 textarea.addMouseListener(new TextPopup());

@@ -1,31 +1,33 @@
 package ru.turikhay.tlauncher.bootstrap.bridge;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class BootBridge {
-    final ArrayList<BootListener> listenerList = new ArrayList<BootListener>();
+    final ArrayList<BootListener> listenerList = new ArrayList<>();
     private BootEventDispatcher dispatcher;
 
     private final String bootstrapVersion;
     private final String[] args;
-    private final String options;
     private final Map<String, BootMessage> messageMap;
+    private final Map<String, Object> capabilities;
+    private String options;
     private UUID client;
 
     volatile boolean interrupted;
 
-    private BootBridge(String bootstrapVersion, String[] args, String options) {
+    public BootBridge(String bootstrapVersion, String[] args) {
         if(args == null) {
             args = new String[0];
         }
 
-        this.messageMap = new HashMap<String, BootMessage>();
-
+        this.messageMap = new HashMap<>();
+        this.capabilities = new HashMap<>();
         this.bootstrapVersion = bootstrapVersion;
         this.args = args;
+    }
+
+    private BootBridge(String bootstrapVersion, String[] args, String options) {
+        this(bootstrapVersion, args);
         this.options = options;
     }
 
@@ -39,6 +41,10 @@ public final class BootBridge {
 
     public String getOptions() {
         return options;
+    }
+
+    public void setOptions(String options) {
+        this.options = options;
     }
 
     public UUID getClient() {
@@ -59,6 +65,18 @@ public final class BootBridge {
 
     public void addMessage(String locale, String title, String message) {
         messageMap.put(locale, new BootMessage(title, message));
+    }
+
+    public Map<String, Object> getCapabilities() {
+        return capabilities;
+    }
+
+    public void addCapability(String key, Object value) {
+        this.capabilities.put(key, value);
+    }
+
+    public void addCapability(String key) {
+        addCapability(key, Boolean.TRUE);
     }
 
     public synchronized void addListener(BootListener listener) {

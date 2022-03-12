@@ -53,13 +53,13 @@ public class BorderPanel extends ExtendedPanel {
     }
 
     private Component set(Component oldComp, Component comp, String location) {
-        if(comp == null) {
-            if(oldComp != null) {
+        if (comp == null) {
+            if (oldComp != null) {
                 remove(oldComp);
             }
             return null;
         }
-        if(oldComp == comp) {
+        if (oldComp == comp) {
             return comp;
         }
         add(comp, location);

@@ -20,13 +20,13 @@ public class VersionDownloadable extends Downloadable {
 
         if (version.getDownloadURL(DownloadType.CLIENT) != null) {
             DownloadInfo downloadInfo = version.getDownloadURL(DownloadType.CLIENT);
-            setURL(downloadInfo.getUrl());
+            setURL(Repository.PROXIFIED_REPO, downloadInfo.getUrl());
         } else {
             Repository repo;
             String id;
 
             if (version.getJar() == null) {
-                repo = repository == null? Repository.OFFICIAL_VERSION_REPO : repository;
+                repo = repository == null ? Repository.OFFICIAL_VERSION_REPO : repository;
                 id = version.getID();
             } else {
                 repo = Repository.OFFICIAL_VERSION_REPO;

@@ -35,8 +35,8 @@ public class StringCharsetData implements CharsetData {
 
     @Override
     public long length() {
-        if(size == UNKNOWN_LENGTH) {
-            if(string.length() > PRETTY_LONG_STRING) {
+        if (size == UNKNOWN_LENGTH) {
+            if (string.length() > PRETTY_LONG_STRING) {
                 size = LENGTH_TOO_LONG;
             } else {
                 size = string.getBytes(StandardCharsets.UTF_8).length;

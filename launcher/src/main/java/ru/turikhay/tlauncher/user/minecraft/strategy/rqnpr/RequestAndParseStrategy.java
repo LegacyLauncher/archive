@@ -1,7 +1,7 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr;
 
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.exceptions.ParseException;
+import ru.turikhay.tlauncher.exceptions.ParseException;
 
 import java.io.IOException;
 
@@ -20,7 +20,7 @@ public abstract class RequestAndParseStrategy<A, V extends Validatable> {
         String response = requester.makeRequest(logger, argument);
         try {
             return parser.parseResponse(logger, response);
-        } catch(ParseException e) {
+        } catch (ParseException e) {
             throw new InvalidResponseException(response, e);
         }
     }

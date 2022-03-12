@@ -8,8 +8,6 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 public class VersionRefreshButton extends ExtendedButton implements VersionHandlerListener, Blockable {
@@ -18,32 +16,18 @@ public class VersionRefreshButton extends ExtendedButton implements VersionHandl
     private static final String MENU = "version.manager.refresher.menu.";
     final VersionHandler handler;
     private final JPopupMenu menu;
-    private final LocalizableMenuItem local;
-    private final LocalizableMenuItem remote;
     private VersionRefreshButton.ButtonState state;
 
     VersionRefreshButton(VersionList list) {
         handler = list.handler;
         menu = new JPopupMenu();
-        local = new LocalizableMenuItem("version.manager.refresher.menu.local");
-        local.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                handler.refresh();
-            }
-        });
+        LocalizableMenuItem local = new LocalizableMenuItem("version.manager.refresher.menu.local");
+        local.addActionListener(e -> handler.refresh());
         menu.add(local);
-        remote = new LocalizableMenuItem("version.manager.refresher.menu.remote");
-        remote.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                handler.asyncRefresh();
-            }
-        });
+        LocalizableMenuItem remote = new LocalizableMenuItem("version.manager.refresher.menu.remote");
+        remote.addActionListener(e -> handler.asyncRefresh());
         menu.add(remote);
-        addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onPressed();
-            }
-        });
+        addActionListener(e -> onPressed());
         setState(VersionRefreshButton.ButtonState.REFRESH);
         handler.addListener(this);
     }

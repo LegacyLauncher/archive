@@ -7,7 +7,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class McleaksStatus {
-    private final List<McleaksStatusListener> listeners = Collections.synchronizedList(new ArrayList<McleaksStatusListener>());
+    private final List<McleaksStatusListener> listeners = Collections.synchronizedList(new ArrayList<>());
 
     private final McleaksStatusThread thread;
     private final AtomicBoolean started = new AtomicBoolean();
@@ -19,7 +19,7 @@ public class McleaksStatus {
 
     public void addListener(McleaksStatusListener listener) {
         listeners.add(listener);
-        if(hasStatus()) {
+        if (hasStatus()) {
             listener.onMcleaksUpdated(this);
         } else {
             listener.onMcleaksUpdating(this);
@@ -40,16 +40,16 @@ public class McleaksStatus {
     }
 
     void triggerFetch() {
-        if(!started.getAndSet(true)) {
+        if (!started.getAndSet(true)) {
             thread.start();
         }
     }
 
     public void waitForResponse(long millis) throws InterruptedException, TimeoutException {
         triggerFetch();
-        if(thread.isAlive()) {
+        if (thread.isAlive()) {
             thread.join(millis);
-            if(thread.isAlive()) {
+            if (thread.isAlive()) {
                 throw new TimeoutException();
             }
         }
@@ -59,13 +59,13 @@ public class McleaksStatus {
         serverIp = payload.serverip;
         McleaksManager.getConnector().receiveServerIp(serverIp);
 
-        for(McleaksStatusListener listener : listeners) {
+        for (McleaksStatusListener listener : listeners) {
             listener.onMcleaksUpdated(this);
         }
     }
 
     void receiveNothing() {
-        for(McleaksStatusListener listener : listeners) {
+        for (McleaksStatusListener listener : listeners) {
             listener.onMcleaksUpdated(this);
         }
     }

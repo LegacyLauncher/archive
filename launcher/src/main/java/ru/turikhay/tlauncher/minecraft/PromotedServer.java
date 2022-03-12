@@ -7,7 +7,7 @@ import java.util.*;
 
 public class PromotedServer extends Server {
     private boolean claimed;
-    private List<String> family = new ArrayList<>();
+    private final List<String> family = new ArrayList<>();
 
     private final Set<Account.AccountType> accountTypes = new HashSet<Account.AccountType>() {
         {

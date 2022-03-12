@@ -1,6 +1,6 @@
 package ru.turikhay.util;
 
-import ru.turikhay.exceptions.ParseException;
+import ru.turikhay.tlauncher.exceptions.ParseException;
 
 import java.awt.*;
 
@@ -47,16 +47,10 @@ public class IntegerArray {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        int[] var6 = integers;
-        int var5 = integers.length;
 
-        for (int var4 = 0; var4 < var5; ++var4) {
-            int i = var6[var4];
-            if (!first) {
+        for (int i : integers) {
+            if (sb.length() != 0) {
                 sb.append(delimiter);
-            } else {
-                first = false;
             }
 
             sb.append(i);
@@ -69,7 +63,7 @@ public class IntegerArray {
         if (val == null) {
             throw new ParseException("String cannot be NULL!");
         } else if (val.length() <= 1) {
-            throw new ParseException("String mustn\'t equal or be less than delimiter!");
+            throw new ParseException("String mustn't equal or be less than delimiter!");
         } else {
             String regexp = "(?<!\\\\)";
             if (del != 120) {

@@ -14,11 +14,14 @@ import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.tlauncher.ui.MigrationFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.notification.Notification;
-import ru.turikhay.tlauncher.user.*;
+import ru.turikhay.tlauncher.user.AuthlibUser;
+import ru.turikhay.tlauncher.user.MojangUser;
+import ru.turikhay.tlauncher.user.MojangUserMigrationStatus;
 import ru.turikhay.util.Lazy;
 import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
+import ru.turikhay.util.async.AsyncThread;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -59,12 +62,7 @@ public class MigrationManager {
 
     public MigrationManager(TLauncher l) {
         this.l = l;
-        l.getProfileManager().getAccountManager().addListener(new UserSetListener() {
-            @Override
-            public void userSetChanged(UserSet set) {
-                queueMigrationCheck();
-            }
-        });
+        l.getProfileManager().getAccountManager().addListener(set -> queueMigrationCheck());
     }
 
     public void queueMigrationCheck() {
@@ -90,11 +88,16 @@ public class MigrationManager {
                         .sorted(Comparator.comparing(AuthlibUser::getUsername))
                         .collect(Collectors.toCollection(LinkedHashSet::new));
 
+        if (users.isEmpty()) {
+            LOGGER.debug("We don't have any Mojang users -> skipping notification");
+            return;
+        }
+
         this.possiblyEligibleForMigration = Collections.unmodifiableSet(users);
         this.updateMigrationFrameIfOpened();
 
         // we have no forced migration date -> decide whether to show notification or not
-        if(!manifest.data.hasForcedMigrationDate()) {
+        if (!manifest.data.hasForcedMigrationDate()) {
             Properties statuses = readMigrationStatuses();
             Stream<MojangUser> eligibleOrKnown = users.stream().filter(u ->
                     // filter out those that are known to be eligible
@@ -105,7 +108,7 @@ public class MigrationManager {
                         try {
                             return f.get(10, TimeUnit.SECONDS).asStatus();
                         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                            if(e instanceof InterruptedException) {
+                            if (e instanceof InterruptedException) {
                                 Thread.currentThread().interrupt();
                             }
                             return MojangUserMigrationStatus.Status.ERROR;
@@ -124,7 +127,7 @@ public class MigrationManager {
     }
 
     private void showMigrationNotificationIfFrameClosed() {
-        if(this.frame != null) {
+        if (this.frame != null) {
             return;
         }
         Notification notification = new Notification(
@@ -148,15 +151,15 @@ public class MigrationManager {
     }
 
     public void showMigrationFrame() {
-        if(this.frame == null) {
+        if (this.frame == null) {
             this.frame = new MigrationFrame();
             this.frame.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
-                    if(e.getWindow() == MigrationManager.this.frame) {
+                    if (e.getWindow() == MigrationManager.this.frame) {
                         MigrationManager.this.frame = null;
                         writeMigrationStatus();
-                        if(firstTime) {
+                        if (firstTime) {
                             firstTime = false;
                             Alert.showLocMessage("mojang-migration.button-hint");
                         }
@@ -167,24 +170,24 @@ public class MigrationManager {
             this.updateMigrationFrameIfOpened();
             this.frame.pack();
             this.frame.showAtCenter();
-            this.manifest.value()
-                    .map(m -> m.data.hasForcedMigrationDate())
-                    .filter(b -> !b)
-                    .ifPresent(b -> this.removeMigrationNotification());
+            this.removeMigrationNotification();
         } else {
             this.frame.requestFocus();
         }
     }
 
     private void updateMigrationFrameIfOpened() {
-        if(this.frame != null) {
-            this.frame.updateUsers(
-                    this.possiblyEligibleForMigration,
-                    this.manifest.value()
-                            .filter(m -> m.data.hasForcedMigrationDate())
-                            .map(m -> m.data.getForcedMigrationEndDate())
-                            .orElse(null)
-            );
+        if (this.frame != null) {
+            AsyncThread.execute(() -> {
+                Optional<MigrationManifest.Data> data = this.manifest.value().map(m -> m.data);
+                SwingUtil.later(() ->
+                        this.frame.updateUsers(
+                                this.possiblyEligibleForMigration,
+                                data.flatMap(MigrationManifest.Data::getForcedMigrationStartDate).orElse(null),
+                                data.flatMap(MigrationManifest.Data::getForcedMigrationEndDate).orElse(null)
+                        )
+                );
+            });
         }
     }
 
@@ -198,7 +201,7 @@ public class MigrationManager {
             );
             manifest.validate();
             return manifest;
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             LOGGER.warn("Couldn't load or parse migration manifest", e);
             Sentry.capture(new EventBuilder()
                     .withLevel(Event.Level.WARNING)
@@ -213,8 +216,8 @@ public class MigrationManager {
 
     private Properties readMigrationStatuses() {
         Properties p = new Properties();
-        if(migrationStatusFile.isFile()) {
-            try(InputStreamReader reader = new InputStreamReader(
+        if (migrationStatusFile.isFile()) {
+            try (InputStreamReader reader = new InputStreamReader(
                     new FileInputStream(migrationStatusFile),
                     StandardCharsets.UTF_8
             )) {
@@ -231,15 +234,15 @@ public class MigrationManager {
         // save UUIDs
         Properties p = new Properties();
         possiblyEligibleForMigration.forEach(u -> p.setProperty(
-            u.getUUID().toString(),
-            u.isReadyToMigrate().valueIfInitialized()
-                    .map(f -> f.getNow(null))
-                    .map(MojangUserMigrationStatus::asStatus)
-                    .orElse(MojangUserMigrationStatus.Status.NONE)
-                    .name()
+                u.getUUID().toString(),
+                u.isReadyToMigrate().valueIfInitialized()
+                        .map(f -> f.getNow(null))
+                        .map(MojangUserMigrationStatus::asStatus)
+                        .orElse(MojangUserMigrationStatus.Status.NONE)
+                        .name()
         ));
-        try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(migrationStatusFile), StandardCharsets.UTF_8)) {
-           p.store(writer, null);
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(migrationStatusFile), StandardCharsets.UTF_8)) {
+            p.store(writer, null);
         } catch (IOException e) {
             LOGGER.warn("Couldn't write ignored list", e);
         }
@@ -250,21 +253,27 @@ public class MigrationManager {
         Data data;
 
         private static class Data {
+            private static final Instant NO_DATE = Instant.parse("2099-01-01T00:00:00.000Z");
             // String migrationStarts;
             String forcedMigrationStarts;
             String forcedMigrationEnds;
             // String id;
 
-            public Instant getForcedMigrationStartDate() {
-                return Instant.parse(forcedMigrationStarts);
+            public Optional<Instant> getForcedMigrationStartDate() {
+                return parseDate(forcedMigrationStarts);
             }
 
-            public Instant getForcedMigrationEndDate() {
-                return Instant.parse(forcedMigrationEnds);
+            public Optional<Instant> getForcedMigrationEndDate() {
+                return parseDate(forcedMigrationEnds);
             }
 
             public boolean hasForcedMigrationDate() {
-                return !forcedMigrationStarts.equals(forcedMigrationEnds);
+                return getForcedMigrationStartDate().isPresent();
+            }
+
+            private static Optional<Instant> parseDate(String date) {
+                Instant parsedDate = Instant.parse(date);
+                return parsedDate.isBefore(NO_DATE) ? Optional.of(parsedDate) : Optional.empty();
             }
         }
 

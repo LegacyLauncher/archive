@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Objects;
 
 public abstract class Repo implements IRepo {
     private final String name;
 
     public Repo(String name) {
-        this.name = U.requireNotNull(name);
+        this.name = Objects.requireNonNull(name);
     }
 
     public String toString() {
@@ -20,9 +21,8 @@ public abstract class Repo implements IRepo {
 
     @Override
     public final URLConnection get(String path, int timeout, Proxy proxy) throws IOException {
-        URL url = U.requireNotNull(makeUrl(path), "url");
-        URLConnection connection = U.requireNotNull(makeConnection(url, timeout, proxy), "connection");
-        return connection;
+        URL url = Objects.requireNonNull(makeUrl(path), "url");
+        return makeConnection(url, timeout, proxy);
     }
 
     public final URLConnection get(String path, int timeout) throws IOException {

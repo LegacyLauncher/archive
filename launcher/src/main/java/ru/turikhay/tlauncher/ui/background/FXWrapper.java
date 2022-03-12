@@ -104,7 +104,7 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
     }
 
     @Override
-    public void loadBackground(final String path) throws Exception {
+    public void loadBackground(final String path) {
         init(new FxRunnable() {
             @Override
             public void runFx() {
@@ -126,19 +126,16 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
             final Exception[] exception = new Exception[1];
 
             Platform.setImplicitExit(false);
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        background = clazz.newInstance();
+            Platform.runLater(() -> {
+                try {
+                    background = clazz.newInstance();
 
-                        Scene scene = new Scene((Parent) background, javafx.scene.paint.Color.MAGENTA);
-                        scene.setFill(javafx.scene.paint.Color.DARKGRAY);
+                    Scene scene = new Scene((Parent) background, javafx.scene.paint.Color.MAGENTA);
+                    scene.setFill(javafx.scene.paint.Color.DARKGRAY);
 
-                        setScene(scene);
-                    } catch (Exception e) {
-                        LOGGER.error("Could not create background", exception[0] = e);
-                    }
+                    setScene(scene);
+                } catch (Exception e) {
+                    LOGGER.error("Could not create background", exception[0] = e);
                 }
             });
 
@@ -171,21 +168,17 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
     }
 
     private class FXInitializer extends ExtendedThread {
-        private final Queue<Runnable> queue = new ConcurrentLinkedQueue<Runnable>();
+        private final Queue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
         @Override
         public void run() {
             checkCurrent();
 
-            init:
-            {
-                try {
-                    LOGGER.trace("Initializing...");
-                    wrapper = new JFX();
-                } catch (Exception e) {
-                    LOGGER.error("Could not init FX background", e);
-                    break init;
-                }
+            try {
+                LOGGER.trace("Initializing...");
+                wrapper = new JFX();
+            } catch (Exception e) {
+                LOGGER.error("Could not init FX background", e);
             }
 
             init = null;

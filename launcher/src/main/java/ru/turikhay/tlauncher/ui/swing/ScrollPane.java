@@ -96,17 +96,17 @@ public class ScrollPane extends JScrollPane {
 
             try {
                 var0[ScrollPane.ScrollBarPolicy.ALWAYS.ordinal()] = 1;
-            } catch (NoSuchFieldError var3) {
+            } catch (NoSuchFieldError ignored) {
             }
 
             try {
                 var0[ScrollPane.ScrollBarPolicy.AS_NEEDED.ordinal()] = 2;
-            } catch (NoSuchFieldError var2) {
+            } catch (NoSuchFieldError ignored) {
             }
 
             try {
                 var0[ScrollPane.ScrollBarPolicy.NEVER.ordinal()] = 3;
-            } catch (NoSuchFieldError var1) {
+            } catch (NoSuchFieldError ignored) {
             }
 
             $SWITCH_TABLE$ru$turikhay$tlauncher$ui$swing$ScrollPane$ScrollBarPolicy = var0;

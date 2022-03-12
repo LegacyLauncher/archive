@@ -1,13 +1,12 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth;
 
 import org.junit.jupiter.api.Test;
-
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.MockRequester;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MinecraftServicesAuthenticatorTest {
 

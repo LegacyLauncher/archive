@@ -1,17 +1,11 @@
 package ru.turikhay.util.windows.dxdiag;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
-import ru.turikhay.tlauncher.pasta.Pasta;
-import ru.turikhay.tlauncher.pasta.PastaFormat;
 import ru.turikhay.util.OS;
 
 import java.io.File;
@@ -28,14 +22,10 @@ import java.util.concurrent.Callable;
 class DxDiagTask implements Callable<DxDiagReport> {
     private static final Logger LOGGER = LogManager.getLogger(DxDiagTask.class);
 
-    private final String osName;
-    private final String osVersion;
     private File reportFile; // if null, will be created later
 
     public DxDiagTask(String osName, String osVersion,
                       File reportFile) {
-        this.osName = osName;
-        this.osVersion = osVersion;
         this.reportFile = reportFile;
     }
 
@@ -55,13 +45,6 @@ class DxDiagTask implements Callable<DxDiagReport> {
         } catch (Exception e) {
             LOGGER.error("DxDiag report failed", e);
             printReportFileContent();
-            File outputFile = getNullableReportFile();
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("DxDiag query error")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withExtra("reportFile", Pasta.pasteFile(outputFile, PastaFormat.XML))
-            );
             throw e;
         }
         LOGGER.debug("DxDiag report is complete");
@@ -87,18 +70,18 @@ class DxDiagTask implements Callable<DxDiagReport> {
     }
 
     void printReportFileContent() {
-        if(!LOGGER.isDebugEnabled()) {
+        if (!LOGGER.isDebugEnabled()) {
             return;
         }
         File outputFile = getNullableReportFile();
-        if(outputFile == null) {
+        if (outputFile == null) {
             LOGGER.debug("Report file was not yet created");
             return;
         }
         LOGGER.debug("DxDiag report file content: {}", outputFile);
         LOGGER.debug("++++++++++++++++++++");
-        try(Scanner scanner = new Scanner(outputFile)) {
-            while(scanner.hasNextLine()) {
+        try (Scanner scanner = new Scanner(outputFile)) {
+            while (scanner.hasNextLine()) {
                 LOGGER.debug(scanner.nextLine());
             }
         } catch (FileNotFoundException e) {

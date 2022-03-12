@@ -81,7 +81,7 @@ public class Images {
         Matcher isIcon = ICON_FILENAME_PATTERN.matcher(
                 Objects.requireNonNull(id, "id")
         );
-        if(!isIcon.matches()) {
+        if (!isIcon.matches()) {
             throw new IllegalArgumentException("bad icon id: " + id);
         }
         String name = isIcon.group(1);
@@ -91,7 +91,7 @@ public class Images {
 
     private static URL findLocation(String resourceName) throws ResourceNotFoundException {
         Optional<URL> url = RESOURCE_LOCATOR.loadResource(resourceName);
-        if(!url.isPresent()) {
+        if (!url.isPresent()) {
             throw new ResourceNotFoundException(resourceName);
         }
         return url.get();

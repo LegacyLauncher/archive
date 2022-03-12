@@ -1,15 +1,21 @@
 package ru.turikhay.tlauncher.bootstrap.task;
 
-public interface TaskListener {
-    void onTaskStarted(Task task);
+public interface TaskListener<T> {
+    default void onTaskStarted(Task<? extends T> task) {
+    }
 
-    void onTaskUpdated(Task task, double percentage);
+    default void onTaskUpdated(Task<? extends T> task, double percentage) {
+    }
 
-    void onTaskBound(Task task, Task boundTo);
+    default void onTaskBound(Task<? extends T> task, Task<?> boundTo) {
+    }
 
-    void onTaskInterrupted(Task task);
+    default void onTaskInterrupted(Task<? extends T> task) {
+    }
 
-    void onTaskSucceeded(Task task);
+    default void onTaskSucceeded(Task<? extends T> task) {
+    }
 
-    void onTaskErrored(Task task, Exception e);
+    default void onTaskErrored(Task<? extends T> task, Exception e) {
+    }
 }

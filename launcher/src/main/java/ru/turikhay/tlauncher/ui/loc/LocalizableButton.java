@@ -50,7 +50,7 @@ public class LocalizableButton extends ExtendedButton implements LocalizableComp
     }
 
     public void updateLocale() {
-        setText(path, variables);
-        setToolTipText(hint, hintVars);
+        setText(path, (Object[]) variables);
+        setToolTipText(hint, (Object[]) hintVars);
     }
 }

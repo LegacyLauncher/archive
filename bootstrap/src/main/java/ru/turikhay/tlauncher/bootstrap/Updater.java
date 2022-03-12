@@ -1,36 +1,42 @@
 package ru.turikhay.tlauncher.bootstrap;
 
+import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.exception.FileLockedException;
 import ru.turikhay.tlauncher.bootstrap.meta.DownloadEntry;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
-import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Random;
 
 public class Updater extends Task<Void> {
 
-    private final File destFile;
+    private final Path destFile;
     private final DownloadEntry entry;
 
     private FinishAction finishAction = FinishAction.EXIT;
     private String restartExec;
 
-    public Updater(String name, File destFile, DownloadEntry entry) throws IOException {
+    public Updater(String name, Path destFile, DownloadEntry entry) throws IOException {
         super(name);
 
-        this.destFile = U.requireNotNull(destFile, "destFile");
-        if(!destFile.isFile()) {
+        this.destFile = Objects.requireNonNull(destFile, "destFile");
+        if (!Files.isRegularFile(destFile)) {
             throw new FileNotFoundException();
         }
 
-        this.entry = U.requireNotNull(entry, "downloadEntry");
+        this.entry = Objects.requireNonNull(entry, "downloadEntry");
     }
 
     public void restartOnFinish(String restartExec) {
         this.finishAction = FinishAction.RESTART;
-        this.restartExec = U.requireNotNull(restartExec, "restartExec");
+        this.restartExec = Objects.requireNonNull(restartExec, "restartExec");
     }
 
     @Override
@@ -42,49 +48,13 @@ public class Updater extends Task<Void> {
 
         ProcessBuilder processBuilder = null;
 
-        if(restartOnFinish) {
+        if (restartOnFinish) {
             processBuilder = new ProcessBuilder(this.restartExec);
         }
 
-        doWork:
-        {
-            File tempFile = File.createTempFile("updater", null);
-            tempFile.deleteOnExit();
+        doWork(randomUrl);
 
-            try {
-                bindTo(entry.toDownloadTask(getName(), tempFile), 0., .95);
-            } catch (FileLockedException lockedException) {
-                UserInterface.showError(
-                        UserInterface.getLString("update.locked",
-                                "Update file is locked by another process."),
-                        randomUrl
-                );
-                break doWork;
-            }
-
-            byte[] buffer = new byte[8192];
-            FileInputStream input = null;
-            FileOutputStream output = null;
-            try {
-                input = new FileInputStream(tempFile);
-                output = new FileOutputStream(destFile);
-
-                int read;
-                while ((read = input.read(buffer)) != -1) {
-                    output.write(buffer, 0, read);
-                }
-            } finally {
-                if (input != null) {
-                    input.close();
-                    tempFile.delete();
-                }
-                if (output != null) {
-                    output.close();
-                }
-            }
-        }
-
-        if(restartOnFinish) {
+        if (restartOnFinish) {
             processBuilder.start();
         }
 
@@ -93,13 +63,36 @@ public class Updater extends Task<Void> {
         return null;
     }
 
+    private void doWork(String randomUrl) throws Exception {
+        Path tempFile = Files.createTempFile("updater", null);
+
+        try {
+            bindTo(entry.toDownloadTask(getName(), tempFile), 0., .95);
+        } catch (FileLockedException lockedException) {
+            UserInterface.showError(
+                    UserInterface.getLString("update.locked",
+                            "Update file is locked by another process."),
+                    randomUrl
+            );
+            Files.delete(tempFile);
+            return;
+        }
+
+        try (InputStream input = Files.newInputStream(tempFile);
+             OutputStream output = Files.newOutputStream(destFile)) {
+            IOUtils.copy(input, output);
+        } finally {
+            Files.delete(tempFile);
+        }
+    }
+
     private String getAnyDownloadUrl() {
         return entry.getUrl().get(new Random().nextInt(entry.getUrl().size())).toString();
     }
 
     private void showUIMessage(String randomUrl, boolean restartOnFinish) {
         StringBuilder message = new StringBuilder();
-        if(restartOnFinish) {
+        if (restartOnFinish) {
             message.append(UserInterface.getLString("update.restart.auto",
                     "Application is going to self-update and then restart automatically."));
         } else {

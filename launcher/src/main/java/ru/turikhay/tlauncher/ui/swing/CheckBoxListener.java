@@ -5,7 +5,7 @@ import java.awt.event.ItemListener;
 
 public abstract class CheckBoxListener implements ItemListener {
     public void itemStateChanged(ItemEvent e) {
-        itemStateChanged(e.getStateChange() == 1);
+        itemStateChanged(e.getStateChange() == ItemEvent.SELECTED);
     }
 
     public abstract void itemStateChanged(boolean var1);

@@ -7,7 +7,7 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.MockRequester;
 import java.io.IOException;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MinecraftProfileRequesterTest {
 

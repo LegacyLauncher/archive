@@ -26,12 +26,12 @@ public class FileIntegrityEntry {
 
     public boolean isTamperedWithAt(File directory) {
         File file = resolve(directory);
-        if(!file.isFile()) {
+        if (!file.isFile()) {
             LOGGER.debug("File doesn't exist: {}", file.getAbsolutePath());
             return true;
         }
         String sha1 = FileUtil.getSHA(file);
-        if(this.sha1.equals(sha1)) {
+        if (this.sha1.equals(sha1)) {
             return false;
         }
         LOGGER.debug("File was tampered with: {} (got {}, expected {})", file.getAbsolutePath(), sha1, this.sha1);

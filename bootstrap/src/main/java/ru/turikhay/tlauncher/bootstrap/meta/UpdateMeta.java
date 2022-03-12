@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.bootstrap.meta;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import org.apache.commons.io.IOUtils;
-import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.json.RemoteBootstrapDeserializer;
 import ru.turikhay.tlauncher.bootstrap.json.RemoteLauncherDeserializer;
@@ -11,34 +10,36 @@ import ru.turikhay.tlauncher.bootstrap.json.UpdateDeserializer;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
 import ru.turikhay.tlauncher.bootstrap.util.Compressor;
-import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UpdateMeta {
-    private static final List<String> UPDATE_URL_LIST = new ArrayList<String>() {
-        {
-            add("https://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
-            Collections.addAll(this, U.shuffle(
-                    "https://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
-                    "https://u.tlauncher.ru/%s/bootstrap.json.mgz.signed",
-                    "https://repo.tlaun.ch/%s/bootstrap.json.mgz.signed"
-            ));
-        }
-    };
+    private static final List<String> UPDATE_URL_LIST;
+
     static {
+        List<String> updateUrlList = new ArrayList<>(Arrays.asList(
+                "https://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
+                "https://tln4.ru/%s/bootstrap.json.mgz.signed",
+                "https://repo.tlaun.ch/%s/bootstrap.json.mgz.signed"
+        ));
+        Collections.shuffle(updateUrlList);
+        updateUrlList.add(0, "https://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
+        UPDATE_URL_LIST = Collections.unmodifiableList(updateUrlList);
+
         Compressor.init(); // init compressor
     }
 
-    private static final int INITIAL_TIMEOUT = 1500, MAX_ATTEMPTS = 5;
+    private static final int INITIAL_TIMEOUT = 2000, MAX_ATTEMPTS = 5;
 
-    public static Task<UpdateMeta> fetchFor(final String shortBrand) throws ExceptionList {
-        U.requireNotNull(shortBrand,  "brand");
+    public static Task<UpdateMeta> fetchFor(final String shortBrand, ConnectionInterrupter interrupter) {
+        Objects.requireNonNull(shortBrand, "brand");
 
         return new Task<UpdateMeta>("fetchUpdate") {
             @Override
@@ -46,39 +47,46 @@ public class UpdateMeta {
                 log("Requesting update for: " + shortBrand);
 
                 Gson gson = createGson(shortBrand);
-                List<Exception> eList = new ArrayList<Exception>();
+                AtomicBoolean updateRequestCancelled = new AtomicBoolean();
+                Exception error = new RuntimeException("");
 
-                for(int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                    if (attempt == 2 && interrupter != null) {
+                        interrupter.mayInterruptConnection(() -> updateRequestCancelled.set(true));
+                    }
                     for (int i = 0; i < UPDATE_URL_LIST.size(); i++) {
+                        if (updateRequestCancelled.get()) {
+                            throw error;
+                        }
                         checkInterrupted();
-                        updateProgress((i+1) / UPDATE_URL_LIST.size());
+                        updateProgress((i + 1f) / UPDATE_URL_LIST.size());
 
-                        String _url = null;
+                        String _url;
                         long time = System.currentTimeMillis();
 
                         InputStream stream = null;
                         try {
-                            _url = String.format(java.util.Locale.ROOT, UPDATE_URL_LIST.get(i), shortBrand);
+                            _url = String.format(Locale.ROOT, UPDATE_URL_LIST.get(i), shortBrand);
                             URL url = new URL(_url);
                             log("URL: ", url);
 
                             stream = setupConnection(url, attempt);
-                            if(url.toExternalForm().endsWith(".signed")) {
+                            if (url.toExternalForm().endsWith(".signed")) {
                                 log("Request is signed, requiring valid signature");
                                 stream = new SignedStream(stream);
                             }
 
                             UpdateMeta meta = fetchFrom(gson, Compressor.uncompressMarked(stream));
 
-                            if(stream instanceof SignedStream) {
+                            if (stream instanceof SignedStream) {
                                 ((SignedStream) stream).validateSignature();
                             }
 
-                            if(meta.isOutdated()) {
+                            if (meta.isOutdated()) {
                                 log("... is outdated");
                                 log("Current time:", time);
                                 log("Time in meta:", meta.getPendingUpdateUTC() * 1000L);
-                                eList.add(new OutdatedUpdateMetaException(
+                                error.addSuppressed(new OutdatedUpdateMetaException(
                                         _url,
                                         format(calendar(time)),
                                         format(calendar(meta.getPendingUpdateUTC() * 1000L))
@@ -91,16 +99,16 @@ public class UpdateMeta {
                             return meta;
                         } catch (Exception e) {
                             e.printStackTrace();
-                            eList.add(e);
+                            error.addSuppressed(e);
                         } finally {
-                            if(stream != null) {
-                                U.close(stream);
+                            if (stream != null) {
+                                stream.close();
                             }
                         }
                     }
                 }
 
-                throw new ExceptionList(eList);
+                throw error;
             }
         };
     }
@@ -116,27 +124,27 @@ public class UpdateMeta {
     private static UpdateMeta fetchFrom(Gson gson, InputStream in) throws Exception {
         String read = null;
         try {
-            read = IOUtils.toString(U.toReader(in));
+            read = IOUtils.toString(in, StandardCharsets.UTF_8);
             return gson.fromJson(read, UpdateMeta.class);
-        } catch(Exception e) {
+        } catch (Exception e) {
             Throwable cause = e;
 
-            if(e.getCause() != null && e.getCause() instanceof IOException) {
-                if(read == null) {
+            if (e.getCause() != null && e.getCause() instanceof IOException) {
+                if (read == null) {
                     throw (IOException) e.getCause();
                 }
                 cause = e.getCause();
             }
 
-            if(read == null) {
+            if (read == null) {
                 throw e;
             }
 
-            if(read.length() > 1000) {
+            if (read.length() > 1000) {
                 read = read.substring(0, 997) + "...";
             }
 
-            throw new IOException("could not read: \""+ read +"\"", cause);
+            throw new IOException("could not read: \"" + read + "\"", cause);
         }
     }
 
@@ -169,7 +177,7 @@ public class UpdateMeta {
     private static SimpleDateFormat FORMAT;
 
     private static String format(Calendar calendar) {
-        if(FORMAT == null) {
+        if (FORMAT == null) {
             FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
         }
         return FORMAT.format(calendar.getTime());
@@ -186,16 +194,16 @@ public class UpdateMeta {
                       RemoteLauncherMeta launcher,
                       String options) {
         this.pendingUpdateUTC = pendingUpdateUTC;
-        this.bootstrap = U.requireNotNull(bootstrap, "bootstrap");
-        this.launcher = U.requireNotNull(launcher, "launcher");
+        this.bootstrap = Objects.requireNonNull(bootstrap, "bootstrap");
+        this.launcher = Objects.requireNonNull(launcher, "launcher");
         this.options = options;
     }
 
     public boolean isOutdated() {
-        if(pendingUpdateUTC < 0) {
+        if (pendingUpdateUTC < 0) {
             return false;
         }
-        if(pendingUpdateUTC == 0) {
+        if (pendingUpdateUTC == 0) {
             return true;
         }
         return calendar().after(calendar(pendingUpdateUTC * 1000));
@@ -217,7 +225,11 @@ public class UpdateMeta {
         return options;
     }
 
-    private static void log(Object... o) {
-        U.log("[UpdateMeta]", o);
+    public interface ConnectionInterrupter {
+        void mayInterruptConnection(Callback callback);
+
+        interface Callback {
+            void onConnectionInterrupted();
+        }
     }
 }

@@ -41,10 +41,10 @@ public class ForgeProcessor {
             int len = val.length();
             if (val.charAt(0) == '[' && val.charAt(len - 1) == ']') {
                 // artifact
-                vars.put(key, this.librariesDir.resolve(getArtifact(val.substring(1, len -1))).toAbsolutePath().toString());
+                vars.put(key, this.librariesDir.resolve(getArtifact(val.substring(1, len - 1))).toAbsolutePath().toString());
             } else if (val.charAt(0) == '\'' && val.charAt(len - 1) == '\'') {
                 // literal
-                vars.put(key, val.substring(1, len -1));
+                vars.put(key, val.substring(1, len - 1));
             } else {
                 // temp file
                 vars.put(key, temp.resolve(val).toAbsolutePath().toString());
@@ -76,7 +76,7 @@ public class ForgeProcessor {
             String classpath = processor.getClasspath().stream()
                     .map(lib -> librariesDir.resolve(getArtifact(lib)).toAbsolutePath().toString())
                     .collect(Collectors.joining(File.pathSeparator));
-            classpath = classpath + File.pathSeparator + jar.toAbsolutePath().toString();
+            classpath = classpath + File.pathSeparator + jar.toAbsolutePath();
 
             JarFile jarFile = new JarFile(jar.toFile());
             String mainClass;
@@ -125,12 +125,12 @@ public class ForgeProcessor {
         int len = val.length();
         if (val.charAt(0) == '[' && val.charAt(len - 1) == ']') {
             // artifact
-            return librariesDir.resolve(getArtifact(val.substring(1, len -1))).toAbsolutePath().toString();
+            return librariesDir.resolve(getArtifact(val.substring(1, len - 1))).toAbsolutePath().toString();
         }
 
         if (val.charAt(0) == '{' && val.charAt(len - 1) == '}') {
             // variable
-            return vars.get(val.substring(1, len -1));
+            return vars.get(val.substring(1, len - 1));
         }
 
         return val;

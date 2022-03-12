@@ -1,33 +1,46 @@
 package pw.modder.serialization;
 
-import com.google.gson.*;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 
-import java.lang.reflect.Type;
+import java.io.IOException;
 
-public class EnumSerializer <T extends Enum> implements JsonSerializer<T>, JsonDeserializer<T> {
-    @Override
-    public T deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        try {
-            Object[] ordinals = Class.forName(typeOfT.getTypeName()).getEnumConstants();
-            short ordinal = json.getAsShort();
+public class EnumSerializer<T extends Enum<T>> extends TypeAdapter<T> {
+    private final T[] enums;
 
-            if (ordinal < 1 || ordinal > ordinals.length)
-                throw new OrdinalOutOfBoundsException(ordinal);
-
-            return (T) ordinals[ordinal-1];
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    public EnumSerializer(Class<T> enumClass) {
+        this.enums = enumClass.getEnumConstants();
     }
 
     @Override
-    public JsonElement serialize(T src, Type typeOfSrc, JsonSerializationContext context) {
-        if (src == null) return JsonNull.INSTANCE;
-        return new JsonPrimitive(src.ordinal()+1);
+    public void write(JsonWriter out, T value) throws IOException {
+        if (value == null) {
+            out.nullValue();
+            return;
+        }
+        out.value(value.ordinal() + 1);
+    }
+
+    @Override
+    public T read(JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
+
+        int ordinal = in.nextInt() - 1;
+
+        if (ordinal < 0 || ordinal >= enums.length) {
+            throw new OrdinalOutOfBoundsException(ordinal);
+        }
+
+        return enums[ordinal];
     }
 
     static class OrdinalOutOfBoundsException extends RuntimeException {
-        public OrdinalOutOfBoundsException(short ordinal) {
+        public OrdinalOutOfBoundsException(int ordinal) {
             super("Enum ordinal out of bounds: " + ordinal);
         }
     }

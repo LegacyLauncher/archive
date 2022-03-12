@@ -55,7 +55,7 @@ public class VersionSyncInfo {
     public boolean equals(Object o) {
         if (this == o) {
             return true;
-        } else if (getID() != null && o != null && o instanceof VersionSyncInfo) {
+        } else if (getID() != null && o instanceof VersionSyncInfo) {
             VersionSyncInfo v = (VersionSyncInfo) o;
             return getID().equals(v.getID());
         } else {
@@ -120,7 +120,7 @@ public class VersionSyncInfo {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "{id=\'" + getID() + "\',\nlocal=" + localVersion + ",\nremote=" + remoteVersion + ", isInstalled=" + isInstalled() + ", hasRemote=" + hasRemote() + ", isUpToDate=" + isUpToDate() + "}";
+        return getClass().getSimpleName() + "{id='" + getID() + "',\nlocal=" + localVersion + ",\nremote=" + remoteVersion + ", isInstalled=" + isInstalled() + ", hasRemote=" + hasRemote() + ", isUpToDate=" + isUpToDate() + "}";
     }
 
     public CompleteVersion resolveCompleteVersion(VersionManager manager, boolean latest) throws IOException {
@@ -143,7 +143,7 @@ public class VersionSyncInfo {
                 complete = version.getVersionList()
                         .getCompleteVersion(version)
                         .resolve(manager, latest);
-            } catch(JsonSyntaxException e) {
+            } catch (JsonSyntaxException e) {
                 throw new IOException("syntax error resolving " + version.getID(), e);
             }
             if (version == localVersion) {
@@ -186,18 +186,22 @@ public class VersionSyncInfo {
     }
 
     public CompleteVersion getLocalCompleteVersion() {
-        if(completeLocal == null && localVersion instanceof CompleteVersion) {
+        if (completeLocal == null && localVersion instanceof CompleteVersion) {
             completeLocal = (CompleteVersion) localVersion;
         }
         return completeLocal;
     }
 
-    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
-        HashSet neededFiles = new HashSet();
+    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type, boolean firstIteration) throws IOException {
+        Set<Downloadable> neededFiles = new HashSet<>();
 
         CompleteVersion version0 = getCompleteVersion(force), version;
         if (type != null && !version0.isProceededFor(type.toString())) {
-            version = TLauncher.getInstance().getLibraryManager().process(version0, type.toString());
+            if (firstIteration) {
+                version = TLauncher.getInstance().getLibraryManager().processExplicitly(version0, type.toString());
+            } else {
+                version = TLauncher.getInstance().getLibraryManager().process(version0, type.toString());
+            }
         } else {
             version = version0;
         }
@@ -206,13 +210,16 @@ public class VersionSyncInfo {
         if (source != null && !source.isRemote()) {
             return neededFiles;
         } else {
-            Collection libraries = version.getRelevantLibraries(featureMatcher);
+            Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
 
-            if(type != Account.AccountType.PLAIN) {
-                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, Account.AccountType.PLAIN));
+            if (firstIteration) {
+                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, type, false));
+            }
+            if (type != Account.AccountType.PLAIN) {
+                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, Account.AccountType.PLAIN, false));
             }
 
-            Iterator var9 = libraries.iterator();
+            Iterator<Library> var9 = libraries.iterator();
             while (true) {
                 Library library;
                 File local1;
@@ -223,7 +230,7 @@ public class VersionSyncInfo {
                             return neededFiles;
                         }
 
-                        library = (Library) var9.next();
+                        library = var9.next();
                         file = null;
                         if (library.getNatives() != null) {
                             String local = library.getNatives().get(os);
@@ -239,7 +246,7 @@ public class VersionSyncInfo {
                 }
                 while (!force && local1.isFile() && (library.getChecksum() == null || library.getChecksum().equals(FileUtil.getChecksum(local1, "SHA-1"))));
 
-                if(!library.hasEmptyUrl()) {
+                if (!library.hasEmptyUrl()) {
                     neededFiles.add(library.getDownloadable(source, featureMatcher, local1, os));
                 }
             }
@@ -247,7 +254,7 @@ public class VersionSyncInfo {
     }
 
     public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
-        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, type);
+        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, type, true);
     }
 
     public static VersionSyncInfo createEmpty() {

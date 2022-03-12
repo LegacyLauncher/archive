@@ -9,12 +9,11 @@ import java.time.format.DateTimeFormatter
 
 plugins {
     id 'java'
-    id "com.github.johnrengelman.shadow" version "7.0.0"
+    id "com.github.johnrengelman.shadow"
     id "org.ajoberstar.grgit"
     id "org.openjfx.javafxplugin"
+    id "com.github.gmazzo.buildconfig"
 }
-
-version '1.14.0'
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
@@ -23,12 +22,7 @@ sourceSets {
     modern
 }
 
-compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-compileTestJava {
+java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
@@ -43,20 +37,20 @@ dependencies {
 
     implementation(project(":bridge"))
     implementation(project(":common"))
-    implementation("com.getsentry.raven:raven:7.8.6")
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
-    implementation("com.timgroup:java-statsd-client:3.1.0")
-    implementation("com.github.zafarkhaja:java-semver:0.9.0")
-    implementation('org.apache.commons:commons-lang3:3.12.0')
-    implementation('org.apache.commons:commons-compress:1.21')
-    implementation('com.google.code.gson:gson:2.8.9')
-    implementation('commons-io:commons-io:2.11.0')
+    implementation(libs.raven)
+    implementation(libs.jopt.simple)
+    implementation(libs.java.statsd.client)
+    implementation(libs.java.semver)
+    implementation(libs.commons.lang3)
+    implementation(libs.commons.compress)
+    implementation(libs.gson)
+    implementation(libs.commons.io)
 
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.8.2')
-    testImplementation('org.mockito:mockito-core:4.1.0')
-    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.8.2')
-    testRuntimeOnly('org.mockito:mockito-junit-jupiter:4.1.0')
-    testRuntimeOnly('org.mockito:mockito-inline:4.1.0')
+    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.mockito.core)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.mockito.junit.jupiter)
+    testRuntimeOnly(libs.mockito.inline)
 }
 
 shadowJar {
@@ -82,12 +76,10 @@ shadowJar {
         from sourceSets.modern.output
     }
 
-    manifest {
-        attributes (
-                'Main-Class': 'ru.turikhay.tlauncher.bootstrap.BootstrapStarter',
-                'Multi-Release': true
-        )
-    }
+    manifest.attributes(
+            'Main-Class': 'ru.turikhay.tlauncher.bootstrap.BootstrapStarter',
+            'Multi-Release': true
+    )
 }
 
 task runDebug(type: JavaExec) {
@@ -95,7 +87,7 @@ task runDebug(type: JavaExec) {
     description = "Run BootstrapDebug"
     classpath(sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
     maxHeapSize = "128M"
-    mainClass = "ru.turikhay.tlauncher.bootstrap.BootstrapDebug"
+    mainClass.set("ru.turikhay.tlauncher.bootstrap.BootstrapDebug")
     if (System.getenv("JRE_EXECUTABLE")) {
         executable(System.getenv("JRE_EXECUTABLE"))
     }
@@ -125,44 +117,52 @@ static def generateChecksum(File file) {
     }
 }
 
-task generateMeta {
+buildConfig {
+    className("BuildConfig")
+    packageName("ru.turikhay.tlauncher.bootstrap")
+
+    useJavaOutput()
+
+    buildConfigField('String', 'SHORT_BRAND', "\"${short_brand}\"")
+    buildConfigField('String', 'FULL_BRAND', "\"${full_brand}\"")
+    buildConfigField('String', 'VERSION', "\"${product_version}\"")
+}
+
+processResources {
+    def meta = [
+            version   : product_version,
+            shortBrand: short_brand,
+            brand     : full_brand,
+            buildDate : OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
+    ]
+
+    inputs.property("meta", meta)
+
     doLast {
-        def meta = new JsonBuilder()
-
-        meta {
-            version(product_version)
-            shortBrand(short_brand)
-            brand(full_brand)
-            buildDate(OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
-        }
-
-        file("$projectDir/src/main/resources/ru/turikhay/tlauncher/bootstrap/meta.json").write(meta.toString())
-        file("$projectDir/meta.json").write(meta.toPrettyString())
+        new File(destinationDir, "ru/turikhay/tlauncher/bootstrap/meta.json").text = new JsonBuilder(meta).toString()
     }
 }
 
 task generateUpdateJson {
     dependsOn shadowJar
     doLast {
-        def meta = new JsonBuilder()
         def jarFileChecksum = generateChecksum(shadowJar.outputs.files.singleFile)
-        def downloadUrlList = [
-                "https://tlauncherrepo.com/",
-                "https://u.tlauncher.ru/",
-                "https://repo.tlaun.ch/",
-                "https://cdn.turikhay.ru/tlauncher/",
-                "http://cdn.turikhay.ru/tlauncher/"
-        ].collect {
-            urlPrefix -> urlPrefix + short_brand + "/bootstrap/" + jarFileChecksum + ".jar"
-        }
 
-        meta {
-            version product_version
-            checksum jarFileChecksum
-            url downloadUrlList
-        }
+        def meta = [
+                version : product_version,
+                checksum: jarFileChecksum,
+                url     : [
+                        "https://tlauncherrepo.com/",
+                        "https://tln4.ru/",
+                        "https://repo.tlaun.ch/",
+                        "https://cdn.turikhay.ru/tlauncher/",
+                        "http://cdn.turikhay.ru/tlauncher/"
+                ].collect { urlPrefix ->
+                    "${urlPrefix}${short_brand}/bootstrap/${jarFileChecksum}.jar"
+                }
+        ]
 
-        file("${buildDir}/update/bootstrap.json").write(meta.toString())
+        file("${buildDir}/update/bootstrap.json").write(new JsonBuilder(meta).toString())
     }
 }
 
@@ -171,10 +171,6 @@ task copyJarAndRenameToSha256(type: Copy) {
     from shadowJar.outputs.files.singleFile
     into "${buildDir}/update"
     rename { generateChecksum(shadowJar.outputs.files.singleFile) + ".jar" }
-}
-
-compileJava {
-    dependsOn(generateMeta)
 }
 
 assemble {

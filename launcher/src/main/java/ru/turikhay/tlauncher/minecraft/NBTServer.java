@@ -5,7 +5,6 @@ import net.minecraft.common.NBTTagCompound;
 import net.minecraft.common.NBTTagList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +21,7 @@ public class NBTServer extends Server {
         setName(server.getName());
         setFullAddress(server.getFullAddress());
 
-        if(server instanceof NBTServer) {
+        if (server instanceof NBTServer) {
             NBTServer nbtServer = (NBTServer) server;
             hideAddress = nbtServer.hideAddress;
             acceptTextures = nbtServer.acceptTextures;
@@ -58,7 +57,7 @@ public class NBTServer extends Server {
     }
 
     public static LinkedHashSet<NBTServer> loadSet(File file) throws IOException {
-        LinkedHashSet<NBTServer> set = new LinkedHashSet<NBTServer>();
+        LinkedHashSet<NBTServer> set = new LinkedHashSet<>();
         NBTTagCompound compound = CompressedStreamTools.read(file);
 
         if (compound == null) {
@@ -71,7 +70,7 @@ public class NBTServer extends Server {
 
             try {
                 nbtServer = getNBTServer((NBTTagCompound) servers.tagAt(i));
-            } catch(RuntimeException rE) {
+            } catch (RuntimeException rE) {
                 LOGGER.warn("Could not parse server from NBT file {}", file, rE);
                 continue;
             }
@@ -85,7 +84,7 @@ public class NBTServer extends Server {
     public static void saveSet(Set<NBTServer> set, File file) throws IOException {
         NBTTagList servers = new NBTTagList();
 
-        for(NBTServer server : set) {
+        for (NBTServer server : set) {
             servers.appendTag(server.getNBT());
         }
 

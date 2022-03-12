@@ -78,7 +78,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     private final VersionManager vm;
     private final AssetsManager am;
     private final ProfileManager pm;
-    private CrashManager crashManager;
     private final List<MinecraftListener> listeners;
     private final List<MinecraftExtendedListener> extListeners;
     private final List<MinecraftLauncherAssistant> assistants;
@@ -90,8 +89,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private CompleteVersion version;
     private CompleteVersion deJureVersion;
     private boolean isLauncher;
-    private String accountName;
-    private Account account;
+    private Account<?> account;
     private String family;
     private File rootDir;
     private File gameDir;
@@ -101,7 +99,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     private File assetsIndexesDir;
     private File assetsObjectsDir;
     private int[] windowSize;
-    private boolean fullScreen;
     private boolean fullCommand;
     private int ramSize;
     private OptionsFile optionsFile;
@@ -132,7 +129,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         return charset;
     }
 
-    private JavaManager javaManager;
+    private final JavaManager javaManager;
 
     private JavaManagerConfig javaManagerConfig;
 
@@ -305,8 +302,10 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     public void setPromotedServers(List<PromotedServer> serverList, List<PromotedServer> outdatedServerList) {
-        this.promotedServers = U.shuffle(serverList);
+        this.promotedServers = new ArrayList<>(serverList);
         this.outdatedPromotedServers = outdatedServerList;
+
+        Collections.shuffle(promotedServers);
     }
 
     public OptionsFile getOptionsFile() {
@@ -353,7 +352,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         try {
             deJureVersion.validate();
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             throw new RuntimeException("Invalid version", rE);
         }
 
@@ -361,16 +360,16 @@ public class MinecraftLauncher implements JavaProcessListener {
             isLauncher = true;
         }
 
-        accountName = settings.get("login.account");
+        String accountName = settings.get("login.account");
         if (accountName != null && !accountName.isEmpty()) {
-            Account.AccountType type2 = Reflect.parseEnum(Account.AccountType.class, settings.get("login.account.type"));
+            Account.AccountType type2 = Account.AccountType.parse(settings.get("login.account.type"));
             account = pm.getAuthDatabase().getByUsername(accountName, type2);
         }
-        if(account == null) {
+        if (account == null) {
             if (isLauncher) {
                 LOGGER.debug("Account is not required, setting user \"launcher\"");
                 accountName = "launcher";
-                account = new Account(new PlainUser("launcher", new UUID(0L, 0L)));
+                account = new Account<>(new PlainUser(accountName, new UUID(0L, 0L)));
             } else {
                 throw new NullPointerException("account");
             }
@@ -395,18 +394,11 @@ public class MinecraftLauncher implements JavaProcessListener {
                     lookupLibrariesForType = Account.AccountType.ELY;
                     break;
                 case PLAIN:
-                    mayBeEly:
-                    {
-                        if (!TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()) {
-                            break mayBeEly;
-                        }
-                        if (!settings.getBoolean("ely.globally")) {
-                            break mayBeEly;
-                        }
+                    if (TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere() && settings.getBoolean("ely.globally")) {
                         lookupLibrariesForType = Account.AccountType.ELY;
-                        break;
+                    } else {
+                        lookupLibrariesForType = Account.AccountType.PLAIN;
                     }
-                    lookupLibrariesForType = Account.AccountType.PLAIN;
                     break;
                 default:
                     lookupLibrariesForType = account.getType();
@@ -446,15 +438,21 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         switch (settings.getSeparateDirs()) {
-            case NONE: gameDir = rootDir; break;
-            case FAMILY: gameDir = new File(rootDir, "home/" + family); break;
-            case VERSION: gameDir = new File(rootDir, "home/" + version.getID()); break;
+            case NONE:
+                gameDir = rootDir;
+                break;
+            case FAMILY:
+                gameDir = new File(rootDir, "home/" + family);
+                break;
+            case VERSION:
+                gameDir = new File(rootDir, "home/" + version.getID());
+                break;
         }
 
 
         detectCharsetOnWindows();
 
-        if(charset == null) {
+        if (charset == null) {
             charset = StandardCharsets.UTF_8;
             LOGGER.info("Using standard charset: {}", charset);
         }
@@ -544,7 +542,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         } else if (windowSize[1] < 1) {
             throw new IllegalArgumentException("Invalid window height!");
         } else {
-            fullScreen = settings.getBoolean("minecraft.fullscreen");
+            boolean fullScreen = settings.getBoolean("minecraft.fullscreen");
 
 
             ramSize = settings.getInteger("minecraft.memory");
@@ -579,16 +577,16 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private void detectCharsetOnWindows() {
-        if(!OS.WINDOWS.isCurrent()) {
+        if (!OS.WINDOWS.isCurrent()) {
             return;
         }
-        if(StringUtils.isAsciiPrintable(gameDir.getAbsolutePath())) {
+        if (StringUtils.isAsciiPrintable(gameDir.getAbsolutePath())) {
             LOGGER.debug("Path to the game directory only contains ASCII characters.");
             LOGGER.debug("I reckon it's fine to use standard UTF-8");
             return;
         }
         String systemCharsetName = System.getProperty("tlauncher.systemCharset");
-        if(systemCharsetName == null) {
+        if (systemCharsetName == null) {
             LOGGER.warn("System charset is unknown");
             detectUsingCharsetDetectTool();
         } else {
@@ -600,7 +598,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         Charset charset;
         try {
             charset = Charset.forName(systemCharsetName);
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             LOGGER.warn("Couldn't find charset {}. It was passed as a system charset.", systemCharsetName, rE);
             Sentry.capture(new EventBuilder()
                     .withLevel(Event.Level.ERROR)
@@ -620,11 +618,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         } catch (ExecutionException | TimeoutException e) {
             LOGGER.warn("Couldn't detect system charset using {} tool",
                     CharsetDetect.class.getSimpleName(), e);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't detect system charset")
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
+            if (!(e instanceof TimeoutException)) {
+                Sentry.capture(new EventBuilder()
+                        .withLevel(Event.Level.ERROR)
+                        .withMessage("couldn't detect system charset")
+                        .withSentryInterface(new ExceptionInterface(e))
+                );
+            }
             return;
         } catch (InterruptedException interruptedException) {
             throw new MinecraftLauncherAborted(interruptedException);
@@ -658,20 +658,20 @@ public class MinecraftLauncher implements JavaProcessListener {
         final List<AssetIndex.AssetObject> assets1 = compareAssets(fastCompare);
 
         DownloadableContainer jreContainer = null;
-        if(jreType instanceof JavaManagerConfig.Recommended) {
+        if (jreType instanceof JavaManagerConfig.Recommended) {
             CompleteVersion.JavaVersion javaVersion = version.getJavaVersion();
-            if(javaVersion == null) {
+            if (javaVersion == null) {
                 LOGGER.debug("Current Minecraft version doesn't have JRE requirements");
                 javaVersion = javaManager.getFallbackRecommendedVersion(version, true);
-                if(javaVersion != null) {
+                if (javaVersion != null) {
                     LOGGER.debug("Will use fallback recommended version: {}", javaVersion);
                 }
             }
-            if(JavaPlatform.CURRENT_PLATFORM == null) {
+            if (JavaPlatform.CURRENT_PLATFORM == null) {
                 LOGGER.warn("Current platform is unsupported");
                 jreType = new JavaManagerConfig.Current();
-                Alert.showWarning("", Localizable.get("launcher.warning.jre-platform-unsupported"));
-            } else if(javaVersion == null) {
+                Alert.showWarning("", Localizable.get("launcher.warning.jre-platform-unknown"));
+            } else if (javaVersion == null) {
                 jreType = new JavaManagerConfig.Current();
             } else {
                 String jreName = javaVersion.getComponent();
@@ -683,22 +683,25 @@ public class MinecraftLauncher implements JavaProcessListener {
                     throw new MinecraftLauncherAborted(interruptedException);
                 }
                 // reinstall JRE if forceUpdate is checked, but ignore it if version has override
-                if(latestLocalOpt.isPresent() && (latestLocalOpt.get().hasOverride() || !forceUpdate)) {
+                if (latestLocalOpt.isPresent() && (latestLocalOpt.get().hasOverride() || !forceUpdate)) {
                     LOGGER.debug("Latest version of required JRE is installed");
                     jreExec = latestLocalOpt.get().getExecutableFile().getAbsolutePath();
                 } else {
                     LOGGER.debug("Will install required JRE");
                     Optional<JavaRuntimeRemote> remoteRuntimeOpt;
+                    boolean runtimeNotSupported;
                     try {
                         remoteRuntimeOpt = javaManager.getFetcher().fetchNow()
                                 .getCurrentPlatformLatestRuntime(jreName);
+                        runtimeNotSupported = !remoteRuntimeOpt.isPresent(); // not present in the manifest
                     } catch (ExecutionException e) {
                         LOGGER.error("Couldn't fetch remote JRE list", e);
                         remoteRuntimeOpt = Optional.empty();
+                        runtimeNotSupported = false; // manifest is not available
                     } catch (InterruptedException interruptedException) {
                         throw new MinecraftLauncherAborted(interruptedException);
                     }
-                    if(remoteRuntimeOpt.isPresent()) {
+                    if (remoteRuntimeOpt.isPresent()) {
                         JavaRuntimeRemote remoteRuntime = remoteRuntimeOpt.get();
                         File javaRootDir = javaManager.getDiscoverer().getRootDir();
                         try {
@@ -708,13 +711,13 @@ public class MinecraftLauncher implements JavaProcessListener {
                                         Localizable.get("launcher.warning.jre-will-take-remaining-space",
                                                 remoteRuntime.getManifest().countBytes() / 1024L / 1024L)
                                 );
-                                if(!continueWithoutInstallation) {
+                                if (!continueWithoutInstallation) {
                                     throw new MinecraftLauncherAborted("JRE will take up all remaining space");
                                 }
                             }
                             downloader.add(jreContainer = javaManager.installVersionNow(remoteRuntime, javaRootDir, forceUpdate));
                             jreExec = remoteRuntime.toLocal(javaRootDir).getExecutableFile().getAbsolutePath();
-                        } catch(ExecutionException e) {
+                        } catch (ExecutionException e) {
                             LOGGER.warn("Couldn't fetch manifest", e);
                             Sentry.capture(new EventBuilder()
                                     .withLevel(Event.Level.WARNING)
@@ -724,9 +727,9 @@ public class MinecraftLauncher implements JavaProcessListener {
                                     .withExtra("version", versionName)
                             );
                             Optional<JavaRuntimeLocal> localRuntimeOpt = javaManager.getDiscoverer().getCurrentPlatformRuntime(jreName);
-                            if(localRuntimeOpt.isPresent()) {
+                            if (localRuntimeOpt.isPresent()) {
                                 LOGGER.info("But local JRE is found. Will use it instead.");
-                                if(Alert.showQuestion("", Localizable.get("launcher.warning.jre-manifest-unavailable.use-local"))) {
+                                if (Alert.showQuestion("", Localizable.get("launcher.warning.jre-manifest-unavailable.use-local"))) {
                                     JavaRuntimeLocal localRuntime = localRuntimeOpt.get();
                                     LOGGER.info("We can continue with the local JRE: {}", localRuntime);
                                     jreExec = localRuntime.getWorkingDirectory().getAbsolutePath();
@@ -735,19 +738,26 @@ public class MinecraftLauncher implements JavaProcessListener {
                                 }
                             } else {
                                 LOGGER.info("But local JRE is not found");
-                                if(Alert.showQuestion("", Localizable.get("launcher.warning.jre-manifest-unavailable.use-current"))) {
+                                if (Alert.showQuestion("", Localizable.get("launcher.warning.jre-manifest-unavailable.use-current"))) {
                                     LOGGER.info("We can continue with the current JRE");
                                     jreType = new JavaManagerConfig.Current();
                                 } else {
                                     throw new MinecraftLauncherAborted("Couldn't fetch jre");
                                 }
                             }
-                        } catch(InterruptedException e) {
+                        } catch (InterruptedException e) {
                             throw new MinecraftLauncherAborted("interrupted while waiting for manifest");
                         }
                     } else {
-                        LOGGER.warn("Couldn't find required JRE");
-                        if(Alert.showQuestion("", Localizable.get("launcher.warning.jre-not-found"))) {
+                        String path;
+                        if (runtimeNotSupported) {
+                            LOGGER.warn("Runtime is not found. This platform is probably not supported.");
+                            path = "jre-platform-unsupported";
+                        } else {
+                            LOGGER.warn("Couldn't find required JRE");
+                            path = "jre-not-found";
+                        }
+                        if (Alert.showQuestion("", Localizable.get("launcher.warning." + path))) {
                             LOGGER.info("User selected to fall back to current JRE");
                             jreType = new JavaManagerConfig.Current();
                         } else {
@@ -758,11 +768,11 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
 
-        if(jreType instanceof JavaManagerConfig.Custom) {
+        if (jreType instanceof JavaManagerConfig.Custom) {
             jreExec = ((JavaManagerConfig.Custom) jreType).getPath().orElse(OS.getJavaPath());
         }
 
-        if(jreType instanceof JavaManagerConfig.Current) {
+        if (jreType instanceof JavaManagerConfig.Current) {
             jreExec = OS.getJavaPath();
         }
 
@@ -792,7 +802,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         downloader.startDownloadAndWait();
         if (versionContainer.isAborted() || (jreContainer != null && jreContainer.isAborted())) {
-            throw new MinecraftLauncher.MinecraftLauncherAborted(new AbortedDownloadException());
+            throw new MinecraftLauncherAborted(new AbortedDownloadException());
         } else if (!versionContainer.getErrors().isEmpty() || (jreContainer != null && !jreContainer.getErrors().isEmpty())) {
             throw new MinecraftException(false, "Cannot download all required files", "download");
         } else {
@@ -864,7 +874,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
 
         if (!isLauncher) {
-            Set<NBTServer> exisingServerList = null, nbtServerList = new LinkedHashSet<>();
+            Set<NBTServer> exisingServerList, nbtServerList = new LinkedHashSet<>();
             try {
                 File file = new File(gameDir, "servers.dat");
                 if (file.isFile()) {
@@ -1094,11 +1104,11 @@ public class MinecraftLauncher implements JavaProcessListener {
         }*/
 
         Library log4jLibrary = findLog4j2Library();
-        if(log4jLibrary == null) {
+        if (log4jLibrary == null) {
             LOGGER.info("Version doesn't use log4j2 library");
         } else {
             Log4jVersion log4jVersion = parseLog4jVersion(log4jLibrary);
-            if(log4jVersion != null && log4jVersion.major != 2) {
+            if (log4jVersion != null && log4jVersion.major != 2) {
                 LOGGER.info("Log4j version is not 2.x.x, it's {}", log4jVersion);
             } else {
                 int minor = log4jVersion == null ? 0 : log4jVersion.minor;
@@ -1112,7 +1122,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                         jvmArgs.add("-Dlog4j2.formatMsgNoLookups=true");
                     } else {
                         String patchedLog4j2ConfigVariant;
-                        if(minor >= 7) {
+                        if (minor >= 7) {
                             // 2.7.0+
                             patchedLog4j2ConfigVariant = "7";
                         } else {
@@ -1127,7 +1137,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                         LOGGER.debug("Log4j2 configuration file: {}", patchedLogFilePath);
                         jvmArgs.add("-Dlog4j.configurationFile=" + patchedLogFilePath);
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     LOGGER.warn("Vulnerable logging configuration patch failure", e);
                     Sentry.capture(new EventBuilder()
                             .withLevel(Event.Level.WARNING)
@@ -1151,7 +1161,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         if (!isLauncher && server != null) {
             programArgs.addAll(Arrays.asList("--server", server.getAddress()));
-            if(server.getPort() != Server.DEFAULT_PORT) {
+            if (server.getPort() != Server.DEFAULT_PORT) {
                 programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
             }
         }
@@ -1233,8 +1243,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         File[] files = new File(gameDir, "mods").listFiles(file ->
                 file.isFile()
                         && Arrays.stream(names).anyMatch(
-                                file.getName().toLowerCase(Locale.ROOT)::matches
-                        )
+                        file.getName().toLowerCase(Locale.ROOT)::matches
+                )
         );
 
         if (files == null) return;
@@ -1246,9 +1256,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }
 
-    private File reconstructAssets() throws IOException, MinecraftException {
+    private File reconstructAssets() throws IOException {
         String assetVersion = version.getAssetIndex().getId();
-        if(assetVersion == null) {
+        if (assetVersion == null) {
             LOGGER.warn("Asset version is unknown");
             assetVersion = "unknown";
         }
@@ -1259,7 +1269,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         } else {
             AssetIndex index;
             try {
-                index = U.requireNotNull(gson.fromJson(new FileReader(indexFile), AssetIndex.class), "json response");
+                index = Objects.requireNonNull(gson.fromJson(new FileReader(indexFile), AssetIndex.class), "json response");
             } catch (Exception var9) {
                 LOGGER.warn("Couldn't read index file", var9);
                 return virtualRoot;
@@ -1288,7 +1298,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                     }
                 }
 
-                    FileUtil.writeFile(new File(virtualRoot, ".lastused"), dateAdapter.format(new Date()));
+                FileUtil.writeFile(new File(virtualRoot, ".lastused"), dateAdapter.format(new Date()));
             }
 
         }
@@ -1298,77 +1308,48 @@ public class MinecraftLauncher implements JavaProcessListener {
     private void unpackNatives(boolean force) throws IOException {
         LOGGER.info("Unpacking natives...");
         Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
-        OS os = OS.CURRENT;
-        ZipFile zip = null;
+
         if (force) {
             nativeDir.delete();
         }
 
-        Iterator<Library> var7 = libraries.iterator();
+        for (Library library : libraries) {
+            Map<OS, String> nativesPerOs = library.getNatives();
+            if (nativesPerOs == null) continue;
+            String natives = nativesPerOs.get(OS.CURRENT);
+            if (natives == null) continue;
 
-        label79:
-        while (true) {
-            Library library;
-            Map<OS, String> nativesPerOs;
-            do {
-                do {
-                    if (!var7.hasNext()) {
-                        return;
-                    }
-
-                    library = var7.next();
-                    nativesPerOs = library.getNatives();
-                } while (nativesPerOs == null);
-            } while (nativesPerOs.get(os) == null);
-
-            File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String) nativesPerOs.get(os)));
+            File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath(natives));
             if (!file.isFile()) {
                 throw new IOException("Required archive doesn't exist: " + file.getAbsolutePath());
             }
 
+            ExtractRules extractRules = library.getExtractRules();
+
+            if (extractRules == null) continue;
+
+            ZipFile zip;
             try {
                 zip = new ZipFile(file);
             } catch (IOException var18) {
                 throw new IOException("Error opening ZIP archive: " + file.getAbsolutePath(), var18);
             }
 
-            ExtractRules extractRules = library.getExtractRules();
-            Enumeration entries = zip.entries();
-
-            while (true) {
-                ZipEntry entry;
-                File targetFile;
-                do {
-                    do {
-                        do {
-                            if (!entries.hasMoreElements()) {
-                                zip.close();
-                                continue label79;
-                            }
-
-                            entry = (ZipEntry) entries.nextElement();
-                        } while (extractRules != null && !extractRules.shouldExtract(entry.getName()));
-
-                        targetFile = new File(nativeDir, entry.getName());
-                    } while (!force && targetFile.isFile());
-
-                    if (targetFile.getParentFile() != null) {
-                        targetFile.getParentFile().mkdirs();
+            try {
+                Enumeration<? extends ZipEntry> entries = zip.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    if (!extractRules.shouldExtract(entry.getName())) continue;
+                    File targetFile = new File(nativeDir, entry.getName());
+                    if (!force && targetFile.isFile()) continue;
+                    targetFile.getParentFile().mkdirs();
+                    try (InputStream input = zip.getInputStream(entry);
+                         OutputStream output = new FileOutputStream(targetFile)) {
+                        IOUtils.copy(input, output);
                     }
-                } while (entry.isDirectory());
-
-                BufferedInputStream inputStream = new BufferedInputStream(zip.getInputStream(entry));
-                byte[] buffer = new byte[2048];
-                FileOutputStream outputStream = new FileOutputStream(targetFile);
-                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-
-                int length;
-                while ((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
-                    bufferedOutputStream.write(buffer, 0, length);
                 }
-
-                inputStream.close();
-                bufferedOutputStream.close();
+            } finally {
+                zip.close();
             }
         }
     }
@@ -1415,7 +1396,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         return result.toString();
     }
 
-    private void fixForNewerVersions() throws MinecraftException {
+    private void fixForNewerVersions() {
         boolean needSave = false;
         if (version.getMinecraftArguments() != null && version.hasModernArguments()) {
             deJureVersion.setMinecraftArguments(null);
@@ -1487,27 +1468,28 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }
 
-    private static final String[] ARGS_LEGACY_REMOVED = new String[]{
+    private static final List<String> ARGS_LEGACY_REMOVED = Collections.unmodifiableList(Arrays.asList(
             "--width", "${resolution_width}", "--height", "${resolution_height}"
-    };
+    ));
 
-    private static final String[] ARGS_CENSORED = new String[]{
+    private static final List<String> ARGS_CENSORED = Collections.singletonList(
             "--accessToken"
-    };
+    );
 
-    private static final String[] CENSORED = new String[]{
+    private static final List<String> CENSORED = Collections.unmodifiableList(Arrays.asList(
             "not for you", "censored", "nothinginteresting", "boiiiiiiiiii",
             "Minecraft is a lie", "vk.cc/7iPiB9", "worp-worp"
-    };
+    ));
 
     private static final int BLACKLIST_MODE_REMOVE = 0, BLACKLIST_MODE_CENSOR = 1;
 
-    private String joinList(List<String> l, String[] blackList, int blacklistMode) {
+    private String joinList(Collection<String> l, Collection<String> blackList, int blacklistMode) {
         StringBuilder b = new StringBuilder();
         Iterator<String> i = l.iterator();
         while (i.hasNext()) {
             String arg = i.next();
-            if (U.find(arg, blackList) == -1) {
+
+            if (!blackList.contains(arg)) {
                 b.append(' ').append(arg);
             } else {
                 if (blacklistMode == BLACKLIST_MODE_CENSOR) {
@@ -1570,7 +1552,6 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void addCMSOptimizedArguments(List<String> args) {
         args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-        args.add("-XX:-UseParallelGC"); // disable Parallel GC
         args.add("-XX:+UseConcMarkSweepGC"); // enable CMS
         args.add("-XX:-UseAdaptiveSizePolicy");
         args.add("-XX:+CMSParallelRemarkEnabled");
@@ -1581,7 +1562,6 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void addG1OptimizedArguments(List<String> args) {
         args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
-        args.add("-XX:-UseParallelGC"); // disable old GCs
         args.add("-XX:+UseG1GC"); // enable G1
         args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
         args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
@@ -1595,15 +1575,13 @@ public class MinecraftLauncher implements JavaProcessListener {
     private void addZGCOptimizedArguments(List<String> args) {
         // https://github.com/Obydux/MC-ZGC-Flags
         args.add("-XX:+UnlockExperimentalVMOptions");
-        args.add("-XX:-UseParallelGC"); // disable old GCs
-        args.add("-XX:-UseG1GC");
         args.add("-XX:+UseZGC"); // enable ZGC
         args.add("-XX:-ZUncommit"); // Unstable feature, disable
         args.add("-XX:ZCollectionInterval=5");
         args.add("-XX:ZAllocationSpikeTolerance=2.0");
         args.add("-XX:+AlwaysPreTouch"); // AlwaysPreTouch gets the memory setup and reserved at process start ensuring
-                                         // it is contiguous, improving the efficiency of it more. This improves
-                                         // the operating systems memory access speed. Mandatory to use Transparent Huge Pages
+        // it is contiguous, improving the efficiency of it more. This improves
+        // the operating systems memory access speed. Mandatory to use Transparent Huge Pages
         args.add("-XX:+ParallelRefProcEnabled"); // Optimizes the GC process to use multiple threads for weak reference checking
         args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
     }
@@ -1612,21 +1590,25 @@ public class MinecraftLauncher implements JavaProcessListener {
         int jreMajorVersion = getJreMajorVersion();
 
         // Consider any unknown Java as Java 8
-        if(jreMajorVersion == 0) {
+        if (jreMajorVersion == 0) {
             jreMajorVersion = 8;
         }
 
         // I want Kotlin's when {}
         // Is enough power and Java 15+ => ZGC
         // ZGC requires A LOT of heap on start
-        if (jreMajorVersion >= 15 && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192) {
+        if (
+                (!OS.WINDOWS.isCurrent() || OS.VERSION.startsWith("1"))
+                        && jreMajorVersion >= 15
+                        && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192
+        ) {
             addZGCOptimizedArguments(args);
             return;
         }
 
         // Is enough power and Java 8+ => G1
         // Java 11+ => G1 for all PCs
-        if(jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
+        if (jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
             addG1OptimizedArguments(args);
             return;
         }
@@ -1660,7 +1642,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private AssetsManager.ResourceChecker resourceChecker;
 
-    private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) throws MinecraftException {
+    private List<AssetIndex.AssetObject> compareAssets(boolean fastCompare) {
         if (version.getAssetIndex() != null && "none".equals(version.getAssetIndex().getId())) {
             LOGGER.info("Assets comparison skipped");
             return null;
@@ -1689,12 +1671,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                     if (showTimerWarning && object == lastObject) {
                         if (++timer == 10) {
                             LOGGER.warn("We're checking this object for too long: {}", object);
-                            AsyncThread.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Alert.showLocWarning("launcher.warning.assets.long");
-                                }
-                            });
+                            AsyncThread.execute(() -> Alert.showLocWarning("launcher.warning.assets.long"));
                             showTimerWarning = false;
                         }
                     } else {
@@ -1726,7 +1703,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
         File serverResourcePacksFolder = new File(gameDir, "server-resource-packs");
         if (serverResourcePacksFolder.isDirectory()) {
-            File[] files = U.requireNotNull(serverResourcePacksFolder.listFiles(), "files of " + serverResourcePacksFolder.getAbsolutePath());
+            File[] files = Objects.requireNonNull(serverResourcePacksFolder.listFiles(), "files of " + serverResourcePacksFolder.getAbsolutePath());
             for (File file : files) {
                 if (file.length() == 0) {
                     FileUtil.deleteFile(file);
@@ -1738,10 +1715,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void launchMinecraft() throws MinecraftException {
         checkStep(MinecraftLauncher.MinecraftLauncherStep.CONSTRUCTING, MinecraftLauncher.MinecraftLauncherStep.LAUNCHING);
-        Iterator var2 = listeners.iterator();
 
-        while (var2.hasNext()) {
-            MinecraftListener e = (MinecraftListener) var2.next();
+        for (MinecraftListener e : listeners) {
             e.onMinecraftLaunch();
         }
 
@@ -1768,7 +1743,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             ProcessBuilder b = launcher.createProcess();
             Map<String, String> env = b.environment();
             LOGGER.debug("Found global _JAVA_OPTIONS=\"" + Optional.ofNullable(System.getenv("_JAVA_OPTIONS")).orElse("null") + "\"");
-            if(env != null) {
+            if (env != null) {
                 Optional<String> old = Optional.ofNullable(env.put("_JAVA_OPTIONS", ""));
                 LOGGER.debug("Replaced process _JAVA_OPTIONS=\"" + old.orElse("null") + "\" with nothing");
             }
@@ -1795,9 +1770,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         checkStep(MinecraftLauncher.MinecraftLauncherStep.LAUNCHING, MinecraftLauncher.MinecraftLauncherStep.POSTLAUNCH);
         LOGGER.info("Post-launch actions are proceeding");
 
-        Iterator var2 = extListeners.iterator();
-        while (var2.hasNext()) {
-            MinecraftExtendedListener listener = (MinecraftExtendedListener) var2.next();
+        for (MinecraftExtendedListener listener : extListeners) {
             listener.onMinecraftPostLaunch();
         }
 
@@ -1848,7 +1821,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void checkAborted() {
         if (!working) {
-            throw new MinecraftLauncher.MinecraftLauncherAborted("Aborted at step: " + step);
+            throw new MinecraftLauncherAborted("Aborted at step: " + step);
         }
     }
 
@@ -1865,6 +1838,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     // PrintStreamType -> Marker
     private static final Marker[] MARKERS;
+
     static {
         PrintStreamType[] types = PrintStreamType.values();
         Validate.isTrue(types.length == 2,
@@ -1883,7 +1857,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             We don't know (yet) if there's *anything* in STDERR that
             CrashManager can make use of.
          */
-        if(processLogger != null && streamType == PrintStreamType.OUT) {
+        if (processLogger != null && streamType == PrintStreamType.OUT) {
             processLogger.log(line);
         }
     }
@@ -1894,10 +1868,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         int exit = jp.getExitCode();
 
-        LOGGER.info("Child process closed with exit code: {} ({})",exit, "0x" + Integer.toHexString(exit));
+        LOGGER.info("Child process closed with exit code: {} ({})", exit, "0x" + Integer.toHexString(exit));
         exitCode = exit;
 
-        if(processLogger != null) {
+        if (processLogger != null) {
             try {
                 processLogger.close();
             } catch (IOException e) {
@@ -1906,7 +1880,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         if (settings.getBoolean("minecraft.crash") && !killed && (System.currentTimeMillis() - startupTime < MIN_WORK_TIME || exit != 0)) {
-            crashManager = new CrashManager(this);
+            CrashManager crashManager = new CrashManager(this);
 
             for (MinecraftListener listener : listeners) {
                 listener.onCrashManagerInit(crashManager);
@@ -1926,10 +1900,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     public void onJavaProcessError(JavaProcess jp, Throwable e) {
         notifyClose();
-        Iterator var4 = listeners.iterator();
 
-        while (var4.hasNext()) {
-            MinecraftListener listener = (MinecraftListener) var4.next();
+        for (MinecraftListener listener : listeners) {
             listener.onMinecraftError(e);
         }
 
@@ -1939,10 +1911,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         while (minecraftWorking) {
             try {
                 wait();
-            } catch (InterruptedException var2) {
+            } catch (InterruptedException ignored) {
             }
         }
-
     }
 
     private synchronized void notifyClose() {
@@ -1955,10 +1926,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         notifyAll();
-        Iterator var2 = listeners.iterator();
 
-        while (var2.hasNext()) {
-            MinecraftListener listener = (MinecraftListener) var2.next();
+        for (MinecraftListener listener : listeners) {
             listener.onMinecraftClose();
         }
 
@@ -2089,7 +2058,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private JavaVersion javaVersion;
 
     private int getJreMajorVersion() throws MinecraftLauncherAborted {
-        if(javaVersion == null) {
+        if (javaVersion == null) {
             if (jreType instanceof JavaManagerConfig.Current) {
                 javaVersion = OS.JAVA_VERSION;
             } else {
@@ -2122,7 +2091,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         final Pattern log4jVersionPattern = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?:-.+)?");
         String libraryVersion = log4jLibrary.getName().substring(LOG4J_CORE.length());
         Matcher matcher = log4jVersionPattern.matcher(libraryVersion);
-        if(matcher.matches()) {
+        if (matcher.matches()) {
             int major = Integer.parseInt(matcher.group("major"));
             int minor = Integer.parseInt(matcher.group("minor"));
             return new Log4jVersion(major, minor);
@@ -2137,8 +2106,8 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private static class Log4jVersion {
-        int major;
-        int minor;
+        final int major;
+        final int minor;
 
         public Log4jVersion(int major, int minor) {
             this.major = major;
@@ -2153,14 +2122,14 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private String savePatchedConfiguration(File logConfigsDir, String variant) throws IOException {
         InputStream loggingFileStream = getClass().getResourceAsStream("logging/log4j2-" + variant + ".xml");
-        if(loggingFileStream == null) {
+        if (loggingFileStream == null) {
             throw new IOException("patched logging file not found: " + variant);
         }
         File file = new File(logConfigsDir, "patched-variant-2." + variant + ".xml");
-        try(FileOutputStream outputStream = new FileOutputStream(file)) {
+        try (FileOutputStream outputStream = new FileOutputStream(file)) {
             IOUtils.copy(loggingFileStream, outputStream);
         } finally {
-            U.close(loggingFileStream);
+            loggingFileStream.close();
         }
         return file.getAbsolutePath();
     }
@@ -2171,7 +2140,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         NONE
     }
 
-    class MinecraftLauncherAborted extends RuntimeException {
+    static class MinecraftLauncherAborted extends RuntimeException {
         MinecraftLauncherAborted(String message) {
             super(message);
         }

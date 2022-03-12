@@ -64,7 +64,7 @@ public class MainPane extends ExtendedLayeredPane {
                 scene.onResize();
                 scene.list.updateList();
 
-                Account selected = scene.list.getSelected();
+                Account<?> selected = scene.list.getSelected();
                 if (selected != null) {
                     MainPane.this.defaultScene.loginForm.accounts.setAccount(selected);
                 }
@@ -273,10 +273,10 @@ public class MainPane extends ExtendedLayeredPane {
     }
 
     public void onResize() {
-        if(progress.isLoaded()) {
+        if (progress.isLoaded()) {
             progress.get().setBounds(0, getHeight() - ProgressBar.DEFAULT_HEIGHT + 1, getWidth(), ProgressBar.DEFAULT_HEIGHT);
         }
-        if(revertFont.isLoaded()) {
+        if (revertFont.isLoaded()) {
             revertFont.get().setBounds(0, 0, getWidth(), getFontMetrics(revertFont.get().revertButton.getFont()).getHeight() * 3);
         }
         //service.onResize();
@@ -298,7 +298,6 @@ public class MainPane extends ExtendedLayeredPane {
 
     public class RevertFontSize extends ExtendedPanel implements LocalizableComponent {
         private final LocalizableButton revertButton, closeButton;
-        private final float oldSize;
         private final int oldSizeInt;
 
         private RevertFontSize() {
@@ -307,7 +306,7 @@ public class MainPane extends ExtendedLayeredPane {
             if (size < TLauncherFrame.minFontSize || size > TLauncherFrame.maxFontSize)
                 size = TLauncherFrame.maxFontSize;
 
-            oldSize = size;
+            float oldSize = size;
             oldSizeInt = (int) size;
 
             revertButton = new LocalizableButton("revert.font.approve");
@@ -327,13 +326,10 @@ public class MainPane extends ExtendedLayeredPane {
             closeButton = new LocalizableButton("revert.font.close");
             closeButton.setToolTipText("revert.font.close.hint");
             closeButton.setFont(closeButton.getFont().deriveFont(Font.BOLD, size));
-            closeButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    rootFrame.getConfiguration().set("gui.font.old", rootFrame.getConfiguration().getInteger("gui.font"));
-                    MainPane.this.remove(RevertFontSize.this);
-                    MainPane.this.repaint();
-                }
+            closeButton.addActionListener(e -> {
+                rootFrame.getConfiguration().set("gui.font.old", rootFrame.getConfiguration().getInteger("gui.font"));
+                MainPane.this.remove(RevertFontSize.this);
+                MainPane.this.repaint();
             });
 
             add(revertButton, closeButton);

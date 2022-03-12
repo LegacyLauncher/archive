@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.notice;
 
-import ru.turikhay.util.Factory;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.WeakObjectPool;
 
@@ -9,12 +8,7 @@ import java.util.function.Supplier;
 
 class SizeCalculator implements Supplier<Dimension> {
     private static final int MIN_WIDTH = 300, MIN_HEIGHT = 48, MAX_WIDTH = 450;
-    private static final WeakObjectPool<NoticeEditorPane> editorPanePool = new WeakObjectPool<NoticeEditorPane>(new Factory<NoticeEditorPane>() {
-        @Override
-        public NoticeEditorPane createNew() {
-            return new NoticeEditorPane();
-        }
-    });
+    private static final WeakObjectPool<NoticeEditorPane> editorPanePool = new WeakObjectPool<>(NoticeEditorPane::new);
 
     private final Notice notice;
     private final ParamPair param;
@@ -26,11 +20,11 @@ class SizeCalculator implements Supplier<Dimension> {
 
     @Override
     public Dimension get() {
-        WeakObjectPool<NoticeEditorPane>.ObjectRef<NoticeEditorPane> ref = editorPanePool.get();
+        WeakObjectPool.ObjectRef<NoticeEditorPane> ref = editorPanePool.get();
         try {
             final NoticeEditorPane pane = ref.get();
             pane.setNotice(notice, param);
-            if(param.width > 0) {
+            if (param.width > 0) {
                 return pane.calcPreferredSize(param.width);
             } else {
                 return pane.calcPreferredSize(SwingUtil.magnify(MIN_HEIGHT), SwingUtil.magnify(MIN_WIDTH), SwingUtil.magnify(MAX_WIDTH));

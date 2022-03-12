@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
  * Таск, который не заставляет пользователя (очень долго) ждать результатов другого таска.
  * Если {@link #reportTask} идёт слишком долго, то просто бросаем {@link TimeoutException}
  * и продолжаем работу.
- *
+ * <p>
  * В этом таске время тайм-аутов всегда идёт относительно начала другого таска:
  * если кто-то вызовет {@link Future#get(long, TimeUnit)}, то мы не будем ждать каждый раз заново.
  * Максимум 2 минуты (по умолчанию).
@@ -40,7 +40,7 @@ class TimeLimitedTask implements Callable<DxDiagReport> {
     public DxDiagReport call() throws Exception {
         try {
             return reportTask.get(timeout, timeUnit);
-        } catch(TimeoutException timeoutException) {
+        } catch (TimeoutException timeoutException) {
             LOGGER.warn("DxDiag did not complete in {} seconds", timeUnit.toSeconds(timeout));
             throw timeoutException;
         }

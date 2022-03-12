@@ -25,12 +25,10 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Iterator;
 
 public class TLauncherFrame extends JFrame {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(TLauncherFrame.class);
@@ -84,6 +82,7 @@ public class TLauncherFrame extends JFrame {
             public void windowIconified(WindowEvent e) {
                 mp.background.pauseBackground();
             }
+
             @Override
             public void windowDeiconified(WindowEvent e) {
                 mp.background.startBackground();
@@ -99,45 +98,42 @@ public class TLauncherFrame extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                feedback:
-                {
-                    if (!settings.getBoolean("feedback") && tlauncher.getBootConfig().getFeedback() != null) {
-                        String url;
-                        if (tlauncher.getBootConfig().getFeedback().containsKey(tlauncher.getSettings().getLocale().toString())) {
-                            url = tlauncher.getBootConfig().getFeedback().get(tlauncher.getSettings().getLocale().toString());
-                        } else if (tlauncher.getBootConfig().getFeedback().containsKey("global")) {
-                            url = tlauncher.getBootConfig().getFeedback().get("global");
-                        } else {
-                            break feedback;
-                        }
-                        settings.set("feedback", true);
-                        new FeedbackFrame(TLauncherFrame.this, url);
+                if (!settings.getBoolean("feedback") && tlauncher.getBootConfig().getFeedback() != null) {
+                    String url;
+                    if (tlauncher.getBootConfig().getFeedback().containsKey(tlauncher.getSettings().getLocale().toString())) {
+                        url = tlauncher.getBootConfig().getFeedback().get(tlauncher.getSettings().getLocale().toString());
+                    } else if (tlauncher.getBootConfig().getFeedback().containsKey("global")) {
+                        url = tlauncher.getBootConfig().getFeedback().get("global");
+                    } else {
+                        instance.setVisible(false);
+                        TLauncher.kill();
                         return;
                     }
+                    settings.set("feedback", true);
+                    new FeedbackFrame(TLauncherFrame.this, url);
                 }
-                instance.setVisible(false);
-                TLauncher.kill();
             }
         });
         addComponentListener(new ExtendedComponentAdapter(this) {
             public void onComponentResized(ComponentEvent e) {
                 updateMaxPoint();
                 Dragger.update();
-                if(mp != null && mp.defaultScene != null) {
+                if (mp != null && mp.defaultScene != null) {
                     boolean lock = getExtendedState() != 0;
                     IntegerArray arr = new IntegerArray(getWidth(), getHeight());
-                    if(mp.defaultScene.settingsForm.isLoaded()) {
+                    if (mp.defaultScene.settingsForm.isLoaded()) {
                         Blocker.setBlocked(mp.defaultScene.settingsForm.get().launcherResolution, "extended", lock);
                         if (!lock) {
                             mp.defaultScene.settingsForm.get().launcherResolution.setValue(arr);
                         }
                     }
-                    if(!lock) {
+                    if (!lock) {
                         settings.set("gui.size", arr);
                     }
                 }
             }
 
+            @Override
             public void componentShown(ComponentEvent e) {
                 instance.validate();
                 instance.repaint();
@@ -145,16 +141,15 @@ public class TLauncherFrame extends JFrame {
                 mp.background.startBackground();
             }
 
+            @Override
             public void componentHidden(ComponentEvent e) {
                 mp.background.pauseBackground();
             }
         });
-        addWindowStateListener(new WindowStateListener() {
-            public void windowStateChanged(WindowEvent e) {
-                int newState = TLauncherFrame.getExtendedStateFor(e.getNewState());
-                if (newState != -1) {
-                    settings.set("gui.window", newState);
-                }
+        addWindowStateListener(e -> {
+            int newState = TLauncherFrame.getExtendedStateFor(e.getNewState());
+            if (newState != -1) {
+                settings.set("gui.window", newState);
             }
         });
         notices = new NoticeManager(this, t.getBootConfig());
@@ -173,20 +168,17 @@ public class TLauncherFrame extends JFrame {
             setWindowTitle();
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    setVisible(true);
-                } catch(RuntimeException rE) {
-                    LOGGER.warn("Hidden exception on setVisible(true)", rE);
-                }
-                int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
-                if (windowState == 0) {
-                    setLocationRelativeTo(null);
-                } else {
-                    setExtendedState(windowState);
-                }
+        SwingUtilities.invokeLater(() -> {
+            try {
+                setVisible(true);
+            } catch (RuntimeException rE) {
+                LOGGER.warn("Hidden exception on setVisible(true)", rE);
+            }
+            int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
+            if (windowState == 0) {
+                setLocationRelativeTo(null);
+            } else {
+                setExtendedState(windowState);
             }
         });
 
@@ -270,21 +262,21 @@ public class TLauncherFrame extends JFrame {
     }
 
     private void setWindowSize() {
-        int width = windowSize[0] > maxSize.width ? maxSize.width : windowSize[0];
-        int height = windowSize[1] > maxSize.height ? maxSize.height : windowSize[1];
+        int width = Math.min(windowSize[0], maxSize.width);
+        int height = Math.min(windowSize[1], maxSize.height);
         Dimension curSize = new Dimension(width, height);
         setMinimumSize(SwingUtil.magnify(minSize));
         setPreferredSize(curSize);
     }
 
     private void setupUI() {
-        if(OS.WINDOWS.isCurrent()) {
+        if (OS.WINDOWS.isCurrent()) {
             UIManager.put("FileChooser.useSystemExtensionHiding", false); // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8179014
         }
 
         UIManager.put("FileChooser.newFolderErrorSeparator", ": ");
         UIManager.put("FileChooser.readOnly", Boolean.FALSE);
-        UIManager.put("TabbedPane.contentOpaque", Boolean.valueOf(false));
+        UIManager.put("TabbedPane.contentOpaque", Boolean.FALSE);
         UIManager.put("TabbedPane.contentBorderInsets", new Insets(0, 0, 0, 0));
         UIManager.put("TabbedPane.tabInsets", new Insets(0, 8, 6, 8));
 
@@ -316,10 +308,7 @@ public class TLauncherFrame extends JFrame {
             }
         }
 
-        Iterator var2 = uiConfig.getKeys().iterator();
-
-        while (var2.hasNext()) {
-            String key = (String) var2.next();
+        for (String key : uiConfig.getKeys()) {
             String value = uiConfig.get(key);
             if (value != null) {
                 UIManager.put(key, lang.get(value));

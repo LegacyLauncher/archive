@@ -1,7 +1,9 @@
 package ru.turikhay.tlauncher.repository;
 
+import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.util.EHttpClient;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.U;
@@ -9,35 +11,72 @@ import ru.turikhay.util.U;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class RepositoryProxy {
-    public static final String[] PROXIFIED_HOSTS = new String[]{
+    private static final Logger PROXY_LOGGER = LogManager.getLogger(ProxyRepo.class);
+
+    public static final List<String> PROXIFIED_HOSTS = Collections.unmodifiableList(Arrays.asList(
             "launchermeta.mojang.com",
-            "libraries.minecraft.net"
-    };
-    private static final String[] PROXIES = new String[] {
-            "https://mcproxy.tlauncher.ru/proxy.php?url=",
+            "libraries.minecraft.net",
+            "launcher.mojang.com",
+            "resources.download.minecraft.net"
+    ));
+    private static final List<String> PROXIES = Collections.unmodifiableList(Arrays.asList(
+            "https://mcproxy.tln4.ru/proxy.php?url=",
             "https://mcproxy.tlaun.ch/proxy.php?url="
-    };
+    ));
     private static boolean PROXY_WORKED = false;
 
     public static boolean canBeProxied(URL url) {
-        return Arrays.stream(PROXIFIED_HOSTS).anyMatch(host -> url.getHost().equals(host));
+        return PROXIFIED_HOSTS.stream().anyMatch(host -> url.getHost().equals(host));
+    }
+
+    public static String requestMaybeProxy(String url) throws IOException {
+        List<String> urls = new ArrayList<>();
+        urls.add(url);
+        {
+            URL strictUrl = U.makeURL(url);
+            if (RepositoryProxy.canBeProxied(strictUrl)) {
+                RepositoryProxy.getProxyRepoList().getRelevant().getList().stream()
+                        .filter(r -> r instanceof ProxyRepo)
+                        .map(r -> ((ProxyRepo) r).prefixUrl(strictUrl))
+                        .forEach(urls::add);
+            }
+        }
+        IOException ex = null;
+        for (String currentUrl : urls) {
+            PROXY_LOGGER.debug("Requesting: {}", currentUrl);
+            try {
+                return EHttpClient.toString(Request.Get(currentUrl));
+            } catch (IOException ioE) {
+                PROXY_LOGGER.warn("Couldn't fetch url {}", url, ioE);
+                if (ex == null) {
+                    ex = ioE;
+                } else {
+                    ex.addSuppressed(ioE);
+                }
+            }
+        }
+
+        if (ex != null) {
+            throw ex;
+        } else {
+            throw new IOException("Unable to fetch data over network due to unknown reason");
+        }
     }
 
     private static ProxyRepoList proxyRepoList;
+
     public static ProxyRepoList getProxyRepoList() {
-        if(proxyRepoList == null) {
+        if (proxyRepoList == null) {
             proxyRepoList = new ProxyRepoList();
         }
         return proxyRepoList;
     }
 
     public static class ProxyRepo implements IRepo {
-        private static final Logger LOGGER = LogManager.getLogger(ProxyRepo.class);
+        private static final Logger PROXY_REPO_LOGGER = LogManager.getLogger(ProxyRepo.class);
 
         private final String proxyPrefix;
 
@@ -50,6 +89,10 @@ public class RepositoryProxy {
             return get(path, timeout, proxy, 1);
         }
 
+        public String prefixUrl(URL url) {
+            return proxyPrefix + encodeUrl(url);
+        }
+
         @Override
         public List<String> getHosts() {
             return Collections.singletonList(U.parseHost(proxyPrefix));
@@ -59,22 +102,22 @@ public class RepositoryProxy {
             URL originalUrl = makeHttpUrl(path);
 
             IOException ioE = new IOException("not a first attempt; failed");
-            if(attempt == 1) {
-                LOGGER.debug("First attempt, no proxy: {}", originalUrl);
+            if (attempt == 1) {
+                PROXY_REPO_LOGGER.debug("First attempt, no proxy: {}", originalUrl);
                 try {
                     return openHttpConnection(originalUrl, proxy, timeout);
-                } catch(IOException ioE1) {
+                } catch (IOException ioE1) {
                     ioE = ioE1;
-                    LOGGER.warn("Failed to open connection to {}; error: {}", originalUrl, ioE.toString());
-                    LOGGER.debug(ioE);
+                    PROXY_REPO_LOGGER.warn("Failed to open connection to {}; error: {}", originalUrl, ioE.toString());
+                    PROXY_REPO_LOGGER.debug(ioE);
                 }
             } else {
-                LOGGER.debug("Using proxy: {}", path);
+                PROXY_REPO_LOGGER.debug("Using proxy: {}", path);
             }
 
             boolean accepted = false;
             for (String acceptedHost : PROXIFIED_HOSTS) {
-                if(acceptedHost.equals(originalUrl.getHost())) {
+                if (acceptedHost.equals(originalUrl.getHost())) {
                     accepted = true;
                     break;
                 }
@@ -83,43 +126,43 @@ public class RepositoryProxy {
             String hostIp;
             try {
                 hostIp = InetAddress.getByName(originalUrl.getHost()).getHostAddress();
-            } catch(Exception e) {
+            } catch (Exception e) {
                 hostIp = e.toString();
             }
-            LOGGER.info("Resolved host {}: {}", originalUrl.getHost(), hostIp);
+            PROXY_REPO_LOGGER.info("Resolved host {}: {}", originalUrl.getHost(), hostIp);
 
-            if(!accepted) {
-                LOGGER.warn("Host is not whitelisted to use proxy: {}", originalUrl.getHost());
+            if (!accepted) {
+                PROXY_REPO_LOGGER.warn("Host is not whitelisted to use proxy: {}", originalUrl.getHost());
                 throw ioE;
             }
 
-            String proxyRequestUrl = proxyPrefix + encodeUrl(originalUrl);
-            LOGGER.debug("Proxying request to {}: {}", originalUrl, proxyRequestUrl);
+            String proxyRequestUrl = prefixUrl(originalUrl);
+            PROXY_REPO_LOGGER.debug("Proxying request to {}: {}", originalUrl, proxyRequestUrl);
 
             HttpURLConnection connection;
             try {
                 connection = openHttpConnection(proxyRequestUrl, proxy, timeout);
-            } catch(IOException oneMoreIOE) {
-                LOGGER.error("Proxying request failed! URL: {}", proxyRequestUrl);
+            } catch (IOException oneMoreIOE) {
+                PROXY_REPO_LOGGER.error("Proxying request failed! URL: {}", proxyRequestUrl);
                 throw oneMoreIOE;
             }
 
-            LOGGER.warn("Using proxy ({}) to: {}", connection.getURL().getHost(), originalUrl);
+            PROXY_REPO_LOGGER.warn("Using proxy ({}) to: {}", connection.getURL().getHost(), originalUrl);
 
-            if(!PROXY_WORKED) {
+            if (!PROXY_WORKED) {
                 PROXY_WORKED = true;
             }
 
             return connection;
         }
 
-        private HttpURLConnection openHttpConnection(String path, Proxy proxy, int timeout) throws IOException {
+        private static HttpURLConnection openHttpConnection(String path, Proxy proxy, int timeout) throws IOException {
             HttpURLConnection httpURLConnection = (HttpURLConnection) makeHttpUrl(path).openConnection(proxy);
             setupTimeout(httpURLConnection, timeout);
             return httpURLConnection;
         }
 
-        private HttpURLConnection openHttpConnection(URL url, Proxy proxy, int timeout) throws IOException {
+        private static HttpURLConnection openHttpConnection(URL url, Proxy proxy, int timeout) throws IOException {
             checkHttpUrl(url);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection(proxy);
             setupTimeout(httpURLConnection, timeout);
@@ -131,21 +174,21 @@ public class RepositoryProxy {
             connection.setReadTimeout(timeout);
         }
 
-        private URL makeHttpUrl(String path) throws IOException {
+        private static URL makeHttpUrl(String path) throws IOException {
             StringUtil.requireNotBlank(path, "path");
             URL url = new URL(path);
             checkHttpUrl(url);
             return url;
         }
 
-        private void checkHttpUrl(URL url) {
-            U.requireNotNull(url, "url");
-            if(!url.getProtocol().equals("http") && !url.getProtocol().equals("https")) {
+        private static void checkHttpUrl(URL url) {
+            Objects.requireNonNull(url, "url");
+            if (!url.getProtocol().equals("http") && !url.getProtocol().equals("https")) {
                 throw new IllegalArgumentException("not an http protocol: " + url);
             }
         }
 
-        private String encodeUrl(URL url) {
+        private static String encodeUrl(URL url) {
             try {
                 return URLEncoder.encode(url.toExternalForm(), FileUtil.getCharset().name());
             } catch (UnsupportedEncodingException e) {
@@ -158,15 +201,17 @@ public class RepositoryProxy {
         private ProxyRepoList() {
             super("ProxyRepo");
 
-            for (String proxy : PROXIES){ //U.shuffle(PROXIES)) {
+            List<String> proxies = new ArrayList<>(PROXIES);
+            Collections.shuffle(proxies);
+
+            for (String proxy : proxies) {
                 add(new ProxyRepo(proxy));
             }
         }
 
-
         @Override
         protected URLConnection connect(IRepo repo, String path, int timeout, Proxy proxy, int attempt) throws IOException {
-            if(repo instanceof ProxyRepo) {
+            if (repo instanceof ProxyRepo) {
                 return ((ProxyRepo) repo).get(path, timeout, proxy, attempt);
             } else {
                 return super.connect(repo, path, timeout, proxy, attempt);

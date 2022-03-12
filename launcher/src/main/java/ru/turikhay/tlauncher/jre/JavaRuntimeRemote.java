@@ -1,8 +1,7 @@
 package ru.turikhay.tlauncher.jre;
 
 import net.minecraft.launcher.updater.DownloadInfo;
-import org.apache.http.client.fluent.Request;
-import ru.turikhay.util.EHttpClient;
+import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.io.File;
@@ -35,7 +34,7 @@ public class JavaRuntimeRemote implements JavaRuntime {
     }
 
     public JavaRuntimeManifest getManifest() throws ExecutionException, InterruptedException {
-        if(manifestTimeout == null) {
+        if (manifestTimeout == null) {
             manifestTimeout = AsyncThread.future(this::getManifestNow);
         }
         return manifestTimeout.get();
@@ -43,7 +42,7 @@ public class JavaRuntimeRemote implements JavaRuntime {
 
     private JavaRuntimeManifest getManifestNow() throws IOException {
         JavaRuntimeManifest manifest = JavaRuntimeManifest.getGson().fromJson(
-                EHttpClient.toString(Request.Get(this.manifest.getUrl())),
+                RepositoryProxy.requestMaybeProxy(this.manifest.getUrl()),
                 JavaRuntimeManifest.class
         );
         return Objects.requireNonNull(manifest, "manifest");

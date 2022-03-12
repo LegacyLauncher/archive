@@ -4,7 +4,6 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Version;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.DownloadableContainerHandler;
 import ru.turikhay.tlauncher.jre.*;
@@ -49,12 +48,12 @@ public class JavaManager {
 
     public Optional<JavaRuntimeLocal> getLatestVersionInstalled(String name) throws InterruptedException {
         Optional<JavaRuntimeLocal> localRuntimeOpt = discoverer.getCurrentPlatformRuntime(name);
-        if(!localRuntimeOpt.isPresent()) {
+        if (!localRuntimeOpt.isPresent()) {
             return Optional.empty();
         }
 
         JavaRuntimeLocal localRuntime = localRuntimeOpt.get();
-        if(localRuntime.hasOverride()) {
+        if (localRuntime.hasOverride()) {
             LOGGER.debug("Local JRE {} has override file, and thus always considered latest",
                     localRuntime.getName());
             return localRuntimeOpt;
@@ -67,7 +66,7 @@ public class JavaManager {
             LOGGER.warn("Couldn't fetch the remote list. Assuming {} is the latest version", name);
             return localRuntimeOpt;
         }
-        if(!remoteRuntimeOpt.isPresent()) {
+        if (!remoteRuntimeOpt.isPresent()) {
             LOGGER.warn("Couldn't find {} in the remote list. Assuming it is the latest version", name);
             return localRuntimeOpt;
         }
@@ -76,13 +75,13 @@ public class JavaManager {
         String localVersion;
         try {
             localVersion = localRuntime.getVersion();
-        } catch(IOException ioE) {
+        } catch (IOException ioE) {
             LOGGER.warn("Couldn't read version file of {}. Assuming the local version NOT the latest version", name);
             return Optional.empty();
         }
 
         String remoteVersion = remoteRuntime.getVersion().getName();
-        if(remoteVersion.equals(localVersion)) {
+        if (remoteVersion.equals(localVersion)) {
             JavaRuntimeManifest manifest;
             try {
                 manifest = remoteRuntime.getManifest();
@@ -92,7 +91,7 @@ public class JavaManager {
             }
             File workingDirectory = localRuntime.getWorkingDirectory();
             LOGGER.info("Checking integrity of {}", workingDirectory.getAbsolutePath());
-            if(checkIntegrity(manifest, workingDirectory)) {
+            if (checkIntegrity(manifest, workingDirectory)) {
                 return localRuntimeOpt;
             } else {
                 LOGGER.info("Local version {} is incomplete or tampered with", name);
@@ -112,32 +111,32 @@ public class JavaManager {
 
     public CompleteVersion.JavaVersion getFallbackRecommendedVersion(Version version, boolean debugging) {
         final String id = version.getID();
-        if(JavaPlatform.CURRENT_PLATFORM == null) {
-            if(debugging) {
+        if (JavaPlatform.CURRENT_PLATFORM == null) {
+            if (debugging) {
                 LOGGER.debug("Current platform is unsupported, and {} won't have fallback JRE", id);
             }
             return null;
         }
-        if(version.getReleaseTime() == null) {
-            if(debugging) {
+        if (version.getReleaseTime() == null) {
+            if (debugging) {
                 LOGGER.debug("Version {} has no release time", id);
             }
             return null;
         }
-        if(OS.JAVA_VERSION.getMajor() < 9) {
-            if(debugging) {
+        if (OS.JAVA_VERSION.getMajor() < 9) {
+            if (debugging) {
                 LOGGER.debug("We're running Java 8; no fallback JRE is required for {}", id);
             }
             return null;
         }
         if (version.getReleaseTime().toInstant().compareTo(JAVA16_UPGRADE_POINT) >= 0) {
-            if(debugging) {
+            if (debugging) {
                 LOGGER.debug("Version {} was released after Java 16 upgrade point; no fallback" +
-                                " JRE for it.", id);
+                        " JRE for it.", id);
             }
             return null;
         }
-        if(debugging) {
+        if (debugging) {
             LOGGER.debug("Fallback JRE for {} is {}", id, "jre-legacy");
         }
         return new CompleteVersion.JavaVersion("jre-legacy", 8);
@@ -146,13 +145,13 @@ public class JavaManager {
     public boolean hasEnoughSpaceToInstall(JavaRuntimeRemote remote)
             throws ExecutionException, InterruptedException {
         long usableSpace = discoverer.getRootDir().getUsableSpace();
-        if(usableSpace < 1L) {
+        if (usableSpace < 1L) {
             LOGGER.warn("Couldn't query usable space left on {}. Result is {}. Probably has no space left.",
                     discoverer.getRootDir().getAbsolutePath(), usableSpace);
             return false;
         }
         long size = remote.getManifest().countBytes();
-        if((size + EXTRA_SPACE) >= usableSpace) {
+        if ((size + EXTRA_SPACE) >= usableSpace) {
             LOGGER.warn("Usable space is almost or already exhausted. Need {} + {} bytes," +
                     "but only got {}", size, usableSpace, EXTRA_SPACE);
             return false;
@@ -170,19 +169,6 @@ public class JavaManager {
                 throws ExecutionException, InterruptedException {
             addAll(remote.getManifest().toDownloadableList(remote.getWorkingDir(rootDir), forceDownload));
             addHandler(new DownloadableContainerHandler() {
-                @Override
-                public void onStart(DownloadableContainer var1) {
-                }
-                @Override
-                public void onAbort(DownloadableContainer var1) {
-                }
-                @Override
-                public void onError(DownloadableContainer var1, Downloadable var2, Throwable var3) {
-                }
-                @Override
-                public void onComplete(DownloadableContainer var1, Downloadable var2) {
-                }
-
                 @Override
                 public void onFullComplete(DownloadableContainer var1) {
                     try {

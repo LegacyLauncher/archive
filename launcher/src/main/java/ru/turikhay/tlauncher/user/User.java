@@ -7,18 +7,24 @@ import java.util.UUID;
 
 public abstract class User {
     public abstract String getUsername();
+
     public abstract String getDisplayName();
+
     public abstract UUID getUUID();
+
     public abstract String getType();
+
     protected abstract boolean equals(User user);
+
     public abstract int hashCode();
+
     public abstract LoginCredentials getLoginCredentials();
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == null || !(obj instanceof User)) return false;
+        if (!(obj instanceof User)) return false;
         User user = (User) obj;
-        return getType().equals(user.getType()) && equals((User) user);
+        return getType().equals(user.getType()) && equals(user);
     }
 
     protected ToStringBuilder toStringBuilder() {
@@ -31,9 +37,5 @@ public abstract class User {
 
     public final String toString() {
         return toStringBuilder().build();
-    }
-
-    public static UserJsonizer getJsonizer() {
-        throw new RuntimeException("jsonizer is not implemented");
     }
 }
