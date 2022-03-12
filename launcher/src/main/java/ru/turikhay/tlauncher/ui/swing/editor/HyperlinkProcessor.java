@@ -5,12 +5,14 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.OS;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public abstract class HyperlinkProcessor {
     public static final HyperlinkProcessor defaultProcessor = new HyperlinkProcessor() {
-        private JPopupMenu popup;
+        protected JPopupMenu popup;
 
         public JPopupMenu process(String link) {
             if (link == null) {
@@ -57,11 +59,11 @@ public abstract class HyperlinkProcessor {
             return null;
         }
 
-        private JMenuItem newItem(final String link) {
+        protected final JMenuItem newItem(final String link) {
             return newItem(link, null);
         }
 
-        private JMenuItem newItem(final String link, String name) {
+        protected JMenuItem newItem(final String link, String name) {
             if (name == null) {
                 if (link.length() > 30) {
                     name = link.substring(0, 30) + "...";
@@ -86,11 +88,14 @@ public abstract class HyperlinkProcessor {
 
             final URI uri = _uri;
 
-            item.addActionListener(e -> {
-                if (uri == null) {
-                    Alert.showLocError("browser.hyperlink.create.error");
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (uri == null) {
+                        Alert.showLocError("browser.hyperlink.create.error");
+                    }
+                    OS.openLink(uri);
                 }
-                OS.openLink(uri);
             });
 
             return item;

@@ -23,7 +23,7 @@ public class JavaRuntimeRemoteListFetcher {
     private Future<JavaRuntimeRemoteList> list;
 
     public Future<JavaRuntimeRemoteList> fetch() {
-        if (list == null) {
+        if(list == null) {
             list = AsyncThread.future(this::doFetch);
         }
         return list;
@@ -42,7 +42,7 @@ public class JavaRuntimeRemoteListFetcher {
             String content = RepositoryProxy.requestMaybeProxy(JavaRuntimeRemoteList.URL);
             JavaRuntimeRemoteList remoteList = gson.fromJson(content, JavaRuntimeRemoteList.class);
             return Objects.requireNonNull(remoteList, "remoteList");
-        } catch (Exception e) {
+        } catch(Exception e) {
             LOGGER.warn("Failed", e);
             Sentry.capture(new EventBuilder()
                     .withLevel(Event.Level.ERROR)

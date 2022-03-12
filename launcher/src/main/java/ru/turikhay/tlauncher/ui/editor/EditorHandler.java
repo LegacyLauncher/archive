@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class EditorHandler implements Blockable {
@@ -15,7 +16,7 @@ public abstract class EditorHandler implements Blockable {
 
     public EditorHandler(String path) {
         this.path = path;
-        listeners = Collections.synchronizedList(new ArrayList<>());
+        listeners = Collections.synchronizedList(new ArrayList());
     }
 
     public boolean addListener(EditorFieldListener listener) {
@@ -36,8 +37,10 @@ public abstract class EditorHandler implements Blockable {
 
     public void onChange(String newvalue) {
         if (TLauncher.getInstance().isReady()) {
+            Iterator var3 = listeners.iterator();
 
-            for (EditorFieldListener listener : listeners) {
+            while (var3.hasNext()) {
+                EditorFieldListener listener = (EditorFieldListener) var3.next();
                 listener.onChange(this, value, newvalue);
             }
         }
@@ -69,6 +72,6 @@ public abstract class EditorHandler implements Blockable {
     protected abstract void setValue0(String var1);
 
     public String toString() {
-        return getClass().getSimpleName() + "{path='" + path + "', value='" + value + "'}";
+        return getClass().getSimpleName() + "{path=\'" + path + "\', value=\'" + value + "\'}";
     }
 }

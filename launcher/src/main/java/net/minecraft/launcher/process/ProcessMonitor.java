@@ -54,7 +54,7 @@ public class ProcessMonitor {
                         StreamMonitorWait.class.getSimpleName());
                 return;
             }
-            if (process.getExitRunnable() != null) {
+            if(process.getExitRunnable() != null) {
                 process.getExitRunnable().onJavaProcessEnded(process);
             }
         }
@@ -72,26 +72,26 @@ public class ProcessMonitor {
 
         @Override
         public void run() {
-            while (process.isRunning()) {
+            while(process.isRunning()) {
                 BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, charset));
                 IOException suppressed = null;
                 String line;
                 try {
-                    while ((line = r.readLine()) != null) {
+                    while((line = r.readLine()) != null) {
                         JavaProcessListener listener = process.getExitRunnable();
-                        if (listener == null) {
+                        if(listener == null) {
                             process.getSysOutLines().add(line);
                         } else {
                             listener.onJavaProcessPrint(process, streamType, line);
                         }
                     }
-                } catch (IOException ioE) {
+                } catch(IOException ioE) {
                     suppressed = ioE;
                 } finally {
                     try {
                         r.close();
-                    } catch (IOException ioE) {
-                        if (suppressed != null) {
+                    } catch(IOException ioE) {
+                        if(suppressed != null) {
                             ioE.addSuppressed(suppressed);
                         }
                         LOGGER.warn("Error handling streams of {}", process, ioE);

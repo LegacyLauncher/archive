@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.json;
 
 import com.google.gson.*;
+
 import ru.turikhay.tlauncher.bootstrap.meta.RemoteLauncherMeta;
 
 import java.lang.reflect.Type;

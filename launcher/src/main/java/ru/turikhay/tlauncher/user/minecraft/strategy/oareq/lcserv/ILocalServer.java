@@ -11,8 +11,8 @@ public interface ILocalServer {
             throws LocalServerException;
 
     MicrosoftOAuthExchangeCode waitForCode(long time, TimeUnit timeUnit)
-            throws MicrosoftOAuthCodeRequestException,
-            TimeoutException, InterruptedException;
+            throws  MicrosoftOAuthCodeRequestException, LocalServerException,
+                    TimeoutException, InterruptedException;
 
     void stop();
 }

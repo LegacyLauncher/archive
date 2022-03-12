@@ -4,6 +4,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,7 +12,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +24,7 @@ public final class OptionsFile {
     private final File file;
 
     public OptionsFile(File file) {
-        this.file = Objects.requireNonNull(file);
+        this.file = U.requireNotNull(file);
     }
 
     public File getFile() {
@@ -53,14 +53,14 @@ public final class OptionsFile {
 
     public void read() throws IOException {
         clear();
-        if (file.length() > 1024L * 1024L) {
+        if(file.length() > 1024L * 1024L) {
             throw new IOException("reported file size is incredibly large: " + file.length());
         }
-        try (FileInputStream in = new FileInputStream(file); Scanner scanner = new Scanner(in)) {
-            while (scanner.hasNextLine()) {
+        try(FileInputStream in = new FileInputStream(file); Scanner scanner = new Scanner(in)) {
+            while(scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 Matcher m = LINE_PATTERN.matcher(line);
-                if (m.matches()) {
+                if(m.matches()) {
                     options.put(m.group(1), m.group(2));
                 } else {
                     LOGGER.warn("Line skipped while parsing {}: {}", file, line);
@@ -70,8 +70,8 @@ public final class OptionsFile {
     }
 
     public void save() throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
-            for (Map.Entry<String, String> entry : options.entrySet()) {
+        try(FileWriter writer = new FileWriter(file)) {
+            for(Map.Entry<String, String> entry : options.entrySet()) {
                 writer.append(entry.getKey()).append(':').append(entry.getValue()).append(System.lineSeparator());
             }
         }

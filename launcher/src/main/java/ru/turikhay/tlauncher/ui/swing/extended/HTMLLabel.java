@@ -51,7 +51,7 @@ public class HTMLLabel extends ExtendedLabel {
         if (getLabelWidth() > 0) {
             builder.append("<div width=\"").append(getLabelWidth()).append("\">");
         }
-        if (text != null) {
+        if(text != null) {
             builder.append(StringUtils.replace(text, "\n", "<br/>"));
         }
         if (getLabelWidth() > 0) {

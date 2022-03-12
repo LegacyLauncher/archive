@@ -1,23 +1,22 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Sha256Sign {
-    private static final WeakObjectPool<MessageDigest> SHA256Pool = new WeakObjectPool<>(() -> {
-        try {
-            return MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException nsaE) {
-            throw new Error(nsaE);
+    private static final WeakObjectPool<MessageDigest> SHA256Pool = new WeakObjectPool<MessageDigest>(new Factory<MessageDigest>() {
+        @Override
+        public MessageDigest createNew() {
+            try {
+                return MessageDigest.getInstance("SHA-256");
+            } catch (NoSuchAlgorithmException nsaE) {
+                throw new Error(nsaE);
+            }
         }
     });
 
-    public static WeakObjectPool.ObjectRef<MessageDigest> getDigest() {
+    public static WeakObjectPool<MessageDigest>.ObjectRef<MessageDigest> getDigest() {
         return SHA256Pool.get();
     }
 
@@ -34,7 +33,7 @@ public class Sha256Sign {
     }
 
     public static byte[] digest(InputStream in) throws IOException {
-        WeakObjectPool.ObjectRef<MessageDigest> digestRef = SHA256Pool.get();
+        WeakObjectPool<MessageDigest>.ObjectRef<MessageDigest> digestRef = SHA256Pool.get();
         final MessageDigest digest = digestRef.get();
         try {
             byte[] dataBytes = new byte[1024];
@@ -49,9 +48,13 @@ public class Sha256Sign {
         }
     }
 
-    public static String calc(Path file) throws IOException {
-        try (InputStream input = Files.newInputStream(file)) {
+    public static String calc(File file) throws IOException {
+        FileInputStream input = null;
+        try {
+            input = new FileInputStream(file);
             return toString(digest(input));
+        } finally {
+            U.close(input);
         }
     }
 

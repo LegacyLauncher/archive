@@ -60,15 +60,15 @@ public class CenterPanel extends VPanel implements Blockable {
         Insets var10001 = insets == null ? defaultInsets : MagnifiedInsets.get(insets);
         Insets var10002 = insets == null ? defaultInsets : MagnifiedInsets.get(insets);
         this.insets = var10001;
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        setLayout(new BoxLayout(this, 3));
         setBackground(theme.getPanelBackground());
         messageLabel = new LocalizableLabel("  ");
-        messageLabel.setFont(getFont().deriveFont(Font.BOLD));
+        messageLabel.setFont(getFont().deriveFont(1));
         messageLabel.setVerticalAlignment(0);
         messageLabel.setHorizontalTextPosition(0);
         messageLabel.setAlignmentX(0.5F);
         messagePanel = new ExtendedPanel();
-        messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
+        messagePanel.setLayout(new BoxLayout(messagePanel, 1));
         messagePanel.setAlignmentX(0.5F);
         messagePanel.setInsets(new Insets(3, 0, 3, 0));
         messagePanel.add(messageLabel);
@@ -83,7 +83,7 @@ public class CenterPanel extends VPanel implements Blockable {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         g.setColor(getBackground());
-        if (theme.getArc() > 0) {
+        if(theme.getArc() > 0) {
             g.fillRoundRect(0, 0, getWidth(), getHeight(), theme.getArc(), theme.getArc());
         } else {
             g.fillRect(0, 0, getWidth(), getHeight());
@@ -94,9 +94,9 @@ public class CenterPanel extends VPanel implements Blockable {
             drawRect(g, xy);
         }
 
-        if (theme.getShadow() != null) {
+        if(theme.getShadow() != null) {
             Color shadow = theme.getShadow();
-            for (double xy = borderSize; ; xy += step) {
+            for (double xy = borderSize; ; xy+= step) {
                 shadow = U.shiftAlpha(shadow, (int) (-10. / sf));
                 if (shadow.getAlpha() <= 0) {
                     break;

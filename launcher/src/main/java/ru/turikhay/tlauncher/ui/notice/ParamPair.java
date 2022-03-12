@@ -21,7 +21,7 @@ class ParamPair {
 
     @Override
     public int hashCode() {
-        int result = (fontSize != 0.0f ? Float.floatToIntBits(fontSize) : 0);
+        int result = (fontSize != +0.0f ? Float.floatToIntBits(fontSize) : 0);
         result = 31 * result + width;
         return result;
     }

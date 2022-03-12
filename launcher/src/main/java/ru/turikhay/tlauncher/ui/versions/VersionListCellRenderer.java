@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Iterator;
 
 public class VersionListCellRenderer extends VersionCellRenderer {
     private final VersionHandler handler;
@@ -27,12 +28,14 @@ public class VersionListCellRenderer extends VersionCellRenderer {
                 label.setText(label.getText() + ' ' + Localizable.get("version.list.needsupdate"));
             }
 
-            java.util.List<VersionSyncInfo> downloadingInfo = handler.downloading;
-            if (downloadingInfo != null && downloadingInfo.size() > 0) {
-                VersionSyncInfo compare = downloadingInfo.get(0);
-                ImageIcon icon = compare.equals(value) ? downloading : null;
-                label.setIcon(icon);
-                label.setDisabledIcon(icon);
+            if (handler.downloading != null) {
+                Iterator var8 = handler.downloading.iterator();
+                if (var8.hasNext()) {
+                    VersionSyncInfo compare = (VersionSyncInfo) var8.next();
+                    ImageIcon icon = compare.equals(value) ? downloading : null;
+                    label.setIcon(icon);
+                    label.setDisabledIcon(icon);
+                }
             }
 
             return label;

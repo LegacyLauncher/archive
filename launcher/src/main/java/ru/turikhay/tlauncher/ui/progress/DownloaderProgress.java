@@ -5,6 +5,7 @@ import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
 import ru.turikhay.tlauncher.ui.loc.LocalizableProgressBar;
+import ru.turikhay.util.U;
 
 import java.awt.*;
 
@@ -52,7 +53,7 @@ public class DownloaderProgress extends LocalizableProgressBar implements Downlo
 
             setIndeterminate(false);
             setValue((int) progress);
-            setCenterString(String.format("%.0f%%", progress));
+            setCenterString(U.setFractional(progress, 1) + "%");
         }
     }
 

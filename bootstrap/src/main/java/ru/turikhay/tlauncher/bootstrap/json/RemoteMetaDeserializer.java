@@ -3,7 +3,9 @@ package ru.turikhay.tlauncher.bootstrap.json;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.lang3.Validate;
 
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -21,7 +23,7 @@ public class RemoteMetaDeserializer {
         return new RemoteMeta(
                 parse(ctx, o, "version", Version.class),
                 parse(ctx, o, "checksum", String.class),
-                parse(ctx, o, "url", typeOfUrlList())
+                (List<URL>) parse(ctx, o, "url", typeOfUrlList())
         );
     }
 
@@ -34,19 +36,17 @@ public class RemoteMetaDeserializer {
     }
 
     protected static Type typeOfUrlList() {
-        return new TypeToken<List<URL>>() {
-        }.getType();
+        return new TypeToken<List<URL>>() {}.getType();
     }
 
     protected static Type typeOfStringMap() {
-        return new TypeToken<Map<String, String>>() {
-        }.getType();
+        return new TypeToken<Map<String, String>>() {}.getType();
     }
 
     protected static class RemoteMeta {
-        final Version version;
-        final String checksum;
-        final List<URL> url;
+        Version version;
+        String checksum;
+        List<URL> url;
 
         public RemoteMeta(Version version, String checksum, List<URL> url) {
             this.version = version;

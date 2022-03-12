@@ -9,20 +9,21 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Button {
     private static final Logger LOGGER = LogManager.getLogger(Button.class);
 
-    private final List<Action> actions = new ArrayList<>();
+    private final List<Action> actions = new ArrayList<Action>();
 
     private final String name;
 
@@ -44,7 +45,7 @@ public class Button {
 
     void setText(String text, Object... vars) {
         this.text = text;
-        this.vars = vars == null ? Localizable.EMPTY_VARS : vars;
+        this.vars = vars == null? Localizable.EMPTY_VARS : vars;
     }
 
     public final List<Action> getActions() {
@@ -53,7 +54,7 @@ public class Button {
 
     void setActions(List<Action> actions) {
         this.actions.clear();
-        this.actions.addAll(actions.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        this.actions.addAll(U.requireNotContainNull(actions, "actions"));
     }
 
     public final boolean isBlockAfter() {
@@ -77,7 +78,7 @@ public class Button {
         final ExtendedButton button;
 
         if (isLocalizable()) {
-            button = new LocalizableButton(useGlobalPath ? "crash.buttons." + getText() : entry.getLocPath("buttons." + getText()), vars);
+            button = new LocalizableButton(useGlobalPath ? "crash.buttons." + getText() : entry.getLocPath("buttons." + getText()), (Object[]) vars);
         } else {
             button = new ExtendedButton(getText());
         }
@@ -87,16 +88,19 @@ public class Button {
         Insets insets = button.getInsets();
         button.setMinimumSize(new Dimension(insets.left + width + insets.right, button.getHeight()));
 
-        button.addActionListener(e -> {
-            try {
-                for (Action action : actions) {
-                    action.execute();
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    for (Action action : actions) {
+                        action.execute();
+                    }
+                } catch (Exception ex) {
+                    LOGGER.warn("Could not perform action", ex);
                 }
-            } catch (Exception ex) {
-                LOGGER.warn("Could not perform action", ex);
-            }
-            if (blockAfter) {
-                button.setEnabled(false);
+                if (blockAfter) {
+                    button.setEnabled(false);
+                }
             }
         });
         return button;
@@ -117,7 +121,7 @@ public class Button {
         private final ITokenResolver resolver;
 
         public Deserializer(CrashManager manager, ITokenResolver resolver) {
-            this.manager = Objects.requireNonNull(manager, "manager");
+            this.manager = U.requireNotNull(manager, "manager");
             this.resolver = resolver;
         }
 
@@ -167,7 +171,7 @@ public class Button {
             }
 
             JsonArray actions = array.getAsJsonArray();
-            ArrayList<Action> actionList = new ArrayList<>(actions.size());
+            ArrayList<Action> actionList = new ArrayList<Action>(actions.size());
 
             for (int i = 0; i < actions.size(); i++) {
                 JsonElement elem = actions.get(i);

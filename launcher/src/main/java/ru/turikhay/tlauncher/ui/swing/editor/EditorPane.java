@@ -60,7 +60,7 @@ public class EditorPane extends JEditorPane {
     public void setFont(Font font) {
         super.setFont(font);
 
-        if (html != null) {
+        if(html != null) {
             Color color = Theme.getTheme().getForeground();
             final String textColor = String.format(java.util.Locale.ROOT, "#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 

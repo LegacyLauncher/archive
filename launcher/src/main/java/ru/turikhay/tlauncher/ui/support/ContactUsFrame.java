@@ -11,6 +11,8 @@ import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -47,11 +49,11 @@ public class ContactUsFrame extends VActionFrame {
             if (!supportService.isApplicable()) {
                 continue;
             }
-            if (i == supportServices.size() - 1) {
+            if(i == supportServices.size() - 1) {
                 c.gridwidth = GridBagConstraints.REMAINDER;
             }
             getFooter().add(supportService.createButton(), c);
-            if (++c.gridx % 2 == 0) {
+            if(++c.gridx % 2 == 0) {
                 c.gridx = 0;
                 c.gridy++;
             }
@@ -63,9 +65,24 @@ public class ContactUsFrame extends VActionFrame {
     }
 
     private interface LangValidator {
-        LangValidator ONLY_CIS = Configuration::isUSSRLocale;
-        LangValidator NOT_CIS = locale -> !ONLY_CIS.isValidFor(locale);
-        LangValidator ANY = locale -> true;
+        LangValidator ONLY_CIS = new LangValidator() {
+            @Override
+            public boolean isValidFor(String locale) {
+                return Configuration.isUSSRLocale(locale);
+            }
+        };
+        LangValidator NOT_CIS = new LangValidator() {
+            @Override
+            public boolean isValidFor(String locale) {
+                return !ONLY_CIS.isValidFor(locale);
+            }
+        };
+        LangValidator ANY = new LangValidator() {
+            @Override
+            public boolean isValidFor(String locale) {
+                return true;
+            }
+        };
 
         boolean isValidFor(String locale);
     }
@@ -86,7 +103,12 @@ public class ContactUsFrame extends VActionFrame {
             LocalizableButton b = new LocalizableButton("support.contact.buttons." + name);
             b.setIcon(Images.getIcon24(icon));
             b.setPreferredSize(new Dimension(1, SwingUtil.magnify(50)));
-            b.addActionListener(e -> OS.openLink(url));
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    OS.openLink(url);
+                }
+            });
             return b;
         }
 

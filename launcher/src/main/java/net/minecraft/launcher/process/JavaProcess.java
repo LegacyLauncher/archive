@@ -5,7 +5,7 @@ import java.nio.charset.Charset;
 public class JavaProcess {
     private static final int MAX_SYSOUT_LINES = 5;
 
-    private final LimitedCapacityList<String> sysOutLines = new LimitedCapacityList<>(String.class, MAX_SYSOUT_LINES);
+    private final LimitedCapacityList<String> sysOutLines = new LimitedCapacityList<String>(String.class, MAX_SYSOUT_LINES);
     private JavaProcessListener listener;
     private final Process process;
     private final ProcessMonitor monitor;

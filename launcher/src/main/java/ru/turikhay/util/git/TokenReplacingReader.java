@@ -1,6 +1,5 @@
 package ru.turikhay.util.git;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
@@ -9,9 +8,9 @@ import java.nio.CharBuffer;
 
 public class TokenReplacingReader extends Reader {
 
-    protected PushbackReader pushbackReader;
-    protected ITokenResolver tokenResolver;
-    protected final StringBuilder tokenNameBuffer = new StringBuilder();
+    protected PushbackReader pushbackReader = null;
+    protected ITokenResolver tokenResolver = null;
+    protected StringBuilder tokenNameBuffer = new StringBuilder();
     protected String tokenValue = null;
     protected int tokenValueIndex = 0;
 
@@ -20,12 +19,8 @@ public class TokenReplacingReader extends Reader {
         tokenResolver = resolver;
     }
 
-    public int read(@Nonnull CharBuffer target) throws IOException {
-        int read;
-        while ((read = read()) >= 0) {
-            target.append((char) read);
-        }
-        return -1;
+    public int read(CharBuffer target) throws IOException {
+        throw new RuntimeException("Operation Not Supported");
     }
 
     boolean unreadOnDollar;
@@ -79,11 +74,11 @@ public class TokenReplacingReader extends Reader {
 
     }
 
-    public int read(char[] cbuf) throws IOException {
+    public int read(char cbuf[]) throws IOException {
         return read(cbuf, 0, cbuf.length);
     }
 
-    public int read(char[] cbuf, int off, int len) throws IOException {
+    public int read(char cbuf[], int off, int len) throws IOException {
         int charsRead = 0;
         for (int i = 0; i < len; i++) {
             int nextChar = read();
@@ -103,7 +98,7 @@ public class TokenReplacingReader extends Reader {
         pushbackReader.close();
     }
 
-    public long skip(long n) {
+    public long skip(long n) throws IOException {
         throw new RuntimeException("Operation Not Supported");
     }
 
@@ -115,11 +110,11 @@ public class TokenReplacingReader extends Reader {
         return false;
     }
 
-    public void mark(int readAheadLimit) {
+    public void mark(int readAheadLimit) throws IOException {
         throw new RuntimeException("Operation Not Supported");
     }
 
-    public void reset() {
+    public void reset() throws IOException {
         throw new RuntimeException("Operation Not Supported");
     }
 

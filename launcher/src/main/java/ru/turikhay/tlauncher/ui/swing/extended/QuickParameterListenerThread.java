@@ -49,7 +49,6 @@ public class QuickParameterListenerThread extends LoopedThread {
             for (int var5 = 0; var5 < initial.length; ++var5) {
                 if (initial[var5] != newvalue[var5]) {
                     equal = false;
-                    break;
                 }
             }
 
@@ -60,6 +59,6 @@ public class QuickParameterListenerThread extends LoopedThread {
     }
 
     private void sleep() {
-        U.sleepFor(tick);
+        U.sleepFor((long) tick);
     }
 }

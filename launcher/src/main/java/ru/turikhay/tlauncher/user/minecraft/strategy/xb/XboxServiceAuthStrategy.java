@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.xb;
 
 import org.apache.logging.log4j.Logger;
+
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.GsonParser;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Parser;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.RequestAndParseStrategy;

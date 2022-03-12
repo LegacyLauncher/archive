@@ -26,10 +26,10 @@ public class MojangUserMigrationStatus {
     }
 
     public Status asStatus() {
-        if (ex != null) {
+        if(ex != null) {
             return Status.ERROR;
         }
-        return canMigrate ? Status.ELIGIBLE : Status.NOT_ELIGIBLE;
+        return canMigrate? Status.ELIGIBLE : Status.NOT_ELIGIBLE;
     }
 
     public enum Status {

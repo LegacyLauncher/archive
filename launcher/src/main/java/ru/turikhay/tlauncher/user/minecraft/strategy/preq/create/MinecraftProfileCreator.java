@@ -24,8 +24,12 @@ public class MinecraftProfileCreator {
     public MinecraftOAuthProfile createProfile(MinecraftServicesToken token) throws IOException, ProfileCreationAbortedException {
         String profileName;
         do {
-            profileName = userInterface.requestProfileName();
-            if (profileName == null) {
+            try {
+                profileName = userInterface.requestProfileName();
+            } catch (InterruptedException e) {
+                throw new ProfileCreationAbortedException(e);
+            }
+            if(profileName == null) {
                 throw new ProfileCreationAbortedException();
             }
             try {
@@ -33,6 +37,6 @@ public class MinecraftProfileCreator {
             } catch (MinecraftProfileCreateException e) {
                 userInterface.showProfileUnavailableMessage(profileName);
             }
-        } while (true);
+        } while(true);
     }
 }

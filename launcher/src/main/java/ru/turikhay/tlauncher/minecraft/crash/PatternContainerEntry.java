@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public abstract class PatternContainerEntry extends CrashEntry {
-    private final List<PatternEntry> patternEntries = new ArrayList<>();
+    private final List<PatternEntry> patternEntries = new ArrayList<PatternEntry>();
     private boolean anyPatternMakesCapable;
 
     public PatternContainerEntry(CrashManager manager, String name) {
@@ -38,7 +38,7 @@ public abstract class PatternContainerEntry extends CrashEntry {
             return false;
         }
 
-        List<PatternEntry> capablePatterns = new ArrayList<>();
+        List<PatternEntry> capablePatterns = new ArrayList<PatternEntry>();
         for (PatternEntry entry : patternEntries) {
             if (entry.checkCapability()) {
                 capablePatterns.add(entry);

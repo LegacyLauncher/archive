@@ -12,8 +12,11 @@ import java.awt.*;
 
 public class EditorResolutionField extends BorderPanel implements EditorField {
     private static final long serialVersionUID = -5565607141889620750L;
-    private final EditorIntegerField w;
-    private final EditorIntegerField h;
+    private EditorIntegerField w;
+    private EditorIntegerField h;
+    private ExtendedLabel x;
+    private final LocalizableLabel hint;
+    private final int[] defaults;
 
     public EditorResolutionField(String promptW, String promptH, int[] defaults, boolean showDefault) {
         if (defaults == null) {
@@ -21,6 +24,7 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
         } else if (defaults.length != 2) {
             throw new IllegalArgumentException("Illegal array size");
         } else {
+            this.defaults = defaults;
             ExtendedPanel container = new ExtendedPanel();
             container.setAlignmentX(0.5F);
             container.setAlignmentY(0.5F);
@@ -30,7 +34,7 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
             h = new EditorIntegerField(promptH);
             h.textField.setColumns(4);
             h.textField.setHorizontalAlignment(0);
-            ExtendedLabel x = new ExtendedLabel("X", 0);
+            x = new ExtendedLabel("X", 0);
             container.setLayout(new GridBagLayout());
             GridBagConstraints c = new GridBagConstraints();
             c.anchor = 10;
@@ -50,7 +54,7 @@ public class EditorResolutionField extends BorderPanel implements EditorField {
             c.fill = 1;
             container.add(h, c);
             setCenter(container);
-            LocalizableLabel hint = new LocalizableHTMLLabel("settings.res.def", defaults[0], defaults[1]);
+            hint = new LocalizableHTMLLabel("settings.res.def", Integer.valueOf(defaults[0]), Integer.valueOf(defaults[1]));
             hint.setFont(hint.getFont().deriveFont((float) hint.getFont().getSize() - 2.0F));
             if (showDefault) {
                 setSouth(hint);

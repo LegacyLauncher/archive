@@ -1,40 +1,37 @@
 package ru.turikhay.tlauncher.bootstrap.task;
 
+import org.apache.commons.io.FileUtils;
+import ru.turikhay.tlauncher.bootstrap.Bootstrap;
+import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.exception.FileLockedException;
-import ru.turikhay.tlauncher.bootstrap.util.Sha256Sign;
+import ru.turikhay.tlauncher.bootstrap.util.DataBuilder;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class DownloadTask extends Task<Void> {
     private final List<URL> urlList;
-    private final Path file;
+    private final File file;
     private final String sha256;
 
-    public DownloadTask(String name, List<URL> urlList, Path file, String sha256) {
+    public DownloadTask(String name, List<URL> urlList, File file, String sha256) {
         super(name);
 
-        if (Objects.requireNonNull(urlList, "urlList").isEmpty()) {
+        if(U.requireNotNull(urlList, "urlList").isEmpty()) {
             throw new IllegalArgumentException("url list is empty");
         }
 
-        this.urlList = new ArrayList<>(urlList);
+        this.urlList = new ArrayList<URL>(urlList);
         this.file = file;
         this.sha256 = sha256;
     }
 
-    public DownloadTask(String name, URL url, Path file, String sha256) {
+    public DownloadTask(String name, URL url, File file, String sha256) {
         this(name, Collections.singletonList(url), file, sha256);
     }
 
@@ -42,10 +39,10 @@ public class DownloadTask extends Task<Void> {
     protected Void execute() throws Exception {
         updateProgress(-1.);
 
-        if (Files.isRegularFile(file) && sha256 != null) {
+        if(file.isFile() && sha256 != null) {
             log("File exists, checking checksum: ", sha256);
-            String hash = Sha256Sign.calc(file);
-            if (sha256.equalsIgnoreCase(hash)) {
+            String hash = U.getSHA256(file);
+            if(sha256.equalsIgnoreCase(hash)) {
                 log("File is the same. Download skipped.");
                 return null;
             } else {
@@ -53,49 +50,48 @@ public class DownloadTask extends Task<Void> {
             }
         }
 
-        Exception error = null;
+        List<Exception> ioEList = new ArrayList<Exception>();
 
         for (URL url : urlList) {
             try {
                 downloadUrl(url);
-            } catch (FileLockedException locked) {
+            } catch(TaskInterruptedException interrupted) {
+                throw interrupted;
+            } catch(FileLockedException locked) {
                 log("File is locked:", locked);
                 throw locked;
             } catch (IOException ioE) {
                 log("Failed to download:", url, ioE);
-                if (error == null) {
-                    error = ioE;
-                } else {
-                    error.addSuppressed(ioE);
-                }
+                ioEList.add(ioE);
                 continue;
             }
             return null;
         }
-        if (error != null) {
-            throw error;
-        } else {
-            throw new RuntimeException("Failed to download");
-        }
+        throw new ExceptionList(ioEList);
     }
 
     protected void downloadUrl(URL url) throws IOException, TaskInterruptedException {
         log("Downloading:", url);
 
         URLConnection connection = url.openConnection(U.getProxy());
-        double contentLength;
-        Path temp = Files.createTempFile("tlauncher", null);
+        InputStream in = null;
+        OutputStream out = null;
+        double contentLength = 0.;
 
-        try (InputStream in = connection.getInputStream();
-             OutputStream out = Files.newOutputStream(temp)) {
+        try {
+            File temp = File.createTempFile("tlauncher", null);
+            temp.deleteOnExit();
 
-            byte[] buffer = new byte[8192];
+            in = connection.getInputStream();
+            out = new FileOutputStream(temp);
+
+            byte[] buffer = new byte[2048];
             long read = 0L;
             int i;
 
             contentLength = (double) connection.getContentLengthLong();
 
-            while ((i = in.read(buffer)) >= 0) {
+            while ((i = in.read(buffer)) != -1) {
                 out.write(buffer, 0, i);
 
                 read += i;
@@ -109,14 +105,19 @@ public class DownloadTask extends Task<Void> {
 
             log("Downloaded", read, " bytes out of", connection.getContentLengthLong());
 
-            if (sha256 != null) {
-                log("Checking SHA256... Expected: ", sha256);
-                out.close();
+            checkSha256:
+            {
+                if (sha256 != null) {
+                    log("Checking SHA256... Expected: ", sha256);
+                    out.close();
 
-                String gotSha256 = Sha256Sign.calc(temp);
-                log("Got: ", gotSha256);
+                    String gotSha256 = U.getSHA256(temp);
+                    log("Got: ", gotSha256);
 
-                if (!sha256.equalsIgnoreCase(gotSha256)) {
+                    if (sha256.equalsIgnoreCase(gotSha256)) {
+                        break checkSha256;
+                    }
+
                     log("Invalid checksum");
                     throw new IOException("invalid checksum. expected: " + sha256 + "; got: " + gotSha256);
                 }
@@ -129,15 +130,15 @@ public class DownloadTask extends Task<Void> {
             boolean tryCopy = false;
             do {
                 try {
-                    Files.copy(temp, file);
-                } catch (FileNotFoundException fnf) {
+                    FileUtils.copyFile(temp, file);
+                } catch(FileNotFoundException fnf) {
                     FileLockedException locked = FileLockedException.getIfPresent(fnf);
 
-                    if (tryCopy) { // already tried
-                        throw locked == null ? fnf : locked;
+                    if(tryCopy) { // already tried
+                        throw locked == null? fnf : locked;
                     }
 
-                    if (locked != null) {
+                    if(locked != null) {
                         log("We got the situation! File is locked. Let's wait some time...", locked);
                     } else {
                         log("File is probably locked, waiting:", fnf, temp, file);
@@ -145,15 +146,15 @@ public class DownloadTask extends Task<Void> {
 
                     try {
                         Thread.sleep(FileLockedException.LOCK_COOLDOWN);
-                    } catch (InterruptedException interrupted) {
+                    } catch(InterruptedException interrupted) {
                         throw new TaskInterruptedException(this);
                     }
 
                     tryCopy = true; // let's try again
                 }
-            } while (tryCopy);
+            } while(tryCopy);
         } finally {
-            Files.delete(temp);
+            U.close(in, out);
         }
     }
 }

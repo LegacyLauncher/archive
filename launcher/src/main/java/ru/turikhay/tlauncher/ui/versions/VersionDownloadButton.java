@@ -15,8 +15,11 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class VersionDownloadButton extends ExtendedButton implements VersionHandlerListener, Unblockable {
@@ -33,6 +36,8 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
     final VersionHandler handler;
     final Blockable blockable;
     private final JPopupMenu menu;
+    private final LocalizableMenuItem ordinary;
+    private final LocalizableMenuItem force;
     private VersionDownloadButton.ButtonState state;
     private boolean downloading;
     private boolean aborted;
@@ -50,19 +55,27 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
             }
         };
         menu = new JPopupMenu();
-        LocalizableMenuItem ordinary = new LocalizableMenuItem("version.manager.downloader.menu.ordinary");
-        ordinary.addActionListener(e -> {
-            forceDownload = false;
-            onDownloadCalled();
+        ordinary = new LocalizableMenuItem("version.manager.downloader.menu.ordinary");
+        ordinary.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                forceDownload = false;
+                onDownloadCalled();
+            }
         });
         menu.add(ordinary);
-        LocalizableMenuItem force = new LocalizableMenuItem("version.manager.downloader.menu.force");
-        force.addActionListener(e -> {
-            forceDownload = true;
-            onDownloadCalled();
+        force = new LocalizableMenuItem("version.manager.downloader.menu.force");
+        force.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                forceDownload = true;
+                onDownloadCalled();
+            }
         });
         menu.add(force);
-        addActionListener(e -> onPressed());
+        addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onPressed();
+            }
+        });
         setState(VersionDownloadButton.ButtonState.DOWNLOAD);
         handler.addListener(this);
     }
@@ -109,15 +122,17 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
 
     void startDownload() {
         aborted = false;
-        List<VersionSyncInfo> list = handler.getSelectedList();
+        List list = handler.getSelectedList();
         if (list != null && !list.isEmpty()) {
             int countLocal = 0;
             VersionSyncInfo local = null;
+            Iterator manager = list.iterator();
 
-            for (VersionSyncInfo containers : list) {
+            while (manager.hasNext()) {
+                VersionSyncInfo containers = (VersionSyncInfo) manager.next();
                 if (forceDownload) {
                     if (!containers.hasRemote()) {
-                        Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.local", containers.getID()));
+                        Alert.showError(Localizable.get("version.manager.downloader.error.title"), Localizable.get("version.manager.downloader.error.local", new Object[]{containers.getID()}));
                         return;
                     }
 
@@ -137,7 +152,7 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
                     container = local.getID();
                 } else {
                     var19 = "multiply";
-                    container = countLocal;
+                    container = Integer.valueOf(countLocal);
                 }
 
                 if (!Alert.showQuestion(var17, Localizable.get("version.manager.downloader.warning.force." + var19, container))) {
@@ -145,13 +160,17 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
                 }
             }
 
-            List<VersionSyncInfoContainer> var18 = new ArrayList<>();
+            ArrayList var18 = new ArrayList();
             VersionManager var20 = TLauncher.getInstance().getVersionManager();
 
+            Iterator var7;
             try {
                 downloading = true;
+                var7 = list.iterator();
 
-                for (VersionSyncInfo var21 : list) {
+                while (var7.hasNext()) {
+                    VersionSyncInfo var21 = (VersionSyncInfo) var7.next();
+
                     try {
                         var21.resolveCompleteVersion(var20, forceDownload);
                         VersionSyncInfoContainer errors = var20.downloadVersion(var21, null, forceDownload);
@@ -181,8 +200,11 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
                     return;
                 }
 
-                for (DownloadableContainer downloadableContainer : var18) {
-                    handler.downloader.add(downloadableContainer);
+                var7 = var18.iterator();
+
+                while (var7.hasNext()) {
+                    DownloadableContainer var22 = (DownloadableContainer) var7.next();
+                    handler.downloader.add(var22);
                 }
 
                 handler.downloading = list;
@@ -193,9 +215,11 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
             }
 
             handler.downloading.clear();
+            var7 = var18.iterator();
 
-            for (VersionSyncInfoContainer var23 : var18) {
-                List<Throwable> var24 = var23.getErrors();
+            while (var7.hasNext()) {
+                VersionSyncInfoContainer var23 = (VersionSyncInfoContainer) var7.next();
+                List var24 = var23.getErrors();
                 VersionSyncInfo version = var23.getVersion();
                 if (var24.isEmpty()) {
                     try {

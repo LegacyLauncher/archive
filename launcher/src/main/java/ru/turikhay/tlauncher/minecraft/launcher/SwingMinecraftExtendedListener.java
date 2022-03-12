@@ -4,7 +4,6 @@ import ru.turikhay.util.SwingUtil;
 
 public class SwingMinecraftExtendedListener extends SwingMinecraftListener implements MinecraftExtendedListener {
     private final MinecraftExtendedListener listener;
-
     public SwingMinecraftExtendedListener(MinecraftExtendedListener listener) {
         super(listener);
         this.listener = listener;

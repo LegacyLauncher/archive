@@ -5,40 +5,42 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Task<T> implements Callable<T> {
-    Task<?> bindingTask, boundTask;
+    Task bindingTask, boundTask;
     private double boundTaskProgressStart;
     private double boundTaskProgressDelta;
 
     private final AtomicBoolean executing = new AtomicBoolean();
     private volatile boolean interrupted;
 
-    private List<TaskListener<? super T>> listeners = new ArrayList<>();
+    private List<TaskListener> listenerList = new ArrayList<TaskListener>();
+    private TaskListener[] listenersArray;
 
     private final String name;
     private final String logPrefix;
 
     public Task(String name) {
         this.name = name;
-        logPrefix = "[" + getClass().getSimpleName() + ":" + name + ']';
+        logPrefix = "["+ getClass().getSimpleName() +":" + name + ']';
     }
 
     public final String getName() {
         return name;
     }
 
-    public final void addListener(TaskListener<? super T> listener) {
-        Objects.requireNonNull(listener, "listener");
-        listeners.add(listener);
+    public final void addListener(TaskListener listener) {
+        U.requireNotNull(listener, "listener");
+        if (listenersArray != null) {
+            throw new IllegalStateException();
+        }
+        listenerList.add(listener);
     }
 
-    public final Task<?> getBindingTask() {
+    public final Task getBindingTask() {
         return bindingTask;
     }
 
@@ -48,7 +50,7 @@ public abstract class Task<T> implements Callable<T> {
         this.interrupted = true;
         interrupted();
 
-        if (bindingTask != null) {
+        if(bindingTask != null) {
             bindingTask.interrupt();
         }
     }
@@ -62,43 +64,47 @@ public abstract class Task<T> implements Callable<T> {
             throw new IllegalArgumentException("already executing");
         }
 
-        listeners = Collections.unmodifiableList(listeners);
+        listenersArray = new TaskListener[listenerList.size()];
+        listenerList.toArray(listenersArray);
 
-        for (TaskListener<? super T> listener : listeners) {
-            listener.onTaskStarted(this);
+        if (listenersArray != null) {
+            for (TaskListener listener : listenersArray) {
+                listener.onTaskStarted(this);
+            }
         }
 
         Exception e = null;
 
         try {
             return execute();
-        } catch (InterruptedException inEx) {
+        } catch(InterruptedException inEx) {
             interrupted = true;
             throw inEx;
         } catch (Exception ex) {
             throw e = ex;
         } finally {
-            if (interrupted) {
+            if(interrupted) {
                 log("interruption confirmed");
                 updateProgress(-1.);
-                for (TaskListener<? super T> listener : listeners) {
+                for (TaskListener listener : listenersArray) {
                     listener.onTaskInterrupted(this);
                 }
             } else {
                 if (e == null) {
                     updateProgress(1.);
                     log("Done!");
-                    for (TaskListener<? super T> listener : listeners) {
+                    for (TaskListener listener : listenersArray) {
                         listener.onTaskSucceeded(this);
                     }
                 } else {
                     log("Failed:", e);
-                    for (TaskListener<? super T> listener : listeners) {
+                    for (TaskListener listener : listenersArray) {
                         listener.onTaskErrored(this, e);
                     }
                 }
             }
-            listeners = new ArrayList<>();
+            listenerList.clear();
+            listenersArray = null;
             executing.set(false);
 
             unbind();
@@ -110,12 +116,14 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     protected final <V> V bindTo(Task<V> task, double startProgress, double stopProgress) throws Exception {
-        if (startProgress > stopProgress) {
+        if(startProgress > stopProgress) {
             throw new IllegalArgumentException();
         }
 
-        for (TaskListener<? super T> listener : listeners) {
-            listener.onTaskBound(this, task);
+        if (listenersArray != null) {
+            for (TaskListener listener : listenersArray) {
+                listener.onTaskBound(this, task);
+            }
         }
 
         if (task != null) {
@@ -140,8 +148,8 @@ public abstract class Task<T> implements Callable<T> {
             return result;
         } else {
             //log("unbind from " + bindingTask);
-            if (bindingTask != null) {
-                if (bindingTask.boundTask == this) {
+            if(bindingTask != null) {
+                if(bindingTask.boundTask == this) {
                     bindingTask.boundTask = null;
                 }
                 bindingTask = null;
@@ -158,14 +166,16 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     protected final void updateProgress(double percentage) {
-        if (percentage < 0. || percentage > 1.) {
+        if(percentage < 0. || percentage > 1.) {
             percentage = -1.;
         }
 
         progress = percentage;
 
-        for (TaskListener<? super T> listener : listeners) {
-            listener.onTaskUpdated(this, percentage);
+        if (listenersArray != null) {
+            for (TaskListener listener : listenersArray) {
+                listener.onTaskUpdated(this, percentage);
+            }
         }
 
         if (boundTask != null) {
@@ -178,7 +188,7 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     protected final void checkInterrupted() throws TaskInterruptedException {
-        if (interrupted) {
+        if(interrupted) {
             throw new TaskInterruptedException(this);
         }
     }

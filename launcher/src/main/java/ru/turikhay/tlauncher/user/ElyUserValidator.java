@@ -18,14 +18,13 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Objects;
 
 class ElyUserValidator {
     private static final Logger LOGGER = LogManager.getLogger(ElyUserValidator.class);
 
     static final String ACCOUNT_INFO = ElyAuth.API_BASE + "/account/v1/info";
-    static final String TOKEN_REFRESH_REQUEST = "grant_type=refresh_token&client_id=" + ElyAuth.CLIENT_ID + "&" +
-            "client_secret=" + ElyAuth.CLIENT_SECRET + "&refresh_token=${refresh_token}";
+    static final String TOKEN_REFRESH_REQUEST = "grant_type=refresh_token&client_id="+ ElyAuth.CLIENT_ID +"&" +
+            "client_secret="+ ElyAuth.CLIENT_SECRET +"&refresh_token=${refresh_token}";
 
     private String accessToken;
     private String refreshToken;
@@ -36,7 +35,7 @@ class ElyUserValidator {
     private final Gson gson = new GsonBuilder().create();
 
     ElyUserValidator(ElyUser user) {
-        Objects.requireNonNull(user, "user");
+        U.requireNotNull(user, "user");
         updateUser(user);
 
         LOGGER.debug("user validator created for user: {}", user);
@@ -46,15 +45,13 @@ class ElyUserValidator {
         LOGGER.debug("validating user...");
 
         Response<ElyUserJsonizer.ElySerialize> rawUserResponse = getUserInfo();
-        renewToken:
-        {
+        renewToken: {
             if (rawUserResponse.error == null) {
                 break renewToken;
             }
 
-            renewTokenBreak:
-            {
-                if (rawUserResponse.error.isTokenExpired()) {
+            renewTokenBreak: {
+                if(rawUserResponse.error.isTokenExpired()) {
                     LOGGER.debug("token has expired. renewing");
                     break renewTokenBreak;
                 }
@@ -69,8 +66,8 @@ class ElyUserValidator {
                 }
 
                 rawUserResponse = getUserInfo();
-                if (rawUserResponse.error != null) {
-                    if (rawUserResponse.error.isTokenExpired() && refreshToken != null) {
+                if(rawUserResponse.error != null) {
+                    if(rawUserResponse.error.isTokenExpired() && refreshToken != null) {
                         LOGGER.debug("token has expired. renewing");
                         break renewTokenBreak;
                     } else {
@@ -82,10 +79,10 @@ class ElyUserValidator {
             }
 
             TokenRefreshResponse response = refreshAccessToken();
-            setToken(response.access_token, refreshToken, System.currentTimeMillis() + (response.expires_in * 1000L));
+            setToken(response.access_token, refreshToken, System.currentTimeMillis() + (response.expires_in * 1000));
 
             rawUserResponse = getUserInfo();
-            if (rawUserResponse.error != null) {
+            if(rawUserResponse.error != null) {
                 throw new InvalidCredentialsException(rawUserResponse.error.toString());
             }
         }
@@ -112,7 +109,7 @@ class ElyUserValidator {
 
         Response<TokenRefreshResponse> tokenRefreshResponse = parse(connection, TokenRefreshResponse.class);
 
-        if (tokenRefreshResponse.error != null) {
+        if(tokenRefreshResponse.error != null) {
             throw new InvalidCredentialsException(tokenRefreshResponse.error.toString());
         }
 
@@ -120,7 +117,7 @@ class ElyUserValidator {
 
         try {
             response.checkConsistancy();
-        } catch (RuntimeException rE) {
+        } catch(RuntimeException rE) {
             throw new IOException("token response is invalid");
         }
 
@@ -128,8 +125,8 @@ class ElyUserValidator {
     }
 
     private void updateUser(ElyUser user) {
-        Objects.requireNonNull(user, "user");
-        if (this.user == null) {
+        U.requireNotNull(user, "user");
+        if(this.user == null) {
             this.user = user;
         } else {
             this.user.copyFrom(user);
@@ -147,7 +144,7 @@ class ElyUserValidator {
 
         this.expiryTime = expiryTime;
 
-        if (user != null) {
+        if(user != null) {
             user.setToken(accessToken, refreshToken, expiryTime);
         }
     }
@@ -170,15 +167,15 @@ class ElyUserValidator {
         LOGGER.debug("response: {}", response);
         try {
             return gson.fromJson(response, clazz);
-        } catch (RuntimeException rE) {
-            throw new IOException("could not parse response: \"" + response + "\"", rE);
+        } catch(RuntimeException rE) {
+            throw new IOException("could not parse response: \""+ response +"\"", rE);
         }
     }
 
     private <T> Response<T> parse(HttpURLConnection connection, Class<T> clazz) throws IOException {
-        if (connection.getResponseCode() == 200) {
+        if(connection.getResponseCode() == 200) {
             try {
-                return new Response<>(parse(connection.getInputStream(), clazz));
+                return new Response<T>(parse(connection.getInputStream(), clazz));
             } catch (Exception e) {
                 throw new IOException("could not parse response", e);
             }
@@ -187,11 +184,11 @@ class ElyUserValidator {
         YiiErrorResponse error;
         try {
             error = parse(connection.getErrorStream(), YiiErrorResponse.class);
-        } catch (Exception e) {
+        } catch(Exception e) {
             throw new IOException("could not read error message", e);
         }
 
-        return new Response<>(error);
+        return new Response<T>(error);
     }
 
     private Response<ElyUserJsonizer.ElySerialize> getUserInfo() throws IOException {
@@ -231,10 +228,10 @@ class ElyUserValidator {
 
         void checkConsistancy() {
             StringUtil.requireNotBlank(access_token, "access_token");
-            if (!"Bearer".equals(token_type)) {
-                throw new IllegalArgumentException("token type: \"" + token_type + "\"");
+            if(!"Bearer".equals(token_type)) {
+                throw new IllegalArgumentException("token type: \""+ token_type +"\"");
             }
-            if (expires_in != 0 && expires_in < 0) {
+            if(expires_in != 0 && expires_in < 0) {
                 throw new IllegalArgumentException("expires_in: " + expires_in);
             }
         }
@@ -248,17 +245,17 @@ class ElyUserValidator {
             this.error = error;
             this.response = response;
 
-            if (error == null && response == null) {
+            if(error == null && response == null) {
                 throw new NullPointerException("error & response");
             }
         }
 
         Response(YiiErrorResponse error) {
-            this(Objects.requireNonNull(error, "error"), null);
+            this(U.requireNotNull(error, "error"), null);
         }
 
         Response(T response) {
-            this(null, Objects.requireNonNull(response, "response"));
+            this(null, U.requireNotNull(response, "response"));
         }
     }
 }

@@ -1,6 +1,6 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.embed;
 
-import java.awt.*;
+import java.awt.Image;
 import java.util.List;
 
 public class BrowserConfiguration {

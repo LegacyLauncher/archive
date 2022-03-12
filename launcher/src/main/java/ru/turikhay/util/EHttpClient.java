@@ -59,7 +59,7 @@ public final class EHttpClient {
         InputStream input = Objects.requireNonNull(entity.getContent(), "content");
         ContentType contentType = ContentType.get(entity);
         Charset charset;
-        if (contentType == null || contentType.getCharset() == null) {
+        if(contentType == null || contentType.getCharset() == null) {
             charset = StandardCharsets.UTF_8;
         } else {
             charset = contentType.getCharset();

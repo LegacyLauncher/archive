@@ -5,6 +5,8 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class UpdateFrame extends VActionFrame {
 
@@ -12,7 +14,7 @@ public class UpdateFrame extends VActionFrame {
         setTitlePath("update.title");
         getHead().setText("update.head", version);
 
-        if (changelog == null) {
+        if(changelog == null) {
             getBodyText().setText("update.body.no-text");
         } else {
             getBodyText().setText(changelog);
@@ -38,7 +40,12 @@ public class UpdateFrame extends VActionFrame {
         c.fill = GridBagConstraints.NONE;
         LocalizableButton yesButton = new LocalizableButton("update.footer.continue");
         yesButton.setPreferredSize(SwingUtil.magnify(new Dimension(150, 40)));
-        yesButton.addActionListener(e -> dispose());
+        yesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
         getFooter().add(yesButton, c);
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);

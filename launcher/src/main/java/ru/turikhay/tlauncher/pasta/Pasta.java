@@ -14,10 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.logger.LogFile;
-import ru.turikhay.util.CharsetData;
-import ru.turikhay.util.CharsetDataHttpEntity;
-import ru.turikhay.util.EHttpClient;
-import ru.turikhay.util.StringCharsetData;
+import ru.turikhay.util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +22,6 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -85,7 +81,7 @@ public class Pasta {
             result = doPaste();
         } catch (Throwable e) {
             LOGGER.error("Could not upload paste", e);
-            if (!(e instanceof PastaException)) {
+            if(!(e instanceof PastaException)) {
                 Sentry.capture(new EventBuilder()
                         .withMessage("pasta not sent")
                         .withExtra("sample", getSample())
@@ -117,16 +113,16 @@ public class Pasta {
             throw new RuntimeException("data is empty");
         }
 
-        try (CloseableHttpClient httpClient = EHttpClient.createRepeatable()) {
+        try(CloseableHttpClient httpClient = EHttpClient.createRepeatable()) {
             PastaUploaded result = null;
             for (int attempt = 1; attempt <= 2; attempt++) {
                 try {
                     result = makeRequest(httpClient, data, format);
-                } catch (TooManyRequests tmr) {
-                    if (ignoreTmr) {
+                } catch(TooManyRequests tmr) {
+                    if(ignoreTmr) {
                         throw tmr;
                     }
-                    int waitTime = (attempt > 1 ? 61 : 31) + new Random().nextInt(10);
+                    int waitTime = (attempt > 1? 61 : 31) + new Random().nextInt(10);
                     LOGGER.warn("Pasta could not be sent because of the rate limit (attempt {}, wait time {}s)", attempt, waitTime);
                     try {
                         Thread.sleep(waitTime * 1000L);
@@ -137,7 +133,7 @@ public class Pasta {
                 }
                 break;
             }
-            if (result == null) {
+            if(result == null) {
                 throw new TooManyRequests();
             }
             LOGGER.info("Pasta has been sent successfully: {}", result.getURL());
@@ -148,7 +144,7 @@ public class Pasta {
     private PastaUploaded makeRequest(HttpClient httpClient, CharsetData data, PastaFormat format)
             throws IOException {
         String clientId;
-        if (TLauncher.getInstance() != null) {
+        if(TLauncher.getInstance() != null) {
             clientId = TLauncher.getInstance().getSettings().getClient().toString();
         } else {
             clientId = "test";
@@ -156,15 +152,15 @@ public class Pasta {
         HttpPost httpPost = new HttpPost(
                 String.format(java.util.Locale.ROOT,
                         CREATE_PASTE_URL,
-                        URLEncoder.encode(APP_KEY, "UTF-8"),
-                        URLEncoder.encode(clientId, "UTF-8"),
-                        URLEncoder.encode(format.value(), "UTF-8")
+                        UrlEncoder.encode(APP_KEY),
+                        UrlEncoder.encode(clientId),
+                        UrlEncoder.encode(format.value())
                 )
         );
         httpPost.setEntity(new CharsetDataHttpEntity(data));
         HttpResponse response = httpClient.execute(httpPost);
         int statusCode = response.getStatusLine().getStatusCode();
-        switch (statusCode) {
+        switch(statusCode) {
             case RESPONSE_OK:
                 return readSuccess(response);
             case RESPONSE_ERROR_TOO_LONG:
@@ -180,14 +176,14 @@ public class Pasta {
 
     private PastaUploaded readSuccess(HttpResponse response) throws IOException {
         String result = EntityUtils.toString(response.getEntity());
-        if (result.startsWith("http")) {
+        if(result.startsWith("http")) {
             URL urlLink;
             try {
                 urlLink = new URL(result);
-            } catch (MalformedURLException e) {
+            } catch(MalformedURLException e) {
                 urlLink = null;
             }
-            if (urlLink != null) { // not malformed
+            if(urlLink != null) { // not malformed
                 return new PastaUploaded(this, urlLink);
             }
         }
@@ -195,10 +191,10 @@ public class Pasta {
     }
 
     private String getSample() {
-        try (Reader reader = data.read(); StringWriter writer = new StringWriter()) {
+        try(Reader reader = data.read(); StringWriter writer = new StringWriter()){
             char[] buffer = new char[256];
             int read = reader.read(buffer);
-            if (read > 0) {
+            if(read > 0) {
                 writer.write(buffer, 0, read);
             } else {
                 return "empty sample";
@@ -206,7 +202,7 @@ public class Pasta {
             return writer.toString();
         } catch (IOException e) {
             LOGGER.warn("Error reading sample", e);
-            return "couldn't get sample: " + e;
+            return "couldn't get sample: " + e.toString();
         }
     }
 
@@ -216,7 +212,7 @@ public class Pasta {
         pasta.setIgnoreTooManyRequests();
         pasta.setFormat(format);
         PastaResult result = pasta.paste();
-        if (result instanceof PastaUploaded) {
+        if(result instanceof PastaUploaded) {
             return ((PastaUploaded) result).getURL().toExternalForm();
         } else if (result instanceof PastaFailed) {
             return "pasta: " + ((PastaFailed) result).getError().toString();
@@ -226,9 +222,9 @@ public class Pasta {
     }
 
     public static String paste(String data, PastaFormat format) {
-        if (data == null) {
+        if(data == null) {
             return "pasta: input null";
-        } else if (StringUtils.isBlank(data)) {
+        } else if(StringUtils.isBlank(data)) {
             return "pasta: input blank";
         }
         return paste(new StringCharsetData(data), format);
@@ -239,13 +235,13 @@ public class Pasta {
     }
 
     public static String pasteFile(File file, PastaFormat format, Charset charset) {
-        if (file == null) {
+        if(file == null) {
             return "pasta: file null";
         }
-        if (!file.isFile()) {
+        if(!file.isFile()) {
             return "pasta: not a file: " + file.getAbsolutePath();
         }
-        if (charset == null) {
+        if(charset == null) {
             charset = StandardCharsets.UTF_8;
         }
         return paste(new LogFile(file, charset), format);

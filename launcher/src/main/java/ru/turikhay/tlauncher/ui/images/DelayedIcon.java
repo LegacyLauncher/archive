@@ -32,7 +32,7 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
 
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
-        if (icon != null) {
+        if(icon != null) {
             g.drawImage(icon, x, y, null);
         }
     }
@@ -44,7 +44,7 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
         this.icon = null;
         this.size = computeSize(iconWidth, iconHeight, targetWidth, targetHeight);
         AsyncThread.future(loader = new IconLoader(icon, size));
-        if (repaint) {
+        if(repaint) {
             repaint();
         }
     }
@@ -104,13 +104,13 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
 
             final Image result;
 
-            if (MultiResInterface.INSTANCE.isEnabled()) {
+            if(MultiResInterface.INSTANCE.isEnabled()) {
                 result = toMultiResIcon(icon, size.width, size.height);
             } else {
                 result = scaledIcon(icon, size.width, size.height, 1.0);
             }
 
-            if (DelayedIcon.this.loader == this) {
+            if(DelayedIcon.this.loader == this) {
                 SwingUtil.later(() -> iconLoaded(result));
             } else {
                 LOGGER.debug("Icon loader result discarded");
@@ -120,7 +120,8 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
 
     private static Dimension computeSize(
             int iconWidth, int iconHeight,
-            int targetWidth, int targetHeight) {
+            int targetWidth, int targetHeight)
+    {
         if (targetWidth == 0 && targetHeight == 0) {
             return new Dimension(iconWidth, iconHeight);
         }
@@ -144,7 +145,7 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
 
     private static Image scaledIcon(Image icon, int width, int height, double scale) {
         final int hints = Image.SCALE_SMOOTH;
-        if (scale == 1.0) {
+        if(scale == 1.0) {
             return icon.getScaledInstance(width, height, hints);
         } else {
             return icon.getScaledInstance((int) (scale * width), (int) (scale * height), hints);

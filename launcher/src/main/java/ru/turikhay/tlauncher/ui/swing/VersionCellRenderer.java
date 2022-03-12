@@ -43,7 +43,7 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
             if (getShowVersionsFor() != null && TLauncher.getInstance().getLibraryManager()
                     .hasLibrariesExplicitly(value, getShowVersionsFor().toString())) {
                 ImageIcon icon = null;
-                switch (getShowVersionsFor()) {
+                switch(getShowVersionsFor()) {
                     case ELY:
                     case ELY_LEGACY:
                         icon = ELY_ICON;
@@ -58,7 +58,7 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
                         break;
                 }
                 mainText.setIcon(icon);
-                if (icon != null) {
+                if(icon != null) {
                     width += icon.getIconWidth() + mainText.getIconTextGap();
                 }
             }

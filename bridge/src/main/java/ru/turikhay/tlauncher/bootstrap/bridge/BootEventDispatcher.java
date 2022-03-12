@@ -115,14 +115,17 @@ public final class BootEventDispatcher implements BootListener {
             notifyAll();
         }
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                log("Closing forcefully!");
+                System.exit(-1);
             }
-            log("Closing forcefully!");
-            System.exit(-1);
         }).start();
     }
 

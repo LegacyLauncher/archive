@@ -21,7 +21,6 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
     }
 
     private final Lazy<DisabledImageIcon> disabledInstance = Lazy.of(() -> new DisabledImageIcon(this));
-
     @Override
     public DisabledImageIcon getDisabledInstance() {
         return disabledInstance.get();
@@ -29,7 +28,7 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
 
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
-        if (image != null) {
+        if(image != null) {
             g.drawImage(image, x, y, null);
         }
     }
@@ -49,16 +48,16 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
     }
 
     public static ImageIcon setup(JComponent component, ImageIcon icon) {
-        if (component == null) {
+        if(component == null) {
             return null;
         }
 
-        if (component instanceof JLabel) {
+        if(component instanceof JLabel) {
             ((JLabel) component).setIcon(icon);
-            ((JLabel) component).setDisabledIcon(icon == null ? null : icon.getDisabledInstance());
-        } else if (component instanceof AbstractButton) {
+            ((JLabel) component).setDisabledIcon(icon == null?  null : icon.getDisabledInstance());
+        } else if(component instanceof AbstractButton) {
             ((AbstractButton) component).setIcon(icon);
-            ((AbstractButton) component).setDisabledIcon(icon == null ? null : icon.getDisabledInstance());
+            ((AbstractButton) component).setDisabledIcon(icon == null? null : icon.getDisabledInstance());
         } else {
             throw new IllegalArgumentException();
         }

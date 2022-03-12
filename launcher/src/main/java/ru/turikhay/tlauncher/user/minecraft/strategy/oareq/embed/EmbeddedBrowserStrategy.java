@@ -2,7 +2,9 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.embed;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.exceptions.ParseException;
+
+import ru.turikhay.exceptions.ParseException;
+
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.*;
 
 import java.net.MalformedURLException;
@@ -50,10 +52,10 @@ public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrateg
         } finally {
             browser.close();
         }
-        if (exception != null) {
+        if(exception != null) {
             throw new MicrosoftOAuthCodeRequestException("url parsed an error", exception);
         }
-        if (code == null) {
+        if(code == null) {
             throw new CodeRequestCancelledException("browser closed and no code received");
         }
         return code;
@@ -68,10 +70,10 @@ public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrateg
         String code = null;
         try {
             code = parser.parseAndValidate(url);
-        } catch (ParseException e) {
+        } catch(ParseException e) {
             LOGGER.trace("Couldn't parse: {}", e.toString());
             return;
-        } catch (MicrosoftOAuthCodeRequestException e) {
+        } catch(MicrosoftOAuthCodeRequestException e) {
             LOGGER.warn("Parser returned: {}", e.toString());
             this.exception = e;
         }
@@ -83,7 +85,7 @@ public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrateg
     public static boolean isJavaFXWebViewSupported() {
         try {
             JavaFXBrowser.checkAvailable();
-        } catch (Error e) {
+        } catch(Error e) {
             LOGGER.info("JavaFX Browser not available: {}", e.toString());
             return false;
         }

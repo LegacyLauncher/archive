@@ -28,25 +28,25 @@ public class NoticePopup extends JPopupMenu {
     public void updateList() {
         removeAll();
 
-        if (notice == null) {
+        if(notice == null) {
             return;
         }
 
-        if (notice.getAction() == null) {
+        if(notice.getAction() == null) {
             return;
         }
 
         List<? extends JMenuItem> items = notice.getAction().getMenuItemList();
-        if (items != null) {
+        if(items != null) {
             for (JMenuItem item : items) {
                 add(item);
             }
         }
-        if (!registeredItems.isEmpty()) {
-            if (items != null) {
+        if(!registeredItems.isEmpty()) {
+            if(items != null) {
                 addSeparator();
             }
-            for (JMenuItem item : registeredItems) {
+            for(JMenuItem item : registeredItems) {
                 add(item);
             }
         }

@@ -11,14 +11,18 @@ import ru.turikhay.tlauncher.ui.swing.editor.HyperlinkProcessor;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.HtmlSubstitutor;
+import ru.turikhay.util.U;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Objects;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class AccountElyStart extends BorderPanel implements AccountMultipaneCompCloseable, LocalizableComponent {
     private final String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
+
+    private final AccountManagerScene scene;
 
     private final LocalizableButton button/*, extraButton*/;
     private final EditorPane content;
@@ -26,12 +30,13 @@ public class AccountElyStart extends BorderPanel implements AccountMultipaneComp
     private StartState state;
 
     public AccountElyStart(final AccountManagerScene scene) {
+        this.scene = scene;
 
         this.content = new EditorPane();
         ((ExtendedHTMLEditorKit) content.getEditorKit()).setHyperlinkProcessor(new HyperlinkProcessor() {
             @Override
             public JPopupMenu process(String link) {
-                if (link != null && link.startsWith("internal:tip:")) {
+                if(link != null && link.startsWith("internal:tip:")) {
                     String tip = link.substring("internal:tip:".length());
                     scene.multipane.showTip(tip);
                     return null;
@@ -50,14 +55,17 @@ public class AccountElyStart extends BorderPanel implements AccountMultipaneComp
         c.gridy = -1;
 
         button = new LocalizableButton();
-        button.addActionListener(e -> {
-            switch (state) {
-                case DESCRIPTION:
-                    setState(StartState.GET_READY);
-                    break;
-                case GET_READY:
-                    scene.multipane.showTip("process-account-ely");
-                    break;
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                switch(state) {
+                    case DESCRIPTION:
+                        setState(StartState.GET_READY);
+                        break;
+                    case GET_READY:
+                        scene.multipane.showTip("process-account-ely");
+                        break;
+                }
             }
         });
         button.setIcon(Images.getIcon24("logo-ely"));
@@ -87,7 +95,7 @@ public class AccountElyStart extends BorderPanel implements AccountMultipaneComp
     }
 
     private void setState(StartState state) {
-        this.state = Objects.requireNonNull(state, "state");
+        this.state = U.requireNotNull(state, "state");
         button.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".button");
         //extraButton.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".bottom-button");
         content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".body"), new HtmlSubstitutor()));

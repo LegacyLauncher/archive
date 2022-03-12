@@ -12,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.URL;
@@ -61,7 +62,7 @@ public class JavaFXBrowser implements EmbeddedBrowser {
     }
 
     private void initJFX(URL url) {
-        if (explicitExit) {
+        if(explicitExit) {
             // Prevent JavaFX from stopping when browser is closed
             // This will ensure another browser can be opened after
             Platform.setImplicitExit(false);
@@ -79,7 +80,7 @@ public class JavaFXBrowser implements EmbeddedBrowser {
     }
 
     private void initWebView(URL url) {
-        if (configuration.isClearCookies()) {
+        if(configuration.isClearCookies()) {
             CookieHandler.setDefault(new CookieManager());
         }
         this.webView = new WebView();
@@ -98,7 +99,7 @@ public class JavaFXBrowser implements EmbeddedBrowser {
 
     private void destroy() {
         Platform.runLater(() -> {
-            if (webView == null || panel == null) {
+            if(webView == null || panel == null) {
                 return;
             }
             webView.getEngine().getLoadWorker().cancel();
@@ -106,7 +107,7 @@ public class JavaFXBrowser implements EmbeddedBrowser {
             panel.setScene(null);
             panel = null;
             SwingUtilities.invokeLater(() -> {
-                if (window == null) {
+                if(window == null) {
                     return;
                 }
                 window.dispose();
@@ -130,7 +131,7 @@ public class JavaFXBrowser implements EmbeddedBrowser {
 
     @Override
     public void waitForClose(long time, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
-        if (!closeLatch.await(time, timeUnit)) {
+        if(!closeLatch.await(time, timeUnit)) {
             throw new TimeoutException();
         }
     }

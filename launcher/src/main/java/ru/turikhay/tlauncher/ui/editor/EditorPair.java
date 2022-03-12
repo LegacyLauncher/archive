@@ -30,7 +30,8 @@ public class EditorPair {
                 c.gridx++;
                 prev = handler;
                 continue;
-            } else if (!NEXT_COLUMN.equals(prev)) {
+            } else if (NEXT_COLUMN.equals(prev)) {
+            } else {
                 c.gridx = 0;
                 c.gridy++;
             }

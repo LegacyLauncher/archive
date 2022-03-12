@@ -20,7 +20,8 @@ public class ThemeColorIconProcessor implements IconProcessor {
 
     public ThemeColorIconProcessor(IconProcessor parentProcessor,
                                    Supplier<Theme> themeSupplier,
-                                   Color defaultColor) {
+                                   Color defaultColor)
+    {
         this.parentProcessor = Objects.requireNonNull(parentProcessor, "parentProcessor");
         this.themeSupplier = Objects.requireNonNull(themeSupplier, "themeSupplier");
         this.defaultColor = Objects.requireNonNull(defaultColor, "defaultColor");
@@ -37,7 +38,7 @@ public class ThemeColorIconProcessor implements IconProcessor {
     @Override
     public Image processBaseIcon(BufferedImage baseIcon, String iconName, int targetSize) {
         BufferedImage icon;
-        if (canPaintColor(baseIcon, iconName)) {
+        if(canPaintColor(baseIcon, iconName)) {
             int targetColor = requestIconColor(iconName);
             icon = paintIcon(baseIcon, targetColor);
         } else {
@@ -66,7 +67,7 @@ public class ThemeColorIconProcessor implements IconProcessor {
     private int requestIconColor(String iconName) {
         Theme theme = Objects.requireNonNull(themeSupplier.get(), "theme");
         Color iconColor = theme.getIconColor(iconName);
-        if (iconColor == null) {
+        if(iconColor == null) {
             iconColor = defaultColor;
         }
         return iconColor.getRGB();
@@ -74,7 +75,7 @@ public class ThemeColorIconProcessor implements IconProcessor {
 
     private static boolean canPaintColor(BufferedImage icon, String iconName) {
         ColorModel colorModel = icon.getColorModel();
-        if (colorModel == null) {
+        if(colorModel == null) {
             LOGGER.warn("Unknown color model of icon {}", iconName);
             return false;
         }

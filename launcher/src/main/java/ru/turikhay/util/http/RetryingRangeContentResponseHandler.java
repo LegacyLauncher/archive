@@ -41,7 +41,7 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
 
     @Override
     public Content handleEntity(HttpEntity entity) throws IOException {
-        if (entity == null) {
+        if(entity == null) {
             return super.handleEntity(null);
         }
 
@@ -51,7 +51,7 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
 
         long read = readBuffer(content, buffer);
 
-        if (length > 0 && read < length) {
+        if(length > 0 && read < length) {
             LOGGER.warn("Premature EOF while downloading {} ({} / {})",
                     request, read, length);
             EntityUtils.consume(entity);
@@ -69,7 +69,7 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
                 read = handler.totalRead;
             }
             LOGGER.debug("Done range downloading {}: {} / {}", request, read, length);
-            if (enableSentryReporting) {
+            if(enableSentryReporting) {
                 Sentry.capture(new EventBuilder()
                         .withLevel(Event.Level.WARNING)
                         .withMessage("partial download success")
@@ -86,7 +86,7 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
         final byte[] tmp = new byte[BUFFER_SIZE];
         long l = 0L;
         int r;
-        while ((r = content.read(tmp)) != -1) {
+        while((r = content.read(tmp)) != -1) {
             buffer.append(tmp, 0, r);
             l += r;
         }
@@ -113,8 +113,8 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
         public Void handleResponse(final HttpResponse response) throws IOException {
             final StatusLine statusLine = response.getStatusLine();
             int statusCode = statusLine.getStatusCode();
-            if (statusCode == 200) {
-                if (enableSentryReporting) {
+            if(statusCode == 200) {
+                if(enableSentryReporting) {
                     Sentry.capture(new EventBuilder()
                             .withLevel(Event.Level.ERROR)
                             .withMessage("server doesn't seem to support partial downloads")
@@ -125,8 +125,8 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
                     );
                 }
                 throw new HttpResponseException(200, "Expected partial download response");
-            } else if (statusCode != 206) {
-                if (enableSentryReporting) {
+            } else if(statusCode != 206) {
+                if(enableSentryReporting) {
                     Sentry.capture(new EventBuilder()
                             .withLevel(Event.Level.ERROR)
                             .withMessage("partial download failed: " + response.getStatusLine().toString())

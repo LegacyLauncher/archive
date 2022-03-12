@@ -11,9 +11,14 @@ public class EditorComboBox<T> extends ExtendedComboBox<T> implements EditorFiel
         super(converter);
         this.allowNull = allowNull;
         if (values != null) {
-            for (T value : values) {
+            T[] var7 = values;
+            int var6 = values.length;
+
+            for (int var5 = 0; var5 < var6; ++var5) {
+                T value = var7[var5];
                 addItem(value);
             }
+
         }
     }
 

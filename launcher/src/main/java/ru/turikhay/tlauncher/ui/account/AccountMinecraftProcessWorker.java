@@ -38,11 +38,10 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticatio
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.UrlEncoder;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -63,12 +62,12 @@ class AccountMinecraftProcessWorker {
     private void run() {
         try {
             doRun();
-        } catch (InterruptedException | TimeoutException e) {
+        } catch(InterruptedException | TimeoutException e) {
             setState("cancelled");
             stopProgress();
-        } catch (MinecraftAuthenticationException e) {
+        } catch(MinecraftAuthenticationException e) {
             stopProgress();
-            if (e instanceof GameOwnershipValidationException && ((GameOwnershipValidationException) e).isKnownNotToOwn()) {
+            if(e instanceof GameOwnershipValidationException && ((GameOwnershipValidationException) e).isKnownNotToOwn()) {
                 LOGGER.info("User does not own Minecraft or not yet migrated their Mojang account");
                 setState("dont-own");
                 Alert.showLocError(
@@ -76,14 +75,14 @@ class AccountMinecraftProcessWorker {
                         locPrefix + "dont-own.alert.message",
                         null
                 );
-            } else if (e instanceof CodeRequestCancelledException) {
+            } else if(e instanceof CodeRequestCancelledException) {
                 setState("cancelled");
                 LOGGER.info("User cancelled OAuth code request: {}", e.toString());
             } else {
                 LOGGER.warn("Authentication failed", e);
                 showError(e);
             }
-        } catch (Exception e) {
+        } catch(Exception e) {
             LOGGER.error("Something went wrong while authenticating", e);
             showError(e);
         }
@@ -97,7 +96,7 @@ class AccountMinecraftProcessWorker {
                 .withMessage("microsoft auth failed")
                 .withSentryInterface(new ExceptionInterface(e))
         );
-        if (e instanceof MinecraftAuthenticationException) {
+        if(e instanceof MinecraftAuthenticationException) {
             String key = ((MinecraftAuthenticationException) e).getShortKey();
             Alert.showLocError(
                     "account.manager.error.title",
@@ -117,7 +116,7 @@ class AccountMinecraftProcessWorker {
         OAuthApplication application = OAuthApplication.TL;
         setState("browser-open");
         MicrosoftOAuthCodeRequestStrategy requestStrategy = initBrowser();
-        if (requestStrategy instanceof LocalServerStrategy) {
+        if(requestStrategy instanceof LocalServerStrategy) {
             LocalServerSelectedConfiguration selectedConfig = ((LocalServerStrategy) requestStrategy).startServer();
             String loginUrl = urlProducer.buildLoginUrl(selectedConfig);
             SwingUtil.later(() -> parent.setButtonLink(loginUrl));
@@ -137,7 +136,7 @@ class AccountMinecraftProcessWorker {
         MinecraftOAuthProfile minecraftProfile;
         try {
             minecraftProfile = new MinecraftProfileRequester().requestProfile(minecraftToken);
-        } catch (ProfileNotCreatedException e) {
+        } catch(ProfileNotCreatedException e) {
             LOGGER.info("User starts Minecraft for the first time");
             minecraftProfile = handleProfileCreation(minecraftToken);
         }
@@ -150,33 +149,29 @@ class AccountMinecraftProcessWorker {
                     u.getType().equals(MojangUser.TYPE) && u.getUUID().equals(minecraftUser.getUUID())
             ).findAny().ifPresent(userSet::remove);
             parent.scene.multipane.showTip("success-add");
-            parent.scene.list.select(new Account<>(minecraftUser));
+            parent.scene.list.select(new Account(minecraftUser));
         });
     }
 
     private final LocalServerUrlProducer urlProducer = new LocalServerUrlProducer();
 
     private MicrosoftOAuthCodeRequestStrategy initBrowser() {
-        try {
-            return new LocalServerStrategy(
-                    new DefaultExternalBrowser(),
-                    urlProducer,
-                    new NanoHttpdLocalServer(
-                            new OAuthUrlParser(),
-                            urlProducer
-                    ),
-                    new LocalServerConfiguration(
-                            "localhost",
-                            Arrays.asList(46521, 47522, 48523, 49524),
-                            "",
-                            "https://tlaun.ch/msft-auth-success" +
-                                    "?tl_version=" + URLEncoder.encode(TLauncher.getVersion().toString(), "UTF-8")
-                                    + "&locale=" + URLEncoder.encode(TLauncher.getInstance().getLang().getLocale().toString(), "UTF-8")
-                    )
-            );
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("unsupported encoding", e);
-        }
+        return new LocalServerStrategy(
+                new DefaultExternalBrowser(),
+                urlProducer,
+                new NanoHttpdLocalServer(
+                        new OAuthUrlParser(),
+                        urlProducer
+                ),
+                new LocalServerConfiguration(
+                        "localhost",
+                        Arrays.asList(46521, 47522, 48523, 49524),
+                        "",
+                        "https://tlaun.ch/msft-auth-success" +
+                                "?tl_version=" + UrlEncoder.encode(TLauncher.getVersion().toString())
+                                + "&locale=" + UrlEncoder.encode(TLauncher.getInstance().getLang().getLocale().toString())
+                )
+        );
     }
 
     private MinecraftOAuthProfile handleProfileCreation(MinecraftServicesToken token) throws IOException, ProfileCreationAbortedException {
@@ -215,7 +210,7 @@ class AccountMinecraftProcessWorker {
     }
 
     void cancel() {
-        if (currentProcess != null) {
+        if(currentProcess != null) {
             currentProcess.cancel(true);
             currentProcess = null;
         }

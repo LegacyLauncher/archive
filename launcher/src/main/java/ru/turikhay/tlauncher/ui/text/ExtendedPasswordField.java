@@ -17,7 +17,7 @@ public class ExtendedPasswordField extends JPasswordField {
 
     private ExtendedPasswordField(CenterPanel panel, String placeholder) {
         theme = panel == null ? CenterPanel.defaultTheme : panel.getTheme();
-        this.placeholder = placeholder == null ? DEFAULT_PLACEHOLDER : placeholder;
+        this.placeholder = placeholder == null ? "пассворд, лол" : placeholder;
         addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {
                 onFocusGained();
@@ -52,7 +52,14 @@ public class ExtendedPasswordField extends JPasswordField {
         return value != null && !value.isEmpty() && !value.equals(placeholder) ? value : null;
     }
 
-    @Override
+    /**
+     * @deprecated
+     */
+    @Deprecated
+    public String getText() {
+        return super.getText();
+    }
+
     public char[] getPassword() {
         String value = getValue();
         return value == null ? new char[0] : value.toCharArray();
@@ -66,7 +73,6 @@ public class ExtendedPasswordField extends JPasswordField {
         return getValueOf(getText());
     }
 
-    @Override
     public void setText(String text) {
         String value = getValueOf(text);
         if (value == null) {

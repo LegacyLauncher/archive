@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ExtendedPanel extends JPanel {
@@ -15,7 +16,7 @@ public class ExtendedPanel extends JPanel {
     public ExtendedPanel(LayoutManager layout, boolean isDoubleBuffered) {
         super(layout, isDoubleBuffered);
         opacity = 1.0F;
-        mouseListeners = new ArrayList<>();
+        mouseListeners = new ArrayList();
         setOpaque(false);
     }
 
@@ -67,11 +68,16 @@ public class ExtendedPanel extends JPanel {
         super.addImpl(comp, constraints, index);
 
         MouseListener[] compareListeners = comp.getMouseListeners();
+        Iterator var4 = mouseListeners.iterator();
 
-        for (MouseListener listener : mouseListeners) {
+        while (var4.hasNext()) {
+            MouseListener listener = (MouseListener) var4.next();
             MouseListener add = listener;
+            MouseListener[] var9 = compareListeners;
+            int var8 = compareListeners.length;
 
-            for (MouseListener compareListener : compareListeners) {
+            for (int var7 = 0; var7 < var8; ++var7) {
+                MouseListener compareListener = var9[var7];
                 if (listener.equals(compareListener)) {
                     add = null;
                     break;
@@ -88,18 +94,32 @@ public class ExtendedPanel extends JPanel {
         if (components == null) {
             throw new NullPointerException();
         } else {
-            for (Component comp : components) {
+            Component[] var5 = components;
+            int var4 = components.length;
+
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Component comp = var5[var3];
                 add(comp);
             }
+
         }
+    }
+
+    public void add(Component component0, Component component1) {
+        add(new Component[]{component0, component1});
     }
 
     public synchronized void addMouseListener(MouseListener listener) {
         if (listener != null) {
             mouseListeners.add(listener);
-            for (Component comp : getComponents()) {
+            Component[] var5;
+            int var4 = (var5 = getComponents()).length;
+
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Component comp = var5[var3];
                 comp.addMouseListener(listener);
             }
+
         }
     }
 
@@ -128,15 +148,19 @@ public class ExtendedPanel extends JPanel {
     public boolean contains(Component comp) {
         if (comp == null) {
             return false;
-        }
+        } else {
+            Component[] var5;
+            int var4 = (var5 = getComponents()).length;
 
-        for (Component c : getComponents()) {
-            if (comp.equals(c)) {
-                return true;
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Component c = var5[var3];
+                if (comp.equals(c)) {
+                    return true;
+                }
             }
-        }
 
-        return false;
+            return false;
+        }
     }
 
     public Insets setInsets(int top, int left, int bottom, int right) {

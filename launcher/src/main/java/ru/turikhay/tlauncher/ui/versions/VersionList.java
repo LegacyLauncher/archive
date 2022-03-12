@@ -13,9 +13,14 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 public class VersionList extends CenterPanel implements VersionHandlerListener {
@@ -23,8 +28,8 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
     final VersionHandler handler;
     public final SimpleListModel<VersionSyncInfo> model;
     public final JList<VersionSyncInfo> list;
-    final VersionDownloadButton download;
-    final VersionRemoveButton remove;
+    VersionDownloadButton download;
+    VersionRemoveButton remove;
     public final ExtendedButton refresh;
     public final ExtendedButton back;
 
@@ -34,11 +39,15 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
         BorderPanel panel = new BorderPanel(0, SwingUtil.magnify(5));
         LocalizableLabel label = new LocalizableLabel("version.manager.list");
         panel.setNorth(label);
-        model = new SimpleListModel<>();
-        list = new JList<>(model);
+        model = new SimpleListModel();
+        list = new JList(model);
         list.setCellRenderer(new VersionListCellRenderer(this));
         list.setSelectionMode(2);
-        list.addListSelectionListener(e -> handler.onVersionSelected(list.getSelectedValuesList()));
+        list.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                handler.onVersionSelected(U.asListOf(VersionSyncInfo.class, list.getSelectedValues()));
+            }
+        });
         panel.setCenter(new ScrollPane(list, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER));
         ExtendedPanel buttons = new ExtendedPanel(new GridLayout(0, 4));
         refresh = new VersionRefreshButton(this);
@@ -49,7 +58,11 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
         buttons.add(remove);
         back = new ExtendedButton();
         back.setIcon(Images.getIcon24("home"));
-        back.addActionListener(e -> handler.exitEditor());
+        back.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                handler.exitEditor();
+            }
+        });
         buttons.add(back);
         panel.setSouth(buttons);
         add(panel);
@@ -76,7 +89,7 @@ public class VersionList extends CenterPanel implements VersionHandlerListener {
 
     void refreshFrom(VersionManager manager) {
         setRefresh(false);
-        List<VersionSyncInfo> list = manager.getVersions(handler.filter, false);
+        List list = manager.getVersions(handler.filter, false);
         model.addAll(list);
     }
 

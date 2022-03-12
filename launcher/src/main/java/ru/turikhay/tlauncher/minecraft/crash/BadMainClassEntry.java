@@ -15,19 +15,24 @@ public class BadMainClassEntry extends PatternEntry {
 
     @Override
     protected boolean checkCapability() throws Exception {
-        if (!super.checkCapability()) {
+        if(!super.checkCapability()) {
             return false;
         }
 
         String requestedMainClass = getMatch().group(1);
         LOGGER.info("Found bad main class: {}", requestedMainClass);
 
-        if (getManager().getLauncher() != null) {
+        if(getManager().getLauncher() != null) {
             String jvmArgs = getManager().getLauncher().getConfiguration().get("minecraft.javaargs");
-            if (jvmArgs != null) {
-                if (jvmArgs.contains(requestedMainClass)) {
+            if(jvmArgs != null) {
+                if(jvmArgs.contains(requestedMainClass)) {
                     setPath("check-javaargs");
-                    newButton("clear-javaargs", () -> getManager().getLauncher().getConfiguration().set("minecraft.javaargs", null));
+                    newButton("clear-javaargs", new Action() {
+                        @Override
+                        public void execute() throws Exception {
+                            getManager().getLauncher().getConfiguration().set("minecraft.javaargs", null);
+                        }
+                    });
                 }
                 addButton(getManager().getButton("open-settings"));
                 return true;

@@ -25,12 +25,14 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.user.McleaksUser;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.tlauncher.user.UserSet;
+import ru.turikhay.tlauncher.user.UserSetListener;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.json.InstantAdapter;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -47,9 +49,9 @@ public class ProfileManager extends RefreshableComponent {
     private final List<ProfileManagerListener> listeners;
     private final Gson gson;
     private File file;
-    private final AuthenticatorDatabase authDatabase;
+    private AuthenticatorDatabase authDatabase;
 
-    public ProfileManager(ComponentManager manager, File file) {
+    public ProfileManager(ComponentManager manager, File file) throws Exception {
         super(manager);
         if (file == null) {
             throw new NullPointerException();
@@ -57,22 +59,25 @@ public class ProfileManager extends RefreshableComponent {
             this.file = file;
             listeners = new CopyOnWriteArrayList<>();
 
-            this.accountManager = new AccountManager();
+            this.accountManager  = new AccountManager();
             authDatabase = new AuthenticatorDatabase(accountManager);
 
-            accountManager.addListener(set -> {
-                for (ProfileManagerListener l : listeners) {
-                    try {
-                        l.onProfilesRefreshed(ProfileManager.this);
-                    } catch (Exception e) {
-                        LOGGER.warn("Caught exception on one of profile manager listeners", e);
+            accountManager.addListener(new UserSetListener() {
+                @Override
+                public void userSetChanged(UserSet set) {
+                    for(ProfileManagerListener l : listeners) {
+                        try {
+                            l.onProfilesRefreshed(ProfileManager.this);
+                        } catch(Exception e) {
+                            LOGGER.warn("Caught exception on one of profile manager listeners", e);
+                        }
                     }
-                }
 
-                try {
-                    saveProfiles();
-                } catch (IOException var3) {
-                    LOGGER.warn("Could not save profiles", var3);
+                    try {
+                        saveProfiles();
+                    } catch (IOException var3) {
+                        LOGGER.warn("Could not save profiles", var3);
+                    }
                 }
             });
 
@@ -88,7 +93,7 @@ public class ProfileManager extends RefreshableComponent {
         }
     }
 
-    public ProfileManager(ComponentManager manager) {
+    public ProfileManager(ComponentManager manager) throws Exception {
         this(manager, getDefaultFile(manager));
     }
 
@@ -99,8 +104,10 @@ public class ProfileManager extends RefreshableComponent {
 
     public boolean refresh() {
         loadProfiles();
+        Iterator var2 = listeners.iterator();
 
-        for (ProfileManagerListener e : listeners) {
+        while (var2.hasNext()) {
+            ProfileManagerListener e = (ProfileManagerListener) var2.next();
             e.onProfilesRefreshed(this);
         }
 
@@ -116,23 +123,32 @@ public class ProfileManager extends RefreshableComponent {
     private void loadProfiles() {
         LOGGER.debug("Refreshing profiles from: {}", file);
         File oldFile = new File(file.getParentFile(), "launcher_profiles.json");
+        OutputStreamWriter writer = null;
         if (!oldFile.isFile()) {
-            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(oldFile), StandardCharsets.UTF_8)) {
+            try {
+                writer = new OutputStreamWriter(new FileOutputStream(oldFile), Charset.forName("UTF-8"));
                 gson.toJson(new OldProfileList(), writer);
+                writer.close();
             } catch (Exception var17) {
                 LOGGER.warn("Cannot write into {}", oldFile, var17);
+            } finally {
+                U.close(writer);
             }
         }
 
         //ProfileManager.RawProfileList raw = null;
+        InputStreamReader reader = null;
         JsonObject object = null;
         File readFile = file.isFile() ? file : oldFile;
         String saveBackup = null;
 
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(readFile), StandardCharsets.UTF_8)) {
+        try {
+            reader = new InputStreamReader(new FileInputStream(readFile), Charset.forName("UTF-8"));
             object = gson.fromJson(reader, JsonObject.class);
         } catch (Exception var15) {
             LOGGER.warn("Cannot read from {}", readFile, var15);
+        } finally {
+            U.close(reader);
         }
 
         String outputJson = gson.toJson(object);
@@ -152,33 +168,33 @@ public class ProfileManager extends RefreshableComponent {
                     raw.userSet = gson.fromJson(object.getAsJsonObject("userSet"), UserSet.class);
                 }
             }
-        } catch (Exception e) {
+        } catch(Exception e) {
             LOGGER.error("Error parsing profile list: {}", readFile, e);
             Sentry.capture(new EventBuilder()
-                    .withMessage("bad profile list")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withLevel(Event.Level.ERROR)
-                    .withExtra("data", Pasta.paste(String.valueOf(object), PastaFormat.JSON))
+                .withMessage("bad profile list")
+                .withSentryInterface(new ExceptionInterface(e))
+                .withLevel(Event.Level.ERROR)
+                .withExtra("data", Pasta.paste(String.valueOf(object), PastaFormat.JSON))
             );
             saveBackup = "errored";
         }
 
-        if (saveBackup != null) {
+        if(saveBackup != null) {
             File backupFile = new File(readFile.getAbsolutePath() + "." + saveBackup + ".bak");
             try {
                 FileUtil.createFile(backupFile);
-                try (FileOutputStream backupOut = new FileOutputStream(backupFile)) {
+                try(FileOutputStream backupOut = new FileOutputStream(backupFile)) {
                     IOUtils.write(outputJson, backupOut, FileUtil.getCharset());
                 }
-            } catch (Exception e) {
+            } catch(Exception e) {
                 LOGGER.error("Could not save backup into {}", backupFile, e);
                 Alert.showError("Could not save profile backup. Accounts will be lost :(", e);
             }
         }
 
-        if (raw.userSet != null) {
-            for (User user : raw.userSet.getSet()) {
-                if (user.getType().equals(McleaksUser.TYPE)) {
+        if(raw.userSet != null) {
+            for(User user : raw.userSet.getSet()) {
+                if(user.getType().equals(McleaksUser.TYPE)) {
                     McleaksManager.triggerConnection();
                 }
             }
@@ -209,8 +225,10 @@ public class ProfileManager extends RefreshableComponent {
             throw new NullPointerException();
         } else {
             this.file = file;
+            Iterator var3 = listeners.iterator();
 
-            for (ProfileManagerListener listener : listeners) {
+            while (var3.hasNext()) {
+                ProfileManagerListener listener = (ProfileManagerListener) var3.next();
                 listener.onProfileManagerChanged(this);
             }
 
@@ -235,10 +253,15 @@ public class ProfileManager extends RefreshableComponent {
 
     static class OldProfileList {
         UUID clientToken = UUID.randomUUID();
-        Map<Object, Object> profiles = new HashMap<>();
+        HashMap<Object, Object> profiles = new HashMap();
     }
 
     static class RawProfileList {
         UserSet userSet;
+    }
+
+    static class UnmigratedProfileList {
+        UUID clientToken;
+        Map<String, LegacyAccount> authenticationDatabase;
     }
 }

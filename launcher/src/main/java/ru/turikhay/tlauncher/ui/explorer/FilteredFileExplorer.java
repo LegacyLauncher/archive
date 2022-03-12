@@ -1,17 +1,16 @@
 package ru.turikhay.tlauncher.ui.explorer;
 
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public abstract class FilteredFileExplorer extends FileExplorer {
-    private final List<String> extensionList = new ArrayList<>();
+    private final List<String> extensionList = new ArrayList<String>();
 
     protected FilteredFileExplorer() {
         setFileFilter(new FileFilter() {
@@ -32,6 +31,6 @@ public abstract class FilteredFileExplorer extends FileExplorer {
     protected abstract String getDescription();
 
     protected void addExtesion(String... ext) {
-        extensionList.addAll(Arrays.stream(ext).filter(Objects::nonNull).collect(Collectors.toList()));
+        Collections.addAll(extensionList, U.requireNotContainNull(ext, "ext"));
     }
 }

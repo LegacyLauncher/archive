@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher;
 
 import com.github.zafarkhaja.semver.Version;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import joptsimple.OptionSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -36,12 +38,15 @@ import ru.turikhay.tlauncher.user.ElyUser;
 import ru.turikhay.tlauncher.user.MinecraftUser;
 import ru.turikhay.tlauncher.user.MojangUser;
 import ru.turikhay.util.*;
-import ru.turikhay.util.async.ExtendedThread;
+import ru.turikhay.util.async.RunnableThread;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
@@ -81,13 +86,13 @@ public final class TLauncher {
 
     private TLauncherFrame frame;
 
-    private final long sessionStartTime;
+    private long sessionStartTime;
 
     private final Object onReadySync = new Object();
     private Queue<Runnable> onReadyJobs = new ConcurrentLinkedQueue<>();
 
     private TLauncher(BootBridge bridge, BootEventDispatcher dispatcher) throws Exception {
-        Objects.requireNonNull(bridge, "bridge");
+        U.requireNotNull(bridge, "bridge");
         checkNotRunning();
         instance = this;
 
@@ -95,9 +100,8 @@ public final class TLauncher {
         Time.start(timer);
 
         this.bridge = bridge;
-        checkReportsCapabilities();
         this.dispatcher = dispatcher;
-        LOGGER.debug("Options: {}", bridge.getOptions() == null ? null : bridge.getOptions().length() + " code units");
+        LOGGER.debug("Options: {}", bridge.getOptions() == null? null : bridge.getOptions().length() + " code units");
 
         OptionSet optionSet = ArgumentParser.parseArgs(bridge.getArgs());
         debug = optionSet.has("debug");
@@ -114,7 +118,7 @@ public final class TLauncher {
         boolean bootConfigEmpty = false;
         try {
             bootConfig = BootConfiguration.parse(bridge.getOptions());
-        } catch (RuntimeException rE) {
+        } catch(RuntimeException rE) {
             LOGGER.warn("Couldn't parse boot config: {}", bridge.getOptions(), rE);
             bootConfig = new BootConfiguration();
             bootConfigEmpty = true;
@@ -175,22 +179,28 @@ public final class TLauncher {
 
         dispatcher.onBootSucceeded();
 
-        if (config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
+        if(config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
             config.set("client", UUID.randomUUID());
+            String creationTime = "unknown";
+            try {
+                creationTime = Files.readAttributes(config.getFile().toPath(), BasicFileAttributes.class).creationTime().toString();
+            } catch(Exception e) {
+                // ignore
+            }
         }
 
         preloadUI();
 
         migrationManager.queueMigrationCheck();
 
-        if (elyByCheckEntry != null && profileManager.getAccountManager().getUserSet().getSet().stream().anyMatch(u ->
+        if(elyByCheckEntry != null && profileManager.getAccountManager().getUserSet().getSet().stream().anyMatch(u ->
                 u.getType().equals(ElyUser.TYPE))) {
             // show notification if Ely accounts are not available
             elyByCheckEntry.withPriority(500);
             connectivityManager.queueCheck(elyByCheckEntry);
         }
 
-        if (authServerCheckEntry != null) {
+        if(authServerCheckEntry != null) {
             if (profileManager.getAccountManager().getUserSet().getSet().stream()
                     .anyMatch(u -> u.getType().equals(MojangUser.TYPE) || u.getType().equals(MinecraftUser.TYPE))
             ) {
@@ -215,7 +225,7 @@ public final class TLauncher {
 
     private ConnectivityManager initConnectivityManager() {
         List<ConnectivityManager.Entry> entries = new ArrayList<>();
-        if (bootConfigEmpty) {
+        if(bootConfigEmpty) {
             entries.add(
                     forceFailed("boot").withPriority(Integer.MAX_VALUE)
             );
@@ -228,7 +238,7 @@ public final class TLauncher {
                 authServerCheckEntry = AuthServerChecker
                         .createEntry()
                         .withPriority(-500) // will be set to 1000 if third party authenticator is detected
-                // or Mojang/Microsoft accounts are presented
+                                            // or Mojang/Microsoft accounts are presented
         );
         elyByCheckEntry = checkByValidJson(
                 "account.ely.by",
@@ -236,11 +246,11 @@ public final class TLauncher {
         ).withPriority(-500); // will be set to 500 if ely accounts are presented
         entries.add(elyByCheckEntry);
         entries.add(checkRepoByValidJson(
-                "repo",
-                Repository.EXTRA_VERSION_REPO,
-                "versions/versions.json"
+                        "repo",
+                        Repository.EXTRA_VERSION_REPO,
+                        "versions/versions.json"
         ));
-        for (String pingDomain : Arrays.asList("tlaun.ch", "tln4.ru", "cdn.turikhay.ru")) {
+        for(String pingDomain : Arrays.asList("tlaun.ch", "tln4.ru", "cdn.turikhay.ru")) {
             entries.add(checkByContent(
                     pingDomain,
                     String.format(Locale.ROOT, "https://%s/ping.txt", pingDomain),
@@ -251,11 +261,11 @@ public final class TLauncher {
         // entries that are not available
         entries.add(
                 checkByContent("launcher.mojang.com", "https://launcher.mojang.com", "")
-                        .withPriority(-500)
+                .withPriority(-500)
         );
         entries.add(
                 checkRepoByValidJson("official_repo_proxy", Repository.PROXIFIED_REPO, LAUNCHERMETA)
-                        .withPriority(-1000)
+                .withPriority(-1000)
         );
         return new ConnectivityManager(this, entries);
     }
@@ -267,7 +277,7 @@ public final class TLauncher {
 
     private void migrateFromOldJreConfig() {
         String cmd = config.get("minecraft.cmd");
-        if (cmd == null) {
+        if(cmd == null) {
             return;
         }
 
@@ -362,13 +372,13 @@ public final class TLauncher {
     }
 
     public MinecraftLauncher newMinecraftLauncher(String versionName, Server server, int serverId, boolean forceUpdate) {
-        if (isMinecraftLauncherWorking()) {
+        if(isMinecraftLauncherWorking()) {
             throw new IllegalStateException("launcher is working");
         }
 
         launcher = new MinecraftLauncher(this, forceUpdate);
 
-        for (MinecraftListener l : uiListeners.getMinecraftListeners()) {
+        for(MinecraftListener l : uiListeners.getMinecraftListeners()) {
             launcher.addListener(l);
         }
 
@@ -376,19 +386,21 @@ public final class TLauncher {
         launcher.setServer(server, serverId);
 
         List<PromotedServer> promotedServerList = new ArrayList<>();
-        if (bootConfig.getPromotedServers().containsKey(getSettings().getLocale().toString())) {
+        if(bootConfig.getPromotedServers().containsKey(getSettings().getLocale().toString())) {
             promotedServerList.addAll(bootConfig.getPromotedServers().get(getSettings().getLocale().toString()));
         } else if (bootConfig.getPromotedServers().containsKey("global")) {
             promotedServerList.addAll(bootConfig.getPromotedServers().get("global"));
         }
 
         List<PromotedServer> outdatedServerList = new ArrayList<>();
-        if (bootConfig.getOutdatedPromotedServers().containsKey(getSettings().getLocale().toString())) {
+        if(bootConfig.getOutdatedPromotedServers().containsKey(getSettings().getLocale().toString())) {
             outdatedServerList.addAll(bootConfig.getOutdatedPromotedServers().get(getSettings().getLocale().toString()));
         } else if (bootConfig.getOutdatedPromotedServers().containsKey("global")) {
             outdatedServerList.addAll(bootConfig.getOutdatedPromotedServers().get("global"));
         }
         launcher.setPromotedServers(promotedServerList, outdatedServerList);
+
+        launcher.start();
 
         return launcher;
     }
@@ -418,7 +430,7 @@ public final class TLauncher {
         SentryConfigurer.setUser(config.getClient());
         config.setUsingSystemLookAndFeel(config.isUsingSystemLookAndFeel() && SwingUtil.initLookAndFeel());
         TLauncherFrame.setFontSize(config.getFontSize());
-        if (!config.getBoolean("connection.ssl")) {
+        if(!config.getBoolean("connection.ssl")) {
             LOGGER.warn("Disabling SSL certificate/hostname validation. IT IS NOT SECURE.");
             try {
                 SSLContext context = SSLContext.getInstance("SSL");
@@ -439,7 +451,7 @@ public final class TLauncher {
                         }
                 }, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
-            } catch (Exception e) {
+            } catch(Exception e) {
                 LOGGER.error("Could not init SSLContext", e);
             }
             HttpsURLConnection.setDefaultHostnameVerifier((s, sslSession) -> true);
@@ -451,19 +463,19 @@ public final class TLauncher {
         SwingLoggerAppender swingLoggerAppender = Log4j2ContextHelper.getSwingLoggerAppender();
         LoggerInterface li = swingLoggerAppender.getLoggerInterface();
         boolean enableLogger = config.getLoggerType() == Configuration.LoggerType.GLOBAL;
-        if (loggerUI == null) {
-            if (!enableLogger) {
+        if(loggerUI == null) {
+            if(!enableLogger) {
                 return;
             }
             loggerUI = new SwingLogger(config);
-            if (li instanceof LoggerBuffer) {
+            if(li instanceof LoggerBuffer) {
                 loggerUI.drainFrom((LoggerBuffer) li);
             }
             swingLoggerAppender.setLoggerInterface(loggerUI);
             initLoggerUI();
             LOGGER.debug("Logger initialized");
         } else {
-            if (enableLogger) {
+            if(enableLogger) {
                 return;
             }
             swingLoggerAppender.setLoggerInterface(new LoggerBuffer());
@@ -475,22 +487,24 @@ public final class TLauncher {
 
     private void initLoggerUI() {
         loggerUI.setFolderAction(() -> {
-            if (isMinecraftLauncherWorking()) {
+            if(isMinecraftLauncherWorking()) {
                 OS.openFolder(getMinecraftLauncher().getGameDir());
             } else {
                 OS.openFolder(MinecraftUtil.getWorkingDirectory());
             }
         });
-        loggerUI.setSaveAction(() -> OS.openFile(Log4j2ContextHelper.getCurrentLogFile().getFile()));
+        loggerUI.setSaveAction(() -> {
+            OS.openFile(Log4j2ContextHelper.getCurrentLogFile().getFile());
+        });
         updateLoggerUIActions();
         loggerUI.show();
     }
 
     public void updateLoggerUIActions() {
-        if (loggerUI == null) {
+        if(loggerUI == null) {
             return;
         }
-        if (isMinecraftLauncherWorking() && getMinecraftLauncher().isMinecraftRunning()) {
+        if(isMinecraftLauncherWorking() && getMinecraftLauncher().isMinecraftRunning()) {
             loggerUI.setKillAction(() -> getMinecraftLauncher().killProcess());
         } else {
             loggerUI.setKillAction(null);
@@ -498,7 +512,7 @@ public final class TLauncher {
     }
 
     private void handleNoticeHiding() {
-        if (!isNoticeDisablingAllowed()) {
+        if(!isNoticeDisablingAllowed()) {
             config.set("notice.enabled", true);
         }
     }
@@ -513,6 +527,7 @@ public final class TLauncher {
 
     private void handleUpdate() {
         String locale = getSettings().getLocale().toString();
+        boolean isRussian = locale.equals("ru_RU");
         BootMessage message = dispatcher.getBootMessage(locale);
         if (message == null) {
             message = dispatcher.getBootMessage("en_US");
@@ -555,17 +570,20 @@ public final class TLauncher {
 
         profileManager.refresh();
 
-        new ExtendedThread(() -> {
-            Stats.submitNoticeStatus(config.getBoolean("notice.enabled"));
-            while (!Thread.interrupted()) {
-                try {
-                    TimeUnit.MINUTES.sleep(30);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+        new RunnableThread("Beacon", new Runnable() {
+            @Override
+            public void run() {
+                Stats.submitNoticeStatus(config.getBoolean("notice.enabled"));
+                while (true) {
+                    try {
+                        TimeUnit.MINUTES.sleep(30);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Stats.beacon();
                 }
-                Stats.beacon();
             }
-        }, "Beacon").start();
+        }).start();
     }
 
     private void preloadUI() {
@@ -590,7 +608,7 @@ public final class TLauncher {
                 uiListeners.updateLocale();
             }
 
-            if (migrationManager != null && migrationManager.getFrame() != null) {
+            if(migrationManager != null && migrationManager.getFrame() != null) {
                 migrationManager.getFrame().updateLocale();
             }
         });
@@ -598,7 +616,7 @@ public final class TLauncher {
 
     public void executeWhenReady(Runnable r) {
         synchronized (onReadySync) {
-            if (onReadyJobs == null) {
+            if(onReadyJobs == null) {
                 r.run();
             } else {
                 onReadyJobs.offer(r);
@@ -606,34 +624,8 @@ public final class TLauncher {
         }
     }
 
-    private boolean reportsCapabilities;
-
-    private void checkReportsCapabilities() {
-        boolean reportsCapabilities = true;
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            bridge.getCapabilities();
-        } catch (NoSuchMethodError e) {
-            LOGGER.info("Bootstrap doesn't report capabilities");
-            reportsCapabilities = false;
-        }
-        this.reportsCapabilities = reportsCapabilities;
-    }
-
-    public <V> Optional<V> getCapability(String key, Class<V> capabilityClass) {
-        if (!reportsCapabilities) {
-            return Optional.empty();
-        }
-        Object o = bridge.getCapabilities().get(key);
-        if (!capabilityClass.isInstance(o)) return Optional.empty();
-        return Optional.of(capabilityClass.cast(o));
-    }
-
-    public boolean hasCapability(String key) {
-        if (!reportsCapabilities) {
-            return false;
-        }
-        return bridge.getCapabilities().containsKey(key);
+    private TLauncher() {
+        throw new RuntimeException("should not be called");
     }
 
     private static TLauncher instance;
@@ -657,7 +649,16 @@ public final class TLauncher {
     }
 
     static {
-        SEMVER = Objects.requireNonNull(Version.valueOf(BuildConfig.VERSION), "semver");
+        URL metaUrl = TLauncher.class.getResource("meta.json");
+        JsonObject meta;
+
+        try {
+            meta = new JsonParser().parse(new InputStreamReader(metaUrl.openStream())).getAsJsonObject();
+        } catch (IOException ioE) {
+            throw new Error("could not load meta", ioE);
+        }
+
+        SEMVER = U.requireNotNull(Version.valueOf(meta.get("version").getAsString()), "semver");
         BETA = !StringUtils.isBlank(SEMVER.getBuildMetadata());
     }
 
@@ -669,6 +670,10 @@ public final class TLauncher {
         return Static.getShortBrand();
     }
 
+    public static String getDeveloper() {
+        return "turikhay";
+    }
+
     public static String getFolder() {
         return Static.getFolder();
     }
@@ -677,23 +682,23 @@ public final class TLauncher {
         return Static.getSettings();
     }
 
-    public static List<String> getOfficialRepo() {
+    public static String[] getOfficialRepo() {
         return Static.getOfficialRepo();
     }
 
-    public static List<String> getExtraRepo() {
+    public static String[] getExtraRepo() {
         return Static.getExtraRepo();
     }
 
-    public static List<String> getLibraryRepo() {
+    public static String[] getLibraryRepo() {
         return Static.getLibraryRepo();
     }
 
-    public static List<String> getAssetsRepo() {
+    public static String[] getAssetsRepo() {
         return Static.getAssetsRepo();
     }
 
-    public static List<String> getServerList() {
+    public static String[] getServerList() {
         return Static.getServerList();
     }
 
@@ -753,7 +758,7 @@ public final class TLauncher {
     }
 
     private static boolean handleLookAndFeelException(Throwable t) {
-        for (StackTraceElement elem : t.getStackTrace()) {
+        for(StackTraceElement elem : t.getStackTrace()) {
             if (elem.toString().toLowerCase(java.util.Locale.ROOT).contains("lookandfeel")) {
                 SwingUtil.resetLookAndFeel();
                 return true;
