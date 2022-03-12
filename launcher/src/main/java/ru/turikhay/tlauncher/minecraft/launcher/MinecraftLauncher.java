@@ -1324,10 +1324,6 @@ public class MinecraftLauncher implements JavaProcessListener {
                 throw new IOException("Required archive doesn't exist: " + file.getAbsolutePath());
             }
 
-            ExtractRules extractRules = library.getExtractRules();
-
-            if (extractRules == null) continue;
-
             ZipFile zip;
             try {
                 zip = new ZipFile(file);
@@ -1336,13 +1332,15 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
 
             try {
+                ExtractRules extractRules = library.getExtractRules();
                 Enumeration<? extends ZipEntry> entries = zip.entries();
                 while (entries.hasMoreElements()) {
                     ZipEntry entry = entries.nextElement();
-                    if (!extractRules.shouldExtract(entry.getName())) continue;
+                    if (entry.isDirectory() || entry.getName().startsWith("META-INF/")) continue;
+                    if (extractRules != null && !extractRules.shouldExtract(entry.getName())) continue;
                     File targetFile = new File(nativeDir, entry.getName());
                     if (!force && targetFile.isFile()) continue;
-                    targetFile.getParentFile().mkdirs();
+                    FileUtil.createFolder(targetFile.getParentFile());
                     try (InputStream input = zip.getInputStream(entry);
                          OutputStream output = new FileOutputStream(targetFile)) {
                         IOUtils.copy(input, output);
