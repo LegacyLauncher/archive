@@ -4,7 +4,6 @@ import com.google.gson.JsonSyntaxException;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.UrlEncoder;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,7 +21,7 @@ public class ExtraVersionList extends RepositoryBasedVersionList {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
             CompleteVersion complete;
-            try(InputStreamReader reader = getUrl("versions/" + UrlEncoder.encode(version.getID(), true) + ".json")) {
+            try (InputStreamReader reader = getUrl("versions/" + version.getID() + ".json")) {
                 complete = gson.fromJson(reader, CompleteVersion.class);
             }
             complete.setID(version.getID());

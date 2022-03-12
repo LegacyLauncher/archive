@@ -6,11 +6,10 @@ import ru.turikhay.util.async.AsyncThread;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.net.URL;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 public class UrlNoticeImage extends NoticeImage {
-    private URL url;
+    private final URL url;
     private int width, height;
     private Future<Image> future;
 
@@ -44,13 +43,8 @@ public class UrlNoticeImage extends NoticeImage {
 
     @Override
     public Future<Image> getTask() {
-        if(future == null) {
-            return future = AsyncThread.future(new Callable<Image>() {
-                @Override
-                public Image call() throws Exception {
-                    return ImageIO.read(url);
-                }
-            });
+        if (future == null) {
+            return future = AsyncThread.future(() -> ImageIO.read(url));
         } else {
             return future;
         }

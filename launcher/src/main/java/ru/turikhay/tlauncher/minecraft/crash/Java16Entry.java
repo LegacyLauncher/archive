@@ -24,14 +24,14 @@ public class Java16Entry extends PatternEntry {
 
     @Override
     protected boolean checkCapability() throws Exception {
-        if(!super.checkCapability()) {
+        if (!super.checkCapability()) {
             return false;
         }
 
         CompleteVersion version = getManager().getLauncher().getCompleteVersion();
 
         final String requiredJavaVersion;
-        if(getMatch() == null) {
+        if (getMatch() == null) {
             requiredJavaVersion = "???";
         } else {
             requiredJavaVersion = guessJavaVersionFromClassFileVersion(getMatch().group("classFileVersion"));
@@ -40,17 +40,15 @@ public class Java16Entry extends PatternEntry {
         String jreType = TLauncher.getInstance().getSettings()
                 .get(JavaManagerConfig.class).getJreTypeOrDefault().getType();
 
-        if(jreType.equals(JavaManagerConfig.Recommended.TYPE)) {
+        if (jreType.equals(JavaManagerConfig.Recommended.TYPE)) {
             // we use recommended jre
-            if(version.getReleaseTime() != null
-                    && version.getReleaseTime().toInstant().compareTo(JavaManager.JAVA16_UPGRADE_POINT) >= 0)
-            {
+            if (version.getReleaseTime() != null
+                    && version.getReleaseTime().toInstant().compareTo(JavaManager.JAVA16_UPGRADE_POINT) >= 0) {
                 // this version released after the Java 16 upgrade point
-                if(getManager().getLauncher().getJreType().getType()
-                        .equals(JavaManagerConfig.Current.TYPE))
-                {
+                if (getManager().getLauncher().getJreType().getType()
+                        .equals(JavaManagerConfig.Current.TYPE)) {
                     // but the launcher used current JRE
-                    if(version.getJavaVersion() == null) {
+                    if (version.getJavaVersion() == null) {
                         // version has no java version requirement
                         // => an old launcher version corrupted json file
                         setPath("force-update-version");
@@ -84,10 +82,10 @@ public class Java16Entry extends PatternEntry {
         double classFileVersion;
         try {
             classFileVersion = Double.parseDouble(input);
-            if(classFileVersion < 52) {
+            if (classFileVersion < 52) {
                 throw new RuntimeException("class file version is too old: " + classFileVersion);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             LOGGER.warn("Can't parse class file version: {}", input, e);
             return Localizable.get(getLocPath("version.unknown"));
         }

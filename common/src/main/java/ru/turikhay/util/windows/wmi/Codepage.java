@@ -4,7 +4,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.nio.charset.Charset;
-
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +28,7 @@ public final class Codepage {
     }
 
     public Charset getCharset() throws UnsupportedCharsetException {
-        if(charset == null) {
+        if (charset == null) {
             throw new UnsupportedCharsetException(charsetName);
         }
         return charset;
@@ -37,7 +37,7 @@ public final class Codepage {
     public String toString() {
         ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("codepage", codepage);
-        if(charset == null) {
+        if (charset == null) {
             b.append("charsetName", charsetName);
         } else {
             b.append("charset", charset);
@@ -45,11 +45,11 @@ public final class Codepage {
         return b.build();
     }
 
-    private static final Map<Integer, Codepage> knownCodepages = new HashMap<Integer, Codepage>();
+    private static final Map<Integer, Codepage> knownCodepages = new HashMap<>();
     private static Codepage instance;
 
     public static Codepage get() throws CodepageException {
-        if(instance == null) {
+        if (instance == null) {
             instance = doDetect();
         }
         return instance;
@@ -70,23 +70,23 @@ public final class Codepage {
                 throw new RuntimeException("could not parse chcp: \"" + matcher.group(1) + "\"", e);
             }
             Codepage codepage = getCodepage(cp);
-            if(codepage == null) {
+            if (codepage == null) {
                 throw new CodepageException("chcp returned unknown codepage: " + cp);
             }
             return codepage;
         }
-        throw new CodepageException("chcp returned unexpected response; lines: \""+ chcpResponse +"\"");
+        throw new CodepageException("chcp returned unexpected response; lines: \"" + chcpResponse + "\"");
     }
 
     private static String queryChcp() throws CodepageException {
         String system32 = System.getenv("WINDIR") + "\\system32\\";
         List<String> result;
         try {
-            result = WMI.execute(new String[]{system32 + "chcp.com"}, Charset.forName("ASCII"));
+            result = WMI.execute(new String[]{system32 + "chcp.com"}, StandardCharsets.US_ASCII);
         } catch (Exception e) {
             throw new CodepageException("Couldn't run chcp.com", e);
         }
-        if(result.isEmpty()) {
+        if (result.isEmpty()) {
             throw new CodepageException("chcp returned no lines");
         }
         return result.get(result.size() - 1); // lastLine

@@ -1,18 +1,13 @@
 package ru.turikhay.tlauncher.ui.loc;
 
 import ru.turikhay.tlauncher.configuration.LangConfiguration;
-import ru.turikhay.util.Reflect;
 import ru.turikhay.util.U;
 
 import java.awt.*;
 
 public class Localizable {
     public static final Object[] EMPTY_VARS = new Object[0];
-    public static final Localizable.LocalizableFilter defaultFilter = new Localizable.LocalizableFilter() {
-        public boolean localize(Component comp) {
-            return true;
-        }
-    };
+    public static final Localizable.LocalizableFilter defaultFilter = comp -> true;
     private static LangConfiguration lang;
 
     public static void setLang(LangConfiguration l) {
@@ -63,9 +58,9 @@ public class Localizable {
 
         for (int var3 = 0; var3 < var4; ++var3) {
             Component c = var5[var3];
-            LocalizableComponent asLocalizable = Reflect.cast(c, LocalizableComponent.class);
-            if (asLocalizable != null && filter.localize(c)) {
-                asLocalizable.updateLocale();
+
+            if (c instanceof LocalizableComponent && filter.localize(c)) {
+                ((LocalizableComponent) c).updateLocale();
             }
 
             if (c instanceof Container) {

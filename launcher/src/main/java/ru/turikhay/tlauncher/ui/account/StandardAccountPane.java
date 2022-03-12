@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.ui.account;
 import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.minecraft.auth.AuthExecutor;
 import ru.turikhay.tlauncher.minecraft.auth.Authenticator;
 import ru.turikhay.tlauncher.minecraft.auth.AuthenticatorListener;
 import ru.turikhay.tlauncher.stats.Stats;
@@ -19,25 +18,20 @@ import ru.turikhay.tlauncher.ui.progress.ProgressBar;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.text.ExtendedPasswordField;
-import ru.turikhay.tlauncher.user.AuthException;
 import ru.turikhay.tlauncher.user.StandardAuth;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
+import java.util.Objects;
 import java.util.Random;
 
 public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends User> extends ExtendedPanel implements AccountMultipaneCompCloseable {
-    private final String LOC_PREFIX;
 
     protected final AccountManagerScene scene;
     private final PaneMode mode;
@@ -52,10 +46,10 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
 
     public StandardAccountPane(final AccountManagerScene scene, PaneMode m, final Account.AccountType accountType) {
         this.scene = scene;
-        this.mode = U.requireNotNull(m, "mode");
-        this.accountType = U.requireNotNull(accountType, "accountType");
+        this.mode = Objects.requireNonNull(m, "mode");
+        this.accountType = Objects.requireNonNull(accountType, "accountType");
 
-        LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-" + accountType.toString().toLowerCase(java.util.Locale.ROOT) + ".";
+        String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-" + accountType.toString().toLowerCase(java.util.Locale.ROOT) + ".";
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -105,36 +99,33 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
         add(forgotpasswordLabel, c);
 
         final LocalizableButton authButton = new LocalizableButton(LOC_PREFIX + "auth");
-        authButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final String email = emailField.getValue();
-                final char[] password = passwordField.getPassword();
+        authButton.addActionListener(e -> {
+            final String email = emailField.getValue();
+            final char[] password = passwordField.getPassword();
 
-                boolean
-                        haveEmail = StringUtils.isNotBlank(email),
-                        havePassword = password != null && password.length > 0;
+            boolean
+                    haveEmail = StringUtils.isNotBlank(email),
+                    havePassword = password != null && password.length > 0;
 
-                if(!haveEmail || !havePassword) {
-                    Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
-                    return;
-                }
-
-                switch (mode) {
-                    case ADD:
-                        removeAccountIfFound(email);
-                        break;
-                    case EDIT:
-                        String oldUsername = scene.list.getSelected() == null || scene.list.getSelected().getType() != accountType? null : scene.list.getSelected().getUsername();
-                        if(oldUsername != null) {
-                            removeAccountIfFound(oldUsername);
-                        }
-                        break;
-                }
-
-                final int currentSession = session = Math.abs(new Random().nextInt());
-                credentialsEntered(currentSession, email, new String(password));
+            if (!haveEmail || !havePassword) {
+                Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
+                return;
             }
+
+            switch (mode) {
+                case ADD:
+                    removeAccountIfFound(email);
+                    break;
+                case EDIT:
+                    String oldUsername = scene.list.getSelected() == null || scene.list.getSelected().getType() != accountType ? null : scene.list.getSelected().getUsername();
+                    if (oldUsername != null) {
+                        removeAccountIfFound(oldUsername);
+                    }
+                    break;
+            }
+
+            final int currentSession = session = Math.abs(new Random().nextInt());
+            credentialsEntered(currentSession, email, new String(password));
         });
         authButton.setFont(authButton.getFont().deriveFont(Font.BOLD));
         authButton.setIcon(Images.getIcon24(accountIcon()));
@@ -148,18 +139,15 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
         c.gridy++;
         add(progressBar, c);
 
-        if(mode == PaneMode.EDIT) {
+        if (mode == PaneMode.EDIT) {
             LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
             removeButton.setIcon(Images.getIcon16("remove"));
-            removeButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Account selected = scene.list.getSelected();
-                    if(selected != null && selected.getType() == accountType) {
-                        TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
-                    }
-                    scene.multipane.goBack();
+            removeButton.addActionListener(e -> {
+                Account<?> selected = scene.list.getSelected();
+                if (selected != null && selected.getType() == accountType) {
+                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
                 }
+                scene.multipane.goBack();
             });
 
             c.insets = new Insets(SwingUtil.magnify(12), 0, 0, 0);
@@ -168,18 +156,13 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
             add(removeButton, c);
         }
 
-        passwordField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                authButton.doClick();
-            }
-        });
+        passwordField.addActionListener(e -> authButton.doClick());
     }
 
     static void removeAccountIfFound(String username, Account.AccountType type) {
         UserSet userSet = TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet();
         User user = userSet.getByUsername(username, type.name().toLowerCase(java.util.Locale.ROOT));
-        if(user != null) {
+        if (user != null) {
             userSet.remove(user);
         }
     }
@@ -189,27 +172,24 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
     }
 
     protected final void credentialsEntered(final int currentSession, final String email, final String password) {
-        final Authenticator authenticator = Authenticator.instanceFor(new AuthExecutor() {
-            @Override
-            public Account pass() throws AuthException, IOException {
-                T auth = standardAuth();
-                Y user = auth.authorize(email, password);
-                return new Account(user);
-            }
+        final Authenticator<Y> authenticator = Authenticator.instanceFor(() -> {
+            T auth = standardAuth();
+            Y user = auth.authorize(email, password);
+            return new Account<>(user);
         }, accountType);
 
-        AuthUIListener l = new AuthUIListener(new AuthenticatorListener() {
+        AuthUIListener<Y> l = new AuthUIListener<>(new AuthenticatorListener<Y>() {
             @Override
-            public void onAuthPassing(Authenticator var1) {
-                if(session == currentSession) {
+            public void onAuthPassing(Authenticator<? extends Y> var1) {
+                if (session == currentSession) {
                     Blocker.blockComponents(StandardAccountPane.this, "user-pass");
                     progressBar.setIndeterminate(true);
                 }
             }
 
             @Override
-            public void onAuthPassingError(Authenticator var1, Throwable var2) {
-                if(session == currentSession) {
+            public void onAuthPassingError(Authenticator<? extends Y> var1, Throwable var2) {
+                if (session == currentSession) {
                     Stats.accountCreation(accountType.toString().toLowerCase(java.util.Locale.ROOT), "standard", "", false);
                     Blocker.unblockComponents(StandardAccountPane.this, "user-pass");
                     progressBar.setIndeterminate(false);
@@ -217,12 +197,12 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
             }
 
             @Override
-            public void onAuthPassed(Authenticator var1) {
-                if(session == currentSession) {
+            public void onAuthPassed(Authenticator<? extends Y> var1) {
+                if (session == currentSession) {
                     Blocker.unblockComponents(StandardAccountPane.this, "user-pass");
                     progressBar.setIndeterminate(false);
 
-                    Account account = authenticator.getAccount();
+                    Account<Y> account = authenticator.getAccount();
 
                     switch (mode) {
                         case ADD:
@@ -246,7 +226,9 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
     }
 
     protected abstract String accountIcon();
+
     protected abstract String forgotPasswordUrl();
+
     protected abstract T standardAuth();
 
     @Override
@@ -274,8 +256,8 @@ public abstract class StandardAccountPane<T extends StandardAuth<Y>, Y extends U
         emailField.setValue(null);
         passwordField.setText(null);
 
-        if(mode == PaneMode.EDIT && scene.list.getSelected() != null && scene.list.getSelected().getType() == accountType) {
-            Account account = scene.list.getSelected();
+        if (mode == PaneMode.EDIT && scene.list.getSelected() != null && scene.list.getSelected().getType() == accountType) {
+            Account<?> account = scene.list.getSelected();
             emailField.setValue(account.getUsername());
         }
     }

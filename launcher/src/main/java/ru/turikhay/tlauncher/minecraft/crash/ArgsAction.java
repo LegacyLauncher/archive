@@ -3,7 +3,8 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.apache.commons.lang3.StringUtils;
-import ru.turikhay.util.U;
+
+import java.util.Objects;
 
 public abstract class ArgsAction extends BindableAction {
     protected final OptionParser parser;
@@ -16,7 +17,7 @@ public abstract class ArgsAction extends BindableAction {
     ArgsAction(String name, String[] args) {
         this(name);
 
-        if (U.requireNotNull(args).length == 0) {
+        if (Objects.requireNonNull(args).length == 0) {
             throw new IllegalArgumentException();
         }
         for (String arg : args) {
@@ -25,10 +26,10 @@ public abstract class ArgsAction extends BindableAction {
     }
 
     @Override
-    public void execute(String args) throws Exception {
+    public void execute(String args) {
         OptionSet set = parser.parse(StringUtils.split(args, ' '));
         execute(set);
     }
 
-    abstract void execute(OptionSet args) throws Exception;
+    abstract void execute(OptionSet args);
 }

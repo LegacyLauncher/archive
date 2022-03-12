@@ -39,40 +39,60 @@ public class ConnectivityManager {
 
     public void queueChecks() {
         entries.stream()
-            .map(Entry::checkConnection)
-            .forEach(f -> f.whenCompleteAsync((r, e) ->
-                    notifyIfFailed(r != Boolean.TRUE || e != null)
-            ));
+                .filter(Entry::isNormalPriority)
+                .forEach(this::queueCheck);
+    }
+
+    public void queueCheck(Entry entry) {
+        CompletableFuture<?> future = entry.checkConnection();
+        if (entry.isNormalPriority()) {
+            // normal priority -> show or update notification
+            future.whenCompleteAsync((r, e) -> notifyIfFailed(r != Boolean.TRUE || e != null));
+        } else {
+            // low priority -> only notify if there are failed entries with normal priority
+            future.whenCompleteAsync((r, e) -> scheduleUpdateWarningWindow());
+        }
+    }
+
+    private void queueLowPriorityChecks() {
+        entries.stream()
+                .filter(Entry::isLowPriority)
+                .forEach(this::queueCheck);
     }
 
     private final AtomicBoolean showFailedNotification = new AtomicBoolean();
 
     public void showNotificationOnceIfNeeded() {
-        if(entries.stream().filter(Entry::isDone).allMatch(e -> e.isReachable() || e.getPriority() < 0)) {
+        if (entries.stream().filter(Entry::isDone).allMatch(e -> e.isReachable() || e.isLowPriority())) {
             return;
         }
-        if(!showFailedNotification.compareAndSet(false, true)) {
+        if (!showFailedNotification.compareAndSet(false, true)) {
             return;
         }
         launcher.executeWhenReady(() -> SwingUtil.later(() ->
-            launcher.getFrame().mp.defaultScene.notificationPanel.addNotification(
-                    NOTIFICATION_ID,
-                    new Notification("warning", this::showWarningWindow)
-            )
+                launcher.getFrame().mp.defaultScene.notificationPanel.addNotification(
+                        NOTIFICATION_ID,
+                        new Notification("warning", this::showWarningWindow)
+                )
         ));
     }
 
     private void notifyIfFailed(boolean failed) {
-        if(failed) {
+        if (failed) {
+            queueLowPriorityChecks();
             showNotificationOnceIfNeeded();
         }
+        scheduleUpdateWarningWindow();
+    }
+
+    private void scheduleUpdateWarningWindow() {
         SwingUtil.later(this::updateWarningWindow);
     }
 
     private ConnectivityWarning warningWindow;
 
     private void showWarningWindow() {
-        if(warningWindow == null) {
+        if (warningWindow == null) {
             warningWindow = new ConnectivityWarning();
             warningWindow.addWindowListener(new WindowAdapter() {
                 @Override
@@ -90,13 +110,13 @@ public class ConnectivityManager {
     }
 
     private void updateWarningWindow() {
-        if(warningWindow != null) {
+        if (warningWindow != null) {
             warningWindow.updateEntries(Collections.unmodifiableList(entries));
         }
     }
 
-    private interface EntryChecker {
-        Boolean checkConnection();
+    public interface EntryChecker {
+        Boolean checkConnection() throws Exception;
     }
 
     private static class RepoEntryJsonChecker implements EntryChecker {
@@ -109,7 +129,7 @@ public class ConnectivityManager {
         }
 
         @Override
-        public Boolean checkConnection() {
+        public Boolean checkConnection() throws IOException {
             try {
                 String content = IOUtils.toString(repo.read(path));
                 try {
@@ -119,7 +139,7 @@ public class ConnectivityManager {
                 }
             } catch (IOException e) {
                 LOGGER.warn("Connectivity check to {} (using {}) failed", path, repo.name(), e);
-                U.throwChecked(e);
+                throw e;
             }
             return Boolean.TRUE;
         }
@@ -136,9 +156,9 @@ public class ConnectivityManager {
         public final Boolean checkConnection() {
             try {
                 checkResponse(Request.Get(url).execute());
-            } catch(IOException e) {
+            } catch (IOException e) {
                 LOGGER.warn("Connectivity check to {} failed", url, e);
-                U.throwChecked(e);
+                throw new RuntimeException(e);
             }
             return Boolean.TRUE;
         }
@@ -157,7 +177,7 @@ public class ConnectivityManager {
         @Override
         protected void checkResponse(Response response) throws IOException {
             String actualContent = response.returnContent().asString();
-            if(!expectedContent.equals(actualContent)) {
+            if (!expectedContent.equals(actualContent)) {
                 throw new ContentMismatchException(expectedContent, actualContent);
             }
         }
@@ -182,7 +202,7 @@ public class ConnectivityManager {
             String content = response.returnContent().asString();
             try {
                 JsonParser.parseString(content);
-            } catch(JsonSyntaxException e) {
+            } catch (JsonSyntaxException e) {
                 throw new InvalidJsonException(content, e);
             }
         }
@@ -197,24 +217,45 @@ public class ConnectivityManager {
     public static class Entry {
         private final String name;
         private final Set<String> hosts;
+        private final EntryChecker checker;
         private final Lazy<CompletableFuture<Boolean>> future;
+        private final Lazy<CompletableFuture<Boolean>> completion;
 
         private Entry(String name, Collection<String> hosts, EntryChecker checker) {
             this.name = name;
             this.hosts = Collections.unmodifiableSet(new LinkedHashSet<>(hosts));
-            this.future = Lazy.of(() ->
-                    CompletableFuture.supplyAsync(
-                            checker::checkConnection,
-                            AsyncThread.SHARED_SERVICE
-                    )
-            );
+            this.checker = checker;
+            this.completion = Lazy.of(CompletableFuture::new);
+            this.future = Lazy.of(() -> {
+                CompletableFuture<Boolean> f = CompletableFuture.supplyAsync(
+                        () -> {
+                            try {
+                                return checker.checkConnection();
+                            } catch (RuntimeException e) {
+                                throw e;
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        },
+                        AsyncThread.SHARED_SERVICE
+                );
+                f.whenCompleteAsync((r, e) -> {
+                    CompletableFuture<Boolean> cf = completion.get();
+                    if (e != null) {
+                        cf.complete(Boolean.FALSE);
+                    } else {
+                        cf.complete(r);
+                    }
+                }, AsyncThread.SHARED_SERVICE);
+                return f;
+            });
         }
 
         private Entry(String name, Stream<String> hostStream, EntryChecker checker) {
             this(name, hostStream.collect(Collectors.toList()), checker);
         }
 
-        private Entry(String name, String host, EntryChecker checker) {
+        Entry(String name, String host, EntryChecker checker) {
             this(name, Collections.singletonList(host), checker);
         }
 
@@ -224,6 +265,14 @@ public class ConnectivityManager {
 
         public Set<String> getHosts() {
             return hosts;
+        }
+
+        public EntryChecker getChecker() {
+            return checker;
+        }
+
+        public boolean isQueued() {
+            return future.isInitialized();
         }
 
         public boolean isDone() {
@@ -243,12 +292,24 @@ public class ConnectivityManager {
             return priority;
         }
 
+        boolean isNormalPriority() {
+            return !isLowPriority();
+        }
+
+        boolean isLowPriority() {
+            return priority < 0;
+        }
+
         public Entry withPriority(int priority) {
             this.priority = priority;
             return this;
         }
 
-        protected CompletableFuture<?> checkConnection() {
+        public CompletableFuture<Boolean> getTask() {
+            return completion.get();
+        }
+
+        protected CompletableFuture<Boolean> checkConnection() {
             return future.get();
         }
     }

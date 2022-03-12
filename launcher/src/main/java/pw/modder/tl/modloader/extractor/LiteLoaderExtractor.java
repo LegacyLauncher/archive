@@ -1,18 +1,8 @@
 package pw.modder.tl.modloader.extractor;
 
-import net.minecraft.launcher.versions.CompleteVersion;
-import org.apache.commons.io.IOUtils;
-import ru.turikhay.util.U;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
 public class LiteLoaderExtractor {
-    private LiteLoaderExtractor() {}
-
+    private LiteLoaderExtractor() {
+    }
 
 
 //    public static CompleteVersion extract(File file) throws IOException {

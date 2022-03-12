@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Rule {
-    private Rule.Action action;
+    private final Rule.Action action;
     private Rule.OSRestriction os;
     private Map<String, Object> features;
 
@@ -16,12 +16,11 @@ public class Rule {
     }
 
     public Rule(Rule rule) {
-        action = Rule.Action.ALLOW;
         action = rule.action;
         if (rule.os != null) {
-            os = new Rule.OSRestriction(rule.os);
+            os = new OSRestriction(rule.os);
         }
-        if(rule.features != null) {
+        if (rule.features != null) {
             features = rule.features;
         }
     }
@@ -50,7 +49,7 @@ public class Rule {
         DISALLOW
     }
 
-    public class OSRestriction {
+    public static class OSRestriction {
         private OS name;
         private String version;
 
@@ -73,7 +72,7 @@ public class Rule {
                         if (!matcher.matches()) {
                             return false;
                         }
-                    } catch (Throwable var3) {
+                    } catch (Throwable ignored) {
                     }
                 }
 
@@ -82,12 +81,11 @@ public class Rule {
         }
 
         public String toString() {
-            return "OSRestriction{name=" + name + ", version=\'" + version + '\'' + '}';
+            return "OSRestriction{name=" + name + ", version='" + version + '\'' + '}';
         }
     }
 
-    public interface FeatureMatcher
-    {
+    public interface FeatureMatcher {
         boolean hasFeature(String paramString, Object paramObject);
     }
 

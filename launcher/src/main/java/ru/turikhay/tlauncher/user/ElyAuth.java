@@ -2,9 +2,9 @@ package ru.turikhay.tlauncher.user;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.util.U;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public final class ElyAuth implements Auth<ElyUser> {
     private static final Logger LOGGER = LogManager.getLogger(ElyAuth.class);
@@ -25,31 +25,31 @@ public final class ElyAuth implements Auth<ElyUser> {
     }
 
     // flow may be null
-    ElyUser createUser(ElyAuthFlow flow) throws Exception {
+    ElyUser createUser(ElyAuthFlow<?> flow) throws Exception {
         return fetchCodeImpl(flow).getUser();
     }
 
-    private ElyAuthCode fetchCodeImpl(ElyAuthFlow flow) throws Exception {
-        U.requireNotNull(flow);
+    private ElyAuthCode fetchCodeImpl(ElyAuthFlow<?> flow) throws Exception {
+        Objects.requireNonNull(flow);
 
         LOGGER.debug("Trying to get code using {}", flow);
         try {
             return flow.call();
         } catch (InterruptedException interrupted) {
             throw interrupted;
-        } catch(Exception e) {
+        } catch (Exception e) {
             LOGGER.error("Couldn't fetch code", e);
             throw e;
         }
     }
 
     @Override
-    public void validate(ElyUser user) throws AuthException, IOException {
-        U.requireNotNull(user, "user");
+    public void validate(ElyUser user) throws AuthException {
+        Objects.requireNonNull(user, "user");
         ElyUserValidator validator = new ElyUserValidator(user);
         try {
             validator.validateUser();
-        } catch(IOException e) {
+        } catch (IOException e) {
             LOGGER.warn("Ely returned error", e);
             throw AuthException.soft(new AuthUnavailableException(e));
         }

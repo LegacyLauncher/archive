@@ -13,20 +13,20 @@ public final class Log4j2ContextHelper {
         return (LoggerContext) LogManager.getContext(false);
     }
 
-    public static <A> A getAppender(String name, Class<A> appenderClass) {
+    public static <A extends Appender> A getAppender(String name, Class<A> appenderClass) {
         Appender appender = getContext().getConfiguration().getAppender(name);
-        if(appender == null) {
+        if (appender == null) {
             throw new RuntimeException(String.format(java.util.Locale.ROOT,
                     "couldn't find appender %s of class %s", name, appenderClass.getSimpleName()
             ));
         }
-        if(!appenderClass.isAssignableFrom(appender.getClass())) {
+        if (!appenderClass.isInstance(appender)) {
             throw new RuntimeException(String.format(java.util.Locale.ROOT,
                     "expected appender %s to be %s, but got %s",
                     name, appenderClass.getSimpleName(), appender.getClass().getSimpleName()
             ));
         }
-        return (A) appender;
+        return appenderClass.cast(appender);
     }
 
     public static SwingLoggerAppender getSwingLoggerAppender() {

@@ -143,7 +143,7 @@
         <script language="javascript">
             load(project.getProperty('tlauncher.base.config') + '/util.js');
 
-            var repos = ["https://tlauncherrepo.com/", "https://u.tlauncher.ru/", "https://turikhay.ru/tlauncher/"];
+            var repos = ["https://tlauncherrepo.com/", "https://tln4.ru/", "https://turikhay.ru/tlauncher/"];
             var brand = brandByBranch(project.getProperty('tlauncher.brand'), project.getProperty('git.branch'));
             var project_name = project.getProperty('tlauncher.final_name');
 

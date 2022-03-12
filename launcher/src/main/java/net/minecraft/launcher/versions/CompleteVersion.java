@@ -61,11 +61,16 @@ public class CompleteVersion implements Version, Cloneable {
 
     Map<String, LoggingConfiguration> logging;
 
-    @Expose Repository source;
-    @Expose Set<String> proceededFor = new HashSet<>();
-    @Expose VersionList list;
+    @Expose
+    Repository source;
+    @Expose
+    final Set<String> proceededFor = new HashSet<>();
+    @Expose
+    VersionList list;
 
-    public CompleteVersion() {}
+    public CompleteVersion() {
+    }
+
     public CompleteVersion(String id, String minecraftArguments, String mainClass, String assets, String jar, Date time, Date releaseTime, Integer minimumLauncherVersion, List<Library> libraries) {
         this.id = id;
         this.minecraftArguments = minecraftArguments;
@@ -211,7 +216,7 @@ public class CompleteVersion implements Version, Cloneable {
 
     public AssetIndexInfo getAssetIndex() {
         if (assetIndex == null) {
-            if(assets == null) {
+            if (assets == null) {
                 assetIndex = new AssetIndexInfo("legacy");
             } else {
                 assetIndex = new AssetIndexInfo(assets);
@@ -434,7 +439,7 @@ public class CompleteVersion implements Version, Cloneable {
         } else if (inheritance.contains(id)) {
             throw new CompleteVersion.DuplicateInheritanceException();
         } else {
-            if(jar == null) {
+            if (jar == null) {
                 jar = inheritsFrom;
             }
             inheritance.add(id);
@@ -464,7 +469,7 @@ public class CompleteVersion implements Version, Cloneable {
 
         result.inheritsFrom = null;
 
-        if(result.modListAbsolutePrefix == null || !result.modListAbsolutePrefix) {
+        if (result.modListAbsolutePrefix == null || !result.modListAbsolutePrefix) {
             result.modListAbsolutePrefix = modListAbsolutePrefix;
         }
 
@@ -472,7 +477,7 @@ public class CompleteVersion implements Version, Cloneable {
             result.releaseTime = releaseTime;
         }
 
-        if (time.getTime() != 0L) {
+        if (time != null && time.getTime() != 0L) {
             result.time = time;
         }
 
@@ -498,7 +503,7 @@ public class CompleteVersion implements Version, Cloneable {
 
         if (libraries != null) {
             Set<Library> lib = new LinkedHashSet<>(libraries);
-            if(result.libraries != null) {
+            if (result.libraries != null) {
                 lib.addAll(result.libraries);
             }
             /*rulesCopy = new ArrayList();
@@ -552,7 +557,7 @@ public class CompleteVersion implements Version, Cloneable {
             result.downloads = downloads;
         }
 
-        if(javaVersion != null) {
+        if (javaVersion != null) {
             result.javaVersion = javaVersion;
         }
 
@@ -560,7 +565,7 @@ public class CompleteVersion implements Version, Cloneable {
             result.source = source;
         }
 
-        if(logging != null) {
+        if (logging != null) {
             result.logging = logging;
         }
 
@@ -628,11 +633,9 @@ public class CompleteVersion implements Version, Cloneable {
 
     public void validate() {
         Validate.notNull(id, "id");
-        if(inheritsFrom != null) {
-            Validate.notNull(type, "type");
-            Validate.notNull(libraries, "libraries");
-            Validate.notNull(mainClass, "mainClass");
-        }
+        Validate.notNull(type, "type");
+        Validate.notNull(libraries, "libraries");
+        Validate.notNull(mainClass, "mainClass");
     }
 
     protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");
@@ -695,11 +698,9 @@ public class CompleteVersion implements Version, Cloneable {
                     version.time = new Date(0L);
                 }
 
-                if(version.libraries == null) {
+                if (version.libraries == null) {
                     version.libraries = new ArrayList<>();
                 }
-
-                version.validate();
 
                 return version;
             }
@@ -753,7 +754,7 @@ public class CompleteVersion implements Version, Cloneable {
             throw new RuntimeException(e);
         }
 
-        if(this.arguments != null) {
+        if (this.arguments != null) {
             c.arguments = new java.util.EnumMap<>(ArgumentType.class);
             for (Map.Entry<ArgumentType, List<Argument>> argsList : arguments.entrySet()) {
                 c.arguments.put(argsList.getKey(), new ArrayList<>(argsList.getValue()));

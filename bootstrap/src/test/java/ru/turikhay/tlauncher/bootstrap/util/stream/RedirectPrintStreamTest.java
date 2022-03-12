@@ -1,53 +1,51 @@
 package ru.turikhay.tlauncher.bootstrap.util.stream;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import static ru.turikhay.tlauncher.bootstrap.util.stream.BufferUtils.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RedirectPrintStreamTest {
     private ByteArrayOutputStream sysOutBuffer;
-    private PrintStream sysOut;
 
     private ByteArrayOutputStream redirBuffer;
-    private RedirectOutputStream redirOutStream;
     private RedirectPrintStream redirPrintStream;
 
     @BeforeEach
     public void setUp() {
         sysOutBuffer = new ByteArrayOutputStream();
-        sysOut = new PrintStream(sysOutBuffer);
+        PrintStream sysOut = new PrintStream(sysOutBuffer);
 
         redirBuffer = new ByteArrayOutputStream();
-        redirOutStream = new RedirectOutputStream(redirBuffer, sysOut);
+        RedirectOutputStream redirOutStream = new RedirectOutputStream(redirBuffer, sysOut);
         redirPrintStream = new RedirectPrintStream(redirOutStream);
     }
 
     @Test
     public void testPrintln() {
         String input = "hello";
-        String expected = "hello" + NEW_LINE;
+        String expected = "hello" + System.lineSeparator();
 
         redirPrintStream.println(input);
 
-        assertEquals(bufferToString(redirBuffer), expected);
-        assertEquals(bufferToString(sysOutBuffer), expected);
+        assertEquals(redirBuffer.toString(), expected);
+        assertEquals(sysOutBuffer.toString(), expected);
     }
 
     @Test
     public void testNoRecording() {
         String input = "hello";
         String
-                expectedSysOut = "hello" + NEW_LINE,
+                expectedSysOut = "hello" + System.lineSeparator(),
                 expectedRedir = "";
 
         redirPrintStream.disableRecording();
         redirPrintStream.println(input);
 
-        assertEquals(bufferToString(redirBuffer), expectedRedir);
-        assertEquals(bufferToString(sysOutBuffer), expectedSysOut);
+        assertEquals(redirBuffer.toString(), expectedRedir);
+        assertEquals(sysOutBuffer.toString(), expectedSysOut);
     }
 }

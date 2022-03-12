@@ -17,8 +17,8 @@ public class DateTypeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
     public Date parse(String value) {
         try {
             return Date.from(OffsetDateTime.parse(value).toInstant());
-        } catch(RuntimeException e) {
-            if(returnEpochIfInvalid) {
+        } catch (RuntimeException e) {
+            if (returnEpochIfInvalid) {
                 return Date.from(Instant.EPOCH);
             }
             throw e;
@@ -32,7 +32,7 @@ public class DateTypeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
     @Override
     public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
-        if(!json.isJsonPrimitive()) {
+        if (!json.isJsonPrimitive()) {
             throw new JsonParseException("date must be a string");
         }
         return parse(json.getAsString());

@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.user.minecraft;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
 import ru.turikhay.tlauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.gos.GameOwnershipValidator;

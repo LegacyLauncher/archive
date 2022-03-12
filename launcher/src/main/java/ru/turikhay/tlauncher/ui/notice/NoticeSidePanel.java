@@ -20,7 +20,6 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -35,7 +34,6 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
     private final NoticeManager noticeManager;
 
     private final ExtendedPanel panel;
-    private final ScrollPane scrollPane;
 
     private final ButtonPanel buttonPanel;
     private final int workHeight;
@@ -54,7 +52,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setInsets(0, 0, 0, 0);
 
-        scrollPane = new ScrollPane(panel, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER, false);
+        ScrollPane scrollPane = new ScrollPane(panel, ScrollPane.ScrollBarPolicy.AS_NEEDED, ScrollPane.ScrollBarPolicy.NEVER, false);
         scrollPane.setBorder(null);
         wrapper.setCenter(scrollPane);
         //add(del(Del.CENTER));
@@ -70,7 +68,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
-                if(page != null) {
+                if (page != null) {
                     Stats.noticeListViewed(page.noticeList);
                 }
             }
@@ -92,11 +90,11 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
 
     private void fillPages(List<Notice> noticeList) {
         pages.clear();
-        if(noticeList == null) {
+        if (noticeList == null) {
             return;
         }
         Page page = new Page();
-        for(final Notice notice : noticeList) {
+        for (final Notice notice : noticeList) {
             NoticeWrapper wrapper = new NoticeWrapper(noticeManager, TLauncherFrame.getFontSize(), getWidth() - SwingUtil.magnify(NoticeWrapper.GAP) * 2 - getInsets().left - getInsets().right - SwingUtil.magnify(NOTICE_IMAGE_SIZE) - SwingUtil.magnify(32), SwingUtil.magnify(NOTICE_IMAGE_SIZE));
             /*final LocalizableMenuItem showAtMenuItem = LocalizableMenuItem.newItem("notice.sidepanel.popup.show-at-menu", new ActionListener() {
                 @Override
@@ -123,7 +121,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             wrapper.setNotice(notice);
 
             Dimension size = wrapper.updateSize();
-            if(size == null) {
+            if (size == null) {
                 continue;
             }
             wrapper.setMaximumSize(size);
@@ -131,7 +129,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             Del del = del(Del.CENTER);
 
             int height = size.height + Del.SIZE;
-            if(page.height + height > workHeight) {
+            if (page.height + height > workHeight) {
                 pages.add(page);
                 page = new Page();
             }
@@ -141,7 +139,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             page.list.add(del);
             page.noticeList.add(notice);
         }
-        if(!page.list.isEmpty()) {
+        if (!page.list.isEmpty()) {
             pages.add(page);
         }
     }
@@ -156,19 +154,19 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         boolean invisible = Blocker.isBlocked(buttonPanel.left) && Blocker.isBlocked(buttonPanel.right);
         buttonPanel.setEast(null);
         buttonPanel.setWest(null);
-        if(invisible) {
+        if (invisible) {
             buttonPanel.setEast(buttonPanel.controlButton);
         } else {
             buttonPanel.setWest(buttonPanel.controlButton);
             buttonPanel.setEast(buttonPanel.pageButtons);
         }
 
-        if(i < 0 || i >= pages.size()) {
+        if (i < 0 || i >= pages.size()) {
             return;
         }
 
         page = pages.get(i);
-        for(Component comp : page.list) {
+        for (Component comp : page.list) {
             panel.add(comp);
         }
 
@@ -177,8 +175,8 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         validate();
         repaint();
 
-        if(TLauncher.getInstance() != null && TLauncher.getInstance().isReady()) {
-            if(page != null) {
+        if (TLauncher.getInstance() != null && TLauncher.getInstance().isReady()) {
+            if (page != null) {
                 Stats.noticeListViewed(page.noticeList);
             }
         }
@@ -193,7 +191,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         //buttonPanel.promotedItem.setVisible(Configuration.isUSSRLocale(TLauncher.getInstance().getLang().getLocale().toString()));
     }
 
-    private class Page {
+    private static class Page {
         private final List<Component> list;
         private final List<Notice> noticeList;
         private int height;
@@ -205,12 +203,13 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
     }
 
     private class ButtonPanel extends BorderPanel {
-        JPopupMenu popup = new JPopupMenu();
-        LocalizableMenuItem promotedItem;
+        final JPopupMenu popup = new JPopupMenu();
+        final LocalizableMenuItem promotedItem;
 
         ExtendedButton controlButton;
-        ExtendedPanel pageButtons;
-        BlockableButton left, right;
+        final ExtendedPanel pageButtons;
+        final BlockableButton left;
+        final BlockableButton right;
 
         ButtonPanel() {
             setPreferredSize(new Dimension(
@@ -220,37 +219,19 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             setMaximumSize(new Dimension(Integer.MAX_VALUE, SwingUtil.magnify(BUTTON_PANEL_HEIGHT)));
 
             promotedItem = new LocalizableMenuItem();
-            promotedItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    togglePromoted();
-                }
-            });
+            promotedItem.addActionListener(e -> togglePromoted());
             popup.add(promotedItem);
             refreshPromoted();
 
-            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.restore", "refresh", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    noticeManager.restoreHidden();
-                }
-            }));
+            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.restore", "refresh", e -> noticeManager.restoreHidden()));
 
             popup.addSeparator();
 
-            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.hide", "compress", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    scene.setNoticeSidePanelEnabled(false);
-                }
-            }));
+            popup.add(LocalizableMenuItem.newItem("notice.sidepanel.control.hide", "compress", e -> scene.setNoticeSidePanelEnabled(false)));
 
-            controlButton = newButton("bars", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    refreshPromoted();
-                    popup.show(controlButton, 0, controlButton.getHeight());
-                }
+            controlButton = newButton("bars", e -> {
+                refreshPromoted();
+                popup.show(controlButton, 0, controlButton.getHeight());
             });
             //setWest(controlButton);
             //setEast(controlButton);
@@ -265,20 +246,10 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             c.weighty = 1.0;
 
             c.gridx++;
-            pageButtons.add(left = newButton("arrow-left", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    renderPage(pageNumber - 1);
-                }
-            }), c);
+            pageButtons.add(left = newButton("arrow-left", e -> renderPage(pageNumber - 1)), c);
 
             c.gridx++;
-            pageButtons.add(right = newButton("arrow-right", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    renderPage(pageNumber + 1);
-                }
-            }), c);
+            pageButtons.add(right = newButton("arrow-right", e -> renderPage(pageNumber + 1)), c);
 
             //setEast(p);
         }
@@ -298,7 +269,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         private void refreshPromoted() {
             boolean enabled = TLauncher.getInstance().getSettings().getBoolean("notice.promoted");
             String path = "notice.promoted.", image;
-            if(enabled) {
+            if (enabled) {
                 path += "hide";
                 image = "eye-slash";
             } else {

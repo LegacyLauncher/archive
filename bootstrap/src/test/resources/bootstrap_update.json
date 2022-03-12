@@ -5,11 +5,11 @@
       "shortBrand": "legacy",
       "downloads": {
         "JAR": {
-          "url": "https://repo.tlauncher.ru/legacy/bootstrap.jar",
+          "url": "https://repo.tln4.ru/legacy/bootstrap.jar",
           "checksum": ""
         },
         "EXE": {
-          "url": "https://repo.tlauncher.ru/legacy/bootstrap.exe",
+          "url": "https://repo.tln4.ru/legacy/bootstrap.exe",
           "checksum": ""
         }
       }

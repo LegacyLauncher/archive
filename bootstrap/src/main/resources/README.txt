@@ -20,7 +20,7 @@ Have troubles? Or questions? Need help? Here is some useful links:
   Our Facebook page: tlaun.ch/fb
   Our VK page: tlaun.ch/vk
   Our Discord server: tlaun.ch/discord/intl
-  Our support e-mail: support@tlauncher.ru
+  Our support e-mail: support@tln4.ru
 
 TL download links:
   Stable:

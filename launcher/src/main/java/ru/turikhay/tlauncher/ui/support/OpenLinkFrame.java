@@ -11,8 +11,6 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class OpenLinkFrame extends VActionFrame {
 
@@ -42,12 +40,9 @@ public class OpenLinkFrame extends VActionFrame {
 
         LocalizableButton goButton = new LocalizableButton("support.open_link.go");
         goButton.setPreferredSize(SwingUtil.magnify(new Dimension(1, 40)));
-        goButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                OS.openLink(link);
-                OpenLinkFrame.this.dispose();
-            }
+        goButton.addActionListener(e -> {
+            OS.openLink(link);
+            OpenLinkFrame.this.dispose();
         });
         ++c.gridy;
         getFooter().add(goButton, c);

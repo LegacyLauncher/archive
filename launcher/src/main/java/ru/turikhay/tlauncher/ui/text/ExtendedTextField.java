@@ -56,14 +56,6 @@ public class ExtendedTextField extends JTextField {
         this(null, null, null);
     }
 
-    /**
-     * @deprecated
-     */
-    @Deprecated
-    public String getText() {
-        return super.getText();
-    }
-
     private String getValueOf(String value) {
         return value != null && !value.isEmpty() && !value.equals(placeholder) && !value.equals(oldPlaceholder) ? value : null;
     }

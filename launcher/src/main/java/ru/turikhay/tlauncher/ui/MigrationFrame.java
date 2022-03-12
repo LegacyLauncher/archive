@@ -25,18 +25,17 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class MigrationFrame extends ExtendedFrame implements LocalizableComponent {
-    private final static int WIDTH = SwingUtil.magnify(500);
-    private final static int IMAGE_HEIGHT = WIDTH / 2;
+    private final static int SIZE = SwingUtil.magnify(500);
+    private final static int IMAGE_HEIGHT = SIZE / 2;
     private final static int BORDER = SwingUtil.magnify(20);
     private final static int HALF_BORDER = BORDER / 2;
     private final static int QUARTER_BORDER = BORDER / 4;
-    private final static int WIDTH_BORDERED = WIDTH - BORDER * 2;
+    private final static int WIDTH_BORDERED = SIZE - BORDER * 2;
 
     private final EditorPane explanationLabel;
     private final LocalizableHTMLLabel accountsCount;
@@ -46,7 +45,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
         getContentPane().setLayout(new GridBagLayout());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setIconImages(SwingUtil.createFaviconList("migration-icon"));
-        setMinimumSize(new Dimension(WIDTH, WIDTH));
+        setMinimumSize(new Dimension(SIZE, SIZE));
 
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
@@ -54,7 +53,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
         c.weightx = 1.0;
 
         FixedSizeImage image = new FixedSizeImage(Images.loadImageByName("migration-banner.jpg"));
-        image.setPreferredSize(new Dimension(WIDTH, IMAGE_HEIGHT));
+        image.setPreferredSize(new Dimension(SIZE, IMAGE_HEIGHT));
         c.fill = GridBagConstraints.BOTH;
         c.weighty = 1.0;
         c.gridy++;
@@ -108,6 +107,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
         this.accountsList.setLayout(new BoxLayout(accountsList, BoxLayout.Y_AXIS));
         this.accountsList.setAlignmentX(Component.LEFT_ALIGNMENT);
         this.accountsList.setAlignmentY(Component.TOP_ALIGNMENT);
+        this.accountsList.add(new ExtendedLabel("..."));
         container.add(accountsList);
         container.add(Box.createRigidArea(new Dimension(1, BORDER)));
 
@@ -131,27 +131,28 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
     }
 
     private Set<MojangUser> accounts;
-    private Instant finalDate;
+    private Instant startDate, endDate;
 
-    public void updateUsers(Set<MojangUser> users, Instant finalDate) {
+    public void updateUsers(Set<MojangUser> users, Instant startDate, Instant endDate) {
         this.accounts = new LinkedHashSet<>(users);
-        this.finalDate = finalDate;
+        this.startDate = startDate;
+        this.endDate = endDate;
         updateUserJobs();
         updateCallback();
         updateLocale();
     }
 
     private void updateUserJobs() {
-        this.accounts.forEach(u -> {
-            u.isReadyToMigrate().get().thenAccept(b -> updateCallback());
-        });
+        if (startDate == null) {
+            this.accounts.forEach(u -> u.isReadyToMigrate().get().thenAccept(b -> updateCallback()));
+        }
     }
 
     private void updateCallback() {
         SwingUtil.later(() -> {
             updateAccountsCount();
             accountsList.removeAll();
-            if(!this.accounts.isEmpty()) {
+            if (!this.accounts.isEmpty()) {
                 JSeparator s = new JSeparator();
                 s.setAlignmentX(Component.LEFT_ALIGNMENT);
                 s.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -159,8 +160,11 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                 accountsList.add(s);
             }
             this.accounts.stream().sorted((ac1, ac0) -> {
+                if (startDate != null) {
+                    return 0;
+                }
                 int s = ac0.getMigrationStatusNow().compareTo(ac1.getMigrationStatusNow());
-                if(s == 0) {
+                if (s == 0) {
                     return ac0.getDisplayName().compareTo(ac1.getDisplayName());
                 } else {
                     return s;
@@ -183,23 +187,27 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
 
                 MojangUserMigrationStatus status = null;
                 boolean canMigrateNow = false;
-                boolean finalDateIsDue = finalDate != null && Instant.now().isAfter(finalDate);
-                if(finalDateIsDue) {
+                boolean forcedMigrationStarted = startDate != null && Instant.now().isAfter(startDate);
+                if (forcedMigrationStarted) {
                     canMigrateNow = true;
                 } else {
-                    CompletableFuture<MojangUserMigrationStatus> f = u.isReadyToMigrate().get();
-                    if (f.isDone()) {
-                        try {
-                            status = f.get();
-                        } catch (ExecutionException | InterruptedException ignored) {
-                        }
+                    if (startDate != null) {
+                        status = new MojangUserMigrationStatus(true);
                     } else {
-                        p.setEast(new LocalizableLabel("mojang-migration.your-accounts.list.waiting"));
+                        CompletableFuture<MojangUserMigrationStatus> f = u.isReadyToMigrate().get();
+                        if (f.isDone()) {
+                            try {
+                                status = f.get();
+                            } catch (ExecutionException | InterruptedException ignored) {
+                            }
+                        } else {
+                            p.setEast(new LocalizableLabel("mojang-migration.your-accounts.list.waiting"));
+                        }
                     }
                 }
-                if(status != null) {
+                if (status != null) {
                     if (status.getError() == null) {
-                        if(status.canMigrate()) {
+                        if (status.canMigrate()) {
                             canMigrateNow = true;
                         } else {
                             LocalizableHTMLLabel nl = new LocalizableHTMLLabel("mojang-migration.your-accounts.list.not-eligible");
@@ -214,7 +222,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                         bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
                         LocalizableButton yes = new LocalizableButton("mojang-migration.your-accounts.list.probably-migrated.yes");
                         yes.addActionListener(e -> {
-                            if(Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.yes.remove")) {
+                            if (Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.yes.remove")) {
                                 TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(u);
                             }
                         });
@@ -222,7 +230,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                         bp.add(Box.createRigidArea(new Dimension(QUARTER_BORDER, 0)));
                         LocalizableButton no = new LocalizableButton("mojang-migration.your-accounts.list.probably-migrated.no");
                         no.addActionListener(e -> {
-                            if(Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.no.open-manager")) {
+                            if (Alert.showLocQuestion("mojang-migration.your-accounts.list.probably-migrated.no.open-manager")) {
                                 TLauncher.getInstance().getFrame().mp.openAccountEditor();
                                 TLauncher.getInstance().getFrame().mp.accountManager.get().multipane.showTip("add-account-mojang");
                                 MigrationFrame.this.dispose();
@@ -232,7 +240,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                         p.setEast(bp);
                     }
                 }
-                if(canMigrateNow) {
+                if (canMigrateNow) {
                     l.setFont(l.getFont().deriveFont(Font.BOLD));
                     ExtendedPanel bp = new ExtendedPanel();
                     bp.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -245,7 +253,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                     mb.addActionListener(e -> OS.openLink("https://aka.ms/MinecraftMigration"));
                     mb.setFont(mb.getFont().deriveFont(Font.BOLD));
                     bp.add(mb);
-                    if(finalDateIsDue) {
+                    if (forcedMigrationStarted) {
                         LocalizableButton db = new LocalizableButton("mojang-migration.your-accounts.list.remove.button");
                         db.addActionListener(e -> {
                             if (Alert.showLocQuestion("mojang-migration.your-accounts.list.remove")) {
@@ -263,7 +271,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                 s.setAlignmentY(Component.TOP_ALIGNMENT);
                 accountsList.add(s);
             });
-            if(!this.accounts.isEmpty()) {
+            if (!this.accounts.isEmpty()) {
                 accountsList.add(Box.createRigidArea(new Dimension(0, HALF_BORDER)));
                 LocalizableButton helpButton = new LocalizableButton("mojang-migration.help.button");
                 helpButton.addActionListener(e -> OS.openLink(TLauncher.getInstance().getSettings().isUSSRLocale() ?
@@ -283,18 +291,18 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
     }
 
     private void updateAccountsCount() {
-        if(this.accounts == null) {
+        if (this.accounts == null) {
             accountsCount.setText(null);
-        } else if(this.accounts.isEmpty()) {
+        } else if (this.accounts.isEmpty()) {
             accountsCount.setText("mojang-migration.your-accounts.count.none");
         } else {
             accountsCount.setText("mojang-migration.your-accounts.count.some", this.accounts.size());
         }
     }
 
-    private final Lazy<DateTimeFormatter> finalDateFormatter = Lazy.of(() ->
-            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG)
-                    .withLocale(Locale.forLanguageTag("ru-RU"))
+    private final Lazy<DateTimeFormatter> dateFormatter = Lazy.of(() ->
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
+                    .withLocale(TLauncher.getInstance().getSettings().getLocale())
                     .withZone(ZoneId.systemDefault())
     );
 
@@ -308,10 +316,18 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                 "https://tlaun.ch/movefaqru" : "https://tlaun.ch/movefaq";
         StringBuilder explanation = new StringBuilder();
         explanation.append(Localizable.get("mojang-migration.body.explanation.text"));
-        if(finalDate != null) {
-            explanation.append(" ").append(Localizable.get(
-                    "mojang-migration.body.explanation.with-final-date",
-                    finalDateFormatter.get().format(finalDate)
+        if (startDate != null) {
+            explanation.append("<br/><br/>").append(Localizable.get(
+                    "mojang-migration.body.explanation.with-start-date.v1." +
+                            (Instant.now().isBefore(startDate) ? "future" : "past"),
+                    dateFormatter.get().format(startDate)
+            ));
+        }
+        if (endDate != null) {
+            explanation.append("<br/><br/>").append(Localizable.get(
+                    "mojang-migration.body.explanation.with-end-date.v1." +
+                            (Instant.now().isBefore(endDate) ? "future" : "past"),
+                    dateFormatter.get().format(endDate)
             ));
         }
         explanation.append(" <a href=\"").append(explanationLink).append("\">");

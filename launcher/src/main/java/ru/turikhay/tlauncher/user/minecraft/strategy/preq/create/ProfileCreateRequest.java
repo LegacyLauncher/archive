@@ -34,7 +34,7 @@ public class ProfileCreateRequest extends RequestAndParseStrategy<MinecraftServi
     public MinecraftOAuthProfile createProfile(MinecraftServicesToken token) throws MinecraftProfileCreateException, IOException {
         try {
             return requestAndParse(token);
-        } catch(InvalidResponseException e) {
+        } catch (InvalidResponseException e) {
             throw new MinecraftProfileCreateException(e);
         }
     }

@@ -1,14 +1,13 @@
 package ru.turikhay.tlauncher.ui.support;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.CharSequenceInputStream;
 import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.pasta.Pasta;
+import ru.turikhay.tlauncher.pasta.PastaResult;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.frames.ProcessFrame;
-import ru.turikhay.util.*;
-import ru.turikhay.tlauncher.pasta.PastaResult;
+import ru.turikhay.util.StringUtil;
 
 import javax.swing.*;
 import java.io.*;
@@ -16,14 +15,14 @@ import java.nio.charset.StandardCharsets;
 
 public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> {
 
-    public final class SendInfoResponse {
+    public static final class SendInfoResponse {
         private final String link;
 
         SendInfoResponse(String link) {
             this.link = StringUtil.requireNotBlank(link);
         }
 
-        public final String getLink() {
+        public String getLink() {
             return link;
         }
     }
@@ -59,12 +58,7 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
         super.onSucceeded(process, result);
 
         final String link = result.getLink();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new OpenLinkFrame(link).showAtCenter();
-            }
-        });
+        SwingUtilities.invokeLater(() -> new OpenLinkFrame(link).showAtCenter());
     }
 
     @Override
@@ -72,44 +66,33 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
         super.onFailed(process, e);
 
         if (Alert.showLocQuestion("support.sending.error")) {
-            Exception error;
+            FileExplorer explorer;
+            try {
+                explorer = FileExplorer.newExplorer();
+            } catch (Exception error) {
+                Alert.showLocError("support.saving.error", error);
+                return;
+            }
 
-            savingFile:
-            {
-                FileExplorer explorer;
-                try {
-                    explorer = FileExplorer.newExplorer();
-                } catch (Exception e0) {
-                    error = e0;
-                    break savingFile;
-                }
+            explorer.setSelectedFile(new File("diagnostic.log"));
 
-                explorer.setSelectedFile(new File("diagnostic.log"));
+            if (explorer.showSaveDialog(this) != FileExplorer.APPROVE_OPTION) {
+                return;
+            }
 
-                if (explorer.showSaveDialog(this) != FileExplorer.APPROVE_OPTION) {
+            if (explorer.getSelectedFile() != null) {
+                File file = explorer.getSelectedFile();
+                try (InputStreamReader reader = Log4j2ContextHelper.getCurrentLogFile().read();
+                     OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)
+                ) {
+                    IOUtils.copy(reader, writer);
+                } catch (Exception error) {
+                    Alert.showLocError("support.saving.error", error);
                     return;
                 }
 
-                if (explorer.getSelectedFile() != null) {
-                    File file = explorer.getSelectedFile();
-                    try(
-                            InputStreamReader reader = Log4j2ContextHelper.getCurrentLogFile().read();
-                            OutputStreamWriter writer = new OutputStreamWriter(
-                                    new FileOutputStream(file),
-                                    StandardCharsets.UTF_8
-                            )
-                    ) {
-                        IOUtils.copy(reader, writer);
-                    } catch (Exception e0) {
-                        error = e0;
-                        break savingFile;
-                    }
-
-                    Alert.showLocMessage("support.saving.success", file);
-                }
-                return;
+                Alert.showLocMessage("support.saving.success", file);
             }
-            Alert.showLocError("support.saving.error", error);
         }
     }
 

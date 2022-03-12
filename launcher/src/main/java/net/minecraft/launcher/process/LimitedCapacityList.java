@@ -11,6 +11,7 @@ public class LimitedCapacityList<T> {
     private int size;
     private int head;
 
+    @SuppressWarnings("unchecked")
     public LimitedCapacityList(Class<? extends T> clazz, int maxSize) {
         this.clazz = clazz;
         items = (T[]) Array.newInstance(clazz, maxSize);
@@ -42,6 +43,7 @@ public class LimitedCapacityList<T> {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public T[] getItems() {
         T[] result = (T[]) Array.newInstance(clazz, size);
         locks.readLock().lock();

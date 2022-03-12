@@ -6,7 +6,7 @@ public class AppenderRepoList extends RepoList {
     public AppenderRepoList(String name, String[] prefixList) {
         super(name);
 
-        for(String prefix : prefixList) {
+        for (String prefix : prefixList) {
             add(new AppenderRepo(prefix));
         }
     }
@@ -14,7 +14,7 @@ public class AppenderRepoList extends RepoList {
     public AppenderRepoList(String name, List<String> prefixList) {
         super(name);
 
-        for(String prefix : prefixList) {
+        for (String prefix : prefixList) {
             add(new AppenderRepo(prefix));
         }
     }

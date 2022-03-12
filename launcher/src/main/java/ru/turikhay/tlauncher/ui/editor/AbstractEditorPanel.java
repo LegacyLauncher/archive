@@ -9,7 +9,6 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public abstract class AbstractEditorPanel extends CenterPanel {
@@ -17,7 +16,7 @@ public abstract class AbstractEditorPanel extends CenterPanel {
 
     public AbstractEditorPanel(CenterPanelTheme theme, Insets insets) {
         super(theme, insets);
-        handlers = new ArrayList();
+        handlers = new ArrayList<>();
     }
 
     public AbstractEditorPanel(Insets insets) {
@@ -30,10 +29,8 @@ public abstract class AbstractEditorPanel extends CenterPanel {
 
     protected boolean checkValues() {
         boolean allValid = true;
-        Iterator var3 = handlers.iterator();
 
-        while (var3.hasNext()) {
-            EditorHandler handler = (EditorHandler) var3.next();
+        for (EditorHandler handler : handlers) {
             boolean valid = handler.isValid();
             setValid(handler, valid);
             if (!valid) {

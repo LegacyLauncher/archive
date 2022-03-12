@@ -4,6 +4,7 @@ import net.minecraft.launcher.updater.VersionSyncInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.minecraft.crash.Crash;
 import ru.turikhay.tlauncher.minecraft.crash.CrashEntry;
@@ -16,13 +17,15 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.Locale;
+import java.util.Objects;
 
 public final class CrashFrame extends VActionFrame {
     private static final Logger LOGGER = LogManager.getLogger(CrashFrame.class);
@@ -46,7 +49,7 @@ public final class CrashFrame extends VActionFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 File logFile;
-                if(crash.getManager().hasProcessLogger()) {
+                if (crash.getManager().hasProcessLogger()) {
                     logFile = crash.getManager().getProcessLogger().getLogFile().getFile();
                 } else {
                     LOGGER.warn("Opening logs, but CrashManager had no process logger");
@@ -60,28 +63,27 @@ public final class CrashFrame extends VActionFrame {
     private final LocalizableButton askHelp = new LocalizableButton("crash.buttons.support");
 
     {
-        askHelp.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                supportFrame.showAtCenter();
-            }
-        });
+        askHelp.addActionListener(e -> supportFrame.showAtCenter());
     }
 
     private final LocalizableButton exitButton = new LocalizableButton("crash.buttons.exit");
+
     {
         askHelp.setPreferredSize(SwingUtil.magnify(new Dimension(150, 25)));
         exitButton.setPreferredSize(SwingUtil.magnify(new Dimension(150, 25)));
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        exitButton.addActionListener(e -> setVisible(false));
     }
 
-    CrashFrame(CrashProcessingFrame frame) {
+    CrashFrame() {
         getFooter().setLayout(new GridBagLayout());
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                if (TLauncher.getInstance().getSettings().getActionOnLaunch() == Configuration.ActionOnLaunch.EXIT) {
+                    TLauncher.kill();
+                }
+            }
+        });
     }
 
     public Crash getCrash() {
@@ -89,7 +91,7 @@ public final class CrashFrame extends VActionFrame {
     }
 
     public void setCrash(Crash crash) {
-        this.crash = U.requireNotNull(crash);
+        this.crash = Objects.requireNonNull(crash);
 
         if (crash.getEntry() == null) {
             initOnUnknown();
@@ -119,15 +121,13 @@ public final class CrashFrame extends VActionFrame {
         setTitlePath(entry.getTitle(), entry.getTitleVars());
 
         if (entry.getImage() != null) {
-            loadImage:
-            {
-                Image image;
-                try {
-                    image = SwingUtil.loadImage(entry.getImage());
-                } catch (Exception e) {
-                    LOGGER.warn("could not load crash image {}", entry.getImage(), e);
-                    break loadImage;
-                }
+            Image image = null;
+            try {
+                image = SwingUtil.loadImage(entry.getImage());
+            } catch (Exception e) {
+                LOGGER.warn("could not load crash image {}", entry.getImage(), e);
+            }
+            if (image != null) {
                 getHead().setIcon(new javax.swing.ImageIcon(image));
             }
         } else {
@@ -161,8 +161,8 @@ public final class CrashFrame extends VActionFrame {
             getFooter().add(button, c);
         }
 
-        if(askHelp) {
-            if(isProbablyBadVersionCrashed()) {
+        if (askHelp) {
+            if (isProbablyBadVersionCrashed()) {
                 LOGGER.info("Custom local version is crashed. Disabling help offer.");
             } else {
                 ++c.gridx;
@@ -197,17 +197,17 @@ public final class CrashFrame extends VActionFrame {
     private boolean isProbablyBadVersionCrashed() {
         String versionId = crash.getManager().getLauncher().getVersion();
 
-        if(versionId.toLowerCase(Locale.ROOT).contains("forge")
+        if (versionId.toLowerCase(Locale.ROOT).contains("forge")
                 || versionId.toLowerCase(Locale.ROOT).contains("fabric")) {
             return false; // force or fabric? probably ok
         }
         VersionSyncInfo versionSyncInfo;
 
         try {
-            versionSyncInfo = U.requireNotNull(TLauncher.getInstance()
+            versionSyncInfo = Objects.requireNonNull(TLauncher.getInstance()
                     .getVersionManager()
                     .getVersionSyncInfo(versionId));
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             LOGGER.warn("Couldn't detect if this crash is occurred in the custom version", rE);
             return false; // possible NPEs, fallback to ok
         }

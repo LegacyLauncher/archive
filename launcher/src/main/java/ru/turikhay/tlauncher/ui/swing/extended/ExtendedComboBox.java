@@ -5,7 +5,6 @@ import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.swing.DefaultConverterCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.theme.Theme;
-import ru.turikhay.util.Reflect;
 
 import javax.swing.*;
 
@@ -15,34 +14,29 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
 
     public ExtendedComboBox(ListCellRenderer<T> renderer) {
         Theme.setup(this);
-        setModel(new SimpleComboBoxModel());
+        setModel(new SimpleComboBoxModel<>());
         setRenderer(renderer);
         setOpaque(false);
         setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
-        Reflect.cast(getEditor().getEditorComponent(), JComponent.class).setOpaque(false);
+        ((JComponent) getEditor().getEditorComponent()).setOpaque(false);
     }
 
     public ExtendedComboBox(StringConverter<T> converter) {
-        this(new DefaultConverterCellRenderer(converter));
+        this(new DefaultConverterCellRenderer<>(converter));
         this.converter = converter;
     }
 
     public ExtendedComboBox() {
-        this((ListCellRenderer) null);
+        this((ListCellRenderer<T>) null);
     }
 
     public SimpleComboBoxModel<T> getSimpleModel() {
-        return (SimpleComboBoxModel) getModel();
+        return (SimpleComboBoxModel<T>) getModel();
     }
 
-    public T getValueAt(int i) {
-        Object value = getItemAt(i);
-        return returnAs(value);
-    }
-
+    @SuppressWarnings("unchecked")
     public T getSelectedValue() {
-        Object selected = getSelectedItem();
-        return returnAs(selected);
+        return (T) getSelectedItem();
     }
 
     public void setSelectedValue(T value) {
@@ -65,19 +59,10 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
     }
 
     protected String convert(T obj) {
-        T from = returnAs(obj);
-        return converter != null ? converter.toValue(from) : (from == null ? null : from.toString());
+        return converter != null ? converter.toValue(obj) : (obj == null ? null : obj.toString());
     }
 
     protected T convert(String from) {
         return converter == null ? null : converter.fromString(from);
-    }
-
-    private T returnAs(Object obj) {
-        try {
-            return (T) obj;
-        } catch (ClassCastException var3) {
-            return null;
-        }
     }
 }

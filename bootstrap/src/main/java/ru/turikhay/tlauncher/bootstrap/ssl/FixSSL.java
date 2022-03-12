@@ -46,7 +46,7 @@ public class FixSSL {
     private static boolean doesContainLetsEncryptRootCert(Map<String, Certificate> jreTrustStore,
                                                           Map<String, Certificate> letsEncryptStore) {
         for (Certificate letsEncryptCert : letsEncryptStore.values()) {
-            if(!jreTrustStore.containsValue(letsEncryptCert)) {
+            if (!jreTrustStore.containsValue(letsEncryptCert)) {
                 U.log("[FixSSL]", "JRE trust store doesn't contain", letsEncryptCert);
                 return false;
             }
@@ -57,7 +57,7 @@ public class FixSSL {
     private static void addLetsEncryptIntoTrustStore() throws Exception {
         Map<String, Certificate> jreTrustStore = loadJreTrustStore();
         Map<String, Certificate> letsEncryptStore = loadLetsEncryptStore();
-        if(doesContainLetsEncryptRootCert(jreTrustStore, letsEncryptStore)) {
+        if (doesContainLetsEncryptRootCert(jreTrustStore, letsEncryptStore)) {
             return;
         }
         KeyStore mergedStore = mergeStores(jreTrustStore, letsEncryptStore);
@@ -102,7 +102,7 @@ public class FixSSL {
     }
 
     private static Map<String, Certificate> readTrustStore(KeyStore keyStore) throws KeyStoreException {
-        Map<String, Certificate> result = new HashMap<String, Certificate>();
+        Map<String, Certificate> result = new HashMap<>();
         Enumeration<String> aliases = keyStore.aliases();
         while (aliases.hasMoreElements()) {
             String alias = aliases.nextElement();
@@ -117,7 +117,7 @@ public class FixSSL {
         try {
             keyStore.load(input, password.toCharArray());
         } finally {
-            U.close(input);
+            input.close();
         }
     }
 

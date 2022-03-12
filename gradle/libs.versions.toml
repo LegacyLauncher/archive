@@ -1,0 +1,59 @@
+[versions]
+authlib = "1.5.24"
+commons-compress = "1.21"
+commons-io = "2.11.0"
+commons-lang3 = "3.12.0"
+gson = "2.8.9"
+guava = "31.0.1-jre"
+httpcomponents = "4.5.13"
+jackson = "2.13.0"
+java-semver = "0.9.0"
+java-statsd-client = "3.1.0"
+jdom = "2.0.2"
+jopt-simple = "5.0.4"
+junit5 = "5.8.2"
+jvd = "1.0"
+log4j = "2.17.0"
+mockito = "4.1.0"
+nanohttpd = "2.3.1"
+nstweaker = "1.0"
+raven = "7.8.6"
+sentry = "1.7.30"
+slf4j = "1.7.32"
+toml4j = "0.7.2"
+xz = "1.9"
+
+[libraries]
+authlib = { module = "com.mojang:authlib", version.ref = "authlib" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+httpcomponents-fluent-hc = { module = "org.apache.httpcomponents:fluent-hc", version.ref = "httpcomponents" }
+httpcomponents-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "httpcomponents" }
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+java-semver = { module = "com.github.zafarkhaja:java-semver", version.ref = "java-semver" }
+java-statsd-client = { module = "com.timgroup:java-statsd-client", version.ref = "java-statsd-client" }
+jdom = { module = "org.jdom:jdom", version.ref = "jdom" }
+jopt-simple = { module = "net.sf.jopt-simple:jopt-simple", version.ref = "jopt-simple" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+jvd = { module = "ru.turikhay:jvd", version.ref = "jvd" }
+log4j-1-2-api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
+log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
+log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
+nstweaker = { module = "ru.turikhay.app:nstweaker", version.ref = "nstweaker" }
+raven = { module = "com.getsentry.raven:raven", version.ref = "raven" }
+sentry = { module = "io.sentry:sentry", version.ref = "sentry" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+toml4j = { module = "com.moandjiezana.toml:toml4j", version.ref = "toml4j" }
+xz = { module = "org.tukaani:xz", version.ref = "xz" }
+
+[bundles]
+httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
+log4j = ["log4j-api", "log4j-core", "log4j-1-2-api"]

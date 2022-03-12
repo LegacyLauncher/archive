@@ -1,6 +1,5 @@
 package net.minecraft.launcher.process;
 
-import com.google.common.primitives.Chars;
 import ru.turikhay.util.OS;
 
 import java.io.File;
@@ -8,7 +7,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 public class JavaProcessLauncher {
@@ -46,24 +44,21 @@ public class JavaProcessLauncher {
     }
 
     List<String> getFullCommands() {
-        ArrayList result = new ArrayList(commands);
-        result.add(0, getJavaPath());
+        List<String> result = new ArrayList<>(commands.size() + 1);
+        result.add(getJavaPath());
+        result.addAll(commands);
         return result;
     }
 
     public String getCommandsAsString() {
-        List parts = getFullCommands();
+        List<String> parts = getFullCommands();
         StringBuilder full = new StringBuilder();
-        boolean first = true;
 
-        String part;
-        for (Iterator var5 = parts.iterator(); var5.hasNext(); full.append(part)) {
-            part = (String) var5.next();
-            if (first) {
-                first = false;
-            } else {
+        for (String part : parts) {
+            if (full.length() != 0) {
                 full.append(' ');
             }
+            full.append(part);
         }
 
         return full.toString();
@@ -83,11 +78,8 @@ public class JavaProcessLauncher {
     }
 
     public void addCommands(Object[] commands) {
-        Object[] var5 = commands;
-        int var4 = commands.length;
 
-        for (int var3 = 0; var3 < var4; ++var3) {
-            Object c = var5[var3];
+        for (Object c : commands) {
             this.commands.add(c.toString());
         }
 

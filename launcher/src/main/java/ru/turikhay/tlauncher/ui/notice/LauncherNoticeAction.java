@@ -8,8 +8,6 @@ import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.util.OS;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,21 +24,11 @@ public class LauncherNoticeAction extends NoticeAction {
     List<? extends JMenuItem> getMenuItemList() {
         List<LocalizableMenuItem> list = new ArrayList<>();
         LocalizableMenuItem launchItem = new LocalizableMenuItem(L10N_PREFIX + "start", launcherName);
-        launchItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startLauncher();
-            }
-        });
+        launchItem.addActionListener(e -> startLauncher());
         list.add(launchItem);
-        if(downloadUrl != null) {
+        if (downloadUrl != null) {
             LocalizableMenuItem downloadItem = new LocalizableMenuItem(L10N_PREFIX + "download");
-            downloadItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    OS.openLink(downloadUrl);
-                }
-            });
+            downloadItem.addActionListener(e -> OS.openLink(downloadUrl));
             list.add(downloadItem);
         }
         return list;
@@ -48,11 +36,11 @@ public class LauncherNoticeAction extends NoticeAction {
 
     private void startLauncher() {
         VersionSyncInfo vs = TLauncher.getInstance().getVersionManager().getVersionSyncInfo(launcherName);
-        if(vs == null) {
-            if(downloadUrl == null) {
+        if (vs == null) {
+            if (downloadUrl == null) {
                 Alert.showLocError(L10N_PREFIX + "start.error.not-found");
             } else {
-                if(Alert.showLocQuestion(L10N_PREFIX + "start.error.not-found.download")) {
+                if (Alert.showLocQuestion(L10N_PREFIX + "start.error.not-found.download")) {
                     OS.openLink(downloadUrl);
                 }
             }

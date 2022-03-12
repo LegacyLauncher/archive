@@ -50,13 +50,13 @@ public class LogFile implements CharsetData {
 
     @Override
     public long length() {
-        if(length == Long.MIN_VALUE) {
+        if (length == Long.MIN_VALUE) {
             length = requestFileSize(file);
         }
         return length;
     }
 
-    public OutputStreamWriter write()  throws IOException {
+    public OutputStreamWriter write() throws IOException {
         createIfNotExist();
         return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
     }

@@ -4,14 +4,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class UrlNoticeAction extends NoticeAction {
     private final String name;
@@ -21,20 +19,15 @@ public class UrlNoticeAction extends NoticeAction {
         super("url");
 
         this.name = StringUtil.requireNotBlank(name, "name");
-        this.url = U.requireNotNull(url,"url");
+        this.url = Objects.requireNonNull(url, "url");
     }
 
     @Override
     List<? extends JMenuItem> getMenuItemList() {
-        List<LocalizableMenuItem> list = new ArrayList<LocalizableMenuItem>();
+        List<LocalizableMenuItem> list = new ArrayList<>();
 
         LocalizableMenuItem item = new LocalizableMenuItem(L10N_PREFIX + "open", name);
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                OS.openLink(url);
-            }
-        });
+        item.addActionListener(e -> OS.openLink(url));
         list.add(item);
 
         return list;

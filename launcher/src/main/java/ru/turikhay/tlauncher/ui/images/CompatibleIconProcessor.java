@@ -23,7 +23,7 @@ class CompatibleIconProcessor implements IconProcessor {
 
     private static CompatibleIconProcessor create(double scalingFactor) {
         IconProcessor processor;
-        if(isMultiResAvailable() && scalingFactor != 1.0) {
+        if (isMultiResAvailable() && scalingFactor != 1.0) {
             processor = MultiResInterface.INSTANCE.createIconProcessor(scalingFactor);
         } else {
             processor = new PlainIconProcessor();

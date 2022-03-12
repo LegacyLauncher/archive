@@ -4,7 +4,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.exceptions.IOExceptionList;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.U;
 
@@ -27,7 +26,7 @@ public class RepoList {
     private final String name;
     private final Object sync = new Object();
 
-    private final ArrayList<IRepo> list = new ArrayList<IRepo>();
+    private final ArrayList<IRepo> list = new ArrayList<>();
     private RelevantRepoList relevant = new RelevantRepoList();
 
     public RepoList(String name) {
@@ -50,15 +49,15 @@ public class RepoList {
         return relevant;
     }
 
-    public InputStream read(String path, Proxy proxy) throws IOExceptionList {
-        List<IOException> exList = new ArrayList<IOException>();
+    public InputStream read(String path, Proxy proxy) throws IOException {
+        IOException ex = null;
         List<IRepo> l = getRelevant().getList();
         int timeout = U.getConnectionTimeout();
 
         Object total = new Object();
         Time.start(total);
 
-        LOGGER.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path,timeout / 1000, proxy);
+        LOGGER.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path, timeout / 1000, proxy);
         int attempt = 0;
 
         for (IRepo repo : l) {
@@ -67,11 +66,11 @@ public class RepoList {
             Time.start(current);
 
             String _path; // path to show in the logs
-            if(repo instanceof AppenderRepo) {
+            if (repo instanceof AppenderRepo) {
                 try {
                     _path = String.valueOf(((AppenderRepo) repo).makeUrl(path));
-                } catch(IOException ioE) {
-                    _path = "(failed to make url: \""+ path +"\")";
+                } catch (IOException ioE) {
+                    _path = "(failed to make url: \"" + path + "\")";
                 }
             } else {
                 _path = path;
@@ -86,14 +85,22 @@ public class RepoList {
             } catch (IOException ioE) {
                 LOGGER.error("Failed to fetch from {}: \"{}\": attempt: {}, exception: {}",
                         name, _path, attempt, ioE.toString());
-                exList.add(ioE);
+                if (ex == null) {
+                    ex = ioE;
+                } else {
+                    ex.addSuppressed(ioE);
+                }
             }
         }
 
-        throw new IOExceptionList(exList);
+        if (ex != null) {
+            throw ex;
+        } else {
+            throw new IOException("Unable to fetch repo due to unknown reason");
+        }
     }
 
-    public final InputStream read(String path) throws IOExceptionList {
+    public final InputStream read(String path) throws IOException {
         return read(path, U.getProxy());
     }
 
@@ -154,13 +161,10 @@ public class RepoList {
         final File temp = File.createTempFile("tlauncher-repo", null);
         temp.deleteOnExit();
 
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(temp);
+        try (OutputStream out = new FileOutputStream(temp)) {
             IOUtils.copy(new BufferedInputStream(in, FILE_BUFFER), out);
         } finally {
             GLOBAL_BUFFER.addAndGet(-FILE_BUFFER);
-            U.close(out);
         }
 
         return new FilterInputStream(new FileInputStream(temp)) {
@@ -177,16 +181,8 @@ public class RepoList {
                 throw new IllegalArgumentException("repo already added");
             }
 
-            list.add(0, repo);
+            list.add(repo);
             relevant = makeRelevantRepoList();
-        }
-    }
-
-    protected void addAll(IRepo... repos) {
-        synchronized (sync) {
-            for (IRepo repo : U.requireNotNull(repos, "repos")) {
-                add(repo);
-            }
         }
     }
 
@@ -208,7 +204,7 @@ public class RepoList {
 
         protected RelevantRepoList() {
             synchronized (sync) {
-                repoList = Collections.unmodifiableList(new ArrayList<IRepo>(list));
+                repoList = Collections.unmodifiableList(new ArrayList<>(list));
             }
         }
 
@@ -225,7 +221,7 @@ public class RepoList {
         return new RelevantRepoList();
     }
 
-    private class BufferException extends Exception {
+    private static class BufferException extends Exception {
         BufferException(String description) {
             super(description);
         }

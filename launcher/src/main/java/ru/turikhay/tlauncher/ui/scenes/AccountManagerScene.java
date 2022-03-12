@@ -57,7 +57,7 @@ public class AccountManagerScene extends PseudoScene {
 
     public void setShown(boolean shown, boolean animate) {
         super.setShown(shown, animate);
-        if(shown) {
+        if (shown) {
             multipane.showTip("welcome");
         }
     }
