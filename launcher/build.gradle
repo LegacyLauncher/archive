@@ -188,6 +188,8 @@ assemble {
 }
 
 jar {
+    from(project(":common").sourceSets.main.output)
+
     into('META-INF/versions/11') {
         from sourceSets.modern.output
     }
