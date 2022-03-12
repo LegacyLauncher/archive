@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.bootstrap.ui.message;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.awt.*;
 
 class MessagePanel extends JPanel {
     private final Message message;

@@ -3,19 +3,19 @@ package ru.turikhay.tlauncher.bootstrap.pasta;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
+import ru.turikhay.tlauncher.bootstrap.exception.ExceptionList;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Pasta {
@@ -36,8 +36,8 @@ public class Pasta {
             try {
                 return makeRequest(url);
             } catch (TooManyRequests tmr) {
-                if (attempt < 3) {
-                    int waitTime = (attempt > 1 ? 61 : 31) + new Random().nextInt(10);
+                if(attempt < 3) {
+                    int waitTime = (attempt > 1? 61 : 31) + new Random().nextInt(10);
                     try {
                         Thread.sleep(waitTime * 1000L);
                     } catch (InterruptedException interrupted) {
@@ -65,46 +65,49 @@ public class Pasta {
             c.setRequestMethod("POST");
             c.setDoOutput(true);
 
-            OutputStreamWriter writer = new OutputStreamWriter(c.getOutputStream(), StandardCharsets.UTF_8);
+            OutputStreamWriter writer = new OutputStreamWriter(c.getOutputStream(), Charsets.UTF_8);
             IOUtils.copy(
                     new StringReader(content),
                     writer
             );
             writer.close();
 
-            String response = IOUtils.toString(c.getInputStream(), StandardCharsets.UTF_8);
-            if (response.startsWith("http")) {
+            String response = IOUtils.toString(c.getInputStream(), Charsets.UTF_8);
+            if(response.startsWith("http")) {
                 return PastaLink.parse(response);
             } else {
                 throw new IOException("illegal response: \"" + response + '\"');
             }
-        } catch (IOException ioE) {
-            if (c == null || c.getErrorStream() == null) {
+        } catch(IOException ioE) {
+            if(c == null || c.getErrorStream() == null) {
                 throw ioE;
             }
-            if (c.getResponseCode() == TooManyRequests.RESPONSE_CODE) {
+            if(c.getResponseCode() == TooManyRequests.RESPONSE_CODE) {
                 throw new TooManyRequests(ioE);
             }
+            List<Exception> exceptionList = new ArrayList<Exception>();
+            exceptionList.add(ioE);
             String errorMessage = null;
             try {
-                errorMessage = IOUtils.toString(c.getErrorStream(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                ioE.addSuppressed(e);
+                errorMessage = IOUtils.toString(c.getErrorStream(), Charsets.UTF_8);
+            } catch(IOException e) {
+                exceptionList.add(e);
             }
-            if (errorMessage != null) {
-                throw new IOException("Pasta returned error: \"" + errorMessage + "\"");
+            if(errorMessage != null) {
+                throw new IOException("Pasta returned error: \""+ errorMessage +"\"");
             } else {
-                throw new IOException("Could not send and read error response from Pasta", ioE);
+                throw new IOException("Could not send and read error response from Pasta",
+                        new ExceptionList(exceptionList));
             }
         } finally {
-            if (c != null) {
+            if(c != null) {
                 c.disconnect();
             }
         }
     }
 
     private URL createUrl() {
-        String clientId = this.clientId == null ? "bootstrap" : this.clientId;
+        String clientId = this.clientId == null? "bootstrap" : this.clientId;
         URL url;
         try {
             url = new URL(
@@ -113,9 +116,9 @@ public class Pasta {
                             URLEncoder.encode(clientId, "UTF-8")
                     )
             );
-        } catch (UnsupportedEncodingException e) {
+        } catch(UnsupportedEncodingException e) {
             throw new Error("UTF-8 not supported", e);
-        } catch (MalformedURLException e) {
+        } catch(MalformedURLException e) {
             throw new RuntimeException("couldn't create url", e);
         }
         return url;

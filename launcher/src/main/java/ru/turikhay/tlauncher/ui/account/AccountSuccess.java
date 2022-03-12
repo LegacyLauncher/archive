@@ -4,16 +4,16 @@ import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.swing.editor.EditorPane;
 import ru.turikhay.tlauncher.ui.swing.extended.HtmlSubstitutor;
+import ru.turikhay.util.U;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 import java.awt.*;
-import java.util.Objects;
 
 public class AccountSuccess extends EditorPane implements LocalizableComponent, AccountMultipaneComp {
     private final PaneMode mode;
 
     public AccountSuccess(PaneMode mode) {
-        this.mode = Objects.requireNonNull(mode, "mode");
+        this.mode = U.requireNotNull(mode, "mode");
         updateLocale();
     }
 

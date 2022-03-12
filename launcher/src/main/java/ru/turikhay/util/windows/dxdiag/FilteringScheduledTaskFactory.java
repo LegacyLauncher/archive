@@ -17,7 +17,7 @@ abstract class FilteringScheduledTaskFactory implements IScheduledTaskFactory {
 
     @Override
     public synchronized Future<DxDiagReport> getScheduledTask() {
-        if (task == null || mustRequestNewTask(task)) {
+        if(task == null || mustRequestNewTask(task)) {
             task = delegateTask.getScheduledTask();
         }
         return task;

@@ -13,6 +13,7 @@ import ru.turikhay.util.SwingUtil;
 import java.awt.*;
 
 public class NoAccountEdit extends ExtendedPanel implements AccountMultipaneCompCloseable {
+    private final String LOC_PREFIX;
 
     private final AccountManagerScene scene;
     private final Account.AccountType type;
@@ -22,7 +23,7 @@ public class NoAccountEdit extends ExtendedPanel implements AccountMultipaneComp
         this.scene = scene;
         this.type = type;
 
-        String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-" + type + ".";
+        LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + "account-"+ type +".";
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -48,8 +49,8 @@ public class NoAccountEdit extends ExtendedPanel implements AccountMultipaneComp
         LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
         removeButton.setIcon(Images.getIcon16("remove"));
         removeButton.addActionListener(e -> {
-            Account<?> selected = scene.list.getSelected();
-            if (selected != null && selected.getType() == type) {
+            Account selected = scene.list.getSelected();
+            if(selected != null && selected.getType() == type) {
                 TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
             }
             scene.multipane.goBack();
@@ -84,8 +85,8 @@ public class NoAccountEdit extends ExtendedPanel implements AccountMultipaneComp
     public void multipaneShown(boolean gotBack) {
         field.setValue(null);
 
-        Account<?> selected = scene.list.getSelected();
-        if (selected != null && selected.getType().equals(type)) {
+        Account selected = scene.list.getSelected();
+        if(selected != null && selected.getType().equals(type)) {
             field.setValue(selected.getUsername());
         }
     }

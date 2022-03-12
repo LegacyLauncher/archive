@@ -1,21 +1,18 @@
 package ru.turikhay.tlauncher.minecraft.auth;
 
 import ru.turikhay.tlauncher.user.User;
+import ru.turikhay.util.Reflect;
+import ru.turikhay.util.U;
 
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
-
-public class Account<T extends User> {
-    protected final T user;
+public class Account {
+    protected final User user;
 
     private Account() {
         this.user = null;
     }
 
-    public Account(T user) {
-        this.user = Objects.requireNonNull(user, "user");
+    public Account(User user) {
+        this.user = U.requireNotNull(user, "user");
     }
 
     @Override
@@ -23,9 +20,9 @@ public class Account<T extends User> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Account<?> account = (Account<?>) o;
+        Account account = (Account) o;
 
-        return user != null && user.equals(account.user);
+        return user != null && user.equals((Object) account.user);
     }
 
     @Override
@@ -33,7 +30,7 @@ public class Account<T extends User> {
         return user != null ? user.hashCode() : super.hashCode();
     }
 
-    public T getUser() {
+    public User getUser() {
         return user;
     }
 
@@ -46,17 +43,15 @@ public class Account<T extends User> {
     }
 
     public AccountType getType() {
-        AccountType type = AccountType.parse(user.getType());
-        if (type == null) throw new IllegalArgumentException("No account type was found for value " + user.getType());
-        return type;
+        return Reflect.parseEnum0(AccountType.class, user.getType());
     }
 
     public boolean isFree() {
         return getType().equals(AccountType.PLAIN);
     }
 
-    public static Account<?> randomAccount() {
-        return new Account<>();
+    public static Account randomAccount() {
+        return new Account();
     }
 
     @Override
@@ -86,13 +81,6 @@ public class Account<T extends User> {
 
         public String toString() {
             return super.toString().toLowerCase(java.util.Locale.ROOT);
-        }
-
-        private static final Collection<AccountType> VALUES = Arrays.asList(values());
-
-        @Nullable
-        public static AccountType parse(String name) {
-            return VALUES.stream().filter(e -> e.name().equalsIgnoreCase(name)).findAny().orElse(null);
         }
     }
 }

@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.bootstrap.ui;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import ru.turikhay.tlauncher.bootstrap.ui.message.Button;
 import ru.turikhay.tlauncher.bootstrap.ui.message.MessageHost;
@@ -9,7 +10,6 @@ import ru.turikhay.tlauncher.bootstrap.util.U;
 import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ResourceBundle;
 
 public class SaveLogsAction implements Runnable {
@@ -36,21 +36,14 @@ public class SaveLogsAction implements Runnable {
             if (!logsDir.isDirectory() && !logsDir.mkdir()) {
                 throw new IOException("could not create directory: " + logsDir.getAbsolutePath());
             }
-            writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
+            writer = new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8);
             IOUtils.copy(new StringReader(content), writer);
-            writer.flush();
         } catch (IOException ioE) {
             U.log("[SaveLogs]", ioE);
             saveLogsFailed();
             return;
         } finally {
-            try {
-                if (writer != null) {
-                    writer.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            U.close(writer);
         }
 
         host.showMessage(new SingleButtonMessage(
@@ -74,6 +67,6 @@ public class SaveLogsAction implements Runnable {
     }
 
     private static String getLogsContent() {
-        return OutputRedirectBuffer.getBuffer();
+        return OutputRedirectBuffer.getBuffer().toString();
     }
 }

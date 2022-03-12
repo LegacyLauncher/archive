@@ -29,6 +29,6 @@ public class LatestVersionSyncInfo extends VersionSyncInfo {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "{id='" + getID() + "', releaseType=" + type + ",\nlocal=" + localVersion + ",\nremote=" + remoteVersion + ", isInstalled=" + isInstalled() + ", hasRemote=" + hasRemote() + ", isUpToDate=" + isUpToDate() + "}";
+        return getClass().getSimpleName() + "{id=\'" + getID() + "\', releaseType=" + type + ",\nlocal=" + localVersion + ",\nremote=" + remoteVersion + ", isInstalled=" + isInstalled() + ", hasRemote=" + hasRemote() + ", isUpToDate=" + isUpToDate() + "}";
     }
 }

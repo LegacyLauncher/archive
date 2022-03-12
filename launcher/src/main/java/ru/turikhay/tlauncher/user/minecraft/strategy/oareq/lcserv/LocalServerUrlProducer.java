@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.AbstractOAuthUrlProducer;
@@ -22,7 +23,7 @@ public class LocalServerUrlProducer extends AbstractOAuthUrlProducer {
     }
 
     public String buildRedirectUrl(LocalServerSelectedConfiguration selectedConfiguration)
-            throws URISyntaxException {
+            throws MalformedURLException, URISyntaxException {
         URIBuilder url = new URIBuilder(
                 String.format(java.util.Locale.ROOT,
                         "http://%s:%d",

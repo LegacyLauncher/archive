@@ -2,8 +2,8 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd;
 
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
+import ru.turikhay.util.U;
 
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -16,22 +16,22 @@ class LockExchange {
 
     MicrosoftOAuthExchangeCode waitForCode(long time, TimeUnit timeUnit)
             throws MicrosoftOAuthCodeRequestException, InterruptedException, TimeoutException {
-        if (!lock.await(time, timeUnit)) {
+        if(!lock.await(time, timeUnit)) {
             throw new TimeoutException();
         }
-        if (error == null) {
-            return Objects.requireNonNull(code, "code");
+        if(error == null) {
+            return U.requireNotNull(code, "code");
         }
         throw error;
     }
 
     void unlock(MicrosoftOAuthExchangeCode code) {
-        this.code = Objects.requireNonNull(code, "code");
+        this.code = U.requireNotNull(code, "code");
         done();
     }
 
     void unlockWithError(MicrosoftOAuthCodeRequestException error) {
-        this.error = Objects.requireNonNull(error, "error");
+        this.error = U.requireNotNull(error, "error");
         done();
     }
 

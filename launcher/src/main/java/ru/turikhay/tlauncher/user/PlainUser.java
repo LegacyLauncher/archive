@@ -6,8 +6,8 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public class PlainUser extends User {
@@ -17,7 +17,7 @@ public class PlainUser extends User {
 
     public PlainUser(String username, UUID uuid) {
         this.username = StringUtil.requireNotBlank(username, "username");
-        this.uuid = Objects.requireNonNull(uuid, "uuid");
+        this.uuid = U.requireNotNull(uuid, "uuid");
     }
 
     @Override
@@ -72,7 +72,7 @@ public class PlainUser extends User {
         @Override
         public PlainUser deserialize(JsonObject json, JsonDeserializationContext context) throws JsonParseException {
             UUID uuid;
-            if (json.has("uuid")) {
+            if(json.has("uuid")) {
                 uuid = UUIDTypeAdapter.fromString(json.get("uuid").getAsString());
             } else {
                 uuid = UUID.randomUUID();

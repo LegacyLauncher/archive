@@ -6,7 +6,6 @@ import java.lang.reflect.Type;
 
 abstract class UserJsonizer<T extends User> implements JsonSerializer<T>, JsonDeserializer<T> {
     public abstract JsonObject serialize(T src, JsonSerializationContext context);
-
     public abstract T deserialize(JsonObject json, JsonDeserializationContext context) throws JsonParseException;
 
     @Override

@@ -12,9 +12,12 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable {
+    private final String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
+    private final String ACCOUNT_TYPE_PREFIX =  LOC_PREFIX +"type.";
 
     private final AccountManagerScene scene;
 
@@ -35,13 +38,36 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = -1;
 
-        String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
-        String ACCOUNT_TYPE_PREFIX = LOC_PREFIX + "type.";
-        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", e -> AccountAdd.this.scene.multipane.showTip("add-account-ely"));
-        minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", e -> AccountAdd.this.scene.multipane.showTip("process-account-minecraft"));
-        mojang = addRow("logo-mojang", ACCOUNT_TYPE_PREFIX + "mojang", e -> AccountAdd.this.scene.multipane.showTip("add-account-mojang"));
-        free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", e -> AccountAdd.this.scene.multipane.showTip("add-account-plain"));
-        idontknow = addRow("info-circle", LOC_PREFIX + "hint", e -> Blocker.toggle(AccountAdd.this, "idontknow"));
+        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-ely");
+            }
+        });
+        minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("process-account-minecraft");
+            }
+        });
+        mojang = addRow("logo-mojang", ACCOUNT_TYPE_PREFIX + "mojang", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-mojang");
+            }
+        });
+        free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AccountAdd.this.scene.multipane.showTip("add-account-plain");
+            }
+        });
+        idontknow = addRow("info-circle", LOC_PREFIX + "hint", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Blocker.toggle(AccountAdd.this, "idontknow");
+            }
+        });
 
         c.gridy++;
         c.gridx = 1;
@@ -107,7 +133,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
 
     @Override
     public void block(Object var1) {
-        if (!"idontknow".equals(var1)) {
+        if(!"idontknow".equals(var1)) {
             Blocker.blockComponents(var1, free, idontknow);
         }
         Blocker.blockComponents(var1, mojang, ely, minecraft);

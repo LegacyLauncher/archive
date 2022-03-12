@@ -10,18 +10,16 @@ import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.MinecraftUtil;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.*;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 public class NewFolderFrame extends VActionFrame {
     private static final Logger LOGGER = LogManager.getLogger(NewFolderFrame.class);
@@ -71,7 +69,12 @@ public class NewFolderFrame extends VActionFrame {
         c.weightx = 0.0;
         c.fill = GridBagConstraints.VERTICAL;
         LocalizableButton cancelButton = new LocalizableButton("newfolder.button.cancel");
-        cancelButton.addActionListener(e -> dispose());
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
         getFooter().add(cancelButton, c);
 
         c.gridx++;
@@ -84,7 +87,12 @@ public class NewFolderFrame extends VActionFrame {
         c.fill = GridBagConstraints.VERTICAL;
         final LocalizableButton okButton = new LocalizableButton("newfolder.button.ok");
         okButton.setPreferredSize(SwingUtil.magnify(new Dimension(150, 40)));
-        okButton.addActionListener(e -> changeFolder(fileField.isValueValid() ? fileField.getSelectedFile() : null));
+        okButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                changeFolder(fileField.isValueValid() ? fileField.getSelectedFile() : null);
+            }
+        });
         getFooter().add(okButton, c);
 
         addWindowListener(new WindowAdapter() {
@@ -147,7 +155,7 @@ public class NewFolderFrame extends VActionFrame {
         }
 
         File profileFile = new File(currentDir, ProfileManager.DEFAULT_PROFILE_FILENAME);
-        if (profileFile.isFile()) {
+        if(profileFile.isFile()) {
             LOGGER.warn("Contains profile file: {}", profileFile);
             return false;
         }
@@ -155,7 +163,7 @@ public class NewFolderFrame extends VActionFrame {
     }
 
     public static File selectDestination() {
-        ArrayList<File> suggestions = new ArrayList<>();
+        ArrayList<File> suggestions = new ArrayList<File>();
 
         if (OS.WINDOWS.isCurrent()) {
             suggestions.addAll(Arrays.asList(
@@ -164,7 +172,7 @@ public class NewFolderFrame extends VActionFrame {
             ));
         }
 
-        suggestions.addAll(Collections.singletonList(
+        suggestions.addAll(Arrays.asList(
                 MinecraftUtil.getSystemRelatedDirectory("minecraft")
         ));
 

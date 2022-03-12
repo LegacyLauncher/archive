@@ -1,9 +1,11 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd;
 
 import fi.iki.elonen.NanoHTTPD;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.exceptions.ParseException;
+
+import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.*;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.LocalServerSelectedConfiguration;
 
@@ -35,11 +37,11 @@ class NanoHttpdAdapter extends NanoHTTPD {
             LOGGER.debug("Not a GET request");
             return badRequest();
         }
-        if (session.getUri().equals(redirectUrl.getUrl().getPath())) {
+        if(session.getUri().equals(redirectUrl.getUrl().getPath())) {
             LOGGER.debug("Not redirect url");
             return badRequest();
         }
-        if (expectedState != null) {
+        if(expectedState != null) {
             if (!session.getParameters().containsKey("state")) {
                 LOGGER.debug("No \"state\" parameter");
                 return badRequest();
@@ -56,7 +58,7 @@ class NanoHttpdAdapter extends NanoHTTPD {
         } catch (ParseException e) {
             LOGGER.debug("Not valid request");
             return badRequest();
-        } catch (CodeRequestCancelledException e) {
+        } catch(CodeRequestCancelledException e) {
             LOGGER.info("Cancelled");
             return handleCancel(e);
         } catch (MicrosoftOAuthCodeRequestException e) {
@@ -84,10 +86,10 @@ class NanoHttpdAdapter extends NanoHTTPD {
     private Response ok() {
         boolean redirect = successRedirectUrl != null;
         Response response = newResponse(
-                redirect ? Response.Status.FOUND : Response.Status.OK,
+                redirect? Response.Status.FOUND : Response.Status.OK,
                 "Success"
         );
-        if (redirect) {
+        if(redirect) {
             response.addHeader("Location", successRedirectUrl);
         }
         return response;

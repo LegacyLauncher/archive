@@ -85,7 +85,7 @@ public class JavaManagerConfig implements Configurable {
         this.mcArgs = configuration.get(PATH_MC_ARGS);
 
         String jreTypeString = configuration.get(PATH_JRE_TYPE);
-        if (jreTypeString == null) {
+        if(jreTypeString == null) {
             jreTypeString = Recommended.TYPE;
         }
         JreType jreType;
@@ -101,7 +101,7 @@ public class JavaManagerConfig implements Configurable {
                 jreType = new Recommended();
                 break;
         }
-        if (jreType instanceof Configurable) {
+        if(jreType instanceof Configurable) {
             ((Configurable) jreType).load(configuration);
         }
         this.jreType = jreType;
@@ -114,7 +114,7 @@ public class JavaManagerConfig implements Configurable {
         configuration.set(PATH_ROOT_DIR, rootDir);
         configuration.set(PATH_ARGS, args);
         configuration.set(PATH_MC_ARGS, mcArgs);
-        if (this.jreType == null) {
+        if(this.jreType == null) {
             configuration.set(PATH_JRE_TYPE, null);
         } else {
             configuration.set(PATH_JRE_TYPE, this.jreType.getType());
@@ -242,7 +242,6 @@ public class JavaManagerConfig implements Configurable {
     }
 
     private static final Map<String, Class<? extends JreType>> TYPES = new LinkedHashMap<>();
-
     static {
         TYPES.put(Recommended.TYPE, Recommended.class);
         TYPES.put(Current.TYPE, Current.class);
@@ -255,7 +254,7 @@ public class JavaManagerConfig implements Configurable {
 
     public static JreType createByType(String type) throws IllegalArgumentException {
         Class<? extends JreType> jreTypeClass = TYPES.get(type);
-        if (jreTypeClass == null) {
+        if(jreTypeClass == null) {
             throw new IllegalArgumentException("unknown jreType: " + type);
         }
         try {

@@ -15,6 +15,8 @@ import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
@@ -46,7 +48,12 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
 
         back = new ExtendedButton();
         updateBackButtonTooltip();
-        back.addActionListener(e -> goBack());
+        back.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                goBack();
+            }
+        });
         back.setIcon(Images.getIcon16("arrow-left"));
         titlePanel.setWest(back);
 
@@ -74,11 +81,11 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
     }
 
     public String currentTip() {
-        return currentComp == null ? null : currentComp.multipaneName();
+        return currentComp == null? null : currentComp.multipaneName();
     }
 
     public void goBack() {
-        if (breadcrumbs.size() < 2) {
+        if(breadcrumbs.size() < 2) {
             showTip("welcome");
         } else {
             showTip(breadcrumbs.get(breadcrumbs.size() - 2), true);
@@ -102,7 +109,7 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
     public void showTip(String name) {
         AccountMultipaneComp comp = byName.get(name);
 
-        if (comp == null) {
+        if(comp == null) {
             throw new IllegalArgumentException("no tip found: " + name);
         }
 
@@ -110,14 +117,14 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
     }
 
     private void showTip(AccountMultipaneComp comp, boolean gotBack) {
-        if (currentComp != null && currentComp instanceof AccountMultipaneCompCloseable) {
+        if(currentComp != null && currentComp instanceof AccountMultipaneCompCloseable) {
             ((AccountMultipaneCompCloseable) currentComp).multipaneClosed();
         }
 
         if (!(comp instanceof AccountMultipaneCompCloseable)) {
             breadcrumbs.clear();
         } else {
-            if (!gotBack) {
+            if(!gotBack) {
                 breadcrumbs.add(comp);
             } else {
                 breadcrumbs.remove(breadcrumbs.size() - 1);
@@ -126,7 +133,7 @@ public class AccountMultipane extends CenterPanel implements LocalizableComponen
 
         this.currentComp = comp;
 
-        if (comp.multipaneLocksView()) {
+        if(comp.multipaneLocksView()) {
             Blocker.block(scene, "tip-lock");
         } else {
             Blocker.unblock(scene, "tip-lock");

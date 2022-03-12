@@ -4,14 +4,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public enum Repository {
     LOCAL_VERSION_REPO,
@@ -29,20 +28,20 @@ public enum Repository {
     private RepoList repoList;
     private final String lowerName = name().toLowerCase(java.util.Locale.ROOT);
 
-    Repository(List<String> urlList) {
-        defaultRepoList = new AppenderRepoList(name(), Objects.requireNonNull(urlList, "defaultUrlList"));
+    Repository(String[] urlList) {
+        defaultRepoList = new AppenderRepoList(name(), U.requireNotNull(urlList, "defaultUrlList"));
     }
 
     Repository(RepoList repoList) {
-        defaultRepoList = Objects.requireNonNull(repoList, "repoList");
+        defaultRepoList = U.requireNotNull(repoList, "repoList");
     }
 
     Repository() {
-        this(Collections.emptyList());
+        this(new String[0]);
     }
 
     public RepoList getList() {
-        return repoList == null ? defaultRepoList : repoList;
+        return repoList == null? defaultRepoList : repoList;
     }
 
     public RepoList.RelevantRepoList getRelevant() {
@@ -62,7 +61,7 @@ public enum Repository {
     }
 
     private void update(List<String> repoList) {
-        if (repoList == null) {
+        if(repoList == null) {
             LOGGER.debug("repoList passed to is null; {} update discarded", name());
             return;
         }
@@ -70,16 +69,16 @@ public enum Repository {
     }
 
     public static void updateList(Map<String, List<String>> repoMap) {
-        if (repoMap == null) {
+        if(repoMap == null) {
             LOGGER.debug("repoMap is null; update discarded");
             return;
         }
 
-        for (Map.Entry<String, List<String>> entry : repoMap.entrySet()) {
-            for (Repository repo : values()) {
-                if (repo.lowerName.equals(entry.getKey())) {
+        entryFor: for(Map.Entry<String, List<String>> entry : repoMap.entrySet()) {
+            for(Repository repo : values()) {
+                if(repo.lowerName.equals(entry.getKey())) {
                     repo.update(entry.getValue());
-                    break;
+                    continue entryFor;
                 }
             }
         }

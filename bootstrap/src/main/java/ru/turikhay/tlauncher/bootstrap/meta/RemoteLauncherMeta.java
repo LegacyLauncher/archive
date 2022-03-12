@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RemoteLauncherMeta extends LauncherMeta {
-    private final String checksum;
-    private final List<URL> url;
+    private String checksum;
+    private List<URL> url;
     private Map<String, String> description;
 
     public RemoteLauncherMeta(Version version, String shortBrand, String checksum,

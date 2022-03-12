@@ -19,7 +19,10 @@ import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
@@ -43,7 +46,6 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                 list.setFixedCellWidth(SwingUtil.magnify(180));
                 return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             }
-
             public Account.AccountType getShowVersionsFor() {
                 return VersionComboBox.showVersionForType;
             }
@@ -52,26 +54,28 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
         model = getSimpleModel();
         manager = TLauncher.getInstance().getVersionManager();
         manager.addListener(new SwingVersionManagerListener(this));
-        addItemListener(e -> {
-            loginForm.buttons.play.updateState();
-            VersionSyncInfo selected = getVersion();
-            if (selected != null) {
-                selectedVersion = selected.getID();
-                loginForm.global.setForcefully("login.version", selectedVersion, false);
-                loginForm.global.store();
-                setToolTipText(selectedVersion);
-            }
-            if (loginForm.scene.settingsForm.isLoaded()) {
-                ((JREComboBox) loginForm.scene.settingsForm.get().jre.getComponent())
-                        .selectedVersionChanged(selected);
-                loginForm.scene.settingsForm.get().useSeparateDir.getComponent().repaint();
+        addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                loginForm.buttons.play.updateState();
+                VersionSyncInfo selected = getVersion();
+                if (selected != null) {
+                    selectedVersion = selected.getID();
+                    loginForm.global.setForcefully("login.version", selectedVersion, false);
+                    loginForm.global.store();
+                    setToolTipText(selectedVersion);
+                }
+                if(loginForm.scene.settingsForm.isLoaded()) {
+                    ((JREComboBox) loginForm.scene.settingsForm.get().jre.getComponent())
+                            .selectedVersionChanged(selected);
+                    loginForm.scene.settingsForm.get().useSeparateDir.getComponent().repaint();
+                }
             }
         });
         selectedVersion = lf.global.get("login.version");
     }
 
     public VersionSyncInfo getVersion() {
-        if (loginForm.requestedVersion != null) {
+        if(loginForm.requestedVersion != null) {
             return loginForm.requestedVersion;
         }
         VersionSyncInfo selected = (VersionSyncInfo) getSelectedItem();
@@ -81,17 +85,19 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
     public void logginingIn() throws LoginException {
         VersionSyncInfo selected = getVersion();
         if (selected == null) {
-            throw new LoginWaitException("Version list is empty, refreshing", () -> {
-                manager.refresh();
+            throw new LoginWaitException("Version list is empty, refreshing", new LoginWaitException.LoginWaitTask() {
+                public void runTask() throws LoginException {
+                    manager.refresh();
 
-                if (getVersion() == null) {
-                    if (loginForm.global.getBoolean("minecraft.versions.sub.remote"))
-                        Alert.showLocError("versions.notfound");
-                    else
-                        Alert.showLocError("versions.notfound.disabled");
+                    if (getVersion() == null) {
+                        if (loginForm.global.getBoolean("minecraft.versions.sub.remote"))
+                            Alert.showLocError("versions.notfound");
+                        else
+                            Alert.showLocError("versions.notfound.disabled");
+                    }
+
+                    throw new LoginException("Giving user a second chance to choose correct version...");
                 }
-
-                throw new LoginException("Giving user a second chance to choose correct version...");
             });
         } else if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate()) {
             if (!Alert.showLocQuestion("versions.found-update")) {
@@ -152,8 +158,10 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                 addItem(EMPTY);
             } else {
                 model.addElements(list);
+                Iterator var4 = list.iterator();
 
-                for (VersionSyncInfo version : list) {
+                while (var4.hasNext()) {
+                    VersionSyncInfo version = (VersionSyncInfo) var4.next();
                     if (select != null && version.getID().equals(select)) {
                         setSelectedItem(version);
                     }

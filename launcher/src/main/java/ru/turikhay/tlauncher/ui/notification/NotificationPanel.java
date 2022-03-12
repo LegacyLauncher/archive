@@ -36,7 +36,7 @@ public class NotificationPanel extends ExtendedPanel implements LocalizableCompo
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
+                if(SwingUtilities.isRightMouseButton(e)) {
                     removeNotification(id);
                 }
             }
@@ -55,15 +55,15 @@ public class NotificationPanel extends ExtendedPanel implements LocalizableCompo
     public void removeNotification(String id) {
         Iterator<NotificationIcon> i = notifications.iterator();
         boolean removed = false;
-        while (i.hasNext()) {
+        while(i.hasNext()) {
             NotificationIcon n = i.next();
-            if (n.id.equals(id)) {
+            if(n.id.equals(id)) {
                 remove(n.parent);
                 i.remove();
                 removed = true;
             }
         }
-        if (removed) {
+        if(removed) {
             deferUpdate();
         }
     }
@@ -76,20 +76,19 @@ public class NotificationPanel extends ExtendedPanel implements LocalizableCompo
     }
 
     private String localeNotificationId;
-
     @Override
     public void updateLocale() {
-        if (localeNotificationId != null) {
+        if(localeNotificationId != null) {
             removeNotification(localeNotificationId);
             localeNotificationId = null;
         }
         UrlNotificationObject notificationObject = TLauncher.getInstance().getBootConfig()
                 .getNotifications().get(Localizable.get().getLocale().toString());
-        if (notificationObject != null) {
+        if(notificationObject != null) {
             addNotification(notificationObject.getId(), new Notification(
                     notificationObject.getImage(),
                     new NotificationListener.UrlOpen(notificationObject.getUrl())
-                            .then(new NotificationListener.Remove(this, notificationObject.getId()))
+                        .then(new NotificationListener.Remove(this, notificationObject.getId()))
             ));
             localeNotificationId = notificationObject.getId();
         }

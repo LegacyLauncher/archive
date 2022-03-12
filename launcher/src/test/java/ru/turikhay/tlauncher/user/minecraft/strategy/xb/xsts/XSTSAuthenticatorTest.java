@@ -7,8 +7,7 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticatio
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class XSTSAuthenticatorTest {
     @Test
@@ -21,7 +20,7 @@ public class XSTSAuthenticatorTest {
     }
 
     @Test
-    void testNoXbox() {
+    void testNoXbox() throws XSTSAuthenticationException, IOException {
         XSTSAuthenticator s = new XSTSAuthenticator(
                 MockRequester.throwing(
                         new InvalidStatusCodeException(
@@ -34,7 +33,7 @@ public class XSTSAuthenticatorTest {
     }
 
     @Test
-    void testChild() {
+    void testChild() throws XSTSAuthenticationException, IOException {
         XSTSAuthenticator s = new XSTSAuthenticator(
                 MockRequester.throwing(
                         new InvalidStatusCodeException(

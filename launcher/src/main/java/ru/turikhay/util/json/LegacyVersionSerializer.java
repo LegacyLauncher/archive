@@ -17,24 +17,33 @@ public class LegacyVersionSerializer extends VersionSerializer {
     public Version deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         double val;
 
-        if (json == null) {
-            return super.deserialize(null, typeOfT, context);
-        }
+        deserializeNormally:
+        {
+            deserialize:
+            {
+                if(json == null) {
+                    break deserialize;
+                }
 
-        try {
-            val = json.getAsDouble();
-        } catch (NumberFormatException nfE) {
+                try {
+                    val = json.getAsDouble();
+                } catch (NumberFormatException nfE) {
+                    break deserialize;
+                }
+
+                break deserializeNormally;
+            }
             return super.deserialize(json, typeOfT, context);
         }
 
         String str = String.valueOf(val);
 
         Matcher matcher;
-        if (val > 0.0 && (matcher = legacyVersionPattern.matcher(str)).matches()) {
+        if(val > 0.0 && (matcher = legacyVersionPattern.matcher(str)).matches()) {
             return Version.forIntegers(
                     pi(matcher.group(1)),
-                    pi(matcher.group(2) + (ne(matcher.group(3)) ? matcher.group(3) : "0")),
-                    ne(matcher.group(4)) ? pi(matcher.group(4)) : 0
+                    pi(matcher.group(2) + (ne(matcher.group(3))? matcher.group(3) : "0")),
+                    ne(matcher.group(4))? pi(matcher.group(4)) : 0
             );
         }
 

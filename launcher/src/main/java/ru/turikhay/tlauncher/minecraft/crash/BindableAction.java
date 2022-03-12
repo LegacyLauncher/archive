@@ -1,8 +1,7 @@
 package ru.turikhay.tlauncher.minecraft.crash;
 
 import ru.turikhay.util.StringUtil;
-
-import java.util.Objects;
+import ru.turikhay.util.U;
 
 public abstract class BindableAction {
     private final String name;
@@ -25,7 +24,7 @@ public abstract class BindableAction {
         private final String arg;
 
         Binding(BindableAction action, String arg) {
-            this.arg = Objects.requireNonNull(arg);
+            this.arg = U.requireNotNull(arg);
         }
 
         @Override

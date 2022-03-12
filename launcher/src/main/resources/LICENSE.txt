@@ -21,3 +21,6 @@ It was modified to be compatible with extra features that TLauncher includes.
 
 This software uses Hamburg icon pack (by former pc.de Team) and WPZOOM Developer
 icon pack under CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/deed.en
+
+This software uses modified jWMI. Copyright Henry Ranch LLC 2009-2010.  All rights reserved.
+https://www.henryranch.net

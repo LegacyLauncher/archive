@@ -21,7 +21,7 @@ public class JavaRuntimeRemoteList {
 
     public List<JavaRuntimeRemote> getRuntimesFor(String platform) {
         Platform pl = perPlatform.get(Objects.requireNonNull(platform, "platform"));
-        if (pl == null) {
+        if(pl == null) {
             return Collections.emptyList();
         }
         return Collections.unmodifiableList(pl.runtimes);
@@ -42,9 +42,11 @@ public class JavaRuntimeRemoteList {
     }
 
     static class Platform {
-        private final List<JavaRuntimeRemote> runtimes;
+        private String name;
+        private List<JavaRuntimeRemote> runtimes;
 
         public Platform(String name, List<JavaRuntimeRemote> runtimes) {
+            this.name = name;
             this.runtimes = runtimes;
         }
     }

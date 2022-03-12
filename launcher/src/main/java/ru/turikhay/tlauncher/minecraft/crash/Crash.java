@@ -13,7 +13,7 @@ public final class Crash {
     private CrashEntry entry;
     private String description, javaDescription, stackTrace;
     private File crashFile, nativeCrashFile;
-    private final Map<String, String> extraInfo = new HashMap<>();
+    private Map<String, String> extraInfo = new HashMap<>();
 
     Crash(CrashManager manager) {
         this.manager = manager;

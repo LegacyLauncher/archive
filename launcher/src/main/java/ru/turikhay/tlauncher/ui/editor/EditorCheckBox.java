@@ -45,7 +45,7 @@ public class EditorCheckBox extends LocalizableCheckbox implements EditorField {
     }
 
     private void updateHint() {
-        if (hint) {
+        if(hint) {
             setToolTipText(Localizable.get(path + ".hint"));
         }
     }

@@ -68,7 +68,7 @@ public class MinecraftOAuthAuthenticate {
         MinecraftOAuthProfile profile;
         try {
             profile = minecraftProfileRequester.requestProfile(mcsToken);
-        } catch (ProfileNotCreatedException e) {
+        } catch(ProfileNotCreatedException e) {
             profile = minecraftProfileCreator.createProfile(mcsToken);
         }
         return minecraftProfileConverter.convertToMinecraftUser(oaex, mcsToken, profile);

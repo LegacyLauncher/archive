@@ -9,5 +9,5 @@ import java.lang.annotation.RetentionPolicy;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ComponentDependence {
-    Class<? extends LauncherComponent>[] value();
+    Class<?>[] value();
 }

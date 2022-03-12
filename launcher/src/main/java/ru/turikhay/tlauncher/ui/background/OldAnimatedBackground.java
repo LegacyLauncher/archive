@@ -27,18 +27,18 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             NIGHT_COLOR = Color.decode("#000221"),
             DAY_COLOR = Color.decode("#8dbde9"),
 
-    SUNRISE_1 = new Color(227, 58, 58),
+            SUNRISE_1 = new Color(227, 58, 58),
             SUNRISE_2 = new Color(227, 175, 58),
             SUN = new Color(255, 255, 255),
 
-    TRANSPARENT = new Color(255, 255, 255, 0);
+            TRANSPARENT = new Color(255, 255, 255, 0);
 
     private final GrassImage grassImage;
     private final SkyColor skyColor;
     private final SunImage sunImage;
     private final StarsImage starsImage;
 
-    private final DayCycle dayCycle;
+    private volatile DayCycle dayCycle;
     private TickTimer tickTimer;
 
     public OldAnimatedBackground() {
@@ -53,16 +53,21 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
     }
 
     private void startTickWorker() {
-        if (tickTimer != null) {
+        if(tickTimer != null) {
             return;
         }
-        tickTimer = new TickTimer(this::repaint);
+        tickTimer = new TickTimer(new Runnable() {
+            @Override
+            public void run() {
+                repaint();
+            }
+        });
         tickTimer.execute();
         LOGGER.debug("Tick worker started");
     }
 
     private void stopTickWorker() {
-        if (tickTimer == null) {
+        if(tickTimer == null) {
             return;
         }
         tickTimer.cancel(true);
@@ -83,10 +88,10 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         g.fillRect(0, 0, width, grassY);
 
         final DaySegment segment;
-        if ((segment = DaySegment.get(currentTimeOfDay)) != DaySegment.AFTERNOON) {
+        if((segment = DaySegment.get(currentTimeOfDay)) != DaySegment.AFTERNOON) {
             final double completion = DaySegment.getSegmentCompletion(currentTimeOfDay);
             final float starsOpacity;
-            switch (segment) {
+            switch(segment) {
                 case NIGHT:
                     starsOpacity = 1.f;
                     break;
@@ -101,7 +106,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             }
             Composite oldComposite = g.getComposite();
             g.setComposite(AlphaComposite.SrcOver.derive(starsOpacity));
-            g.drawImage(starsImage.get(currentTimeOfDay, width, grassY * 2), 0, 0, null);
+            g.drawImage(starsImage.get(currentTimeOfDay, width, grassY * 2), 0, 0,null);
             g.setComposite(oldComposite);
         }
 
@@ -111,7 +116,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             g.drawImage(scaledGrassImage, x, grassY, null);
         }
 
-        if (TLauncher.getInstance() != null && TLauncher.getInstance().isDebug()) {
+        if(TLauncher.getInstance() != null && TLauncher.getInstance().isDebug()) {
             g.setPaint(Color.GREEN);
             g.drawString(String.valueOf(currentTimeOfDay) + " " + DaySegment.get(currentTimeOfDay) + " " + DaySegment.getSegmentCompletion(currentTimeOfDay), 0, 50);
         }
@@ -153,54 +158,54 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
     }
 
     static int transitionColor(int oldValue, int newValue, double progress) {
-        if (progress < 0) {
+        if(progress < 0) {
             return oldValue;
-        } else if (progress > 1.) {
+        } else if(progress > 1.) {
             return newValue;
         }
         int value = (int) (oldValue + (newValue - oldValue) * progress);
-        if (value < 0) {
+        if(value < 0) {
             return 0;
-        } else if (value > 255) {
+        } else if(value > 255) {
             return 255;
         }
         return value;
     }
 
     static float transitionColor(float oldValue, float newValue, double progress) {
-        if (progress < 0) {
+        if(progress < 0) {
             return oldValue;
-        } else if (progress > 1.) {
+        } else if(progress > 1.) {
             return newValue;
         }
         float value = (float) (oldValue + (newValue - oldValue) * progress);
-        if (value < 0.f) {
+        if(value < 0.f) {
             return 0.f;
-        } else if (value > 1.f) {
+        } else if(value > 1.f) {
             return 1.f;
         }
         return value;
     }
 
     static double transitionColor(double oldValue, double newValue, double progress) {
-        if (progress < 0) {
+        if(progress < 0) {
             return oldValue;
-        } else if (progress > 1.) {
+        } else if(progress > 1.) {
             return newValue;
         }
         double value = oldValue + (newValue - oldValue) * progress;
-        if (value < 0.) {
+        if(value < 0.) {
             return 0.;
-        } else if (value > 1.) {
+        } else if(value > 1.) {
             return 1.;
         }
         return value;
     }
 
     static int transition(int oldValue, int newValue, double progress) {
-        if (progress < 0) {
+        if(progress < 0) {
             return oldValue;
-        } else if (progress > 1.) {
+        } else if(progress > 1.) {
             return newValue;
         }
         return (int) (oldValue + (newValue - oldValue) * progress);
@@ -237,10 +242,10 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         boolean needToRepaint(short newTimeOfDay) {
             DaySegment oldDaySegment = DaySegment.get(requestedTimeOfDay);
             DaySegment newDaySegment = DaySegment.get(newTimeOfDay);
-            if (oldDaySegment != newDaySegment) {
+            if(oldDaySegment != newDaySegment) {
                 return true;
             }
-            switch (newDaySegment) {
+            switch(newDaySegment) {
                 case NIGHT:
                 case AFTERNOON:
                     return false;
@@ -325,7 +330,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
 
         int getSunX(short timeOfDay, int width, int height) {
             double completion = DaySegment.getSegmentCompletion(timeOfDay);
-            switch (DaySegment.get(timeOfDay)) {
+            switch(DaySegment.get(timeOfDay)) {
                 case NIGHT:
                     return 0;
                 case MORNING:
@@ -341,10 +346,11 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
 
         @Override
         BufferedImage generate(short timeOfDay, int width, int height) {
-            if (DaySegment.get(timeOfDay) == DaySegment.NIGHT) {
+            if(DaySegment.get(timeOfDay) == DaySegment.NIGHT) {
                 return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
             }
-            BufferedImage image = new BufferedImage(height, height / 2, BufferedImage.TYPE_INT_ARGB);
+            final int imageWidth = height, imageHeight = height / 2;
+            BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
             draw(image, timeOfDay);
             return image;
         }
@@ -365,9 +371,9 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             final int flareY;
             final double flareOpacity;
 
-            switch (DaySegment.get(timeOfDay)) {
+            switch(DaySegment.get(timeOfDay)) {
                 case MORNING:
-                    if (completion < .5) {
+                    if(completion < .5) {
                         sunColor = transitionColor(SUNRISE_1, SUNRISE_2, completion * 2.);
                         //flareY = 0;//transition(, 0, (completion - .5) * 2.);
                     } else {
@@ -390,7 +396,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
                     flareY = 0;
                     break;
                 case DUSK:
-                    if (completion < .5) {
+                    if(completion < .5) {
                         sunColor = transitionColor(SUN, SUNRISE_2, completion * 2.);
                     } else {
                         sunColor = transitionColor(SUNRISE_2, SUNRISE_1, (completion - .5) * 2.);
@@ -429,7 +435,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         }
 
         GrassImage(BufferedImage grassImage) {
-            this.grassImage = Objects.requireNonNull(grassImage, "grassImage");
+            this.grassImage = U.requireNotNull(grassImage, "grassImage");
         }
 
         BufferedImage generate(short timeOfDay, int width, int height) {
@@ -451,7 +457,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             Graphics2D g = (Graphics2D) grassImage.getGraphics();
             g.drawImage(this.grassImage, 0, 0, width, height, null);
 
-            switch (DaySegment.get(timeOfDay)) {
+            switch(DaySegment.get(timeOfDay)) {
                 case NIGHT:
                     g.setComposite(AlphaComposite.SrcOver.derive(NIGHT_COLOR_ALPHA));
                     g.setPaint(NIGHT_COLOR);
@@ -476,7 +482,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
     static class SkyColor {
         Color get(short timeOfDay) {
             double completion = DaySegment.getSegmentCompletion(timeOfDay);
-            switch (DaySegment.get(timeOfDay)) {
+            switch(DaySegment.get(timeOfDay)) {
                 case NIGHT:
                     return NIGHT_COLOR;
                 case MORNING:
@@ -495,7 +501,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         private short timeOfDay;
 
         DayCycle(short timeOfDay) {
-            if (timeOfDay < 0 || timeOfDay >= DAY_CYCLE_IN_TICKS) {
+            if(timeOfDay < 0 || timeOfDay >= DAY_CYCLE_IN_TICKS) {
                 throw new IllegalArgumentException("timeOfDay: " + timeOfDay);
             }
             this.timeOfDay = timeOfDay;
@@ -527,7 +533,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
 
         static short normalize(long ticks) {
             short normalized;
-            if (ticks < 0 || ticks >= DAY_CYCLE_IN_TICKS) {
+            if(ticks < 0 || ticks >= DAY_CYCLE_IN_TICKS) {
                 normalized = 0;
             } else {
                 normalized = (short) ticks;
@@ -562,11 +568,14 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         }
 
         private static int getSegmentIndex(short timeOfDay) {
-            if (timeOfDay < DaySegment.SEGMENT_LENGTH_IN_TICKS) {
+            if(timeOfDay < DaySegment.SEGMENT_LENGTH_IN_TICKS) {
                 return 0;
             }
             int index = timeOfDay / DaySegment.SEGMENT_LENGTH_IN_TICKS;
-            return Math.min(index, VALUES.length - 1);
+            if(index > VALUES.length - 1) {
+                return VALUES.length - 1;
+            }
+            return index;
         }
 
         static DaySegment get(short timeOfDay) {
@@ -579,7 +588,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         }
 
         static double getOverallCompletion(short timeOfDay) {
-            if (timeOfDay < 0) {
+            if(timeOfDay < 0) {
                 return 0.;
             }
             return (double) timeOfDay / DAY_CYCLE_IN_TICKS;
@@ -591,11 +600,11 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         private long lastDayCycleUpdate;
 
         TickTimer(Runnable onUpdate) {
-            this.onUpdate = Objects.requireNonNull(onUpdate, "onUpdate");
+            this.onUpdate = U.requireNotNull(onUpdate, "onUpdate");
         }
 
         @Override
-        protected Void doInBackground() {
+        protected Void doInBackground() throws Exception {
             try {
                 LOGGER.debug("First tick: {}", dayCycle);
                 lastDayCycleUpdate = System.currentTimeMillis();
@@ -606,7 +615,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
                 }
             } catch (InterruptedException in) {
                 LOGGER.debug("interrupted");
-            } catch (Exception e) {
+            } catch(Exception e) {
                 e.printStackTrace();
             }
             LOGGER.debug("cancelled");
@@ -616,7 +625,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         private void updateDayCycle() {
             final long currentTime = System.currentTimeMillis();
             final long msDelta = currentTime - lastDayCycleUpdate;
-            if (msDelta < ONE_TICK_IN_MS) {
+            if(msDelta < ONE_TICK_IN_MS) {
                 return;
             }
             final short deltaTicks = DayCycle.normalize(msDelta / ONE_TICK_IN_MS);

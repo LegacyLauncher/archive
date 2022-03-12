@@ -1,6 +1,5 @@
 package ru.turikhay.tlauncher.ui.settings;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -12,6 +11,7 @@ import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
 
@@ -62,18 +62,39 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
     }
 
     public void updateLocale() {
-        if (source == null) {
-            return;
-        }
-        try {
-            String string = IOUtils.toString(new TokenReplacingReader(new StringReader(source), resolver));
-            editor.setText(string);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (source != null) {
+            StringBuilder string = new StringBuilder();
+            TokenReplacingReader replacer = new TokenReplacingReader(new StringReader(source), resolver);
+
+            label54:
+            {
+                try {
+                    while (true) {
+                        int read;
+                        if ((read = replacer.read()) <= 0) {
+                            break label54;
+                        }
+
+                        string.append((char) read);
+                    }
+                } catch (IOException var8) {
+                    var8.printStackTrace();
+                } finally {
+                    U.close(replacer);
+                }
+
+                return;
+            }
+
+            editor.setText(string.toString());
         }
     }
 
     private class AboutPageTokenResolver implements ITokenResolver {
+        private static final String image = "image:";
+        private static final String loc = "loc:";
+        private static final String color = "color";
+
         private AboutPageTokenResolver() {
         }
 
@@ -81,16 +102,7 @@ public class HTMLPage extends BorderPanel implements LocalizableComponent {
             if (token.equals("width")) {
                 return String.valueOf(SwingUtil.magnify(525));
             }
-            if (token.startsWith("image:")) {
-                return token.substring("image:".length());
-            }
-            if (token.startsWith("loc:")) {
-                return Localizable.get(token.substring("loc:".length()));
-            }
-            if (token.equals("color")) {
-                return textColor;
-            }
-            return token;
+            return token.startsWith("image:") ? token.substring("image:".length()) /* handled by ExtendedImageView */ : (token.startsWith("loc:") ? Localizable.get(token.substring("loc:".length())) : (token.equals("color") ? textColor : token));
         }
     }
 }

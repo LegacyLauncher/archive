@@ -9,19 +9,22 @@ import ru.turikhay.tlauncher.minecraft.PromotedServerDeserializer;
 import ru.turikhay.tlauncher.ui.notice.Notice;
 import ru.turikhay.tlauncher.ui.notice.NoticeDeserializer;
 import ru.turikhay.tlauncher.ui.notification.UrlNotificationObject;
+import ru.turikhay.util.U;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public final class BootConfiguration {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private boolean stats, ely;
-    private final Map<String, List<String>> repositories = new HashMap<>();
-    private final Map<String, List<Notice>> notices = new HashMap<>();
-    private final Map<String, List<PromotedServer>> promotedServers = new HashMap<>();
-    private final Map<String, List<PromotedServer>> outdatedPromotedServers = new HashMap<>();
-    private final Map<String, String> feedback = new HashMap<>();
-    private final Map<String, UrlNotificationObject> notifications = new HashMap<>();
+    private Map<String, List<String>> repositories = new HashMap<String, List<String>>();
+    private Map<String, List<Notice>> notices = new HashMap<String, List<Notice>>();
+    private Map<String, List<PromotedServer>> promotedServers = new HashMap<>(), outdatedPromotedServers = new HashMap<>();
+    private Map<String, String> feedback = new HashMap<>();
+    private Map<String, UrlNotificationObject> notifications = new HashMap<>();
     private int allowNoticeDisable;
 
     public boolean isStatsAllowed() {
@@ -65,7 +68,7 @@ public final class BootConfiguration {
     }
 
     public static BootConfiguration parse(String options) {
-        Objects.requireNonNull(options, "options");
+        U.requireNotNull(options, "options");
 
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Notice.class, new NoticeDeserializer())

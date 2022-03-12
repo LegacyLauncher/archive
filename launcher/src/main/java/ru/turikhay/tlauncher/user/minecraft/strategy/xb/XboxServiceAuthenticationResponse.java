@@ -6,7 +6,7 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.notEmpty;
+import static ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Validatable.*;
 
 public class XboxServiceAuthenticationResponse implements Validatable {
     private final String token, uhs;

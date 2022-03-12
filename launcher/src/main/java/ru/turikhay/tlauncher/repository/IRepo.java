@@ -7,6 +7,5 @@ import java.util.List;
 
 public interface IRepo {
     URLConnection get(String path, int timeout, Proxy proxy) throws IOException;
-
     List<String> getHosts();
 }

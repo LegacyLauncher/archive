@@ -9,6 +9,8 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class NewFeaturesFrame extends VActionFrame {
     public static final int INCREMENTAL = 1339;
@@ -31,9 +33,12 @@ public class NewFeaturesFrame extends VActionFrame {
 
         // NEW FEATURES
         getBody().add(oldReleases = new LocalizableCheckbox("newfeatures.list.old_releases"));
-        oldReleases.addActionListener(e -> {
-            frame.mp.defaultScene.settingsForm.get().oldVersionsHandler.setValue(oldReleases.isSelected());
-            frame.mp.defaultScene.settingsForm.get().saveValues();
+        oldReleases.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.mp.defaultScene.settingsForm.get().oldVersionsHandler.setValue(oldReleases.isSelected());
+                frame.mp.defaultScene.settingsForm.get().saveValues();
+            }
         });
         oldReleases.setSelected(frame.mp.defaultScene.settingsForm.get().oldVersionsHandler.getValue().equals("true"));
 
@@ -48,7 +53,12 @@ public class NewFeaturesFrame extends VActionFrame {
         //getFooter().add(new);
         okayButton = new LocalizableButton("newfeatures.button.okay");
         okayButton.setPreferredSize(SwingUtil.magnify(new Dimension(150, 40)));
-        okayButton.addActionListener(e -> dispose());
+        okayButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
 
         getFooter().setLayout(new BorderLayout());
         getFooter().add(okayButton, "East");
@@ -66,7 +76,12 @@ public class NewFeaturesFrame extends VActionFrame {
         newNoticeList.addActionListener(listener);
         promotedServers.addActionListener(listener);*/
 
-        okayButton.addActionListener(e -> frame.getConfiguration().set("gui.features", NewFeaturesFrame.INCREMENTAL));
+        okayButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.getConfiguration().set("gui.features", NewFeaturesFrame.INCREMENTAL);
+            }
+        });
 
         pack();
         okayButton.requestFocusInWindow();

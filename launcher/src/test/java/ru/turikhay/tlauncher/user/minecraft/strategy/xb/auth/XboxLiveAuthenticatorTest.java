@@ -6,7 +6,7 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticatio
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class XboxLiveAuthenticatorTest {
     @Test

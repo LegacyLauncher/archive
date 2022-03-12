@@ -10,6 +10,10 @@ import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.View;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -21,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class SwingUtil {
     private static final Logger LOGGER = LogManager.getLogger(SwingUtil.class);
@@ -51,7 +54,7 @@ public class SwingUtil {
     private static boolean allowSystemLookAndFeel = true;
 
     public static boolean initLookAndFeel() {
-        if (allowSystemLookAndFeel) {
+        if(allowSystemLookAndFeel) {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 return true;
@@ -76,8 +79,9 @@ public class SwingUtil {
     public static void initFontSize(int defSize) {
         try {
             UIDefaults e = UIManager.getDefaults();
+            int minSize = defSize;
             int maxSize = defSize + 2;
-            Enumeration<?> e1 = e.keys();
+            Enumeration e1 = e.keys();
 
             while (e1.hasMoreElements()) {
                 Object key = e1.nextElement();
@@ -85,8 +89,8 @@ public class SwingUtil {
                 if (value instanceof Font) {
                     Font font = (Font) value;
                     int size = font.getSize();
-                    if (size < defSize) {
-                        size = defSize;
+                    if (size < minSize) {
+                        size = minSize;
                     } else if (size > maxSize) {
                         size = maxSize;
                     }
@@ -137,13 +141,17 @@ public class SwingUtil {
         return i;
     }
 
+    public static boolean isThiner(Dimension d1, Dimension d2) {
+        return Math.min(d1.width, d2.width) == d1.width || Math.min(d1.height, d2.height) == d1.height;
+    }
+
     public static Dimension getPrefSize(JComponent component, int width, int height) {
-        Objects.requireNonNull(component, "component");
+        U.requireNotNull(component, "component");
         View view;
 
-        if (component instanceof JLabel) {
+        if(component instanceof JLabel) {
             view = (View) component.getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey);
-        } else if (component instanceof JEditorPane) {
+        } else if(component instanceof JEditorPane) {
             view = ((JEditorPane) component).getUI().getRootView((JEditorPane) component);
         } else {
             throw new IllegalArgumentException();
@@ -158,7 +166,7 @@ public class SwingUtil {
         int minHeight = getPrefHeight(component, Integer.MAX_VALUE), curHeight, width = 0;
         do {
             curHeight = getPrefHeight(component, width += step);
-        } while (curHeight >= height && curHeight != minHeight);
+        } while(curHeight >= height && curHeight != minHeight);
 
         return width;
     }
@@ -166,6 +174,44 @@ public class SwingUtil {
     // when determining for indefinite width - use Integer.MAX_VALUE
     public static int getPrefHeight(JComponent component, int width) {
         return getPrefSize(component, width, 0).height;
+    }
+
+    private static final String DOTS = "...";
+    public static String fitString(FontMetrics metrics, char[] chars, int prefWidth) {
+        int len, width, offset = -1, dotsWidth = metrics.stringWidth(DOTS);
+        if(prefWidth < dotsWidth) {
+            return DOTS;
+        }
+
+        do {
+            offset++;
+            len = chars.length - offset;
+            width = metrics.charsWidth(chars, 0, len) + (offset > 0? dotsWidth : 0);
+            if(width <= dotsWidth) {
+                return DOTS;
+            }
+        } while(width > prefWidth);
+
+        String result = new String(chars, 0, len);
+        return offset > 0? result + DOTS : result;
+    }
+
+    public static void setClipboard(String text) {
+        if (text == null) {
+            return;
+        }
+
+        try {
+            StringSelection stringSelection = new StringSelection(text);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, new ClipboardOwner() {
+                @Override
+                public void lostOwnership(Clipboard clipboard, Transferable contents) {
+                }
+            });
+        } catch (Exception e) {
+            LOGGER.warn("Could not copy to clipboard: \"{}\"", text, e);
+        }
     }
 
     private static final String base64s = "data:image/", base64e = ";base64,";
@@ -185,7 +231,7 @@ public class SwingUtil {
             return null;
         }
 
-        if (!source.startsWith(base64e, offset)) {
+        if (!source.substring(offset, offset + base64e.length()).equals(base64e)) {
             return null;
         }
 
@@ -202,7 +248,7 @@ public class SwingUtil {
 
         try {
             return ImageIO.read(new URL(source));
-        } catch (MalformedURLException ignored) {
+        } catch(MalformedURLException ignored) {
         }
 
         return Images.loadIconById(source);
@@ -225,15 +271,15 @@ public class SwingUtil {
     }
 
     public static <V> V waitAndReturn(Callable<V> callable) {
-        AtomicReference<V> ref = new AtomicReference<>();
-        wait(() -> ref.set(callable.call()));
-        return ref.get();
+        Ref<V> ref = new Ref<>();
+        wait(() -> ref.setValue(callable.call()));
+        return ref.getValue();
     }
 
     private static void invokeNow(SwingRunnable r) {
         try {
             r.run();
-        } catch (SwingRunnableException e) {
+        } catch(SwingRunnableException e) {
             throw new SwingException(e.getCause());
         }
     }
@@ -245,9 +291,9 @@ public class SwingUtil {
             Thread.currentThread().interrupt();
         } catch (InvocationTargetException invocationTargetException) {
             Throwable t;
-            if (invocationTargetException.getCause() != null) {
+            if(invocationTargetException.getCause() != null) {
                 t = invocationTargetException.getCause();
-                if (t instanceof SwingRunnableException) {
+                if(t instanceof SwingRunnableException) {
                     t = t.getCause();
                 }
             } else {
@@ -257,7 +303,7 @@ public class SwingUtil {
         }
     }
 
-    private static final Lazy<Double> SCALING_FACTOR = Lazy.of(SwingUtil::queryScalingFactor);
+    private static Lazy<Double> SCALING_FACTOR = Lazy.of(SwingUtil::queryScalingFactor);
 
     public static double getScalingFactor() {
         return SCALING_FACTOR.value().orElse(1.0);
@@ -276,7 +322,7 @@ public class SwingUtil {
             double scaleY = tx.getScaleY();
 
             return Math.max(scaleX, scaleY);
-        } catch (NoClassDefFoundError | NoSuchMethodError t) {
+        } catch(NoClassDefFoundError | NoSuchMethodError t) {
             throw new Exception(t);
         }
     }

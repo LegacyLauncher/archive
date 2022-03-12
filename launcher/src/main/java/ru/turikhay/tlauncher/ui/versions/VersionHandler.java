@@ -13,6 +13,7 @@ import ru.turikhay.tlauncher.ui.scenes.VersionManagerScene;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class VersionHandler implements Blockable, VersionHandlerListener {
@@ -34,8 +35,8 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
 
     public VersionHandler(VersionManagerScene scene) {
         this.scene = scene;
-        listeners = Collections.synchronizedList(new ArrayList<>());
-        downloading = Collections.synchronizedList(new ArrayList<>());
+        listeners = Collections.synchronizedList(new ArrayList());
+        downloading = Collections.synchronizedList(new ArrayList());
         TLauncher launcher = TLauncher.getInstance();
         vm = launcher.getVersionManager();
         downloader = launcher.getDownloader();
@@ -103,8 +104,10 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
 
     public void onVersionRefreshing(VersionManager vm) {
         Blocker.block(instance, "refresh");
+        Iterator var3 = listeners.iterator();
 
-        for (VersionHandlerListener listener : listeners) {
+        while (var3.hasNext()) {
+            VersionHandlerListener listener = (VersionHandlerListener) var3.next();
             listener.onVersionRefreshing(vm);
         }
 
@@ -112,8 +115,10 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
 
     public void onVersionRefreshed(VersionManager vm) {
         Blocker.unblock(instance, "refresh");
+        Iterator var3 = listeners.iterator();
 
-        for (VersionHandlerListener listener : listeners) {
+        while (var3.hasNext()) {
+            VersionHandlerListener listener = (VersionHandlerListener) var3.next();
             listener.onVersionRefreshed(vm);
         }
 
@@ -122,8 +127,10 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
     public void onVersionSelected(List<VersionSyncInfo> version) {
         selected = version;
         if (version != null && !version.isEmpty() && version.get(0).getID() != null) {
+            Iterator var3 = listeners.iterator();
 
-            for (VersionHandlerListener listener : listeners) {
+            while (var3.hasNext()) {
+                VersionHandlerListener listener = (VersionHandlerListener) var3.next();
                 listener.onVersionSelected(version);
             }
         } else {
@@ -134,8 +141,10 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
 
     public void onVersionDeselected() {
         selected = null;
+        Iterator var2 = listeners.iterator();
 
-        for (VersionHandlerListener listener : listeners) {
+        while (var2.hasNext()) {
+            VersionHandlerListener listener = (VersionHandlerListener) var2.next();
             listener.onVersionDeselected();
         }
 
@@ -143,8 +152,10 @@ public class VersionHandler implements Blockable, VersionHandlerListener {
 
     public void onVersionDownload(List<VersionSyncInfo> list) {
         downloading = list;
+        Iterator var3 = listeners.iterator();
 
-        for (VersionHandlerListener listener : listeners) {
+        while (var3.hasNext()) {
+            VersionHandlerListener listener = (VersionHandlerListener) var3.next();
             listener.onVersionDownload(list);
         }
 

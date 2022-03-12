@@ -2,6 +2,7 @@ package net.minecraft.launcher.versions;
 
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
+import ru.turikhay.util.U;
 
 import java.util.HashMap;
 

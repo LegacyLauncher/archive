@@ -19,7 +19,7 @@ public class DuplicateAwareResourceLocator implements ImageResourceLocator {
     public Optional<URL> loadResource(String resourceName) {
         Matcher matcher = PATTERN.matcher(resourceName);
         String normalResourceName;
-        if (matcher.matches()) {
+        if(matcher.matches()) {
             normalResourceName = matcher.group(1) + matcher.group(2);
         } else {
             normalResourceName = resourceName;

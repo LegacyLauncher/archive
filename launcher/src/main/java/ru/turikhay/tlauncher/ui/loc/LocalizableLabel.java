@@ -10,6 +10,7 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
     private boolean notEmpty;
 
     public LocalizableLabel(String path, Object... vars) {
+        init();
         setText(path, vars);
         setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
     }
@@ -31,8 +32,8 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
         this.path = path;
         variables = Localizable.checkVariables(vars);
 
-        if (path == null) {
-            setRawText(notEmpty ? " " : "");
+        if(path == null) {
+            setRawText(notEmpty? " " : "");
             return;
         }
 
@@ -44,13 +45,16 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
     }
 
     public void updateLocale() {
-        setText(path, (Object[]) variables);
+        setText(path, variables);
+    }
+
+    protected void init() {
     }
 
     public void setNotEmpty(boolean flag) {
         this.notEmpty = flag;
 
-        if (path == null) {
+        if(path == null) {
             setText(null);
         }
     }

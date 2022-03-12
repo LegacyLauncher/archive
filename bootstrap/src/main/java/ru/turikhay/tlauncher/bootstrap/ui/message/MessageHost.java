@@ -19,16 +19,24 @@ public class MessageHost {
     private String title;
 
     public void setTitle(final String title) {
-        SwingUtilities.invokeLater(() -> {
-            MessageHost.this.title = title;
-            if (window != null) {
-                window.setTitle(title);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MessageHost.this.title = title;
+                if(window != null) {
+                    window.setTitle(title);
+                }
             }
         });
     }
 
     public void showMessage(final Message message) {
-        SwingUtilities.invokeLater(() -> setMessage(message));
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setMessage(message);
+            }
+        });
     }
 
     public void waitForClose() throws InterruptedException {
@@ -36,9 +44,12 @@ public class MessageHost {
     }
 
     public void close() {
-        SwingUtilities.invokeLater(() -> {
-            if (window != null) {
-                window.dispose();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if(window != null) {
+                    window.dispose();
+                }
             }
         });
     }
@@ -52,7 +63,7 @@ public class MessageHost {
     }
 
     private void destroyOldWindow(MessageWindow oldWindow) {
-        if (oldWindow == null) {
+        if(oldWindow == null) {
             return;
         }
         oldWindow.removeWindowListener(listener);
