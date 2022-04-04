@@ -4,12 +4,16 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.downloader.Downloadable;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.downloader.DownloaderListener;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableProgressBar;
 
 import java.awt.*;
+import java.text.NumberFormat;
 
 public class DownloaderProgress extends LocalizableProgressBar implements DownloaderListener {
     private static final long serialVersionUID = -8382205925341380876L;
+
+    private NumberFormat percentFormat;
 
     private DownloaderProgress(Component parentComp, Downloader downloader) {
         super(parentComp);
@@ -52,7 +56,8 @@ public class DownloaderProgress extends LocalizableProgressBar implements Downlo
 
             setIndeterminate(false);
             setValue((int) progress);
-            setCenterString(String.format("%.0f%%", progress));
+
+            setCenterString(getOrUpdatePercentFormat(false).format(dprogress));
         }
     }
 
@@ -63,5 +68,18 @@ public class DownloaderProgress extends LocalizableProgressBar implements Downlo
 
     public void onDownloaderComplete(Downloader d) {
         stopProgress();
+    }
+
+    @Override
+    public void updateLocale() {
+        super.updateLocale();
+        getOrUpdatePercentFormat(true);
+    }
+
+    private NumberFormat getOrUpdatePercentFormat(boolean forceUpdate) {
+        if (percentFormat == null || forceUpdate) {
+            percentFormat = NumberFormat.getPercentInstance(Localizable.get().getLocale());
+        }
+        return percentFormat;
     }
 }
