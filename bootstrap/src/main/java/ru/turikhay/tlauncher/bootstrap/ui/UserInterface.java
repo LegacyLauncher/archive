@@ -14,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.NumberFormat;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -34,6 +35,8 @@ public final class UserInterface implements IInterface {
         }
         resourceBundle = b;
     }
+
+    private static final NumberFormat PERCENT_FORMAT = NumberFormat.getPercentInstance();
 
     private final JFrame frame;
     private final JPanel panel;
@@ -117,7 +120,7 @@ public final class UserInterface implements IInterface {
                         }
 
                         String title = getLString("appname", "Bootstrap") + " :: " +
-                                (newValue == -1 ? "..." : newValue + "%") + " :: " +
+                                (newValue == -1 ? "..." : PERCENT_FORMAT.format(newValue / 100.)) + " :: " +
                                 getLocalizedTaskName(childTask);
 
                         frame.setTitle(title);

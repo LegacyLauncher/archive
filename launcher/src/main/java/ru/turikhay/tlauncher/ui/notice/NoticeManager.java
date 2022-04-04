@@ -64,27 +64,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                 }
 
                 Collections.shuffle(noticeList);
-
-                List<Notice> noticesThatMadeMeReplaceOthersDamnIHateIt = new ArrayList<>();
-                for (int i = 0; i < noticeList.size(); i++) {
-                    Notice notice = noticeList.get(i);
-                    if (noticesThatMadeMeReplaceOthersDamnIHateIt.contains(notice)) {
-                        continue;
-                    }
-                    int pos = notice.getPos();
-                    if (pos > -1) {
-                        if (pos >= noticeList.size()) {
-                            pos = noticeList.size() - 1;
-                        }
-                        Notice replacement = noticeList.get(pos);
-                        noticeList.set(i, replacement);
-                        noticeList.set(pos, notice);
-
-                        noticesThatMadeMeReplaceOthersDamnIHateIt.add(notice);
-
-                        i = -1; // redo the position
-                    }
-                }
+                noticeList.sort(Comparator.comparingInt(Notice::getPos));
 
                 byLocaleMap.put(locale, Collections.unmodifiableList(noticeList));
                 LOGGER.debug("Added {} notices for {}", noticeList.size(), locale);

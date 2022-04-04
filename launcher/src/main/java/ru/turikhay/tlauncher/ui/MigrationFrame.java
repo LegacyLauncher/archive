@@ -318,8 +318,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
         explanation.append(Localizable.get("mojang-migration.body.explanation.text"));
         if (startDate != null) {
             explanation.append("<br/><br/>").append(Localizable.get(
-                    "mojang-migration.body.explanation.with-start-date.v1." +
-                            (Instant.now().isBefore(startDate) ? "future" : "past"),
+                    "mojang-migration.body.explanation.with-start-date.v1.past",
                     dateFormatter.get().format(startDate)
             ));
         }
