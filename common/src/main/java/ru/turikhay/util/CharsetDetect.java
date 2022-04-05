@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class CharsetDetect {
 
     public static void main(String[] args) {
-        System.out.println("Charset: \"" + Charset.defaultCharset().name() + "\"");
+        System.out.println("Charset: \""+ Charset.defaultCharset().name() +"\"");
     }
 
     public static Charset detect() {
@@ -24,7 +24,7 @@ public class CharsetDetect {
 
     public static Charset detect(String javaExec) {
         CodeSource codeSource = CharsetDetect.class.getProtectionDomain().getCodeSource();
-        if (codeSource == null) {
+        if(codeSource == null) {
             throw new RuntimeException("unknown code source");
         }
         File file;

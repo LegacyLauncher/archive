@@ -12,7 +12,10 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class VersionRemoveButton extends ExtendedButton implements VersionHandlerListener, Blockable {
@@ -24,6 +27,8 @@ public class VersionRemoveButton extends ExtendedButton implements VersionHandle
     private static final String MENU = "version.manager.delete.menu.";
     private final VersionHandler handler;
     private final JPopupMenu menu;
+    private final LocalizableMenuItem onlyJar;
+    private final LocalizableMenuItem withLibraries;
     private boolean libraries;
 
     VersionRemoveButton(VersionList list) {
@@ -31,13 +36,25 @@ public class VersionRemoveButton extends ExtendedButton implements VersionHandle
         handler = list.handler;
         handler.addListener(this);
         menu = new JPopupMenu();
-        LocalizableMenuItem onlyJar = new LocalizableMenuItem("version.manager.delete.menu.jar");
-        onlyJar.addActionListener(e -> onChosen(false));
+        onlyJar = new LocalizableMenuItem("version.manager.delete.menu.jar");
+        onlyJar.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onChosen(false);
+            }
+        });
         menu.add(onlyJar);
-        LocalizableMenuItem withLibraries = new LocalizableMenuItem("version.manager.delete.menu.libraries");
-        withLibraries.addActionListener(e -> onChosen(true));
+        withLibraries = new LocalizableMenuItem("version.manager.delete.menu.libraries");
+        withLibraries.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onChosen(true);
+            }
+        });
         menu.add(withLibraries);
-        addActionListener(e -> onPressed());
+        addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onPressed();
+            }
+        });
     }
 
     void onPressed() {
@@ -52,9 +69,11 @@ public class VersionRemoveButton extends ExtendedButton implements VersionHandle
     void delete() {
         if (handler.selected != null) {
             LocalVersionList localList = handler.vm.getLocalList();
-            List<Throwable> errors = new ArrayList<>();
+            ArrayList errors = new ArrayList();
+            Iterator message = handler.selected.iterator();
 
-            for (VersionSyncInfo title : handler.selected) {
+            while (message.hasNext()) {
+                VersionSyncInfo title = (VersionSyncInfo) message.next();
                 if (title.isInstalled()) {
                     try {
                         localList.deleteVersion(title.getID(), libraries);
@@ -82,8 +101,10 @@ public class VersionRemoveButton extends ExtendedButton implements VersionHandle
 
     public void onVersionSelected(List<VersionSyncInfo> versions) {
         boolean onlyRemote = true;
+        Iterator var4 = versions.iterator();
 
-        for (VersionSyncInfo version : versions) {
+        while (var4.hasNext()) {
+            VersionSyncInfo version = (VersionSyncInfo) var4.next();
             if (version.isInstalled()) {
                 onlyRemote = false;
                 break;

@@ -6,11 +6,14 @@ import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 
 public abstract class FxRunnable implements Runnable {
 
-    final Runnable fxBridge = () -> {
-        try {
-            runFx();
-        } catch (Throwable t) {
-            ExceptionHandler.getInstance().uncaughtException(Thread.currentThread(), t);
+    final Runnable fxBridge = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                runFx();
+            } catch (Throwable t) {
+                ExceptionHandler.getInstance().uncaughtException(Thread.currentThread(), t);
+            }
         }
     };
 

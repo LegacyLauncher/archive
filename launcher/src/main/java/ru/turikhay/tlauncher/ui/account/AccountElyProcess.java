@@ -21,6 +21,8 @@ import ru.turikhay.util.async.AsyncThread;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.Future;
@@ -64,15 +66,28 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
         setCenter(panel);
 
         final JPopupMenu menu = new JPopupMenu();
-        menu.add(fallbackMenuItem = LocalizableMenuItem.newItem(LOC_PREFIX + "failed.fallback", e -> activateFallbackFlow()));
-        menu.add(LocalizableMenuItem.newItem(LOC_PREFIX + "failed.classic", e -> {
-            cancelCurrentFlow();
-            scene.multipane.clearBreadcrumbs();
-            scene.multipane.showTip("add-account-ely_legacy");
+        menu.add(fallbackMenuItem = LocalizableMenuItem.newItem(LOC_PREFIX + "failed.fallback", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                activateFallbackFlow();
+            }
+        }));
+        menu.add(LocalizableMenuItem.newItem(LOC_PREFIX + "failed.classic", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cancelCurrentFlow();
+                scene.multipane.clearBreadcrumbs();
+                scene.multipane.showTip("add-account-ely_legacy");
+            }
         }));
 
         button = new LocalizableButton();
-        button.addActionListener(e -> menu.show(button, 0, button.getHeight()));
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                menu.show(button, 0, button.getHeight());
+            }
+        });
         button.setIcon(Images.getIcon24("warning-2"));
         button.setIconTextGap(SwingUtil.magnify(10));
         button.setText(LOC_PREFIX + "failed");
@@ -84,7 +99,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
         int progress = -1;
         boolean helpEnabled = true;
 
-        switch (state) {
+        switch(state) {
             case INIT:
                 labelText = "init";
                 break;
@@ -155,35 +170,35 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
             }
 
             @Override
-            public void strategyStarted(ElyAuthFlow<?> strategy) {
+            public void strategyStarted(ElyAuthFlow strategy) {
                 setState(FlowState.INIT);
             }
 
             @Override
-            public void strategyErrored(ElyAuthFlow<?> strategy, Exception e) {
+            public void strategyErrored(ElyAuthFlow strategy, Exception e) {
                 Stats.accountCreation("ely", "primary", "", false);
                 setState(FlowState.ERROR);
             }
 
             @Override
-            public void strategyUrlOpened(ElyAuthFlow<?> strategy, URL url) {
+            public void strategyUrlOpened(ElyAuthFlow strategy, URL url) {
                 setState(FlowState.WAITING);
             }
 
             @Override
-            public void strategyUrlOpeningFailed(ElyAuthFlow<?> strategy, URL url) {
+            public void strategyUrlOpeningFailed(ElyAuthFlow strategy, URL url) {
                 Stats.accountCreation("ely", "primary", "url_opening", false);
                 setState(FlowState.ERROR);
             }
 
             @Override
-            public void strategyCancelled(ElyAuthFlow<?> strategy) {
+            public void strategyCancelled(ElyAuthFlow strategy) {
                 Stats.accountCreation("ely", "primary", "cancelled", false);
                 setState(FlowState.CANCELLED);
             }
 
             @Override
-            public void strategyComplete(ElyAuthFlow<?> strategy, ElyAuthCode code) {
+            public void strategyComplete(ElyAuthFlow strategy, ElyAuthCode code) {
                 fetchCode("primary", code);
                 Stats.accountCreation("ely", "primary", "", true);
             }
@@ -201,39 +216,44 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
             @Override
             public ElyFlowWaitTask<String> fallbackStrategyRequestedInput(FallbackElyAuthFlow strategy) {
                 setState(FlowState.INPUT_WAITING);
-                return () -> Alert.showLocInputQuestion("account.manager.multipane.process-account-ely.flow.input_waiting.alert");
+                return new ElyFlowWaitTask<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return Alert.showLocInputQuestion("account.manager.multipane.process-account-ely.flow.input_waiting.alert");
+                    }
+                };
             }
 
             @Override
-            public void strategyStarted(ElyAuthFlow<?> strategy) {
+            public void strategyStarted(ElyAuthFlow strategy) {
                 setState(FlowState.INIT);
             }
 
             @Override
-            public void strategyErrored(ElyAuthFlow<?> strategy, Exception e) {
+            public void strategyErrored(ElyAuthFlow strategy, Exception e) {
                 Stats.accountCreation("ely", "fallback", "", false);
                 setState(FlowState.ERROR);
             }
 
             @Override
-            public void strategyUrlOpened(ElyAuthFlow<?> strategy, URL url) {
+            public void strategyUrlOpened(ElyAuthFlow strategy, URL url) {
                 setState(FlowState.WAITING);
             }
 
             @Override
-            public void strategyUrlOpeningFailed(ElyAuthFlow<?> strategy, URL url) {
+            public void strategyUrlOpeningFailed(ElyAuthFlow strategy, URL url) {
                 Stats.accountCreation("ely", "fallback", "url_opening", false);
                 setState(FlowState.ERROR);
             }
 
             @Override
-            public void strategyCancelled(ElyAuthFlow<?> strategy) {
+            public void strategyCancelled(ElyAuthFlow strategy) {
                 Stats.accountCreation("ely", "fallback", "cancelled", false);
                 setState(FlowState.CANCELLED);
             }
 
             @Override
-            public void strategyComplete(ElyAuthFlow<?> strategy, ElyAuthCode code) {
+            public void strategyComplete(ElyAuthFlow strategy, ElyAuthCode code) {
                 Stats.accountCreation("ely", "fallback", "", true);
                 fetchCode("fallback", code);
             }
@@ -263,11 +283,11 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
         TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
         scene.multipane.showTip("success-add");
-        scene.list.select(new Account<>(user));
+        scene.list.select(new Account(user));
     }
 
     private void cancelCurrentFlow() {
-        if (authProcess != null) {
+        if(authProcess != null) {
             authProcess.cancel(true);
         }
     }

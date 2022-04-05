@@ -5,25 +5,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.json.ToStringBuildable;
 import ru.turikhay.tlauncher.bootstrap.task.DownloadTask;
+import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.net.MalformedURLException;
+import java.io.File;
 import java.net.URL;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class Library extends ToStringBuildable {
-    private static final List<String> LIBRARY_REPO_LIST;
-
-    static {
-        List<String> libraryRepoList = Arrays.asList(
-                "https://tln4.ru/repo/libraries/",
-                "https://tlauncherrepo.com/repo/libraries/",
-                "https://repo.tlaun.ch/repo/libraries/",
-                "https://cdn.turikhay.ru/tlauncher/repo/libraries/"
-        );
-        Collections.shuffle(libraryRepoList);
-        LIBRARY_REPO_LIST = Collections.unmodifiableList(libraryRepoList);
-    }
+    private static final List<String> LIBRARY_REPO_LIST = Arrays.asList(U.shuffle(
+            "https://tln4.ru/repo/libraries/",
+            "https://tlauncherrepo.com/repo/libraries/",
+            "https://repo.tlaun.ch/repo/libraries/",
+            "https://cdn.turikhay.ru/tlauncher/repo/libraries/"
+    ));
 
     private String name, checksum;
 
@@ -31,27 +27,23 @@ public final class Library extends ToStringBuildable {
         return name;
     }
 
-    public Path getFile(Path folder) {
-        return Objects.requireNonNull(folder, "folder").resolve(getPath());
+    public File getFile(File folder) {
+        return new File(U.requireNotNull(folder, "folder"), getPath());
     }
 
-    public DownloadTask downloadTo(Path dest) {
+    public DownloadTask downloadTo(File dest) {
         return new DownloadTask(name, getUrlList(), dest, checksum);
     }
 
-    public DownloadTask download(Path folder) {
+    public DownloadTask download(File folder) {
         return downloadTo(getFile(folder));
     }
 
     private List<URL> getUrlList() {
-        ArrayList<URL> urlList = new ArrayList<>();
+        ArrayList<URL> urlList = new ArrayList<URL>();
         String path = getPath();
-        for (String prefix : LIBRARY_REPO_LIST) {
-            try {
-                urlList.add(new URL(prefix + path));
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
+        for(String prefix : LIBRARY_REPO_LIST) {
+            urlList.add(U.toUrl(prefix + path));
         }
         return urlList;
     }
@@ -72,8 +64,8 @@ public final class Library extends ToStringBuildable {
     private String[] parts;
 
     private String[] getParts() {
-        if (parts == null) {
-            parts = StringUtils.split(Objects.requireNonNull(name, "name"), ":", 3);
+        if(parts == null) {
+            parts = StringUtils.split(U.requireNotNull(name, "name"), ":", 3);
         }
         return parts;
     }

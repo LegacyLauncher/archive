@@ -4,19 +4,19 @@ import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.util.StringUtil;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.util.Objects;
 
 public class ProgressBar extends JProgressBar {
     private final Color textColor = Theme.getTheme().getForeground();
-    public static final int DEFAULT_HEIGHT = SwingUtil.magnify(20);
-    private static final int BORDER_SIZE = SwingUtil.magnify(10);
-    private static final int EDGE_CHARS = 50;
-    private static final int CENTER_CHARS = 30;
+    public static int DEFAULT_HEIGHT = SwingUtil.magnify(20);
+    private static int BORDER_SIZE = SwingUtil.magnify(10);
+    private static int EDGE_CHARS = 50;
+    private static int CENTER_CHARS = 30;
     private static final long serialVersionUID = -8095192709934629794L;
     private final Object sync;
     private final Component parent;
@@ -91,7 +91,7 @@ public class ProgressBar extends JProgressBar {
 
     public void setWestString(String string, boolean update) {
         string = StringUtil.cut(string, EDGE_CHARS);
-        wS_changed = !Objects.equals(wS, string);
+        wS_changed = wS != string;
         wS = string;
         if (wS_changed && update) {
             repaint();
@@ -119,7 +119,7 @@ public class ProgressBar extends JProgressBar {
 
     public void setEastString(String string, boolean update) {
         string = StringUtil.cut(string, EDGE_CHARS);
-        eS_changed = !Objects.equals(eS, string);
+        eS_changed = eS != string;
         eS = string;
         if (eS_changed && update) {
             repaint();

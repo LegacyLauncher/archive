@@ -6,11 +6,12 @@ import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class LocalizableMenuItem extends JMenuItem implements LocalizableComponent {
     private static final long serialVersionUID = 1364363532569997394L;
-    private static final List<LocalizableMenuItem> items = Collections.synchronizedList(new ArrayList<>());
+    private static List<LocalizableMenuItem> items = Collections.synchronizedList(new ArrayList());
     private String path;
     private String[] variables;
 
@@ -48,11 +49,14 @@ public class LocalizableMenuItem extends JMenuItem implements LocalizableCompone
     }
 
     public void updateLocale() {
-        setText(path, (Object[]) variables);
+        setText(path, variables);
     }
 
     public static void updateLocales() {
-        for (LocalizableMenuItem item : items) {
+        Iterator var1 = items.iterator();
+
+        while (var1.hasNext()) {
+            LocalizableMenuItem item = (LocalizableMenuItem) var1.next();
             if (item != null) {
                 item.updateLocale();
             }
@@ -61,7 +65,7 @@ public class LocalizableMenuItem extends JMenuItem implements LocalizableCompone
 
     public static LocalizableMenuItem newItem(String path, String image, ActionListener action) {
         LocalizableMenuItem item = new LocalizableMenuItem(path);
-        if (image != null) {
+        if(image != null) {
             item.setIcon(Images.getIcon16(image));
         }
         item.addActionListener(action);

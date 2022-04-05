@@ -19,12 +19,12 @@ public final class McleaksManager {
             supported = false;
         }
         SUPPORTED = supported;
-        STATUS = supported ? new McleaksStatus() : null;
-        CONNECTOR = supported ? new McleaksConnector() : null;
+        STATUS = supported? new McleaksStatus() : null;
+        CONNECTOR = supported? new McleaksConnector() : null;
     }
 
     public static void checkSupported() {
-        if (!SUPPORTED) {
+        if(!SUPPORTED) {
             throw new IllegalStateException("not supported");
         }
     }
@@ -44,7 +44,7 @@ public final class McleaksManager {
     }
 
     public static void triggerConnection() {
-        if (SUPPORTED) {
+        if(SUPPORTED) {
             getStatus().triggerFetch();
         }
     }

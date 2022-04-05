@@ -5,7 +5,7 @@ public interface DownloadableHandler {
 
     void onAbort(Downloadable var1);
 
-    void onComplete(Downloadable var1);
+    void onComplete(Downloadable var1) throws RetryDownloadException;
 
     void onError(Downloadable var1, Throwable var2);
 }

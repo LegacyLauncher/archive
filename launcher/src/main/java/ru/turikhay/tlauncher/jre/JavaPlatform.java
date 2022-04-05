@@ -20,7 +20,7 @@ public class JavaPlatform {
             case WINDOWS:
                 return is64bit ? "windows-x64" : "windows-x86";
             case OSX:
-                if (!is64bit) {
+                if(!is64bit) {
                     LOGGER.warn("macOS x86 is not supported. How old is this computer?");
                     return null;
                 }
@@ -34,11 +34,11 @@ public class JavaPlatform {
     public static OS getOSByPlatform(String platform) {
         Objects.requireNonNull(platform, "platform");
 
-        if (platform.startsWith("linux")) {
+        if(platform.startsWith("linux")) {
             return OS.LINUX;
-        } else if (platform.startsWith("windows")) {
+        } else if(platform.startsWith("windows")) {
             return OS.WINDOWS;
-        } else if (platform.equals("mac-os")) {
+        } else if(platform.equals("mac-os")) {
             return OS.OSX;
         } else {
             throw new IllegalArgumentException("unknown platform: " + platform);

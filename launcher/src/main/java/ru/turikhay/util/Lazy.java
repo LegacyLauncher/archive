@@ -25,10 +25,10 @@ public final class Lazy<T> implements Callable<T> {
     }
 
     public synchronized T get() throws LazyInitException {
-        if (exception != null) {
+        if(exception != null) {
             throw new LazyInitException(exception);
         }
-        if (calledOnce) {
+        if(calledOnce) {
             return value;
         } else {
             calledOnce = true;
@@ -50,9 +50,9 @@ public final class Lazy<T> implements Callable<T> {
     public T call() throws Exception {
         try {
             return get();
-        } catch (LazyInitException e) {
+        } catch(LazyInitException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof Exception) {
+            if(cause instanceof Exception) {
                 throw (Exception) cause;
             } else {
                 throw new Error(cause); // should never happen
@@ -64,14 +64,14 @@ public final class Lazy<T> implements Callable<T> {
         T value;
         try {
             value = get();
-        } catch (LazyInitException e) {
+        } catch(LazyInitException e) {
             return Optional.empty();
         }
         return Optional.ofNullable(value);
     }
 
     public Optional<T> valueIfInitialized() {
-        if (isInitialized()) {
+        if(isInitialized()) {
             return value();
         } else {
             return Optional.empty();
@@ -86,7 +86,7 @@ public final class Lazy<T> implements Callable<T> {
     public String toString() {
         // we don't really care here about a race condition
         return "Lazy{" +
-                (calledOnce ? "value=" + value : "initializer=" + initializer) +
+                (calledOnce? "value=" + value : "initializer=" + initializer) +
                 '}';
     }
 }

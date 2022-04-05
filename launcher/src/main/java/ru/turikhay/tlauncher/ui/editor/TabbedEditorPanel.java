@@ -28,16 +28,18 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
 
     public TabbedEditorPanel(CenterPanelTheme theme, Insets insets) {
         super(theme, insets);
-        tabs = new ArrayList<>();
+        tabs = new ArrayList();
 
         TabbedPane tabbedPane;
-        tabbedPane = new TabbedPane() {
-            @Override
-            public void onTabChange(int index) {
-                super.onTabChange(index);
-                TabbedEditorPanel.this.onTabChange(index);
-            }
-        };
+        initTabbedPane: {
+            tabbedPane = new TabbedPane() {
+                @Override
+                public void onTabChange(int index) {
+                    super.onTabChange(index);
+                    TabbedEditorPanel.this.onTabChange(index);
+                }
+            };
+        }
         tabPane = tabbedPane;
 
         if (tabPane.getExtendedUI() != null) {
@@ -132,11 +134,11 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
                 this.name = name;
                 this.tip = tip;
                 this.icon = icon;
-                panels = new ArrayList<>();
-                constraints = new ArrayList<>();
-                setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+                panels = new ArrayList();
+                constraints = new ArrayList();
+                setLayout(new BoxLayout(this, 3));
                 setInsets(0, 10, 0, 10);
-                scroll = new EditorScrollPane(this);
+                scroll = TabbedEditorPanel.this.new EditorScrollPane(this);
             }
         }
 
@@ -223,7 +225,7 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
         }
     }
 
-    public static class EditorScrollPane extends ScrollPane {
+    public class EditorScrollPane extends ScrollPane {
         private final TabbedEditorPanel.EditorPanelTab tab;
 
         EditorScrollPane(TabbedEditorPanel.EditorPanelTab tab) {

@@ -41,7 +41,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
     @Override
     public LocalServerSelectedConfiguration start(LocalServerConfiguration configuration)
             throws LocalServerException {
-        if (!invoked.compareAndSet(false, true)) {
+        if(!invoked.compareAndSet(false, true)) {
             return selectedConfiguration;
         }
 
@@ -62,7 +62,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
             RedirectUrl redirectUrl;
             try {
                 redirectUrl = new RedirectUrl(urlProducer.buildRedirectUrl(selectedConfiguration));
-            } catch (URISyntaxException | MalformedURLException e) {
+            } catch (MalformedURLException | URISyntaxException e) {
                 throw new LocalServerException("cannot build redirect uri", e);
             }
 
@@ -87,7 +87,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
 
             break; // ok
         }
-        if (adapter == null) {
+        if(adapter == null) {
             LocalServerException e = new LocalServerException("every allowed port cannot be bound to");
             serverStartExceptions.forEach(e::addSuppressed);
             throw e;
@@ -105,7 +105,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
     @Override
     public MicrosoftOAuthExchangeCode waitForCode(long time, TimeUnit timeUnit)
             throws MicrosoftOAuthCodeRequestException, TimeoutException, InterruptedException {
-        if (!invoked.get()) {
+        if(!invoked.get()) {
             throw new IllegalStateException("server has not been started");
         }
         return lockExchange.waitForCode(time, timeUnit);
@@ -113,7 +113,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
 
     @Override
     public void stop() {
-        if (!invoked.compareAndSet(true, false)) {
+        if(!invoked.compareAndSet(true, false)) {
             throw new IllegalStateException("server has not been started");
         }
         AsyncThread.execute(() -> {

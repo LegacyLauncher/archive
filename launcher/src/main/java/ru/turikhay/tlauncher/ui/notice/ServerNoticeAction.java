@@ -13,9 +13,11 @@ import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.user.User;
+import ru.turikhay.util.U;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
 
 public class ServerNoticeAction extends NoticeAction {
@@ -27,7 +29,7 @@ public class ServerNoticeAction extends NoticeAction {
 
     ServerNoticeAction(PromotedServer server, int serverId) {
         super("server");
-        this.server = Objects.requireNonNull(server, "server");
+        this.server = U.requireNotNull(server, "server");
         this.serverId = serverId;
 
         installedVersion = Images.getIcon16("check-square");
@@ -39,10 +41,10 @@ public class ServerNoticeAction extends NoticeAction {
 
     @Override
     List<? extends JMenuItem> getMenuItemList() {
-        List<JMenuItem> list = new ArrayList<>();
+        List<JMenuItem> list = new ArrayList<JMenuItem>();
 
         if (server.hasAccountTypeRestriction()) {
-            Set<Account.AccountType> accountTypes = new LinkedHashSet<>(server.getAccountTypes());
+            Set<Account.AccountType> accountTypes = new LinkedHashSet<Account.AccountType>(server.getAccountTypes());
 
             boolean supportsFree = accountTypes.remove(Account.AccountType.PLAIN);
             String path = L10N_PREFIX + "account." + (supportsFree ? "supported" : "required");
@@ -63,9 +65,12 @@ public class ServerNoticeAction extends NoticeAction {
         list.add(selectItem);
 
         LocalizableMenuItem currentItem = new LocalizableMenuItem(L10N_PREFIX + "choose-version.current");
-        currentItem.addActionListener(e -> {
-            VersionSyncInfo vs = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.versions.getVersion();
-            startVersion(vs);
+        currentItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                VersionSyncInfo vs = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.versions.getVersion();
+                startVersion(vs);
+            }
         });
         list.add(currentItem);
 
@@ -78,7 +83,12 @@ public class ServerNoticeAction extends NoticeAction {
                 if (syncInfo.isInstalled() && syncInfo.isUpToDate()) {
                     installedVersion.setup(item);
                 }
-                item.addActionListener(e -> startVersion(syncInfo));
+                item.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        startVersion(syncInfo);
+                    }
+                });
                 list.add(item);
             }
         }
@@ -92,11 +102,20 @@ public class ServerNoticeAction extends NoticeAction {
         }
 
         LoginForm lf = TLauncher.getInstance().getFrame().mp.defaultScene.loginForm;
-        Account<? extends User> account = lf.accounts.getAccount();
 
-        if (server.hasAccountTypeRestriction() && account != null && !server.getAccountTypes().contains(account.getType())) {
+        prepareStart:
+        if (server.hasAccountTypeRestriction()) {
+            Account account = lf.accounts.getAccount();
+            if (account == null) {
+                break prepareStart; // show error message
+            }
+
+            if (server.getAccountTypes().contains(account.getType())) {
+                break prepareStart; // ok
+            }
+
             Set<Account.AccountType> allowedTypes = server.getAccountTypes();
-            Collection<Account<? extends User>> accounts = TLauncher.getInstance().getProfileManager().getAuthDatabase().getAccounts();
+            Collection<Account> accounts = TLauncher.getInstance().getProfileManager().getAuthDatabase().getAccounts();
             String body;
             boolean haveOne;
 
@@ -134,14 +153,14 @@ public class ServerNoticeAction extends NoticeAction {
     }
 
     static List<VersionSyncInfo> getFamilyMembers(List<String> familyList, List<VersionSyncInfo> syncInfoList) {
-        List<VersionSyncInfo> fullVersionList = new ArrayList<>();
+        List<VersionSyncInfo> fullVersionList = new ArrayList<VersionSyncInfo>();
 
-        for (String family : familyList) {
-            List<VersionSyncInfo> curVersionList = new ArrayList<>();
+        for(String family : familyList) {
+            List<VersionSyncInfo> curVersionList = new ArrayList<VersionSyncInfo>();
             for (VersionSyncInfo syncInfo : syncInfoList) {
                 String currentFamily;
 
-                if (syncInfo.getAvailableVersion().getReleaseType() == ReleaseType.SNAPSHOT) {
+                if(syncInfo.getAvailableVersion().getReleaseType() == ReleaseType.SNAPSHOT) {
                     continue;
                 }
                 if (family.equals(syncInfo.getID())) {
@@ -163,16 +182,18 @@ public class ServerNoticeAction extends NoticeAction {
     }
 
     static List<VersionSyncInfo> filterLatestVersions(List<VersionSyncInfo> syncInfoList) {
-        syncInfoList.sort((a, b) -> {
-            Date aDate = a.getLatestVersion().getReleaseTime();
-            Date bDate = b.getLatestVersion().getReleaseTime();
-            return aDate != null && bDate != null ? bDate.compareTo(aDate) : 1;
+        Collections.sort(syncInfoList, new Comparator<VersionSyncInfo>() {
+            public int compare(VersionSyncInfo a, VersionSyncInfo b) {
+                Date aDate = a.getLatestVersion().getReleaseTime();
+                Date bDate = b.getLatestVersion().getReleaseTime();
+                return aDate != null && bDate != null ? bDate.compareTo(aDate) : 1;
+            }
         });
         return syncInfoList.size() > MAX_FAMILY_MEMBERS ? syncInfoList.subList(0, MAX_FAMILY_MEMBERS) : syncInfoList;
     }
 
-    private static boolean haveAccountWithType(Collection<Account<? extends User>> accounts, Account.AccountType type) {
-        for (Account<? extends User> acc : accounts) {
+    private static boolean haveAccountWithType(Collection<Account> accounts, Account.AccountType type) {
+        for (Account acc : accounts) {
             if (acc.getType() == type) {
                 return true;
             }

@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public class LocaleConverter implements StringConverter<Locale> {
     public String toString(Locale from, Locale format) {
-        if (from == null) {
+        if(from == null) {
             return null;
         }
         String displayLang;

@@ -13,41 +13,64 @@ import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class SettingsButton extends LocalizableButton implements Blockable, NoticeManagerListener {
     private final LoginForm lf;
     private final JPopupMenu popup;
     private final LocalizableMenuItem accountManager;
     private final LocalizableMenuItem versionManager;
+    private final LocalizableMenuItem settings;
     private final LocalizableMenuItem notices;
+    private final LocalizableMenuItem migrationStatus;
 
     SettingsButton(LoginForm loginform) {
         lf = loginform;
         setToolTipText("loginform.button.settings");
         setIcon(Images.getIcon24("bars"));
         popup = new JPopupMenu();
-        LocalizableMenuItem settings = new LocalizableMenuItem("loginform.button.settings.launcher");
-        settings.addActionListener(e -> lf.scene.setSidePanel(DefaultScene.SidePanel.SETTINGS));
+        settings = new LocalizableMenuItem("loginform.button.settings.launcher");
+        settings.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                lf.scene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
+            }
+        });
         popup.add(settings);
         versionManager = new LocalizableMenuItem("loginform.button.settings.version");
-        versionManager.addActionListener(e -> lf.pane.openVersionManager());
+        versionManager.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                lf.pane.openVersionManager();
+            }
+        });
         popup.add(versionManager);
         accountManager = new LocalizableMenuItem("loginform.button.settings.account");
-        accountManager.addActionListener(e -> lf.pane.openAccountEditor());
+        accountManager.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                lf.pane.openAccountEditor();
+            }
+        });
         popup.add(accountManager);
-        notices = LocalizableMenuItem.newItem("loginform.button.settings.notices", e -> {
-            //lf.scene.getMainPane().openNoticeScene();
-            lf.scene.setNoticeSidePanelEnabled(true);
-            lf.scene.setSidePanel(DefaultScene.SidePanel.NOTICES);
+        notices = LocalizableMenuItem.newItem("loginform.button.settings.notices", new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //lf.scene.getMainPane().openNoticeScene();
+                lf.scene.setNoticeSidePanelEnabled(true);
+                lf.scene.setSidePanel(DefaultScene.SidePanel.NOTICES);
+            }
         });
         updateNoticeEntry();
-        LocalizableMenuItem migrationStatus = LocalizableMenuItem.newItem("mojang-migration.button", "migration-icon", e ->
+        migrationStatus = LocalizableMenuItem.newItem("mojang-migration.button", "migration-icon", e ->
                 lf.scene.getMainPane().getRootFrame().getLauncher().getMigrationManager().showMigrationFrame()
         );
         popup.addSeparator();
         popup.add(migrationStatus);
         setPreferredSize(new Dimension(30, getHeight()));
-        addActionListener(e -> callPopup());
+        addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                callPopup();
+            }
+        });
         lf.scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
     }
 
@@ -92,7 +115,7 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
     }
 
     private void updateNoticeEntry() {
-        if (lf.scene.getMainPane().getRootFrame().getNotices().getForCurrentLocale() == null) {
+        if(lf.scene.getMainPane().getRootFrame().getNotices().getForCurrentLocale() == null) {
             popup.remove(notices);
         } else {
             popup.add(notices);

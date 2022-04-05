@@ -32,14 +32,13 @@ public class Library {
     protected String type;
 
     static {
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> map = new HashMap<String, String>();
         map.put("platform", OS.CURRENT.getName());
         map.put("arch", OS.Arch.CURRENT.getBit());
         SUBSTITUTOR = new StrSubstitutor(map);
     }
 
-    public Library() {
-    }
+    public Library() {}
 
     public Library(String name, String url, String checksum) {
         this.name = name;
@@ -80,7 +79,7 @@ public class Library {
 
     public String getPlainName() {
         String[] split = name.split(":", 3);
-        if (split.length < 3) {
+        if(split.length < 3) {
             throw new IllegalArgumentException("bad library: " + name);
         }
         return split[0] + "." + split[1];
@@ -135,7 +134,7 @@ public class Library {
             throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
         } else {
             String[] parts = name.split(":", 4);
-            if (parts.length < 3) {
+            if(parts.length < 3) {
                 throw new IllegalArgumentException("bad library name: " + name);
             }
             return String.format(java.util.Locale.ROOT, "%s/%s/%s", parts[0].replaceAll("\\.", "/"), parts[1], parts[2]);
@@ -179,7 +178,7 @@ public class Library {
     }
 
     public String toString() {
-        return "Library{name=\"" + name + "\", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", mod=" + mod + ", downloadOnly=\"+" + downloadOnly + "\"}";
+        return "Library{name=\"" + name + "\", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", mod="+ mod +", downloadOnly=\"+" + downloadOnly + "\"}";
     }
 
     public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {
@@ -200,7 +199,7 @@ public class Library {
             if (url == null) {
                 repo = Repository.LIBRARY_REPO;
             } else if (url.startsWith("/")) {
-                repo = versionSource == null ? Repository.EXTRA_VERSION_REPO : versionSource;
+                repo = versionSource == null? Repository.EXTRA_VERSION_REPO : versionSource;
                 path = url.substring(1) + path;
             } else {
                 repo = Repository.PROXIFIED_REPO;
@@ -211,7 +210,7 @@ public class Library {
             path = exact_url;
         }
 
-        return new LibraryDownloadable(repo, path, file);
+        return repo == null ? new Library.LibraryDownloadable(path, file) : new Library.LibraryDownloadable(repo, path, file);
     }
 
     public class LibraryDownloadable extends Sha1Downloadable {
@@ -226,7 +225,7 @@ public class Library {
         }
 
         public LibraryDownloadable(DownloadInfo info, File file) {
-            super(info.getUrl().startsWith("/") ? Repository.EXTRA_VERSION_REPO : Repository.PROXIFIED_REPO, info.getUrl(), file);
+            super(info.getUrl().startsWith("/")? Repository.EXTRA_VERSION_REPO : Repository.PROXIFIED_REPO, info.getUrl(), file);
             this.sha1 = info.getSha1();
             this.length = info.getSize();
         }

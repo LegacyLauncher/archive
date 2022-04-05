@@ -3,10 +3,7 @@ package ru.turikhay.tlauncher.bootstrap.ui;
 import ru.turikhay.tlauncher.bootstrap.pasta.Pasta;
 import ru.turikhay.tlauncher.bootstrap.pasta.PastaException;
 import ru.turikhay.tlauncher.bootstrap.pasta.PastaLink;
-import ru.turikhay.tlauncher.bootstrap.ui.message.Button;
-import ru.turikhay.tlauncher.bootstrap.ui.message.MessageHost;
-import ru.turikhay.tlauncher.bootstrap.ui.message.ProcessMessage;
-import ru.turikhay.tlauncher.bootstrap.ui.message.SingleButtonMessage;
+import ru.turikhay.tlauncher.bootstrap.ui.message.*;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
 
@@ -27,12 +24,15 @@ class PastaAction implements Runnable {
     public void run() {
         host.showMessage(new ProcessMessage(
                 b.getString("pasta.sending"),
-                () -> {
-                    try {
-                        sendPasta();
-                    } catch (PastaException e) {
-                        U.log("[Pasta]", e);
-                        sendPastaFailed();
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            sendPasta();
+                        } catch(PastaException e) {
+                            U.log("[Pasta]", e);
+                            sendPastaFailed();
+                        }
                     }
                 }
         ));
@@ -50,7 +50,12 @@ class PastaAction implements Runnable {
     private void sendPastaFailed() {
         host.showMessage(new SingleButtonMessage(
                 b.getString("pasta.fail.text"),
-                new Button(b.getString("pasta.fail.button"), this::saveLogs)
+                new Button(b.getString("pasta.fail.button"), new Runnable() {
+                    @Override
+                    public void run() {
+                        saveLogs();
+                    }
+                })
         ));
     }
 
@@ -59,6 +64,6 @@ class PastaAction implements Runnable {
     }
 
     private static String getLogsContent() {
-        return OutputRedirectBuffer.getBuffer();
+        return OutputRedirectBuffer.getBuffer().toString();
     }
 }

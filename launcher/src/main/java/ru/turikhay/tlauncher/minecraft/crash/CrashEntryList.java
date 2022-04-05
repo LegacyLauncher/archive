@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.git.ITokenResolver;
 import ru.turikhay.util.git.MapTokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
 public final class CrashEntryList {
     private static final Logger LOGGER = LogManager.getLogger(CrashEntryList.class);
 
-    private final List<CrashEntry> signatures = new ArrayList<>(), _signatures = Collections.unmodifiableList(signatures);
+    private final List<CrashEntry> signatures = new ArrayList<CrashEntry>(), _signatures = Collections.unmodifiableList(signatures);
     private int revision;
     private Version required;
 
@@ -59,16 +60,16 @@ public final class CrashEntryList {
         private final CrashManager manager;
 
         ListDeserializer(CrashManager manager) {
-            this.manager = Objects.requireNonNull(manager);
+            this.manager = U.requireNotNull(manager);
 
-            vars = new LinkedHashMap<>();
+            vars = new LinkedHashMap<String, String>();
             vars.put("os", OS.CURRENT.toString());
             vars.put("arch", OS.Arch.CURRENT.toString());
-            vars.put("locale", TLauncher.getInstance() == null ? Locale.getDefault().toString() : TLauncher.getInstance().getSettings().getLocale().toString());
+            vars.put("locale", TLauncher.getInstance() == null? Locale.getDefault().toString() : TLauncher.getInstance().getSettings().getLocale().toString());
 
             varsResolver = new MapTokenResolver(vars);
 
-            buttonMap = new HashMap<>();
+            buttonMap = new HashMap<String, Button>();
             buttonDeserializer = new Button.Deserializer(manager, varsResolver);
         }
 
@@ -97,7 +98,7 @@ public final class CrashEntryList {
             entryList.required = required;
             entryList.revision = root.get("revision").getAsInt();
 
-            HashMap<String, String> loadedVars = new HashMap<>();
+            HashMap<String, String> loadedVars = new HashMap<String, String>();
             for (Map.Entry<String, JsonElement> entry : root.get("variables").getAsJsonObject().entrySet()) {
                 String value;
                 loadedVars.put(entry.getKey(), value = getLoc(entry.getValue(), context, varsResolver));
@@ -107,14 +108,14 @@ public final class CrashEntryList {
 
             List<String> skipFolders = new ArrayList<>();
 
-            if (root.has("skip-folders")) {
+            if(root.has("skip-folders")) {
                 JsonArray skippingFolders = root.get("skip-folders").getAsJsonArray();
 
-                skippingFolders.forEach(elem ->
+                skippingFolders.forEach( elem ->
                         skipFolders.add(elem.getAsString())
                 );
 
-            } else if (vars.containsKey("skip-folders")) {
+            } else if(vars.containsKey("skip-folders")) {
                 Collections.addAll(skipFolders, StringUtils.split(vars.get("skip-folders"), ';'));
             }
 
@@ -137,12 +138,15 @@ public final class CrashEntryList {
 
             LOGGER.trace("{} crash entries were parsed", entryList.signatures.size());
 
-            entryList.signatures.sort((entry1, entry2) -> {
-                boolean r1 = entry1.requiresDxDiag(), r2 = entry2.requiresDxDiag();
-                if (r1 == r2) {
-                    return 0;
+            Collections.sort(entryList.signatures, new Comparator<CrashEntry>() {
+                @Override
+                public int compare(CrashEntry entry1, CrashEntry entry2) {
+                    boolean r1 = entry1.requiresDxDiag(), r2 = entry2.requiresDxDiag();
+                    if(r1 == r2) {
+                        return 0;
+                    }
+                    return r1? 1 : -1;
                 }
-                return r1 ? 1 : -1;
             });
 
             return entryList;
@@ -215,7 +219,7 @@ public final class CrashEntryList {
                 }
 
                 if (object.has("os")) {
-                    entry.setOS(context.deserialize(object.get("os"), new TypeToken<OS[]>() {
+                    entry.setOS((OS[]) context.deserialize(object.get("os"), new TypeToken<OS[]>() {
                     }.getType()));
                 }
 
@@ -239,7 +243,7 @@ public final class CrashEntryList {
             }
         }
 
-        static class IncompatibleEntryList extends JsonParseException {
+        class IncompatibleEntryList extends JsonParseException {
             IncompatibleEntryList(Version required) {
                 super("required: " + required);
             }
@@ -261,7 +265,7 @@ public final class CrashEntryList {
 
         Map<String, String> map = context.deserialize(obj, type);
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            Objects.requireNonNull(entry.getKey());
+            U.requireNotNull(entry.getKey());
             StringUtil.requireNotBlank(entry.getValue());
         }
 

@@ -2,9 +2,9 @@ package ru.turikhay.tlauncher.user;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 
 import java.util.Date;
-import java.util.Objects;
 import java.util.UUID;
 
 public class ElyUser extends User {
@@ -22,12 +22,12 @@ public class ElyUser extends User {
     private Long expiryTime;
 
     ElyUser(int id, String username, String displayName, UUID uuid, Date registeredAt, String accessToken, String refreshToken, Long expiryTime) {
-        if (id < 0) {
+        if(id < 0) {
             throw new IllegalArgumentException("id");
         }
 
         this.id = id;
-        this.registeredAt = Objects.requireNonNull(registeredAt, "registeredAt");
+        this.registeredAt = U.requireNotNull(registeredAt, "registeredAt");
 
         setUsername(username);
         setDisplayName(displayName);
@@ -62,7 +62,7 @@ public class ElyUser extends User {
     }
 
     void setUUID(UUID uuid) {
-        this.uuid = Objects.requireNonNull(uuid, "uuid");
+        this.uuid = U.requireNotNull(uuid, "uuid");
     }
 
     Date getRegisteredAt() {
@@ -82,7 +82,7 @@ public class ElyUser extends User {
     }
 
     void setToken(String accessToken, String refreshToken, Long expiryTime) {
-        if (expiryTime != null && expiryTime < 1) {
+        if(expiryTime != null && expiryTime < 1) {
             throw new IllegalArgumentException("expiryTime");
         }
 
@@ -92,9 +92,9 @@ public class ElyUser extends User {
     }
 
     void copyFrom(ElyUser user) {
-        Objects.requireNonNull(user, "user");
+        U.requireNotNull(user, "user");
 
-        if (!this.equals(user)) {
+        if(!this.equals(user)) {
             throw new IllegalArgumentException("different users cannot be merged");
         }
 
@@ -111,7 +111,7 @@ public class ElyUser extends User {
 
     @Override
     protected boolean equals(User user) {
-        return user != null && ((ElyUser) user).id == id;
+        return user != null &&((ElyUser) user).id == id;
     }
 
     @Override

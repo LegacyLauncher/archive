@@ -1,6 +1,5 @@
 package pw.modder.tl.curse;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.http.client.fluent.Request;
@@ -16,13 +15,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CurseClient {
-    private static final String BASE_URL = "https://addons-ecs.forgesvc.net/api/v2";
-    private static final String GAME_ID = "432";
-    private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(AddonFile.DependencyType.class, new EnumSerializer<>(AddonFile.DependencyType.class))
-            .registerTypeAdapter(AddonFile.Status.class, new EnumSerializer<>(AddonFile.Status.class))
-            .registerTypeAdapter(AddonInfo.Status.class, new EnumSerializer<>(AddonInfo.Status.class))
-            .registerTypeAdapter(AddonFileReleaseType.class, new EnumSerializer<>(AddonFileReleaseType.class))
+    private static String BASE_URL = "https://addons-ecs.forgesvc.net/api/v2";
+    private static String GAME_ID = "432";
+    private static Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(AddonFile.DependencyType.class, new EnumSerializer<>())
+            .registerTypeAdapter(AddonFile.Status.class, new EnumSerializer<>())
+            .registerTypeAdapter(AddonInfo.Status.class, new EnumSerializer<>())
+            .registerTypeAdapter(AddonFileReleaseType.class, new EnumSerializer<>())
             .registerTypeAdapter(Instant.class, new InstantSerializer())
             .create();
 
@@ -34,15 +33,13 @@ public class CurseClient {
         );
     }
 
-    @SuppressWarnings("UnstableApiUsage")
-    public static List<AddonInfo> getAddons(int... ids) throws IOException {
+    public static List<AddonInfo> getAddons(int ...ids) throws IOException {
         return GSON.fromJson(
                 HttpClientUtils.execute(
                         Request.Get(BASE_URL + "/addon")
-                                .bodyString(Arrays.toString(ids), ContentType.APPLICATION_JSON)
+                        .bodyString(Arrays.toString(ids), ContentType.APPLICATION_JSON)
                 ).returnContent().asString(StandardCharsets.UTF_8),
-                new TypeToken<List<AddonInfo>>() {
-                }.getType()
+                List.class
         );
     }
 
@@ -54,13 +51,11 @@ public class CurseClient {
         );
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     public static List<AddonFile> getAddonFiles(int addonId) throws IOException {
         return GSON.fromJson(
                 HttpClientUtils.execute(Request.Get(BASE_URL + "/addon/" + addonId + "/files"))
                         .returnContent().asString(StandardCharsets.UTF_8),
-                new TypeToken<List<AddonFile>>() {
-                }.getType()
+                List.class
         );
     }
 

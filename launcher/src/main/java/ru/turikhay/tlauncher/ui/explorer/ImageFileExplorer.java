@@ -6,7 +6,7 @@ public class ImageFileExplorer extends FilteredFileExplorer {
     static final String[] IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"};
 
     ImageFileExplorer() {
-        addExtesion(IMAGE_EXTENSIONS);
+        addExtesion((String[]) IMAGE_EXTENSIONS);
         setAccessory(new ImageFilePreview(this));
         setAcceptAllFileFilterUsed(false);
     }
@@ -17,10 +17,6 @@ public class ImageFileExplorer extends FilteredFileExplorer {
     }
 
     public static ImageFileExplorer newExplorer() throws Exception {
-        try {
-            return new ImageFileExplorer();
-        } catch (Throwable var1) {
-            throw new Exception("couldn't create explorer", var1);
-        }
+        return new ImageFileExplorer();
     }
 }

@@ -12,6 +12,7 @@ import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.configuration.SimpleConfiguration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public final class ContributorsAlert {
             Locale ruLocale = LangConfiguration.ru_RU;
             boolean isUssr = ruLocale != null && settings.isUSSRLocale();
 
-            List<String> contributorList = new ArrayList<>();
+            List<String> contributorList = new ArrayList<String>();
             int others = 0;
 
             JsonArray contribArray = (JsonArray) contributors.get(locale.toString());
@@ -109,7 +110,7 @@ public final class ContributorsAlert {
     public static void showAlert() {
         try {
             showIt();
-        } catch (Exception e) {
+        } catch(Exception e) {
             LOGGER.error("Couldn't show window", e);
         }
     }

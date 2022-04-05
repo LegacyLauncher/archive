@@ -2,8 +2,7 @@ package ru.turikhay.tlauncher.managers;
 
 import ru.turikhay.tlauncher.managed.ManagedListenerHelper;
 import ru.turikhay.tlauncher.user.*;
-
-import java.util.Objects;
+import ru.turikhay.util.U;
 
 public final class AccountManager {
     private static final MojangAuth MOJANG_AUTH = new MojangAuth();
@@ -13,7 +12,7 @@ public final class AccountManager {
     private static final McleaksAuth MCLEAKS_AUTH = new McleaksAuth();
     private static final MinecraftAuth MINECRAFT_AUTH = new MinecraftAuth();
 
-    private final ManagedListenerHelper<User> helper = new ManagedListenerHelper<>();
+    private final ManagedListenerHelper<UserSetListener> helper = new ManagedListenerHelper<>();
     private final UserSetJsonizer jsonizer = new UserSetJsonizer(helper);
 
     private UserSet userSet;
@@ -27,7 +26,7 @@ public final class AccountManager {
     }
 
     void setUserSet(UserSet userSet) {
-        this.userSet = userSet == null ? new UserSet(helper) : userSet;
+        this.userSet = userSet == null? new UserSet(helper) : userSet;
     }
 
     public UserSetJsonizer getTypeAdapter() {
@@ -62,8 +61,8 @@ public final class AccountManager {
         return MINECRAFT_AUTH;
     }
 
-    public static Auth<?> getAuthFor(User user) {
-        Objects.requireNonNull(user, "user");
+    public static Auth getAuthFor(User user) {
+        U.requireNotNull(user, "user");
         switch (user.getType()) {
             case MojangUser.TYPE:
                 return MOJANG_AUTH;

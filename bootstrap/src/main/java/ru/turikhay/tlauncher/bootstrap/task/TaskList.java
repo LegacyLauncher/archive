@@ -1,10 +1,10 @@
 package ru.turikhay.tlauncher.bootstrap.task;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -12,11 +12,11 @@ public final class TaskList extends Task<Void> {
     private final ExecutorService service;
     private final boolean shutdownAfter;
 
-    private final Map<Task<?>, Future<?>> taskMap = new HashMap<>();
+    private final Map<Task, Future> taskMap = new Hashtable<Task, Future>();
 
     public TaskList(String name, ExecutorService service, boolean shutdownAfter) {
         super(name);
-        this.service = Objects.requireNonNull(service, "service");
+        this.service = U.requireNotNull(service, "service");
         this.shutdownAfter = shutdownAfter;
     }
 
@@ -37,7 +37,7 @@ public final class TaskList extends Task<Void> {
         return future;
     }
 
-    public Set<Task<?>> getTaskSet() {
+    public Set<Task> getTaskSet() {
         return taskMap.keySet();
     }
 
@@ -56,18 +56,18 @@ public final class TaskList extends Task<Void> {
                 }
 
                 double progress = 0.0, currentProgress;
-                for (Map.Entry<Task<?>, Future<?>> entry : taskMap.entrySet()) {
+                for (Map.Entry<Task, Future> entry : taskMap.entrySet()) {
                     if (allDone &= entry.getValue().isDone()) {
                         try {
                             entry.getValue().get(); // check if computation did not threw an exception
-                        } catch (CancellationException cancelled) {
+                        } catch(CancellationException cancelled) {
                             // ignore
                         } catch (Exception e) {
                             error = e;
                         }
                     }
                     currentProgress = entry.getKey().getProgress();
-                    if (currentProgress > 0.) {
+                    if(currentProgress > 0.) {
                         progress += currentProgress;
                     }
                 }
@@ -95,7 +95,7 @@ public final class TaskList extends Task<Void> {
     }
 
     private void cancellAll() {
-        for (Task<?> task : taskMap.keySet()) {
+        for (Task task : taskMap.keySet()) {
             task.interrupt();
         }
     }
@@ -109,10 +109,13 @@ public final class TaskList extends Task<Void> {
 
     private static ThreadFactory getThreadFactory() {
         if (threadFactory == null) {
-            threadFactory = r -> {
-                Thread t = new Thread(r);
-                t.setUncaughtExceptionHandler(ExceptionHandler.get());
-                return t;
+            threadFactory = new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r);
+                    t.setUncaughtExceptionHandler(ExceptionHandler.get());
+                    return t;
+                }
             };
         }
         return threadFactory;

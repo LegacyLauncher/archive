@@ -8,7 +8,6 @@ import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Objects;
 import java.util.UUID;
 
 public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
@@ -46,18 +45,18 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
         void validate() throws Exception;
     }
 
-    private static abstract class Response implements Validable {
+    private static abstract class Response implements Validable{
         String error;
         String errorMessage;
         String cause;
 
         @Override
         public void validate() throws Exception {
-            if ("ForbiddenOperationException".equals(error)) {
-                if ("Account protected with two factor auth.".equals(errorMessage)) {
+            if("ForbiddenOperationException".equals(error)) {
+                if("Account protected with two factor auth.".equals(errorMessage)) {
                     throw new AuthException(errorMessage, "2fa");
                 }
-                if ("This account has been suspended.".equals(errorMessage)) {
+                if("This account has been suspended.".equals(errorMessage)) {
                     throw new AuthBannedException();
                 }
                 throw new InvalidCredentialsException(errorMessage);
@@ -65,7 +64,7 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
             if ("ServiceTemporarilyUnavailableException".equals(error)) {
                 throw new AuthUnavailableException(errorMessage);
             }
-            if (StringUtils.isNotBlank(error) || StringUtils.isNotBlank(errorMessage)) {
+            if(StringUtils.isNotBlank(error) || StringUtils.isNotBlank(errorMessage)) {
                 throw new AuthDetailedException(errorMessage);
             }
         }
@@ -73,18 +72,16 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
 
     private static abstract class Request<T extends Response> {
         abstract String url();
-
         abstract Class<T> responseClass();
-
         T makeRequest() throws AuthException, IOException {
-            URL url = new URL(Objects.requireNonNull(url(), "url"));
+            URL url = new URL(U.requireNotNull(url(), "url"));
             String input = U.getGson().toJson(this);
             String jsonResult = Http.performPostRequest(url, input, "application/json");
             T result;
             try {
                 result = U.getGson().fromJson(jsonResult, responseClass());
-                Objects.requireNonNull(result).validate();
-            } catch (AuthException | IOException auth) {
+                U.requireNotNull(result).validate();
+            } catch(AuthException | IOException auth) {
                 throw auth;
             } catch (Exception var7) {
                 throw new AuthUnknownException(var7);
@@ -102,7 +99,7 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
         String id, name;
 
         @Override
-        public void validate() {
+        public void validate() throws Exception {
             StringUtil.requireNotBlank(id, "id");
             StringUtil.requireNotBlank(name, "name");
         }
@@ -141,7 +138,7 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
             super.validate();
             StringUtil.requireNotBlank(accessToken, "accessToken");
             StringUtil.requireNotBlank(clientToken, "clientToken");
-            Objects.requireNonNull(selectedProfile, "selectedProfile").validate();
+            U.requireNotNull(selectedProfile, "selectedProfile").validate();
         }
     }
 
@@ -176,7 +173,7 @@ public final class ElyLegacyAuth implements StandardAuth<ElyLegacyUser> {
             super.validate();
             StringUtil.requireNotBlank(accessToken, "accessToken");
             StringUtil.requireNotBlank(clientToken, "clientToken");
-            Objects.requireNonNull(selectedProfile, "selectedProfile").validate();
+            U.requireNotNull(selectedProfile, "selectedProfile").validate();
         }
     }
 }

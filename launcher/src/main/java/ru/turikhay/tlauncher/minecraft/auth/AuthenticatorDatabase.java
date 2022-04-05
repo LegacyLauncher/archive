@@ -2,6 +2,8 @@ package ru.turikhay.tlauncher.minecraft.auth;
 
 import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.user.User;
+import ru.turikhay.tlauncher.user.UserSet;
+import ru.turikhay.tlauncher.user.UserSetListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,24 +11,27 @@ import java.util.Collections;
 import java.util.List;
 
 public class AuthenticatorDatabase {
-    private final List<Account<? extends User>> accounts = new ArrayList<>(), accounts_ = Collections.unmodifiableList(accounts);
+    private final List<Account> accounts = new ArrayList<>(), accounts_ = Collections.unmodifiableList(accounts);
 
     public AuthenticatorDatabase(AccountManager manager) {
-        manager.addListener(set -> {
-            accounts.clear();
-            for (User user : set.getSet()) {
-                accounts.add(new Account<>(user));
+        manager.addListener(new UserSetListener() {
+            @Override
+            public void userSetChanged(UserSet set) {
+                accounts.clear();
+                for(User user : set.getSet()) {
+                    accounts.add(new Account(user));
+                }
             }
         });
     }
 
-    public Collection<Account<? extends User>> getAccounts() {
+    public Collection<Account> getAccounts() {
         return accounts_;
     }
 
-    public Account<? extends User> getByUsername(String username, Account.AccountType type) {
-        for (Account<? extends User> account : accounts) {
-            if (account.getUsername().equals(username) && account.getType().equals(type)) {
+    public Account getByUsername(String username, Account.AccountType type) {
+        for(Account account : accounts) {
+            if(account.getUsername().equals(username) && account.getType().equals(type)) {
                 return account;
             }
         }

@@ -5,6 +5,8 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
+import ru.turikhay.tlauncher.ui.settings.SettingsPanel;
+import ru.turikhay.tlauncher.ui.swing.DelayedComponent;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedTextArea;
@@ -48,7 +50,7 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
     }
 
     LoggerFrame(Configuration config) {
-        this(config, 1024 * 1024);
+        this(config,1024 * 1024);
     }
 
     public void append(String text) {
@@ -99,8 +101,8 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
     }
 
     private void saveStateInfoConfiguration() {
-        if (!isDisplayable() || !isVisible()) {
-            return;
+        if(!isDisplayable() || !isVisible()) {
+           return;
         }
         String prefix = "gui.logger.";
         Dimension size = getSize();
@@ -127,7 +129,7 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
         final Document document = textArea.getDocument();
         document.insertString(document.getLength(), text, null);
         int length = document.getLength();
-        if (length >= capacity) {
+        if(length >= capacity) {
             document.remove(0, capacity / 2);
             return true;
         }
@@ -169,7 +171,6 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
 
     private boolean shouldScrollDown = true;
     private int lastWindowWidth, scrollBarValue;
-
     private void initVerticalScrollbar() {
         addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -192,15 +193,14 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
     }
 
     private ExtendedComponentAdapter listenerThread;
-
     private void initFrame() {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                if (config.getLoggerType() == Configuration.LoggerType.GLOBAL) {
+                if(config.getLoggerType() == Configuration.LoggerType.GLOBAL) {
                     config.setLoggerType(Configuration.LoggerType.NONE);
-                    if (TLauncher.getInstance().isReady() &&
+                    if(TLauncher.getInstance().isReady() &&
                             TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
                         TLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
                     }
@@ -211,7 +211,6 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
             public void onComponentResized(ComponentEvent e) {
                 delayedSave();
             }
-
             public void onComponentMoved(ComponentEvent e) {
                 delayedSave();
             }

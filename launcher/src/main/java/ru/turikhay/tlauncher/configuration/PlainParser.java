@@ -1,10 +1,10 @@
 package ru.turikhay.tlauncher.configuration;
 
-import ru.turikhay.tlauncher.exceptions.ParseException;
+import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 
-import java.util.Objects;
 import java.util.UUID;
 
 class PlainParser {
@@ -39,7 +39,7 @@ class PlainParser {
                             throw new ParseException("Cannot parse SeparateDirs");
                         }
                     } else if (defaultValue instanceof UUID) {
-                        Objects.requireNonNull(UUID.fromString(value), "uuid");
+                        U.requireNotNull(UUID.fromString(value), "uuid");
                     }
 
                 } catch (Exception var4) {

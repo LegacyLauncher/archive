@@ -31,14 +31,17 @@ public class TextPopup extends MouseAdapter {
         } else {
             boolean isEditable = comp.isEditable();
             boolean isSelected = comp.getSelectedText() != null;
-            boolean hasValue = comp instanceof ExtendedTextField ? ((ExtendedTextField) comp).getValue() != null : StringUtils.isNotEmpty(comp.getText());
+            boolean hasValue = comp instanceof ExtendedTextField? ((ExtendedTextField) comp).getValue() != null : StringUtils.isNotEmpty(comp.getText());
             boolean pasteAvailable = isEditable && Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null).isDataFlavorSupported(DataFlavor.stringFlavor);
             JPopupMenu menu = new JPopupMenu();
             Action cut = isEditable && hasValue ? selectAction(comp, "cut-to-clipboard", "cut") : null;
-            final Action copy = selectAction(comp, "copy-to-clipboard", "copy");
-            Action paste = pasteAvailable ? selectAction(comp, "paste-from-clipboard", "paste", e1 -> {
-                if (comp instanceof ExtendedTextField) {
-                    ((ExtendedTextField) comp).onFocusGained();
+            final Action copy =  selectAction(comp, "copy-to-clipboard", "copy");
+            Action paste = pasteAvailable ? selectAction(comp, "paste-from-clipboard", "paste", new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if(comp instanceof ExtendedTextField) {
+                        ((ExtendedTextField) comp).onFocusGained();
+                    }
                 }
             }) : null;
             final Action selectAll = hasValue ? selectAction(comp, "select-all", "selectAll") : null;
@@ -100,7 +103,7 @@ public class TextPopup extends MouseAdapter {
         if (action == null) {
             action = comp.getActionMap().get(fallback);
         }
-        if (action != null && listener != null) {
+        if(action != null && listener != null) {
             final Action a = action;
             return new Action() {
                 @Override

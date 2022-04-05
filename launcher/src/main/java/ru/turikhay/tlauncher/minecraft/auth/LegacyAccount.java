@@ -21,7 +21,7 @@ public class LegacyAccount {
                 .append("username", username)
                 .append("userID", userID)
                 .append("displayName", displayName)
-                .append("accessToken", accessToken != null ? accessToken.length() : 0)
+                .append("accessToken", accessToken != null? accessToken.length() : 0)
                 .append("clientToken", clientToken)
                 .append("uuid", uuid)
                 .append("userProperties", userProperties)

@@ -6,7 +6,7 @@ public class CodeRequestErrorException extends MicrosoftOAuthCodeRequestExceptio
     }
 
     private static String format(String error, String errorDescription) {
-        if (errorDescription != null) {
+        if(errorDescription != null) {
             return error + ": " + errorDescription;
         }
         return error;

@@ -40,6 +40,6 @@ public class LocalizableCheckbox extends ExtendedCheckbox implements Localizable
     }
 
     public void updateLocale() {
-        setText(path, (Object[]) variables);
+        setText(path, variables);
     }
 }

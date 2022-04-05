@@ -16,8 +16,8 @@ public class LibraryReplace extends Library {
     private Pattern replaces;
     private String args;
     private String mainClass;
-    private final List<Library> requires = new ArrayList<>();
-    private final List<String> supports = new ArrayList<>();
+    private List<Library> requires = new ArrayList<>();
+    private List<String> supports = new ArrayList<>();
 
     public LibraryReplace() {
         url = "/libraries/";
@@ -49,7 +49,7 @@ public class LibraryReplace extends Library {
     }
 
     public boolean supports(String version) {
-        return supports.contains(version);
+        return supports != null && supports.contains(version);
     }
 
     public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {

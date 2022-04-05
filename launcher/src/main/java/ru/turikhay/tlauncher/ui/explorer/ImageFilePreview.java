@@ -6,37 +6,41 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 
 public class ImageFilePreview extends JComponent {
     private static final long serialVersionUID = -1465489971097254329L;
     private static final Cursor DEFAULT = Cursor.getDefaultCursor();
-    private static final Cursor HAND = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+    private static final Cursor HAND = Cursor.getPredefinedCursor(12);
     ImageIcon thumbnail = null;
     File file = null;
 
     public ImageFilePreview(JFileChooser fc) {
         setCursor(DEFAULT);
         setPreferredSize(new Dimension(200, 100));
-        fc.addPropertyChangeListener(e -> {
-            boolean update = false;
-            String prop = e.getPropertyName();
-            if ("directoryChanged".equals(prop)) {
-                file = null;
-                update = true;
-            } else if ("SelectedFileChangedProperty".equals(prop)) {
-                file = (File) e.getNewValue();
-                update = true;
-            }
-
-            if (update) {
-                thumbnail = null;
-                if (isShowing()) {
-                    loadImage();
-                    repaint();
+        fc.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent e) {
+                boolean update = false;
+                String prop = e.getPropertyName();
+                if ("directoryChanged".equals(prop)) {
+                    file = null;
+                    update = true;
+                } else if ("SelectedFileChangedProperty".equals(prop)) {
+                    file = (File) e.getNewValue();
+                    update = true;
                 }
-            }
 
+                if (update) {
+                    thumbnail = null;
+                    if (isShowing()) {
+                        loadImage();
+                        repaint();
+                    }
+                }
+
+            }
         });
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {

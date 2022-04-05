@@ -24,7 +24,7 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
     public void setWestString(String path, boolean update, Object... vars) {
         westPath = path;
         westVars = Localizable.checkVariables(vars);
-        super.setWestString(Localizable.get(westPath, (Object[]) westVars), update);
+        super.setWestString(Localizable.get(westPath, westVars), update);
     }
 
     public void setWestString(String path, boolean update) {
@@ -38,7 +38,7 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
     public void setCenterString(String path, boolean update, Object... vars) {
         centerPath = path;
         centerVars = Localizable.checkVariables(vars);
-        super.setCenterString(Localizable.get(centerPath, (Object[]) centerVars), update);
+        super.setCenterString(Localizable.get(centerPath, centerVars), update);
     }
 
     public void setCenterString(String path, boolean update) {
@@ -52,7 +52,7 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
     public void setEastString(String path, boolean update, Object... vars) {
         eastPath = path;
         eastVars = Localizable.checkVariables(vars);
-        super.setEastString(Localizable.get(eastPath, (Object[]) eastVars), update);
+        super.setEastString(Localizable.get(eastPath, eastVars), update);
     }
 
     public void setEastString(String path, boolean update) {
@@ -65,15 +65,15 @@ public class LocalizableProgressBar extends ProgressBar implements LocalizableCo
 
     public void setStrings(String west, String center, String east, boolean acceptNull, boolean repaint, boolean saveVars) {
         if (acceptNull || west != null) {
-            setWestString(west, false, saveVars ? westVars : Localizable.EMPTY_VARS);
+            setWestString(west, false, (Object[]) (saveVars ? westVars : Localizable.EMPTY_VARS));
         }
 
         if (acceptNull || center != null) {
-            setCenterString(center, false, saveVars ? centerVars : Localizable.EMPTY_VARS);
+            setCenterString(center, false, (Object[]) (saveVars ? centerVars : Localizable.EMPTY_VARS));
         }
 
         if (acceptNull || east != null) {
-            setEastString(east, false, saveVars ? eastVars : Localizable.EMPTY_VARS);
+            setEastString(east, false, (Object[]) (saveVars ? eastVars : Localizable.EMPTY_VARS));
         }
 
         repaint();

@@ -43,17 +43,13 @@ class LazyTest {
 
     @Test
     void getExceptionTest() {
-        Lazy<Object> lazy = Lazy.of(() -> {
-            throw new RuntimeException();
-        });
+        Lazy<Object> lazy = Lazy.of(() -> { throw new RuntimeException(); });
         assertThrows(LazyInitException.class, lazy::get);
     }
 
     @Test
     void valueExceptionTest() {
-        Lazy<Object> lazy = Lazy.of(() -> {
-            throw new RuntimeException();
-        });
+        Lazy<Object> lazy = Lazy.of(() -> { throw new RuntimeException(); });
         Optional<Object> value = lazy.value();
         assertFalse(value.isPresent());
     }

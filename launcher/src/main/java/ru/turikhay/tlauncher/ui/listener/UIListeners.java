@@ -13,7 +13,7 @@ import java.util.List;
 
 public final class UIListeners implements LocalizableComponent {
     private final MinecraftUIListener minecraftUIListener;
-    private final List<MinecraftListener> minecraftListeners = new ArrayList<>();
+    private final List<MinecraftListener> minecraftListeners = new ArrayList<MinecraftListener>();
     private final VersionManagerUIListener versionManagerUIListener;
 
     public UIListeners(TLauncher tlauncher) {
@@ -43,8 +43,8 @@ public final class UIListeners implements LocalizableComponent {
 
     @Override
     public void updateLocale() {
-        for (MinecraftListener l : minecraftListeners) {
-            if (l instanceof LocalizableComponent) {
+        for(MinecraftListener l : minecraftListeners) {
+            if(l instanceof LocalizableComponent) {
                 ((LocalizableComponent) l).updateLocale();
             }
         }

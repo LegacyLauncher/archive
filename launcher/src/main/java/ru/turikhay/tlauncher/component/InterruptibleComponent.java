@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.component;
 
 import ru.turikhay.tlauncher.managers.ComponentManager;
 
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 public abstract class InterruptibleComponent extends RefreshableComponent {
@@ -11,11 +10,11 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
     protected final Semaphore semaphore;
     protected boolean lastResult;
 
-    protected InterruptibleComponent(ComponentManager manager) {
+    protected InterruptibleComponent(ComponentManager manager) throws Exception {
         this(manager, 64);
     }
 
-    private InterruptibleComponent(ComponentManager manager, int listSize) {
+    private InterruptibleComponent(ComponentManager manager, int listSize) throws Exception {
         super(manager);
         semaphore = new Semaphore(1);
         if (listSize < 1) {
@@ -38,7 +37,8 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
         } else {
             try {
                 semaphore.acquire();
-                return lastResult;
+                boolean var3 = lastResult;
+                return var3;
             } catch (InterruptedException var11) {
                 var11.printStackTrace();
             } finally {
@@ -54,7 +54,10 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
     }
 
     public synchronized void stopRefresh() {
-        Arrays.fill(refreshList, false);
+        for (int i = 0; i < refreshList.length; ++i) {
+            refreshList[i] = false;
+        }
+
     }
 
     protected synchronized int nextID() {

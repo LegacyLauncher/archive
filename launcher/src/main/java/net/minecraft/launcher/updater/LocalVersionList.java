@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 
 public class LocalVersionList extends StreamVersionList {
@@ -65,47 +66,51 @@ public class LocalVersionList extends StreamVersionList {
 
     public synchronized void refreshVersions() throws IOException {
         clearCache();
-        if (!baseVersionsDir.isDirectory()) {
+        if(!baseVersionsDir.isDirectory()) {
             FileUtil.createFolder(baseVersionsDir);
         }
         File[] files = baseVersionsDir.listFiles();
         if (files != null) {
-            for (File directory : files) {
+            File[] var5 = files;
+            int var4 = files.length;
+
+            for (int var3 = 0; var3 < var4; ++var3) {
+                File directory = var5[var3];
                 String id = directory.getName();
                 File jsonFile = new File(directory, id + ".json");
                 if (directory.isDirectory() && jsonFile.isFile()) {
                     String input = null;
                     try {
-                        try (InputStreamReader reader = getUrl("versions/" + id + "/" + id + ".json")) {
+                        try(InputStreamReader reader = getUrl("versions/" + id + "/" + id + ".json")) {
                             input = IOUtils.toString(reader);
                         }
-                        if (input.isEmpty()) {
+                        if(input.isEmpty()) {
                             LOGGER.warn("Json of {} is empty and is going to be deleted", id);
                             deleteJsonFile(id, jsonFile);
                             continue;
                         }
-                        if (StringUtils.containsOnly(input, '\0')) {
+                        if(StringUtils.containsOnly(input, '\0')) {
                             LOGGER.warn("Json of {} is corrupted and contain only zero bytes. Will try to delete it", id);
                             deleteJsonFile(id, jsonFile);
                             continue;
                         }
                         JsonElement jsonElement = JsonParser.parseString(input);
-                        if (!jsonElement.isJsonObject()) {
+                        if(!jsonElement.isJsonObject()) {
                             LOGGER.warn("Version doesn't contain object: {}", id);
                             continue;
                         }
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
-                        if (jsonObject.has("modpack") && !jsonObject.get("modpack").isJsonPrimitive()) {
+                        if(jsonObject.has("modpack") && !jsonObject.get("modpack").isJsonPrimitive()) {
                             LOGGER.debug("Ignoring modpack version: {}", id);
                             continue;
                         }
-                        if (!jsonObject.has("id")) {
+                        if(!jsonObject.has("id")) {
                             LOGGER.warn("Ignored version without id: {} (probably not a " +
                                     "Minecraft version at all)", id);
                             continue;
                         }
                         CompleteVersion ex = gson.fromJson(jsonObject, CompleteVersion.class);
-                        if (ex == null) {
+                        if(ex == null) {
                             LOGGER.warn("Version is empty: {}", id);
                             continue;
                         }
@@ -114,7 +119,7 @@ public class LocalVersionList extends StreamVersionList {
                         ex.setVersionList(this);
                         addVersion(ex);
                     } catch (Exception e) {
-                        if (e.getCause() instanceof MalformedJsonException
+                        if(e.getCause() instanceof MalformedJsonException
                                 || e.getCause() instanceof EOFException) {
                             LOGGER.warn("Invalid json file {}", id, e);
                         } else {
@@ -127,7 +132,7 @@ public class LocalVersionList extends StreamVersionList {
                                     .withLevel(Event.Level.ERROR)
                             );
                         }
-                        if (e instanceof JsonSyntaxException) {
+                        if(e instanceof JsonSyntaxException) {
                             renameJsonFile(jsonFile);
                         }
                     }
@@ -138,7 +143,7 @@ public class LocalVersionList extends StreamVersionList {
     }
 
     private void deleteJsonFile(String id, File jsonFile) {
-        if (jsonFile.delete()) {
+        if(jsonFile.delete()) {
             LOGGER.warn("Json of {} deleted successfully", id);
         } else {
             LOGGER.error("Couldn't remove json of {}: {}", id, jsonFile.getAbsolutePath());
@@ -176,12 +181,17 @@ public class LocalVersionList extends StreamVersionList {
             } else {
                 FileUtil.deleteDirectory(dir);
                 if (deleteLibraries) {
+                    Iterator var6 = version.getClassPath(featureMatcher, baseDirectory).iterator();
 
-                    for (File nativeLib : version.getClassPath(featureMatcher, baseDirectory)) {
+                    while (var6.hasNext()) {
+                        File nativeLib = (File) var6.next();
                         FileUtil.deleteFile(nativeLib);
                     }
 
-                    for (String nativeLib1 : version.getNatives(featureMatcher)) {
+                    var6 = version.getNatives(featureMatcher).iterator();
+
+                    while (var6.hasNext()) {
+                        String nativeLib1 = (String) var6.next();
                         FileUtil.deleteFile(new File(baseDirectory, nativeLib1));
                     }
 
@@ -195,14 +205,20 @@ public class LocalVersionList extends StreamVersionList {
     }
 
     public boolean hasAllFiles(CompleteVersion version, OS os) {
-        Set<String> files = version.getRequiredFiles(os, new CurrentLaunchFeatureMatcher());
+        Set files = version.getRequiredFiles(os, new CurrentLaunchFeatureMatcher());
+        Iterator var5 = files.iterator();
 
-        for (String filename : files) {
-            File required = new File(baseDirectory, filename);
-            if (!required.isFile() || required.length() == 0L) return false;
-        }
+        File required;
+        do {
+            if (!var5.hasNext()) {
+                return true;
+            }
 
-        return true;
+            String file = (String) var5.next();
+            required = new File(baseDirectory, file);
+        } while (required.isFile() && required.length() != 0L);
+
+        return false;
     }
 
     public synchronized CompleteVersion getCompleteVersion(Version version) throws JsonSyntaxException, IOException {
@@ -212,7 +228,7 @@ public class LocalVersionList extends StreamVersionList {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
             CompleteVersion complete;
-            try (InputStreamReader reader = getUrl("versions/" + version.getID() + "/" + version.getID() + ".json")) {
+            try(InputStreamReader reader = getUrl("versions/" + version.getID() + "/" + version.getID() + ".json")) {
                 complete = gson.fromJson(reader, CompleteVersion.class);
             }
             complete.setID(version.getID());

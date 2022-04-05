@@ -21,7 +21,7 @@ public class TextMessage extends Message {
         HTMLPane htmlPane = new HTMLPane();
         htmlPane.setText(toHtml(text));
 
-        if (useBottomBorder) {
+        if(useBottomBorder) {
             htmlPane.setBorder(new EmptyBorder(0, 0, 30, 0));
         }
 

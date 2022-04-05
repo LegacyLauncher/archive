@@ -1,18 +1,14 @@
 package pw.modder.hashing;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 
 public class MurmurHash2 {
     private static final long M32 = 0x5bd1e995;
-    private static final int R32 = 24;
-    private static final int SEED = 1;
+    private static final int  R32 = 24;
+    private static final int  SEED = 1;
 
-    private MurmurHash2() {
-    }
+    private MurmurHash2() {}
 
     public static long hash32(File inputFile) throws IOException {
         return hash32(inputFile, false);
@@ -47,7 +43,7 @@ public class MurmurHash2 {
         int k;
         int[] data = new int[4];
         int read;
-        while ((read = readNextBytes(data, inputStream, normalized)) == 4) {
+        while((read = readNextBytes(data, inputStream, normalized)) == 4) {
             k = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
             k *= M32;
             k ^= k >>> R32;

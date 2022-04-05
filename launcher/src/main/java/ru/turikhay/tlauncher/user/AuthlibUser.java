@@ -2,9 +2,10 @@ package ru.turikhay.tlauncher.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.U;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public abstract class AuthlibUser extends User {
@@ -14,15 +15,15 @@ public abstract class AuthlibUser extends User {
     AuthlibUser(String clientToken, String username, com.mojang.authlib.UserAuthentication userAuthentication) {
         this.clientToken = StringUtil.requireNotBlank(clientToken, "clientToken");
         this.username = StringUtil.requireNotBlank(username, "username");
-        this.userAuthentication = Objects.requireNonNull(userAuthentication, "userAuthentication");
+        this.userAuthentication = U.requireNotNull(userAuthentication, "userAuthentication");
 
-        if (!userAuthentication.isLoggedIn()) {
+        if(!userAuthentication.isLoggedIn()) {
             throw new IllegalArgumentException("userAuthentication can't log in");
         }
 
-        Objects.requireNonNull(userAuthentication.getSelectedProfile(), "selectedProfile");
-        Objects.requireNonNull(userAuthentication.getUserProperties(), "userProperties");
-        Objects.requireNonNull(userAuthentication.getUserType(), "userType");
+        U.requireNotNull(userAuthentication.getSelectedProfile(), "selectedProfile");
+        U.requireNotNull(userAuthentication.getUserProperties(), "userProperties");
+        U.requireNotNull(userAuthentication.getUserType(), "userType");
     }
 
     AuthlibUser(AuthlibUserPayload payload) {
@@ -65,6 +66,11 @@ public abstract class AuthlibUser extends User {
         int result = username.hashCode();
         result = 31 * result + getType().hashCode();
         return result;
+    }
+
+    @Override
+    protected ToStringBuilder toStringBuilder() {
+        return super.toStringBuilder();
     }
 
     private static final Gson gson = new GsonBuilder()

@@ -26,15 +26,15 @@ public class GraphicsEntry extends PatternContainerEntry {
         intelWin10BugCardNamePattern = manager.getVar("intel-win10-bug-card-pattern") == null ? Pattern.compile("Intel HD Graphics(?: [2-3]000)?") : Pattern.compile(manager.getVar("intel-win10-bug-card-pattern"));
         intelBugMinecraft1_10Pattern = manager.getVar("intel-bug-minecraft-1.10") == null ? Pattern.compile(".*1\\.(?:1[0-9]|[2-9][0-9])(?:\\.[\\d]+|)(?:-.+|)") : Pattern.compile(manager.getVar("intel-bug-minecraft-1.10"));
 
-        addPattern("general", Pattern.compile("[\\s]*org\\.lwjgl\\.LWJGLException: Pixel format not accelerated"));
-        addPattern("general", Pattern.compile("WGL: The driver does not appear to support OpenGL"));
+        addPattern("general", Pattern.compile("[\\s]*org\\.lwjgl\\.LWJGLException\\: Pixel format not accelerated"));
+        addPattern("general", Pattern.compile("WGL\\: The driver does not appear to support OpenGL"));
 
         amd = addPattern("amd",
-                Pattern.compile(manager.getVar("amd-pattern") == null ? "^#[ ]+C[ ]+\\[atio(?:gl|[0-9a-z]{2,})xx\\.dll\\+0x[0-9a-z]+]$" : manager.getVar("amd-pattern"))
+                Pattern.compile(manager.getVar("amd-pattern") == null ? "^#[ ]+C[ ]+\\[atio(?:gl|[0-9a-z]{2,})xx\\.dll\\+0x[0-9a-z]+\\]$" : manager.getVar("amd-pattern"))
         );
 
         intel = addPattern("intel",
-                Pattern.compile(manager.getVar("intel-pattern") == null ? "^# C[ ]+\\[ig[0-9a-z]+icd(?:32|64)\\.dll\\+0x[0-9a-z]+]$" : manager.getVar("intel-pattern"))
+                Pattern.compile(manager.getVar("intel-pattern") == null ? "^# C[ ]+\\[ig[0-9a-z]+icd(?:32|64)\\.dll\\+0x[0-9a-z]+\\]$" : manager.getVar("intel-pattern"))
         );
     }
 
@@ -96,7 +96,7 @@ public class GraphicsEntry extends PatternContainerEntry {
                 LOGGER.debug("External pattern: {}", intelWin10BugJrePattern);
 
                 if (intelWin10BugJrePattern == null ?
-                        (OS.JAVA_VERSION.getMajor() == 8 ? OS.JAVA_VERSION.getUpdate() > 60 : OS.JAVA_VERSION.getMajor() > 8) : // 8u60 or above
+                        (OS.JAVA_VERSION.getMajor() == 8? OS.JAVA_VERSION.getUpdate() > 60 : OS.JAVA_VERSION.getMajor() > 8) : // 8u60 or above
                         intelWin10BugJrePattern.matcher(System.getProperty("java.version")).matches()) {
                     LOGGER.info("We're currently running Java version on Windows 10 that have known incompatibility " +
                             "bug with 1st and 2nd generation Intel HD graphics chipsets");
@@ -111,9 +111,9 @@ public class GraphicsEntry extends PatternContainerEntry {
         }
 
         boolean
-                haveIntel = report.getDisplayDevice("intel").isPresent(),
-                haveNvidia = report.getDisplayDevice("nvidia").isPresent(),
-                haveAmd = report.getDisplayDevice("amd").isPresent() || report.getDisplayDevice("ati ").isPresent();
+                haveIntel = report.getDisplayDevice("intel") != null,
+                haveNvidia = report.getDisplayDevice("nvidia") != null,
+                haveAmd = report.getDisplayDevice("amd") != null || report.getDisplayDevice("ati ") != null;
 
         if (haveIntel) {
             if (haveNvidia) {
@@ -165,7 +165,7 @@ public class GraphicsEntry extends PatternContainerEntry {
     }
 
     private class VarUrlAction implements Action {
-        private final String url;
+        private String url;
 
         VarUrlAction(String varName, String fallbackUrl) {
             String url = getManager().getVar(varName);
@@ -176,7 +176,7 @@ public class GraphicsEntry extends PatternContainerEntry {
         }
 
         @Override
-        public void execute() {
+        public void execute() throws Exception {
             OS.openLink(url);
         }
     }

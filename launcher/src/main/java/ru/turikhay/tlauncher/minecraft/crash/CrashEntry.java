@@ -4,11 +4,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
+import ru.turikhay.util.U;
 import ru.turikhay.util.windows.dxdiag.DisplayDevice;
 import ru.turikhay.util.windows.dxdiag.DxDiag;
 import ru.turikhay.util.windows.dxdiag.DxDiagReport;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class CrashEntry extends IEntry {
@@ -59,8 +63,7 @@ public class CrashEntry extends IEntry {
         this.exitCode = exitCode;
     }
 
-    private final List<OS> osList = new ArrayList<>(Arrays.asList(OS.values()));
-    private final List<OS> _osList = Collections.unmodifiableList(osList);
+    private List<OS> osList = new ArrayList<OS>(Arrays.asList(OS.values())), _osList = Collections.unmodifiableList(osList);
 
     public final boolean isCompatibleWith(OS os) {
         return osList.contains(os);
@@ -159,14 +162,14 @@ public class CrashEntry extends IEntry {
         setBody(prefix + ".body", vars);
     }
 
-    private final List<Button> buttons = new ArrayList<>(), _buttons = Collections.unmodifiableList(buttons);
+    private final List<Button> buttons = new ArrayList<Button>(), _buttons = Collections.unmodifiableList(buttons);
 
     public final List<Button> getButtons() {
         return _buttons;
     }
 
     protected final void addButton(Button button) {
-        buttons.add(Objects.requireNonNull(button));
+        buttons.add(U.requireNotNull(button));
     }
 
     protected final void clearButtons() {
@@ -251,7 +254,7 @@ public class CrashEntry extends IEntry {
                     LOGGER.warn("Could not detect if system is 64-bit");
                 }
 
-                if (OS.Arch.x86.isCurrent() && is64Bit) {
+                if(OS.Arch.x86.isCurrent() && is64Bit) {
                     return true;
                 }
 

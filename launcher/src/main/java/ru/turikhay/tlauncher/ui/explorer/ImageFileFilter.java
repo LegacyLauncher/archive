@@ -8,11 +8,11 @@ import java.io.File;
 import java.util.regex.Pattern;
 
 public class ImageFileFilter extends FileFilter {
-    public static final Pattern extensionPattern = Pattern.compile("^(?:jp(?:e|)g|png)$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern extensionPattern = Pattern.compile("^(?:jp(?:e|)g|png)$", 2);
 
     public boolean accept(File f) {
         String extension = FileUtil.getExtension(f);
-        return extension == null || extensionPattern.matcher(extension).matches();
+        return extension == null ? true : extensionPattern.matcher(extension).matches();
     }
 
     public String getDescription() {

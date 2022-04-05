@@ -53,20 +53,20 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
 
     public void selectedVersionChanged(VersionSyncInfo versionSyncInfo) {
         comboBox.repaint();
-        if (settingsWindow != null) {
+        if(settingsWindow != null) {
             settingsWindow.selectedVersionChanged(versionSyncInfo);
         }
     }
 
     private void javaVersionCallback() {
         comboBox.repaint();
-        if (settingsWindow != null) {
+        if(settingsWindow != null) {
             settingsWindow.javaVersionCallback();
         }
     }
 
     private void openSettingsWindow() {
-        if (settingsWindow == null) {
+        if(settingsWindow == null) {
             settingsWindow = new JRESettingsWindow(this);
             settingsWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             settingsWindow.addWindowListener(new WindowAdapter() {
@@ -106,16 +106,16 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
 
     @Override
     public boolean isValueValid() {
-        if (!comboBox.isValueValid()) {
+        if(!comboBox.isValueValid()) {
             return false;
         }
         JavaManagerConfig.JreType jreType = JavaManagerConfig.createByType(comboBox.getSettingsValue());
-        if (jreType instanceof JavaManagerConfig.Custom) {
+        if(jreType instanceof JavaManagerConfig.Custom) {
             JavaManagerConfig.Custom custom = (JavaManagerConfig.Custom) jreType;
             custom.load(sp.global);
-            if (!custom.getPath().isPresent()) {
+            if(!custom.getPath().isPresent()) {
                 LOGGER.warn("Custom JRE is not configured");
-                if (TLauncher.getInstance() != null) {
+                if(TLauncher.getInstance() != null) {
                     Alert.showError(
                             "",
                             Localizable.get("settings.jre.type.custom.not-configured")
@@ -129,7 +129,7 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
 
     private String getJavaVersion(String path) {
         Future<JavaVersion> javaVersionFuture = javaVersionCache.get(path);
-        if (!javaVersionFuture.isDone()) {
+        if(!javaVersionFuture.isDone()) {
             return "...";
         } else {
             try {
@@ -142,7 +142,7 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
 
     @Override
     public void updateLocale() {
-        if (settingsWindow != null) {
+        if(settingsWindow != null) {
             Localizable.updateContainer(settingsWindow);
         }
     }
@@ -158,36 +158,36 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
             JavaManagerConfig.JreType jreType;
             try {
                 jreType = JavaManagerConfig.createByType(var1);
-            } catch (RuntimeException e) {
+            } catch(RuntimeException e) {
                 return var1;
             }
-            if (jreType instanceof JavaManagerConfig.Current) {
+            if(jreType instanceof JavaManagerConfig.Current) {
                 return Localizable.get("settings.jre.type." + var1,
                         "Java " + OS.JAVA_VERSION.getMajor());
             }
-            if (jreType instanceof JavaManagerConfig.Recommended) {
+            if(jreType instanceof JavaManagerConfig.Recommended) {
                 String value = Localizable.get("settings.jre.type." + var1);
                 VersionSyncInfo version = sp.scene.loginForm.versions.getVersion();
-                if (version == null) {
+                if(version == null) {
                     return value;
                 }
                 CompleteVersion localCompleteVersion = version.getLocalCompleteVersion();
-                if (localCompleteVersion == null) {
+                if(localCompleteVersion == null) {
                     return value;
                 }
                 CompleteVersion.JavaVersion javaVersion = localCompleteVersion.getJavaVersion();
-                if (javaVersion == null) {
+                if(javaVersion == null) {
                     javaVersion = TLauncher.getInstance().getJavaManager()
                             .getFallbackRecommendedVersion(localCompleteVersion, false);
                 }
-                return value + " (" + Localizable.get("settings.jre.type.recommended.specific",
+                return value + " ("+ Localizable.get("settings.jre.type.recommended.specific",
                         localCompleteVersion.getID(),
                         javaVersion == null ?
                                 Localizable.get("settings.jre.type.current.lowercase")
                                 : javaVersion.getComponent()
-                ) + ")";
+                ) +")";
             }
-            if (jreType instanceof JavaManagerConfig.Custom) {
+            if(jreType instanceof JavaManagerConfig.Custom) {
                 JavaManagerConfig.Custom custom = (JavaManagerConfig.Custom) jreType;
                 custom.load(sp.global);
                 Optional<String> path = ((JavaManagerConfig.Custom) jreType).getPath();

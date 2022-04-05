@@ -49,6 +49,6 @@ public class LocalizableTextField extends ExtendedTextField implements Localizab
     }
 
     public void updateLocale() {
-        setPlaceholder(placeholderPath, (Object[]) variables);
+        setPlaceholder(placeholderPath, variables);
     }
 }
