@@ -110,6 +110,10 @@ public class MinecraftUtil {
         String userHome = System.getProperty("user.home", ".");
         File file;
         switch (OS.CURRENT) {
+            case LINUX:
+            case SOLARIS:
+                file = new File(userHome, path);
+                break;
             case WINDOWS:
                 String applicationData = System.getenv("APPDATA");
                 String folder = applicationData != null ? applicationData : userHome;
@@ -118,8 +122,6 @@ public class MinecraftUtil {
             case OSX:
                 file = new File(userHome, "Library/Application Support/" + path);
                 break;
-            case LINUX:
-            case SOLARIS:
             default:
                 file = new File(userHome, path);
         }

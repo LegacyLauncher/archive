@@ -2,10 +2,12 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.embed;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
+
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
+import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
 
 import java.util.Collections;

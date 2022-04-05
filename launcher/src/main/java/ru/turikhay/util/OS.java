@@ -11,9 +11,6 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.function.Function;
 
 public enum OS {
     LINUX("linux", "unix"),
@@ -61,9 +58,16 @@ public enum OS {
 
     private static OS getCurrent() {
         String osName = NAME.toLowerCase(java.util.Locale.ROOT);
+        OS[] var4;
+        int var3 = (var4 = values()).length;
 
-        for (OS os : values()) {
-            for (String alias : os.aliases) {
+        for (int var2 = 0; var2 < var3; ++var2) {
+            OS os = var4[var2];
+            String[] var8 = os.aliases;
+            int var7 = os.aliases.length;
+
+            for (int var6 = 0; var6 < var7; ++var6) {
+                String alias = var8[var6];
                 if (osName.contains(alias)) {
                     return os;
                 }
@@ -94,7 +98,11 @@ public enum OS {
         } else if (any.length == 0) {
             return false;
         } else {
-            for (OS compare : any) {
+            OS[] var4 = any;
+            int var3 = any.length;
+
+            for (int var2 = 0; var2 < var3; ++var2) {
+                OS compare = var4[var2];
                 if (CURRENT == compare) {
                     return true;
                 }
@@ -122,36 +130,12 @@ public enum OS {
     }
 
     public static String getSummary() {
-        return NAME + " (" + VERSION + ") " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + ", " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + Arch.AVAILABLE_PROCESSORS + "x CPU";
+        return NAME + " (" + VERSION + ") " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") +", " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + Arch.AVAILABLE_PROCESSORS + "x CPU";
     }
 
-    private static final java.util.List<Function<URI, Boolean>> OPEN_LINK_STRATEGIES = Collections.unmodifiableList(Arrays.asList(
-            uri -> {
-                LOGGER.info("Opening the link using Desktop.browse: \"{}\"", uri);
-
-                try {
-                    Desktop.getDesktop().browse(uri);
-                    return true;
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARN, "Opening the link using Desktop.browse failed: \"{}\"", uri, e);
-                    return false;
-                }
-            },
-            uri -> {
-                if (!LINUX.isCurrent()) return false;
-                LOGGER.info("Opening the link using xdg-open: \"{}\"", uri);
-
-                try {
-                    final Process process = new ProcessBuilder()
-                            .command("xdg-open", uri.toString())
-                            .start();
-                    return process.waitFor() == 0;
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARN, "Opening the link using xdg-open failed: \"{}\"", uri, e);
-                    return false;
-                }
-            }
-    ));
+    private static void rawOpenLink(URI uri) throws Throwable {
+        Desktop.getDesktop().browse(uri);
+    }
 
     public static boolean openLink(String _url, boolean alertError) {
         URL url;
@@ -176,16 +160,20 @@ public enum OS {
     }
 
     public static boolean openLink(URI uri, boolean alertError) {
-        for (Function<URI, Boolean> strategy : OPEN_LINK_STRATEGIES) {
-            if (strategy.apply(uri)) return true;
-        }
+        LOGGER.info("Opening the link using Desktop.browse: \"{}\"", uri);
 
-        LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Opening the link failed: \"{}\"", uri);
-        if (alertError) {
-            Alert.showLocError("ui.error.openlink", uri);
-        }
+        try {
+            Desktop.getDesktop().browse(uri);
+            return true;
+        } catch (Throwable var3) {
+            LOGGER.log(alertError? Level.ERROR : Level.WARN,
+                    "Opening the link using Desktop.browse failed: \"{}\"", uri, var3);
+            if (alertError) {
+                Alert.showLocError("ui.error.openlink", uri);
+            }
 
-        return false;
+            return false;
+        }
     }
 
     public static boolean openLink(URI uri) {
@@ -222,7 +210,7 @@ public enum OS {
                 openPath(folder);
                 return true;
             } catch (Throwable var3) {
-                LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Failed to open folder: {}", folder, var3);
+                LOGGER.log(alertError? Level.ERROR : Level.WARN, "Failed to open folder: {}", folder, var3);
                 if (alertError) {
                     Alert.showLocError("ui.error.openfolder", folder);
                 }
@@ -246,7 +234,7 @@ public enum OS {
                 openPath(file);
                 return true;
             } catch (Throwable var3) {
-                LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Failed to open file: {}", file, var3);
+                LOGGER.log(alertError? Level.ERROR : Level.WARN,"Failed to open file: {}", file, var3);
                 if (alertError) {
                     Alert.showLocError("ui.error.openfolder", file);
                 }
@@ -274,20 +262,30 @@ public enum OS {
         public static final int AVAILABLE_PROCESSORS;
         private static final int TOTAL_RAM_GB;
 
-        private final String sBit;
+        private final int bit, arch;
+        private final String sBit, sArch;
 
         static {
             CURRENT = getCurrent();
             TOTAL_RAM = getTotalRam();
             TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
-            TOTAL_RAM_GB = Math.round((float) TOTAL_RAM_MB / 1024.0F + 0.25F); // better round
+            TOTAL_RAM_GB = Math.round((float)TOTAL_RAM_MB / 1024.0F + 0.25F); // better round
             PREFERRED_MEMORY = getPreferredMemory();
             MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
         }
 
         Arch(int bit) {
+            this.bit = bit;
             sBit = String.valueOf(bit);
+
+            if(bit == 0) {
+                sArch = toString();
+                arch = 0;
+            } else {
+                sArch = toString().substring(1);
+                arch = Integer.parseInt(sArch);
+            }
         }
 
         public String getBit() {
@@ -324,7 +322,7 @@ public enum OS {
 
         private static int getAvailableProcessors() {
             try {
-                return ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+                return ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getAvailableProcessors();
             } catch (Throwable var1) {
                 LOGGER.warn("Cannot query the number of available processors", var1);
                 return 1;

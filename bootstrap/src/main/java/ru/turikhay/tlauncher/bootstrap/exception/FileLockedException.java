@@ -13,24 +13,34 @@ public class FileLockedException extends IOException {
         super(path, cause);
     }
 
-    private static final Pattern pattern = Pattern.compile("(.+) \\(.*\\)");
+    private static final Pattern pattern = Pattern.compile("(.+)(?: \\(.*\\))");
+
+    public static void throwIfPresent(FileNotFoundException notFound) throws FileLockedException {
+        FileLockedException ex = getIfPresent(notFound);
+        if(ex != null) {
+            throw ex;
+        }
+    }
 
     public static FileLockedException getIfPresent(FileNotFoundException notFound) {
-        String message = notFound.getMessage();
-        if (message == null) {
-            return null;
-        }
+        checkIfPresent: {
+            String message = notFound.getMessage();
+            if(message == null) {
+                break checkIfPresent;
+            }
 
-        Matcher matcher = pattern.matcher(message);
-        if (!matcher.matches()) {
-            return null;
-        }
+            Matcher matcher = pattern.matcher(message);
+            if(!matcher.matches()) {
+                break checkIfPresent;
+            }
 
-        File file = new File(matcher.group(1));
-        if (!file.isFile()) {
-            return null;
-        }
+            File file = new File(matcher.group(1));
+            if(!file.isFile()) {
+                break checkIfPresent;
+            }
 
-        return new FileLockedException(file.getAbsolutePath(), notFound);
+            return new FileLockedException(file.getAbsolutePath(), notFound);
+        }
+        return null;
     }
 }

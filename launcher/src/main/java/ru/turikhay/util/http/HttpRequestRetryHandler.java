@@ -7,11 +7,10 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Locale;
 
 public class HttpRequestRetryHandler extends DefaultHttpRequestRetryHandler {
-    private static final Collection<Class<? extends IOException>> NON_RETRIABLE = Collections.singletonList(
+    private static final Collection<Class<? extends IOException>> NON_RETRIABLE = Arrays.asList(
             UnknownHostException.class
     );
 

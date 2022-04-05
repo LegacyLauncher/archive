@@ -9,9 +9,7 @@ import ru.turikhay.util.U;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -19,8 +17,7 @@ import java.util.zip.ZipFile;
 public class ForgeExtractor {
     // Json inside installer jar
     // Must run processors to patch Minecraft
-    private ForgeExtractor() {
-    }
+    private ForgeExtractor() {}
 
     public static pw.modder.tl.modloader.extractor.ForgeProcessor ExtractProfile(File file, File librariesDir, File versionsDir) throws IOException {
         ZipFile zipFile = new ZipFile(file);

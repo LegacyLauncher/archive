@@ -20,6 +20,7 @@ import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
+import ru.turikhay.util.U;
 import ru.turikhay.util.json.ExposeExclusion;
 
 import java.io.IOException;
@@ -33,11 +34,11 @@ public abstract class VersionList {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected final Gson gson;
-    protected final Map<String, Version> byName = new HashMap<>();
-    protected final List<Version> versions = Collections.synchronizedList(new ArrayList<>());
-    protected final Map<ReleaseType, Version> latest = new HashMap<>();
+    protected final Map<String, Version> byName = new Hashtable();
+    protected final List<Version> versions = Collections.synchronizedList(new ArrayList());
+    protected final Map<ReleaseType, Version> latest = new Hashtable();
 
-    private final List<VersionList> dependencies = new ArrayList<>();
+    private final List<VersionList> dependencies = new ArrayList<VersionList>();
 
     VersionList() {
         GsonBuilder builder = new GsonBuilder();
@@ -75,12 +76,12 @@ public abstract class VersionList {
             CompleteVersion complete;
             InputStreamReader reader = null;
             try {
-                if (version.getUrl() == null) {
+                if(version.getUrl() == null) {
                     reader = getUrl("versions/" + version.getID() + "/" + version.getID() + ".json");
                 } else {
                     URL url = new URL(version.getUrl());
                     InputStream input;
-                    if (RepositoryProxy.canBeProxied(url)) {
+                    if(RepositoryProxy.canBeProxied(url)) {
                         input = RepositoryProxy.getProxyRepoList().read(url.toString());
                     } else {
                         input = url.openConnection().getInputStream();
@@ -89,9 +90,7 @@ public abstract class VersionList {
                 }
                 complete = gson.fromJson(reader, CompleteVersion.class);
             } finally {
-                if (reader != null) {
-                    reader.close();
-                }
+                U.close(reader);
             }
             complete.setID(version.getID());
             complete.setVersionList(this);
@@ -118,12 +117,12 @@ public abstract class VersionList {
         Time.start(lock);
         RawVersionList list;
         String input;
-        try (InputStreamReader reader = getUrl("versions/versions.json")) {
+        try(InputStreamReader reader = getUrl("versions/versions.json")) {
             input = IOUtils.toString(reader);
         }
         try {
             list = gson.fromJson(input, RawVersionList.class);
-        } catch (RuntimeException e) {
+        } catch(RuntimeException e) {
             Sentry.capture(new EventBuilder()
                     .withLevel(Event.Level.ERROR)
                     .withMessage("couldn't parse remote repository")
@@ -131,8 +130,10 @@ public abstract class VersionList {
             );
             throw e;
         }
+        Iterator var4 = list.versions.iterator();
 
-        for (PartialVersion version : list.versions) {
+        while (var4.hasNext()) {
+            PartialVersion version = (PartialVersion) var4.next();
             version.setVersionList(this);
         }
 
@@ -142,23 +143,28 @@ public abstract class VersionList {
 
     public synchronized void refreshVersions(RawVersionList versionList) {
         clearCache();
+        Iterator var3 = versionList.getVersions().iterator();
 
-        for (PartialVersion partialVersion : versionList.getVersions()) {
-            if (partialVersion != null && partialVersion.getID() != null) {
-                versions.add(partialVersion);
-                byName.put(partialVersion.getID(), partialVersion);
+        while (var3.hasNext()) {
+            Version en = (Version) var3.next();
+            if (en != null && en.getID() != null) {
+                versions.add(en);
+                byName.put(en.getID(), en);
             }
         }
 
-        for (Entry<ReleaseType, String> entry : versionList.latest.entrySet()) {
-            ReleaseType releaseType = entry.getKey();
+        var3 = versionList.latest.entrySet().iterator();
+
+        while (var3.hasNext()) {
+            Entry en1 = (Entry) var3.next();
+            ReleaseType releaseType = (ReleaseType) en1.getKey();
             if (releaseType == null) {
-                LOGGER.warn("Unknown release type for latest version entry: {}", entry);
+                LOGGER.warn("Unknown release type for latest version entry: {}", en1);
             } else {
-                Version version = getVersion(entry.getValue());
+                Version version = getVersion((String) en1.getValue());
 
                 if (version == null) {
-                    LOGGER.warn("Cannot find version for latest version entry: {}", entry);
+                    LOGGER.warn("Cannot find version for latest version entry: {}", en1);
                 } else {
                     latest.put(releaseType, version);
                 }
@@ -175,7 +181,7 @@ public abstract class VersionList {
         if (version.getID() == null) {
             throw new IllegalArgumentException("Cannot add blank version");
         } else if (getVersion(version.getID()) != null) {
-            LOGGER.warn("Version '{}' is already tracked", version.getID());
+            LOGGER.warn("Version \'{}\' is already tracked", version.getID());
             return version;
         } else {
             versions.add(version);
@@ -189,7 +195,7 @@ public abstract class VersionList {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
             versions.remove(version);
-            byName.remove(version.getID());
+            byName.remove(version);
         }
     }
 
@@ -223,7 +229,7 @@ public abstract class VersionList {
     }
 
     public final synchronized void addDependancy(VersionList list) {
-        if (Objects.requireNonNull(list) == this) {
+        if (U.requireNotNull(list) == this) {
             throw new IllegalArgumentException("cannot be itself");
         }
 

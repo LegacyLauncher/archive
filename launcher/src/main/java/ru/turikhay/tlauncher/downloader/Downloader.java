@@ -35,8 +35,8 @@ public class Downloader extends ExtendedThread {
         super("MD");
         remainingObjects = new AtomicInteger();
         threads = new DownloaderThread[6];
-        list = Collections.synchronizedList(new ArrayList<>());
-        listeners = Collections.synchronizedList(new ArrayList<>());
+        list = Collections.synchronizedList(new ArrayList());
+        listeners = Collections.synchronizedList(new ArrayList());
         progressContainer = new double[6];
         workLock = new Object();
         startAndWait();
@@ -94,11 +94,13 @@ public class Downloader extends ExtendedThread {
             throw new NullPointerException();
         } else {
             int i = -1;
+            Iterator var4 = coll.iterator();
 
-            for (Downloadable d : coll) {
+            while (var4.hasNext()) {
+                Downloadable d = (Downloadable) var4.next();
                 ++i;
                 if (d == null) {
-                    throw new NullPointerException("Downloadable at " + i + " is NULL!");
+                    throw new NullPointerException("Downloadable at" + i + " is NULL!");
                 }
 
                 list.add(d);
@@ -135,6 +137,7 @@ public class Downloader extends ExtendedThread {
         haveWork = true;
 
         while (haveWork) {
+            Object var1 = workLock;
             synchronized (workLock) {
                 try {
                     workLock.wait();
@@ -148,6 +151,7 @@ public class Downloader extends ExtendedThread {
 
     private void notifyWork() {
         haveWork = false;
+        Object var1 = workLock;
         synchronized (workLock) {
             workLock.notifyAll();
         }
@@ -180,6 +184,7 @@ public class Downloader extends ExtendedThread {
         while (true) {
             lockThread("iteration");
             LOGGER.debug("Files in the queue: {}", list.size());
+            List i = list;
             synchronized (list) {
                 sortOut();
             }
@@ -251,8 +256,10 @@ public class Downloader extends ExtendedThread {
     }
 
     private void onStart(int size) {
+        Iterator var3 = listeners.iterator();
 
-        for (DownloaderListener listener : listeners) {
+        while (var3.hasNext()) {
+            DownloaderListener listener = (DownloaderListener) var3.next();
             listener.onDownloaderStart(this, size);
         }
 
@@ -260,8 +267,10 @@ public class Downloader extends ExtendedThread {
     }
 
     void onAbort() {
+        Iterator var2 = listeners.iterator();
 
-        for (DownloaderListener listener : listeners) {
+        while (var2.hasNext()) {
+            DownloaderListener listener = (DownloaderListener) var2.next();
             listener.onDownloaderAbort(this);
         }
 
@@ -275,8 +284,10 @@ public class Downloader extends ExtendedThread {
         if (remainingObjects.get() == 1 || averageProgress - lastAverageProgress >= 0.01D) {
             speed = 0.005D * speed + 0.995D * curspeed;
             lastAverageProgress = averageProgress;
+            Iterator var8 = listeners.iterator();
 
-            for (DownloaderListener listener : listeners) {
+            while (var8.hasNext()) {
+                DownloaderListener listener = (DownloaderListener) var8.next();
                 listener.onDownloaderProgress(this, averageProgress, speed);
             }
         }
@@ -285,8 +296,10 @@ public class Downloader extends ExtendedThread {
     void onFileComplete(DownloaderThread thread, Downloadable file) {
         int remaining = remainingObjects.decrementAndGet();
         LOGGER.debug("Remaining: {}", remaining);
+        Iterator var5 = listeners.iterator();
 
-        for (DownloaderListener listener : listeners) {
+        while (var5.hasNext()) {
+            DownloaderListener listener = (DownloaderListener) var5.next();
             listener.onDownloaderFileComplete(this, file);
         }
 
@@ -296,8 +309,10 @@ public class Downloader extends ExtendedThread {
     }
 
     private void onComplete() {
+        Iterator var2 = listeners.iterator();
 
-        for (DownloaderListener listener : listeners) {
+        while (var2.hasNext()) {
+            DownloaderListener listener = (DownloaderListener) var2.next();
             listener.onDownloaderComplete(this);
         }
 

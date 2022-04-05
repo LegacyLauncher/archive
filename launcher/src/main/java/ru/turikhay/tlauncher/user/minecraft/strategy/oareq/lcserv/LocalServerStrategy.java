@@ -65,6 +65,10 @@ public class LocalServerStrategy implements MicrosoftOAuthCodeRequestStrategy {
 
     private MicrosoftOAuthExchangeCode waitForCode(long time, TimeUnit timeUnit)
             throws MicrosoftOAuthCodeRequestException, InterruptedException, TimeoutException {
-        return localServer.waitForCode(time, timeUnit);
+        try {
+            return localServer.waitForCode(time, timeUnit);
+        } catch (LocalServerException e) {
+            throw new MicrosoftOAuthCodeRequestException("local server error", e);
+        }
     }
 }

@@ -41,7 +41,7 @@ class BottomPanel extends BorderPanel {
 
         Button(String path) {
             addActionListener((e) -> {
-                if (action != null) {
+                if(action != null) {
                     action.run();
                 }
             });

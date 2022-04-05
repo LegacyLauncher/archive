@@ -22,7 +22,7 @@ public class McleaksAuth extends AuthlibAuth<McleaksUser> {
         com.mojang.authlib.UserAuthentication userAuthentication;
         try {
             userAuthentication = super.authorize(clientToken, altToken, "12345");
-        } catch (InvalidCredentialsException inv) {
+        } catch(InvalidCredentialsException inv) {
             throw new McleaksAltTokenExpired();
         }
         return new McleaksUser(altToken, clientToken, userAuthentication);
@@ -33,8 +33,8 @@ public class McleaksAuth extends AuthlibAuth<McleaksUser> {
         checkAvailable();
         try {
             super.logIn(userAuthentication);
-        } catch (InvalidCredentialsException inv) {
-            if (inv.getMessage() != null && inv.getMessage().contains("ALT-TOKEN")) {
+        } catch(InvalidCredentialsException inv) {
+            if(inv.getMessage() != null && inv.getMessage().contains("ALT-TOKEN")) {
                 throw new McleaksAltTokenExpired();
             }
         }
@@ -51,22 +51,22 @@ public class McleaksAuth extends AuthlibAuth<McleaksUser> {
             @Override
             protected <T extends Response> T makeRequest(final URL url, Object input, Class<T> classOfT) throws AuthenticationException {
                 URL newUrl;
-                if (url.getProtocol().equals("https")) {
+                if(url.getProtocol().equals("https")) {
                     try {
                         // open connection and tweak it
                         final HttpsURLConnection connection = McleaksManager.getConnector().setupHttpsConnection(url);
                         // replace URLStreamHandler to make it use tweaked connection
                         newUrl = new URL(null, url.toExternalForm(), new URLStreamHandler() {
                             @Override
-                            protected URLConnection openConnection(URL u) {
+                            protected URLConnection openConnection(URL u) throws IOException {
                                 return connection;
                             }
 
-                            protected URLConnection openConnection(URL u, Proxy p) {
+                            protected URLConnection openConnection(URL u, Proxy p) throws IOException {
                                 return connection;
                             }
                         });
-                    } catch (IOException ioE) {
+                    } catch(IOException ioE) {
                         throw new AuthenticationUnavailableException(ioE);
                     }
                 } else {
@@ -78,13 +78,13 @@ public class McleaksAuth extends AuthlibAuth<McleaksUser> {
     }
 
     private static void checkAvailable() throws AuthException {
-        if (McleaksManager.isUnsupported()) {
+        if(McleaksManager.isUnsupported()) {
             throw new AuthException("MCLeaks is unsupported", "mcleaks.unsupported");
         }
-        if (!McleaksManager.getStatus().hasStatus()) {
+        if(!McleaksManager.getStatus().hasStatus()) {
             throw new AuthException("MCLeaks status is unknown", "mcleaks.status-unknown");
         }
-        if (McleaksManager.getStatus().getServerIp() == null) {
+        if(McleaksManager.getStatus().getServerIp() == null) {
             throw new AuthException("MCLeaks is unavailable", "mcleaks.unavailable");
         }
     }

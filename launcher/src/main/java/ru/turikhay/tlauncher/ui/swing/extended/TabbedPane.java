@@ -3,13 +3,20 @@ package ru.turikhay.tlauncher.ui.swing.extended;
 import ru.turikhay.tlauncher.ui.swing.util.Orientation;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.TabbedPaneUI;
 
 public class TabbedPane extends JTabbedPane {
     public TabbedPane(Orientation tabLocation, TabbedPane.TabLayout layout) {
         setTabLocation(tabLocation == null ? Orientation.TOP : tabLocation);
         setTabLayout(layout == null ? TabbedPane.TabLayout.SCROLL : layout);
-        addChangeListener(e -> onTabChange(getSelectedIndex()));
+        addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                onTabChange(getSelectedIndex());
+            }
+        });
     }
 
     public TabbedPane() {

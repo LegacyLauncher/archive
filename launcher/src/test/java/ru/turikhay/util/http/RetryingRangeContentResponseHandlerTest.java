@@ -36,7 +36,7 @@ class RetryingRangeContentResponseHandlerTest {
             // read one small chunk per connection
             final byte[] tmp = new byte[32768];
             int r = content.read(tmp);
-            if (r > 0) {
+            if(r > 0) {
                 buffer.append(tmp, 0, r);
                 return r;
             }

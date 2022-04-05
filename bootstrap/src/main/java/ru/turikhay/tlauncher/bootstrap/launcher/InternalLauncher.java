@@ -4,37 +4,34 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
+import ru.turikhay.tlauncher.bootstrap.util.U;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class InternalLauncher extends LocalCastingLauncher {
 
     private final URL url;
-    private Path tempFile;
+    private File tempFile;
 
     public InternalLauncher() throws LauncherNotFoundException {
         this.url = getClass().getResource("/launcher.jar");
-        if (url == null) {
+        if(url == null) {
             throw new LauncherNotFoundException("internal");
         }
     }
 
     private InputStream getInputStream() throws IOException {
-        if (tempFile != null) {
-            return Files.newInputStream(tempFile);
+        if(tempFile != null) {
+            return new FileInputStream(tempFile);
         }
         return url.openStream();
     }
 
-    private Path getTempFile() throws IOException {
-        if (tempFile == null) {
-            Path temp = Files.createTempFile("tlauncher", null);
-            unpack(Files.newOutputStream(temp));
+    private File getTempFile() throws IOException {
+        if(tempFile == null) {
+            File temp = File.createTempFile("tlauncher", null);
+            unpack(new FileOutputStream(temp));
             this.tempFile = temp;
         }
         return tempFile;
@@ -49,16 +46,16 @@ public class InternalLauncher extends LocalCastingLauncher {
         return LocalLauncher.findMetaEntry(getTempFile(), InternalLauncherMeta.class);
     }
 
-    public Task<LocalLauncher> toLocalLauncher(final Path file, final Path libFolder) {
+    public Task<LocalLauncher> toLocalLauncher(final File file, final File libFolder) {
         return new Task<LocalLauncher>("internalToLocalLauncher") {
             @Override
             protected LocalLauncher execute() throws Exception {
-                Files.createDirectories(file.getParent());
-                unpack(Files.newOutputStream(file));
+                U.createFile(file);
+                unpack(new FileOutputStream(file));
 
                 try {
                     return new LocalLauncher(file, libFolder);
-                } catch (LauncherNotFoundException lnfE) {
+                } catch(LauncherNotFoundException lnfE) {
                     throw new IOException(lnfE);
                 }
             }

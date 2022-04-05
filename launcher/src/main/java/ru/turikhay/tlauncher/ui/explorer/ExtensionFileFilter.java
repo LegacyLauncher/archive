@@ -35,7 +35,7 @@ public class ExtensionFileFilter extends FileFilter {
 
     public boolean accept(File f) {
         String currentExtension = FileUtil.getExtension(f);
-        return acceptNull && currentExtension == null || extension.equals(currentExtension);
+        return acceptNull && currentExtension == null ? true : extension.equals(currentExtension);
     }
 
     public String getDescription() {

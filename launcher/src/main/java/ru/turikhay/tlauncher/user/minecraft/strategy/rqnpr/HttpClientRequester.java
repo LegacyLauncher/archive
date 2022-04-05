@@ -33,7 +33,7 @@ public class HttpClientRequester<A> implements Requester<A> {
         logger.trace("Response: {}", response);
         int statusCode = httpResponse.getStatusLine().getStatusCode();
         logger.trace("Status code: {}", statusCode);
-        if (statusCode >= 200 && statusCode <= 299) {
+        if(statusCode >= 200 && statusCode <= 299) {
             return response;
         }
         throw new InvalidStatusCodeException(statusCode, response);

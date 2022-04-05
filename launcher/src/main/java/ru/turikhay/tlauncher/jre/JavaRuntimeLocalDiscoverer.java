@@ -11,7 +11,7 @@ public class JavaRuntimeLocalDiscoverer {
 
     public JavaRuntimeLocalDiscoverer(File rootDir) {
         this.rootDir = Objects.requireNonNull(rootDir);
-        if (!rootDir.isDirectory()) {
+        if(!rootDir.isDirectory()) {
             throw new IllegalArgumentException("rootDir doesn't exist");
         }
     }
@@ -22,7 +22,7 @@ public class JavaRuntimeLocalDiscoverer {
 
     public Optional<JavaRuntimeLocal> getRuntime(String platform, String name) {
         File runtimeDir = getRuntimeDir(platform, name);
-        if (!runtimeDir.isDirectory() || Optional.ofNullable(runtimeDir.listFiles()).orElse(new File[0]).length == 0) {
+        if(!runtimeDir.isDirectory() || Optional.ofNullable(runtimeDir.listFiles()).orElse(new File[0]).length == 0) {
             return Optional.empty();
         }
         return Optional.of(new JavaRuntimeLocal(name, platform, runtimeDir));

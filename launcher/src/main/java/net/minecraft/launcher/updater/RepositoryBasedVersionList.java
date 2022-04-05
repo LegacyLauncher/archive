@@ -2,13 +2,13 @@ package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
 import net.minecraft.launcher.versions.CompleteVersion;
-import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.Version;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Iterator;
 
 public class RepositoryBasedVersionList extends RemoteVersionList {
     private final Repository repository;
@@ -23,8 +23,10 @@ public class RepositoryBasedVersionList extends RemoteVersionList {
 
     public RawVersionList getRawList() throws IOException {
         RawVersionList rawList = super.getRawList();
+        Iterator var3 = rawList.getVersions().iterator();
 
-        for (PartialVersion version : rawList.getVersions()) {
+        while (var3.hasNext()) {
+            Version version = (Version) var3.next();
             version.setSource(repository);
         }
 

@@ -2,10 +2,11 @@ package net.minecraft.launcher.versions;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class ExtractRules {
-    private final List<String> exclude = new ArrayList<>();
+    private List<String> exclude = new ArrayList();
 
     public ExtractRules() {
     }
@@ -14,10 +15,17 @@ public class ExtractRules {
         if (exclude != null) {
             Collections.addAll(this.exclude, exclude);
         }
+
     }
 
     public ExtractRules(ExtractRules rules) {
-        this.exclude.addAll(rules.exclude);
+        Iterator var3 = rules.exclude.iterator();
+
+        while (var3.hasNext()) {
+            String exclude = (String) var3.next();
+            this.exclude.add(exclude);
+        }
+
     }
 
     public List<String> getExcludes() {
@@ -25,13 +33,19 @@ public class ExtractRules {
     }
 
     public boolean shouldExtract(String path) {
+        if (exclude == null) {
+            return true;
+        } else {
+            Iterator var3 = exclude.iterator();
 
-        for (String rule : exclude) {
-            if (path.startsWith(rule)) {
-                return false;
+            while (var3.hasNext()) {
+                String rule = (String) var3.next();
+                if (path.startsWith(rule)) {
+                    return false;
+                }
             }
-        }
 
-        return true;
+            return true;
+        }
     }
 }

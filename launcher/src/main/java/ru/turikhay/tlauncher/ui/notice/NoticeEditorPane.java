@@ -12,11 +12,14 @@ class NoticeEditorPane extends EditorPane {
 
     void setNotice(Notice notice, ParamPair param) {
         setFont(getFont().deriveFont(param.fontSize));
-        setText("<html><div " + (param.width > 0 ? "width=\"" + param.width + "\" " : "") + "align=\"center\">" + notice.getText() + "</div></html>");
+        setText("<html><div "+ (param.width > 0? "width=\""+ param.width +"\" " : "") +"align=\"center\">" + notice.getText() + "</div></html>");
     }
 
     Dimension calcPreferredSize(final int minHeight, final int minWidth, final int maxWidth, int widthStep, int heightStep) {
-        int prefWidth = SwingUtil.getPrefWidth(this, 0, widthStep), prefHeight = SwingUtil.getPrefHeight(this, Integer.MAX_VALUE);
+        final int
+                originWidth = SwingUtil.getPrefWidth(this, 0, widthStep),
+                originHeight = SwingUtil.getPrefHeight(this, Integer.MAX_VALUE);
+        int prefWidth = originWidth, prefHeight = originHeight;
 
         if (prefWidth > maxWidth) {
             prefHeight -= 1;
@@ -27,7 +30,7 @@ class NoticeEditorPane extends EditorPane {
             prefHeight += 1;
             do {
                 prefWidth = SwingUtil.getPrefWidth(this, prefHeight -= heightStep, widthStep);
-            } while (prefWidth > maxWidth && prefHeight >= minHeight);
+            } while (prefWidth > maxWidth && prefWidth >= originWidth && prefHeight >= minHeight);
         }
 
         return new Dimension(prefWidth, prefHeight);

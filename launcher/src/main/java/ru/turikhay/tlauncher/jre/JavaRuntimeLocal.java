@@ -28,11 +28,11 @@ public class JavaRuntimeLocal implements JavaRuntime {
     }
 
     public boolean hasOverride() {
-        if (!directory.isDirectory()) {
+        if(!directory.isDirectory()) {
             return false;
         }
         File[] files = directory.listFiles();
-        if (files == null) {
+        if(files == null) {
             return false;
         }
         return Arrays.stream(files).anyMatch(file -> file.getName().startsWith("override"));

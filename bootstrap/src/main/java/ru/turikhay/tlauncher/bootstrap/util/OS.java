@@ -4,8 +4,6 @@ import java.awt.*;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public enum OS {
     LINUX("linux", "unix"),
@@ -41,32 +39,34 @@ public enum OS {
         return false;
     }
 
-    public static Path getSystemRelatedFile(String path) {
+    public static File getSystemRelatedFile(String path) {
         String userHome = System.getProperty("user.home", ".");
-
+        File file;
         switch (CURRENT) {
+            case LINUX:
+            case SOLARIS:
+                file = new File(userHome, path);
+                break;
             case WINDOWS:
                 String applicationData = System.getenv("APPDATA");
                 String folder = applicationData != null ? applicationData : userHome;
-                return Paths.get(folder, path);
+                file = new File(folder, path);
+                break;
             case OSX:
-                return Paths.get(userHome, "Library", "Application Support", path);
-            case LINUX:
-            case SOLARIS:
+                file = new File(userHome, "Library/Application Support/" + path);
+                break;
             default:
-                return Paths.get(userHome, path);
+                file = new File(userHome, path);
         }
+
+        return file;
     }
 
-    public static Path getSystemRelatedDirectory(String path, boolean hide) {
+    public static File getSystemRelatedDirectory(String path, boolean hide) {
         if (hide && !OS.isAny(OSX, UNKNOWN)) {
             path = '.' + path;
         }
         return getSystemRelatedFile(path);
-    }
-
-    public static Path getDefaultFolder() {
-        return OS.getSystemRelatedDirectory("tlauncher", true);
     }
 
     public static boolean openUri(URI uri) {
@@ -96,7 +96,7 @@ public enum OS {
     public static boolean openPath(File path) {
         try {
             Desktop.getDesktop().open(path);
-        } catch (Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -131,9 +131,9 @@ public enum OS {
         static {
             String dataModel = System.getProperty("sun.arch.data.model");
             Arch current = UNKNOWN;
-            if (dataModel != null) {
-                for (Arch arch : values()) {
-                    if (dataModel.equals(arch.determiner)) {
+            if(dataModel != null) {
+                for(Arch arch : values()) {
+                    if(dataModel.equals(arch.determiner)) {
                         current = arch;
                         break;
                     }

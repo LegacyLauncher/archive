@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.*;
 
 public class Blocker {
-    private static final Map<Blockable, List<Object>> blockMap = new Hashtable<>();
+    private static final Map<Blockable, List<Object>> blockMap = new Hashtable();
     public static final Object UNIVERSAL_UNBLOCK = "lol, man";
     public static final Object WEAK_BLOCK = "weak";
 
@@ -13,7 +13,7 @@ public class Blocker {
         if (blockable == null) {
             throw new NullPointerException();
         } else {
-            blockMap.put(blockable, Collections.synchronizedList(new ArrayList<>()));
+            blockMap.put(blockable, Collections.synchronizedList(new ArrayList()));
         }
     }
 
@@ -46,7 +46,7 @@ public class Blocker {
                     add(blockable);
                 }
 
-                List<Object> reasons = blockMap.get(blockable);
+                List reasons = (List) blockMap.get(blockable);
                 if (!reasons.contains(reason)) {
                     boolean blocked = !reasons.isEmpty();
                     reasons.add(reason);
@@ -60,8 +60,11 @@ public class Blocker {
 
     public static void block(Object reason, Blockable... blockables) {
         if (blockables != null && reason != null) {
+            Blockable[] var5 = blockables;
+            int var4 = blockables.length;
 
-            for (Blockable blockable : blockables) {
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Blockable blockable = var5[var3];
                 block(blockable, reason);
             }
 
@@ -78,13 +81,15 @@ public class Blocker {
         } else if (!blockMap.containsKey(blockable)) {
             return true;
         } else {
-            List<Object> reasons = blockMap.get(blockable);
+            List reasons = (List) blockMap.get(blockable);
             reasons.remove(reason);
             if (reason.equals(UNIVERSAL_UNBLOCK)) {
                 reasons.clear();
             }
 
-            reasons.remove(WEAK_BLOCK);
+            if (reasons.contains(WEAK_BLOCK)) {
+                reasons.remove(WEAK_BLOCK);
+            }
 
             if (!reasons.isEmpty()) {
                 return false;
@@ -97,8 +102,11 @@ public class Blocker {
 
     public static void unblock(Object reason, Blockable... blockables) {
         if (blockables != null && reason != null) {
+            Blockable[] var5 = blockables;
+            int var4 = blockables.length;
 
-            for (Blockable blockable : blockables) {
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Blockable blockable = var5[var3];
                 unblock(blockable, reason);
             }
 
@@ -116,8 +124,8 @@ public class Blocker {
     }
 
     public static void setBlocked(Object reason, boolean blocked, Blockable... blockables) {
-        for (Blockable blockable : blockables) {
-            if (blocked) {
+        for(Blockable blockable : blockables) {
+            if(blocked) {
                 block(blockable, reason);
             } else {
                 unblock(blockable, reason);
@@ -129,7 +137,7 @@ public class Blocker {
         if (blockable == null) {
             throw new NullPointerException();
         } else {
-            return blockMap.containsKey(blockable) && !blockMap.get(blockable).isEmpty();
+            return !blockMap.containsKey(blockable) ? false : !((List) blockMap.get(blockable)).isEmpty();
         }
     }
 
@@ -141,7 +149,7 @@ public class Blocker {
                 add(blockable);
             }
 
-            return Collections.unmodifiableList(blockMap.get(blockable));
+            return Collections.unmodifiableList((List) blockMap.get(blockable));
         }
     }
 
@@ -151,7 +159,11 @@ public class Blocker {
         } else if (reason == null) {
             throw new NullPointerException("Reason is NULL!");
         } else {
-            for (Component component : components) {
+            Component[] var5 = components;
+            int var4 = components.length;
+
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Component component = var5[var3];
                 if (component instanceof Blockable) {
                     block((Blockable) component, reason);
                 } else if (!(component instanceof Unblockable)) {
@@ -161,6 +173,7 @@ public class Blocker {
                     }
                 }
             }
+
         }
     }
 
@@ -174,7 +187,11 @@ public class Blocker {
         } else if (reason == null) {
             throw new NullPointerException("Reason is NULL!");
         } else {
-            for (Component component : components) {
+            Component[] var5 = components;
+            int var4 = components.length;
+
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Component component = var5[var3];
                 if (component instanceof Blockable) {
                     unblock((Blockable) component, reason);
                 } else if (!(component instanceof Unblockable)) {
@@ -184,6 +201,7 @@ public class Blocker {
                     }
                 }
             }
+
         }
     }
 

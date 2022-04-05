@@ -50,7 +50,7 @@ public class AccountMinecraftProcess extends BorderPanel implements AccountMulti
 
         button = new LocalizableButton(LOC_PREFIX + "link.open");
         button.addActionListener(e -> {
-            if (buttonLink != null) {
+            if(buttonLink != null) {
                 Alert.showLocMessage(LOC_PREFIX + "link.open.alert", buttonLink);
             }
         });

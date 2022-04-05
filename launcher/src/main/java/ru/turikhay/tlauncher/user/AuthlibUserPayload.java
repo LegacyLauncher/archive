@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.user;
 
 import com.mojang.authlib.UserAuthentication;
+import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 
 public class AuthlibUserPayload {
     private final String clientToken;

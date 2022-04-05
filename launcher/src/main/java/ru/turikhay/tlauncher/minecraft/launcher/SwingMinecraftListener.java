@@ -2,14 +2,13 @@ package ru.turikhay.tlauncher.minecraft.launcher;
 
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.util.SwingUtil;
-
-import java.util.Objects;
+import ru.turikhay.util.U;
 
 public class SwingMinecraftListener implements MinecraftListener {
     private final MinecraftListener listener;
 
     public SwingMinecraftListener(MinecraftListener listener) {
-        this.listener = Objects.requireNonNull(listener, "listener");
+        this.listener = U.requireNotNull(listener, "listener");
     }
 
     @Override

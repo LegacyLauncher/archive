@@ -31,13 +31,12 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
     private final LocalizableMenuItem
             hideNotice = new LocalizableMenuItem("notice.action.hide"),
             hidePromoted = new LocalizableMenuItem("notice.promoted.hide.here");
-
     {
         Images.getIcon16("eye-slash").setup(hideNotice);
         hideNotice.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (promotedNoticePopup.getNotice() != null) {
+                if(promotedNoticePopup.getNotice() != null) {
                     NoticeManager manager = loginForm.scene.getMainPane().getRootFrame().getNotices();
                     manager.setHidden(promotedNoticePopup.getNotice(), true);
                     manager.selectRandom();
@@ -75,24 +74,29 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
     PlayButton(LoginForm lf) {
         loginForm = lf;
         button = new LocalizableButton();
-        button.addActionListener(e -> {
-            switch (state) {
-                case CANCEL:
-                    loginForm.stopLauncher();
-                    break;
-                default:
-                    loginForm.startLauncher();
-            }
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                switch (state) {
+                    case CANCEL:
+                        loginForm.stopLauncher();
+                        break;
+                    default:
+                        loginForm.startLauncher();
+                }
 
+            }
         });
-        button.setFont(getFont().deriveFont(Font.BOLD).deriveFont(TLauncherFrame.getFontSize() * 1.5f));
+        button.setFont(getFont().deriveFont(1).deriveFont(TLauncherFrame.getFontSize() * 1.5f));
         setCenter(button);
 
-        promotedNoticeButton = new LocalizableButton();
+        promotedNoticeButton =  new LocalizableButton();
         promotedNoticeButton.setPreferredSize(SwingUtil.magnify(new Dimension(48, 1)));
-        promotedNoticeButton.addActionListener(e -> {
-            promotedNoticePopup.updateList();
-            promotedNoticePopup.show(promotedNoticeButton, promotedNoticeButton.getWidth(), 0);
+        promotedNoticeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                promotedNoticePopup.updateList();
+                promotedNoticePopup.show(promotedNoticeButton, promotedNoticeButton.getWidth(), 0);
+            }
         });
         onNoticePromoted(null);
 
@@ -174,7 +178,7 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
 
     @Override
     public void onNoticePromoted(Notice promotedNotice) {
-        if (promotedNotice == null) {
+        if(promotedNotice == null) {
             setEast(null);
         } else {
             setEast(promotedNoticeButton);

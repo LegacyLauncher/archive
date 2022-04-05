@@ -29,6 +29,6 @@ public class LocalizableTransparentButton extends TransparentButton implements L
     }
 
     public void updateLocale() {
-        setText(path, (Object[]) variables);
+        setText(path, variables);
     }
 }

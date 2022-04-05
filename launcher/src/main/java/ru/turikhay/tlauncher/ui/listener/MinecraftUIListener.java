@@ -69,7 +69,7 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
     }
 
     public void onMinecraftKnownError(MinecraftException e) {
-        Alert.showError(lang.get("launcher.error.title"), lang.get("launcher.error." + e.getLangPath(), (Object[]) e.getLangVars()), e.getCause());
+        Alert.showError(lang.get("launcher.error.title"), lang.get("launcher.error." + e.getLangPath(), e.getLangVars()), e.getCause());
     }
 
     @Override

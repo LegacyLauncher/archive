@@ -137,7 +137,7 @@ public class AddonFile {
         DEPRECATED,
         BAKING,
         AWAITING_FOR_PUBLISHING,
-        FAILED_PUBLISHING
+        FAILED_PUBLISHING;
     }
 
     public enum DependencyType {
@@ -146,6 +146,6 @@ public class AddonFile {
         REQUIRED_DEPENDENCY,
         TOOL,
         INCOMPATIBLE,
-        INCLUDE
+        INCLUDE;
     }
 }

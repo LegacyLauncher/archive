@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RawVersionList {
-    final List<PartialVersion> versions = new ArrayList<>();
-    final Map<ReleaseType, String> latest = new EnumMap<>(ReleaseType.class);
+    List<PartialVersion> versions = new ArrayList<>();
+    Map<ReleaseType, String> latest = new EnumMap<>(ReleaseType.class);
 
     public List<PartialVersion> getVersions() {
         return versions;

@@ -15,12 +15,12 @@ public class VersionHandlerThread {
 
     VersionHandlerThread(VersionHandler handler) {
         this.handler = handler;
-        startThread = new StartDownloadThread(this);
-        stopThread = new StopDownloadThread(this);
-        deleteThread = new VersionDeleteThread(this);
+        startThread = new VersionHandlerThread.StartDownloadThread(this);
+        stopThread = new VersionHandlerThread.StopDownloadThread(this);
+        deleteThread = new VersionHandlerThread.VersionDeleteThread(this);
     }
 
-    static class StartDownloadThread extends LoopedThread {
+    class StartDownloadThread extends LoopedThread {
         private final VersionHandler handler;
         private final VersionDownloadButton button;
 
@@ -40,7 +40,7 @@ public class VersionHandlerThread {
         }
     }
 
-    static class StopDownloadThread extends LoopedThread {
+    class StopDownloadThread extends LoopedThread {
         private final VersionHandler handler;
         private final VersionDownloadButton button;
 
@@ -62,7 +62,7 @@ public class VersionHandlerThread {
         }
     }
 
-    static class VersionDeleteThread extends LoopedThread {
+    class VersionDeleteThread extends LoopedThread {
         private final VersionHandler handler;
         private final VersionRemoveButton button;
 

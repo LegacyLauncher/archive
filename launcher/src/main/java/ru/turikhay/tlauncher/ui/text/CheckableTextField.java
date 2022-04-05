@@ -4,7 +4,7 @@ import ru.turikhay.tlauncher.ui.center.CenterPanel;
 
 public abstract class CheckableTextField extends ExtendedTextField {
     private static final long serialVersionUID = 2835507963141686372L;
-    private final CenterPanel parent;
+    private CenterPanel parent;
 
     protected CheckableTextField(CenterPanel panel, String placeholder, String value) {
         super(panel, placeholder, value);

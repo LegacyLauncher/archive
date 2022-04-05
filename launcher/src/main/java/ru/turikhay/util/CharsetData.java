@@ -16,7 +16,6 @@ public interface CharsetData {
 
     /**
      * Requests data length
-     *
      * @return data length in bytes, or {@link #UNKNOWN_LENGTH}
      */
     long length();

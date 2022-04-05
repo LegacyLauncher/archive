@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.minecraft.launcher;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 
 public class MinecraftException extends Exception {
+    private final boolean send;
     private final String langPath;
     private final String[] langVars;
 
@@ -11,6 +12,7 @@ public class MinecraftException extends Exception {
         if (langPath == null) {
             throw new NullPointerException("Lang path required!");
         } else {
+            this.send = send;
 
             if (langVars == null) {
                 langVars = new Object[0];

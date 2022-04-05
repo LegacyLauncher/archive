@@ -2,8 +2,11 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.*;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 

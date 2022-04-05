@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.ui.background.fx;
 
 import javafx.animation.FadeTransition;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.geometry.Insets;
@@ -20,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.ui.background.IFXBackground;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 
 import java.io.File;
 import java.net.URL;
@@ -40,14 +43,17 @@ public class MediaFxBackground extends Pane implements IFXBackground {
         //minWidthProperty().bind(prefWidthProperty());
         //minHeightProperty().bind(prefHeightProperty());
 
-        sceneProperty().addListener(observable -> {
-            final Scene scene = getScene();
+        sceneProperty().addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                final Scene scene = getScene();
 
-            prefWidthProperty().unbind();
-            prefWidthProperty().bind(scene.widthProperty());
+                prefWidthProperty().unbind();
+                prefWidthProperty().bind(scene.widthProperty());
 
-            prefHeightProperty().unbind();
-            prefHeightProperty().bind(scene.heightProperty());
+                prefHeightProperty().unbind();
+                prefHeightProperty().bind(scene.heightProperty());
+            }
         });
 
         setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -104,37 +110,43 @@ public class MediaFxBackground extends Pane implements IFXBackground {
 
         view.setMediaPlayer(player);
 
-        player.setOnHalted(() -> {
-            if (view.getMediaPlayer() != player) {
-                return;
+        player.setOnHalted(new Runnable() {
+            @Override
+            public void run() {
+                if (view.getMediaPlayer() != player) {
+                    return;
+                }
+                LOGGER.error("Error loading media {}", media, player.getError());
             }
-            LOGGER.error("Error loading media {}", media, player.getError());
         });
 
-        player.setOnReady(() -> {
-            if (view.getMediaPlayer() != player) {
-                return;
+        player.setOnReady(new Runnable() {
+            @Override
+            public void run() {
+                if (view.getMediaPlayer() != player) {
+                    return;
+                }
+
+                NumberBinding
+                        ratio = Bindings.min(media.widthProperty().divide(widthProperty()), media.heightProperty().divide(heightProperty())),
+                        width = media.widthProperty().divide(ratio),
+                        height = media.heightProperty().divide(ratio),
+                        x = Bindings.subtract(widthProperty(), width).divide(2.),
+                        y = Bindings.subtract(heightProperty(), height).divide(2.);
+
+                view.layoutXProperty().bind(x);
+                view.layoutYProperty().bind(y);
+                view.fitWidthProperty().bind(width);
+                view.fitHeightProperty().bind(height);
+
+                FadeTransition transition = new FadeTransition();
+                transition.setNode(rect);
+                transition.setDuration(Duration.millis(250));
+                transition.setToValue(0.);
+
+                transition.play();
+                player.play();
             }
-
-            NumberBinding
-                    ratio = Bindings.min(media.widthProperty().divide(widthProperty()), media.heightProperty().divide(heightProperty())),
-                    width = media.widthProperty().divide(ratio),
-                    height = media.heightProperty().divide(ratio),
-                    x = Bindings.subtract(widthProperty(), width).divide(2.),
-                    y = Bindings.subtract(heightProperty(), height).divide(2.);
-
-            view.layoutXProperty().bind(x);
-            view.layoutYProperty().bind(y);
-            view.fitWidthProperty().bind(width);
-            view.fitHeightProperty().bind(height);
-
-            FadeTransition transition = new FadeTransition();
-            transition.setNode(rect);
-            transition.setDuration(Duration.millis(250));
-            transition.setToValue(0.);
-
-            transition.play();
-            player.play();
         });
 
         if (player.getStatus() == MediaPlayer.Status.HALTED) {

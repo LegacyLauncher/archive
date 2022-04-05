@@ -66,12 +66,14 @@ public class MinecraftUserGameOwnershipResponse implements Validatable {
 
             Item item = (Item) o;
 
-            return name.equals(item.name);
+            if (!name.equals(item.name)) return false;
+            return true;
         }
 
         @Override
         public int hashCode() {
-            return name.hashCode();
+            int result = name.hashCode();
+            return result;
         }
 
         @Override

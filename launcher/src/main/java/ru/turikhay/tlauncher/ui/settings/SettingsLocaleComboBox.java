@@ -24,7 +24,7 @@ public class SettingsLocaleComboBox extends BorderPanel implements EditorField, 
     public SettingsLocaleComboBox(SettingsPanel panel) {
         this.panel = panel;
 
-        comboBox = new EditorComboBox<>(new LocaleConverter(), panel.global.getLocales());
+        comboBox = new EditorComboBox<Locale>(new LocaleConverter(), panel.global.getLocales());
         setCenter(comboBox);
 
         hint = new ExtendedLabel();
@@ -78,6 +78,6 @@ public class SettingsLocaleComboBox extends BorderPanel implements EditorField, 
         hint.setVisible(!locale.equals("ru_RU") && !locale.equals("uk_UA"));
 
         String hintLocalized = panel.lang.get(CONTRIBUTE_PATH);
-        hint.setText("<html>" + hintLocalized + "</html>");
+        hint.setText(new StringBuilder().append("<html>").append(hintLocalized).append("</html>").toString());
     }
 }

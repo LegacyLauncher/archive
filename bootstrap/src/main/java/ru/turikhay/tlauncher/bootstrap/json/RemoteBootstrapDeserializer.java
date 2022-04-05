@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.bootstrap.json;
 
 import com.google.gson.*;
+
 import ru.turikhay.tlauncher.bootstrap.meta.DownloadEntry;
 import ru.turikhay.tlauncher.bootstrap.meta.RemoteBootstrapMeta;
 

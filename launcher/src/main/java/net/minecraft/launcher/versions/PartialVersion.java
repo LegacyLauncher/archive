@@ -86,11 +86,11 @@ public class PartialVersion implements Version {
             return false;
         } else {
             Version compare = (Version) o;
-            return compare.getID() != null && compare.getID().equals(id);
+            return compare.getID() == null ? false : compare.getID().equals(id);
         }
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "{id='" + id + "', time=" + time + ", url='" + url + "',release=" + releaseTime + ", type=" + type + ", source=" + source + ", list=" + list + "}";
+        return getClass().getSimpleName() + "{id=\'" + id + "\', time=" + time + ", url='" + url + "',release=" + releaseTime + ", type=" + type + ", source=" + source + ", list=" + list + "}";
     }
 }

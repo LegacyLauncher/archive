@@ -7,6 +7,7 @@ import ru.turikhay.tlauncher.downloader.RetryDownloadException;
 import ru.turikhay.tlauncher.managers.AssetsManager;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.IOException;

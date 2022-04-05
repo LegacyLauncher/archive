@@ -1,5 +1,7 @@
 package ru.turikhay.tlauncher.user;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.sentry.Sentry;
 import io.sentry.event.Event;
@@ -9,8 +11,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.exceptions.IOExceptionList;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.U;
 import ru.turikhay.util.async.ExtendedThread;
 import ru.turikhay.util.git.MapTokenResolver;
 import ru.turikhay.util.git.TokenReplacingReader;
@@ -22,11 +26,10 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> {
     private static final Logger LOGGER = LogManager.getLogger(PrimaryElyAuthFlow.class);
@@ -71,12 +74,12 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         LOGGER.debug("Creating server...");
 
         int portCreatingTries = 0, port;
-        IOException ex = null;
+        ArrayList<IOException> ioEList = new ArrayList<IOException>();
         do {
             checkCancelled();
 
             ++portCreatingTries;
-            port = ThreadLocalRandom.current().nextInt(49152, 65535);
+            port = U.random(49152, 65535);
 
             LOGGER.debug("attempt {}; selected port: {}", portCreatingTries, port);
 
@@ -84,27 +87,25 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
             try {
                 adapter = new HttpServerAdapter(watchdog, port, watchdog.getCheckState());
             } catch (IOException ioE) {
-                if (ex == null) {
-                    ex = ioE;
-                } else {
-                    ex.addSuppressed(ioE);
-                }
+                ioEList.add(ioE);
                 continue;
+            } catch (ClassNotFoundException classNotFound) {
+                throw new ElyAuthStrategyException("Incompatible JRE/JDK - Oracle JRE required", classNotFound, "incompatible");
             } catch (Exception e) {
-                throw new ElyAuthStrategyException("Unknown error", e);
+                throw new ElyAuthStrategyException("Unknown error", e, "unknown");
             }
 
-            for (PrimaryElyAuthFlowListener listener : getListenerList()) {
+            for(PrimaryElyAuthFlowListener listener : getListenerList()) {
                 listener.primaryStrategyServerCreated(this, port);
             }
 
             return adapter;
         } while (portCreatingTries < PORT_CREATING_TRIES);
 
-        throw new ElyAuthStrategyException("Max port occupy tries exceed", ex);
+        throw new ElyAuthStrategyException("Max port occupy tries exceed", new IOExceptionList(ioEList), "max-tries");
     }
 
-    void openBrowser(int port, int state) throws InterruptedException {
+    void openBrowser(int port, int state) throws ElyAuthStrategyException, InterruptedException {
         openBrowser(getRedirectUri(port), state);
     }
 
@@ -113,49 +114,50 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         private final HttpServer server;
         private final int port, state;
 
-        private HttpServerAdapter(URIWatchdog watchdog, int port, int state) throws IOException {
+        private HttpServerAdapter(URIWatchdog watchdog, int port, int state) throws ClassNotFoundException, IOException {
             LOGGER.debug("Creating HttpServerAdapter at port {}", port);
 
-            this.watchdog = Objects.requireNonNull(watchdog, "watchdog");
+            this.watchdog = U.requireNotNull(watchdog, "watchdog");
             this.port = port;
             this.state = state;
 
             server = HttpServer.create(new InetSocketAddress(port), SERVER_BACKLOG);
-            server.createContext(SERVER_ENTRY_POINT, httpExchange -> {
-                try {
-                    LOGGER.debug("handling uri: {}", httpExchange.getRequestURI());
-                    int responseStatus;
-                    String response;
+            server.createContext(SERVER_ENTRY_POINT, new HttpHandler() {
+                @Override
+                public void handle(HttpExchange httpExchange) throws IOException {
+                    try {
+                        LOGGER.debug("handling uri: {}", httpExchange.getRequestURI());
+                        int responseStatus;
+                        String response;
 
-                    if (HttpServerAdapter.this.watchdog.passURI(httpExchange.getRequestURI(), getRedirectUri(HttpServerAdapter.this.port), HttpServerAdapter.this.state)) {
-                        responseStatus = HttpURLConnection.HTTP_MOVED_TEMP;
-                        response = TokenReplacingReader.resolveVars(SERVER_RESPONSE, new MapTokenResolver(new HashMap<String, String>() {
-                            {
-                                put("text", Localizable.get("account.manager.multipane.process-account-ely.flow.complete.response"));
-                            }
-                        }));
-                    } else {
-                        responseStatus = HttpURLConnection.HTTP_BAD_REQUEST;
-                        response = "\r\n";
+                        if (HttpServerAdapter.this.watchdog.passURI(httpExchange.getRequestURI(), getRedirectUri(HttpServerAdapter.this.port), HttpServerAdapter.this.state)) {
+                            responseStatus = HttpURLConnection.HTTP_MOVED_TEMP;
+                            response = TokenReplacingReader.resolveVars(SERVER_RESPONSE, new MapTokenResolver(new HashMap<String, String>() {
+                                { put("text", Localizable.get("account.manager.multipane.process-account-ely.flow.complete.response")); }
+                            }));
+                        } else {
+                            responseStatus = HttpURLConnection.HTTP_BAD_REQUEST;
+                            response = "\r\n";
+                        }
+
+                        httpExchange.getResponseHeaders().set("Content-Type", "text/html; charset=" + FileUtil.getCharset().name());
+                        if(responseStatus == HttpURLConnection.HTTP_MOVED_TEMP) {
+                            httpExchange.getResponseHeaders().set("Location", TOKEN_EXCHANGE_SUCCESS);
+                        }
+                        httpExchange.sendResponseHeaders(responseStatus, response.getBytes(FileUtil.getCharset()).length);
+
+                        OutputStream out = httpExchange.getResponseBody();
+                        IOUtils.write(response, out, FileUtil.getCharset());
+                        out.close();
+                    } catch (Exception e) {
+                        LOGGER.error("Interrupting watchdog because of Server (port {}) failure", port, e);
+                        Sentry.capture(new EventBuilder()
+                                .withMessage("internal server crashed")
+                                .withSentryInterface(new ExceptionInterface(e))
+                                .withLevel(Event.Level.ERROR)
+                        );
+                        HttpServerAdapter.this.watchdog.interrupt();
                     }
-
-                    httpExchange.getResponseHeaders().set("Content-Type", "text/html; charset=" + FileUtil.getCharset().name());
-                    if (responseStatus == HttpURLConnection.HTTP_MOVED_TEMP) {
-                        httpExchange.getResponseHeaders().set("Location", TOKEN_EXCHANGE_SUCCESS);
-                    }
-                    httpExchange.sendResponseHeaders(responseStatus, response.getBytes(FileUtil.getCharset()).length);
-
-                    OutputStream out = httpExchange.getResponseBody();
-                    IOUtils.write(response, out, FileUtil.getCharset());
-                    out.close();
-                } catch (Exception e) {
-                    LOGGER.error("Interrupting watchdog because of Server (port {}) failure", port, e);
-                    Sentry.capture(new EventBuilder()
-                            .withMessage("internal server crashed")
-                            .withSentryInterface(new ExceptionInterface(e))
-                            .withLevel(Event.Level.ERROR)
-                    );
-                    HttpServerAdapter.this.watchdog.interrupt();
                 }
             });
             server.setExecutor(null);
@@ -189,7 +191,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
         private volatile URI uri;
         private ElyAuthCode code;
 
-        private URIWatchdog(int state) {
+        private URIWatchdog( int state) {
             this.state = state;
 
             LOGGER.debug("Starting watchdog...");
@@ -206,7 +208,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
             String query = uri.toString().substring(SERVER_ENTRY_POINT.length() + 1 /* including "?" */);
             Map<String, String> queryMap = splitQuery(query);
 
-            if (Integer.parseInt(queryMap.get("state")) != state) {
+            if(Integer.parseInt(queryMap.get("state")) != state) {
                 throw new IllegalArgumentException("state");
             }
 
@@ -285,7 +287,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
 
 
     private static Map<String, String> splitQuery(String query) {
-        Map<String, String> query_pairs = new LinkedHashMap<>();
+        Map<String, String> query_pairs = new LinkedHashMap<String, String>();
         String[] pairs = StringUtils.split(query, '&');
 
         try {

@@ -7,10 +7,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class NBTTagCompound extends NBTBase {
-    private final Map<String, NBTBase> tagMap = new HashMap<>();
+    private Map tagMap = new HashMap();
 
     public NBTTagCompound() {
         super("");
@@ -20,13 +21,15 @@ public class NBTTagCompound extends NBTBase {
         super(par1Str);
     }
 
-    void write(DataOutput dataOutput) throws IOException {
+    void write(DataOutput par1DataOutput) throws IOException {
+        Iterator var2 = tagMap.values().iterator();
 
-        for (NBTBase tag : tagMap.values()) {
-            NBTBase.writeNamedTag(tag, dataOutput);
+        while (var2.hasNext()) {
+            NBTBase var3 = (NBTBase) var2.next();
+            NBTBase.writeNamedTag(var3, par1DataOutput);
         }
 
-        dataOutput.writeByte(0);
+        par1DataOutput.writeByte(0);
     }
 
     void load(DataInput par1DataInput, int par2) throws IOException {
@@ -43,7 +46,7 @@ public class NBTTagCompound extends NBTBase {
         }
     }
 
-    public Collection<NBTBase> getTags() {
+    public Collection getTags() {
         return tagMap.values();
     }
 
@@ -100,7 +103,7 @@ public class NBTTagCompound extends NBTBase {
     }
 
     public NBTBase getTag(String par1Str) {
-        return tagMap.get(par1Str);
+        return (NBTBase) tagMap.get(par1Str);
     }
 
     public boolean hasKey(String par1Str) {
@@ -111,7 +114,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? 0 : ((NBTTagByte) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 1, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(1), var3));
         }
     }
 
@@ -119,7 +122,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? 0 : ((NBTTagShort) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 2, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(2), var3));
         }
     }
 
@@ -127,7 +130,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? 0 : ((NBTTagInt) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 3, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(3), var3));
         }
     }
 
@@ -135,7 +138,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? 0L : ((NBTTagLong) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 4, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(4), var3));
         }
     }
 
@@ -143,7 +146,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? 0.0F : ((NBTTagFloat) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 5, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(5), var3));
         }
     }
 
@@ -151,7 +154,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? 0.0D : ((NBTTagDouble) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 6, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(6), var3));
         }
     }
 
@@ -159,7 +162,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? "" : ((NBTTagString) tagMap.get(par1Str)).data;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 8, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(8), var3));
         }
     }
 
@@ -167,7 +170,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? new byte[0] : ((NBTTagByteArray) tagMap.get(par1Str)).byteArray;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 7, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(7), var3));
         }
     }
 
@@ -175,7 +178,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? new int[0] : ((NBTTagIntArray) tagMap.get(par1Str)).intArray;
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 11, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(11), var3));
         }
     }
 
@@ -183,7 +186,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? new NBTTagCompound(par1Str) : (NBTTagCompound) tagMap.get(par1Str);
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 10, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(10), var3));
         }
     }
 
@@ -191,7 +194,7 @@ public class NBTTagCompound extends NBTBase {
         try {
             return !tagMap.containsKey(par1Str) ? new NBTTagList(par1Str) : (NBTTagList) tagMap.get(par1Str);
         } catch (ClassCastException var3) {
-            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, 9, var3));
+            throw new RuntimeException("Error parsing NBT:" + U.toLog(par1Str, Integer.valueOf(9), var3));
         }
     }
 
@@ -204,20 +207,14 @@ public class NBTTagCompound extends NBTBase {
     }
 
     public String toString() {
-        StringBuilder result = new StringBuilder(getName());
-        result.append(":[");
+        String var1 = getName() + ":[";
 
-        for (Map.Entry<String, NBTBase> entry : tagMap.entrySet()) {
-            result.append(entry.getKey()).append(':').append(entry.getValue()).append(',');
+        String var3;
+        for (Iterator var2 = tagMap.keySet().iterator(); var2.hasNext(); var1 = var1 + var3 + ":" + tagMap.get(var3) + ",") {
+            var3 = (String) var2.next();
         }
 
-        if (result.charAt(result.length() - 1) == ',') {
-            result.setCharAt(result.length() - 1, ']');
-        } else {
-            result.append(']');
-        }
-
-        return result.toString();
+        return var1 + "]";
     }
 
     public boolean hasNoTags() {
@@ -226,9 +223,11 @@ public class NBTTagCompound extends NBTBase {
 
     public NBTBase copy() {
         NBTTagCompound var1 = new NBTTagCompound(getName());
+        Iterator var2 = tagMap.keySet().iterator();
 
-        for (String var3 : tagMap.keySet()) {
-            var1.setTag(var3, tagMap.get(var3).copy());
+        while (var2.hasNext()) {
+            String var3 = (String) var2.next();
+            var1.setTag(var3, ((NBTBase) tagMap.get(var3)).copy());
         }
 
         return var1;
@@ -247,7 +246,7 @@ public class NBTTagCompound extends NBTBase {
         return super.hashCode() ^ tagMap.hashCode();
     }
 
-    static Map<String, NBTBase> getTagMap(NBTTagCompound par0NBTTagCompound) {
+    static Map getTagMap(NBTTagCompound par0NBTTagCompound) {
         return par0NBTTagCompound.tagMap;
     }
 }

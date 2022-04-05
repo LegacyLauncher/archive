@@ -10,7 +10,7 @@ import java.awt.event.ComponentListener;
 
 public abstract class ExtendedLayeredPane extends BlockableLayeredPane implements ResizeableComponent {
     private static final long serialVersionUID = -1L;
-    private int layerCount = 0;
+    private Integer LAYER_COUNT = Integer.valueOf(0);
     protected final JComponent parent;
 
     protected ExtendedLayeredPane() {
@@ -40,7 +40,9 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
     }
 
     public Component add(Component comp) {
-        super.add(comp, (Integer) layerCount++);
+        Integer var10002 = LAYER_COUNT;
+        LAYER_COUNT = LAYER_COUNT + 1;
+        super.add(comp, var10002);
         return comp;
     }
 
@@ -48,8 +50,11 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
         if (components == null) {
             throw new NullPointerException();
         } else {
+            Component[] var5 = components;
+            int var4 = components.length;
 
-            for (Component comp : components) {
+            for (int var3 = 0; var3 < var4; ++var3) {
+                Component comp = var5[var3];
                 add(comp);
             }
 
@@ -59,8 +64,11 @@ public abstract class ExtendedLayeredPane extends BlockableLayeredPane implement
     public void onResize() {
         if (parent != null) {
             setSize(parent.getWidth(), parent.getHeight());
+            Component[] var4;
+            int var3 = (var4 = getComponents()).length;
 
-            for (Component comp : getComponents()) {
+            for (int var2 = 0; var2 < var3; ++var2) {
+                Component comp = var4[var2];
                 if (comp instanceof ResizeableComponent) {
                     ((ResizeableComponent) comp).onResize();
                 }

@@ -102,7 +102,7 @@ public class JavaRuntimeManifest {
 
         FileIntegrityEntry toIntegrityEntry() {
             DownloadInfo download = getDownload();
-            if (download == null) {
+            if(download == null) {
                 LOGGER.warn("file doesn't contain raw download: {}", this);
                 return null;
             }
@@ -127,7 +127,7 @@ public class JavaRuntimeManifest {
     private static Gson GSON;
 
     static Gson getGson() {
-        if (GSON == null) {
+        if(GSON == null) {
             GSON = new GsonBuilder()
                     .registerTypeAdapter(JavaRuntimeManifest.class, new JavaRuntimeManifestDeserializer())
                     .create();

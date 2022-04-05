@@ -1,17 +1,18 @@
 package ru.turikhay.tlauncher.managed;
 
+import ru.turikhay.util.U;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
 
 public abstract class ManagedSet<T> {
-    private final Set<T> set = new LinkedHashSet<>(), set_ = Collections.unmodifiableSet(set);
-    private final ManagedListener<T> listener;
+    private final Set<T> set = new LinkedHashSet<T>(), set_ = Collections.unmodifiableSet(set);
+    private final ManagedListener listener;
     private T selected;
 
-    protected ManagedSet(ManagedListener<T> listener) {
-        this.listener = Objects.requireNonNull(listener, "listener");
+    protected ManagedSet(ManagedListener listener) {
+        this.listener = U.requireNotNull(listener, "listener");
     }
 
     protected void fireSetChanged() {
@@ -19,17 +20,17 @@ public abstract class ManagedSet<T> {
     }
 
     public void add(T obj) {
-        if (set.add(Objects.requireNonNull(obj, "user"))) {
+        if(set.add(U.requireNotNull(obj, "user"))) {
             fireSetChanged();
         }
     }
 
     public void remove(T obj) {
-        if (obj == null) {
+        if(obj == null) {
             return;
         }
-        if (set.remove(obj)) {
-            if (obj.equals(selected)) {
+        if(set.remove(obj)) {
+            if(obj.equals(selected)) {
                 selected = null;
             }
             fireSetChanged();
@@ -37,9 +38,9 @@ public abstract class ManagedSet<T> {
     }
 
     public void select(T obj, boolean fireRefresh) {
-        if (!Objects.equals(selected, obj)) {
+        if(!U.equal(selected, obj)) {
             selected = obj;
-            if (fireRefresh) {
+            if(fireRefresh) {
                 fireSetChanged();
             }
         }

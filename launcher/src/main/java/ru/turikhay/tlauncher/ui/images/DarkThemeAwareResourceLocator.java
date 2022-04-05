@@ -15,9 +15,9 @@ public class DarkThemeAwareResourceLocator extends PrefixResourceLocator {
     @Override
     public Optional<URL> loadResource(String resourceName) {
         Optional<URL> url;
-        if (Theme.getTheme().useDarkTheme()) {
+        if(Theme.getTheme().useDarkTheme()) {
             url = super.loadResource(resourceName);
-            if (url.isPresent()) {
+            if(url.isPresent()) {
                 return url;
             }
         }

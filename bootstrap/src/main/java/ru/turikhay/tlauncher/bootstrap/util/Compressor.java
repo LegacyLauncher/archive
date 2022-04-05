@@ -4,17 +4,14 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 public abstract class Compressor {
     public static final int MARKER_SIZE = 5;
-    private static final Map<String, Compressor> compressorByMarker = new TreeMap<>();
+    private static Map<String, Compressor> compressorByMarker = new TreeMap<String, Compressor>();
 
     public static void init() {
         new GzipCompressor();
@@ -55,21 +52,27 @@ public abstract class Compressor {
 
     public static InputStream uncompressMarked(InputStream in, boolean failIfNoMarker) throws IOException {
         byte[] markerBytes = new byte[MARKER_SIZE];
-        if (IOUtils.read(in, markerBytes) != MARKER_SIZE) {
-            if (failIfNoMarker) {
-                throw new MarkerNotFoundException();
+
+        lookingForMarker:
+        {
+            if (in.read(markerBytes) < MARKER_SIZE) {
+                if (failIfNoMarker) {
+                    throw new MarkerNotFoundException();
+                }
+                break lookingForMarker;
             }
-        } else {
-            String marker = new String(markerBytes, StandardCharsets.UTF_8);
+
+            String marker = new String(markerBytes);
             Compressor compressor = compressorByMarker.get(marker);
 
-            if (compressor != null) {
-                return compressor.uncompress(in);
+            if (compressor == null) {
+                if (failIfNoMarker) {
+                    throw new UnknownMarkerException(marker);
+                }
+                break lookingForMarker;
             }
 
-            if (failIfNoMarker) {
-                throw new UnknownMarkerException(marker);
-            }
+            return compressor.uncompress(in);
         }
 
         return new SequenceInputStream(new ByteArrayInputStream(markerBytes), in);
@@ -97,7 +100,7 @@ public abstract class Compressor {
     }
 
     protected Compressor(String name, String shortName) {
-        this(name, shortName.getBytes(StandardCharsets.UTF_8));
+        this(name, shortName.getBytes(U.UTF8));
     }
 
     public final String getName() {
@@ -126,7 +129,7 @@ public abstract class Compressor {
         protected CompressedInputStream(Compressor compressor, InputStream delegator) {
             super(delegator);
 
-            this.compressor = Objects.requireNonNull(compressor, "compressor");
+            this.compressor = U.requireNotNull(compressor, "compressor");
         }
 
         public final Compressor getCompressor() {
@@ -140,7 +143,7 @@ public abstract class Compressor {
         protected CompressedOutputStream(Compressor compressor, OutputStream delegator) {
             super(delegator);
 
-            this.compressor = Objects.requireNonNull(compressor, "compressor");
+            this.compressor = U.requireNotNull(compressor, "compressor");
         }
 
         public final Compressor getCompressor() {

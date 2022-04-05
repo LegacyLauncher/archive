@@ -37,7 +37,7 @@ public class MinecraftProfileRequester
         } catch (InvalidResponseException e) {
             JsonObject response = e.getResponseAsJson();
             JsonElement errorElement = response.get("error");
-            if (errorElement != null && errorElement.isJsonPrimitive() && "NOT_FOUND".equals(errorElement.getAsString())) {
+            if(errorElement != null && errorElement.isJsonPrimitive() && "NOT_FOUND".equals(errorElement.getAsString())) {
                 throw new ProfileNotCreatedException(e);
             }
             throw new MinecraftProfileRequestException(e);

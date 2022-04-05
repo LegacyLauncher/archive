@@ -31,7 +31,7 @@ public abstract class AbstractOAuthUrlProducer {
         b.addParameter("response_type", "code");
         b.addParameter("redirect_uri", Objects.requireNonNull(redirectUrl, "redirectUrl"));
         b.addParameter("scope", scope);
-        if (state != null) {
+        if(state != null) {
             b.addParameter("state", state);
         }
         return b;

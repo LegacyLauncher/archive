@@ -17,19 +17,21 @@ import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.ScrollPane;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.user.User;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class AccountList extends CenterPanel implements ProfileManagerListener, AccountListener, Blockable {
 
     private final AccountManagerScene scene;
 
-    private final DefaultListModel<Account<? extends User>> accountModel;
-    private final JList<Account<? extends User>> list;
-    private final LocalizableButton add;
-    private final LocalizableButton edit;
+    private final DefaultListModel<Account> accountModel;
+    private final JList<Account> list;
+    private final LocalizableButton add, back, edit;
 
 
     public AccountList(final AccountManagerScene scene) {
@@ -45,9 +47,12 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         this.list = new JList<>(accountModel);
         list.setCellRenderer(new AccountCellRenderer(AccountCellRenderer.AccountCellType.EDITOR));
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.addListSelectionListener(e -> {
-            if ("success".equals(scene.multipane.currentTip())) {
-                scene.multipane.showTip("welcome");
+        list.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if("success".equals(scene.multipane.currentTip())) {
+                    scene.multipane.showTip("welcome");
+                }
             }
         });
         //list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -71,36 +76,46 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         buttons.add(firstLineButtons, c);
 
         add = new LocalizableButton(Images.getIcon24("plus-square"), "account.button.add");
-        add.addActionListener(e -> AccountList.this.scene.multipane.showTip("add-account"));
+        add.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                AccountList.this.scene.multipane.showTip("add-account");
+            }
+        });
         firstLineButtons.add(add);
 
         edit = new LocalizableButton(Images.getIcon24("pencil-square"), "account.button.remove");
-        edit.addActionListener(e -> {
-            if (scene.list.getSelected() != null) {
-                scene.multipane.showTip("edit-account-" + scene.list.getSelected().getType().toString().toLowerCase(java.util.Locale.ROOT));
+        edit.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if(scene.list.getSelected() != null) {
+                    scene.multipane.showTip("edit-account-" + scene.list.getSelected().getType().toString().toLowerCase(java.util.Locale.ROOT));
+                }
+                /*int index = list.getSelectedIndex();
+                Account selected = list.getSelectedValue();
+                if(selected != null) {
+                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
+                }
+                try {
+                    TLauncher.getInstance().getProfileManager().saveProfiles();
+                } catch (IOException e1) {
+                    Alert.showError(e1);
+                    return;
+                }
+                if(index >= accountModel.getSize()) {
+                    index = accountModel.getSize() - 1;
+                }
+                if(index > -1) {
+                    list.setSelectedIndex(index);
+                }*/
             }
-            /*int index = list.getSelectedIndex();
-            Account selected = list.getSelectedValue();
-            if(selected != null) {
-                TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selected.getUser());
-            }
-            try {
-                TLauncher.getInstance().getProfileManager().saveProfiles();
-            } catch (IOException e1) {
-                Alert.showError(e1);
-                return;
-            }
-            if(index >= accountModel.getSize()) {
-                index = accountModel.getSize() - 1;
-            }
-            if(index > -1) {
-                list.setSelectedIndex(index);
-            }*/
         });
         firstLineButtons.add(edit);
 
-        LocalizableButton back = new LocalizableButton(Images.getIcon24("home"), "account.button.home");
-        back.addActionListener(e -> TLauncher.getInstance().getFrame().mp.openDefaultScene());
+        back = new LocalizableButton(Images.getIcon24("home"), "account.button.home");
+        back.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                TLauncher.getInstance().getFrame().mp.openDefaultScene();
+            }
+        });
         firstLineButtons.add(back);
 
         wrapper.setSouth(buttons);
@@ -109,11 +124,11 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
         TLauncher.getInstance().getProfileManager().addListener(new SwingProfileManagerListener(this));
     }
 
-    public Account<? extends User> getSelected() {
+    public Account getSelected() {
         return list.getSelectedValue();
     }
 
-    public void select(Account<? extends User> account) {
+    public void select(Account account) {
         list.setSelectedValue(account, true);
     }
 
@@ -124,7 +139,7 @@ public class AccountList extends CenterPanel implements ProfileManagerListener, 
     @Override
     public void onAccountsRefreshed(AuthenticatorDatabase db) {
         accountModel.clear();
-        for (Account<? extends User> account : db.getAccounts()) {
+        for(Account account : db.getAccounts()) {
             accountModel.addElement(account);
         }
     }

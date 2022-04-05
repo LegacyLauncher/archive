@@ -10,19 +10,19 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ProcessStarter {
 
-    public static ProcessBuilder startJarProcess(Path dir, Set<Path> classpath, String mainClass, List<String> jvmArgs, List<String> appArgs) throws IOException {
-        Objects.requireNonNull(classpath, "classpath");
-        Objects.requireNonNull(jvmArgs, "jvmArgs");
-        Objects.requireNonNull(appArgs, "appArgs");
+    public static Process startJarProcess(File dir, Set<File> classpath, String mainClass, List<String> jvmArgs, List<String> appArgs) throws IOException {
+        U.requireNotNull(classpath, "classpath");
+        U.requireNotNull(jvmArgs, "jvmArgs");
+        U.requireNotNull(appArgs, "appArgs");
 
-        List<String> cmd = new ArrayList<>();
+        List<String> cmd = new ArrayList<String>();
         cmd.add(getJavaExec());
         cmd.addAll(jvmArgs);
         cmd.add("-classpath");
@@ -33,11 +33,11 @@ public class ProcessStarter {
         return startProcess(dir, cmd);
     }
 
-    private static ProcessBuilder startProcess(Path dir, List<String> cmd) throws IOException {
+    private static Process startProcess(File dir, List<String> cmd) throws IOException {
         U.log("[ProcessStarter]", "Starting process:", cmd);
-        Objects.requireNonNull(dir, "dir");
-        Objects.requireNonNull(cmd, "cmd");
-        return new ProcessBuilder().command(cmd).directory(dir.toFile());
+        U.requireNotNull(dir, "dir");
+        U.requireNotNull(cmd, "cmd");
+        return new ProcessBuilder().command(cmd).directory(dir).start();
     }
 
     private static String getJavaExec() {
@@ -51,51 +51,51 @@ public class ProcessStarter {
         return path;
     }
 
-    private static String constructClassPath(Set<Path> classpathList) throws IOException {
+    private static String constructClassPath(Set<File> classpathList) throws IOException {
         StringBuilder classpathBuilder = new StringBuilder();
-        for (Path classpathEntry : classpathList) {
-            Objects.requireNonNull(classpathEntry, "classpathEntry");
-            if (!Files.exists(classpathEntry)) {
-                throw new FileNotFoundException("classpath not found: " + classpathEntry.toAbsolutePath());
+        for(File classpathEntry : classpathList) {
+            U.requireNotNull(classpathEntry, "classpathEntry");
+            if(!classpathEntry.exists()) {
+                throw new FileNotFoundException("classpath not found: " + classpathEntry.getAbsolutePath());
             }
-            if (classpathBuilder.length() > 0) {
+            if(classpathBuilder.length() > 0) {
                 classpathBuilder.append(File.pathSeparatorChar);
             }
-            classpathBuilder.append(classpathEntry.toAbsolutePath());
+            classpathBuilder.append(classpathEntry.getAbsolutePath());
         }
 
         return classpathBuilder.toString();
     }
 
-    public static Set<Path> getDefinedClasspath() throws IOException {
-        HashSet<Path> set = new HashSet<>();
+    public static Set<File> getDefinedClasspath() throws IOException {
+        HashSet<File> set = new HashSet<File>();
         ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        if (systemClassLoader instanceof URLClassLoader) {
+        if(systemClassLoader instanceof URLClassLoader) {
             for (URL url : ((URLClassLoader) systemClassLoader).getURLs()) {
-                Path systemClasspathEntry;
+                File systemClasspathEntry;
 
                 try {
-                    systemClasspathEntry = Paths.get(url.toURI());
+                    systemClasspathEntry = new File(url.toURI());
                 } catch (URISyntaxException e) {
                     throw new IOException(e);
                 }
 
-                if (!Files.exists(systemClasspathEntry)) {
-                    throw new FileNotFoundException("system classpath not found: " + systemClasspathEntry.toAbsolutePath());
+                if (!systemClasspathEntry.exists()) {
+                    throw new FileNotFoundException("system classpath not found: " + systemClasspathEntry.getAbsolutePath());
                 }
 
                 set.add(systemClasspathEntry);
             }
         } else {
             String classPath = System.getProperty("tlauncher.bootstrap.classpath");
-            if (classPath == null) {
+            if(classPath == null) {
                 U.log("[WARNING] tlauncher.bootstrap.classpath is not defined");
                 return set;
             }
-            for (String path : StringUtils.split(classPath, File.pathSeparatorChar)) {
-                Path file = Paths.get(path);
-                if (!Files.exists(file)) {
-                    throw new FileNotFoundException("predefined classpath entry not found: " + path + "(points to: " + file.toAbsolutePath() + ")");
+            for(String path : StringUtils.split(classPath, File.pathSeparatorChar)) {
+                File file = new File(path);
+                if(!file.isFile()) {
+                    throw new FileNotFoundException("predefined classpath entry not found: " + path + "(points to: " + file.getAbsolutePath() + ")");
                 }
                 set.add(file);
             }

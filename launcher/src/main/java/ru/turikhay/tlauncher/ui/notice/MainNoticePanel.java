@@ -14,34 +14,37 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
 public class MainNoticePanel extends NoticePanel implements ResizeableComponent {
-    private static final int SAFE_ZONE = 10;
+    private static int SAFE_ZONE = 10;
 
     private final DefaultScene defaultScene;
 
     private final LocalizableMenuItem hideNotice = new LocalizableMenuItem("notice.action.hide");
-
     {
         Images.getIcon16("eye-slash").setup(hideNotice);
-        hideNotice.addActionListener(e -> {
-            if (getNotice() != null) {
-                manager.setHidden(getNotice(), true);
-                manager.selectRandom();
+        hideNotice.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(getNotice() != null) {
+                    manager.setHidden(getNotice(), true);
+                    manager.selectRandom();
+                }
             }
         });
     }
 
     private final LocalizableMenuItem hideAllNotices = new LocalizableMenuItem("notice.action.hide-all");
-
     {
         Images.getIcon16("remove").setup(hideAllNotices);
-        hideAllNotices.addActionListener(e -> {
-            manager.setAllHidden();
-            manager.selectNotice(null, true);
+        hideAllNotices.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                manager.setAllHidden();
+                manager.selectNotice(null, true);
+            }
         });
     }
 
     private final LocalizableMenuItem openNoticeScene = new LocalizableMenuItem("notice.action.scene");
-
     {
         Images.getIcon16("expand").setup(openNoticeScene);
         openNoticeScene.addActionListener(new ActionListener() {
@@ -81,7 +84,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
     }
 
     private void noticeSeen() {
-        if (isVisible() && getNotice() != null && (TLauncher.getInstance() == null || TLauncher.getInstance().getMinecraftLauncher() == null || !TLauncher.getInstance().getMinecraftLauncher().isWorking())) {
+        if(isVisible() && getNotice() != null && (TLauncher.getInstance() == null || TLauncher.getInstance().getMinecraftLauncher() == null || !TLauncher.getInstance().getMinecraftLauncher().isWorking())) {
             Stats.noticeViewed(getNotice());
         }
     }
@@ -89,7 +92,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
     protected void updateNotice() {
         super.updateNotice();
 
-        if (TLauncher.getInstance() != null && TLauncher.getInstance().isReady()) {
+        if(TLauncher.getInstance() != null && TLauncher.getInstance().isReady()) {
             onResize();
         }
 
@@ -98,7 +101,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
 
     @Override
     public void onResize() {
-        if (getNotice() == null) {
+        if(getNotice() == null) {
             return;
         }
 
@@ -111,9 +114,9 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
 
         int x = loginFormLocation.x + loginFormSize.width / 2 - fullWidth / 2;
 
-        if (x + fullWidth > defaultScene.getWidth() - SAFE_ZONE) {
+        if(x + fullWidth > defaultScene.getWidth() - SAFE_ZONE) {
             x = defaultScene.getWidth() - fullWidth - SAFE_ZONE;
-        } else if (x < SAFE_ZONE) {
+        } else if(x < SAFE_ZONE) {
             x = SAFE_ZONE;
         }
 

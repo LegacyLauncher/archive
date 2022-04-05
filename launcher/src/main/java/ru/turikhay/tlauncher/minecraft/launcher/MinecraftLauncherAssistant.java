@@ -17,11 +17,11 @@ public abstract class MinecraftLauncherAssistant {
         return launcher;
     }
 
-    protected abstract void collectInfo();
+    protected abstract void collectInfo() throws MinecraftException;
 
-    protected abstract void collectResources(Downloader var1);
+    protected abstract void collectResources(Downloader var1) throws MinecraftException;
 
-    protected abstract void constructJavaArguments();
+    protected abstract void constructJavaArguments() throws MinecraftException;
 
-    protected abstract void constructProgramArguments();
+    protected abstract void constructProgramArguments() throws MinecraftException;
 }

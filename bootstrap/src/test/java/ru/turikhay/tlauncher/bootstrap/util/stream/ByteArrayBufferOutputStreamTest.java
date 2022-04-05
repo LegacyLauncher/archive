@@ -1,13 +1,11 @@
 package ru.turikhay.tlauncher.bootstrap.util.stream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ByteArrayBufferOutputStreamTest {
     private static final int COUNT = 16;
@@ -22,8 +20,8 @@ public class ByteArrayBufferOutputStreamTest {
     @Test
     public void testSimpleWrites() throws IOException {
         stream.write('\u0046');
-        stream.write(new byte[]{111, 111});
-        stream.write(new byte[]{0, 33, 0}, 1, 1);
+        stream.write(new byte[]{ 111, 111 });
+        stream.write(new byte[]{ 0, 33, 0 }, 1, 1);
         assertEquals(stream.buffer().toString("UTF-8"), "Foo!");
     }
 
@@ -51,7 +49,7 @@ public class ByteArrayBufferOutputStreamTest {
     public void testOverflowWriteArray() throws IOException {
         write(COUNT);
         assertEquals(size(), COUNT);
-        stream.write(new byte[]{32, 32, 32, 32});
+        stream.write(new byte[]{ 32, 32, 32, 32 });
         assertEquals(size(), COUNT);
     }
 
@@ -59,7 +57,7 @@ public class ByteArrayBufferOutputStreamTest {
     public void testOverflowWriteBuffer() throws IOException {
         write(COUNT);
         assertEquals(size(), COUNT);
-        stream.write(new byte[]{32, 32, 32, 32}, 2, 2);
+        stream.write(new byte[]{ 32, 32, 32, 32 }, 2, 2);
         assertEquals(size(), COUNT);
     }
 

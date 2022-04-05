@@ -42,7 +42,7 @@ public class Sha1Downloadable extends Downloadable {
 
     @Override
     protected void onComplete() throws RetryDownloadException {
-        if (length > 0L) {
+        if(length > 0L) {
             BasicFileAttributeView attrs = Files.getFileAttributeView(getDestination().toPath(),
                     BasicFileAttributeView.class);
             long length;
@@ -51,7 +51,7 @@ public class Sha1Downloadable extends Downloadable {
             } catch (IOException e) {
                 throw new RetryDownloadException("couldn't read file length", e);
             }
-            if (this.length != length) {
+            if(this.length != length) {
                 throw new RetryDownloadException("file length doesn't match. got: " + length + ", expected: " + this.length);
             }
         }

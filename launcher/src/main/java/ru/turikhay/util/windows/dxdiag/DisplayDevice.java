@@ -8,7 +8,7 @@ public class DisplayDevice {
             driverDate, hybridGraphics;
 
     DisplayDevice(String cardName, String manufacturer, String dacType, String type, String key,
-                  String driverVersion, String driverModel, String driverDate, String hybridGraphics) {
+                         String driverVersion, String driverModel, String driverDate, String hybridGraphics) {
         this.cardName = cardName;
         this.manufacturer = manufacturer;
         this.dacType = dacType;

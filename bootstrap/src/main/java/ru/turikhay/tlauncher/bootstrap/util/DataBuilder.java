@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class DataBuilder {
-    private final Map<String, String> data = new LinkedHashMap<>();
+    private final Map<String, String> data = new LinkedHashMap<String, String>();
 
     public DataBuilder add(String key, String value) {
         data.put(key, value);
@@ -15,7 +15,7 @@ public final class DataBuilder {
     public DataBuilder add(String key, Object value) {
         String str;
 
-        if (value instanceof File) {
+        if(value instanceof File) {
             str = ((File) value).getAbsolutePath();
         } else {
             str = String.valueOf(value);

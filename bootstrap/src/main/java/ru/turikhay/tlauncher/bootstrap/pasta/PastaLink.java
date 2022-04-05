@@ -17,7 +17,7 @@ public class PastaLink {
         URL url;
         try {
             url = new URL(href);
-        } catch (Exception e) {
+        } catch(Exception e) {
             throw new PastaException("bad url: " + href, e);
         }
         return new PastaLink(url);

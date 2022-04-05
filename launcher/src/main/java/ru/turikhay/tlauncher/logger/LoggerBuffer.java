@@ -19,7 +19,7 @@ public class LoggerBuffer implements LoggerInterface {
         final StringBuilder buffer = this.buffer;
         if (buffer != null) {
             synchronized (buffer) {
-                if (buffer.length() + message.length() >= capacity) {
+                if(buffer.length() + message.length() >= capacity) {
                     buffer.setLength(0);
                 }
                 buffer.append(message);
@@ -29,7 +29,7 @@ public class LoggerBuffer implements LoggerInterface {
 
     public String drain() {
         final StringBuilder buffer = this.buffer;
-        if (buffer == null) {
+        if(buffer == null) {
             return null;
         }
         synchronized (buffer) {
@@ -42,7 +42,7 @@ public class LoggerBuffer implements LoggerInterface {
     }
 
     public void cleanup() {
-        if (buffer != null) {
+        if(buffer != null) {
             buffer = null;
         }
     }

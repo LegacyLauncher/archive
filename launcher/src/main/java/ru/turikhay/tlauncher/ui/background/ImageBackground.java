@@ -79,7 +79,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
         } else {
             currentImage = null;
 
-            InputStream input;
+            InputStream input = null;
 
             if (U.makeURL(path) == null) {
                 File file = new File(path);
@@ -133,12 +133,12 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
         /*if(MultiResInterface.INSTANCE.isEnabled()) {
             return renderMultiResImage(image);
         } else {*/
-        return renderScaleImage(image);
+            return renderScaleImage(image);
         //}
     }
 
     private Image renderScaleImage(Image image) {
-        double realWidth = getWidth() * SwingUtil.getScalingFactor(),
+        double  realWidth = getWidth() * SwingUtil.getScalingFactor(),
                 realHeight = getHeight() * SwingUtil.getScalingFactor();
         BufferedImage scaledImage;
         Graphics2D g;
@@ -148,6 +148,8 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g.drawImage(image, 0, 0, scaledImage.getWidth(), scaledImage.getHeight(), null);
         } catch (OutOfMemoryError oom) {
+            scaledImage = null;
+            g = null;
             ExceptionHandler.reduceMemory(oom);
             return Images.ONE_PIX.get();
         }
@@ -171,7 +173,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
 
         try {
             g.drawImage(render, (int) x, (int) y, (int) width, (int) height, null);
-        } catch (OutOfMemoryError oom) {
+        } catch(OutOfMemoryError oom) {
             ExceptionHandler.reduceMemory(oom);
         }
     }

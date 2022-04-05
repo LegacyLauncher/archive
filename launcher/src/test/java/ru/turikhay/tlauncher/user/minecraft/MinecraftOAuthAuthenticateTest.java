@@ -96,13 +96,13 @@ public class MinecraftOAuthAuthenticateTest {
 
     private final ProfileCreatorUserInterface profileCreatorUserInterface = new ProfileCreatorUserInterface() {
         @Override
-        public String requestProfileName() {
+        public String requestProfileName() throws InterruptedException {
             return JOptionPane.showInputDialog("Please select Minecraft profile name:");
         }
 
         @Override
         public void showProfileUnavailableMessage(String profileName) {
-            JOptionPane.showMessageDialog(null, "This profile name (" + profileName + ") is not available");
+            JOptionPane.showMessageDialog(null, "This profile name ("+ profileName +") is not available");
         }
     };
 }

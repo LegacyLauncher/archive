@@ -19,7 +19,8 @@ import java.awt.event.MouseEvent;
 
 public class SettingsFontSlider extends BorderPanel implements EditorField {
     private final JSlider slider = new JSlider();
-    private final EditorIntegerField inputField;
+    private EditorIntegerField inputField;
+    private final LocalizableLabel pt;
 
     SettingsFontSlider() {
         slider.setOpaque(false);
@@ -37,7 +38,7 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
         setCenter(slider);
         inputField = new EditorIntegerField();
         inputField.textField.setColumns(2);
-        LocalizableLabel pt = new LocalizableLabel("settings.fontsize.pt");
+        pt = new LocalizableLabel("settings.fontsize.pt");
         ExtendedPanel panel = new ExtendedPanel();
         panel.add(inputField, pt);
         setEast(panel);
@@ -93,7 +94,7 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
     }
 
     private void onSliderUpdate() {
-        inputField.textField.setValue(slider.getValue());
+        inputField.textField.setValue(Integer.valueOf(slider.getValue()));
     }
 
     private void updateSlider() {
