@@ -21,12 +21,12 @@ public class Multipane extends ExtendedPanel implements Scrollable {
     }
 
     public Component add(Component comp) {
-        add(comp, (String) null);
+        add(comp, null);
         return comp;
     }
 
     public void add(Component comp, Object key) {
-        if(key instanceof String) {
+        if (key instanceof String) {
             add(comp, (String) key);
         } else {
             throw new IllegalArgumentException("key is not a String");
@@ -35,7 +35,7 @@ public class Multipane extends ExtendedPanel implements Scrollable {
 
     public void add(Component comp, String key) {
         Component old = compMap.get(key);
-        if(old != null) {
+        if (old != null) {
             super.remove(old);
         }
         super.add(comp, key);
@@ -44,7 +44,7 @@ public class Multipane extends ExtendedPanel implements Scrollable {
 
     public void show(String key) {
         Component comp = compMap.get(key);
-        if(comp == null) {
+        if (comp == null) {
             throw new IllegalArgumentException("component missing: " + key);
         }
         layout.show(this, key);
@@ -54,7 +54,7 @@ public class Multipane extends ExtendedPanel implements Scrollable {
 
     @Override
     public void setLayout(LayoutManager mgr) {
-        if(mgr instanceof CardLayout) {
+        if (mgr instanceof CardLayout) {
             super.setLayout(mgr);
         }
     }
@@ -65,7 +65,7 @@ public class Multipane extends ExtendedPanel implements Scrollable {
 
     @Override
     public Dimension getPreferredScrollableViewportSize() {
-        return scrollSize == null? getPreferredSize() : scrollSize;
+        return scrollSize == null ? getPreferredSize() : scrollSize;
     }
 
     @Override

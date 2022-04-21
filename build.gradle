@@ -2,6 +2,8 @@ plugins {
     id "java"
     id "org.ajoberstar.grgit" version "4.1.0" apply false
     id "org.openjfx.javafxplugin" version "0.0.10" apply false
+    id "com.github.johnrengelman.shadow" version "7.0.0" apply false
+    id "com.github.gmazzo.buildconfig" version "3.0.3" apply false
 }
 
 allprojects {
@@ -9,10 +11,25 @@ allprojects {
         options.encoding = 'UTF-8'
     }
     repositories {
-        jcenter()
         mavenCentral()
-        flatDir {
-            dirs "${rootDir}/libraries/maven"
+        maven {
+            url("https://cdn.turikhay.ru/tlauncher/repo/libraries")
+            name("turikhay cdn")
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
+            mavenContent {
+                includeGroup("ru.turikhay")
+                includeGroup("ru.turikhay.app")
+            }
+        }
+        maven {
+            url("https://libraries.minecraft.net")
+            name("Minecraft")
+            mavenContent {
+                includeGroup("com.mojang")
+            }
         }
     }
 }

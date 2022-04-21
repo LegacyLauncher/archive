@@ -9,8 +9,6 @@ import ru.turikhay.util.OS;
 
 import javax.swing.plaf.basic.BasicHTML;
 import javax.swing.text.View;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 public class VersionTipPanel extends CenterPanel implements LocalizableComponent, ResizeableComponent {
     private final HTMLLabel tip = new HTMLLabel();
@@ -18,13 +16,11 @@ public class VersionTipPanel extends CenterPanel implements LocalizableComponent
     VersionTipPanel(VersionHandler handler) {
         super(CenterPanel.tipTheme, CenterPanel.squareInsets);
         add(tip);
-        tip.addPropertyChangeListener("html", new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
-                Object o = evt.getNewValue();
-                if (o != null && o instanceof View) {
-                    View view = (View) o;
-                    BasicHTML.getHTMLBaseline(view, 300 - getHorizontalInsets(), 0);
-                }
+        tip.addPropertyChangeListener("html", evt -> {
+            Object o = evt.getNewValue();
+            if (o instanceof View) {
+                View view = (View) o;
+                BasicHTML.getHTMLBaseline(view, 300 - getHorizontalInsets(), 0);
             }
         });
         updateLocale();

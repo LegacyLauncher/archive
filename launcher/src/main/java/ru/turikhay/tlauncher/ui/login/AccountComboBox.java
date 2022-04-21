@@ -19,30 +19,23 @@ import ru.turikhay.tlauncher.ui.swing.AccountCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.tlauncher.user.InvalidCredentialsException;
+import ru.turikhay.tlauncher.user.User;
 
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 
-public class AccountComboBox extends ExtendedComboBox<Account> implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
+public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
     private static final Logger LOGGER = LogManager.getLogger(AccountComboBox.class);
 
     private static final long serialVersionUID = 6618039863712810645L;
-    private static final Account EMPTY;
-    private static final Account MANAGE;
+    private static final Account<? extends User> EMPTY = AccountCellRenderer.EMPTY;
+    private static final Account<? extends User> MANAGE = AccountCellRenderer.MANAGE;
     private final ProfileManager manager;
     private final LoginForm loginForm;
-    private final AuthenticatorListener listener;
-    private final SimpleComboBoxModel<Account> model;
-    private Account selectedAccount;
+    private final AuthenticatorListener<? super User> listener;
+    private final SimpleComboBoxModel<Account<? extends User>> model;
+    private Account<? extends User> selectedAccount;
     boolean refreshing;
-
-    static {
-        EMPTY = AccountCellRenderer.EMPTY;
-        MANAGE = AccountCellRenderer.MANAGE;
-    }
 
     AccountComboBox(LoginForm lf) {
         super(new AccountCellRenderer());
@@ -50,49 +43,47 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
         model = getSimpleModel();
         manager = TLauncher.getInstance().getProfileManager();
         manager.addListener(new SwingProfileManagerListener(this));
-        listener = new AuthUIListener(lf) {
+        listener = new AuthUIListener<User>(lf) {
             @Override
-            public void onAuthPassingError(Authenticator auth, Throwable e) {
-                if(e instanceof InvalidCredentialsException) {
+            public void onAuthPassingError(Authenticator<? extends User> auth, Throwable e) {
+                if (e instanceof InvalidCredentialsException) {
                     //TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().remove(selectedAccount.getUser());
                     loginForm.pane.openAccountEditor();
                     loginForm.pane.accountManager.get().multipane.showTip("add-account-" +
-                            (selectedAccount.getType() == Account.AccountType.ELY_LEGACY? "ely" :
-                            selectedAccount.getType().name().toLowerCase(java.util.Locale.ROOT))
+                            (selectedAccount.getType() == Account.AccountType.ELY_LEGACY ? "ely" :
+                                    selectedAccount.getType().name().toLowerCase(java.util.Locale.ROOT))
                     );
                 }
                 super.onAuthPassingError(auth, e);
             }
         };
-        addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                Account selected = (Account) getSelectedItem();
-                if (selected != null && selected != AccountComboBox.EMPTY) {
-                    if (selected == AccountComboBox.MANAGE) {
-                        if(selectedAccount != null && loginForm.pane.accountManager.isLoaded()) {
-                            loginForm.pane.accountManager.get().list.select(selectedAccount);
-                        }
-                        loginForm.pane.openAccountEditor();
-                        setSelectedIndex(0);
-                    } else {
-                        selectedAccount = selected;
-                        TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().select(selectedAccount == null? null : selectedAccount.getUser(), false);
-                        try {
-                            TLauncher.getInstance().getProfileManager().saveProfiles();
-                        } catch (IOException e1) {
-                            LOGGER.warn("Could not save profiles", e1);
-                        }
+        addItemListener(e -> {
+            Account<? extends User> selected = (Account<? extends User>) getSelectedItem();
+            if (selected != null && selected != AccountComboBox.EMPTY) {
+                if (selected == AccountComboBox.MANAGE) {
+                    if (selectedAccount != null && loginForm.pane.accountManager.isLoaded()) {
+                        loginForm.pane.accountManager.get().list.select(selectedAccount);
+                    }
+                    loginForm.pane.openAccountEditor();
+                    setSelectedIndex(0);
+                } else {
+                    selectedAccount = selected;
+                    TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().select(selectedAccount == null ? null : selectedAccount.getUser(), false);
+                    try {
+                        TLauncher.getInstance().getProfileManager().saveProfiles();
+                    } catch (IOException e1) {
+                        LOGGER.warn("Could not save profiles", e1);
                     }
                 }
-                updateAccount();
             }
+            updateAccount();
         });
     }
 
     private void updateAccount() {
         Account.AccountType type = Account.AccountType.PLAIN;
         if (!refreshing) {
-            if(selectedAccount != null) {
+            if (selectedAccount != null) {
                 if (selectedAccount.getType() == Account.AccountType.ELY ||
                         selectedAccount.getType() == Account.AccountType.ELY_LEGACY ||
                         selectedAccount.getType() == Account.AccountType.MCLEAKS) {
@@ -106,12 +97,12 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
         VersionComboBox.showVersionForType = type;
     }
 
-    public Account getAccount() {
-        Account value = (Account) getSelectedItem();
+    public Account<? extends User> getAccount() {
+        Account<? extends User> value = (Account<? extends User>) getSelectedItem();
         return value != null && !value.equals(EMPTY) ? value : null;
     }
 
-    public void setAccount(Account account) {
+    public void setAccount(Account<? extends User> account) {
         if (account != null) {
             if (!account.equals(getAccount())) {
                 setSelectedItem(account);
@@ -120,21 +111,17 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     }
 
     public void logginingIn() throws LoginException {
-        if(loginForm.versions.getVersion() != null &&
+        if (loginForm.versions.getVersion() != null &&
                 loginForm.versions.getVersion().getAvailableVersion().getReleaseType() == ReleaseType.LAUNCHER) {
             return;
         }
-        final Account account = getAccount();
+        final Account<? extends User> account = getAccount();
         if (account == null) {
             loginForm.pane.openAccountEditor();
             Alert.showLocError("account.empty.error");
             throw new LoginException("Account list is empty!");
         } else if (!account.isFree()) {
-            throw new LoginWaitException("Waiting for auth...", new LoginWaitException.LoginWaitTask() {
-                public void runTask() {
-                    Authenticator.instanceFor(account).pass(listener);
-                }
-            });
+            throw new LoginWaitException("Waiting for auth...", () -> Authenticator.instanceFor(account).pass(listener));
         }
     }
 
@@ -144,19 +131,17 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     public void loginSucceed() {
     }
 
-    public void refreshAccounts(AuthenticatorDatabase db, Account select) {
+    public void refreshAccounts(AuthenticatorDatabase db, Account<? extends User> select) {
         removeAllItems();
         selectedAccount = null;
-        Collection list1 = db.getAccounts();
+        Collection<Account<? extends User>> list1 = db.getAccounts();
         if (list1.isEmpty()) {
             addItem(EMPTY);
         } else {
             refreshing = true;
             model.addElements(list1);
-            Iterator var5 = list1.iterator();
 
-            while (var5.hasNext()) {
-                Account account1 = (Account) var5.next();
+            for (Account<? extends User> account1 : list1) {
                 if (select != null && select.equals(account1)) {
                     setSelectedItem(account1);
                     break;
@@ -178,11 +163,11 @@ public class AccountComboBox extends ExtendedComboBox<Account> implements Blocka
     }
 
     public void onProfilesRefreshed(ProfileManager pm) {
-        refreshAccounts(pm.getAuthDatabase(), pm.getAccountManager().getUserSet().getSelected() == null? null : new Account(pm.getAccountManager().getUserSet().getSelected()));
+        refreshAccounts(pm.getAuthDatabase(), pm.getAccountManager().getUserSet().getSelected() == null ? null : new Account<>(pm.getAccountManager().getUserSet().getSelected()));
     }
 
     public void onProfileManagerChanged(ProfileManager pm) {
-        refreshAccounts(pm.getAuthDatabase(), pm.getAccountManager().getUserSet().getSelected() == null? null : new Account(pm.getAccountManager().getUserSet().getSelected()));
+        refreshAccounts(pm.getAuthDatabase(), pm.getAccountManager().getUserSet().getSelected() == null ? null : new Account<>(pm.getAccountManager().getUserSet().getSelected()));
     }
 
     public void block(Object reason) {

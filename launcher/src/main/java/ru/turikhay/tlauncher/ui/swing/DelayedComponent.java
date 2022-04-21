@@ -3,10 +3,10 @@ package ru.turikhay.tlauncher.ui.swing;
 import org.apache.commons.lang3.Validate;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import java.awt.*;
 import java.lang.ref.SoftReference;
+import java.util.Objects;
 
 public class DelayedComponent<T extends Component> implements Blockable {
 
@@ -18,9 +18,9 @@ public class DelayedComponent<T extends Component> implements Blockable {
     }
 
     public T get() {
-        if(componentRef != null) {
+        if (componentRef != null) {
             final T comp = componentRef.get();
-            if(comp != null) {
+            if (comp != null) {
                 return comp;
             }
         }
@@ -52,7 +52,7 @@ public class DelayedComponent<T extends Component> implements Blockable {
 
     @Override
     public void unblock(Object var1) {
-        if(U.equal(blockObj, var1)) {
+        if (Objects.equals(blockObj, var1)) {
             blockObj = null;
         }
     }

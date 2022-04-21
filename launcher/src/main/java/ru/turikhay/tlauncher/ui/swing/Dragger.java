@@ -8,7 +8,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,11 +15,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class Dragger extends BorderPanel implements LocalizableComponent {
-    private static final List<SoftReference<Dragger>> draggers = new ArrayList();
+    private static final List<SoftReference<Dragger>> draggers = new ArrayList<>();
     private static final Color enabledColor = new Color(0, 0, 0, 32);
     private static final Color disabledColor = new Color(0, 0, 0, 16);
     private static Configuration config;
@@ -29,7 +27,6 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
     private final JComponent parent;
     private final String key;
     private final ExtendedLabel label;
-    private final Dragger.DraggerMouseListener listener;
     private String tooltip;
 
     public Dragger(JComponent parent, String name) {
@@ -42,13 +39,13 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
         } else {
             this.parent = parent;
             key = "dragger." + name;
-            listener = new Dragger.DraggerMouseListener();
+            DraggerMouseListener listener = new DraggerMouseListener();
             setCursor(SwingUtil.getCursor(13));
             label = new ExtendedLabel();
             label.addMouseListener(listener);
             setCenter(label);
             if (!ready) {
-                draggers.add(new SoftReference(this));
+                draggers.add(new SoftReference<>(this));
             }
 
             setEnabled(true);
@@ -126,38 +123,29 @@ public class Dragger extends BorderPanel implements LocalizableComponent {
             } else if (maxPoint == null) {
                 throw new NullPointerException("maxPoint");
             } else {
-                config = config;
-                maxPoint = maxPoint;
                 ready = true;
-                Iterator var3 = draggers.iterator();
 
-                while (var3.hasNext()) {
-                    SoftReference dragger = (SoftReference) var3.next();
-                    if (dragger.get() == null) {
-                    } else {
-                        ((Dragger) dragger.get()).ready();
+                for (SoftReference<Dragger> draggerRef : draggers) {
+                    Dragger dragger = draggerRef.get();
+                    if (dragger != null) {
+                        dragger.ready();
                     }
                 }
-
             }
         }
     }
 
     public static synchronized void update() {
-        Iterator var1 = draggers.iterator();
-
-        while (var1.hasNext()) {
-            SoftReference dragger = (SoftReference) var1.next();
-            if (dragger.get() == null) {
-            } else {
-                ((Dragger) dragger.get()).updateCoords();
+        for (SoftReference<Dragger> draggerRef : draggers) {
+            Dragger dragger = draggerRef.get();
+            if (dragger != null) {
+                dragger.updateCoords();
             }
         }
-
     }
 
     public class DraggerMouseListener extends MouseAdapter {
-        private int[] startPoint = new int[2];
+        private final int[] startPoint = new int[2];
 
         public void mousePressed(MouseEvent e) {
             if (isEnabled()) {

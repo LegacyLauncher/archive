@@ -23,11 +23,11 @@ public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
 
     static class ElySerialize {
 
-        int id;
-        String username;
-        String displayName;
-        UUID uuid;
-        long registeredAt;
+        final int id;
+        final String username;
+        final String displayName;
+        final UUID uuid;
+        final long registeredAt;
         String accessToken;
         String refreshToken;
         Long expiryTime;
@@ -45,14 +45,14 @@ public class ElyUserJsonizer extends UserJsonizer<ElyUser> {
 
         ElyUser create() {
             return new ElyUser(
-                id,
-                username,
-                StringUtils.isBlank(displayName)? username : displayName,
-                uuid,
-                U.getUTC(registeredAt * 1000L).getTime(),
-                accessToken,
-                refreshToken,
-                expiryTime
+                    id,
+                    username,
+                    StringUtils.isBlank(displayName) ? username : displayName,
+                    uuid,
+                    U.getUTC(registeredAt * 1000L).getTime(),
+                    accessToken,
+                    refreshToken,
+                    expiryTime
             );
         }
     }

@@ -83,23 +83,23 @@ public class DefaultScene extends PseudoScene {
     }
 
     private void updateSidePanel() {
-        if(isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
+        if (isNoticeSidePanelEnabled() && getMainPane().getRootFrame().getNotices().getForCurrentLocale() != null) {
             setSidePanel(null);
         }
     }
 
     public void setShown(boolean shown, boolean animate) {
         super.setShown(shown, animate);
-        if(shown) {
-            if(getMainPane().getRootFrame().getNotices().getSelectedNotice() != null) {
+        if (shown) {
+            if (getMainPane().getRootFrame().getNotices().getSelectedNotice() != null) {
                 if (getMainPane().getRootFrame().getNotices().isHidden(noticePanel.get().getNotice())) {
                     getMainPane().getRootFrame().getNotices().selectRandom();
                 }
                 noticePanel.get().redraw();
             }
 
-            if(getMainPane().accountManager.isLoaded()) {
-                Account selected = getMainPane().accountManager.get().list.getSelected();
+            if (getMainPane().accountManager.isLoaded()) {
+                Account<?> selected = getMainPane().accountManager.get().list.getSelected();
                 if (selected != null) {
                     loginForm.accounts.setAccount(selected);
                 }
@@ -230,7 +230,7 @@ public class DefaultScene extends PseudoScene {
             sidePanelComp.setLocation(sp_x, sp_y);
         }
         loginForm.setLocation(lf_x, lf_y);
-        if(noticePanel.isLoaded()) {
+        if (noticePanel.isLoaded()) {
             noticePanel.get().onResize();
         }
 
@@ -262,7 +262,7 @@ public class DefaultScene extends PseudoScene {
 
     public void setSidePanel(DefaultScene.SidePanel side) {
         java.util.List<Notice> noticeList = getMainPane().getRootFrame().getNotices().getForCurrentLocale();
-        if(side == null && isNoticeSidePanelEnabled() && noticeList != null && noticeList.size() > 3) {
+        if (side == null && isNoticeSidePanelEnabled() && noticeList != null && noticeList.size() > 3) {
             side = SidePanel.NOTICES;
         }
         if (sidePanel != side) {
@@ -277,7 +277,7 @@ public class DefaultScene extends PseudoScene {
                 sidePanelComp.setVisible(true);
             }
 
-            if(noticePanel.isLoaded()) {
+            if (noticePanel.isLoaded()) {
                 noticePanel.get().setVisible(noSidePanel);
             }
             /*if(noSidePanel) {
@@ -289,7 +289,7 @@ public class DefaultScene extends PseudoScene {
             validate();
             repaint();
 
-            if(sidePanelComp != null) {
+            if (sidePanelComp != null) {
                 sidePanelComp.validate();
                 sidePanelComp.repaint();
             }

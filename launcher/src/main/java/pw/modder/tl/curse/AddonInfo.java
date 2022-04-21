@@ -169,6 +169,6 @@ public class AddonInfo {
         INACTIVE,
         ABANDONED,
         DELETED,
-        UNDER_REVIEW;
+        UNDER_REVIEW
     }
 }

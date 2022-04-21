@@ -9,17 +9,19 @@ import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
 import javax.swing.*;
+import java.util.Collections;
+import java.util.List;
 
 public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProcessListener {
     private static final long serialVersionUID = 768489049585749260L;
-    private static final String[] phrases = new String[]{"This ain't easter egg."};
+    private static final List<String> phrases = Collections.singletonList("This ain't easter egg.");
     public final LocalizableCheckbox autologin;
     public final LocalizableCheckbox forceupdate;
     private boolean state;
     private final LoginForm loginForm;
 
     CheckBoxPanel(LoginForm lf) {
-        BoxLayout lm = new BoxLayout(this, 3);
+        BoxLayout lm = new BoxLayout(this, BoxLayout.PAGE_AXIS);
         setLayout(lm);
         setOpaque(false);
         setAlignmentX(0.5F);
@@ -29,11 +31,7 @@ public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProc
             public void itemStateChanged(boolean newstate) {
                 loginForm.autologin.setEnabled(newstate);
                 if (newstate) {
-                    AsyncThread.execute(new Runnable() {
-                        public void run() {
-                            Alert.showLocMessage("loginform.checkbox.autologin.tip");
-                        }
-                    });
+                    AsyncThread.execute(() -> Alert.showLocMessage("loginform.checkbox.autologin.tip"));
                 }
 
             }

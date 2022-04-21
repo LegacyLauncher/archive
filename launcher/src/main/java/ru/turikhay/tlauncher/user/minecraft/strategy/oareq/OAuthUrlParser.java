@@ -2,8 +2,7 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-
-import ru.turikhay.exceptions.ParseException;
+import ru.turikhay.tlauncher.exceptions.ParseException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,18 +16,18 @@ public class OAuthUrlParser {
         List<NameValuePair> pairs;
         try {
             pairs = URLEncodedUtils.parse(new URI(url), StandardCharsets.UTF_8);
-        } catch(URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw new ParseException(e);
         }
         String error = findByKey(pairs, "error");
-        if(error != null) {
-            if(error.equals("access_denied")) {
+        if (error != null) {
+            if (error.equals("access_denied")) {
                 throw new CodeRequestCancelledException("redirect page received \"access_denied\"");
             }
             throw new CodeRequestErrorException(error, findByKey(pairs, "error_description"));
         }
         Optional<NameValuePair> code = pairs.stream().filter(p -> p.getName().equals("code")).findAny();
-        if(code.isPresent()) {
+        if (code.isPresent()) {
             return code.get().getValue();
         }
         throw new ParseException("no code in query");
@@ -38,9 +37,6 @@ public class OAuthUrlParser {
         Optional<NameValuePair> pair = pairs.stream()
                 .filter(p -> p.getName().equals(key))
                 .findAny();
-        if(!pair.isPresent()) {
-            return null;
-        }
-        return pair.get().getValue();
+        return pair.map(NameValuePair::getValue).orElse(null);
     }
 }

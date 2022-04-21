@@ -34,7 +34,7 @@ public class JavaRuntimeRemote implements JavaRuntime {
     }
 
     public JavaRuntimeManifest getManifest() throws ExecutionException, InterruptedException {
-        if(manifestTimeout == null) {
+        if (manifestTimeout == null) {
             manifestTimeout = AsyncThread.future(this::getManifestNow);
         }
         return manifestTimeout.get();

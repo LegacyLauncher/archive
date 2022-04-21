@@ -2,13 +2,13 @@ package ru.turikhay.tlauncher.ui.theme;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.exceptions.ParseException;
+import ru.turikhay.tlauncher.exceptions.ParseException;
 import ru.turikhay.util.IntegerArray;
-import ru.turikhay.util.U;
 
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
 
 public final class ExternalTheme extends ChildTheme {
@@ -18,39 +18,39 @@ public final class ExternalTheme extends ChildTheme {
 
     ExternalTheme(String name, InputStream input) throws IOException {
         super(name);
-        properties.load(U.requireNotNull(input, "input"));
+        properties.load(Objects.requireNonNull(input, "input"));
     }
 
     private Color getColor(String key, Color defaultColor) {
         Object obj = properties.get(key);
 
-        if(obj == null) {
+        if (obj == null) {
             return defaultColor;
         }
 
-        if(obj instanceof Color) {
+        if (obj instanceof Color) {
             return (Color) obj;
         }
 
         int[] a;
         try {
             IntegerArray arr = IntegerArray.parseIntegerArray(String.valueOf(obj), '.');
-            if(arr.size() < 3 || arr.size() > 4) {
+            if (arr.size() < 3 || arr.size() > 4) {
                 throw new ParseException("illegal size");
             }
             a = arr.toArray();
-            for(int i : a) {
-                if(i < 0 || i > 255) {
+            for (int i : a) {
+                if (i < 0 || i > 255) {
                     throw new ParseException("illegal byte:" + i);
                 }
             }
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             LOGGER.warn("Could not parse color: {}", key, rE);
             properties.remove(key);
             return defaultColor;
         }
 
-        Color color = a.length == 4? new Color(a[0], a[1], a[2], a[3]) : new Color(a[0], a[1], a[2], 255);
+        Color color = a.length == 4 ? new Color(a[0], a[1], a[2], a[3]) : new Color(a[0], a[1], a[2], 255);
         properties.put(key, color);
 
         return color;
@@ -58,17 +58,17 @@ public final class ExternalTheme extends ChildTheme {
 
     private int getSize(String key, int maxValue, int defValue) {
         String value = properties.getProperty(key);
-        if(value == null) {
+        if (value == null) {
             return defValue;
         }
 
         int intVal;
         try {
             intVal = Integer.parseInt(value);
-            if(intVal < 0 || intVal > maxValue) {
-                throw new ParseException("illegal value [0, "+maxValue+"]: " + key);
+            if (intVal < 0 || intVal > maxValue) {
+                throw new ParseException("illegal value [0, " + maxValue + "]: " + key);
             }
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             LOGGER.warn("Could not parse integer at: {} = {}", key, value, rE);
             return defValue;
         }
@@ -78,7 +78,7 @@ public final class ExternalTheme extends ChildTheme {
 
     private boolean getBoolean(String key, boolean defaultValue) {
         String value = properties.getProperty(key);
-        return value == null? defaultValue : Boolean.parseBoolean(value);
+        return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
 
     @Override
@@ -118,8 +118,8 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public Color getBorder(Border border) {
-        Color color = getColor("border." + U.requireNotNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), null);
-        if(color != null) {
+        Color color = getColor("border." + Objects.requireNonNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), null);
+        if (color != null) {
             return color;
         }
         return getColor("border.color", super.getBorder(border));
@@ -127,14 +127,14 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public Color getShadow(Border border) {
-        Color color = getColor("shadow." + U.requireNotNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), null);
-        if(color != null) {
+        Color color = getColor("shadow." + Objects.requireNonNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), null);
+        if (color != null) {
             return color;
         }
 
         String shadowValue = properties.getProperty("shadow");
 
-        if("border".equalsIgnoreCase(shadowValue)) {
+        if ("border".equalsIgnoreCase(shadowValue)) {
             return getBorder(border);
         }
 
@@ -143,9 +143,9 @@ public final class ExternalTheme extends ChildTheme {
 
     @Override
     public int getArc(Border border) {
-        int size = getSize("arc." + U.requireNotNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), SystemTheme.MAX_ARC, -1);
+        int size = getSize("arc." + Objects.requireNonNull(border, "border").name().toLowerCase(java.util.Locale.ROOT), SystemTheme.MAX_ARC, -1);
 
-        if(size > -1) {
+        if (size > -1) {
             return size;
         }
 

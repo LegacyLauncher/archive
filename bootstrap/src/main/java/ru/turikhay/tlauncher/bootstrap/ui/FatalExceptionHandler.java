@@ -31,21 +31,12 @@ final class FatalExceptionHandler {
     private Button contactButton() {
         boolean canUsePasta = canUsePasta();
         return new Button(
-                b.getString("fatal.buttons." + (canUsePasta? "send_logs" : "contact")),
-                canUsePasta? pastaAction() : contactDirectlyAction());
+                b.getString("fatal.buttons." + (canUsePasta ? "send_logs" : "contact")),
+                canUsePasta ? pastaAction() : this::contactDirectly);
     }
 
     private Runnable pastaAction() {
         return new PastaAction(host, clientId);
-    }
-
-    private Runnable contactDirectlyAction() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                contactDirectly();
-            }
-        };
     }
 
     private void contactDirectly() {
@@ -53,21 +44,11 @@ final class FatalExceptionHandler {
                 b.getString("contact-directly.save-logs"),
                 new Button(
                         b.getString("contact-directly.save-logs.yes"),
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                new SaveLogsAction(host).run();
-                            }
-                        }
+                        () -> new SaveLogsAction(host).run()
                 ),
                 new Button(
                         b.getString("contact-directly.save-logs.no"),
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                showContacts();
-                            }
-                        }
+                        this::showContacts
                 )
         ));
     }
@@ -75,18 +56,13 @@ final class FatalExceptionHandler {
     private void showContacts() {
         host.showMessage(new TextMessage(
                 b.getString("contact-directly")
-                + "<br/>"
-                + b.getString("contacts")
+                        + "<br/>"
+                        + b.getString("contacts")
         ));
     }
 
     private Button createCloseButton() {
-        return new Button(b.getString("fatal.buttons.close"), new Runnable() {
-            @Override
-            public void run() {
-                host.close();
-            }
-        });
+        return new Button(b.getString("fatal.buttons.close"), host::close);
     }
 
     private String getInitialText() {
@@ -99,7 +75,7 @@ final class FatalExceptionHandler {
         FatalExceptionType effective = isUnknown ? FatalExceptionType.UNKNOWN : exceptionType;
         return b.getString("fatal.type." + effective.nameLowerCase())
                 + "<br/><br/>"
-                + b.getString("fatal.bottom." + (canUsePasta()? "pasta" : "contact_directly"));
+                + b.getString("fatal.bottom." + (canUsePasta() ? "pasta" : "contact_directly"));
     }
 
     private boolean canUsePasta() {

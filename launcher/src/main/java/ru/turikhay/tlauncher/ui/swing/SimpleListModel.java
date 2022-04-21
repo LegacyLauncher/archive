@@ -6,7 +6,7 @@ import java.util.Vector;
 
 public class SimpleListModel<E> extends AbstractListModel<E> {
     private static final long serialVersionUID = 727845864028652893L;
-    protected final Vector<E> vector = new Vector();
+    protected final Vector<E> vector = new Vector<>();
 
     public int getSize() {
         return vector.size();

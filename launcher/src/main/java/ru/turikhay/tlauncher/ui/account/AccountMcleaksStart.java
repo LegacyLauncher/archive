@@ -16,17 +16,13 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.HtmlSubstitutor;
 import ru.turikhay.util.SwingUtil;
-import ru.turikhay.util.U;
 import ru.turikhay.util.git.TokenReplacingReader;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Objects;
 
 public class AccountMcleaksStart extends BorderPanel implements AccountMultipaneCompCloseable, LocalizableComponent, McleaksStatusListener, Blockable {
     private final String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
-
-    private final AccountManagerScene scene;
 
     private final LocalizableButton button;
     private final Blockable buttonBlocker = new Blockable() {
@@ -48,7 +44,6 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
     private boolean managerUpdated;
 
     public AccountMcleaksStart(final AccountManagerScene scene) {
-        this.scene = scene;
 
         this.content = new EditorPane();
         setCenter(content);
@@ -62,18 +57,15 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
         c.gridy = -1;
 
         button = new LocalizableButton();
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                switch(state) {
-                    case DESCRIPTION:
-                        setState(StartState.WAITING);
-                        break;
-                    case GET_ALT_TOKEN:
-                    case WAITING:
-                        scene.multipane.showTip("process-account-mcleaks");
-                        break;
-                }
+        button.addActionListener(e -> {
+            switch (state) {
+                case DESCRIPTION:
+                    setState(StartState.WAITING);
+                    break;
+                case GET_ALT_TOKEN:
+                case WAITING:
+                    scene.multipane.showTip("process-account-mcleaks");
+                    break;
             }
         });
         button.setIcon(Images.getIcon24("logo-mcleaks"));
@@ -88,7 +80,7 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
 
         setSouth(panel);
 
-        if(McleaksManager.isUnsupported()) {
+        if (McleaksManager.isUnsupported()) {
             setState(StartState.UNSUPPORTED);
         } else {
             setState(StartState.DESCRIPTION);
@@ -97,15 +89,15 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
     }
 
     private void setState(StartState state) {
-        if(McleaksManager.isUnsupported() || (mcleaksUpdated && !mcleaksAvailable)) {
+        if (McleaksManager.isUnsupported() || (mcleaksUpdated && !mcleaksAvailable)) {
             state = StartState.UNSUPPORTED;
-        } else if(state == StartState.WAITING && mcleaksUpdated) {
+        } else if (state == StartState.WAITING && mcleaksUpdated) {
             state = StartState.GET_ALT_TOKEN;
         }
-        this.state = U.requireNotNull(state, "state");
+        this.state = Objects.requireNonNull(state, "state");
         button.setText(LOC_PREFIX + state.toString().toLowerCase(java.util.Locale.ROOT) + ".button");
         Blocker.setBlocked("state-required", state.blockButton, buttonBlocker);
-        content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + (state == StartState.UNSUPPORTED? StartState.DESCRIPTION : state).toString().toLowerCase(java.util.Locale.ROOT) + ".body"), new HtmlSubstitutor()));
+        content.setText(TokenReplacingReader.resolveVars(Localizable.get(LOC_PREFIX + (state == StartState.UNSUPPORTED ? StartState.DESCRIPTION : state).toString().toLowerCase(java.util.Locale.ROOT) + ".body"), new HtmlSubstitutor()));
     }
 
     @Override
@@ -136,7 +128,7 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
 
     @Override
     public void multipaneShown(boolean gotBack) {
-        if(!McleaksManager.isUnsupported()) {
+        if (!McleaksManager.isUnsupported()) {
             McleaksManager.triggerConnection();
         }
         setState(StartState.DESCRIPTION);
@@ -162,13 +154,13 @@ public class AccountMcleaksStart extends BorderPanel implements AccountMultipane
         this.mcleaksAvailable = status.getServerIp() != null;
 
         progressBar.setIndeterminate(false);
-        if(mcleaksAvailable) {
+        if (mcleaksAvailable) {
             progressBar.setValue(100);
         } else {
             progressBar.setValue(0);
         }
 
-        if(state == StartState.WAITING) {
+        if (state == StartState.WAITING) {
             setState(StartState.GET_ALT_TOKEN);
         }
     }

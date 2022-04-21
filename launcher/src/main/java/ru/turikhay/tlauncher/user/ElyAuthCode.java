@@ -102,19 +102,19 @@ public final class ElyAuthCode {
         IOException ioE = null;
         byte[] read;
 
-        try(InputStream input = connection.getInputStream()){
+        try (InputStream input = connection.getInputStream()) {
             read = IOUtils.toByteArray(input);
-        } catch(IOException e) {
+        } catch (IOException e) {
             ioE = e;
-            try(InputStream error = connection.getErrorStream()){
+            try (InputStream error = connection.getErrorStream()) {
                 read = IOUtils.toByteArray(error);
-            } catch(IOException suppressedIoE) {
+            } catch (IOException suppressedIoE) {
                 ioE.addSuppressed(suppressedIoE);
                 throw ioE;
             }
         }
 
-        if(ioE != null) {
+        if (ioE != null) {
             throw detailed(read);
         }
 
@@ -138,7 +138,7 @@ public final class ElyAuthCode {
     HttpURLConnection setupExchangeConnection() throws IOException {
         LOGGER.debug("Setting up exchange connection...");
 
-        String request = TokenReplacingReader.resolveVars(TOKEN_EXCHANGE_REQUEST, new MapTokenResolver(new HashMap<String, String>(){
+        String request = TokenReplacingReader.resolveVars(TOKEN_EXCHANGE_REQUEST, new MapTokenResolver(new HashMap<String, String>() {
             {
                 put("client_id", ElyAuth.CLIENT_ID);
                 put("client_secret", ElyAuth.CLIENT_SECRET);
@@ -181,14 +181,14 @@ public final class ElyAuthCode {
         String access_token, token_type, refresh_token;
         int expires_in;
 
-        void checkConsistency() throws AuthException {
+        void checkConsistency() {
             StringUtil.requireNotBlank(access_token, "access_token");
 
-            if(!"Bearer".equals(token_type)) {
+            if (!"Bearer".equals(token_type)) {
                 throw new IllegalArgumentException("token_type: " + token_type);
             }
 
-            if(expires_in != 0 && expires_in < 0) {
+            if (expires_in != 0 && expires_in < 0) {
                 throw new IllegalArgumentException("expires_in: " + expires_in);
             }
         }

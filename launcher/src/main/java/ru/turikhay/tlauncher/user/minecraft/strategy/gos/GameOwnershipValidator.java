@@ -38,13 +38,13 @@ public class GameOwnershipValidator extends RequestAndParseStrategy<MinecraftSer
             throw new GameOwnershipValidationException(e);
         }
         List<MinecraftUserGameOwnershipResponse.Item> items = response.getItems();
-        if(items.isEmpty()) {
+        if (items.isEmpty()) {
             throw new GameOwnershipValidationException("no ownership found");
         }
-        if(items.stream().noneMatch(item -> "product_minecraft".equals(item.getName()))) {
+        if (items.stream().noneMatch(item -> "product_minecraft".equals(item.getName()))) {
             throw new GameOwnershipValidationException("no \"product_minecraft\"");
         }
-        if(items.stream().noneMatch(item -> "game_minecraft".equals(item.getName()))) {
+        if (items.stream().noneMatch(item -> "game_minecraft".equals(item.getName()))) {
             throw new GameOwnershipValidationException("no \"game_minecraft\"");
         }
     }

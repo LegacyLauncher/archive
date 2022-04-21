@@ -9,11 +9,11 @@ public class CurrentLaunchFeatureMatcher implements Rule.FeatureMatcher {
 
     @Override
     public boolean hasFeature(String key, Object value) {
-        if(key != null) {
+        if (key != null) {
             switch (key) {
                 case "has_custom_resolution":
                     int[] clientSize = TLauncher.getInstance().getSettings().getClientWindowSize();
-                    if(value != null && "true".equals(value.toString()) && clientSize[0] > 0 && clientSize[1] > 0) {
+                    if (value != null && "true".equals(value.toString()) && clientSize[0] > 0 && clientSize[1] > 0) {
                         return true;
                     }
                     break;

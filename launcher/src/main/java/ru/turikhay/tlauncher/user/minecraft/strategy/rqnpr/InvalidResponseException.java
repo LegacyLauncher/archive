@@ -28,7 +28,7 @@ public class InvalidResponseException extends Exception {
     public JsonObject getResponseAsJson() {
         try {
             return (JsonObject) new JsonParser().parse(response);
-        } catch(RuntimeException rE) {
+        } catch (RuntimeException rE) {
             return null;
         }
     }

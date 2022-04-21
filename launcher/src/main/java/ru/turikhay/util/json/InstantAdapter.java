@@ -13,13 +13,13 @@ public class InstantAdapter implements JsonSerializer<Instant>, JsonDeserializer
         String value = Objects.requireNonNull(json.getAsString(), "date");
         try {
             return Instant.parse(value);
-        } catch(DateTimeParseException e) {
+        } catch (DateTimeParseException e) {
             throw new JsonParseException("cannot parse date: " + value, e);
         }
     }
 
     @Override
     public JsonElement serialize(Instant src, Type typeOfSrc, JsonSerializationContext context) {
-        return src == null? null : new JsonPrimitive(src.toString());
+        return src == null ? null : new JsonPrimitive(src.toString());
     }
 }

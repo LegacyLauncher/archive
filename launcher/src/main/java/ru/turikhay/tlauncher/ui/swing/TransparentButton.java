@@ -13,7 +13,7 @@ public class TransparentButton extends JButton {
         setOpaque(false);
         setForeground(Color.white);
         setPreferredSize(new Dimension(27, 27));
-        setCursor(Cursor.getPredefinedCursor(12));
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
     public TransparentButton(String text) {

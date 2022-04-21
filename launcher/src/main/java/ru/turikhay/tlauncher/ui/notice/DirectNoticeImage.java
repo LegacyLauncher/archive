@@ -1,17 +1,17 @@
 package ru.turikhay.tlauncher.ui.notice;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import ru.turikhay.util.U;
-import ru.turikhay.util.async.EmptyFuture;
 
 import java.awt.*;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 public class DirectNoticeImage extends NoticeImage {
     private final Image image;
 
     DirectNoticeImage(Image image) {
-        this.image = U.requireNotNull(image, "image");
+        this.image = Objects.requireNonNull(image, "image");
     }
 
     @Override
@@ -26,7 +26,7 @@ public class DirectNoticeImage extends NoticeImage {
 
     @Override
     public Future<Image> getTask() {
-        return new EmptyFuture<Image>(image);
+        return CompletableFuture.completedFuture(image);
     }
 
     protected ToStringBuilder toStringBuilder() {

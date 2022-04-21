@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.gos;
 
 import org.junit.jupiter.api.Test;
-
 import ru.turikhay.tlauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.InvalidResponseException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.MockRequester;

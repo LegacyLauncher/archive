@@ -38,7 +38,7 @@ public class JavaVersionDetector {
         try {
             return task.get(30, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
-            if(e.getCause() instanceof JavaVersionNotDetectedException) {
+            if (e.getCause() instanceof JavaVersionNotDetectedException) {
                 throw (JavaVersionNotDetectedException) e.getCause();
             } else {
                 throw new JavaVersionNotDetectedException(e);
@@ -74,18 +74,18 @@ public class JavaVersionDetector {
         }
         LOGGER.debug("Started process: {}", command);
 
-        try(BufferedReader input = new BufferedReader(new InputStreamReader(
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(
                 process.getInputStream(),
                 StandardCharsets.US_ASCII
         ))) {
             String line;
-            while((line = input.readLine()) != null) {
-                if(Thread.interrupted()) {
+            while ((line = input.readLine()) != null) {
+                if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
                 LOGGER.debug("[{}] Line: {}", javaExec, line);
                 Matcher matcher = PATTERN.matcher(line);
-                if(matcher.matches()) {
+                if (matcher.matches()) {
                     LOGGER.debug("[{}] Found matching line: {}", javaExec, line);
                     try {
                         return JavaVersion.parse(matcher.group(1));

@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd.NanoHttpdLocalServer;
@@ -10,7 +9,8 @@ import ru.turikhay.tlauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd.Nano
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LocalServerStrategyTest {
 
@@ -19,11 +19,8 @@ class LocalServerStrategyTest {
     void testPortAcquisition() {
         LocalServerUrlProducer urlProducer = new LocalServerUrlProducer();
         LocalServerStrategy strategy = new LocalServerStrategy(
-                new ExternalBrowser() {
-                    @Override
-                    public void openUrl(String url) {
-                        // no-op
-                    }
+                url -> {
+                    // no-op
                 },
                 urlProducer,
                 new NanoHttpdLocalServer(

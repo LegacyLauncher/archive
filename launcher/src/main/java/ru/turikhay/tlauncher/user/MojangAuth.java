@@ -12,10 +12,10 @@ public final class MojangAuth extends MojangLikeAuth<MojangUser> {
     public MojangUser authorize(String username, String password) throws AuthException, IOException {
         try {
             return super.authorize(username, password);
-        } catch(AuthUnknownException e) {
-            if(e.getCause() instanceof AuthenticationException) {
+        } catch (AuthUnknownException e) {
+            if (e.getCause() instanceof AuthenticationException) {
                 AuthenticationException ae = (AuthenticationException) e.getCause();
-                if(MojangAccountMigratedException.detect(ae)) {
+                if (MojangAccountMigratedException.detect(ae)) {
                     throw new MojangAccountMigratedException();
                 }
             }

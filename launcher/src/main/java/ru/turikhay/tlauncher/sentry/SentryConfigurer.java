@@ -22,7 +22,7 @@ public class SentryConfigurer {
 
     public static void configure(Version version, String shortBrand) {
         SENTRY = Sentry.init(
-                TLauncher.getInstance() != null && TLauncher.getInstance().isDebug()? null :
+                TLauncher.getInstance() != null && TLauncher.getInstance().isDebug() ? null :
                         "https://6bd0f45848ad4217b1970ae598712dfc@sentry.ely.by/46",
                 new CustomClientFactory()
         );
@@ -43,6 +43,7 @@ public class SentryConfigurer {
 
     private static class CustomClientFactory extends DefaultSentryClientFactory {
         private final ContextManager ctxManager = new SingletonContextManager();
+
         @Override
         protected ContextManager getContextManager(Dsn dsn) {
             return ctxManager;
@@ -52,14 +53,14 @@ public class SentryConfigurer {
     private static class CustomEventBuilderHelper implements EventBuilderHelper {
         @Override
         public void helpBuildingEvent(EventBuilder eventBuilder) {
-            if(TLauncher.getInstance() != null && TLauncher.getInstance().getBootstrapVersion() != null) {
+            if (TLauncher.getInstance() != null && TLauncher.getInstance().getBootstrapVersion() != null) {
                 eventBuilder.withTag("bootstrap", TLauncher.getInstance().getBootstrapVersion());
             }
             eventBuilder.withTag("java", String.valueOf(OS.JAVA_VERSION.getMajor()));
             eventBuilder.withTag("java_version", System.getProperty("java.version"));
             eventBuilder.withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"));
             eventBuilder.withTag("os_arch", System.getProperty("os.arch"));
-            if(OS.WINDOWS.isCurrent()) {
+            if (OS.WINDOWS.isCurrent()) {
                 eventBuilder.withExtra("av", WMIProvider.getAvSoftwareList());
             }
         }

@@ -1,6 +1,9 @@
 package ru.turikhay.tlauncher.ui.editor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class EditorGroupHandler {
     private final List<EditorFieldChangeListener> listeners;
@@ -23,10 +26,8 @@ public class EditorGroupHandler {
                         checkedFlag = checkedFlag + 1;
                         if (checkedFlag == checkedLimit) {
                             if (changedFlag > 0) {
-                                Iterator var5 = listeners.iterator();
 
-                                while (var5.hasNext()) {
-                                    EditorFieldChangeListener listener = (EditorFieldChangeListener) var5.next();
+                                for (EditorFieldChangeListener listener : listeners) {
                                     listener.onChange(null, null);
                                 }
                             }
@@ -49,7 +50,7 @@ public class EditorGroupHandler {
                 handler.addListener(listener);
             }
 
-            listeners = Collections.synchronizedList(new ArrayList());
+            listeners = Collections.synchronizedList(new ArrayList<>());
         }
     }
 

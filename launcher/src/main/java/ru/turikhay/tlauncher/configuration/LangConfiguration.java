@@ -15,8 +15,8 @@ public final class LangConfiguration {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final Locale ru_RU = U.getLocale("ru_RU");
 
-    private final Map<Locale, Properties> translationsMap = new HashMap<Locale, Properties>();
-    private final Map<Locale, Pattern[]> pluralMap = new HashMap<Locale, Pattern[]>();
+    private final Map<Locale, Properties> translationsMap = new HashMap<>();
+    private final Map<Locale, Pattern[]> pluralMap = new HashMap<>();
 
     private Pattern[] plurals;
 
@@ -27,10 +27,10 @@ public final class LangConfiguration {
     }
 
     public String lget(Locale locale, String key) {
-        if(key == null) {
+        if (key == null) {
             return null;
         }
-        if(translationsMap.containsKey(locale)) {
+        if (translationsMap.containsKey(locale)) {
             Properties l = translationsMap.get(locale);
             return l.getProperty(key);
         }
@@ -38,7 +38,7 @@ public final class LangConfiguration {
     }
 
     public String lget(Locale locale, String key, Object... vars) {
-        if(key == null) {
+        if (key == null) {
             return null;
         }
 
@@ -49,7 +49,7 @@ public final class LangConfiguration {
 
         String[] variables = checkVariables(vars);
 
-        if(pluralMap.containsKey(locale)) {
+        if (pluralMap.containsKey(locale)) {
             Pattern[] plurals = pluralMap.get(locale);
 
             for (int var = 0; var < variables.length; var++) {
@@ -80,7 +80,7 @@ public final class LangConfiguration {
 
     public String get(String key) {
         String value = nget(key);
-        if(value == null) {
+        if (value == null) {
             value = lget(selectBackingLocale(), key);
         }
         return value == null ? key : value;
@@ -92,14 +92,14 @@ public final class LangConfiguration {
 
     public String get(String key, Object... vars) {
         String value = nget(key, vars);
-        if(value == null) {
+        if (value == null) {
             value = lget(selectBackingLocale(), key, vars);
         }
         return value == null ? key : value;
     }
 
     private Locale selectBackingLocale() {
-        if(locale != ru_RU && Configuration.isUSSRLocale(locale.toString())) {
+        if (locale != ru_RU && Configuration.isUSSRLocale(locale.toString())) {
             loadLocale(ru_RU);
             return ru_RU;
         } else {
@@ -114,11 +114,7 @@ public final class LangConfiguration {
             String[] string = new String[check.length];
 
             for (int i = 0; i < check.length; ++i) {
-                if (check[i] == null) {
-                    throw new NullPointerException("Variable at index " + i + " is NULL!");
-                }
-
-                string[i] = check[i].toString();
+                string[i] = String.valueOf(check[i]);
             }
 
             return string;
@@ -163,16 +159,15 @@ public final class LangConfiguration {
         }
 
         String localeStr = localeObj.toString();
-        if(localeStr.equals("id_ID")) {
+        if (localeStr.equals("id_ID")) {
             localeStr = "in_ID";
         }
 
         Properties translations = translationsMap.get(localeObj);
 
         if (translations == null) {
-            InputStream in = null;
-            try {
-                in = LangConfiguration.class.getResourceAsStream("/lang/lang_" + localeStr + ".properties");
+
+            try (InputStream in = LangConfiguration.class.getResourceAsStream("/lang/lang_" + localeStr + ".properties")) {
                 if (in == null) {
                     throw new NullPointerException("could not find translations for " + localeStr);
                 }
@@ -180,8 +175,6 @@ public final class LangConfiguration {
             } catch (Exception e) {
                 LOGGER.warn("Could not load translations for {}", localeStr, e);
                 return null;
-            } finally {
-                U.close(in);
             }
         }
 
@@ -221,7 +214,7 @@ public final class LangConfiguration {
         }
 
         Properties translations = getTranslations(locale);
-        if(translations == null) {
+        if (translations == null) {
             return;
         }
 
@@ -248,16 +241,17 @@ public final class LangConfiguration {
     }
 
     private static final List<Locale> localeList;
+
     static {
-        List<Locale> list = new ArrayList<Locale>(Static.getLangList().length);
-        for(String locale : Static.getLangList()) {
+        List<Locale> list = new ArrayList<>(Static.getLangList().size());
+        Static.getLangList().forEach(locale -> {
             Locale l = U.getLocale(locale);
-            if(l == null) {
+            if (l == null) {
                 LOGGER.warn("{} is not supported", locale);
             } else {
                 list.add(U.getLocale(locale));
             }
-        }
+        });
         localeList = Collections.unmodifiableList(list);
     }
 

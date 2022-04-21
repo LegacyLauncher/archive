@@ -5,16 +5,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.reflect.TypeToken;
-import ru.turikhay.util.U;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class AuthlibUserJsonizer<T extends AuthlibUser> extends UserJsonizer<T> {
-    private final AuthlibAuth auth;
+    private final AuthlibAuth<? extends AuthlibUser> auth;
 
-    AuthlibUserJsonizer(AuthlibAuth auth) {
-        this.auth = U.requireNotNull(auth, "auth");
+    AuthlibUserJsonizer(AuthlibAuth<? extends AuthlibUser> auth) {
+        this.auth = Objects.requireNonNull(auth, "auth");
     }
 
     protected Map<String, Object> createStorage(T src) {
@@ -36,9 +36,10 @@ public abstract class AuthlibUserJsonizer<T extends AuthlibUser> extends UserJso
     public T deserialize(JsonObject json, JsonDeserializationContext context) throws JsonParseException {
         String clientToken = json.get("clientToken").getAsString();
 
-        Map<String, Object> storage = context.deserialize(json, new TypeToken<Map<String, Object>>(){}.getType());
-        U.requireNotNull(storage, "storage");
-        if(storage.isEmpty()) {
+        Map<String, Object> storage = context.deserialize(json, new TypeToken<Map<String, Object>>() {
+        }.getType());
+        Objects.requireNonNull(storage, "storage");
+        if (storage.isEmpty()) {
             throw new IllegalArgumentException("storage is empty");
         }
 

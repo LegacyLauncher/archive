@@ -4,20 +4,28 @@ import ru.turikhay.util.U;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class ExtendedThread extends Thread {
-    private static AtomicInteger threadNum = new AtomicInteger();
+public class ExtendedThread extends Thread {
+    private static final AtomicInteger threadNum = new AtomicInteger();
     private volatile ExtendedThread.ExtendedThreadCaller caller;
     private String blockReason;
     private final Object monitor;
 
-    public ExtendedThread(String name) {
-        super((name == null ? "ExtendedThread" : name) + "#" + threadNum.incrementAndGet());
+    public ExtendedThread(Runnable runnable, String name) {
+        super(runnable, (name == null ? "ExtendedThread" : name) + "#" + threadNum.incrementAndGet());
         monitor = new Object();
         caller = new ExtendedThread.ExtendedThreadCaller();
     }
 
+    public ExtendedThread(Runnable runnable) {
+        this(runnable, null);
+    }
+
+    public ExtendedThread(String name) {
+        this(null, name);
+    }
+
     public ExtendedThread() {
-        this("ExtendedThread");
+        this(null, null);
     }
 
     public ExtendedThread.ExtendedThreadCaller getCaller() {
@@ -35,8 +43,6 @@ public abstract class ExtendedThread extends Thread {
             U.sleepFor(100L);
         }
     }
-
-    public abstract void run();
 
     protected void lockThread(String reason) {
         if (reason == null) {
@@ -64,9 +70,8 @@ public abstract class ExtendedThread extends Thread {
             throw new IllegalStateException("Unlocking denied! Locked with: " + blockReason + ", tried to unlock with: " + reason);
         } else {
             blockReason = null;
-            Object var2 = monitor;
             synchronized (monitor) {
-                monitor.notifyAll();
+                monitor.notify();
             }
         }
     }
@@ -78,7 +83,6 @@ public abstract class ExtendedThread extends Thread {
             if (reason.equals(blockReason)) {
                 unlockThread(reason);
             }
-
         }
     }
 

@@ -18,8 +18,6 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedToggleButton;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -67,29 +65,17 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
         setVisible(false);
 
         Notice selected = null;
-        selectNotice:
-        {
-            List<Notice> noticeList = getMainPane().getRootFrame().getNotices().getForCurrentLocale();
-            if(noticeList == null) {
-                break selectNotice;
-            }
+        List<Notice> noticeList = getMainPane().getRootFrame().getNotices().getForCurrentLocale();
 
+        if (noticeList != null) {
             int currentIndex = noticeList.indexOf(noticePanel.getNotice());
 
-            if (currentIndex == -1) {
-                break selectNotice;
+            if (currentIndex != -1) {
+                currentIndex = (currentIndex + indexDelta + noticeList.size()) % noticeList.size();
+                selected = noticeList.get(currentIndex);
             }
-
-            currentIndex += indexDelta;
-
-            if(currentIndex < 0) {
-                currentIndex = noticeList.size() - 1;
-            } else if(currentIndex >= noticeList.size()) {
-                currentIndex = 0;
-            }
-
-            selected = noticeList.get(currentIndex);
         }
+
         getMainPane().getRootFrame().getNotices().selectNotice(selected, true);
 
         setVisible(true);
@@ -97,7 +83,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
     }
 
     private void updateNoticeVisibility() {
-        if(noticePanel.getNotice() != null) {
+        if (noticePanel.getNotice() != null) {
             boolean hidden = getMainPane().getRootFrame().getNotices().isHidden(noticePanel.getNotice());
 
             Blocker.setBlocked(noticePanel, "notice_disabled", hidden);
@@ -111,13 +97,13 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
     public void setShown(boolean shown, boolean animate) {
         super.setShown(shown, animate);
 
-        if(shown) {
+        if (shown) {
             Stats.noticeSceneShown();
             NoticeManager manager = getMainPane().getRootFrame().getNotices();
 
             List<Notice> list = manager.getForCurrentLocale();
-            if(list != null) {
-                if(manager.getSelectedNotice() == null) {
+            if (list != null) {
+                if (manager.getSelectedNotice() == null) {
                     manager.selectNotice(list.get(0), false);
                 }
             }
@@ -147,28 +133,18 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             c.gridy = 0;
             c.fill = GridBagConstraints.VERTICAL;
 
-            prev = newButton("arrow-left", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    changeNotice(-1);
-                }
-            });
+            prev = newButton("arrow-left", e -> changeNotice(-1));
             c.gridx++;
             add(prev, c);
 
-            next = newButton("arrow-right", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    changeNotice(1);
-                }
-            });
+            next = newButton("arrow-right", e -> changeNotice(1));
             c.gridx++;
             add(next, c);
 
             visible = newToggleButton("eye.png", "eye-slash.png", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if(noticePanel.getNotice() == null) {
+                    if (noticePanel.getNotice() == null) {
                         return;
                     }
                     boolean hidden = !visible.isSelected();
@@ -179,12 +155,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             c.gridx++;
             add(visible, c);
 
-            home = newButton("home", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    getMainPane().openDefaultScene();
-                }
-            });
+            home = newButton("home", e -> getMainPane().openDefaultScene());
             c.gridx++;
             add(home, c);
         }
@@ -231,12 +202,9 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
             final ExtendedToggleButton b = new ExtendedToggleButton();
             final ImageIcon enabled = newImage(enabledIcon), disabled = newImage(disabledIcon);
 
-            b.addChangeListener(new ChangeListener() {
-                @Override
-                public void stateChanged(ChangeEvent e) {
-                    b.setIcon(b.isSelected() ? enabled : disabled);
-                    b.setDisabledIcon(disabled);
-                }
+            b.addChangeListener(e -> {
+                b.setIcon(b.isSelected() ? enabled : disabled);
+                b.setDisabledIcon(disabled);
             });
 
             b.setSelected(true);
