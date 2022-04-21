@@ -14,7 +14,6 @@ import joptsimple.OptionSpecBuilder;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootListenerAdapter;
 import ru.turikhay.tlauncher.bootstrap.exception.FatalExceptionType;
-import ru.turikhay.tlauncher.bootstrap.json.Json;
 import ru.turikhay.tlauncher.bootstrap.launcher.*;
 import ru.turikhay.tlauncher.bootstrap.meta.*;
 import ru.turikhay.tlauncher.bootstrap.ssl.FixSSL;
@@ -171,24 +170,6 @@ public final class Bootstrap {
             bootstrap.setIgnoreUpdate(true);
             log("Package mode: Ignore self update set to", bootstrap.getIgnoreSelfUpdate());
             log("Package mode: Ignore update set to", bootstrap.getIgnoreUpdate());
-        }
-
-        FileStat bootstrapStat = fileStat(bootstrapJar);
-        if (!bootstrapStat.writeable && !bootstrap.getIgnoreSelfUpdate()) {
-            log("Bootstrap jar not writeable, disable self updating");
-            bootstrap.setIgnoreSelfUpdate(true);
-        }
-
-        FileStat launcherStat = fileStat(bootstrap.getTargetJar());
-        if (!launcherStat.writeable && !bootstrap.getIgnoreUpdate()) {
-            log("Launcher jar not writeable, disable updating");
-            bootstrap.setIgnoreUpdate(true);
-        }
-
-        FileStat libStat = fileStat(bootstrap.getTargetLibFolder());
-        if (!libStat.writeable && !bootstrap.getIgnoreUpdate()) {
-            log("Libs directory not writeable, disable updating");
-            bootstrap.setIgnoreUpdate(true);
         }
 
         return bootstrap;
@@ -536,6 +517,7 @@ public final class Bootstrap {
             @Override
             protected Void execute() throws Exception {
                 printVersion(null);
+                lowerRequirementsIfNeeded();
                 UpdateMeta updateMeta;
 
                 if (updateMetaFile != null) {
@@ -595,6 +577,30 @@ public final class Bootstrap {
                 return null;
             }
         };
+    }
+
+    private void lowerRequirementsIfNeeded() throws Exception {
+        FileStat bootstrapStat = fileStat(bootstrapJar);
+        if (!bootstrapStat.writeable && !getIgnoreSelfUpdate()) {
+            log("Bootstrap jar not writeable, disable self updating");
+            setIgnoreSelfUpdate(true);
+        }
+
+        Files.createDirectories(getTargetJar().getParent());
+
+        FileStat launcherStat = fileStat(getTargetJar());
+        if (launcherStat.exists && !launcherStat.writeable && !getIgnoreUpdate()) {
+            log("Launcher jar not writeable, disable updating");
+            setIgnoreUpdate(true);
+        }
+
+        Files.createDirectories(getTargetLibFolder());
+
+        FileStat libStat = fileStat(getTargetLibFolder());
+        if (!libStat.writeable && !getIgnoreUpdate()) {
+            log("Libs directory not writeable, disable updating");
+            setIgnoreUpdate(true);
+        }
     }
 
     private UpdateMeta.ConnectionInterrupter createInterrupter() {

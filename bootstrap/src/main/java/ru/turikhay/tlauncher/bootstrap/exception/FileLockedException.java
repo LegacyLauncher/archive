@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileLockedException extends IOException {
-    public static final long LOCK_COOLDOWN = 1000;
+    public static final long LOCK_COOLDOWN = 100;
 
     public FileLockedException(String path, Throwable cause) {
         super(path, cause);

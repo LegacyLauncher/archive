@@ -286,11 +286,18 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
                 }
             }
         });
-        // only show this config entry if bootstrap supports it
+
         Optional<Boolean> canSwitchToBetaBranch = TLauncher.getInstance().getCapability("can_switch_to_beta_branch", Boolean.class);
-        if (canSwitchToBetaBranch.filter(o -> o == Boolean.TRUE).isPresent()) {
+        if (canSwitchToBetaBranch.isPresent()) {
+            // only show if bootstrap supports it
             tlauncherTab.add(new EditorPair("settings.switch-to-beta.label", switchToBeta));
             tlauncherTab.nextPane();
+            if (!canSwitchToBetaBranch.filter(v -> v == Boolean.TRUE).isPresent()) {
+                // disable if can't switch to beta branch
+                Blocker.block(switchToBeta, "cant_switch_to_beta_branch");
+                switchToBeta.setPath(null); // -> ignored, not updated or saved
+                switchToBeta.setValue(true);
+            }
         }
 
         locale = new EditorFieldHandler("locale", new SettingsLocaleComboBox(this));
