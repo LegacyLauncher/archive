@@ -1,13 +1,13 @@
 package ru.turikhay.tlauncher.bootstrap.launcher;
 
-import ru.turikhay.tlauncher.bootstrap.util.U;
+import java.util.Objects;
 
 public final class LocalLauncherTask {
     private final LocalLauncher launcher;
     private final boolean updated;
 
     public LocalLauncherTask(LocalLauncher launcher, boolean updated) {
-        this.launcher = U.requireNotNull(launcher, "launcher");
+        this.launcher = Objects.requireNonNull(launcher, "launcher");
         this.updated = updated;
     }
 

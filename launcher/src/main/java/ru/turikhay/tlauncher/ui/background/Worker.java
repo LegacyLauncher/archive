@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
 import ru.turikhay.util.U;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -85,7 +86,7 @@ class Worker {
         private final String path;
 
         private SetBackgroundTask(IBackground background, String path) {
-            this.background = U.requireNotNull(background, "background");
+            this.background = Objects.requireNonNull(background, "background");
             this.path = path;
         }
 
@@ -93,21 +94,14 @@ class Worker {
         public void run() {
             hideBackgroundTask.run();
 
-            loadBackground:
-            {
-                wrapper.setBackground(background);
+            wrapper.setBackground(background);
 
-                if(background != null) {
-                    try {
-                        background.loadBackground(path);
-                    } catch (OutOfMemoryError outOfMemoryError) {
-                        ExceptionHandler.reduceMemory(outOfMemoryError);
-                        break loadBackground;
-                    } catch (Exception e) {
-                        LOGGER.error("Could not load background for {}; path: {}", background, path, e);
-                        break loadBackground;
-                    }
-                }
+            try {
+                background.loadBackground(path);
+            } catch (OutOfMemoryError outOfMemoryError) {
+                ExceptionHandler.reduceMemory(outOfMemoryError);
+            } catch (Exception e) {
+                LOGGER.error("Could not load background for {}; path: {}", background, path, e);
             }
 
             showBackgroundTask.run();

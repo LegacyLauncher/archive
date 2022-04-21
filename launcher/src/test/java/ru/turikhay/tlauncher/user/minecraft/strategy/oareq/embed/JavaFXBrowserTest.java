@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.user.minecraft.strategy.oareq.embed;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

@@ -10,9 +10,9 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
     public static final int MAX_TIMEOUT = 10;
     private boolean enabled;
     private boolean active;
-    private int timeout;
+    private final int timeout;
     private int sec;
-    private Runnable task;
+    private final Runnable task;
     private final LoginForm loginForm;
 
     AutoLogin(LoginForm lf) {
@@ -24,22 +24,20 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
         }
 
         this.timeout = timeout;
-        task = new Runnable() {
-            public void run() {
-                while (sec > 0) {
-                    U.sleepFor(1000L);
-                    if (updateLogin()) {
-                        loginForm.startLauncher();
-                    }
+        task = () -> {
+            while (sec > 0) {
+                U.sleepFor(1000L);
+                if (updateLogin()) {
+                    loginForm.startLauncher();
                 }
-
             }
+
         };
     }
 
     private boolean updateLogin() {
         --sec;
-        loginForm.buttons.cancel.setText("loginform.cancel", Integer.valueOf(sec));
+        loginForm.buttons.cancel.setText("loginform.cancel", sec);
         if (sec != 0) {
             return false;
         } else {
@@ -85,7 +83,7 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
                 loginForm.checkbox.autologin.setSelected(enabled);
             }
 
-            loginForm.global.set("login.auto", Boolean.valueOf(enabled));
+            loginForm.global.set("login.auto", enabled);
         }
     }
 

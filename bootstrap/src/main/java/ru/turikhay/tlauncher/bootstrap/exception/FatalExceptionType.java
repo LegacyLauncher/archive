@@ -4,18 +4,14 @@ import ru.turikhay.tlauncher.bootstrap.launcher.LauncherNotFoundException;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 
 import java.net.*;
+import java.util.Arrays;
 import java.util.List;
 
 public enum FatalExceptionType {
-    INTERNET_CONNECTIVITY_BLOCKED(new TypeAssertion() {
-        @Override
-        public boolean ensure(Throwable t) {
-            return t instanceof SocketException
-                    && t.getMessage() != null
-                    && t.getMessage().startsWith("Address family not supported by protocol family")
-                    && OS.WINDOWS.isCurrent();
-        }
-    }),
+    INTERNET_CONNECTIVITY_BLOCKED(t -> t instanceof SocketException
+            && t.getMessage() != null
+            && t.getMessage().startsWith("Address family not supported by protocol family")
+            && OS.WINDOWS.isCurrent()),
 
     FILE_LOCKED(FileLockedException.class),
 
@@ -48,24 +44,20 @@ public enum FatalExceptionType {
             return false;
         }
 
-        if (t instanceof ExceptionList) {
-            List<Exception> list = ((ExceptionList) t).getList();
-            if (list.isEmpty()) {
-                return false;
-            }
-            boolean allUnknown = true;
-            for (Exception e : list) {
-                FatalExceptionType type = getType(e);
-                allUnknown &= (type == UNKNOWN);
-                if (type == UNKNOWN || type == this) {
-                    continue;
-                }
-                return false;
-            }
-            return !allUnknown;
+        List<Throwable> list = Arrays.asList(t.getSuppressed());
+        if (list.isEmpty()) {
+            return assertion.ensure(t);
         }
-
-        return assertion.ensure(t);
+        boolean allUnknown = true;
+        for (Throwable e : list) {
+            FatalExceptionType type = getType(e);
+            allUnknown &= (type == UNKNOWN);
+            if (type == UNKNOWN || type == this) {
+                continue;
+            }
+            return false;
+        }
+        return !allUnknown || assertion.ensure(t);
     }
 
     public String nameLowerCase() {

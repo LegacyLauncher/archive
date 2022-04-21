@@ -4,10 +4,11 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.exceptions.ParseException;
 import ru.turikhay.tlauncher.user.minecraft.oauth.OAuthApplication;
 import ru.turikhay.tlauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
-import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.*;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.HttpClientRequester;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.InvalidResponseException;
+import ru.turikhay.tlauncher.user.minecraft.strategy.rqnpr.Requester;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthStrategy;
 import ru.turikhay.tlauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 
@@ -21,7 +22,7 @@ public class XboxLiveAuthenticator extends XboxServiceAuthStrategy {
                 Request.Post("https://user.auth.xboxlive.com/user/authenticate")
                         .bodyString(
                                 String.format(java.util.Locale.ROOT, "{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"%s\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}",
-                                        (application.usesWeirdXboxTokenPrefix()? "d=" : "") + accessToken),
+                                        (application.usesWeirdXboxTokenPrefix() ? "d=" : "") + accessToken),
                                 ContentType.APPLICATION_JSON
                         ))
         );

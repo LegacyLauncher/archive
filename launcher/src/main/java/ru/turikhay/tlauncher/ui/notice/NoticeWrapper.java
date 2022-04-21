@@ -12,7 +12,6 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
@@ -34,7 +33,7 @@ class NoticeWrapper extends BorderPanel {
 
         this.manager = manager;
 
-        if(fixedWidth > 0) {
+        if (fixedWidth > 0) {
             this.paramPair = new ParamPair(fontSize, fixedWidth);
             this.fixedIconWidth = iconWidth;
         } else {
@@ -68,7 +67,7 @@ class NoticeWrapper extends BorderPanel {
     Dimension updateSize() {
         Dimension size = calcNoticeSize(notice);
 
-        if(size.width == 0 && size.height == 0) {
+        if (size.width == 0 && size.height == 0) {
             return null;
         }
 
@@ -76,7 +75,7 @@ class NoticeWrapper extends BorderPanel {
 
         final int setIconWidth, setIconHeight;
         int additionalWidth = 0;
-        if(fixedIconWidth > 0 && size.height >= fixedIconWidth) {
+        if (fixedIconWidth > 0 && size.height >= fixedIconWidth) {
             setIconWidth = fixedIconWidth;
             setIconHeight = 0;
         } else {
@@ -86,7 +85,7 @@ class NoticeWrapper extends BorderPanel {
         iconLabel.setImage(image, setIconWidth, setIconHeight);
 
         int iconWidth = iconLabel.getIconWidth();
-        if(fixedIconWidth > 0 && fixedIconWidth != iconWidth) {
+        if (fixedIconWidth > 0 && fixedIconWidth != iconWidth) {
             additionalWidth += fixedIconWidth - iconWidth;
         }
 
@@ -118,7 +117,7 @@ class NoticeWrapper extends BorderPanel {
     }
 
     private Dimension calcNoticeSize(Notice notice) {
-        if(manager == null) {
+        if (manager == null) {
             return new NoticeTextSize(notice).get(paramPair);
         } else {
             return manager.getTextSize(notice, paramPair);
@@ -132,21 +131,18 @@ class NoticeWrapper extends BorderPanel {
         ButtonPane() {
             setInsets(0, 0, 0, 0);
             this.action = new Button();
-            action.registerAction(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if(notice == null) {
-                        return;
-                    }
-                    if(notice.getAction() != null) {
-                        action.popup.clearMenu();
-                        NoticeAction noticeAction = notice.getAction();
-                        for (JMenuItem item : noticeAction.getMenuItemList()) {
-                            action.popup.registerItem(item);
-                        }
-                    }
-                    action.popup.show(action);
+            action.registerAction(e -> {
+                if (notice == null) {
+                    return;
                 }
+                if (notice.getAction() != null) {
+                    action.popup.clearMenu();
+                    NoticeAction noticeAction = notice.getAction();
+                    for (JMenuItem item : noticeAction.getMenuItemList()) {
+                        action.popup.registerItem(item);
+                    }
+                }
+                action.popup.show(action);
             });
 
             this.extra = new Button();
@@ -166,7 +162,7 @@ class NoticeWrapper extends BorderPanel {
         }
 
         void updateButton() {
-            if(notice != null && notice.getAction() instanceof LauncherNoticeAction) {
+            if (notice != null && notice.getAction() instanceof LauncherNoticeAction) {
                 action.setGoColorIcon();
             } else {
                 action.setGoIcon();
@@ -176,12 +172,12 @@ class NoticeWrapper extends BorderPanel {
         Dimension updateSize(int height) {
             int width;
 
-            if(!extra.popup.items.isEmpty() || extra.listener != null) {
+            if (!extra.popup.items.isEmpty() || extra.listener != null) {
                 boolean hor = height < SwingUtil.magnify(BUTTON_ICON_WIDTH) * 2;
-                int useHeight = hor? height : height / 2;
+                int useHeight = hor ? height : height / 2;
                 int actionWidth = action.updateSize(useHeight).width, extraWidth = extra.updateSize(useHeight).width;
 
-                if(hor) {
+                if (hor) {
                     width = actionWidth + extraWidth;
                 } else {
                     width = Math.max(actionWidth, extraWidth);
@@ -190,18 +186,18 @@ class NoticeWrapper extends BorderPanel {
                 removeAll();
                 c.gridx = 0;
                 c.gridy = 0;
-                c.anchor = hor? GridBagConstraints.WEST : GridBagConstraints.NORTH;
-                c.fill = hor? GridBagConstraints.VERTICAL : GridBagConstraints.HORIZONTAL;
+                c.anchor = hor ? GridBagConstraints.WEST : GridBagConstraints.NORTH;
+                c.fill = hor ? GridBagConstraints.VERTICAL : GridBagConstraints.HORIZONTAL;
 
                 add(action, c);
 
-                if(hor) {
+                if (hor) {
                     c.gridx++;
                 } else {
                     c.gridy++;
                 }
 
-                c.anchor = hor? GridBagConstraints.EAST : GridBagConstraints.SOUTH;
+                c.anchor = hor ? GridBagConstraints.EAST : GridBagConstraints.SOUTH;
                 add(extra, c);
             } else {
                 width = action.updateSize(height).width;
@@ -221,14 +217,11 @@ class NoticeWrapper extends BorderPanel {
 
             popup = new Popup();
             setIcon(Images.getIcon24("ellipsis-v"));
-            addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if(listener != null) {
-                        listener.actionPerformed(e);
-                    } else {
-                        popup.show(Button.this);
-                    }
+            addActionListener(e -> {
+                if (listener != null) {
+                    listener.actionPerformed(e);
+                } else {
+                    popup.show(Button.this);
                 }
             });
         }
@@ -263,26 +256,27 @@ class NoticeWrapper extends BorderPanel {
             addPopupMenuListener(new PopupMenuListener() {
                 @Override
                 public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                    if(manager != null) {
+                    if (manager != null) {
                         Blocker.block(manager, this);
                     }
                 }
 
                 @Override
                 public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-                    if(manager != null) {
+                    if (manager != null) {
                         Blocker.unblock(manager, this);
                     }
                 }
 
                 @Override
                 public void popupMenuCanceled(PopupMenuEvent e) {
-                    if(manager != null) {
+                    if (manager != null) {
                         Blocker.unblock(manager, this);
                     }
                 }
             });
         }
+
         private final java.util.List<JMenuItem> items = new ArrayList<>();
         private ActionListener visbilityListener;
 
@@ -302,13 +296,13 @@ class NoticeWrapper extends BorderPanel {
         void updateMenu() {
             removeAll();
 
-            if(notice == null) {
+            if (notice == null) {
                 return;
             }
 
-            if(!items.isEmpty()) {
-                for(JMenuItem item : items) {
-                    if(item == null) {
+            if (!items.isEmpty()) {
+                for (JMenuItem item : items) {
+                    if (item == null) {
                         addSeparator();
                     } else {
                         add(item);
@@ -316,7 +310,7 @@ class NoticeWrapper extends BorderPanel {
                 }
             }
 
-            if(visbilityListener != null) {
+            if (visbilityListener != null) {
                 visbilityListener.actionPerformed(null);
             }
         }

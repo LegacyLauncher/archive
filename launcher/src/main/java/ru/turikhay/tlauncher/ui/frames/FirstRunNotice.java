@@ -14,7 +14,8 @@ import ru.turikhay.util.U;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Locale;
 
 public class FirstRunNotice extends VActionFrame {
@@ -50,7 +51,7 @@ public class FirstRunNotice extends VActionFrame {
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
 
-        final ExtendedComboBox<Locale> localeChoose = new ExtendedComboBox<Locale>(new LocaleConverter() {
+        final ExtendedComboBox<Locale> localeChoose = new ExtendedComboBox<>(new LocaleConverter() {
             @Override
             public String toString(Locale from) {
                 return toString(from, Locale.US);
@@ -60,18 +61,15 @@ public class FirstRunNotice extends VActionFrame {
             localeChoose.addItem(locale);
         }
         localeChoose.setSelectedValue(t.getLang().getLocale());
-        localeChoose.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                Locale selected = localeChoose.getSelectedValue();
-                if (selected == null) {
-                    selected = Locale.US;
-                }
-                t.getSettings().set("locale", selected);
-                t.getLang().setLocale(selected);
-                updateLocale();
-                ContributorsAlert.showAlert();
+        localeChoose.addItemListener(e -> {
+            Locale selected = localeChoose.getSelectedValue();
+            if (selected == null) {
+                selected = Locale.US;
             }
+            t.getSettings().set("locale", selected);
+            t.getLang().setLocale(selected);
+            updateLocale();
+            ContributorsAlert.showAlert();
         });
 
         getFooter().add(localeChoose, c);
@@ -86,12 +84,7 @@ public class FirstRunNotice extends VActionFrame {
         c.fill = GridBagConstraints.NONE;
         LocalizableButton yesButton = new LocalizableButton("firstrun.notice.answer.yes");
         yesButton.setPreferredSize(SwingUtil.magnify(new Dimension(150, 40)));
-        yesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        });
+        yesButton.addActionListener(e -> dispose());
         getFooter().add(yesButton, c);
 
         updateLocale();
@@ -108,10 +101,9 @@ public class FirstRunNotice extends VActionFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                if(localeUpdated) {
-                } else {
+                if (!localeUpdated) {
                     FirstRunNotice p = FirstRunNotice.this;
-                    while(p.parent != null) {
+                    while (p.parent != null) {
                         p = p.parent;
                     }
                     p.localeUpdated = false;
@@ -130,7 +122,7 @@ public class FirstRunNotice extends VActionFrame {
 
     @Override
     public void updateLocale() {
-        if(isDisplayable()) {
+        if (isDisplayable()) {
             localeUpdated = true;
             dispose();
             FirstRunNotice f = new FirstRunNotice();

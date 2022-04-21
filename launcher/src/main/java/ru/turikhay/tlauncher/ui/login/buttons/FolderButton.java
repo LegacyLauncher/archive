@@ -27,23 +27,16 @@ public class FolderButton extends LocalizableButton implements Unblockable {
 
     final JPopupMenu menu = new JPopupMenu();
     final LocalizableMenuItem openFamily, openRoot;
+
     {
-        menu.add(openFamily = LocalizableMenuItem.newItem("loginform.button.folder.family", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                File folder = getFamilyFolder();
-                if(folder != null) {
-                    openFolder(folder);
-                }
+        menu.add(openFamily = LocalizableMenuItem.newItem("loginform.button.folder.family", e -> {
+            File folder = getFamilyFolder();
+            if (folder != null) {
+                openFolder(folder);
             }
         }));
 
-        menu.add(openRoot = LocalizableMenuItem.newItem("loginform.button.folder.root", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openDefFolder();
-            }
-        }));
+        menu.add(openRoot = LocalizableMenuItem.newItem("loginform.button.folder.root", e -> openDefFolder()));
     }
 
     FolderButton(LoginForm loginform) {
@@ -54,13 +47,13 @@ public class FolderButton extends LocalizableButton implements Unblockable {
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(getFamilyFolder() == null) {
+                if (getFamilyFolder() == null) {
                     openDefFolder();
                 } else {
                     menu.removeAll();
 
                     CompleteVersion complete = getSelectedVersion();
-                    if(complete != null) {
+                    if (complete != null) {
                         menu.add(openFamily);
                         openFamily.setVariables(complete.getFamily());
                     }
@@ -78,21 +71,25 @@ public class FolderButton extends LocalizableButton implements Unblockable {
 
     private CompleteVersion getSelectedVersion() {
         VersionSyncInfo syncInfo = lf.versions.getVersion();
-        return syncInfo == null? null : syncInfo.getLocalCompleteVersion();
+        return syncInfo == null ? null : syncInfo.getLocalCompleteVersion();
     }
 
     private File getFamilyFolder() {
         Configuration.SeparateDirs separateDirs = lf.global.getSeparateDirs();
 
         CompleteVersion complete = getSelectedVersion();
-        if(complete == null) {
+        if (complete == null) {
             return null;
         }
 
         String dirName = null;
         switch (separateDirs) {
-            case FAMILY: dirName = complete.getFamily(); break;
-            case VERSION: dirName = complete.getID(); break;
+            case FAMILY:
+                dirName = complete.getFamily();
+                break;
+            case VERSION:
+                dirName = complete.getID();
+                break;
         }
 
         if (dirName != null && !StringUtils.isEmpty(dirName))
@@ -101,24 +98,19 @@ public class FolderButton extends LocalizableButton implements Unblockable {
     }
 
     private void openFolder(final File folder) {
-        if(folder == null) {
+        if (folder == null) {
             throw new NullPointerException();
         }
 
-        if(!folder.isDirectory()) {
+        if (!folder.isDirectory()) {
             try {
                 FileUtil.createFolder(folder);
-            } catch(IOException ioE) {
+            } catch (IOException ioE) {
                 throw new RuntimeException(ioE);
             }
         }
 
-        AsyncThread.execute(new Runnable() {
-            @Override
-            public void run() {
-                OS.openFolder(folder);
-            }
-        });
+        AsyncThread.execute(() -> OS.openFolder(folder));
     }
 
     private void openDefFolder() {

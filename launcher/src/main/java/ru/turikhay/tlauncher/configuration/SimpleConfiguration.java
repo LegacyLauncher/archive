@@ -4,11 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -87,11 +86,9 @@ public class SimpleConfiguration implements AbstractConfiguration {
     }
 
     public void set(Map<String, Object> map, boolean flush) {
-        Iterator var4 = map.entrySet().iterator();
 
-        while (var4.hasNext()) {
-            Entry en = (Entry) var4.next();
-            String key = (String) en.getKey();
+        for (Entry<String, Object> en : map.entrySet()) {
+            String key = en.getKey();
             Object value = en.getValue();
             if (value == null) {
                 properties.remove(key);
@@ -110,11 +107,9 @@ public class SimpleConfiguration implements AbstractConfiguration {
     }
 
     public Set<String> getKeys() {
-        HashSet set = new HashSet();
-        Iterator var3 = properties.keySet().iterator();
+        Set<String> set = new HashSet<>();
 
-        while (var3.hasNext()) {
-            Object obj = var3.next();
+        for (Object obj : properties.keySet()) {
             set.add(getStringOf(obj));
         }
 
@@ -239,7 +234,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
         if (stream == null) {
             throw new NullPointerException();
         } else {
-            InputStreamReader reader = new InputStreamReader(new BufferedInputStream(stream), Charset.forName("UTF-8"));
+            InputStreamReader reader = new InputStreamReader(new BufferedInputStream(stream), StandardCharsets.UTF_8);
             properties.clear();
             properties.load(reader);
         }
@@ -291,10 +286,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
                 dest.clear();
             }
 
-            Iterator var4 = src.entrySet().iterator();
-
-            while (var4.hasNext()) {
-                Entry en = (Entry) var4.next();
+            for (Entry<Object, Object> en : src.entrySet()) {
                 String key = en.getKey() == null ? null : en.getKey().toString();
                 String value = en.getKey() == null ? null : en.getValue().toString();
                 dest.setProperty(key, value);

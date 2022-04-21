@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui.listener;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.Expose;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -19,17 +18,14 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.MinecraftUtil;
-import ru.turikhay.util.U;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class VersionManagerUIListener implements VersionManagerListener {
     private static final Logger LOGGER = LogManager.getLogger(VersionManagerUIListener.class);
 
-    private final TLauncher tl;
     private final Configuration settings;
 
     private final Gson gson;
@@ -39,7 +35,6 @@ public class VersionManagerUIListener implements VersionManagerListener {
     private SimpleVersionList list;
 
     public VersionManagerUIListener(TLauncher tl) {
-        this.tl = tl;
         settings = tl.getSettings();
 
         gson = new GsonBuilder()
@@ -94,7 +89,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
 
         SimpleVersionList newList = fetchListFromManager(vm);
 
-        TreeMap<ReleaseType, List<SimpleVersion>> newVersions = new TreeMap<ReleaseType, List<SimpleVersion>>();
+        TreeMap<ReleaseType, List<SimpleVersion>> newVersions = new TreeMap<>();
 
         SimpleVersion lastVersion = null;
         int i = 0;
@@ -124,7 +119,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
             if (newVersions.containsKey(version.type)) {
                 subVersionList = newVersions.get(version.type);
             } else {
-                subVersionList = new ArrayList<SimpleVersion>();
+                subVersionList = new ArrayList<>();
                 newVersions.put(version.type, subVersionList);
             }
 
@@ -178,31 +173,24 @@ public class VersionManagerUIListener implements VersionManagerListener {
         saveList(newList);
     }
 
-    private boolean saveList(SimpleVersionList versionList) {
-        FileWriter writer = null;
-        try {
-            FileUtil.createFile(listFile);
-            writer = new FileWriter(listFile);
+    private void saveList(SimpleVersionList versionList) {
+        if (!listFile.getParentFile().mkdirs()) {
+            throw new RuntimeException("Unable to create parent directory for version list");
+        }
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(listFile), StandardCharsets.UTF_8)) {
             gson.toJson(versionList, writer);
-            return true;
         } catch (Exception e) {
             LOGGER.error("Could not write version list file: {}", listFile, e);
             throw new RuntimeException(e);
-        } finally {
-            U.close(writer);
         }
     }
 
     private SimpleVersionList fetchListFromFile() {
-        FileReader reader = null;
-        try {
-            reader = new FileReader(listFile);
+        try (Reader reader = new InputStreamReader(new FileInputStream(listFile), StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, SimpleVersionList.class);
         } catch (Exception e) {
             LOGGER.error("Could not read version list from file: {}", listFile, e);
             return null;
-        } finally {
-            U.close(reader);
         }
     }
 
@@ -278,7 +266,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
 
     private static class SimpleVersionList {
         String _notice = "Pretend that you are not reading this. And this file does not exist. It does not affect anything important. Just for indexing. Hvae fnu!";
-        List<SimpleVersion> versions = new ArrayList<SimpleVersion>();
+        final List<SimpleVersion> versions = new ArrayList<>();
 
         boolean contains(SimpleVersion version) {
             return versions.contains(version);
@@ -290,12 +278,10 @@ public class VersionManagerUIListener implements VersionManagerListener {
     }
 
     private static class SimpleVersion {
-        private String id;
+        private final String id;
         private ReleaseType type;
-        private Date releaseTime, time;
-
-        @Expose
-        private boolean hasRemote;
+        private final Date releaseTime;
+        private final Date time;
 
         SimpleVersion(VersionSyncInfo syncInfo) {
             id = syncInfo.getID();
@@ -306,7 +292,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
             releaseTime = version.getReleaseTime();
             time = version.getUpdatedTime();
 
-            hasRemote = syncInfo.hasRemote();
+            boolean hasRemote = syncInfo.hasRemote();
         }
 
         SimpleVersion(String id, ReleaseType type, Date date) {
@@ -316,7 +302,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
         }
 
         public boolean equals(Object o) {
-            if (o == null || !(o instanceof SimpleVersion)) {
+            if (!(o instanceof SimpleVersion)) {
                 return false;
             }
 

@@ -31,7 +31,7 @@ public class AssetsManager extends LauncherComponent {
     private final Gson gson = U.getGson();
     private final Object assetsFlushLock = new Object();
 
-    public AssetsManager(ComponentManager manager) throws Exception {
+    public AssetsManager(ComponentManager manager) {
         super(manager);
     }
 
@@ -44,7 +44,7 @@ public class AssetsManager extends LauncherComponent {
 
     private Set<Downloadable> getResourceFiles(CompleteVersion version, File baseDirectory, List<AssetIndex.AssetObject> list) {
         File objectsFolder = new File(baseDirectory, "assets/objects");
-        HashSet result = new HashSet();
+        Set<Downloadable> result = new HashSet<>();
 
         for (AssetIndex.AssetObject object : list) {
 
@@ -64,7 +64,7 @@ public class AssetsManager extends LauncherComponent {
     }
 
     List<AssetIndex.AssetObject> getResourceFiles(CompleteVersion version, File baseDirectory, boolean local) {
-        List list = null;
+        List<AssetIndex.AssetObject> list = null;
         if (!local) {
             try {
                 list = getRemoteResourceFilesList(version, baseDirectory, true);
@@ -89,35 +89,24 @@ public class AssetsManager extends LauncherComponent {
     }
 
     private List<AssetIndex.AssetObject> getLocalResourceFilesList(CompleteVersion version, File baseDirectory) {
-        ArrayList result = new ArrayList();
         String indexName = version.getAssetIndex().getId();
         File indexesFolder = new File(baseDirectory, "assets/indexes/");
         File indexFile = new File(indexesFolder, indexName + ".json");
         LOGGER.debug("Reading indexes from file {}", indexFile);
 
-        FileReader reader = null;
-        AssetIndex index = null;
-        try {
-            index = U.requireNotNull(gson.fromJson(reader = new FileReader(indexFile), AssetIndex.class));
+        AssetIndex index;
+        try (Reader reader = new FileReader(indexFile)) {
+            AssetIndex obj = gson.fromJson(reader, AssetIndex.class);
+            index = Objects.requireNonNull(obj);
         } catch (Exception e) {
             LOGGER.error("could not read index file {}", indexFile, e);
             return null;
-        } finally {
-            U.close(reader);
         }
 
-        Iterator var10 = index.getUniqueObjects().iterator();
-
-        while (var10.hasNext()) {
-            AssetIndex.AssetObject object = (AssetIndex.AssetObject) var10.next();
-            result.add(object);
-        }
-
-        return result;
+        return new ArrayList<>(index.getUniqueObjects());
     }
 
     private List<AssetIndex.AssetObject> getRemoteResourceFilesList(CompleteVersion version, File baseDirectory, boolean save) throws IOException {
-        ArrayList<AssetIndex.AssetObject> result = new ArrayList<AssetIndex.AssetObject>();
 
         String indexName = version.getAssetIndex().getId();
         if (indexName == null) {
@@ -141,33 +130,25 @@ public class AssetsManager extends LauncherComponent {
         File tempIndexFile = null;
 
         if (save) {
-            FileOutputStream out = null;
-
             tempIndexFile = File.createTempFile("tlauncher-assets", null);
             tempIndexFile.deleteOnExit();
 
-            try {
-                IOUtils.copy(json, out = new FileOutputStream(tempIndexFile), StandardCharsets.UTF_8);
-            } finally {
-                U.close(out);
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(tempIndexFile), StandardCharsets.UTF_8)) {
+                IOUtils.copy(json, writer);
             }
 
             json = new FileReader(tempIndexFile);
         }
 
         AssetIndex index = gson.fromJson(json, AssetIndex.class);
-        for (AssetIndex.AssetObject object : index.getUniqueObjects()) {
-            result.add(object);
-        }
+        ArrayList<AssetIndex.AssetObject> result = new ArrayList<>(index.getUniqueObjects());
 
         if (save) {
             synchronized (assetsFlushLock) {
-                FileInputStream in = null;
-                FileOutputStream out = null;
-                try {
-                    IOUtils.copy(in = new FileInputStream(tempIndexFile), out = new FileOutputStream(indexFile));
+                try (InputStream in = new FileInputStream(tempIndexFile);
+                     OutputStream out = new FileOutputStream(indexFile)) {
+                    IOUtils.copy(in, out);
                 } finally {
-                    U.close(in, out);
                     tempIndexFile.delete();
                 }
             }
@@ -238,17 +219,11 @@ public class AssetsManager extends LauncherComponent {
     }
 
     public static void decompress(File compressedInput, File uncompressedOutput, String expectHash) throws IOException {
-        InputStream in = null;
-        OutputStream out = null;
         String hash;
 
-        try {
-            in = new GZIPInputStream(new FileInputStream(compressedInput));
-            out = new FileOutputStream(uncompressedOutput);
+        try (InputStream in = new GZIPInputStream(new FileInputStream(compressedInput));
+             OutputStream out = new FileOutputStream(uncompressedOutput)) {
             hash = FileUtil.copyAndDigest(in, out, "SHA", 40);
-        } finally {
-            U.close(in);
-            U.close(out);
         }
 
         if (!expectHash.equals(hash)) {
@@ -256,7 +231,7 @@ public class AssetsManager extends LauncherComponent {
         }
     }
 
-    public final class ResourceChecker extends ExtendedThread {
+    public static final class ResourceChecker extends ExtendedThread {
         final File baseDirectory;
         final boolean fast;
         final List<AssetIndex.AssetObject> objectList;
@@ -312,9 +287,9 @@ public class AssetsManager extends LauncherComponent {
         }
 
         private void check() {
-            LOGGER.info("Executing {} assets comparison", fast? "fast" : "deep");
+            LOGGER.info("Executing {} assets comparison", fast ? "fast" : "deep");
 
-            List<AssetIndex.AssetObject> result = new ArrayList<AssetIndex.AssetObject>();
+            List<AssetIndex.AssetObject> result = new ArrayList<>();
             Time.start();
 
             for (AssetIndex.AssetObject object : objectList) {

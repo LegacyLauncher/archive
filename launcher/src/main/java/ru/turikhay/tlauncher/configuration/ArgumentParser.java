@@ -10,13 +10,13 @@ import ru.turikhay.util.OS;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class ArgumentParser {
-    private static final Map<String, String> m = new HashMap();
+    private static final Map<String, String> m = new HashMap<>();
     private static final OptionParser parser;
 
     static {
@@ -66,13 +66,13 @@ public class ArgumentParser {
         StringWriter writer = new StringWriter();
         try {
             parser.printHelpOn(writer);
-        } catch (IOException ioE) {
+        } catch (IOException ignored) {
         }
         writer.flush();
         return writer.toString();
     }
 
-    public static OptionSet parseArgs(String[] args) throws OptionException, IOException {
+    public static OptionSet parseArgs(String[] args) throws OptionException {
         try {
             return parser.parse(args);
         } catch (OptionException e) {
@@ -82,41 +82,37 @@ public class ArgumentParser {
     }
 
     public static Map<String, Object> parse(OptionSet set) {
-        HashMap r = new HashMap();
         if (set == null) {
-            return r;
-        } else {
-            if(set.has("java-directory")) {
-                r.put(
-                        "java-executable",
-                        // <java dir>/bin/java[w.exe]
-                        set.valueOf("java-directory") + File.pathSeparator +
-                                "bin" + File.pathSeparator +
-                                "java" + (OS.WINDOWS.isCurrent()? "w.exe" : "")
-                );
-            }
-
-            Iterator var3 = m.entrySet().iterator();
-
-            while (var3.hasNext()) {
-                Entry a = (Entry) var3.next();
-                String key = (String) a.getKey();
-                Object value = null;
-                if (key.startsWith("-")) {
-                    key = key.substring(1);
-                    value = Boolean.valueOf(true);
-                }
-
-                if (set.has(key)) {
-                    if (value == null) {
-                        value = set.valueOf(key);
-                    }
-
-                    r.put(a.getValue(), value);
-                }
-            }
-
-            return r;
+            return Collections.emptyMap();
         }
+        Map<String, Object> r = new HashMap<>();
+        if (set.has("java-directory")) {
+            r.put(
+                    "java-executable",
+                    // <java dir>/bin/java[w.exe]
+                    set.valueOf("java-directory") + File.pathSeparator +
+                            "bin" + File.pathSeparator +
+                            "java" + (OS.WINDOWS.isCurrent() ? "w.exe" : "")
+            );
+        }
+
+        for (Entry<String, String> entry : m.entrySet()) {
+            String key = entry.getKey();
+            Object value = null;
+            if (key.startsWith("-")) {
+                key = key.substring(1);
+                value = Boolean.TRUE;
+            }
+
+            if (set.has(key)) {
+                if (value == null) {
+                    value = set.valueOf(key);
+                }
+
+                r.put(entry.getValue(), value);
+            }
+        }
+
+        return r;
     }
 }

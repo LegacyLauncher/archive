@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.user;
 
 import ru.turikhay.util.StringUtil;
-import ru.turikhay.util.U;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class ElyLegacyUser extends User {
@@ -14,7 +14,7 @@ public class ElyLegacyUser extends User {
 
     public ElyLegacyUser(String username, UUID uuid, String displayName, String clientToken, String accessToken) {
         this.username = StringUtil.requireNotBlank(username, "username");
-        this.uuid = U.requireNotNull(uuid, "uuid");
+        this.uuid = Objects.requireNonNull(uuid, "uuid");
         setDisplayName(displayName);
         setToken(clientToken, accessToken);
     }

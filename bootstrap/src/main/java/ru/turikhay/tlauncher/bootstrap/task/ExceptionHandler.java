@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.bootstrap.task;
 import com.getsentry.raven.event.Event;
 import com.getsentry.raven.event.EventBuilder;
 import com.getsentry.raven.event.interfaces.ExceptionInterface;
-
 import ru.turikhay.tlauncher.bootstrap.Bootstrap;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 

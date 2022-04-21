@@ -9,8 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class Downloadable {
     private static final boolean DEFAULT_FORCE = false;
@@ -28,8 +28,8 @@ public class Downloadable {
     private Throwable error;
 
     protected Downloadable() {
-        additionalDestinations = Collections.synchronizedList(new ArrayList());
-        handlers = Collections.synchronizedList(new ArrayList());
+        additionalDestinations = Collections.synchronizedList(new ArrayList<>());
+        handlers = Collections.synchronizedList(new ArrayList<>());
     }
 
     public Downloadable(Repository repo, String path, File destination, boolean forceDownload, boolean fastDownload) {
@@ -69,7 +69,7 @@ public class Downloadable {
             return false;
         } else {
             Downloadable c = (Downloadable) o;
-            return U.equal(path, c.path) && U.equal(repo, c.repo) && U.equal(destination, c.destination) && U.equal(additionalDestinations, c.additionalDestinations);
+            return Objects.equals(path, c.path) && Objects.equals(repo, c.repo) && Objects.equals(destination, c.destination) && Objects.equals(additionalDestinations, c.additionalDestinations);
         }
     }
 
@@ -206,10 +206,8 @@ public class Downloadable {
 
     protected void onStart() {
         setLocked(true);
-        Iterator var2 = handlers.iterator();
 
-        while (var2.hasNext()) {
-            DownloadableHandler handler = (DownloadableHandler) var2.next();
+        for (DownloadableHandler handler : handlers) {
             handler.onStart(this);
         }
 
@@ -218,10 +216,8 @@ public class Downloadable {
     protected void onAbort(AbortedDownloadException ae) {
         setLocked(false);
         error = ae;
-        Iterator var3 = handlers.iterator();
 
-        while (var3.hasNext()) {
-            DownloadableHandler handler = (DownloadableHandler) var3.next();
+        for (DownloadableHandler handler : handlers) {
             handler.onAbort(this);
         }
 
@@ -233,10 +229,8 @@ public class Downloadable {
 
     protected void onComplete() throws RetryDownloadException {
         setLocked(false);
-        Iterator var2 = handlers.iterator();
 
-        while (var2.hasNext()) {
-            DownloadableHandler handler = (DownloadableHandler) var2.next();
+        for (DownloadableHandler handler : handlers) {
             handler.onComplete(this);
         }
 
@@ -250,10 +244,8 @@ public class Downloadable {
         error = e;
         if (e != null) {
             setLocked(false);
-            Iterator var3 = handlers.iterator();
 
-            while (var3.hasNext()) {
-                DownloadableHandler handler = (DownloadableHandler) var3.next();
+            for (DownloadableHandler handler : handlers) {
                 handler.onError(this, e);
             }
 
@@ -265,7 +257,7 @@ public class Downloadable {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "{path=\'" + path + "\'; " + "repo=" + repo + "; " + "destinations=" + destination + "," + additionalDestinations + "; " + "force=" + forceDownload + "; " + "fast=" + fastDownload + "; " + "locked=" + locked + "; " + "container=" + container + "; " + "handlers=" + handlers + "; " + "error=" + error + ";" + "}";
+        return getClass().getSimpleName() + "{path='" + path + "'; " + "repo=" + repo + "; " + "destinations=" + destination + "," + additionalDestinations + "; " + "force=" + forceDownload + "; " + "fast=" + fastDownload + "; " + "locked=" + locked + "; " + "container=" + container + "; " + "handlers=" + handlers + "; " + "error=" + error + ";" + "}";
     }
 
     public static HttpURLConnection setUp(URLConnection connection0, int timeout, boolean fake) {

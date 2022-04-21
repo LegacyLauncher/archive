@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.bootstrap.util.stream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 class ByteArrayBufferOutputStream extends ToStringBufferOutputStream {
     private static final int DEFAULT_MAX_COUNT = 4 * 1024 * 1024;

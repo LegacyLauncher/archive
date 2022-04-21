@@ -41,7 +41,7 @@ public class SeparateDirsConverter extends LocalizableStringConverter<Configurat
     }
 
     private String evaluateHintIfAvailable(Configuration.SeparateDirs from) {
-        if(!useCurrentVersionHint || from == null) {
+        if (!useCurrentVersionHint || from == null) {
             return "";
         }
         String hint = evaluateBestEffortHint(from);
@@ -51,12 +51,12 @@ public class SeparateDirsConverter extends LocalizableStringConverter<Configurat
     private static final String homeDirPrefix = "home" + File.separatorChar;
 
     private static String evaluateBestEffortHint(Configuration.SeparateDirs mode) {
-        if(mode == null || mode == Configuration.SeparateDirs.NONE || !TLauncher.getInstance().isReady()) {
+        if (mode == null || mode == Configuration.SeparateDirs.NONE || !TLauncher.getInstance().isReady()) {
             return null;
         }
         VersionSyncInfo versionSyncInfo =
                 TLauncher.getInstance().getFrame().mp.defaultScene.loginForm.versions.getVersion();
-        if(versionSyncInfo == null) {
+        if (versionSyncInfo == null) {
             return null;
         }
         switch (mode) {
@@ -70,7 +70,7 @@ public class SeparateDirsConverter extends LocalizableStringConverter<Configurat
     }
 
     private static String guessFamilyOf(VersionSyncInfo versionSyncInfo) {
-        if(versionSyncInfo.getLocalCompleteVersion() != null) {
+        if (versionSyncInfo.getLocalCompleteVersion() != null) {
             return versionSyncInfo.getLocalCompleteVersion().getFamily();
         }
         switch (versionSyncInfo.getAvailableVersion().getReleaseType()) {

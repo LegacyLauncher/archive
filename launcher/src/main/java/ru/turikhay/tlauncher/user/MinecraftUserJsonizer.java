@@ -24,11 +24,11 @@ public class MinecraftUserJsonizer extends UserJsonizer<MinecraftUser> {
     }
 
     private static class Payload {
-        UUID id;
-        String name;
+        final UUID id;
+        final String name;
 
-        MinecraftTokenPayload minecraft;
-        MicrosoftTokenPayload microsoft;
+        final MinecraftTokenPayload minecraft;
+        final MicrosoftTokenPayload microsoft;
 
         Payload(MinecraftUser src) {
             this.id = src.getUUID();
@@ -50,8 +50,8 @@ public class MinecraftUserJsonizer extends UserJsonizer<MinecraftUser> {
     }
 
     private static class MinecraftTokenPayload {
-        String token;
-        Instant expiresAt;
+        final String token;
+        final Instant expiresAt;
 
         MinecraftTokenPayload(MinecraftServicesToken token) {
             this.token = token.getAccessToken();
@@ -67,8 +67,9 @@ public class MinecraftUserJsonizer extends UserJsonizer<MinecraftUser> {
     }
 
     private static class MicrosoftTokenPayload {
-        String accessToken, refreshToken;
-        Instant expiresAt;
+        final String accessToken;
+        final String refreshToken;
+        final Instant expiresAt;
 
         MicrosoftTokenPayload(MicrosoftOAuthToken token) {
             this.accessToken = token.getAccessToken();

@@ -12,10 +12,12 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class PreSupportFrame extends VActionFrame {
-    private ProcessFrame<Void> dxdiagFlusher;
 
     private final ExtendedLabel whatIsDiagnosticLabel = new ExtendedLabel();
 
@@ -62,10 +64,8 @@ public class PreSupportFrame extends VActionFrame {
         }
     };
 
-    private final LocalizableButton continueButton;
-
     public PreSupportFrame() {
-        dxdiagFlusher = new ProcessFrame<Void>() {
+        ProcessFrame<Void> dxdiagFlusher = new ProcessFrame<Void>() {
             {
                 setTitlePath("loginform.button.support.processing.title");
                 getHead().setText("loginform.button.support.processing.head");
@@ -117,14 +117,9 @@ public class PreSupportFrame extends VActionFrame {
         c.weighty = 1.0;
         c.fill = GridBagConstraints.BOTH;
 
-        continueButton = new LocalizableButton("support.pre.continue");
+        LocalizableButton continueButton = new LocalizableButton("support.pre.continue");
         continueButton.setPreferredSize(new Dimension(1, SwingUtil.magnify(50)));
-        continueButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onContinued();
-            }
-        });
+        continueButton.addActionListener(e -> onContinued());
         c.gridwidth = GridBagConstraints.REMAINDER;
         getFooter().add(continueButton, c);
 
@@ -134,7 +129,7 @@ public class PreSupportFrame extends VActionFrame {
     }
 
     protected void onContinued() {
-        if(sendDiagnosticCheckbox.isSelected()) {
+        if (sendDiagnosticCheckbox.isSelected()) {
             sendInfoFrame.submit();
         } else {
             new ContactUsFrame().showAtCenter();

@@ -15,14 +15,18 @@ import java.util.stream.Collectors;
 
 public interface ModloaderList {
     List<String> list(String minecraftVersion);
+
     Optional<String> getStable(String minecraftVersion);
+
     Optional<String> getLatest(String minecraftVersion);
+
     void fetch() throws IOException;
 
     class Forge implements ModloaderList {
         private final static String FORGE_MAVEN_METADATA_URL = "https://files.minecraftforge.net/maven/net/minecraftforge/forge/maven-metadata.json";
         private final static String FORGE_PROMOTIONS_URL = "https://files.minecraftforge.net/maven/net/minecraftforge/forge/promotions_slim.json";
-        private final static Type METADATA_TYPE = new TypeToken<Map<String, List<String>>>() {}.getType();
+        private final static Type METADATA_TYPE = new TypeToken<Map<String, List<String>>>() {
+        }.getType();
 
         private Map<String, List<String>> versions = Collections.emptyMap();
         private Promotions promotions = new Promotions();
@@ -57,15 +61,17 @@ public interface ModloaderList {
         }
 
         private static class Promotions {
-            private Map<String, String> promos = Collections.emptyMap();
+            private final Map<String, String> promos = Collections.emptyMap();
 
             public Optional<String> getRecommended(String minecraft) {
-                if (promos.containsKey(minecraft+"-recommended")) return Optional.of(promos.get(minecraft+"-recommended"));
+                if (promos.containsKey(minecraft + "-recommended"))
+                    return Optional.of(promos.get(minecraft + "-recommended"));
                 return Optional.empty();
             }
 
             public Optional<String> getLatest(String minecraft) {
-                if (promos.containsKey(minecraft+"-latest")) return Optional.of(promos.get(minecraft+"-recommended"));
+                if (promos.containsKey(minecraft + "-latest"))
+                    return Optional.of(promos.get(minecraft + "-recommended"));
                 return Optional.empty();
             }
         }
@@ -80,8 +86,8 @@ public interface ModloaderList {
         public List<String> list(String minecraftVersion) {
             Optional<LiteLoaderVersion> list = versions.getVersion(minecraftVersion);
             return list.map(liteLoaderVersion -> liteLoaderVersion.getAll().stream()
-                                                                    .map(LiteLoaderVersionEntry::getVersion)
-                                                                    .collect(Collectors.toList()))
+                            .map(LiteLoaderVersionEntry::getVersion)
+                            .collect(Collectors.toList()))
                     .orElse(Collections.emptyList());
         }
 
@@ -123,7 +129,7 @@ public interface ModloaderList {
         }
 
         private static class LiteLoaderVersion {
-            private LiteLoaderVersionMeta artefacts; // not a typo
+            private LiteLoaderVersionMeta artifacts; // not a typo
             private LiteLoaderVersionMeta snapshots;
             private LiteLoaderVersionRepo repo;
 
@@ -132,12 +138,12 @@ public interface ModloaderList {
             }
 
             public LiteLoaderVersionMeta getReleases() {
-                return artefacts;
+                return artifacts;
             }
 
             public List<LiteLoaderVersionEntry> getAll() {
-                List<LiteLoaderVersionEntry> vers = Arrays.asList();
-                vers.addAll(artefacts.versions.values());
+                List<LiteLoaderVersionEntry> vers = new ArrayList<>(artifacts.versions.size() + snapshots.versions.size());
+                vers.addAll(artifacts.versions.values());
                 vers.addAll(snapshots.versions.values());
                 return vers;
             }
@@ -193,14 +199,15 @@ public interface ModloaderList {
         }
 
         enum LiteLoaderStream {
-            SNAPSHOT, RELEASE;
+            SNAPSHOT, RELEASE
         }
     }
 
     // TODO
     class Fabric implements ModloaderList {
-        private static String FABRIC_LIST_URL = "https://meta.fabricmc.net/v2/versions/loader";
-        private final static Type METADATA_TYPE = new TypeToken<List<FabricLoaderMeta>>() {}.getType();
+        private static final String FABRIC_LIST_URL = "https://meta.fabricmc.net/v2/versions/loader";
+        private final static Type METADATA_TYPE = new TypeToken<List<FabricLoaderMeta>>() {
+        }.getType();
         private List<FabricLoaderMeta> versions = Collections.emptyList();
 
         @Override

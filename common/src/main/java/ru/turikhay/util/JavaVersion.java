@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,12 +17,12 @@ public final class JavaVersion implements Comparable<JavaVersion> {
     private static JavaVersion CURRENT;
 
     public static JavaVersion getCurrent() {
-        if(CURRENT == null) {
+        if (CURRENT == null) {
             String sVersion = System.getProperty("java.version");
             JavaVersion version;
             try {
                 version = parse(sVersion);
-            } catch(RuntimeException rE) {
+            } catch (RuntimeException rE) {
                 System.err.println("Could not parse java version: " + sVersion);
                 rE.printStackTrace();
                 version = UNKNOWN;
@@ -40,13 +39,13 @@ public final class JavaVersion implements Comparable<JavaVersion> {
     private final double d;
 
     private JavaVersion(String version, String identifier, int epoch, int major, int minor, int update) {
-        if(StringUtils.isBlank(version)) {
+        if (StringUtils.isBlank(version)) {
             throw new IllegalArgumentException("version");
         }
         this.version = version;
         identifier = StringUtils.isBlank(identifier) ? null : identifier;
 
-        if(epoch == 1) {
+        if (epoch == 1) {
             this.epoch = epoch;
             this.major = ifNotNegative(major, "major");
             this.minor = ifNotNegative(minor, "minor");
@@ -67,7 +66,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
                 }
             }
             this.update = ifNotSmallerMinusOne(update, "update");
-        } else if(epoch == 0 && ifPositive(major, "major") > 0) {
+        } else if (epoch == 0 && ifPositive(major, "major") > 0) {
             this.epoch = 1;
             this.major = major;
             this.minor = ifNotNegative(minor, "minor (java 9+)");
@@ -109,32 +108,31 @@ public final class JavaVersion implements Comparable<JavaVersion> {
 
     @Override
     public int compareTo(JavaVersion o) {
-        if(o == null) {
+        if (o == null) {
             throw new NullPointerException("version");
         }
 
-        int epochCompare = compare(getEpoch(), o.getEpoch());
-        if(epochCompare != 0) {
+        int epochCompare = Integer.compare(getEpoch(), o.getEpoch());
+        if (epochCompare != 0) {
             return epochCompare;
         }
 
-        int majorCompare = compare(getMajor(), o.getMajor());
-        if(majorCompare != 0) {
+        int majorCompare = Integer.compare(getMajor(), o.getMajor());
+        if (majorCompare != 0) {
             return majorCompare;
         }
 
-        int minorCompare = compare(getMinor(), o.getMinor());
-        if(minorCompare != 0) {
+        int minorCompare = Integer.compare(getMinor(), o.getMinor());
+        if (minorCompare != 0) {
             return minorCompare;
         }
 
-        int updateCompare = compare(getUpdate(), o.getUpdate());
-        if(updateCompare != 0) {
+        int updateCompare = Integer.compare(getUpdate(), o.getUpdate());
+        if (updateCompare != 0) {
             return updateCompare;
         }
 
-        int currentRelease = boolToInt(isRelease()), compareRelease = boolToInt(o.isRelease());
-        return currentRelease - compareRelease; // 00,11 = 0; 01 = -1; 10 = 1
+        return Boolean.compare(isRelease(), o.isRelease());
     }
 
     public String getVersion() {
@@ -194,7 +192,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
     private static final Pattern pattern = Pattern.compile("(?:([0-9]+)\\.)?([0-9]+)(?:\\.([0-9]+))?(?:\\.[0-9]+)*(?:_([0-9]+)(?:b[0-9]+)?)?(?:-(.+))?");
 
     public static JavaVersion parse(String version) {
-        if(StringUtils.isBlank(version)) {
+        if (StringUtils.isBlank(version)) {
             throw new IllegalArgumentException("version");
         }
         Matcher matcher = pattern.matcher(version);
@@ -216,25 +214,18 @@ public final class JavaVersion implements Comparable<JavaVersion> {
     }
 
     private static int parse(String str, String name, boolean zeroifNull) {
-        RuntimeException nested = null;
-
-        parsing:
-        {
-            if (StringUtils.isEmpty(str)) {
-                if (zeroifNull) {
-                    return 0;
-                }
-                break parsing;
+        if (StringUtils.isEmpty(str)) {
+            if (zeroifNull) {
+                return 0;
             }
-
-            try {
-                return Integer.parseInt(str);
-            } catch (RuntimeException rE) {
-                nested = rE;
-            }
+            throw new IllegalArgumentException("could not parse " + name, null);
         }
 
-        throw new IllegalArgumentException("could not parse " + name, nested);
+        try {
+            return Integer.parseInt(str);
+        } catch (RuntimeException rE) {
+            throw new IllegalArgumentException("could not parse " + name, rE);
+        }
     }
 
     private static int parse(String str, String name) {
@@ -268,13 +259,5 @@ public final class JavaVersion implements Comparable<JavaVersion> {
             throw new IllegalArgumentException(name + " must not be less than -1");
         }
         return num;
-    }
-
-    private static int compare(int i0, int i1) {
-        return (i0 < i1? -1 : (i0 == i1? 0 : 1));
-    }
-
-    private static int boolToInt(boolean b) {
-        return b? 1 : 0;
     }
 }

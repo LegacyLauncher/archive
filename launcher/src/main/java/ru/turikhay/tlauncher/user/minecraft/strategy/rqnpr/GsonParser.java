@@ -4,7 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.exceptions.ParseException;
+import ru.turikhay.tlauncher.exceptions.ParseException;
 import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 
 import java.lang.reflect.Type;
@@ -31,9 +31,9 @@ public class GsonParser<V extends Validatable> implements Parser<V> {
         logger.trace("Validating response");
         try {
             result.validate();
-        } catch(ParseException e) {
+        } catch (ParseException e) {
             throw e;
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             throw new ParseException(e);
         }
         return result;

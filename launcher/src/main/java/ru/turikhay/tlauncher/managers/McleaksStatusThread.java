@@ -6,6 +6,7 @@ import ru.turikhay.util.async.ExtendedThread;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 class McleaksStatusThread extends ExtendedThread {
     private final McleaksStatus parent;
@@ -20,7 +21,7 @@ class McleaksStatusThread extends ExtendedThread {
 
         try {
             receivePayload();
-        } catch(Exception e) {
+        } catch (Exception e) {
             parent.receiveNothing();
         }
     }
@@ -28,9 +29,9 @@ class McleaksStatusThread extends ExtendedThread {
     private void receivePayload() throws IOException {
         Gson gson = new Gson();
         URL url = new URL("https://api.mcleaks.net/");
-        String response = IOUtils.toString(url.openStream(), "UTF-8");
+        String response = IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
         Payload payload = gson.fromJson(response, Payload.class);
-        if(payload != null && payload.serverip != null) {
+        if (payload != null && payload.serverip != null) {
             parent.receiveStatus(payload);
         } else {
             throw new IOException("cannot parse response: " + response);

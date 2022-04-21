@@ -4,7 +4,6 @@ import ru.turikhay.tlauncher.bootstrap.util.OS;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import java.awt.*;
@@ -35,13 +34,11 @@ class EditorPane extends JEditorPane {
         setEditorKit(html);
         setEditable(false);
         setOpaque(false);
-        addHyperlinkListener(new HyperlinkListener() {
-            public void hyperlinkUpdate(HyperlinkEvent e) {
-                if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
-                    URL url = e.getURL();
-                    if (url != null) {
-                        OS.openUrl(url);
-                    }
+        addHyperlinkListener(e -> {
+            if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                URL url = e.getURL();
+                if (url != null) {
+                    OS.openUrl(url);
                 }
             }
         });

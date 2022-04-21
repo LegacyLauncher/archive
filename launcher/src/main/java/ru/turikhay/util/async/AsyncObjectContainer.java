@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 public class AsyncObjectContainer<T> {
-    private final List<AsyncObject<T>> objects = new ArrayList<AsyncObject<T>>();
-    private final Map<AsyncObject<T>, T> values = new LinkedHashMap<AsyncObject<T>, T>();
+    private final List<AsyncObject<T>> objects = new ArrayList<>();
+    private final Map<AsyncObject<T>, T> values = new LinkedHashMap<>();
 
     private final Object waitLock = new Object();
     private boolean executionLock;

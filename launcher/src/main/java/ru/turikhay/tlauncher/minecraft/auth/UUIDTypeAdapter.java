@@ -21,7 +21,7 @@ public class UUIDTypeAdapter extends TypeAdapter<UUID> {
     }
 
     public static String fromUUID(UUID value) {
-        return toUUID(value == null? null : value.toString());
+        return toUUID(value == null ? null : value.toString());
     }
 
     public static UUID fromString(String input) {

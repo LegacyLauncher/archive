@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.user.minecraft.strategy.preq.create;
 
 public interface ProfileCreatorUserInterface {
-    String requestProfileName() throws InterruptedException;
+    String requestProfileName();
+
     void showProfileUnavailableMessage(String profileName);
 }

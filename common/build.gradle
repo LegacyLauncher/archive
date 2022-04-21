@@ -10,10 +10,10 @@ java {
 }
 
 dependencies {
-    implementation("org.apache.commons:commons-lang3:3.4")
+    implementation(libs.commons.lang3)
 
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.1')
-    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.7.1')
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 test {

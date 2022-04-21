@@ -5,14 +5,11 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import ru.turikhay.util.FileUtil;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AssetIndex {
     public static final String DEFAULT_ASSET_NAME = "pre-1.6";
-    private Map<String, AssetIndex.AssetObject> objects = new LinkedHashMap<String, AssetIndex.AssetObject>();
+    private final Map<String, AssetIndex.AssetObject> objects = new LinkedHashMap<>();
     private boolean virtual;
 
     public Map<String, AssetIndex.AssetObject> getFileMap() {
@@ -26,14 +23,14 @@ public class AssetIndex {
     }
 
     public Set<AssetIndex.AssetObject> getUniqueObjects() {
-        return new HashSet<AssetIndex.AssetObject>(objects.values());
+        return new HashSet<>(objects.values());
     }
 
     public boolean isVirtual() {
         return virtual;
     }
 
-    public class AssetObject {
+    public static class AssetObject {
         private String hash;
         private long size;
         private boolean reconstruct;
@@ -92,10 +89,10 @@ public class AssetIndex {
             if (size != that.size) {
                 return false;
             }
-            if (compressedHash != null ? !compressedHash.equals(that.compressedHash) : that.compressedHash != null) {
+            if (!Objects.equals(compressedHash, that.compressedHash)) {
                 return false;
             }
-            return hash != null ? hash.equals(that.hash) : that.hash == null;
+            return Objects.equals(hash, that.hash);
         }
 
         public int hashCode() {
