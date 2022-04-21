@@ -10,8 +10,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -127,27 +129,29 @@ public class DownloadTask extends Task<Void> {
             out.close();
 
             boolean tryCopy = false;
+            ArrayList<IOException> copyAttemptFailures = new ArrayList<>();
             do {
                 try {
-                    Files.copy(temp, file);
-                } catch (FileNotFoundException fnf) {
-                    FileLockedException locked = FileLockedException.getIfPresent(fnf);
-
-                    if (tryCopy) { // already tried
-                        throw locked == null ? fnf : locked;
+                    Files.createDirectories(file.getParent());
+                    Files.deleteIfExists(file);
+                    Files.copy(temp, file, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    if (copyAttemptFailures.size() == 5) {
+                        log("File is locked. Giving up trying to copy it", e);
+                        copyAttemptFailures.forEach(e::addSuppressed);
+                        throw e;
                     }
+                    copyAttemptFailures.add(e);
 
-                    if (locked != null) {
-                        log("We got the situation! File is locked. Let's wait some time...", locked);
-                    } else {
-                        log("File is probably locked, waiting:", fnf, temp, file);
-                    }
+                    log("File is probably locked. Let's wait some time...", e);
 
                     try {
                         Thread.sleep(FileLockedException.LOCK_COOLDOWN);
                     } catch (InterruptedException interrupted) {
                         throw new TaskInterruptedException(this);
                     }
+
+                    checkInterrupted();
 
                     tryCopy = true; // let's try again
                 }

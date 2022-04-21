@@ -82,7 +82,13 @@ public class LocalLauncher extends Launcher {
         ZipEntry metaEntry = zip.getEntry(ENTRY_NAME);
 
         if (metaEntry == null) {
-            throw new IOException("could not find entry: " + ENTRY_NAME);
+            IOException ioE = new IOException("could not find entry: " + ENTRY_NAME);
+            try {
+                zip.close();
+            } catch (IOException suppressed) {
+                ioE.addSuppressed(suppressed);
+            }
+            throw ioE;
         }
 
         return new FilterInputStream(zip.getInputStream(metaEntry)) {

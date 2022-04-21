@@ -618,7 +618,13 @@ public final class TLauncher {
             return Optional.empty();
         }
         Object o = bridge.getCapabilities().get(key);
-        if (!capabilityClass.isInstance(o)) return Optional.empty();
+        if (o == null) {
+            return Optional.empty();
+        }
+        if (!capabilityClass.isInstance(o)) {
+            LOGGER.warn("Capability type mismatch! Key: {}, expected: {}, got: {}", key, capabilityClass, o.getClass());
+            return Optional.empty();
+        }
         return Optional.of(capabilityClass.cast(o));
     }
 

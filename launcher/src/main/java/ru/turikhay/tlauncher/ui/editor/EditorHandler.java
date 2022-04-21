@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class EditorHandler implements Blockable {
-    private final String path;
+    private String path;
     private String value;
     private final List<EditorFieldListener> listeners;
 
@@ -47,6 +47,10 @@ public abstract class EditorHandler implements Blockable {
 
     public String getPath() {
         return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public void updateValue(Object obj) {
