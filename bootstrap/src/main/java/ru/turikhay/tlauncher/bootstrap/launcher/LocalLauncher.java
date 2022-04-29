@@ -58,11 +58,9 @@ public class LocalLauncher extends Launcher {
     }
 
     static <T extends LauncherMeta> T findMetaEntry(Path file, Class<T> clazz) throws IOException {
-
         if (!Files.exists(file)) {
             throw new FileNotFoundException();
         }
-
         InputStream input;
         if (Files.isRegularFile(file)) {
             input = getZipEntry(file);
@@ -73,8 +71,9 @@ public class LocalLauncher extends Launcher {
             }
             input = Files.newInputStream(file);
         }
-
-        return Json.get().fromJson(new InputStreamReader(input, StandardCharsets.UTF_8), clazz);
+        try (InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+            return Json.get().fromJson(reader, clazz);
+        }
     }
 
     private static InputStream getZipEntry(Path file) throws IOException {

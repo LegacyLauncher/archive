@@ -133,7 +133,6 @@ public class DownloadTask extends Task<Void> {
             do {
                 try {
                     Files.createDirectories(file.getParent());
-                    Files.deleteIfExists(file);
                     Files.copy(temp, file, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     if (copyAttemptFailures.size() == 5) {
