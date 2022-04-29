@@ -274,7 +274,7 @@ public class Downloadable {
             connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
             connection.setRequestProperty("Pragma", "no-cache"); // HTTP 1.0.
             connection.setRequestProperty("Expires", "0"); // Proxies.
-            connection.setRequestProperty("User-Agent", "");
+//            connection.setRequestProperty("User-Agent", "");
 
             return connection;
             /*if (!fake) {
