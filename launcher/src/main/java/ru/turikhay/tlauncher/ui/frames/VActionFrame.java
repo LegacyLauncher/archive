@@ -46,7 +46,7 @@ public class VActionFrame extends ActionFrame {
 
         head = new LocalizableLabel();
         head.setFont(head.getFont().deriveFont(head.getFont().getSize2D() + 18f).deriveFont(Font.BOLD));
-        head.setForeground(new Color(head.getForeground().getRed(), head.getForeground().getGreen(), head.getForeground().getBlue(), 128));
+        //head.setForeground(new Color(head.getForeground().getRed(), head.getForeground().getGreen(), head.getForeground().getBlue(), 128));
         head.setIconTextGap(SwingUtil.magnify(10));
         holder.setNorth(head);
 

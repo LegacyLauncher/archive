@@ -24,11 +24,14 @@ import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
 import ru.turikhay.tlauncher.bootstrap.ui.HeadlessInterface;
 import ru.turikhay.tlauncher.bootstrap.ui.IInterface;
 import ru.turikhay.tlauncher.bootstrap.ui.UserInterface;
+import ru.turikhay.tlauncher.bootstrap.ui.flatlaf.FlatLaf;
 import ru.turikhay.tlauncher.bootstrap.util.*;
 import ru.turikhay.tlauncher.bootstrap.util.stream.OutputRedirectBuffer;
+import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.windows.wmi.WMI;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -249,7 +252,7 @@ public final class Bootstrap {
 
     private final InternalLauncher internal;
     private final BootBridge bootBridge;
-//    private final TargetConfig config;
+    private final TargetConfig config;
 
     private IInterface ui;
     private final Path bootstrapJar;
@@ -271,6 +274,7 @@ public final class Bootstrap {
             log("Couldn't read launcher config", e);
             config = new TargetConfig();
         }
+        this.config = config;
 
         String client = config.getClient();
         if (client != null) {
@@ -317,6 +321,31 @@ public final class Bootstrap {
                 log("Configuration tells us to switch to beta branch, but we're already on beta");
             }
         }
+
+        bootBridge.addCapability("has_flatlaf");
+        SwingUtilities.invokeLater(() -> {
+            FlatLafConfiguration flatLafConfig = FlatLafConfiguration.parseFromMap(Bootstrap.this.config.asMap());
+            String guiSystemLookAndFeel = Bootstrap.this.config.get("gui.systemlookandfeel");
+            boolean preFlatLafConfiguration = !flatLafConfig.getState().isPresent() && guiSystemLookAndFeel != null;
+            if (preFlatLafConfiguration) {
+                log("Detected pre-FlatLaf configuration");
+            }
+            if (preFlatLafConfiguration && "true".equals(guiSystemLookAndFeel) || flatLafConfig.getState().filter(s -> s == FlatLafConfiguration.State.SYSTEM).isPresent()) {
+                log("Using system L&F");
+                UserInterface.setSystemLookAndFeel();
+            } else if (preFlatLafConfiguration && "false".equals(guiSystemLookAndFeel)) {
+                log("Not setting L&F on pre-FlatLaf configuration because gui.systemlookandfeel == false");
+            } else {
+                if (flatLafConfig.isEnabled()) {
+                    log("Using FlatLaf configuration");
+                    FlatLaf.initialize(flatLafConfig);
+                } else {
+                    log("Not setting L&F because FlatLaf is not enabled");
+                }
+            }
+            // flags bootstrap took care of setting L&F
+            bootBridge.addCapability("set_laf");
+        });
     }
 
     public Bootstrap(String[] launcherArgs, Path bootstrapJar) {

@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.configuration;
 
 import net.minecraft.launcher.versions.ReleaseType;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
+import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
 import ru.turikhay.util.MinecraftUtil;
@@ -63,7 +64,9 @@ public final class ConfigurationDefaults {
 
         d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
         d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent() ? 1000 : 1200, 600));
-        d.put("gui.systemlookandfeel", true);
+//        d.put("gui.systemlookandfeel", false);
+
+        d.putAll(FlatLaf.getDefaults());
 
         d.put("gui.background", null);
 

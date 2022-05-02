@@ -3,6 +3,7 @@ authlib = "1.5.24"
 commons-compress = "1.21"
 commons-io = "2.11.0"
 commons-lang3 = "3.12.0"
+flatlaf = "2.2"
 gson = "2.8.9"
 guava = "31.0.1-jre"
 httpcomponents = "4.5.13"
@@ -30,6 +31,7 @@ authlib = { module = "com.mojang:authlib", version.ref = "authlib" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+flatlaf = { module = "com.formdev:flatlaf", version.ref = "flatlaf" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 httpcomponents-fluent-hc = { module = "org.apache.httpcomponents:fluent-hc", version.ref = "httpcomponents" }

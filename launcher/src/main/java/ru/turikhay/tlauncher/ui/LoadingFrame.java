@@ -2,7 +2,6 @@ package ru.turikhay.tlauncher.ui;
 
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.progress.ProgressBar;
-import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,7 +10,6 @@ public class LoadingFrame extends JFrame {
     private final ProgressBar progress;
 
     public LoadingFrame() {
-        SwingUtil.initLookAndFeel();
         setLayout(new BorderLayout());
         progress = new ProgressBar();
         progress.setPreferredSize(new Dimension(250, 0));

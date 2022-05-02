@@ -6,7 +6,10 @@ import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
+import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComponentAdapter;
 import ru.turikhay.util.SwingUtil;
@@ -21,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Optional;
 
 public final class ImageBackground extends JComponent implements ISwingBackground {
     private static final Logger LOGGER = LogManager.getLogger(ImageBackground.class);
@@ -69,7 +73,26 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
     @Override
     public void loadBackground(String path) throws Exception {
         if (defaultImage == null) {
-            defaultImage = Images.loadImageByName("plains.jpg");
+            String defaultImageName = "plains.jpg";
+            if (TLauncher.getInstance() != null) {
+                Optional<FlatLafConfiguration> flatLafConfiguration = TLauncher.getInstance().getSettings()
+                        .getFlatLafConfiguration();
+                Optional<FlatLafConfiguration.Theme> selectedTheme = FlatLaf.getSelectedNowTheme(flatLafConfiguration);
+                if(flatLafConfiguration.isPresent() && selectedTheme.isPresent()) {
+                    defaultImageName = "plains4K.jpg";
+                    String selectedThemeFile = flatLafConfiguration.get().getThemeFiles().get(selectedTheme.get());
+                    if (selectedThemeFile != null) {
+                        BufferedImage externalBackgroundImage = FlatLaf
+                                .loadDefaultBackgroundFromThemeFile(selectedThemeFile);
+                        if (externalBackgroundImage != null) {
+                            defaultImage = externalBackgroundImage;
+                        }
+                    }
+                }
+            }
+            if (defaultImage == null) {
+                defaultImage = Images.loadImageByName(defaultImageName);
+            }
         }
 
         renderImage = null;

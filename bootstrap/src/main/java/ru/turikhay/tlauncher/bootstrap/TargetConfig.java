@@ -12,6 +12,8 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class TargetConfig {
@@ -39,6 +41,14 @@ public class TargetConfig {
 
     public boolean isSwitchToBeta() {
         return getBoolean("bootstrap.switchToBeta");
+    }
+
+    public Map<String, String> asMap() {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            map.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+        return map;
     }
 
     public static TargetConfig readConfigFromFile(Path file) throws IOException {

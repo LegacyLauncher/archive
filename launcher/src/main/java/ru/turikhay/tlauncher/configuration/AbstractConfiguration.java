@@ -1,8 +1,9 @@
 package ru.turikhay.tlauncher.configuration;
 
 import java.io.IOException;
+import java.util.Map;
 
-public interface AbstractConfiguration {
+public interface AbstractConfiguration extends Map<String, String> {
     String get(String var1);
 
     int getInteger(String var1);
@@ -29,7 +30,10 @@ public interface AbstractConfiguration {
 
     void set(String var1, Object var2);
 
+    @Override
     void clear();
 
     void save() throws IOException;
+
+
 }

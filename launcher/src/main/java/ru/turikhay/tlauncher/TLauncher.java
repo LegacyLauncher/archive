@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
+import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
@@ -24,6 +25,7 @@ import ru.turikhay.tlauncher.minecraft.launcher.MinecraftListener;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.sentry.SentryConfigurer;
 import ru.turikhay.tlauncher.stats.Stats;
+import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
@@ -42,6 +44,7 @@ import ru.turikhay.util.async.ExtendedThread;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
+import javax.swing.*;
 import java.io.File;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -107,6 +110,7 @@ public final class TLauncher {
         dispatcher.onBootStateChanged("Loading configuration", 0.1);
         this.config = Configuration.createConfiguration(optionSet);
         dispatcher.passClient(config.getClient());
+        migrateLafConfigOrSetLaf();
         this.lang = new LangConfiguration();
         initConfig();
 
@@ -275,6 +279,33 @@ public final class TLauncher {
         config.set(JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
     }
 
+    private void migrateLafConfigOrSetLaf() {
+        boolean setSystemLaf;
+        if (config.containsKey("gui.systemlookandfeel") && !config.containsKey(FlatLafConfiguration.KEY_STATE)) {
+            // pre-FlatLaf configuration
+            setSystemLaf = config.getBoolean("gui.systemlookandfeel");
+            LOGGER.info("FlatLaf is not enabled because \"gui.systemlookandfeel\" is set to \""+ setSystemLaf +"\"");
+            if (FlatLaf.isSupported()) {
+                // already using system L&F
+                config.set(FlatLafConfiguration.KEY_STATE, setSystemLaf ?
+                        FlatLafConfiguration.State.SYSTEM.toString() : FlatLafConfiguration.State.OFF.toString());
+                setSystemLaf = false;
+            }
+        } else {
+            // bootstrap didn't set L&F
+            setSystemLaf = !hasCapability("set_laf");
+        }
+        if (setSystemLaf) {
+            LOGGER.info("Setting system L&F");
+            String systemLaf = UIManager.getSystemLookAndFeelClassName();
+            try {
+                UIManager.setLookAndFeel(systemLaf);
+            } catch (Exception e) {
+                LOGGER.warn("Couldn't set system L&F: {}", systemLaf, e);
+            }
+        }
+    }
+
     private void executeOnReadyJobs() {
         synchronized (onReadySync) {
             Objects.requireNonNull(onReadyJobs, "onReadyJobs");
@@ -411,7 +442,6 @@ public final class TLauncher {
 
     private void initConfig() {
         SentryConfigurer.setUser(config.getClient());
-        config.setUsingSystemLookAndFeel(config.isUsingSystemLookAndFeel() && SwingUtil.initLookAndFeel());
         TLauncherFrame.setFontSize(config.getFontSize());
         if (!config.getBoolean("connection.ssl")) {
             LOGGER.warn("Disabling SSL certificate/hostname validation. IT IS NOT SECURE.");
@@ -731,19 +761,14 @@ public final class TLauncher {
         BootEventDispatcher dispatcher = bridge.setupDispatcher();
         dispatcher.onBootStarted();
 
-        while (true) {
+//        while (true) {
             try {
                 new TLauncher(bridge, dispatcher);
-                break;
             } catch (Throwable t) {
                 LOGGER.fatal("Error launching TL", t);
-
-                if (!handleLookAndFeelException(t)) {
-                    dispatcher.onBootErrored(t);
-                    return;
-                }
+                dispatcher.onBootErrored(t);
             }
-        }
+//        }
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -760,16 +785,6 @@ public final class TLauncher {
         ExceptionHandler handler = ExceptionHandler.getInstance();
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
-    }
-
-    private static boolean handleLookAndFeelException(Throwable t) {
-        for (StackTraceElement elem : t.getStackTrace()) {
-            if (elem.toString().toLowerCase(java.util.Locale.ROOT).contains("lookandfeel")) {
-                SwingUtil.resetLookAndFeel();
-                return true;
-            }
-        }
-        return false;
     }
 
     static {

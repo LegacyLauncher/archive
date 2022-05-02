@@ -12,6 +12,7 @@ allprojects {
     }
     repositories {
         mavenCentral()
+        maven { url 'https://jitpack.io' }
         maven {
             url("https://cdn.turikhay.ru/tlauncher/repo/libraries")
             name("turikhay cdn")
