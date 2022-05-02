@@ -643,6 +643,7 @@ public final class TLauncher {
         } else {
             LOGGER.info("JNA capability is not enabled");
         }
+        LOGGER.info("Is current OS 64-bit? {}", JNA.is64Bit());
     }
 
     private static TLauncher instance;
