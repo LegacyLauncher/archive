@@ -14,9 +14,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +46,7 @@ public final class UserInterface implements IInterface {
 
     private final TaskListener<Object> taskListener;
 
-    public UserInterface() throws HeadlessException {
+    private UserInterface() throws HeadlessException {
         if (!isHeaded()) {
             throw new HeadlessException();
         }
@@ -196,6 +198,18 @@ public final class UserInterface implements IInterface {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("task", bindingTask)
                 .build();
+    }
+
+    public static UserInterface createInterface() throws InterruptedException {
+        AtomicReference<UserInterface> ref = new AtomicReference<>();
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                ref.set(new UserInterface());
+            });
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException("couldn't init UserInterface", e);
+        }
+        return ref.get();
     }
 
     public static ResourceBundle getResourceBundle() {

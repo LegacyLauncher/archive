@@ -58,7 +58,7 @@ public final class Bootstrap {
         FixSSL.addLetsEncryptCertSupportIfNeeded();
     }
 
-    static Bootstrap createBootstrap(String[] rawArgs) {
+    static Bootstrap createBootstrap(String[] rawArgs) throws InterruptedException {
         log("Starting bootstrap...");
 
         SplitArgs args;
@@ -352,7 +352,7 @@ public final class Bootstrap {
         this(launcherArgs, bootstrapJar, null, null);
     }
 
-    public void setupUserInterface(boolean forceHeadlessMode) {
+    public void setupUserInterface(boolean forceHeadlessMode) throws InterruptedException {
         if (ui != null) {
             return;
         }
@@ -363,7 +363,7 @@ public final class Bootstrap {
         } else {
             log("Trying to load user interface");
             try {
-                ui = new UserInterface();
+                ui = UserInterface.createInterface();
                 log("UI loaded");
                 return;
             } catch (RuntimeException rE) {
