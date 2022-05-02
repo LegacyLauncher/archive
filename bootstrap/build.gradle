@@ -64,6 +64,7 @@ shadowJar {
     ]
     relocate("com.", "shaded.com.") {
         exclude("com.sun.jna.**")
+        exclude("/com/sun/jna/**")
         exclude("com.formdev.**")
     }
     relocate("de.", "shaded.de.")
@@ -76,6 +77,7 @@ shadowJar {
 
     minimize() {
         exclude(dependency("net.java.dev.jna:.*"))
+        exclude(dependency("com.formdev:flatlaf"))
     }
 
     exclude '*.md'

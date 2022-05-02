@@ -281,14 +281,15 @@ public final class TLauncher {
 
     private void migrateLafConfigOrSetLaf() {
         boolean setSystemLaf;
-        if (config.containsKey("gui.systemlookandfeel") && !config.containsKey(FlatLafConfiguration.KEY_STATE)) {
+        if (config.containsKey("gui.systemlookandfeel")) {
             // pre-FlatLaf configuration
             setSystemLaf = config.getBoolean("gui.systemlookandfeel");
             LOGGER.info("FlatLaf is not enabled because \"gui.systemlookandfeel\" is set to \""+ setSystemLaf +"\"");
             if (FlatLaf.isSupported()) {
                 // already using system L&F
                 config.set(FlatLafConfiguration.KEY_STATE, setSystemLaf ?
-                        FlatLafConfiguration.State.SYSTEM.toString() : FlatLafConfiguration.State.OFF.toString());
+                        FlatLafConfiguration.State.SYSTEM.toString() : FlatLafConfiguration.State.OFF.toString(), false);
+                config.set("gui.systemlookandfeel", null);
                 setSystemLaf = false;
             }
         } else {
