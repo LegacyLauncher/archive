@@ -10,6 +10,8 @@ import net.minecraft.launcher.versions.ReleaseType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
+import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.util.*;
 
 import java.io.File;
@@ -18,7 +20,6 @@ import java.io.IOException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
-import java.util.Map.Entry;
 
 public class Configuration extends SimpleConfiguration {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -392,6 +393,17 @@ public class Configuration extends SimpleConfiguration {
 
     public <C extends Configurable> void set(C configurable) {
         configurable.save(this);
+    }
+
+    public Optional<FlatLafConfiguration> getFlatLafConfiguration() {
+        return FlatLaf.parseFromMap(this);
+    }
+
+    public void setFlatLafConfiguration(Object configuration) {
+        if(!(configuration instanceof FlatLafConfiguration)) {
+            throw new IllegalArgumentException();
+        }
+        putAll(((FlatLafConfiguration) configuration).toMap());
     }
 
     public File getFile() {

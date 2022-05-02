@@ -4,10 +4,12 @@ import net.minecraft.launcher.versions.ReleaseType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.managers.VersionLists;
 import ru.turikhay.tlauncher.stats.Stats;
+import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.converter.ActionOnLaunchConverter;
@@ -19,10 +21,7 @@ import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.ImageFileExplorer;
 import ru.turikhay.tlauncher.ui.explorer.MediaFileExplorer;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
-import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
-import ru.turikhay.tlauncher.ui.loc.LocalizableMenuItem;
+import ru.turikhay.tlauncher.ui.loc.*;
 import ru.turikhay.tlauncher.ui.login.LoginException;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
 import ru.turikhay.tlauncher.ui.scenes.DefaultScene;
@@ -59,7 +58,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler oldVersionsHandler; // temp
     public final EditorGroupHandler extraHandler;
     public final EditorFieldHandler launcherResolution;
-    public final EditorFieldHandler systemTheme;
+    public final EditorFieldHandler laf;
     public final EditorFieldHandler font;
     public final EditorFieldHandler background;
     public final EditorFieldHandler loginFormDirection;
@@ -206,18 +205,38 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         tlauncherTab.add(new EditorPair("settings.direction.label", loginFormDirection));
-        systemTheme = new EditorFieldHandler("gui.systemlookandfeel", new EditorCheckBox("settings.systemlnf"));
-        systemTheme.addListener(new EditorFieldChangeListener() {
-            protected void onChange(String oldValue, String newValue) {
-                if (SettingsPanel.this.ready) {
-                    Alert.showLocWarning("settings.systemlnf.note.title", "settings.systemlnf.note." + newValue, null);
-                }
+        laf = new EditorFieldHandler(FlatLafConfiguration.KEY_STATE, new EditorComboBox<>(
+                new LocalizableStringConverter<String>("settings.laf.state") {
+                    @Override
+                    protected String toPath(String var1) {
+                        return var1;
+                    }
 
+                    @Override
+                    public String fromString(String var1) {
+                        return var1;
+                    }
+
+                    @Override
+                    public String toValue(String var1) {
+                        return var1;
+                    }
+
+                    @Override
+                    public Class<String> getObjectClass() {
+                        return String.class;
+                    }
+                },
+                getLafStates()
+        ));
+        laf.addListener(new EditorFieldChangeListener() {
+            protected void onChange(String oldValue, String newValue) {
+                if (SettingsPanel.this.ready && newValue != null) {
+                    Alert.showLocWarning("", "settings.laf.restart", null);
+                }
             }
         });
-        tlauncherTab.add(new EditorPair("settings.systemlnf.label", systemTheme));
-        //tlauncherTab.nextPane();
-        //tlauncherTab.nextPane();
+        tlauncherTab.add(new EditorPair("settings.laf.label", laf));
 
         boolean mediaFxAvailable = sc.getMainPane().background.getMediaFxBackground() != null;
         FileExplorer backgroundExplorer = null;
@@ -391,6 +410,17 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
         updateValues();
         updateLocale();
+    }
+
+    private String[] getLafStates() {
+        if (!FlatLaf.getStates().isEmpty()) {
+            return FlatLaf.getStates().toArray(new String[0]);
+        }
+        String existingValue = tlauncher.getSettings().get(FlatLafConfiguration.KEY_STATE);
+        if (existingValue != null) {
+            return new String[]{ existingValue };
+        }
+        return new String[]{ null };
     }
 
     public void updateValues() {

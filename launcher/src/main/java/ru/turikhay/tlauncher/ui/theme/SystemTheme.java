@@ -103,7 +103,7 @@ public final class SystemTheme extends Theme {
     }
 
     private boolean useColorfulIcons() {
-        if (Boolean.getBoolean("tlauncher.ui.noColorfulIcons")) {
+        if (Boolean.getBoolean("tlauncher.ui.noColorfulIcons") || UIManager.getBoolean("laf.dark")) {
             return false;
         }
         Color background = getBackground();

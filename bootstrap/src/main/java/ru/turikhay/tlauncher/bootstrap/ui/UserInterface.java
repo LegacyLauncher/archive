@@ -261,6 +261,15 @@ public final class UserInterface implements IInterface {
         return getChildTask(child, depth - 1);
     }
 
+    public static void setSystemLookAndFeel() {
+        String systemLaf = UIManager.getSystemLookAndFeelClassName();
+        try {
+            UIManager.setLookAndFeel(systemLaf);
+        } catch (Exception e) {
+            log("Couldn't set system L&F:", systemLaf, e);
+        }
+    }
+
     private static void log(Object... o) {
         U.log("[UI]", o);
     }

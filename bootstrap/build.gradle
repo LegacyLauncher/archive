@@ -34,6 +34,8 @@ compileModernJava {
 
 dependencies {
     modernImplementation(sourceSets.main.output)
+    modernImplementation(project(":bridge"))
+    modernImplementation("com.github.Dansoftowner:jSystemThemeDetector:3.7")
 
     implementation(project(":bridge"))
     implementation(project(":common"))
@@ -46,6 +48,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.commons.io)
     implementation(libs.bundles.jna)
+    implementation(libs.flatlaf)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -55,13 +58,21 @@ dependencies {
 }
 
 shadowJar {
-    relocate("com", "shaded.com") {
+    configurations = [
+            project.configurations.runtimeClasspath,
+            project.configurations.modernRuntimeClasspath,
+    ]
+    relocate("com.", "shaded.com.") {
         exclude("com.sun.jna.**")
+        exclude("com.formdev.**")
     }
-    relocate("joptsimple", "shaded.joptsimple")
-    relocate("org", "shaded.org")
+    relocate("de.", "shaded.de.")
+    relocate("io.", "shaded.io.")
+    relocate("joptsimple.", "shaded.joptsimple.")
+    relocate("org.", "shaded.org.")
+    relocate("oshi.", "shaded.oshi.")
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
-    relocate("net", "shaded.net")
+    relocate("net.", "shaded.net.")
 
     minimize() {
         exclude(dependency("net.java.dev.jna:.*"))
@@ -90,7 +101,7 @@ shadowJar {
 task runDebug(type: JavaExec) {
     group = "Execution"
     description = "Run BootstrapDebug"
-    classpath(sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
+    classpath(sourceSets.modern.runtimeClasspath, sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
     maxHeapSize = "128M"
     mainClass.set("ru.turikhay.tlauncher.bootstrap.BootstrapDebug")
     if (System.getenv("JRE_EXECUTABLE")) {
@@ -99,7 +110,9 @@ task runDebug(type: JavaExec) {
     if (System.getenv("RUN_EXTERNAL") == "true") {
         jvmArgs("-Dtlauncher.bootstrap.debug.external=true")
     }
-//    jvmArgs("-Dsun.java2d.uiScale=1.25")
+    if (System.getenv("UI_SCALE")) {
+        jvmArgs("-Dsun.java2d.uiScale=" + System.getenv("UI_SCALE"))
+    }
     jvmArgs("-Dtlauncher.logFolder=${rootDir}/logs")
     jvmArgs("-Dtlauncher.systemCharset=${Charset.defaultCharset().name()}")
     args("--debug")

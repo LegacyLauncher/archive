@@ -48,31 +48,6 @@ public class SwingUtil {
         frame.setIconImages(getFavicons());
     }
 
-    private static boolean allowSystemLookAndFeel = true;
-
-    public static boolean initLookAndFeel() {
-        if (allowSystemLookAndFeel) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                return true;
-            } catch (Exception e) {
-                LOGGER.warn("Can't set system L&F", e);
-                allowSystemLookAndFeel = false;
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public static void resetLookAndFeel() {
-        allowSystemLookAndFeel = false;
-        try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (Exception e) {
-            LOGGER.warn("Can't set default L&F!", e);
-        }
-    }
-
     public static void initFontSize(int defSize) {
         try {
             UIDefaults e = UIManager.getDefaults();

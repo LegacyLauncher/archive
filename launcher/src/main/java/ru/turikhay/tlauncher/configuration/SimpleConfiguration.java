@@ -9,7 +9,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class SimpleConfiguration implements AbstractConfiguration {
     private final static Logger LOGGER = LogManager.getLogger();
@@ -222,8 +222,68 @@ public class SimpleConfiguration implements AbstractConfiguration {
         }
     }
 
+    @Override
+    public int size() {
+        return properties.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return properties.isEmpty();
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        return properties.containsKey(key);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        return properties.containsValue(value);
+    }
+
+    @Override
+    public String get(Object key) {
+        return get(String.valueOf(key));
+    }
+
+    @Override
+    public String put(String key, String value) {
+        set(key, value);
+        return null;
+    }
+
+    @Override
+    public String remove(Object key) {
+        set(String.valueOf(key), null);
+        return null;
+    }
+
+    @Override
+    public void putAll(Map<? extends String, ? extends String> m) {
+        for (Entry<? extends String, ? extends String> entry : m.entrySet()) {
+            set(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override
     public void clear() {
         properties.clear();
+    }
+
+    @Override
+    public Set<String> keySet() {
+        return properties.keySet().stream().map(String::valueOf).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Collection<String> values() {
+        return properties.values().stream().map(String::valueOf).collect(Collectors.toList());
+    }
+
+    @Override
+    public Set<Entry<String, String>> entrySet() {
+        return null;
     }
 
     public boolean isSaveable() {
