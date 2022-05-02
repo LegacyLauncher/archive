@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.commons.compress)
     implementation(libs.gson)
     implementation(libs.commons.io)
+    implementation(libs.bundles.jna)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -54,13 +55,17 @@ dependencies {
 }
 
 shadowJar {
-    relocate("com", "shaded.com")
+    relocate("com", "shaded.com") {
+        exclude("com.sun.jna.**")
+    }
     relocate("joptsimple", "shaded.joptsimple")
     relocate("org", "shaded.org")
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
     relocate("net", "shaded.net")
 
-    minimize()
+    minimize() {
+        exclude(dependency("net.java.dev.jna:.*"))
+    }
 
     exclude '*.md'
     exclude '*module-info.class'

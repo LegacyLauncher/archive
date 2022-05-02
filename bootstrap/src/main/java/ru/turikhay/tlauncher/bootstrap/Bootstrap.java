@@ -259,6 +259,7 @@ public final class Bootstrap {
     private Path updateMetaFile;
     private boolean ignoreUpdate, ignoreSelfUpdate, packageMode;
     private String restartExec;
+    private boolean switchToBeta;
 
     Bootstrap(String[] launcherArgs, Path bootstrapJar, Path targetJar, Path targetLibFolder) {
         this.bootstrapJar = bootstrapJar;
@@ -303,6 +304,7 @@ public final class Bootstrap {
         setTargetLibFolder(targetLibFolder);
 
         this.bootBridge = new BootBridge(LocalBootstrapMeta.getInstance().getVersion().toString(), launcherArgs);
+        bootBridge.addCapability("jna");
 
         boolean isNotBeta = !BootstrapMeta.BETA_BRANCH.equals(LocalBootstrapMeta.getInstance().getShortBrand());
         // announce capability, but disallow switching from beta to beta :)
@@ -310,7 +312,7 @@ public final class Bootstrap {
         if (config.isSwitchToBeta()) {
             if (isNotBeta) {
                 log("Configuration tells us to switch to beta branch");
-                LocalBootstrapMeta.getInstance().setShortBrand(BootstrapMeta.BETA_BRANCH);
+                switchToBeta = true;
             } else {
                 log("Configuration tells us to switch to beta branch, but we're already on beta");
             }
@@ -467,7 +469,7 @@ public final class Bootstrap {
         return new Task<LocalLauncherTask>("prepareLauncher") {
             @Override
             protected LocalLauncherTask execute() throws Exception {
-                RemoteLauncher remoteLauncher = updateMeta == null ? null : new RemoteLauncher(updateMeta.getLauncher());
+                RemoteLauncher remoteLauncher = updateMeta == null ? null : new RemoteLauncher(updateMeta.getLauncher(switchToBeta));
                 log("Remote launcher: " + remoteLauncher);
 
                 final boolean ignoreUpdate = getIgnoreUpdate();
@@ -564,7 +566,7 @@ public final class Bootstrap {
                     bootBridge.setOptions(updateMeta.getOptions());
                 }
                 if (localLauncherTask.isUpdated() && updateMeta != null) {
-                    addUpdateMessage(updateMeta.getLauncher());
+                    addUpdateMessage(updateMeta.getLauncher(switchToBeta));
                 }
 
                 bindTo(startLauncher(localLauncher), 0.75, 1.);

@@ -185,17 +185,19 @@ public class UpdateMeta {
 
     protected long pendingUpdateUTC;
     protected RemoteBootstrapMeta bootstrap;
-    protected RemoteLauncherMeta launcher;
+    protected RemoteLauncherMeta launcher, launcherBeta;
     @Expose
     protected String options; // this field is handled by UpdateDeserializer
 
     public UpdateMeta(long pendingUpdateUTC,
                       RemoteBootstrapMeta bootstrap,
                       RemoteLauncherMeta launcher,
+                      RemoteLauncherMeta launcherBeta,
                       String options) {
         this.pendingUpdateUTC = pendingUpdateUTC;
         this.bootstrap = Objects.requireNonNull(bootstrap, "bootstrap");
         this.launcher = Objects.requireNonNull(launcher, "launcher");
+        this.launcherBeta = launcherBeta;
         this.options = options;
     }
 
@@ -217,8 +219,8 @@ public class UpdateMeta {
         return bootstrap;
     }
 
-    public RemoteLauncherMeta getLauncher() {
-        return launcher;
+    public RemoteLauncherMeta getLauncher(boolean beta) {
+        return beta && launcherBeta != null ? launcherBeta : launcher;
     }
 
     public String getOptions() {

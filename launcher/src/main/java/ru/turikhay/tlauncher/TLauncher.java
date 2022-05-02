@@ -11,6 +11,7 @@ import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
 import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
+import ru.turikhay.tlauncher.jna.JNA;
 import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.logger.LoggerBuffer;
 import ru.turikhay.tlauncher.logger.LoggerInterface;
@@ -96,6 +97,7 @@ public final class TLauncher {
 
         this.bridge = bridge;
         checkReportsCapabilities();
+        enableJnaIfCapable();
         this.dispatcher = dispatcher;
         LOGGER.debug("Options: {}", bridge.getOptions() == null ? null : bridge.getOptions().length() + " code units");
 
@@ -633,6 +635,14 @@ public final class TLauncher {
             return false;
         }
         return bridge.getCapabilities().containsKey(key);
+    }
+
+    private void enableJnaIfCapable() {
+        if (hasCapability("jna")) {
+            JNA.enable();
+        } else {
+            LOGGER.info("JNA capability is not enabled");
+        }
     }
 
     private static TLauncher instance;

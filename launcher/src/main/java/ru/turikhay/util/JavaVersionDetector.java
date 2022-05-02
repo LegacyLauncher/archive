@@ -65,6 +65,7 @@ public class JavaVersionDetector {
                 JavaVersionDetectorMain.class.getName()
         );
         ProcessBuilder b = new ProcessBuilder(command);
+        b.redirectErrorStream(true);
 
         Process process;
         try {

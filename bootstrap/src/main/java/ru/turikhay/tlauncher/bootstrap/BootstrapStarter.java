@@ -6,6 +6,7 @@ import ru.turikhay.tlauncher.bootstrap.util.OS;
 import ru.turikhay.tlauncher.bootstrap.util.U;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,12 +22,7 @@ public final class BootstrapStarter {
     }
 
     static int start(String[] args, boolean waitForClose) throws Exception {
-        Path currentJar = Paths.get(BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-        Path currentDir = currentJar.getParent();
-        if (currentDir == null) {
-            currentDir = Paths.get(System.getProperty("tlauncher.bootstrap.dir", "."));
-        }
-        log("Current dir: ", currentDir.toAbsolutePath());
+        Path currentDir = Paths.get(System.getProperty("tlauncher.bootstrap.dir", "."));
 
         List<String> jvmArgs = new ArrayList<>();
         jvmArgs.addAll(loadJvmArgs());
@@ -36,9 +32,8 @@ public final class BootstrapStarter {
         Collections.addAll(appArgs, args);
         appArgs.addAll(loadExternalArgs(currentDir, "args"));
 
-        Set<Path> classPath = new LinkedHashSet<>();
-        classPath.addAll(ProcessStarter.getDefinedClasspath());
-        classPath.add(currentJar);
+        Set<Path> classPath = new LinkedHashSet<>(ProcessStarter.getDefinedClasspath());
+        classPath.add(getCurrentJar());
 
         Process process = ProcessStarter
                 .startJarProcess(currentDir, classPath, Bootstrap.class.getName(), jvmArgs, appArgs)
@@ -128,6 +123,10 @@ public final class BootstrapStarter {
 
                 return lines;
         }
+    }
+
+    private static Path getCurrentJar() throws URISyntaxException {
+        return Paths.get(BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     }
 
     private static void log(Object... o) {

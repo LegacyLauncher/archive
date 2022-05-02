@@ -35,7 +35,7 @@ public final class Json {
         }
     }
 
-    public static <T> T parse(JsonDeserializationContext ctx, JsonObject o, String key, Type type) {
+    public static <T> T parse(JsonDeserializationContext ctx, JsonObject o, String key, Type type, boolean require) {
         T value;
         if (o.has(key)) {
             try {
@@ -44,9 +44,17 @@ public final class Json {
                 throw new JsonParseException("error deserializing key \"" + key + "\" in " + o, rE);
             }
         } else {
-            throw new JsonParseException("required key: \"" + key + "\"");
+            if (require) {
+                throw new JsonParseException("required key: \"" + key + "\"");
+            } else {
+                return null;
+            }
         }
         return value;
+    }
+
+    public static <T> T parse(JsonDeserializationContext ctx, JsonObject o, String key, Type type) {
+        return parse(ctx, o, key, type, true);
     }
 
     private Json() {
