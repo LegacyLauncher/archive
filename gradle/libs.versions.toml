@@ -10,6 +10,8 @@ jackson = "2.13.0"
 java-semver = "0.9.0"
 java-statsd-client = "3.1.0"
 jdom = "2.0.2"
+jna = "5.10.0"
+jna-platform = "5.10.0"
 jopt-simple = "5.0.4"
 junit5 = "5.8.2"
 jvd = "1.0"
@@ -36,6 +38,8 @@ jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref
 java-semver = { module = "com.github.zafarkhaja:java-semver", version.ref = "java-semver" }
 java-statsd-client = { module = "com.timgroup:java-statsd-client", version.ref = "java-statsd-client" }
 jdom = { module = "org.jdom:jdom", version.ref = "jdom" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
+jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 jopt-simple = { module = "net.sf.jopt-simple:jopt-simple", version.ref = "jopt-simple" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
@@ -57,3 +61,4 @@ xz = { module = "org.tukaani:xz", version.ref = "xz" }
 [bundles]
 httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
 log4j = ["log4j-api", "log4j-core", "log4j-1-2-api"]
+jna = ["jna", "jna-platform"]

@@ -60,6 +60,7 @@ dependencies {
     annotationProcessor(libs.log4j.core)
     implementation(project(":common"))
     implementation(project(":bridge"))
+    implementation(libs.bundles.jna)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)

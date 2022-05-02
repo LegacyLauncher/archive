@@ -141,6 +141,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private String jreExec;
 
+    private CompleteVersion.JavaVersion recommendedJavaVersion;
+
     public Downloader getDownloader() {
         return downloader;
     }
@@ -659,23 +661,23 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         DownloadableContainer jreContainer = null;
         if (jreType instanceof JavaManagerConfig.Recommended) {
-            CompleteVersion.JavaVersion javaVersion = version.getJavaVersion();
-            if (javaVersion == null) {
+            recommendedJavaVersion = version.getJavaVersion();
+            if (recommendedJavaVersion == null) {
                 LOGGER.debug("Current Minecraft version doesn't have JRE requirements");
-                javaVersion = javaManager.getFallbackRecommendedVersion(version, true);
-                if (javaVersion != null) {
-                    LOGGER.debug("Will use fallback recommended version: {}", javaVersion);
+                recommendedJavaVersion = javaManager.getFallbackRecommendedVersion(version, true);
+                if (recommendedJavaVersion != null) {
+                    LOGGER.debug("Will use fallback recommended version: {}", recommendedJavaVersion);
                 }
             }
             if (JavaPlatform.CURRENT_PLATFORM == null) {
                 LOGGER.warn("Current platform is unsupported");
                 jreType = new JavaManagerConfig.Current();
                 Alert.showWarning("", Localizable.get("launcher.warning.jre-platform-unknown"));
-            } else if (javaVersion == null) {
+            } else if (recommendedJavaVersion == null) {
                 jreType = new JavaManagerConfig.Current();
             } else {
-                String jreName = javaVersion.getComponent();
-                LOGGER.debug("Will use JRE: {}", javaVersion);
+                String jreName = recommendedJavaVersion.getComponent();
+                LOGGER.debug("Will use JRE: {}", recommendedJavaVersion);
                 Optional<JavaRuntimeLocal> latestLocalOpt;
                 try {
                     latestLocalOpt = javaManager.getLatestVersionInstalled(jreName);
@@ -2066,6 +2068,15 @@ public class MinecraftLauncher implements JavaProcessListener {
                     javaVersion = detector.detect();
                 } catch (JavaVersionNotDetectedException e) {
                     LOGGER.warn("Couldn't detect Java version", e);
+                    if (jreType instanceof JavaManagerConfig.Recommended) {
+                        if (recommendedJavaVersion != null) {
+                            LOGGER.warn("Falling back to JavaVersion: {}", recommendedJavaVersion.getMajorVersion());
+                            return recommendedJavaVersion.getMajorVersion();
+                        } else {
+                            // jreType should always be "current" if this is the case
+                            LOGGER.warn("recommendedJavaVersion == null");
+                        }
+                    }
                     javaVersion = JavaVersion.UNKNOWN;
                 } catch (InterruptedException interruptedException) {
                     throw new MinecraftLauncherAborted(interruptedException);

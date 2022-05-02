@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.jna.JNA;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.windows.dxdiag.DisplayDevice;
 import ru.turikhay.util.windows.dxdiag.DxDiag;
@@ -243,12 +244,20 @@ public class CrashEntry extends IEntry {
 
         if (isArchIssue()) {
             if (OS.Arch.x86.isCurrent() && DxDiag.canExecute()) {
-                boolean is64Bit = false;
+                boolean is64Bit;
 
-                try {
-                    is64Bit = DxDiag.getInstanceTask().get().getSysInfo().is64Bit();
-                } catch (Exception e) {
-                    LOGGER.warn("Could not detect if system is 64-bit");
+                Optional<Boolean> jnaIs64Bit = JNA.is64Bit();
+                if (jnaIs64Bit.isPresent()) {
+                    is64Bit = jnaIs64Bit.get();
+                    LOGGER.info("JNA reported system is 64-bit: {}", is64Bit);
+                } else {
+                    try {
+                        is64Bit = DxDiag.getInstanceTask().get().getSysInfo().is64Bit();
+                        LOGGER.info("DxDiag reported system is 64-bit: {}", is64Bit);
+                    } catch (Exception e) {
+                        LOGGER.warn("Could not detect if system is 64-bit");
+                        is64Bit = false;
+                    }
                 }
 
                 if (OS.Arch.x86.isCurrent() && is64Bit) {
