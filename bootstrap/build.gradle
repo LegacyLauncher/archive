@@ -17,6 +17,7 @@ plugins {
 
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
+apply from: '../gradle/repo.gradle'
 
 sourceSets {
     modern
@@ -171,14 +172,8 @@ task generateUpdateJson {
         def meta = [
                 version : product_version,
                 checksum: jarFileChecksum,
-                url     : [
-                        "https://tlauncherrepo.com/",
-                        "https://tln4.ru/",
-                        "https://repo.tlaun.ch/",
-                        "https://cdn.turikhay.ru/tlauncher/",
-                        "http://cdn.turikhay.ru/tlauncher/"
-                ].collect { urlPrefix ->
-                    "${urlPrefix}${short_brand}/bootstrap/${jarFileChecksum}.jar"
+                url     : repo_hosts.collect { host ->
+                    "https://${host}/update/${short_brand}/bootstrap/${jarFileChecksum}.jar"
                 }
         ]
 

@@ -52,7 +52,7 @@ public class FlatLaf {
                 .collect(Collectors.toList());
     });
 
-    public static Map<String, Object> getDefaults() {
+    public static Map<String, String> getDefaults() {
         if(isSupported()) {
             return FlatLafConfiguration.getDefaults();
         } else {

@@ -32,7 +32,13 @@ public class BootstrapDebug {
             throw new FileNotFoundException("libDir: " + libDir);
         }
 
-        Bootstrap bootstrap = new Bootstrap(args, bootstrapJar, launcherFile, libDir);
+        Bootstrap bootstrap = new Bootstrap(
+                args,
+                bootstrapJar,
+                TargetConfig.readConfigFromFile(TargetConfig.getDefaultConfigFilePath(BuildConfig.SHORT_BRAND)),
+                launcherFile,
+                libDir
+        );
         bootstrap.setupUserInterface(true);
 
         Task<LocalLauncherTask> localLauncherTask = bootstrap.prepareLauncher(null);

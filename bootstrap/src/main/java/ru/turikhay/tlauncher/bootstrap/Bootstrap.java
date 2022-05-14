@@ -61,25 +61,7 @@ public final class Bootstrap {
     static Bootstrap createBootstrap(String[] rawArgs) throws InterruptedException {
         log("Starting bootstrap...");
 
-        SplitArgs args;
-        try {
-            args = SplitArgs.splitArgs(rawArgs);
-        } catch (RuntimeException rE) {
-            throw new RuntimeException("couldn't split args: " + Arrays.toString(rawArgs), rE);
-        }
-
-        Path bootstrapJar;
-        try {
-            bootstrapJar = Paths.get(Bootstrap.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to determine bootstrap jar location", e);
-        }
-
-        Bootstrap bootstrap = new Bootstrap(args.getLauncher(), bootstrapJar);
         LocalBootstrapMeta localBootstrapMeta = LocalBootstrapMeta.getInstance();
-
-        log("Version: " + localBootstrapMeta.getVersion());
-
         /*log("Starting bootstrap...");
 
 
@@ -111,22 +93,55 @@ public final class Bootstrap {
                 parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> restartExec =
                 parser.accepts("restartExec", "instructs the bootstrap to run this executable after self update").withRequiredArg().ofType(String.class);
+        ArgumentAcceptingOptionSpec<String> settings = parser.accepts("settings").withRequiredArg();
 
-        CombinedOptionSet parsed = new CombinedOptionSet(parseJvmArgs(parser), parser.parse(args.getBootstrap()));
+        SplitArgs args;
+        try {
+            args = SplitArgs.splitArgs(rawArgs);
+        } catch (RuntimeException rE) {
+            throw new RuntimeException("couldn't split args: " + Arrays.toString(rawArgs), rE);
+        }
+
+        Path bootstrapJar;
+        try {
+            bootstrapJar = Paths.get(Bootstrap.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to determine bootstrap jar location", e);
+        }
 
         RunningConditionsResult runningConditions = checkRunningConditions(bootstrapJar);
         runningConditions.showErrorIfNeeded();
 
-        bootstrap.setupUserInterface(parsed.has(forceHeadlessMode));
+        CombinedOptionSet parsed = new CombinedOptionSet(parseJvmArgs(parser), parser.parse(args.getBootstrap()));
 
+        boolean disallowBetaSwitch = false;
         if (parsed.has(brandParser)) {
             String brand = parsed.valueOf(brandParser);
             log("Picked up brand from arguments: ", brand);
             localBootstrapMeta.setShortBrand(brand);
             // disallow switching if branch is set by an argument
-            bootstrap.bootBridge.addCapability("can_switch_to_beta_branch", Boolean.FALSE);
+            disallowBetaSwitch = true;
         }
         log("Short brand: ", localBootstrapMeta.getShortBrand());
+
+        Path configFile;
+        if (parsed.has(settings)) {
+            configFile = Paths.get(parsed.valueOf(settings));
+        } else {
+            configFile = TargetConfig.getDefaultConfigFilePath(localBootstrapMeta.getShortBrand());
+        }
+
+        TargetConfig targetConfig = TargetConfig.readConfigFromFile(configFile);
+
+        Bootstrap bootstrap = new Bootstrap(args.getLauncher(), bootstrapJar, targetConfig);
+
+        if (disallowBetaSwitch) {
+            bootstrap.bootBridge.addCapability("can_switch_to_beta_branch", Boolean.FALSE);
+        }
+
+        log("Version: " + localBootstrapMeta.getVersion());
+
+        bootstrap.setupUserInterface(parsed.has(forceHeadlessMode));
 
         Path targetJar = parsed.valueOf(targetFileParser); // can be null
         if (targetJar == null) {
@@ -264,16 +279,8 @@ public final class Bootstrap {
     private String restartExec;
     private boolean switchToBeta;
 
-    Bootstrap(String[] launcherArgs, Path bootstrapJar, Path targetJar, Path targetLibFolder) {
+    Bootstrap(String[] launcherArgs, Path bootstrapJar, TargetConfig config, Path targetJar, Path targetLibFolder) {
         this.bootstrapJar = bootstrapJar;
-
-        TargetConfig config;
-        try {
-            config = TargetConfig.readConfigUsingContext(BuildConfig.SHORT_BRAND, launcherArgs);
-        } catch (IOException e) {
-            log("Couldn't read launcher config", e);
-            config = new TargetConfig();
-        }
         this.config = config;
 
         String client = config.getClient();
@@ -324,7 +331,9 @@ public final class Bootstrap {
 
         bootBridge.addCapability("has_flatlaf");
         SwingUtilities.invokeLater(() -> {
-            FlatLafConfiguration flatLafConfig = FlatLafConfiguration.parseFromMap(Bootstrap.this.config.asMap());
+            FlatLafConfiguration flatLafConfig = FlatLafConfiguration.parseFromMap(
+                    Bootstrap.this.config.isEmpty() ? FlatLafConfiguration.getDefaults() : Bootstrap.this.config.asMap()
+            );
             String guiSystemLookAndFeel = Bootstrap.this.config.get("gui.systemlookandfeel");
             boolean preFlatLafConfiguration = !flatLafConfig.getState().isPresent() && guiSystemLookAndFeel != null;
             if (preFlatLafConfiguration) {
@@ -348,8 +357,8 @@ public final class Bootstrap {
         });
     }
 
-    public Bootstrap(String[] launcherArgs, Path bootstrapJar) {
-        this(launcherArgs, bootstrapJar, null, null);
+    public Bootstrap(String[] launcherArgs, Path bootstrapJar, TargetConfig targetConfig) {
+        this(launcherArgs, bootstrapJar, targetConfig, null, null);
     }
 
     public void setupUserInterface(boolean forceHeadlessMode) throws InterruptedException {
@@ -561,14 +570,19 @@ public final class Bootstrap {
                         signedStream.validateSignature();
                     }
                 } else {
-                    updateMeta = bindTo(
-                            UpdateMeta.fetchFor(
-                                    LocalBootstrapMeta.getInstance().getShortBrand(),
-                                    createInterrupter()
-                            ),
-                            .0,
-                            .25
-                    );
+                    try {
+                        updateMeta = bindTo(
+                                UpdateMeta.fetchFor(
+                                        LocalBootstrapMeta.getInstance().getShortBrand(),
+                                        createInterrupter()
+                                ),
+                                .0,
+                                .25
+                        );
+                    } catch (UpdateMeta.UpdateMetaFetchFailed e) {
+                        log(e);
+                        updateMeta = null;
+                    }
                 }
 
                 if (updateMeta != null) {
@@ -794,6 +808,7 @@ public final class Bootstrap {
         public void showErrorIfNeeded() {
             String message = formatMessage();
             if (!message.isEmpty()) {
+                log("Preconditions failed:", message);
                 UserInterface.showError(message, brokenPath);
                 throw new RuntimeException("precodintions failed");
             }

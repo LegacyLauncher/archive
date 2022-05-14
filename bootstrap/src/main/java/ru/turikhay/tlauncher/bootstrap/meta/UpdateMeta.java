@@ -10,6 +10,7 @@ import ru.turikhay.tlauncher.bootstrap.json.UpdateDeserializer;
 import ru.turikhay.tlauncher.bootstrap.task.Task;
 import ru.turikhay.tlauncher.bootstrap.transport.SignedStream;
 import ru.turikhay.tlauncher.bootstrap.util.Compressor;
+import ru.turikhay.tlauncher.repository.RepoPrefixV1;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,18 +20,18 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class UpdateMeta {
     private static final List<String> UPDATE_URL_LIST;
 
     static {
-        List<String> updateUrlList = new ArrayList<>(Arrays.asList(
-                "https://tlauncherrepo.com/%s/bootstrap.json.mgz.signed",
-                "https://tln4.ru/%s/bootstrap.json.mgz.signed",
-                "https://repo.tlaun.ch/%s/bootstrap.json.mgz.signed"
-        ));
-        Collections.shuffle(updateUrlList);
-        updateUrlList.add(0, "https://cdn.turikhay.ru/tlauncher/%s/bootstrap.json.mgz.signed");
+        final String updatePathFormat = "/brands/%s/bootstrap.json.mgz.signed";
+        List<String> updateUrlList = RepoPrefixV1.prefixesCdnFirst().stream().map(prefix ->
+                prefix + updatePathFormat
+        ).collect(
+                Collectors.toList()
+        );
         UPDATE_URL_LIST = Collections.unmodifiableList(updateUrlList);
 
         Compressor.init(); // init compressor
@@ -48,7 +49,7 @@ public class UpdateMeta {
 
                 Gson gson = createGson(shortBrand);
                 AtomicBoolean updateRequestCancelled = new AtomicBoolean();
-                Exception error = new RuntimeException("");
+                Exception error = new UpdateMetaFetchFailed();
 
                 for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
                     if (attempt == 2 && interrupter != null) {
@@ -232,6 +233,12 @@ public class UpdateMeta {
 
         interface Callback {
             void onConnectionInterrupted();
+        }
+    }
+
+    public static class UpdateMetaFetchFailed extends Exception {
+        UpdateMetaFetchFailed() {
+            super("Couldn't fetch UpdateMeta");
         }
     }
 }

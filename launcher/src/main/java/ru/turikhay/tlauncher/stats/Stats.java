@@ -26,7 +26,7 @@ import java.util.concurrent.*;
 public final class Stats {
     private static final Logger LOGGER = LogManager.getLogger(Stats.class);
 
-    private static final URL STATS_BASE = Http.constantURL("https://stats.tln4.ru/v1/");
+    private static final URL STATS_BASE = Http.constantURL("https://stats.tlaun.ch");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
     private static String lastResult;
@@ -159,7 +159,7 @@ public final class Stats {
             LOGGER.debug("{} responded with {}: {}", url, connection.getResponseCode(), e);
             return e;
         } catch (IOException e) {
-            LOGGER.warn("Stats request failed: {}", e.getMessage(), e);
+            LOGGER.warn("Stats request failed: {}", e.toString());
             throw e;
         }
     }
