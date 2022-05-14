@@ -151,8 +151,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         for (int i = 0; i < releaseTypes.size(); i++) {
             ReleaseType imgExplorer = releaseTypes.get(i);
             versions.add(new EditorFieldHandler("minecraft.versions." + imgExplorer, new EditorCheckBox("settings.versions." + imgExplorer)));
-            if (i % 2 == 0)
+            if (i % 2 == 1) {
                 versions.add(EditorPair.NEXT_COLUMN);
+            }
         }
 
         versions.add(oldVersionsHandler = new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.OLD_RELEASE)));

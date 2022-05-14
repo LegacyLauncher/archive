@@ -5,24 +5,24 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import ru.turikhay.tlauncher.bootstrap.json.ToStringBuildable;
 import ru.turikhay.tlauncher.bootstrap.task.DownloadTask;
+import ru.turikhay.tlauncher.repository.RepoPrefixV1;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class Library extends ToStringBuildable {
     private static final List<String> LIBRARY_REPO_LIST;
 
     static {
-        List<String> libraryRepoList = Arrays.asList(
-                "https://tln4.ru/repo/libraries/",
-                "https://tlauncherrepo.com/repo/libraries/",
-                "https://repo.tlaun.ch/repo/libraries/",
-                "https://cdn.turikhay.ru/tlauncher/repo/libraries/"
+        LIBRARY_REPO_LIST = Collections.unmodifiableList(
+                RepoPrefixV1.prefixesCdnLast()
+                        .stream()
+                        .map(prefix -> prefix + "/repo/libraries/")
+                        .collect(Collectors.toList())
         );
-        Collections.shuffle(libraryRepoList);
-        LIBRARY_REPO_LIST = Collections.unmodifiableList(libraryRepoList);
     }
 
     private String name, checksum;

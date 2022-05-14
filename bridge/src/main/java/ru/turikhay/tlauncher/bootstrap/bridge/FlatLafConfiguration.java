@@ -26,8 +26,8 @@ public class FlatLafConfiguration {
         return VERSION;
     }
     
-    public static Map<String, Object> getDefaults() {
-        LinkedHashMap<String, Object> defaults = new LinkedHashMap<>();
+    public static Map<String, String> getDefaults() {
+        LinkedHashMap<String, String> defaults = new LinkedHashMap<>();
         defaults.put(KEY_STATE, DEFAULT_STATE);
         defaults.put(KEY_DARK_THEME_FILE, DEFAULT_THEME_FILE);
         defaults.put(KEY_LIGHT_THEME_FILE, DEFAULT_THEME_FILE);
@@ -100,7 +100,7 @@ public class FlatLafConfiguration {
 
     public Map<String, String> toMap() {
         Map<String, String> map = new LinkedHashMap<>();
-        map.put(KEY_STATE, getState().toString());
+        map.put(KEY_STATE, getState().map(State::toString).orElse(null));
         map.put(KEY_DARK_THEME_FILE, getThemeFiles().get(Theme.DARK));
         map.put(KEY_LIGHT_THEME_FILE, getThemeFiles().get(Theme.LIGHT));
         map.put(KEY_DARK_THEME_UI_PROPERTIES_FILE, getUiPropertiesFiles().get(Theme.DARK));

@@ -1,9 +1,12 @@
 package ru.turikhay.tlauncher.configuration;
 
-import java.util.ArrayList;
+
+import ru.turikhay.tlauncher.repository.RepoPrefixV1;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class Static {
     private static final String BRAND = BuildConfig.FULL_BRAND;
@@ -12,20 +15,34 @@ public final class Static {
     private static final String FOLDER = "minecraft";
     private static final List<String> OFFICIAL_REPO = Collections.singletonList("https://s3.amazonaws.com/Minecraft.Download/");
     private static final List<String> EXTRA_REPO;
-    private static final List<String> LIBRARY_REPO = Collections.unmodifiableList(Arrays.asList("https://libraries.minecraft.net/", "https://tln4.ru/repo/libraries/", "https://repo.tlaun.ch/repo/libraries/", "https://tlauncherrepo.com/repo/libraries/"));
+    private static final List<String> LIBRARY_REPO;
     private static final List<String> ASSETS_REPO;
 
     static {
-        List<String> assets = new ArrayList<>(3);
-        assets.add("https://resources.download.mcproxy.tlaun.ch/");
-        assets.add("https://resources.download.mcproxy.tln4.ru/");
-        Collections.shuffle(assets);
-        assets.add(0, "https://resources.download.minecraft.net/");
-        ASSETS_REPO = Collections.unmodifiableList(assets);
-
-        List<String> extra = Arrays.asList("https://tln4.ru/repo/", "https://repo.tlaun.ch/repo/", "https://tlauncherrepo.com/repo/");
-        Collections.shuffle(extra);
-        EXTRA_REPO = Collections.unmodifiableList(extra);
+        EXTRA_REPO = Collections.unmodifiableList(
+                RepoPrefixV1.prefixesCdnLast()
+                        .stream()
+                        .map(prefix -> prefix + "/repo/")
+                        .collect(Collectors.toList())
+        );
+        LIBRARY_REPO = Collections.unmodifiableList(
+                RepoPrefixV1.combine(
+                        Collections.singletonList("https://libraries.minecraft.net/"),
+                        RepoPrefixV1.prefixesCdnLast()
+                                .stream()
+                                .map(prefix -> prefix + "/repo/libraries/")
+                                .collect(Collectors.toList())
+                )
+        );
+        ASSETS_REPO = Collections.unmodifiableList(
+                RepoPrefixV1.combine(
+                    Collections.singletonList("https://resources.download.minecraft.net/"),
+                    RepoPrefixV1.prefixesCdnLast()
+                            .stream()
+                            .map(prefix -> prefix + "/proxy/assets/")
+                            .collect(Collectors.toList())
+                )
+        );
     }
 
     private static final List<String> SERVER_LIST = Collections.emptyList();
