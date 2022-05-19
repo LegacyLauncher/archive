@@ -1,10 +1,11 @@
 plugins {
     id "java"
-    id "org.ajoberstar.grgit" version "4.1.0" apply false
     id "org.openjfx.javafxplugin" version "0.0.10" apply false
     id "com.github.johnrengelman.shadow" version "7.0.0" apply false
     id "com.github.gmazzo.buildconfig" version "3.0.3" apply false
 }
+
+apply from: 'gradle/pkgbuild.gradle'
 
 allprojects {
     tasks.withType(JavaCompile) {

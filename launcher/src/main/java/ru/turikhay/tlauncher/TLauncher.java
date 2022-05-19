@@ -679,7 +679,6 @@ public final class TLauncher {
 
     private static TLauncher instance;
     private static final Version SEMVER;
-    private static final boolean BETA;
 
     public static TLauncher getInstance() {
         return instance;
@@ -693,13 +692,8 @@ public final class TLauncher {
         return bridge.getBootstrapVersion();
     }
 
-    public static boolean isBeta() {
-        return BETA;
-    }
-
     static {
         SEMVER = Objects.requireNonNull(Version.valueOf(BuildConfig.VERSION), "semver");
-        BETA = !StringUtils.isBlank(SEMVER.getBuildMetadata());
     }
 
     public static String getBrand() {
@@ -751,7 +745,6 @@ public final class TLauncher {
         if (bridge.getBootstrapVersion() != null) {
             LOGGER.info("... using Bootstrap {}", bridge.getBootstrapVersion());
         }
-        LOGGER.info("Beta: {}", isBeta());
         LOGGER.info("Machine info: {}", OS.getSummary());
         LOGGER.info("Java version: {}", OS.JAVA_VERSION);
         LOGGER.info("Startup time: {}", Instant.now());

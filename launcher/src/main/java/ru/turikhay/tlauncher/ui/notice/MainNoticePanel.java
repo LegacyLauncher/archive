@@ -57,19 +57,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         super(scene.getMainPane().getRootFrame().getNotices());
         this.defaultScene = scene;
 
-        /*if(TLauncher.isBeta()) {
-            registerExtraItems(openNoticeScene, null, hideNotice, hideAllNotices);
-        } else {
-            registerExtraItems(openNoticeScene, null, hideNotice);
-        }*/
         registerExtraItems(openNoticeScene, null, hideNotice);
-        /*registerExtraAction("expand.png", new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                defaultScene.setNoticeSidePanelEnabled(true);
-                //defaultScene.getMainPane().openNoticeScene();
-            }
-        });*/
         scene.getMainPane().getRootFrame().getNotices().addListener(this, true);
 
         addComponentListener(new ComponentAdapter() {

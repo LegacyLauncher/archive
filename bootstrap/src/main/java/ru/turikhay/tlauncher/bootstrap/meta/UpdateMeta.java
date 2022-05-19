@@ -196,7 +196,7 @@ public class UpdateMeta {
                       RemoteLauncherMeta launcherBeta,
                       String options) {
         this.pendingUpdateUTC = pendingUpdateUTC;
-        this.bootstrap = Objects.requireNonNull(bootstrap, "bootstrap");
+        this.bootstrap = bootstrap;
         this.launcher = Objects.requireNonNull(launcher, "launcher");
         this.launcherBeta = launcherBeta;
         this.options = options;
