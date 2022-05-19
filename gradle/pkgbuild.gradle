@@ -41,7 +41,7 @@ task collectPkgBuildInfo() {
         }
 
         def resourceList = new ArrayList()
-        def resourceDir = file("$rootDir/gradle/aur/${short_brand}/resources")
+        def resourceDir = file("$rootDir/gradle/aur/resources")
         fileTree(dir: resourceDir).visit {
             if (!it.isDirectory()) {
                 def path = it.getRelativePath().toString()
