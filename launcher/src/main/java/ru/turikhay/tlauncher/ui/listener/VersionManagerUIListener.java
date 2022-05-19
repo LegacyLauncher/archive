@@ -21,6 +21,7 @@ import ru.turikhay.util.MinecraftUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 
 public class VersionManagerUIListener implements VersionManagerListener {
@@ -174,10 +175,11 @@ public class VersionManagerUIListener implements VersionManagerListener {
     }
 
     private void saveList(SimpleVersionList versionList) {
-        if (!listFile.getParentFile().mkdirs()) {
+        File dir = listFile.getParentFile();
+        if (!dir.isDirectory() && !dir.mkdirs()) {
             throw new RuntimeException("Unable to create parent directory for version list");
         }
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(listFile), StandardCharsets.UTF_8)) {
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(listFile.toPath()), StandardCharsets.UTF_8)) {
             gson.toJson(versionList, writer);
         } catch (Exception e) {
             LOGGER.error("Could not write version list file: {}", listFile, e);
@@ -186,7 +188,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
     }
 
     private SimpleVersionList fetchListFromFile() {
-        try (Reader reader = new InputStreamReader(new FileInputStream(listFile), StandardCharsets.UTF_8)) {
+        try (Reader reader = new InputStreamReader(Files.newInputStream(listFile.toPath()), StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, SimpleVersionList.class);
         } catch (Exception e) {
             LOGGER.error("Could not read version list from file: {}", listFile, e);
@@ -207,8 +209,8 @@ public class VersionManagerUIListener implements VersionManagerListener {
         }
     }
 
-    private StringBuilder add(StringBuilder b, SimpleVersion version) {
-        return b.append("– ").append(version.id).append(" (").append(getTimeDifference(version.time)).append(")").append('\n');
+    private void add(StringBuilder b, SimpleVersion version) {
+        b.append("– ").append(version.id).append(" (").append(getTimeDifference(version.time)).append(")").append('\n');
     }
 
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");

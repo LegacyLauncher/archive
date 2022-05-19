@@ -26,7 +26,7 @@ import java.util.concurrent.*;
 public final class Stats {
     private static final Logger LOGGER = LogManager.getLogger(Stats.class);
 
-    private static final URL STATS_BASE = Http.constantURL("https://stats.tlaun.ch");
+    private static final URL STATS_BASE = Http.constantURL("https://stats.tlaun.ch/v1");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
     private static String lastResult;
@@ -52,38 +52,27 @@ public final class Stats {
     }
 
     public static void noticeViewed(Notice notice) {
-        noticeListViewed(Collections.singletonList(notice));
     }
 
-    // private static final Set<Notice> viewedList = Collections.synchronizedSet(new HashSet<Notice>());
-
     public static void noticeListViewed(List<Notice> list) {
-        submitDenunciation(newAction("notice_viewed")
-                .add("notice_id", StringUtils.join(list.stream().map(Notice::getId).iterator(), ',')));
     }
 
     public static void noticeHiddenByUser(Notice notice) {
-        submitDenunciation(newAction("notice_act_hidden").add("notice_id", String.valueOf(notice.getId())));
     }
 
     public static void noticeShownByUser(Notice notice) {
-        submitDenunciation(newAction("notice_act_shown").add("notice_id", String.valueOf(notice.getId())));
     }
 
     public static void noticeStatusUpdated(boolean enabled) {
-        submitDenunciation(newAction("notices_" + (enabled ? "shown" : "hidden")).add("notice_id", "0"));
     }
 
     public static void noticeSceneShown() {
-        submitDenunciation(newAction("notice_scene_shown"));
     }
 
     public static void feedbackStarted() {
-        submitDenunciation(newAction("feedback_started"));
     }
 
     public static void feedbackRefused(boolean returnBack) {
-        submitDenunciation(newAction("feedback_refused").add("return_back", String.valueOf(returnBack)));
     }
 
     public static void accountCreation(String type, String strategy, String step, boolean success) {
@@ -95,7 +84,6 @@ public final class Stats {
     }
 
     public static void submitNoticeStatus(boolean enabled) {
-        submitDenunciation(newAction("notices_status").add("status", (enabled ? "shown" : "hidden")));
     }
 
     private static Stats.Args newAction(String name) {

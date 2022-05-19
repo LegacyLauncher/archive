@@ -1,0 +1,69 @@
+# Maintainer: McModder <aur @ modder.pw>
+# Contributor: SaMaLerO <smlr[at]ukr[dot]net>
+# PLEASE do not mark it out-of date because "2.xx is released"
+# *2.xx a separate project with same name from other dev team*
+pkgname='@PKGNAME@'
+pkgver='@LAUNCHER_VERSION@'
+pkgrel=@PKGREL@
+epoch=1
+pkgdesc='@PKGDESC@'
+url='https://tlaun.ch'
+arch=('any')
+license=('custom')
+depends=('java-runtime>=8')
+optdepends=('xorg-xrandr: Required for some old Minecraft versions')
+
+#_bootstrap_version='@BOOTSTRAP_VERSION@'
+#_bootstrap_checksum='@BOOTSTRAP_CHECKSUM@'
+#_launcher_version='@LAUNCHER_VERSION@'
+#_launcher_checksum='@LAUNCHER_CHECKSUM@'
+
+_repo='https://tlaun.ch/repo'
+# Try one of these if the above one fails:
+@ALTERNATE_REPO_COMMENT@
+
+source=(
+  # Bootstrap
+  "@BOOTSTRAP_JAR@::${_repo}/update/@BRAND@/bootstrap/@BOOTSTRAP_CHECKSUM@.jar"
+
+  # Launcher
+  "@LAUNCHER_JAR@::${_repo}/update/@BRAND@/launcher/@LAUNCHER_CHECKSUM@.jar"
+
+  # Libraries
+@LAUNCHER_LIBRARIES@
+
+  # Other resources
+@RESOURCE_LIST@
+)
+
+noextract=(
+  "${source[@]##*/}"
+  "@BOOTSTRAP_JAR@"
+  "@LAUNCHER_JAR@"
+)
+
+sha256sums=(
+  '@BOOTSTRAP_CHECKSUM@' # @BOOTSTRAP_JAR@
+
+  '@LAUNCHER_CHECKSUM@' # @LAUNCHER_JAR@
+
+@CHECKSUMS@
+)
+
+package() {
+  # install launch script and .desktop file
+  install -Dm0644 "${srcdir}/tlauncher.desktop" "${pkgdir}/usr/share/applications/tlauncher.desktop"
+  install -Dm0755 "${srcdir}/tlauncher.bash" "${pkgdir}/usr/bin/tlauncher"
+
+  # install icons
+  for size in 256x256 192x192 128x128 96x96 64x64 48x48; do
+    install -Dm0644 "${srcdir}/minecraft.${size}.png" "${pkgdir}/usr/share/icons/hicolor/${size}/apps/minecraft.png"
+  done
+
+  # install launcher
+  install -Dm0644 "${srcdir}/@BOOTSTRAP_JAR@" "${pkgdir}/opt/tlauncher/bootstrap.jar"
+  install -Dm0644 "${srcdir}/@LAUNCHER_JAR@" "${pkgdir}/opt/tlauncher/launcher.jar"
+
+  # install libraries
+@LAUNCHER_LIBRARIES_INSTALLS@
+}

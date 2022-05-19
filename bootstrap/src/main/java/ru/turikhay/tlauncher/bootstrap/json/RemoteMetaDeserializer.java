@@ -10,6 +10,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import static ru.turikhay.tlauncher.bootstrap.json.Json.parse;
+
 public class RemoteMetaDeserializer {
     protected final String shortBrand;
 
@@ -23,14 +25,6 @@ public class RemoteMetaDeserializer {
                 parse(ctx, o, "checksum", String.class),
                 parse(ctx, o, "url", typeOfUrlList())
         );
-    }
-
-    protected static <T> T parse(JsonDeserializationContext ctx, JsonObject o, String key, Class<T> type) {
-        return parse(ctx, o, key, (Type) type);
-    }
-
-    protected static <T> T parse(JsonDeserializationContext ctx, JsonObject o, String key, Type type) {
-        return Json.parse(ctx, o, key, type);
     }
 
     protected static Type typeOfUrlList() {

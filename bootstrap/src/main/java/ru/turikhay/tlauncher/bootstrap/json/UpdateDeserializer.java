@@ -15,8 +15,8 @@ public class UpdateDeserializer implements JsonDeserializer<UpdateMeta> {
         JsonObject object = jsonElement.getAsJsonObject();
         return new UpdateMeta(
                 Json.require(object, "pendingUpdateUTC").getAsLong(),
-                Json.parse(ctx, object, "bootstrap_java", RemoteBootstrapMeta.class),
-                Json.parse(ctx, object, "launcher", RemoteLauncherMeta.class),
+                Json.parse(ctx, object, "bootstrap_java", RemoteBootstrapMeta.class, false),
+                Json.parse(ctx, object, "launcher", RemoteLauncherMeta.class, false),
                 Json.parse(ctx, object, "launcher_beta", RemoteLauncherMeta.class, false),
                 parseOptions(object)
         );

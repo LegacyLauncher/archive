@@ -1,0 +1,123 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+import java.security.DigestInputStream
+import java.security.MessageDigest
+
+apply from: 'gradle/brand.gradle'
+apply from: 'gradle/repo.gradle'
+
+LinkedHashMap<String, Object> pkgInfo = []
+
+task collectPkgBuildInfo() {
+    afterEvaluate {
+        dependsOn ":bootstrap:assemble", ":launcher:assemble"
+    }
+
+    doLast {
+        def launcher = project(':launcher')
+
+        def alternateRepoComment = new ArrayList<String>()
+        repo_cdn_path_prefixes.each { cdn_path ->
+            alternateRepoComment.add("#_repo='${cdn_path}/repo'")
+        }
+        repo_hosts.each { host ->
+            alternateRepoComment.add("#_repo='https://${host}/repo'")
+        }
+
+        def checksums = new ArrayList()
+
+        def launcherLibs = new ArrayList()
+        def launcherLibsInstalls = new ArrayList()
+
+        launcher.configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def artifactId = artifact.moduleVersion.id
+            def fileName = artifactId.with { "${name}-${version}.jar" }
+            def path = artifactId.with {
+                "${group.replace('.', '/')}/${name}/$version/${fileName}"
+            }
+            launcherLibs.add("\"\${_repo}/libraries/${path}\"")
+            launcherLibsInstalls.add("install -Dm0644 \"\${srcdir}/${fileName}\" \"\${pkgdir}/opt/tlauncher/lib/${path}\"")
+            checksums.add("'${generateChecksum(artifact.file)}' # ${artifact.moduleVersion.id}")
+        }
+
+        def resourceList = new ArrayList()
+        def resourceDir = file("$rootDir/gradle/aur/${short_brand}/resources")
+        fileTree(dir: resourceDir).visit {
+            if (!it.isDirectory()) {
+                def path = it.getRelativePath().toString()
+                resourceList.add(path)
+                checksums.add("'${generateChecksum(it.getFile())}' # ${path}")
+            }
+        }
+
+        def launcherVersion = launcher.version
+        def bootstrapVersion = project(':bootstrap').version
+
+        pkgInfo.putAll([
+                'PKGNAME': System.getenv("PKGBUILD_PKGNAME") ?: "tlauncher",
+                'PKGDESC': System.getenv("PKGBUILD_PKGDESC") ?: "Freeware Minecraft launcher",
+                'PKGREL': "1",
+                'BRAND': short_brand,
+                'LAUNCHER_VERSION': launcherVersion,
+                'ALTERNATE_REPO_COMMENT': alternateRepoComment.join("\n"),
+                'LAUNCHER_CHECKSUM': generateChecksum(tasks.getByPath(':launcher:jar').outputs.files.singleFile),
+                'BOOTSTRAP_CHECKSUM': generateChecksum(tasks.getByPath(':bootstrap:shadowJar').outputs.files.singleFile),
+                'BOOTSTRAP_VERSION': bootstrapVersion,
+                'LAUNCHER_LIBRARIES': collect(launcherLibs),
+                'RESOURCE_LIST': collect(resourceList),
+                'CHECKSUMS': collect(checksums),
+                'LAUNCHER_LIBRARIES_INSTALLS': collect(launcherLibsInstalls),
+                'BOOTSTRAP_JAR': "tl-bootstrap-${bootstrapVersion}.jar".toString(),
+                'LAUNCHER_JAR': "tl-launcher-${launcherVersion}.jar".toString(),
+        ])
+    }
+}
+
+task generatePkgBuild(type: Sync) {
+    dependsOn collectPkgBuildInfo
+    from file("$rootDir/gradle/aur/PKGBUILD")
+    filter(ReplaceTokens, tokens: pkgInfo)
+    filteringCharset = 'UTF-8'
+    into "$buildDir/aur/${short_brand}"
+}
+
+task copyPkgBuildResources(type: Copy) {
+    dependsOn generatePkgBuild
+    from "$rootDir/gradle/aur/resources"
+    into "$buildDir/aur/${short_brand}"
+}
+
+task writePkgBuildVersion {
+    doLast {
+        file("$buildDir/aur/${short_brand}/.pkgver").write(project(":launcher").version.toString())
+        file("$buildDir/aur/${short_brand}/.pkgrel").write("1")
+    }
+}
+
+task createPkgBuild {
+    dependsOn generatePkgBuild, copyPkgBuildResources, writePkgBuildVersion
+}
+
+assemble {
+    afterEvaluate {
+        if (System.getenv("PKGBUILD_ENABLED") == "true") {
+            dependsOn("createPkgBuild")
+        }
+    }
+    doLast {
+        file("$buildDir/aur/${short_brand}").mkdirs()
+    }
+}
+
+static def generateChecksum(File file) {
+    file.withInputStream {
+        new DigestInputStream(it, MessageDigest.getInstance('SHA-256')).withStream {
+            it.eachByte {}
+            it.messageDigest.digest().encodeHex() as String
+        }
+    }
+}
+
+static def collect(ArrayList list) {
+    return list.collect { "  $it" }.join("\n")
+}

@@ -1,0 +1,365 @@
+stages:
+  - Build
+  - Deploy
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+  # - dev     – build & deploy to $CI_COMMIT_BRANCH
+  # – beta    - manual build & deploy to 'legacy_beta' & 'aur'
+  # - release – manual build & deploy to 'legacy', 'mcl'
+  RELEASE_GROUP: 'dev'
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG != null
+      variables:
+        RELEASE_GROUP: 'beta'
+      when: always
+    - if: $CI_COMMIT_BRANCH == null
+      when: never
+    - if: $CI_COMMIT_BRANCH == 'master'
+      variables:
+        RELEASE_GROUP: 'release'
+    - when: always
+
+.dev_only_rules: &dev_only_rules
+  - if: $RELEASE_GROUP == 'dev'
+    when: on_success
+  - when: never
+
+.beta_only_rules: &beta_only_rules
+  - if: $RELEASE_GROUP == 'beta'
+    when: on_success
+  - when: never
+
+.beta_manual_only: &beta_manual_only
+  - if: $RELEASE_GROUP == 'beta'
+    when: manual
+    allow_failure: false
+  - when: never
+
+.release_only_rules: &release_only_rules
+  - if: $RELEASE_GROUP == 'release'
+    when: on_success
+  - when: never
+
+.release_manual_only: &release_manual_only
+  - if: $RELEASE_GROUP == 'release'
+    when: manual
+    allow_failure: false
+  - when: never
+
+.legacy: &legacy
+  SHORT_BRAND: 'legacy'
+
+.mcl: &mcl
+  SHORT_BRAND: 'mcl'
+
+.beta: &beta
+  SHORT_BRAND: 'legacy_beta'
+
+.aur: &aur
+  SHORT_BRAND: 'aur'
+  PKGBUILD_ENABLED: 'true'
+  PKGBUILD_PUSH: 'true'
+
+.dev: &dev
+  SHORT_BRAND: $CI_COMMIT_BRANCH
+
+.ssh: &ssh
+  image: bitnami/git:2
+  resource_group: deploy
+  stage: Deploy
+  before_script: &ssh_before
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cat $SSH_KNOWN_HOSTS_FILE > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - base64 -d $SSH_PRIVATE_KEY_BASE64_FILE > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+
+.ssh_deploy: &ssh_deploy
+  <<: *ssh
+  script:
+    - >
+      for host in $SSH_HOSTS; do \
+        echo "Uploading $ENTITY to $host"; \
+        ssh $SSH_USER@$host mkdir -p $SSH_BRANDS_DIR/files/$SHORT_BRAND/$ENTITY; \
+        scp -v -r $ENTITY/build/update/$SHORT_BRAND/* $SSH_USER@$host:$SSH_BRANDS_DIR/files/$SHORT_BRAND/$ENTITY/; \
+        ssh $SSH_USER@$host bash $SSH_BRANDS_DIR/deploy.sh $ENTITY $SHORT_BRAND; \
+      done
+
+.build: &build
+  image: openjdk:17-jdk
+  stage: Build
+  script:
+    - 'export GRADLE_USER_HOME=`pwd`/.gradle'
+    - '[[ $RELEASE_GROUP != "dev" ]] && export INCLUDE_CHANGELOG=true'
+    - './gradlew build buildLauncherRepo'
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/aur/$SHORT_BRAND
+      - launcher/build/update/$SHORT_BRAND
+      - bootstrap/build/update/$SHORT_BRAND
+      - lib
+    expire_in: 1 week
+
+.upload_libraries: &upload_libraries
+  <<: *ssh
+  stage: Deploy
+  script:
+    - >
+      for host in $SSH_HOSTS; do \
+        echo "Uploading libraries to $host"; \
+        scp -v -r lib/$SHORT_BRAND/* $SSH_USER@$host:$SSH_LIBRARIES_DIR/; \
+      done
+
+.deploy_launcher: &deploy_launcher
+  <<: *ssh_deploy
+
+.deploy_bootstrap: &deploy_bootstrap
+  <<: *ssh_deploy
+  artifacts:
+    paths:
+      - bootstrap/build/update/$SHORT_BRAND/bootstrap.jar
+
+.gen_srcinfo: &gen_srcinfo
+  image:
+    name: whynothugo/makepkg:latest
+    entrypoint: [""]
+  stage: Build
+  script:
+    - cd build/aur/$SHORT_BRAND
+    - sudo chown $(whoami):$(whoami) -R .
+    - makepkg --printsrcinfo > .SRCINFO
+  artifacts:
+    paths:
+      - build/aur/$SHORT_BRAND
+
+.push_pkgbuild: &push_pkgbuild
+  <<: *ssh
+  before_script:
+    - *ssh_before
+    - git config --global user.name "$GIT_USERNAME"
+    - git config --global user.email "$GIT_EMAIL"
+    - ssh-keyscan -H $PKGBUILD_GIT_HOST >> ~/.ssh/known_hosts
+  script:
+    - git clone $PKGBUILD_GIT_ORIGIN -b $PKGBUILD_GIT_BRANCH ~/aur
+    - PKGVER=$(cat ~/aur/.pkgver || printf "")
+    - PKGREL=$(cat ~/aur/.pkgrel || printf "1")
+    - rm -rf ~/aur/*
+    - cp -r build/aur/$SHORT_BRAND/. ~/aur/
+    - cd ~/aur
+    - >
+      if [[ "$PKGVER" == "$(cat .pkgver)" ]]; then \
+        PKGREL_INCR=$(expr "$PKGREL" + 1); \
+        echo "Incrementing pkgrel ($PKGREL -> $PKGREL_INCR): last commit released the same version ($PKGVER)"; \
+        sed -i "s/pkgrel=$PKGREL/pkgrel=$PKGREL_INCR/g" PKGBUILD; \
+        sed -i "s/pkgrel = $PKGREL/pkgrel = $PKGREL_INCR/g" .SRCINFO; \
+        printf $PKGREL_INCR > .pkgrel; \
+      fi
+    - git add .
+    - git commit -m "$(cat .pkgver)-$(cat .pkgrel)"
+    - git push origin
+
+'Dev':
+  <<: *build
+  variables:
+    <<: *dev
+  rules:
+    - *dev_only_rules
+
+'Dev: libs':
+  <<: *upload_libraries
+  variables:
+    <<: *dev
+  rules:
+    - *dev_only_rules
+  needs: ['Dev']
+
+'Dev: launcher':
+  <<: *deploy_launcher
+  variables:
+    <<: *dev
+    ENTITY: launcher
+  rules:
+    - *dev_only_rules
+  dependencies: ['Dev']
+  needs: ['Dev', 'Dev: libs']
+
+'Dev: bootstrap':
+  <<: *deploy_bootstrap
+  variables:
+    <<: *dev
+    ENTITY: bootstrap
+  rules:
+    - *dev_only_rules
+  dependencies: ['Dev']
+  needs: ['Dev', 'Dev: libs']
+
+'Legacy':
+  <<: *build
+  variables:
+    <<: *legacy
+  rules:
+    - *release_manual_only
+
+'Legacy: libs':
+  <<: *upload_libraries
+  variables:
+    <<: *legacy
+  rules:
+    - *release_only_rules
+  needs: ['Legacy']
+
+'Legacy: launcher':
+  <<: *deploy_launcher
+  variables:
+    <<: *legacy
+    ENTITY: launcher
+  rules:
+    - *release_only_rules
+  dependencies: ['Legacy']
+  needs: ['Legacy', 'Legacy: libs']
+
+'Legacy: bootstrap':
+  <<: *deploy_bootstrap
+  variables:
+    <<: *legacy
+    ENTITY: bootstrap
+  rules:
+    - *release_manual_only
+  dependencies: ['Legacy']
+  needs: ['Legacy', 'Legacy: libs']
+
+'MCL':
+  <<: *build
+  variables:
+    <<: *mcl
+  rules:
+    - *release_manual_only
+
+'MCL: libs':
+  <<: *upload_libraries
+  variables:
+    <<: *mcl
+  rules:
+    - *release_only_rules
+  needs: ['MCL']
+
+'MCL: launcher':
+  <<: *deploy_launcher
+  variables:
+    <<: *mcl
+    ENTITY: launcher
+  rules:
+    - *release_only_rules
+  dependencies: ['MCL']
+  needs: ['MCL', 'MCL: libs']
+
+'MCL: bootstrap':
+  <<: *deploy_bootstrap
+  variables:
+    <<: *mcl
+    ENTITY: bootstrap
+  rules:
+    - *release_manual_only
+  dependencies: ['MCL']
+  needs: ['MCL', 'MCL: libs']
+
+'Beta':
+  <<: *build
+  variables:
+    <<: *beta
+  rules:
+    - *beta_manual_only
+
+'Beta: libs':
+  <<: *upload_libraries
+  variables:
+    <<: *beta
+  rules:
+    - *beta_only_rules
+  needs: ['Beta']
+
+'Beta: launcher':
+  <<: *deploy_launcher
+  variables:
+    <<: *beta
+    ENTITY: launcher
+  rules:
+    - *beta_only_rules
+  dependencies: ['Beta']
+  needs: ['Beta', 'Beta: libs']
+
+'Beta: bootstrap':
+  <<: *deploy_bootstrap
+  variables:
+    <<: *beta
+    ENTITY: bootstrap
+  rules:
+    - *beta_manual_only
+  dependencies: ['Beta']
+  needs: ['Beta', 'Beta: libs']
+
+'AUR':
+  <<: *build
+  variables:
+    <<: *aur
+  rules:
+    - *beta_manual_only
+
+'AUR: libs':
+  <<: *upload_libraries
+  variables:
+    <<: *aur
+  rules:
+    - *beta_only_rules
+  needs: ['AUR']
+
+'AUR: launcher':
+  <<: *deploy_launcher
+  variables:
+    <<: *aur
+    ENTITY: launcher
+  rules:
+    - *beta_only_rules
+  dependencies: ['AUR']
+  needs: ['AUR', 'AUR: libs']
+
+'AUR: bootstrap':
+  <<: *deploy_bootstrap
+  variables:
+    <<: *aur
+    ENTITY: bootstrap
+  rules:
+    - *beta_only_rules
+  dependencies: ['AUR']
+  needs: ['AUR', 'AUR: libs']
+
+'AUR: .SRCINFO':
+  <<: *gen_srcinfo
+  variables:
+    <<: *aur
+  rules:
+    - *beta_only_rules
+  needs: ['AUR']
+
+'AUR: Push':
+  <<: *push_pkgbuild
+  variables:
+    <<: *aur
+    ENTITY: bootstrap
+  rules:
+    - *beta_only_rules
+  dependencies:
+    - 'AUR: .SRCINFO'
+  needs:
+    - 'AUR: .SRCINFO'
+    - 'AUR: launcher'
+    - 'AUR: bootstrap'

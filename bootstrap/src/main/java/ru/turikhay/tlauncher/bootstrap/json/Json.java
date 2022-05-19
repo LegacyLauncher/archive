@@ -41,7 +41,11 @@ public final class Json {
             try {
                 value = Validate.notNull(ctx.deserialize(o.get(key), type), key);
             } catch (RuntimeException rE) {
-                throw new JsonParseException("error deserializing key \"" + key + "\" in " + o, rE);
+                if (require) {
+                    throw new JsonParseException("error deserializing key \"" + key + "\" in " + o, rE);
+                } else {
+                    return null;
+                }
             }
         } else {
             if (require) {

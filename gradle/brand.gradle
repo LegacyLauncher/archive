@@ -1,17 +1,16 @@
 ext {
-    git_branch = grgit?.branch?.current()?.name?.replaceAll("[^0-9A-Za-z\\-]", "-")
-    short_brand = System.getenv("SHORT_BRAND")
-    product_version = project.version
-    full_brand = System.getenv("BRAND") ?: "Legacy"
-    launch4j_xml = System.getenv("LAUNCH4J_XML") ?: "legacy"
+    short_brand = System.getenv("SHORT_BRAND") ?: 'develop'
 
-    switch (git_branch) {
-        case "master":
-            if (!short_brand) short_brand = "legacy"
-            break
-        default:
-            if (!short_brand) short_brand = "legacy_beta"
-            product_version += "+$git_branch"
-            break
-    }
+    full_brand = System.getenv("BRAND") ?: [
+            'develop': 'Dev',
+            'legacy': 'Legacy',
+            'legacy_beta'  : 'Legacy Beta',
+            'mcl': 'for Mc-launcher.com',
+            'aur': 'AUR',
+    ].getOrDefault(
+            short_brand,
+            short_brand
+    )
+
+    product_version = "${project.version}+${short_brand?.replaceAll("[^\\dA-Za-z\\-]", "-")}${System.getenv("VERSION_SUFFIX") ?: ""}"
 }

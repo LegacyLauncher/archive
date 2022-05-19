@@ -459,6 +459,11 @@ public final class Bootstrap {
     DownloadEntry getBootstrapUpdate(UpdateMeta updateMeta) {
         RemoteBootstrapMeta remoteMeta = Objects.requireNonNull(updateMeta, "updateMeta").getBootstrap();
 
+        if (remoteMeta == null) {
+            log("RemoteBootstrap meta is not available");
+            return null;
+        }
+
         log("RemoteBootstrap meta", remoteMeta);
 
         Objects.requireNonNull(remoteMeta, "RemoteBootstrap meta");
@@ -589,7 +594,8 @@ public final class Bootstrap {
                     DownloadEntry downloadEntry = getBootstrapUpdate(updateMeta);
                     if (downloadEntry != null) {
                         if (getIgnoreSelfUpdate()) {
-                            log("Bootstrap self update ignored:", updateMeta.getBootstrap().getVersion());
+                            log("Bootstrap self update ignored:",
+                                    updateMeta.getBootstrap() == null ? null : updateMeta.getBootstrap().getVersion());
                         } else {
                             Updater updater = new Updater("bootstrapUpdate", bootstrapJar, downloadEntry);
                             if (getRestartExec() != null) {

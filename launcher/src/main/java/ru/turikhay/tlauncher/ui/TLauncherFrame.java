@@ -242,10 +242,6 @@ public class TLauncherFrame extends JFrame {
             brandBuilder.append(" [DEBUG]");
         }
 
-        if (TLauncher.isBeta()) {
-            brandBuilder.append(" [BETA]");
-        }
-
         brand = brandBuilder.toString();
     }
 

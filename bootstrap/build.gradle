@@ -10,7 +10,6 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'java'
     id "com.github.johnrengelman.shadow"
-    id "org.ajoberstar.grgit"
     id "org.openjfx.javafxplugin"
     id "com.github.gmazzo.buildconfig"
 }
@@ -154,7 +153,6 @@ processResources {
             version   : product_version,
             shortBrand: short_brand,
             brand     : full_brand,
-            buildDate : OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
     ]
 
     inputs.property("meta", meta)
@@ -169,27 +167,40 @@ task generateUpdateJson {
     doLast {
         def jarFileChecksum = generateChecksum(shadowJar.outputs.files.singleFile)
 
+        def downloadPath = "repo/update/${short_brand}/bootstrap/${jarFileChecksum}.jar"
+
         def meta = [
                 version : product_version,
                 checksum: jarFileChecksum,
-                url     : repo_hosts.collect { host ->
-                    "https://${host}/update/${short_brand}/bootstrap/${jarFileChecksum}.jar"
+                url     : [ "https://tlaun.ch/${downloadPath}" ] + repo_hosts.collect { host ->
+                    ["http", "https"].collect {scheme ->
+                        "${scheme}://${host}/${downloadPath}"
+                    }
+                }.flatten().sort { a, b ->
+                    a.startsWith("https") ? (b.startsWith("https") ? 0 : -1) : (b.startsWith("https") ? 1 : 0)
                 }
         ]
 
-        file("${buildDir}/update/bootstrap.json").write(new JsonBuilder(meta).toString())
+        file("${buildDir}/update/${short_brand}/bootstrap.json").write(new JsonBuilder(meta).toString())
     }
 }
 
-task copyJarAndRenameToSha256(type: Copy) {
+task copyJarAndRename(type: Copy) {
     dependsOn shadowJar
     from shadowJar.outputs.files.singleFile
-    into "${buildDir}/update"
-    rename { generateChecksum(shadowJar.outputs.files.singleFile) + ".jar" }
+    into "${buildDir}/update/${short_brand}"
+    rename { "bootstrap.jar" }
+}
+
+task generateSha256File {
+    dependsOn shadowJar
+    doLast {
+        file("${buildDir}/update/${short_brand}/bootstrap.jar.sha256").write(generateChecksum(shadowJar.outputs.files.singleFile))
+    }
 }
 
 assemble {
-    dependsOn(generateUpdateJson, copyJarAndRenameToSha256)
+    dependsOn(generateUpdateJson, copyJarAndRename, generateSha256File)
 }
 
 test {
