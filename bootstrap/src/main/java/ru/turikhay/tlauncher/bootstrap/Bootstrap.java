@@ -637,7 +637,10 @@ public final class Bootstrap {
             setIgnoreSelfUpdate(true);
         }
 
-        Files.createDirectories(getTargetJar().getParent());
+        Path targetJarParent = getTargetJar().getParent();
+        if (targetJarParent != null) {
+            Files.createDirectories(targetJarParent);
+        }
 
         FileStat launcherStat = fileStat(getTargetJar());
         if (launcherStat.exists && !launcherStat.writeable && !getIgnoreUpdate()) {

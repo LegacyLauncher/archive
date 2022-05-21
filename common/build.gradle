@@ -23,17 +23,20 @@ test {
 }
 
 processResources {
-    def repoProperties = new Properties()
-    repoProperties.put("domains", repo_domains.join(','))
-    repoProperties.put("eu_prefixes", repo_domain_zones_eu.join(','))
-    repoProperties.put("ru_prefixes", repo_domain_zones_ru.join(','))
-    repoProperties.put("cdn_prefixes", repo_cdn_path_prefixes.join(','))
+    def repoProperties = [
+            "domains":      repo_domains.join(','),
+            "eu_prefixes":  repo_domain_zones_eu.join(','),
+            "ru_prefixes":  repo_domain_zones_ru.join(','),
+            "cdn_prefixes": repo_cdn_path_prefixes.join(','),
+    ]
 
     inputs.property("repoProperties", repoProperties)
 
     doLast {
         file("$destinationDir/ru/turikhay/tlauncher/repository/repositories_v1.properties").withWriter('UTF-8') { writer ->
-            repoProperties.store(writer, null)
+            repoProperties.each {entry ->
+                writer.append("$entry.key=$entry.value\n")
+            }
         }
     }
 }
