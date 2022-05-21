@@ -53,6 +53,9 @@ task collectPkgBuildInfo() {
         def launcherVersion = launcher.version
         def bootstrapVersion = project(':bootstrap').version
 
+        def launcherChecksum = generateChecksum(tasks.getByPath(':launcher:jar').outputs.files.singleFile)
+        def bootstrapChecksum = generateChecksum(tasks.getByPath(':bootstrap:shadowJar').outputs.files.singleFile)
+
         pkgInfo.putAll([
                 'PKGNAME': System.getenv("PKGBUILD_PKGNAME") ?: "tlauncher",
                 'PKGDESC': System.getenv("PKGBUILD_PKGDESC") ?: "Freeware Minecraft launcher",
@@ -60,15 +63,15 @@ task collectPkgBuildInfo() {
                 'BRAND': short_brand,
                 'LAUNCHER_VERSION': launcherVersion,
                 'ALTERNATE_REPO_COMMENT': alternateRepoComment.join("\n"),
-                'LAUNCHER_CHECKSUM': generateChecksum(tasks.getByPath(':launcher:jar').outputs.files.singleFile),
-                'BOOTSTRAP_CHECKSUM': generateChecksum(tasks.getByPath(':bootstrap:shadowJar').outputs.files.singleFile),
+                'LAUNCHER_CHECKSUM': launcherChecksum,
+                'BOOTSTRAP_CHECKSUM': bootstrapChecksum,
                 'BOOTSTRAP_VERSION': bootstrapVersion,
                 'LAUNCHER_LIBRARIES': collect(launcherLibs),
                 'RESOURCE_LIST': collect(resourceList),
                 'CHECKSUMS': collect(checksums),
                 'LAUNCHER_LIBRARIES_INSTALLS': collect(launcherLibsInstalls),
-                'BOOTSTRAP_JAR': "tl-bootstrap-${bootstrapVersion}.jar".toString(),
-                'LAUNCHER_JAR': "tl-launcher-${launcherVersion}.jar".toString(),
+                'BOOTSTRAP_JAR': "tl-bootstrap-${bootstrapVersion}-${bootstrapChecksum.substring(0, 8)}.jar".toString(),
+                'LAUNCHER_JAR': "tl-launcher-${launcherVersion}-${launcherChecksum.substring(0, 8)}.jar".toString(),
         ])
     }
 }
@@ -109,7 +112,7 @@ assemble {
     }
 }
 
-static def generateChecksum(File file) {
+static String generateChecksum(File file) {
     file.withInputStream {
         new DigestInputStream(it, MessageDigest.getInstance('SHA-256')).withStream {
             it.eachByte {}

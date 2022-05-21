@@ -167,40 +167,40 @@ workflow:
     - git commit -m "$(cat .pkgver)-$(cat .pkgrel)"
     - git push origin
 
-'Dev':
+'Build':
   <<: *build
   variables:
     <<: *dev
   rules:
     - *dev_only_rules
 
-'Dev: libs':
+'Upload libs':
   <<: *upload_libraries
   variables:
     <<: *dev
   rules:
     - *dev_only_rules
-  needs: ['Dev']
+  needs: ['Build']
 
-'Dev: launcher':
+'Launcher.jar':
   <<: *deploy_launcher
   variables:
     <<: *dev
     ENTITY: launcher
   rules:
     - *dev_only_rules
-  dependencies: ['Dev']
-  needs: ['Dev', 'Dev: libs']
+  dependencies: ['Build']
+  needs: ['Build', 'Upload libs']
 
-'Dev: bootstrap':
+'Bootstrap.jar':
   <<: *deploy_bootstrap
   variables:
     <<: *dev
     ENTITY: bootstrap
   rules:
     - *dev_only_rules
-  dependencies: ['Dev']
-  needs: ['Dev', 'Dev: libs']
+  dependencies: ['Build']
+  needs: ['Build', 'Upload libs']
 
 'Legacy':
   <<: *build
@@ -233,7 +233,7 @@ workflow:
     <<: *legacy
     ENTITY: bootstrap
   rules:
-    - *release_manual_only
+    - *release_only_rules
   dependencies: ['Legacy']
   needs: ['Legacy', 'Legacy: libs']
 
@@ -268,7 +268,7 @@ workflow:
     <<: *mcl
     ENTITY: bootstrap
   rules:
-    - *release_manual_only
+    - *release_only_rules
   dependencies: ['MCL']
   needs: ['MCL', 'MCL: libs']
 
@@ -303,7 +303,7 @@ workflow:
     <<: *beta
     ENTITY: bootstrap
   rules:
-    - *beta_manual_only
+    - *beta_only_rules
   dependencies: ['Beta']
   needs: ['Beta', 'Beta: libs']
 
