@@ -1,0 +1,32 @@
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven {
+        url("https://cdn.turikhay.ru/tlauncher/repo/libraries")
+        name("turikhay cdn")
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+        mavenContent {
+            includeGroup("ru.turikhay")
+            includeGroup("ru.turikhay.app")
+        }
+    }
+    maven {
+        url("https://libraries.minecraft.net")
+        name("Minecraft")
+        mavenContent {
+            includeGroup("com.mojang")
+        }
+    }
+}

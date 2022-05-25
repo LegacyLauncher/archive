@@ -1,0 +1,178 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+plugins {
+    id "base"
+}
+
+apply from: '../gradle/brand.gradle'
+
+def portableBaseBuildDir = file("$buildDir/portableBase/$short_brand")
+
+def jreVersions = [
+        "x64": [
+                url: "https://cdn.azul.com/zulu/bin/zulu17.34.19-ca-fx-jre17.0.3-win_x64.zip",
+                sha256: "6067b31c1de84c13040fcbf43ec179e0bf14994697c27f6c97d040ca9ce7684b",
+        ],
+        "x86": [
+                url: "https://cdn.azul.com/zulu/bin/zulu17.34.19-ca-fx-jre17.0.3-win_i686.zip",
+                sha256: "cc8a9a585c1eb658fe0527d103f2c1ba02a1d2531242fd137a55dff5a3e537ef",
+        ],
+]
+
+jreVersions.each { e ->
+    def arch = e.key
+    def Arch = arch.capitalize()
+    def jreZip = file("$buildDir/jreDownloads/jre${Arch}.zip")
+    tasks.register("verifyJre$Arch", Verify) {
+        src jreZip
+        algorithm "SHA-256"
+        checksum e.value.sha256
+    }
+    tasks.register("downloadJre$Arch", Download) {
+        src e.value.url
+        dest jreZip
+        overwrite false
+        finalizedBy "verifyJre$Arch"
+    }
+    tasks.register("unzipJre$Arch", Copy) {
+        dependsOn "downloadJre$Arch"
+        from zipTree(tasks.getByName("downloadJre$Arch").dest)
+        into "$buildDir/jre/$arch"
+        eachFile {
+            path -= ~/^.+?\//
+        }
+        includeEmptyDirs = false
+    }
+}
+
+task copyPortableBaseLibraries(type: Copy) {
+    afterEvaluate {
+        dependsOn ":launcher:buildLauncherRepo"
+    }
+    from "$rootDir/lib/$short_brand"
+    into "$portableBaseBuildDir/launcher/libraries"
+}
+
+task copyPortableBaseLauncher(type: Copy) {
+    afterEvaluate {
+        dependsOn ":launcher:jar"
+        from tasks.getByPath(":launcher:jar").outputs.files.singleFile
+        into "$portableBaseBuildDir/launcher"
+        rename { "launcher.jar" }
+    }
+}
+
+task copyPortableBaseBootstrap(type: Copy) {
+    afterEvaluate {
+        dependsOn ":bootstrap:shadowJar"
+        from tasks.getByPath(":bootstrap:shadowJar").outputs.files.singleFile
+        into "$portableBaseBuildDir/launcher"
+        rename { "bootstrap.jar" }
+    }
+}
+
+task copyPortableBaseResources(type: Copy) {
+    from "$projectDir/baseResources"
+    into portableBaseBuildDir
+}
+
+task preparePortableBaseBuild {
+    dependsOn (
+            copyPortableBaseLibraries,
+            copyPortableBaseLauncher,
+            copyPortableBaseBootstrap,
+            copyPortableBaseResources,
+    )
+}
+
+task copyBasePortableBuildToPortableBuild(type: Copy) {
+    dependsOn preparePortableBaseBuild
+    from portableBaseBuildDir
+    into "$buildDir/portable/$short_brand"
+}
+
+task copyJreX64ToPortableBuild(type: Copy) {
+    dependsOn "unzipJreX64"
+    from "$buildDir/jre/x64"
+    into "$buildDir/portable/$short_brand/jre"
+}
+
+task copyJreX86ToPortableBuild(type: Copy) {
+    dependsOn "unzipJreX86"
+    from "$buildDir/jre/x86"
+    into "$buildDir/portable/$short_brand/jre/x86"
+}
+
+task copyJreToPortableBuild {
+    dependsOn copyJreX64ToPortableBuild, copyJreX86ToPortableBuild
+}
+
+task copyPortableReadme(type: Copy) {
+    def tokens = [
+            date: DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
+                    .withLocale(Locale.ROOT)
+                    .format(LocalDate.now(ZoneOffset.UTC)),
+            version: "0.0.0"
+    ]
+    afterEvaluate {
+        tokens['version'] = project(":launcher").version.toString()
+    }
+    from file("$projectDir/resources/README.txt")
+    filter(ReplaceTokens, tokens: tokens)
+    filteringCharset = 'UTF-8'
+    into "$buildDir/portable/$short_brand"
+}
+
+task writePortableBuildConfig {
+    dependsOn copyBasePortableBuildToPortableBuild
+    doLast {
+        file("$buildDir/portable/$short_brand/tl.properties").withWriterAppend('UTF-8') {writer ->
+            writer.append("minecraft.jre.dir=./jre\n")
+        }
+        file("$buildDir/portable/$short_brand/tl.args").withWriterAppend('UTF-8') {writer ->
+            writer.append("\n")
+            writer.append("--directory\n")
+            writer.append("./game\n")
+        }
+    }
+}
+
+task preparePortableBuild {
+    dependsOn (
+            copyBasePortableBuildToPortableBuild,
+            copyJreToPortableBuild,
+            writePortableBuildConfig,
+            copyPortableReadme,
+    )
+}
+
+task zipPortableBuild(type: Zip) {
+    dependsOn preparePortableBuild
+    from "$buildDir/portable/$short_brand"
+
+    destinationDirectory = file("$buildDir/update/$short_brand")
+    archiveFileName = "portable.zip"
+    afterEvaluate {
+        preserveFileTimestamps = true
+    }
+}
+
+task createPortableBuild {
+    dependsOn zipPortableBuild
+}
+
+assemble {
+    afterEvaluate {
+        if (System.getenv("PORTABLE_ENABLED") == "true") {
+            dependsOn("createPortableBuild")
+        }
+    }
+    doLast {
+        file("$buildDir/update/$short_brand").mkdirs()
+    }
+}

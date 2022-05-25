@@ -1,0 +1,83 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id "base"
+}
+
+apply from: '../gradle/brand.gradle'
+
+def mainIss = [
+        name: "TL ${full_brand}".toString(),
+        version: "0.0.0.0",
+        id: generateUUIDFromString(short_brand.toString()),
+        short_brand: short_brand.toString(),
+]
+
+afterEvaluate {
+    mainIss['version'] = "${project(":launcher").version}.0".toString()
+}
+
+task copyBasePortableBuildToInstaller(type: Copy) {
+    dependsOn tasks.getByPath(":portable:preparePortableBaseBuild")
+    from "$rootDir/portable/build/portableBase/$short_brand"
+    into "$buildDir/innosetup/$short_brand/files/common"
+}
+
+task copyInnosetupResources(type: Copy) {
+    from "$projectDir/resources"
+    into "$buildDir/innosetup/$short_brand"
+}
+
+task copyMainIss(type: Copy) {
+    from file("$projectDir/main.iss")
+    filter(ReplaceTokens, tokens: mainIss)
+    filteringCharset = 'UTF-8'
+    into "$buildDir/innosetup/$short_brand"
+}
+
+task copyJreX64ToInstaller(type: Copy) {
+    dependsOn ":portable:unzipJreX64"
+    from "$rootDir/portable/build/jre/x64"
+    into "$buildDir/innosetup/$short_brand/files/x64/jre"
+}
+
+task copyJreX86ToInstaller(type: Copy) {
+    dependsOn ":portable:unzipJreX86"
+    from "$rootDir/portable/build/jre/x86"
+    into "$buildDir/innosetup/$short_brand/files/x86/jre/x86"
+}
+
+task copyJreToInstaller {
+    dependsOn (
+            copyJreX64ToInstaller,
+            copyJreX86ToInstaller,
+    )
+}
+
+task prepareInstaller {
+    dependsOn (
+            copyBasePortableBuildToInstaller,
+            copyInnosetupResources,
+            copyMainIss,
+            copyJreToInstaller,
+    )
+}
+
+assemble {
+    afterEvaluate {
+        if (System.getenv("INSTALLER_ENABLED") == "true") {
+            dependsOn("prepareInstaller")
+        }
+    }
+    doLast {
+        file("$buildDir/innosetup/$short_brand").mkdirs()
+        file("$buildDir/update/$short_brand").mkdirs()
+    }
+}
+
+static String generateUUIDFromString(String val) {
+    def random = new Random(val.hashCode())
+    def uuidBytes = new byte[16]
+    random.nextBytes(uuidBytes)
+    return UUID.nameUUIDFromBytes(uuidBytes)
+}

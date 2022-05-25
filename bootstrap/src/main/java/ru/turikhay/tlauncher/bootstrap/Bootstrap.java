@@ -74,26 +74,30 @@ public final class Bootstrap {
                 defaultFile = Objects.requireNonNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation"),
                 defaultLibFolder = defaultFile.getParent() == null ? Paths.get("lib") : defaultFile.getParent().resolve("lib");
 
-        OptionParser parser = new OptionParser();
+        OptionParser bootstrapParser = new OptionParser();
         ArgumentAcceptingOptionSpec<Path> targetFileParser =
-                parser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
+                bootstrapParser.accepts("targetJar", "points to the targetJar").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<Path> targetLibFolderParser =
-                parser.accepts("targetLibFolder", "points to the library folder").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
+                bootstrapParser.accepts("targetLibFolder", "points to the library folder").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> brandParser =
-                parser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class);
+                bootstrapParser.accepts("brand", "defines brand name").withRequiredArg().ofType(String.class);
         OptionSpecBuilder forceUpdateParser =
-                parser.accepts("ignoreUpdate", "defines if bootstrap should ignore launcher update processes");
+                bootstrapParser.accepts("ignoreUpdate", "defines if bootstrap should ignore launcher update processes");
         OptionSpecBuilder ignoreSelfUpdateParser =
-                parser.accepts("ignoreSelfUpdate", "defines if bootstrap should ignore self update processes");
+                bootstrapParser.accepts("ignoreSelfUpdate", "defines if bootstrap should ignore self update processes");
         OptionSpecBuilder forceHeadlessMode =
-                parser.accepts("headlessMode", "defines if bootstrap should run without UI");
+                bootstrapParser.accepts("headlessMode", "defines if bootstrap should run without UI");
         OptionSpecBuilder packageMode =
-                parser.accepts("packageMode", "defines if bootstrap runs inside a package");
+                bootstrapParser.accepts("packageMode", "defines if bootstrap runs inside a package");
         ArgumentAcceptingOptionSpec<Path> targetUpdateFile =
-                parser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
+                bootstrapParser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> restartExec =
-                parser.accepts("restartExec", "instructs the bootstrap to run this executable after self update").withRequiredArg().ofType(String.class);
-        ArgumentAcceptingOptionSpec<String> settings = parser.accepts("settings").withRequiredArg();
+                bootstrapParser.accepts("restartExec", "instructs the bootstrap to run this executable after self update").withRequiredArg().ofType(String.class);
+
+        OptionParser launcherParser = new OptionParser();
+        launcherParser.allowsUnrecognizedOptions();
+        ArgumentAcceptingOptionSpec<String> settings =
+                launcherParser.accepts("settings").withRequiredArg();
 
         SplitArgs args;
         try {
@@ -112,11 +116,11 @@ public final class Bootstrap {
         RunningConditionsResult runningConditions = checkRunningConditions(bootstrapJar);
         runningConditions.showErrorIfNeeded();
 
-        CombinedOptionSet parsed = new CombinedOptionSet(parseJvmArgs(parser), parser.parse(args.getBootstrap()));
+        CombinedOptionSet bootstrapParsed = new CombinedOptionSet(parseJvmArgs(bootstrapParser), bootstrapParser.parse(args.getBootstrap()));
 
         boolean disallowBetaSwitch = false;
-        if (parsed.has(brandParser)) {
-            String brand = parsed.valueOf(brandParser);
+        if (bootstrapParsed.has(brandParser)) {
+            String brand = bootstrapParsed.valueOf(brandParser);
             log("Picked up brand from arguments: ", brand);
             localBootstrapMeta.setShortBrand(brand);
             // disallow switching if branch is set by an argument
@@ -124,9 +128,11 @@ public final class Bootstrap {
         }
         log("Short brand: ", localBootstrapMeta.getShortBrand());
 
+        OptionSet launcherParsed = launcherParser.parse(args.getLauncher());
+
         Path configFile;
-        if (parsed.has(settings)) {
-            configFile = Paths.get(parsed.valueOf(settings));
+        if (launcherParsed.has(settings)) {
+            configFile = Paths.get(launcherParsed.valueOf(settings));
         } else {
             configFile = TargetConfig.getDefaultConfigFilePath(localBootstrapMeta.getShortBrand());
         }
@@ -141,16 +147,16 @@ public final class Bootstrap {
 
         log("Version: " + localBootstrapMeta.getVersion());
 
-        bootstrap.setupUserInterface(parsed.has(forceHeadlessMode));
+        bootstrap.setupUserInterface(bootstrapParsed.has(forceHeadlessMode));
 
-        Path targetJar = parsed.valueOf(targetFileParser); // can be null
+        Path targetJar = bootstrapParsed.valueOf(targetFileParser); // can be null
         if (targetJar == null) {
             targetJar = Objects.requireNonNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation");
         }
         bootstrap.setTargetJar(targetJar);
         log("Target jar:", bootstrap.getTargetJar());
 
-        Path targetLibFolder = parsed.valueOf(targetLibFolderParser); // can be null
+        Path targetLibFolder = bootstrapParsed.valueOf(targetLibFolderParser); // can be null
         if (targetLibFolder == null) {
             if (bootstrap.getTargetJar().getParent() == null) {
                 targetLibFolder = Paths.get("lib");
@@ -166,20 +172,20 @@ public final class Bootstrap {
         bootstrap.setTargetLibFolder(targetLibFolder);
         log("Target lib folder:", bootstrap.getTargetLibFolder());
 
-        bootstrap.setUpdateMetaFile(parsed.valueOf(targetUpdateFile));
+        bootstrap.setUpdateMetaFile(bootstrapParsed.valueOf(targetUpdateFile));
         log("Update meta file:", bootstrap.getUpdateMetaFile());
 
-        bootstrap.setIgnoreUpdate(parsed.has(forceUpdateParser));
+        bootstrap.setIgnoreUpdate(bootstrapParsed.has(forceUpdateParser));
         log("Ignore launcher update:", bootstrap.getIgnoreUpdate());
 
-        bootstrap.setIgnoreSelfUpdate(parsed.has(ignoreSelfUpdateParser));
+        bootstrap.setIgnoreSelfUpdate(bootstrapParsed.has(ignoreSelfUpdateParser));
         log("Ignore self update:", bootstrap.getIgnoreSelfUpdate());
 
-        bootstrap.setPackageMode(parsed.has(packageMode));
+        bootstrap.setPackageMode(bootstrapParsed.has(packageMode));
         log("Package mode:", bootstrap.isPackageMode());
 
-        if (parsed.has(restartExec)) {
-            bootstrap.setRestartExec(parsed.valueOf(restartExec));
+        if (bootstrapParsed.has(restartExec)) {
+            bootstrap.setRestartExec(bootstrapParsed.valueOf(restartExec));
             log("Restart exec on self update:", bootstrap.getRestartExec());
         }
 
@@ -332,7 +338,8 @@ public final class Bootstrap {
         bootBridge.addCapability("has_flatlaf");
         SwingUtilities.invokeLater(() -> {
             FlatLafConfiguration flatLafConfig = FlatLafConfiguration.parseFromMap(
-                    Bootstrap.this.config.isEmpty() ? FlatLafConfiguration.getDefaults() : Bootstrap.this.config.asMap()
+                    Bootstrap.this.config.isEmpty() || Bootstrap.this.config.isFirstRun() ?
+                            FlatLafConfiguration.getDefaults() : Bootstrap.this.config.asMap()
             );
             String guiSystemLookAndFeel = Bootstrap.this.config.get("gui.systemlookandfeel");
             boolean preFlatLafConfiguration = !flatLafConfig.getState().isPresent() && guiSystemLookAndFeel != null;

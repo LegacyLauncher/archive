@@ -14,6 +14,7 @@ plugins {
     id "com.github.gmazzo.buildconfig"
 }
 
+apply from: '../gradle/java.gradle'
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
 apply from: '../gradle/repo.gradle'
@@ -69,7 +70,7 @@ shadowJar {
     }
     relocate("de.", "shaded.de.")
     relocate("io.", "shaded.io.")
-    relocate("joptsimple.", "shaded.joptsimple.")
+//    relocate("joptsimple.", "shaded.joptsimple.")
     relocate("org.", "shaded.org.")
     relocate("oshi.", "shaded.oshi.")
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")

@@ -2,6 +2,8 @@ plugins {
     id 'java'
 }
 
+apply from: '../gradle/java.gradle'
+
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8

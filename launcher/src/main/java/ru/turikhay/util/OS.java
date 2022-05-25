@@ -4,6 +4,7 @@ import com.sun.management.OperatingSystemMXBean;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.jna.JNA;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 import java.awt.*;
@@ -122,7 +123,8 @@ public enum OS {
     }
 
     public static String getSummary() {
-        return NAME + " (" + VERSION + ") " + OS.Arch.CURRENT + ", Java " + System.getProperty("java.version") + ", " + OS.Arch.TOTAL_RAM_MB + " MB RAM, " + Arch.AVAILABLE_PROCESSORS + "x CPU";
+        return String.format("%s (%s) %s, Java %s %s (%s), %s MB RAM, %sx CPU",
+                NAME, VERSION, JNA.getArch().orElse("n/a"), System.getProperty("java.version", "unknown"), System.getProperty("os.arch", "unknown"), Arch.CURRENT, Arch.TOTAL_RAM_MB, Arch.AVAILABLE_PROCESSORS);
     }
 
     private static final java.util.List<Function<URI, Boolean>> OPEN_LINK_STRATEGIES = Collections.unmodifiableList(Arrays.asList(

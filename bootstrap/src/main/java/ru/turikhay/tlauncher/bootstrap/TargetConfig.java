@@ -47,6 +47,10 @@ public class TargetConfig {
         return properties.isEmpty();
     }
 
+    public boolean isFirstRun() {
+        return getBoolean("firstRun");
+    }
+
     public Map<String, String> asMap() {
         Map<String, String> map = new LinkedHashMap<>();
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
