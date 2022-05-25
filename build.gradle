@@ -3,39 +3,8 @@ plugins {
     id "org.openjfx.javafxplugin" version "0.0.10" apply false
     id "com.github.johnrengelman.shadow" version "7.0.0" apply false
     id "com.github.gmazzo.buildconfig" version "3.0.3" apply false
+    id "de.undercouch.download" version "5.1.0"
 }
 
 apply from: 'gradle/pkgbuild.gradle'
 
-allprojects {
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-    }
-    tasks.withType(AbstractArchiveTask) {
-        preserveFileTimestamps = false
-        reproducibleFileOrder = true
-    }
-    repositories {
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-        maven {
-            url("https://cdn.turikhay.ru/tlauncher/repo/libraries")
-            name("turikhay cdn")
-            metadataSources {
-                mavenPom()
-                artifact()
-            }
-            mavenContent {
-                includeGroup("ru.turikhay")
-                includeGroup("ru.turikhay.app")
-            }
-        }
-        maven {
-            url("https://libraries.minecraft.net")
-            name("Minecraft")
-            mavenContent {
-                includeGroup("com.mojang")
-            }
-        }
-    }
-}

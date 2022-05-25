@@ -13,6 +13,7 @@ plugins {
     id "com.github.gmazzo.buildconfig"
 }
 
+apply from: '../gradle/java.gradle'
 apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
 apply from: '../gradle/repo.gradle'
@@ -88,8 +89,8 @@ task prepareLauncherDir(type: Sync) {
 
     from(compileModernJava)
     from(compileJava)
-    from(sourceSets.modern.resources)
-    from(sourceSets.main.resources)
+    from(processModernResources)
+    from(processResources)
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
@@ -99,7 +100,7 @@ task prepareLauncherDirJava8(type: Sync) {
     dependsOn(compileJava)
 
     from(compileJava)
-    from(sourceSets.main.resources)
+    from(processResources)
 }
 
 static def generateChecksum(File file) {

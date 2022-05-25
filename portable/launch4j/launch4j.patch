@@ -1,0 +1,72 @@
+diff --git a/head_src/head.c b/head_src/head.c
+index 64ad445..f698e9e 100644
+--- a/head_src/head.c
++++ b/head_src/head.c
+@@ -550,6 +550,46 @@ BOOL isLauncherPathValid(const char* path)
+ 	return result;
+ }
+ 
++BOOL checkCompatibilityByLauncherPath(const char* path)
++{
++	char launcherPath[_MAX_PATH] = {0};
++	DWORD binaryType;
++	
++	strcpy(launcherPath, path);
++	appendLauncher(launcherPath);
++	
++	if (!GetBinaryTypeA(launcherPath, &binaryType)) {
++		debug("checkCompatibilityByLauncherPath\t%s: GetBinaryTypeA returns FALSE. Skipping\n", launcherPath);
++		return FALSE;
++	}
++	
++	debug("checkCompatibilityByLauncherPath\t%s: GetBinaryTypeA returns %d...\n", launcherPath, binaryType);
++	
++	BOOL binaryIs64Bit;
++	
++	switch(binaryType) {
++		case SCS_32BIT_BINARY:
++			debug("... which is 32-bit ...\n");
++			binaryIs64Bit = FALSE;
++			break;
++		case SCS_64BIT_BINARY:
++			debug("... which is 64-bit ...\n");
++			binaryIs64Bit = TRUE;
++			break;
++		default:
++			debug("... which is unsupported. Probably OK?");
++			return TRUE;
++	}
++	
++	if (binaryIs64Bit == wow64) {
++		debug("... OK!\n");
++		return TRUE;
++	}
++	
++	debug("... skipping\n")
++	return FALSE;
++}
++
+ void regSearchWow(const char* keyName, const int searchType)
+ {
+ 	if (search.runtimeBits == INIT_RUNTIME_BITS)
+@@ -976,7 +1016,7 @@ BOOL bundledJreSearch(const char *exePath, const int pathLen)
+     			appendPath(launcher.cmd, pathNoBin);
+     		}
+ 
+-    		if (isLauncherPathValid(launcher.cmd))
++    		if (isLauncherPathValid(launcher.cmd) && checkCompatibilityByLauncherPath(launcher.cmd))
+     		{
+                 search.foundJava = is64BitJre ? FOUND_BUNDLED | KEY_WOW64_64KEY : FOUND_BUNDLED;
+     			strcpy(search.foundJavaHome, launcher.cmd);
+diff --git a/head_src/head.h b/head_src/head.h
+index cc6d2b2..81a3426 100644
+--- a/head_src/head.h
++++ b/head_src/head.h
+@@ -112,6 +112,7 @@ void formatJavaVersion(char* version, const char* originalVersion);
+ void regSearch(const char* keyName, const int searchType);
+ BOOL isJavaHomeValid(const char* keyName, const int searchType);
+ BOOL isLauncherPathValid(const char* path);
++BOOL checkCompatibilityByLauncherPath(const char* path);
+ void regSearchWow(const char* keyName, const int searchType);
+ void regSearchJreSdk(const char* jreKeyName, const char* sdkKeyName,
+ 		const int jdkPreference);

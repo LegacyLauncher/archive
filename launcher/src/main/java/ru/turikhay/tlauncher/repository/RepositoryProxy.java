@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class RepositoryProxy {
     private static final Logger PROXY_LOGGER = LogManager.getLogger(ProxyRepo.class);
@@ -20,12 +21,15 @@ public class RepositoryProxy {
             "launchermeta.mojang.com",
             "libraries.minecraft.net",
             "launcher.mojang.com",
-            "resources.download.minecraft.net"
+            "resources.download.minecraft.net",
+            "files.minecraftforge.net",
+            "maven.fabricmc.net"
     ));
-    private static final List<String> PROXIES = Collections.unmodifiableList(Arrays.asList(
-            "https://mcproxy.tln4.ru/proxy.php?url=",
-            "https://mcproxy.tlaun.ch/proxy.php?url="
-    ));
+    private static final List<String> PROXIES = Collections.unmodifiableList(
+            RepoPrefixV1.prefixesCdnLast().stream().map(prefix -> String.format(Locale.ROOT,
+                    "%s/proxy.php?url=", prefix
+            )).collect(Collectors.toList())
+    );
     private static boolean PROXY_WORKED = false;
 
     public static boolean canBeProxied(URL url) {

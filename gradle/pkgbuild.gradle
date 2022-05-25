@@ -76,7 +76,7 @@ task collectPkgBuildInfo() {
     }
 }
 
-task generatePkgBuild(type: Sync) {
+task generatePkgBuild(type: Copy) {
     dependsOn collectPkgBuildInfo
     from file("$rootDir/gradle/aur/PKGBUILD")
     filter(ReplaceTokens, tokens: pkgInfo)
@@ -85,7 +85,6 @@ task generatePkgBuild(type: Sync) {
 }
 
 task copyPkgBuildResources(type: Copy) {
-    dependsOn generatePkgBuild
     from "$rootDir/gradle/aur/resources"
     into "$buildDir/aur/${short_brand}"
 }
@@ -98,7 +97,11 @@ task writePkgBuildVersion {
 }
 
 task createPkgBuild {
-    dependsOn generatePkgBuild, copyPkgBuildResources, writePkgBuildVersion
+    dependsOn(
+            generatePkgBuild,
+            copyPkgBuildResources,
+            writePkgBuildVersion,
+    )
 }
 
 assemble {

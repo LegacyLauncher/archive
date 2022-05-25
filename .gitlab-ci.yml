@@ -23,8 +23,21 @@ workflow:
         RELEASE_GROUP: 'release'
     - when: always
 
+.expires: &expires
+  expire_in: 1 week
+
 .dev_only_rules: &dev_only_rules
   - if: $RELEASE_GROUP == 'dev'
+    when: on_success
+  - when: never
+
+.dev_and_installer_only_rules: &dev_and_installer_only_rules
+  - if: $RELEASE_GROUP == 'dev' && $INSTALLER_ENABLED == 'true'
+    when: on_success
+  - when: never
+
+.dev_and_portable_only_rules: &dev_and_portable_only_rules
+  - if: $RELEASE_GROUP == 'dev' && $PORTABLE_ENABLED == 'true'
     when: on_success
   - when: never
 
@@ -52,9 +65,12 @@ workflow:
 
 .legacy: &legacy
   SHORT_BRAND: 'legacy'
+  PORTABLE_ENABLED: 'true'
+  INSTALLER_ENABLED: 'true'
 
 .mcl: &mcl
   SHORT_BRAND: 'mcl'
+  INSTALLER_ENABLED: 'true'
 
 .beta: &beta
   SHORT_BRAND: 'legacy_beta'
@@ -69,7 +85,6 @@ workflow:
 
 .ssh: &ssh
   image: bitnami/git:2
-  resource_group: deploy
   stage: Deploy
   before_script: &ssh_before
     - mkdir -p ~/.ssh
@@ -81,6 +96,7 @@ workflow:
 
 .ssh_deploy: &ssh_deploy
   <<: *ssh
+  resource_group: deploy-$SHORT_BRAND-$ENTITY
   script:
     - >
       for host in $SSH_HOSTS; do \
@@ -106,11 +122,27 @@ workflow:
       - build/aur/$SHORT_BRAND
       - launcher/build/update/$SHORT_BRAND
       - bootstrap/build/update/$SHORT_BRAND
+      - portable/build/update/$SHORT_BRAND
+      - installer/build/innosetup/$SHORT_BRAND
       - lib
-    expire_in: 1 week
+    <<: *expires
+
+.installer: &installer
+  image:
+    name: amake/innosetup
+    entrypoint: [""]
+  stage: Build
+  script:
+    - cd installer/build/innosetup/$SHORT_BRAND
+    - iscc "/O..\\..\\update\\$SHORT_BRAND" "/Finstaller" main.iss
+  artifacts:
+    paths:
+      - installer/build/update/$SHORT_BRAND
+    <<: *expires
 
 .upload_libraries: &upload_libraries
   <<: *ssh
+  resource_group: deploy-libraries
   stage: Deploy
   script:
     - >
@@ -119,7 +151,7 @@ workflow:
         scp -v -r lib/$SHORT_BRAND/* $SSH_USER@$host:$SSH_LIBRARIES_DIR/; \
       done
 
-.deploy_launcher: &deploy_launcher
+.deploy: &deploy
   <<: *ssh_deploy
 
 .deploy_bootstrap: &deploy_bootstrap
@@ -127,6 +159,7 @@ workflow:
   artifacts:
     paths:
       - bootstrap/build/update/$SHORT_BRAND/bootstrap.jar
+    <<: *expires
 
 .gen_srcinfo: &gen_srcinfo
   image:
@@ -140,9 +173,11 @@ workflow:
   artifacts:
     paths:
       - build/aur/$SHORT_BRAND
+    <<: *expires
 
 .push_pkgbuild: &push_pkgbuild
   <<: *ssh
+  resource_group: deploy-aur
   before_script:
     - *ssh_before
     - git config --global user.name "$GIT_USERNAME"
@@ -159,8 +194,8 @@ workflow:
       if [[ "$PKGVER" == "$(cat .pkgver)" ]]; then \
         PKGREL_INCR=$(expr "$PKGREL" + 1); \
         echo "Incrementing pkgrel ($PKGREL -> $PKGREL_INCR): last commit released the same version ($PKGVER)"; \
-        sed -i "s/pkgrel=$PKGREL/pkgrel=$PKGREL_INCR/g" PKGBUILD; \
-        sed -i "s/pkgrel = $PKGREL/pkgrel = $PKGREL_INCR/g" .SRCINFO; \
+        sed -i "s/pkgrel=1/pkgrel=$PKGREL_INCR/g" PKGBUILD; \
+        sed -i "s/pkgrel = 1/pkgrel = $PKGREL_INCR/g" .SRCINFO; \
         printf $PKGREL_INCR > .pkgrel; \
       fi
     - git add .
@@ -182,8 +217,17 @@ workflow:
     - *dev_only_rules
   needs: ['Build']
 
+'Installer.exe':
+  <<: *installer
+  variables:
+    <<: *dev
+  rules:
+    - *dev_and_installer_only_rules
+  dependencies: ['Build']
+  needs: ['Build']
+
 'Launcher.jar':
-  <<: *deploy_launcher
+  <<: *deploy
   variables:
     <<: *dev
     ENTITY: launcher
@@ -202,6 +246,26 @@ workflow:
   dependencies: ['Build']
   needs: ['Build', 'Upload libs']
 
+'Portable':
+  <<: *deploy
+  variables:
+    <<: *dev
+    ENTITY: portable
+  rules:
+    - *dev_and_portable_only_rules
+  dependencies: ['Build']
+  needs: ['Build', 'Upload libs', 'Launcher.jar', 'Bootstrap.jar']
+
+'Installer':
+  <<: *deploy
+  variables:
+    <<: *dev
+    ENTITY: installer
+  rules:
+    - *dev_and_installer_only_rules
+  dependencies: ['Installer.exe']
+  needs: ['Build', 'Installer.exe', 'Upload libs', 'Launcher.jar', 'Bootstrap.jar']
+
 'Legacy':
   <<: *build
   variables:
@@ -218,7 +282,7 @@ workflow:
   needs: ['Legacy']
 
 'Legacy: launcher':
-  <<: *deploy_launcher
+  <<: *deploy
   variables:
     <<: *legacy
     ENTITY: launcher
@@ -237,6 +301,63 @@ workflow:
   dependencies: ['Legacy']
   needs: ['Legacy', 'Legacy: libs']
 
+'Legacy: portable':
+  <<: *deploy
+  variables:
+    <<: *legacy
+    ENTITY: portable
+  rules:
+    - *release_only_rules
+  dependencies: ['Legacy']
+  needs: ['Legacy', 'Legacy: libs', 'Legacy: launcher', 'Legacy: bootstrap']
+
+'Legacy: build installer':
+  <<: *installer
+  variables:
+    <<: *legacy
+  rules:
+    - *release_only_rules
+  dependencies: ['Legacy']
+  needs: ['Legacy']
+
+'Legacy: installer':
+  <<: *deploy
+  variables:
+    <<: *legacy
+    ENTITY: installer
+  rules:
+    - *release_only_rules
+  dependencies: ['Legacy: build installer']
+  needs: ['Legacy', 'Legacy: build installer', 'Legacy: libs', 'Legacy: launcher', 'Legacy: bootstrap']
+
+'Legacy: source.zip':
+  stage: Build
+  image: joshkeegan/zip
+  script:
+    - mkdir -p source/build/update/$SHORT_BRAND
+    - zip -rv9 source/build/update/$SHORT_BRAND/source.zip . -x ".git/*" ".gradle/*" "source/*" ".gitlab-ci.yml"
+  cache: []
+  dependencies: []
+  artifacts:
+    paths:
+      - source/build/update/$SHORT_BRAND
+    <<: *expires
+  variables:
+    <<: *legacy
+  needs: ['Legacy']
+  rules:
+    - *release_only_rules
+
+'Legacy: source':
+  <<: *deploy
+  variables:
+    <<: *legacy
+    ENTITY: source
+  rules:
+    - *release_only_rules
+  dependencies: ['Legacy: source.zip']
+  needs: ['Legacy: source.zip']
+
 'MCL':
   <<: *build
   variables:
@@ -253,7 +374,7 @@ workflow:
   needs: ['MCL']
 
 'MCL: launcher':
-  <<: *deploy_launcher
+  <<: *deploy
   variables:
     <<: *mcl
     ENTITY: launcher
@@ -272,6 +393,25 @@ workflow:
   dependencies: ['MCL']
   needs: ['MCL', 'MCL: libs']
 
+'MCL: build installer':
+  <<: *installer
+  variables:
+    <<: *mcl
+  rules:
+    - *release_only_rules
+  dependencies: ['MCL']
+  needs: ['MCL']
+
+'MCL: installer':
+  <<: *deploy
+  variables:
+    <<: *legacy
+    ENTITY: installer
+  rules:
+    - *release_only_rules
+  dependencies: ['MCL: build installer']
+  needs: ['MCL', 'MCL: build installer', 'MCL: libs', 'MCL: launcher', 'MCL: bootstrap']
+
 'Beta':
   <<: *build
   variables:
@@ -288,7 +428,7 @@ workflow:
   needs: ['Beta']
 
 'Beta: launcher':
-  <<: *deploy_launcher
+  <<: *deploy
   variables:
     <<: *beta
     ENTITY: launcher
@@ -323,7 +463,7 @@ workflow:
   needs: ['AUR']
 
 'AUR: launcher':
-  <<: *deploy_launcher
+  <<: *deploy
   variables:
     <<: *aur
     ENTITY: launcher

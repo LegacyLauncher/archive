@@ -11,6 +11,10 @@ public class JNA {
         return ENABLED ? Optional.of(Platform.is64Bit()) : Optional.empty();
     }
 
+    public static Optional<String> getArch() {
+        return ENABLED ? Optional.of(Platform.ARCH) : Optional.empty();
+    }
+
     public static boolean isEnabled() {
         return ENABLED;
     }

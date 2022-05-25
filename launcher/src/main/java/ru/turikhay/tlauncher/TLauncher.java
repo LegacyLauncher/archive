@@ -100,7 +100,8 @@ public final class TLauncher {
 
         this.bridge = bridge;
         checkReportsCapabilities();
-        enableJnaIfCapable();
+        if (!JNA.isEnabled())
+            enableJnaIfCapable();
         this.dispatcher = dispatcher;
         LOGGER.debug("Options: {}", bridge.getOptions() == null ? null : bridge.getOptions().length() + " code units");
 
@@ -674,7 +675,6 @@ public final class TLauncher {
         } else {
             LOGGER.info("JNA capability is not enabled");
         }
-        LOGGER.info("Is current OS 64-bit? {}", JNA.is64Bit());
     }
 
     private static TLauncher instance;
@@ -745,6 +745,13 @@ public final class TLauncher {
         if (bridge.getBootstrapVersion() != null) {
             LOGGER.info("... using Bootstrap {}", bridge.getBootstrapVersion());
         }
+
+        try {
+            if (bridge.getCapabilities().containsKey("jna")) {
+                JNA.enable();
+            }
+        } catch (NoSuchMethodError ignored) {}
+
         LOGGER.info("Machine info: {}", OS.getSummary());
         LOGGER.info("Java version: {}", OS.JAVA_VERSION);
         LOGGER.info("Startup time: {}", Instant.now());
