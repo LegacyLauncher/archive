@@ -3,7 +3,6 @@ plugins {
 }
 
 apply from: '../gradle/java.gradle'
-apply from: '../gradle/repo.gradle'
 
 version 'unspecified'
 

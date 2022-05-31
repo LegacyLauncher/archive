@@ -4,8 +4,6 @@ plugins {
     id "base"
 }
 
-apply from: '../gradle/brand.gradle'
-
 def mainIss = [
         name: "TL ${full_brand}".toString(),
         version: "0.0.0.0",
@@ -18,8 +16,8 @@ afterEvaluate {
 }
 
 task copyBasePortableBuildToInstaller(type: Copy) {
-    dependsOn tasks.getByPath(":portable:preparePortableBaseBuild")
-    from "$rootDir/portable/build/portableBase/$short_brand"
+    dependsOn ":packages:portable:preparePortableBaseBuild"
+    from "${project(":packages:portable").buildDir}/portableBase/$short_brand"
     into "$buildDir/innosetup/$short_brand/files/common"
 }
 
@@ -36,14 +34,14 @@ task copyMainIss(type: Copy) {
 }
 
 task copyJreX64ToInstaller(type: Copy) {
-    dependsOn ":portable:unzipJreX64"
-    from "$rootDir/portable/build/jre/x64"
+    dependsOn ":packages:portable:unzipJreX64"
+    from "${project(":packages:portable").buildDir}/jre/x64"
     into "$buildDir/innosetup/$short_brand/files/x64/jre"
 }
 
 task copyJreX86ToInstaller(type: Copy) {
-    dependsOn ":portable:unzipJreX86"
-    from "$rootDir/portable/build/jre/x86"
+    dependsOn ":packages:portable:unzipJreX86"
+    from "${project(":packages:portable").buildDir}/jre/x86"
     into "$buildDir/innosetup/$short_brand/files/x86/jre/x86"
 }
 
@@ -54,12 +52,23 @@ task copyJreToInstaller {
     )
 }
 
+task writeInstallerBuildConfig {
+    dependsOn copyBasePortableBuildToInstaller
+    doLast {
+        file("$buildDir/innosetup/$short_brand/files/common/tl.bootargs").withWriterAppend('UTF-8') {writer ->
+            writer.append("\n")
+            writer.append("-Dtlauncher.bootstrap.packageMode=windows\n")
+        }
+    }
+}
+
 task prepareInstaller {
     dependsOn (
             copyBasePortableBuildToInstaller,
             copyInnosetupResources,
             copyMainIss,
             copyJreToInstaller,
+            writeInstallerBuildConfig,
     )
 }
 

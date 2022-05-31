@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
@@ -21,7 +22,7 @@ public class Updater extends Task<Void> {
     private final DownloadEntry entry;
 
     private FinishAction finishAction = FinishAction.EXIT;
-    private String restartExec;
+    private String[] restartCmd;
 
     public Updater(String name, Path destFile, DownloadEntry entry) throws IOException {
         super(name);
@@ -34,9 +35,9 @@ public class Updater extends Task<Void> {
         this.entry = Objects.requireNonNull(entry, "downloadEntry");
     }
 
-    public void restartOnFinish(String restartExec) {
+    public void restartOnFinish(List<String> restartCmd) {
         this.finishAction = FinishAction.RESTART;
-        this.restartExec = Objects.requireNonNull(restartExec, "restartExec");
+        this.restartCmd = restartCmd.toArray(new String[0]);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class Updater extends Task<Void> {
         ProcessBuilder processBuilder = null;
 
         if (restartOnFinish) {
-            processBuilder = new ProcessBuilder(this.restartExec);
+            processBuilder = new ProcessBuilder(this.restartCmd);
         }
 
         doWork(randomUrl);

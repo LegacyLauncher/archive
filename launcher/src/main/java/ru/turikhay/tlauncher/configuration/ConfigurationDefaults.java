@@ -90,6 +90,7 @@ public final class ConfigurationDefaults {
 
         if (OS.WINDOWS.isCurrent()) {
             d.put("windows.dxdiag", true);
+            d.put("windows.gpuperf", true);
         }
 
         d.put("bootstrap.switchToBeta", false);

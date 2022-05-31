@@ -6,6 +6,8 @@ import java.security.MessageDigest
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
 
 plugins {
     id 'java'
@@ -15,9 +17,7 @@ plugins {
 }
 
 apply from: '../gradle/java.gradle'
-apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
-apply from: '../gradle/repo.gradle'
 
 sourceSets {
     modern
@@ -118,6 +118,9 @@ task runDebug(type: JavaExec) {
     }
     jvmArgs("-Dtlauncher.logFolder=${rootDir}/logs")
     jvmArgs("-Dtlauncher.systemCharset=${Charset.defaultCharset().name()}")
+    if (DefaultNativePlatform.currentOperatingSystem.macOsX) {
+        jvmArgs("-Dapple.awt.application.appearance=system")
+    }
     args("--debug")
 
     dependsOn(":launcher:buildLauncherRepo")

@@ -3,8 +3,9 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import java.security.DigestInputStream
 import java.security.MessageDigest
 
-apply from: 'gradle/brand.gradle'
-apply from: 'gradle/repo.gradle'
+plugins {
+    id "base"
+}
 
 LinkedHashMap<String, Object> pkgInfo = []
 
@@ -41,7 +42,7 @@ task collectPkgBuildInfo() {
         }
 
         def resourceList = new ArrayList()
-        def resourceDir = file("$rootDir/gradle/aur/resources")
+        def resourceDir = file("$projectDir/resources")
         fileTree(dir: resourceDir).visit {
             if (!it.isDirectory()) {
                 def path = it.getRelativePath().toString()
@@ -78,14 +79,14 @@ task collectPkgBuildInfo() {
 
 task generatePkgBuild(type: Copy) {
     dependsOn collectPkgBuildInfo
-    from file("$rootDir/gradle/aur/PKGBUILD")
+    from file("$projectDir/PKGBUILD")
     filter(ReplaceTokens, tokens: pkgInfo)
     filteringCharset = 'UTF-8'
     into "$buildDir/aur/${short_brand}"
 }
 
 task copyPkgBuildResources(type: Copy) {
-    from "$rootDir/gradle/aur/resources"
+    from "$projectDir/resources"
     into "$buildDir/aur/${short_brand}"
 }
 

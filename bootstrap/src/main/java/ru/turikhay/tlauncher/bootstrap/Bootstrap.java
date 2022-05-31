@@ -87,8 +87,8 @@ public final class Bootstrap {
                 bootstrapParser.accepts("ignoreSelfUpdate", "defines if bootstrap should ignore self update processes");
         OptionSpecBuilder forceHeadlessMode =
                 bootstrapParser.accepts("headlessMode", "defines if bootstrap should run without UI");
-        OptionSpecBuilder packageMode =
-                bootstrapParser.accepts("packageMode", "defines if bootstrap runs inside a package");
+        ArgumentAcceptingOptionSpec<String> packageMode =
+                bootstrapParser.accepts("packageMode", "defines if bootstrap runs inside a package").withOptionalArg();
         ArgumentAcceptingOptionSpec<Path> targetUpdateFile =
                 bootstrapParser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> restartExec =
@@ -181,19 +181,28 @@ public final class Bootstrap {
         bootstrap.setIgnoreSelfUpdate(bootstrapParsed.has(ignoreSelfUpdateParser));
         log("Ignore self update:", bootstrap.getIgnoreSelfUpdate());
 
-        bootstrap.setPackageMode(bootstrapParsed.has(packageMode));
-        log("Package mode:", bootstrap.isPackageMode());
+        bootstrap.setPackageMode(bootstrapParsed.valueOf(packageMode));
+        log("Package mode:", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "false");
+        bootstrap.bootBridge.addCapability("package_mode", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "");
 
         if (bootstrapParsed.has(restartExec)) {
-            bootstrap.setRestartExec(bootstrapParsed.valueOf(restartExec));
-            log("Restart exec on self update:", bootstrap.getRestartExec());
+            bootstrap.setRestartCmd(Collections.singletonList(bootstrapParsed.valueOf(restartExec)));
+            log("Restart cmd on self update:", bootstrap.getRestartCmd());
         }
 
         if (bootstrap.isPackageMode()) {
-            bootstrap.setIgnoreSelfUpdate(true);
-            bootstrap.setIgnoreUpdate(true);
-            log("Package mode: Ignore self update set to", bootstrap.getIgnoreSelfUpdate());
-            log("Package mode: Ignore update set to", bootstrap.getIgnoreUpdate());
+            boolean ignoreUpdate = false;
+            switch (bootstrap.getPackageMode()) {
+                case "aur":
+                    ignoreUpdate = true;
+                    break;
+            }
+            if (ignoreUpdate) {
+                bootstrap.setIgnoreSelfUpdate(true);
+                bootstrap.setIgnoreUpdate(true);
+                log("Package mode: Ignore self update set to", bootstrap.getIgnoreSelfUpdate());
+                log("Package mode: Ignore update set to", bootstrap.getIgnoreUpdate());
+            }
         }
 
         return bootstrap;
@@ -281,8 +290,9 @@ public final class Bootstrap {
     private Path targetLibFolder;
     private Path targetUpdateFile;
     private Path updateMetaFile;
-    private boolean ignoreUpdate, ignoreSelfUpdate, packageMode;
-    private String restartExec;
+    private String packageMode;
+    private boolean ignoreUpdate, ignoreSelfUpdate;
+    private List<String> restartCmd;
     private boolean switchToBeta;
 
     Bootstrap(String[] launcherArgs, Path bootstrapJar, TargetConfig config, Path targetJar, Path targetLibFolder) {
@@ -427,20 +437,24 @@ public final class Bootstrap {
         this.ignoreSelfUpdate = ignoreSelfUpdate;
     }
 
-    public boolean isPackageMode() {
+    public String getPackageMode() {
         return packageMode;
     }
 
-    public void setPackageMode(boolean packageMode) {
+    public boolean isPackageMode() {
+        return packageMode != null;
+    }
+
+    public void setPackageMode(String packageMode) {
         this.packageMode = packageMode;
     }
 
-    public String getRestartExec() {
-        return restartExec;
+    public List<String> getRestartCmd() {
+        return restartCmd;
     }
 
-    public void setRestartExec(String restartExec) {
-        this.restartExec = restartExec;
+    public void setRestartCmd(List<String> restartCmd) {
+        this.restartCmd = restartCmd;
     }
 
     public Path getTargetUpdateFile() {
@@ -605,8 +619,8 @@ public final class Bootstrap {
                                     updateMeta.getBootstrap() == null ? null : updateMeta.getBootstrap().getVersion());
                         } else {
                             Updater updater = new Updater("bootstrapUpdate", bootstrapJar, downloadEntry);
-                            if (getRestartExec() != null) {
-                                updater.restartOnFinish(getRestartExec());
+                            if (getRestartCmd() != null) {
+                                updater.restartOnFinish(getRestartCmd());
                             }
                             bindTo(updater, .25, 1.);
                             return null;
