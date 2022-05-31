@@ -21,6 +21,8 @@ workflow:
     - if: $CI_COMMIT_BRANCH == 'master'
       variables:
         RELEASE_GROUP: 'release'
+    - if: $CI_COMMIT_BRANCH =~ /-no-ci$/
+      when: never
     - when: always
 
 .expires: &expires
@@ -119,11 +121,12 @@ workflow:
       - .gradle/caches
   artifacts:
     paths:
-      - build/aur/$SHORT_BRAND
       - launcher/build/update/$SHORT_BRAND
       - bootstrap/build/update/$SHORT_BRAND
-      - portable/build/update/$SHORT_BRAND
-      - installer/build/innosetup/$SHORT_BRAND
+      - packages/aur/build/aur/$SHORT_BRAND
+      - packages/portable/build/update/$SHORT_BRAND
+      - packages/installer/build/innosetup/$SHORT_BRAND
+      - packages/dmg/build/dmg/$SHORT_BRAND
       - lib
     <<: *expires
 
@@ -133,11 +136,11 @@ workflow:
     entrypoint: [""]
   stage: Build
   script:
-    - cd installer/build/innosetup/$SHORT_BRAND
+    - cd packages/installer/build/innosetup/$SHORT_BRAND
     - iscc "/O..\\..\\update\\$SHORT_BRAND" "/Finstaller" main.iss
   artifacts:
     paths:
-      - installer/build/update/$SHORT_BRAND
+      - packages/installer/build/update/$SHORT_BRAND
     <<: *expires
 
 .upload_libraries: &upload_libraries
@@ -167,12 +170,12 @@ workflow:
     entrypoint: [""]
   stage: Build
   script:
-    - cd build/aur/$SHORT_BRAND
+    - cd packages/aur/build/aur/$SHORT_BRAND
     - sudo chown $(whoami):$(whoami) -R .
     - makepkg --printsrcinfo > .SRCINFO
   artifacts:
     paths:
-      - build/aur/$SHORT_BRAND
+      - packages/aur/build/aur/$SHORT_BRAND
     <<: *expires
 
 .push_pkgbuild: &push_pkgbuild
@@ -188,7 +191,7 @@ workflow:
     - PKGVER=$(cat ~/aur/.pkgver || printf "")
     - PKGREL=$(cat ~/aur/.pkgrel || printf "1")
     - rm -rf ~/aur/*
-    - cp -r build/aur/$SHORT_BRAND/. ~/aur/
+    - cp -r packages/aur/build/aur/$SHORT_BRAND/. ~/aur/
     - cd ~/aur
     - >
       if [[ "$PKGVER" == "$(cat .pkgver)" ]]; then \
@@ -405,7 +408,7 @@ workflow:
 'MCL: installer':
   <<: *deploy
   variables:
-    <<: *legacy
+    <<: *mcl
     ENTITY: installer
   rules:
     - *release_only_rules

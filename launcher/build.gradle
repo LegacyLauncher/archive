@@ -1,5 +1,6 @@
 import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
+
+import org.yaml.snakeyaml.Yaml
 
 import java.security.DigestInputStream
 import java.security.MessageDigest
@@ -14,9 +15,7 @@ plugins {
 }
 
 apply from: '../gradle/java.gradle'
-apply from: '../gradle/brand.gradle'
 apply from: '../gradle/javafx.gradle'
-apply from: '../gradle/repo.gradle'
 
 sourceSets {
     modern
@@ -146,8 +145,12 @@ task generateUpdateJson {
             a.startsWith("https") ? (b.startsWith("https") ? 0 : -1) : (b.startsWith("https") ? 1 : 0)
         }
 
-        def changelog = System.getenv("INCLUDE_CHANGELOG") == 'true' ?
-                new JsonSlurper().parse(file("changelog.json")) : null
+        def changelog = null
+        if (System.getenv("INCLUDE_CHANGELOG") == 'true') {
+            new File("$projectDir/changelog.yml").withReader('UTF-8') {reader ->
+                changelog = new Yaml().load(reader)
+            }
+        }
 
         def meta = [
                 version    : product_version,

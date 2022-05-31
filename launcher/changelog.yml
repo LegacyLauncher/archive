@@ -1,0 +1,6 @@
+ru_RU: >
+  Для Windows 10 Build 20190 и новее: теперь при запуске Minecraft мы будем стараться использовать более мощную видеокарту
+  <br/>Обновление русского языка (mctaylors, l1ttleO)
+
+en_US: >
+  For Windows 10 Build 20190 or newer: we'll try to force Minecraft to use more performant graphics card, if one is available

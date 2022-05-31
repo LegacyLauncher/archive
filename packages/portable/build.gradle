@@ -7,9 +7,8 @@ import java.time.format.FormatStyle
 
 plugins {
     id "base"
+    id "de.undercouch.download"
 }
-
-apply from: '../gradle/brand.gradle'
 
 def portableBaseBuildDir = file("$buildDir/portableBase/$short_brand")
 
@@ -28,18 +27,18 @@ jreVersions.each { e ->
     def arch = e.key
     def Arch = arch.capitalize()
     def jreZip = file("$buildDir/jreDownloads/jre${Arch}.zip")
-    tasks.register("verifyJre$Arch", Verify) {
+    project.tasks.register("verifyJre$Arch", Verify) {
         src jreZip
         algorithm "SHA-256"
         checksum e.value.sha256
     }
-    tasks.register("downloadJre$Arch", Download) {
+    project.tasks.register("downloadJre$Arch", Download) {
         src e.value.url
         dest jreZip
         overwrite false
         finalizedBy "verifyJre$Arch"
     }
-    tasks.register("unzipJre$Arch", Copy) {
+    project.tasks.register("unzipJre$Arch", Copy) {
         dependsOn "downloadJre$Arch"
         from zipTree(tasks.getByName("downloadJre$Arch").dest)
         into "$buildDir/jre/$arch"
@@ -133,6 +132,10 @@ task writePortableBuildConfig {
     doLast {
         file("$buildDir/portable/$short_brand/tl.properties").withWriterAppend('UTF-8') {writer ->
             writer.append("minecraft.jre.dir=./jre\n")
+        }
+        file("$buildDir/portable/$short_brand/tl.bootargs").withWriterAppend('UTF-8') {writer ->
+            writer.append("\n")
+            writer.append("-Dtlauncher.bootstrap.packageMode=portable\n")
         }
         file("$buildDir/portable/$short_brand/tl.args").withWriterAppend('UTF-8') {writer ->
             writer.append("\n")
