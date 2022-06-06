@@ -157,6 +157,8 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         }
 
         versions.add(oldVersionsHandler = new EditorFieldHandler("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE, new EditorCheckBox("settings.versions.sub." + ReleaseType.SubType.OLD_RELEASE)));
+        versions.add(new EditorFieldHandler("minecraft.versions.only-installed", new EditorCheckBox("settings.versions.only-installed")));
+
         versionHandler = new EditorGroupHandler(versions);
         versionHandler.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldvalue, String newvalue) {

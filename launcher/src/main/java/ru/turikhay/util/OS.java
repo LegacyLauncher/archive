@@ -14,42 +14,44 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.function.Function;
 
 public enum OS {
     LINUX("linux", "unix"),
     WINDOWS("win"),
     OSX("mac"),
-    SOLARIS("solaris", "sunos"),
     UNKNOWN("unknown");
 
     private static final Logger LOGGER = LogManager.getLogger(OS.class);
 
-    public static final String NAME;
-    public static final String VERSION;
-    public static final JavaVersion JAVA_VERSION;
-    public static final OS CURRENT;
-    private final String name;
-    private final String[] aliases;
+    public static final String NAME = System.getProperty("os.name");
+    public static final String VERSION = System.getProperty("os.version");
 
+    public static final OS CURRENT = JNA.getCurrentOs().orElseGet(OS::detectOSFallback);
+
+    public static final JavaVersion JAVA_VERSION;
     static {
-        NAME = System.getProperty("os.name");
-        VERSION = System.getProperty("os.version");
-        JAVA_VERSION = getJavaVersion();
-        CURRENT = getCurrent();
+        JavaVersion version;
+        try {
+            version = JavaVersion.parse(System.getProperty("java.version"));
+        } catch (Exception e) {
+            version = JavaVersion.create(1, 8, 0, 45);
+
+            LOGGER.warn("Could not parse Java version: {}", System.getProperty("java.version"));
+            LOGGER.warn("Assuming it is 1.8.0_45");
+        }
+        JAVA_VERSION = version;
     }
 
+    private final String[] aliases;
+
     OS(String... aliases) {
-        if (aliases == null) {
-            throw new NullPointerException();
-        } else {
-            name = toString().toLowerCase(java.util.Locale.ROOT);
-            this.aliases = aliases;
-        }
+        this.aliases = aliases;
     }
 
     public String getName() {
-        return name;
+        return name().toLowerCase(Locale.ROOT);
     }
 
     public boolean isUnsupported() {
@@ -60,9 +62,23 @@ public enum OS {
         return this == CURRENT;
     }
 
-    private static OS getCurrent() {
-        String osName = NAME.toLowerCase(java.util.Locale.ROOT);
+    public static boolean is(OS... any) {
+        if (any == null) {
+            throw new NullPointerException();
+        }
+        if (any.length == 0) {
+            return false;
+        }
+        for (OS compare : any) {
+            if (CURRENT == compare) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    private static OS detectOSFallback() {
+        String osName = NAME.toLowerCase(java.util.Locale.ROOT);
         for (OS os : values()) {
             for (String alias : os.aliases) {
                 if (osName.contains(alias)) {
@@ -70,39 +86,7 @@ public enum OS {
                 }
             }
         }
-
         return UNKNOWN;
-    }
-
-    private static JavaVersion getJavaVersion() {
-        JavaVersion version;
-
-        try {
-            version = JavaVersion.parse(System.getProperty("java.version"));
-        } catch (Exception e) {
-            version = JavaVersion.create(1, 8, 0, 45);
-
-            LOGGER.warn("Could not parse Java version: {}", System.getProperty("java.version"));
-            LOGGER.warn("Assuming it is 1.8.0_45");
-        }
-
-        return version;
-    }
-
-    public static boolean is(OS... any) {
-        if (any == null) {
-            throw new NullPointerException();
-        } else if (any.length == 0) {
-            return false;
-        } else {
-            for (OS compare : any) {
-                if (CURRENT == compare) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
 
     public static String getJavaPath(boolean appendBinFolder) {
@@ -264,10 +248,20 @@ public enum OS {
 
     public enum Arch {
         x86(32),
-        x64(64),
-        UNKNOWN(0);
+        x64(64);
 
-        public static final OS.Arch CURRENT;
+        public static final Arch CURRENT;
+        static {
+            Arch current;
+            if (JNA.is64Bit().orElseGet(Arch::is64BitFallback)) {
+                current = Arch.x64;
+            } else {
+                // We'll hope that the current platform can emulate x86
+                current = Arch.x86;
+            }
+            CURRENT = current;
+        }
+
         public static final long TOTAL_RAM;
         public static final long TOTAL_RAM_MB;
         public static final int MIN_MEMORY = 512;
@@ -279,7 +273,6 @@ public enum OS {
         private final String sBit;
 
         static {
-            CURRENT = getCurrent();
             TOTAL_RAM = getTotalRam();
             TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
             TOTAL_RAM_GB = Math.round((float) TOTAL_RAM_MB / 1024.0F + 0.25F); // better round
@@ -298,21 +291,6 @@ public enum OS {
 
         public boolean isCurrent() {
             return this == CURRENT;
-        }
-
-        private static OS.Arch getCurrent() {
-            String curArch = System.getProperty("sun.arch.data.model");
-            OS.Arch[] var4;
-            int var3 = (var4 = values()).length;
-
-            for (int var2 = 0; var2 < var3; ++var2) {
-                OS.Arch arch = var4[var2];
-                if (arch.sBit.equals(curArch)) {
-                    return arch;
-                }
-            }
-
-            return UNKNOWN;
         }
 
         private static long getTotalRam() {
@@ -359,6 +337,18 @@ public enum OS {
                 default:
                     return MIN_MEMORY;
             }
+        }
+
+        private static boolean is64BitFallback() {
+            String model = System.getProperty("sun.arch.data.model");
+            if (model != null) {
+                return "64".equals(model);
+            }
+            String arch = System.getProperty("os.arch");
+            if (arch != null) {
+                return arch.contains("64");
+            }
+            return false;
         }
     }
 }

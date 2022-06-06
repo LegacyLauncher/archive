@@ -8,6 +8,7 @@ proguard.log
 */src/main/resources/**/meta.json
 
 **/Thumbs.db
+**/.DS_Store
 
 /lib/*
 

@@ -119,7 +119,6 @@ public class MinecraftUtil {
                 file = new File(userHome, "Library/Application Support/" + path);
                 break;
             case LINUX:
-            case SOLARIS:
             default:
                 file = new File(userHome, path);
         }

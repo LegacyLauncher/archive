@@ -55,9 +55,13 @@ task copyJreToInstaller {
 task writeInstallerBuildConfig {
     dependsOn copyBasePortableBuildToInstaller
     doLast {
-        file("$buildDir/innosetup/$short_brand/files/common/tl.bootargs").withWriterAppend('UTF-8') {writer ->
+        file("$buildDir/innosetup/$short_brand/files/common/tl.args").withWriter('UTF-8') {writer ->
+            writer.append("--packageMode\n")
+            writer.append("windows\n")
             writer.append("\n")
-            writer.append("-Dtlauncher.bootstrap.packageMode=windows\n")
+            writer.append(file("${project(":packages:portable").projectDir}/tl.args.0.txt").text)
+            writer.append("\n--\n\n")
+            writer.append(file("${project(":packages:portable").projectDir}/tl.args.1.txt").text)
         }
     }
 }

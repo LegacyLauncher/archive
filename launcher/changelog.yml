@@ -1,6 +1,21 @@
 ru_RU: >
-  Для Windows 10 Build 20190 и новее: теперь при запуске Minecraft мы будем стараться использовать более мощную видеокарту
-  <br/>Обновление русского языка (mctaylors, l1ttleO)
+  <a href="https://cdn.turikhay.ru/tlauncher/Teaser_VersionSearch.mp4">Поиск по списку версий</a>: щелкните по
+  нему и начните вводить название версии (напр. 1.16.5)
+  <br/>Новая настройка «Только установленные» покажет в списке версий только установленные версии. Старая
+  настройка «Загружать с сервера» делает почти то же самое, но полное отключение загрузки списка версий может
+  быть нежелательным
+  <br/>Новый аргумент «--launch» включает автозапуск: ранее оно включалось только из интерфейса и файла настроек
+  <br/>Исправили и дополнили поведение аргумента «--account»: теперь он действительно выбирает указанный аккаунт.
+  А в случае его отсутствия, создаёт новый с таким же именем
+  <br/>Другие небольшие улучшения и исправления
 
 en_US: >
-  For Windows 10 Build 20190 or newer: we'll try to force Minecraft to use more performant graphics card, if one is available
+  <a href="https://cdn.turikhay.ru/tlauncher/Teaser_VersionSearch.mp4">Implemented version list search</a>: click
+  on it and start typing (e.g. 1.16.5)
+  <br/>You can now configure version list to only show installed versions. It's different from "Remote from server"
+  option because the new option doesn't prevent the version list itself from loading
+  <br/>New argument "--launch" activates "Delayed start" option. Previously it could only be done the interface
+  or by editing configuration file
+  <br/>Fixed and improved "--account" argument: now it is working properly. Also if the account doesn't exist, it
+  will be created
+  <br/>Other fixes and improvements

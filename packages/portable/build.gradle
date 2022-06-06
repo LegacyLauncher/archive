@@ -133,11 +133,13 @@ task writePortableBuildConfig {
         file("$buildDir/portable/$short_brand/tl.properties").withWriterAppend('UTF-8') {writer ->
             writer.append("minecraft.jre.dir=./jre\n")
         }
-        file("$buildDir/portable/$short_brand/tl.bootargs").withWriterAppend('UTF-8') {writer ->
+        file("$buildDir/portable/$short_brand/tl.args").withWriter('UTF-8') {writer ->
+            writer.append("--packageMode\n")
+            writer.append("portable\n")
             writer.append("\n")
-            writer.append("-Dtlauncher.bootstrap.packageMode=portable\n")
-        }
-        file("$buildDir/portable/$short_brand/tl.args").withWriterAppend('UTF-8') {writer ->
+            writer.append(file("$projectDir/tl.args.0.txt").text)
+            writer.append("\n--\n\n")
+            writer.append(file("$projectDir/tl.args.1.txt").text)
             writer.append("\n")
             writer.append("--directory\n")
             writer.append("./game\n")

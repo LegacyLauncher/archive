@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.bootstrap.launcher.ProcessStarter;
 import ru.turikhay.tlauncher.bootstrap.util.OS;
 import ru.turikhay.tlauncher.bootstrap.util.U;
+import ru.turikhay.util.JavaVersion;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -55,6 +56,11 @@ public final class BootstrapStarter {
         jvmArgs.add("-Dfile.encoding=UTF-8");
         jvmArgs.add("-Dtlauncher.systemCharset=" + Charset.defaultCharset().name());
         jvmArgs.add("-Dtlauncher.logFolder=" + OS.getSystemRelatedDirectory("tlauncher/logs", true));
+
+        if (JavaVersion.getCurrent().getMajor() >= 9) {
+            jvmArgs.add("--add-exports");
+            jvmArgs.add("java.desktop/sun.awt=javafx.swing");
+        }
 
         for (String propKey : System.getProperties().stringPropertyNames()) {
             if (propKey.startsWith("tlauncher.bootstrap.")) {

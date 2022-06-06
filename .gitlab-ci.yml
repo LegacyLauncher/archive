@@ -26,7 +26,7 @@ workflow:
     - when: always
 
 .expires: &expires
-  expire_in: 1 week
+  expire_in: 1 day
 
 .dev_only_rules: &dev_only_rules
   - if: $RELEASE_GROUP == 'dev'
@@ -69,10 +69,12 @@ workflow:
   SHORT_BRAND: 'legacy'
   PORTABLE_ENABLED: 'true'
   INSTALLER_ENABLED: 'true'
+  DMG_ENABLED: 'true'
 
 .mcl: &mcl
   SHORT_BRAND: 'mcl'
   INSTALLER_ENABLED: 'true'
+  DMG_ENABLED: 'true'
 
 .beta: &beta
   SHORT_BRAND: 'legacy_beta'

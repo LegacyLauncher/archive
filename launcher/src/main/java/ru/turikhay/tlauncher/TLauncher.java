@@ -1,6 +1,10 @@
 package ru.turikhay.tlauncher;
 
 import com.github.zafarkhaja.semver.Version;
+import io.sentry.Sentry;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -35,9 +39,8 @@ import ru.turikhay.tlauncher.ui.listener.UIListeners;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.logger.SwingLogger;
 import ru.turikhay.tlauncher.ui.login.LoginForm;
-import ru.turikhay.tlauncher.user.ElyUser;
-import ru.turikhay.tlauncher.user.MinecraftUser;
-import ru.turikhay.tlauncher.user.MojangUser;
+import ru.turikhay.tlauncher.ui.notification.Notification;
+import ru.turikhay.tlauncher.user.*;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.ExtendedThread;
 
@@ -46,6 +49,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.*;
 import java.io.File;
+import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
@@ -53,6 +57,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static ru.turikhay.tlauncher.managers.ConnectivityManager.*;
 
@@ -100,12 +105,14 @@ public final class TLauncher {
 
         this.bridge = bridge;
         checkReportsCapabilities();
-        if (!JNA.isEnabled())
-            enableJnaIfCapable();
         this.dispatcher = dispatcher;
         LOGGER.debug("Options: {}", bridge.getOptions() == null ? null : bridge.getOptions().length() + " code units");
 
         OptionSet optionSet = ArgumentParser.parseArgs(bridge.getArgs());
+        if (optionSet.has("help")) {
+            LOGGER.info("\n{}", ArgumentParser.printHelp());
+            System.exit(0);
+        }
         debug = optionSet.has("debug");
 
         dispatcher.onBootStateChanged("Loading configuration", 0.1);
@@ -212,6 +219,115 @@ public final class TLauncher {
             }
             connectivityManager.queueCheck(authServerCheckEntry);
         }
+
+        Optional<String> packageModeOpt = getCapability("package_mode", String.class);
+        if (packageModeOpt.filter(m -> m.equals("dmg")).isPresent()) {
+            Optional<String> dmgAppPathOpt = getCapability("dmg-app-path", String.class);
+            if (!dmgAppPathOpt.isPresent()) {
+                LOGGER.warn("Package mode is dmg, but bootstrap hasn't announced dmg-app-path");
+            } else {
+                String dmgAppPath = dmgAppPathOpt.get();
+                if (dmgAppPath.startsWith("/Volumes/")) {
+                    LOGGER.info("Application seems to be running from a .dmg image");
+                    SwingUtilities.invokeLater(() -> {
+                        frame.mp.defaultScene.notificationPanel.addNotification(
+                                "macos-copy-icon",
+                                new Notification(
+                                        "macos-copy-icon",
+                                        () -> Alert.showMessage(
+                                                "",
+                                                Localizable.get("macos.please-install-notification")
+                                        )
+                                )
+                        );
+                    });
+                }
+            }
+        }
+
+        executeWhenReady(() -> {
+            if (getBootstrapVersion() != null) {
+                Version version;
+                try {
+                    version = Version.valueOf(getBootstrapVersion());
+                } catch (RuntimeException e) {
+                    LOGGER.warn("Couldn't parse bootstrap version: {}", getBootstrapVersion(), e);
+                    Sentry.capture(new EventBuilder()
+                            .withLevel(Event.Level.ERROR)
+                            .withMessage("couldn't parse bootstrap version")
+                            .withSentryInterface(new ExceptionInterface(e))
+                    );
+                    return;
+                }
+                if (version.compareTo(Version.forIntegers(1, 5, 13)) == 0) {
+                    LOGGER.info("Detected deprecated bootstrap version: {}", version);
+                    LOGGER.info("Collecting environment information for an upcoming upgrade");
+                    String gameDir = config.get("minecraft.gamedir");
+                    Sentry.capture(new EventBuilder()
+                            .withLevel(Event.Level.INFO)
+                            .withMessage("Deprecated bootstrap: gameDir")
+                            .withTag("gameDirAbsolute", String.valueOf(Paths.get(gameDir).isAbsolute()))
+                            .withExtra("gameDir", StringUtils.replace(gameDir, System.getProperty("user.name"), "***"))
+                    );
+                }
+            }
+        });
+
+        executeWhenReady(() -> {
+            if (optionSet.has("username")) {
+                String forceSelectedUser = (String) optionSet.valueOf("username");
+                Optional<String> forceSelectedUserType = Optional.ofNullable(optionSet.valueOf("usertype")).map(o -> (String) o);
+                List<User> selectedUsers = profileManager.getAccountManager().getUserSet().getSet().stream()
+                        .filter(u -> u.getDisplayName().equals(forceSelectedUser)).collect(Collectors.toList());
+                User selectedUser;
+                switch (selectedUsers.size()) {
+                    case 0:
+                        if (!forceSelectedUserType.isPresent() || forceSelectedUserType.get().equals("plain")) {
+                            LOGGER.info("Force selected user {} doesn't exist, but we'll create one for you",
+                                    forceSelectedUser);
+                            selectedUser = new PlainUser(forceSelectedUser, UUID.randomUUID());
+                            profileManager.getAccountManager().getUserSet().add(selectedUser);
+                        } else {
+                            LOGGER.warn("Force selected user {} (of type {}) doesn't exist",
+                                    forceSelectedUser, forceSelectedUserType.get());
+                            return;
+                        }
+                        break;
+                    case 1:
+                        LOGGER.info("Force selecting user {} for you", forceSelectedUser);
+                        selectedUser = selectedUsers.get(0);
+                        break;
+                    default:
+                        if (forceSelectedUserType.isPresent()) {
+                            List<User> filteredUsers = selectedUsers.stream()
+                                    .filter(u -> u.getType().equals(forceSelectedUserType.get()))
+                                    .collect(Collectors.toList());
+                            switch (filteredUsers.size()) {
+                                case 0:
+                                    LOGGER.warn("Found users with name {}, but none was of the type {}. A typo?",
+                                            forceSelectedUser, forceSelectedUserType.get());
+                                    return;
+                                case 1:
+                                    LOGGER.info("Selecting user {} of type {} for you",
+                                            forceSelectedUser, forceSelectedUserType.get());
+                                    selectedUser = filteredUsers.get(0);
+                                    break;
+                                default:
+                                    LOGGER.warn("Something is very wrong with your account list. Take a look: {}",
+                                            filteredUsers);
+                                    return;
+                            }
+                        } else {
+                            LOGGER.warn("More than one user with name {} was found. Consider specifying a type with --usertype",
+                                    forceSelectedUser);
+                            selectedUser = selectedUsers.get(0);
+                        }
+                        break;
+                }
+                LOGGER.debug("Selecting user: {}", selectedUser);
+                profileManager.getAccountManager().getUserSet().select(selectedUser);
+            }
+        });
 
         executeOnReadyJobs();
     }
@@ -669,14 +785,6 @@ public final class TLauncher {
         return bridge.getCapabilities().containsKey(key);
     }
 
-    private void enableJnaIfCapable() {
-        if (hasCapability("jna")) {
-            JNA.enable();
-        } else {
-            LOGGER.info("JNA capability is not enabled");
-        }
-    }
-
     private static TLauncher instance;
     private static final Version SEMVER;
 
@@ -745,12 +853,6 @@ public final class TLauncher {
         if (bridge.getBootstrapVersion() != null) {
             LOGGER.info("... using Bootstrap {}", bridge.getBootstrapVersion());
         }
-
-        try {
-            if (bridge.getCapabilities().containsKey("jna")) {
-                JNA.enable();
-            }
-        } catch (NoSuchMethodError ignored) {}
 
         LOGGER.info("Machine info: {}", OS.getSummary());
         LOGGER.info("Java version: {}", OS.JAVA_VERSION);

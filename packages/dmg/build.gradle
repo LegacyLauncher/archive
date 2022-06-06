@@ -9,8 +9,19 @@ def jreZipDownload = "https://cdn.azul.com/zulu/bin/zulu17.34.19-ca-fx-jre17.0.3
 def jreZipSha256 = "14177db1dd0c8ec8352e34de2e17d0352487489ba748da87dc62bbe9429d3460"
 def jreZipEntry = "zulu17.34.19-ca-fx-jre17.0.3-macosx_x64/zulu-17.jre"
 
+def bundleName = "TL ${full_brand}".toString()
 def dmgDir = "$buildDir/dmg/$short_brand"
-def contentsDir = "$dmgDir/TL.app/Contents"
+def contentsDir = "$dmgDir/${bundleName}.app/Contents"
+
+def tokens = [
+        'bundle_name': bundleName,
+        'short_brand': short_brand,
+        'full_brand': full_brand,
+        'version': '0.0.0',
+]
+afterEvaluate {
+    tokens['version'] = project(":launcher").version.toString()
+}
 
 task processBinaryContents(type: Copy) {
     from "$projectDir/contents/binary"
@@ -18,12 +29,6 @@ task processBinaryContents(type: Copy) {
 }
 
 task processTextualContents(type: Copy) {
-    def tokens = [
-            'version': '0.0.0',
-    ]
-    afterEvaluate {
-        tokens['version'] = project(":launcher").version.toString()
-    }
     from "$projectDir/contents/textual"
     filter(ReplaceTokens, tokens: tokens)
     filteringCharset = 'UTF-8'
@@ -52,8 +57,10 @@ task copyBackground(type: Copy) {
     into "$dmgDir"
 }
 
-task copyCreateScript(type: Copy) {
-    from "$projectDir/create.sh"
+task copyScripts(type: Copy) {
+    from "$projectDir/script"
+    filter(ReplaceTokens, tokens: tokens)
+    filteringCharset = 'UTF-8'
     into "$dmgDir"
 }
 
@@ -97,7 +104,7 @@ task prepareDmgBuild {
             processTextualContents,
             copyIcons,
             copyBackground,
-            copyCreateScript,
+            copyScripts,
             copyBootstrap,
             copyMacOsJre,
     )

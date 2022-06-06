@@ -2,6 +2,7 @@ package ru.turikhay.tlauncher.ui.converter;
 
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.VersionFamily;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.loc.LocalizableStringConverter;
@@ -61,31 +62,11 @@ public class SeparateDirsConverter extends LocalizableStringConverter<Configurat
         }
         switch (mode) {
             case FAMILY:
-                String family = guessFamilyOf(versionSyncInfo);
+                String family = VersionFamily.guessFamilyOf(versionSyncInfo);
                 return family == null ? null : homeDirPrefix + family;
             case VERSION:
                 return homeDirPrefix + versionSyncInfo.getAvailableVersion().getID();
         }
         return null;
-    }
-
-    private static String guessFamilyOf(VersionSyncInfo versionSyncInfo) {
-        if (versionSyncInfo.getLocalCompleteVersion() != null) {
-            return versionSyncInfo.getLocalCompleteVersion().getFamily();
-        }
-        switch (versionSyncInfo.getAvailableVersion().getReleaseType()) {
-            case UNKNOWN:
-            case OLD_ALPHA:
-            case SNAPSHOT:
-                return versionSyncInfo.getAvailableVersion().getReleaseType().toString();
-        }
-        String id = versionSyncInfo.getAvailableVersion().getID();
-        if (id.toLowerCase(java.util.Locale.ROOT).contains("forge")) {
-            return FORGE_PREFIX + "???";
-        }
-        if (id.toLowerCase(java.util.Locale.ROOT).contains("fabric")) {
-            return FABRIC_PREFIX + "???";
-        }
-        return CompleteVersion.getFamilyOf(id);
     }
 }

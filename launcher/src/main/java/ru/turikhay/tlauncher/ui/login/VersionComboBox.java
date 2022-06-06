@@ -1,26 +1,40 @@
 package ru.turikhay.tlauncher.ui.login;
 
+import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
+import net.minecraft.launcher.versions.ReleaseType;
+import net.minecraft.launcher.versions.Version;
+import net.minecraft.launcher.versions.VersionFamily;
+import org.apache.commons.lang3.StringUtils;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.managers.SwingVersionManagerListener;
 import ru.turikhay.tlauncher.managers.VersionManager;
 import ru.turikhay.tlauncher.managers.VersionManagerListener;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.settings.JREComboBox;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
+import ru.turikhay.tlauncher.ui.swing.combobox.ComboBoxFilter;
+import ru.turikhay.tlauncher.ui.swing.combobox.IconText;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
 import ru.turikhay.util.SwingUtil;
 import ru.turikhay.util.U;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
+import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
     private static final long serialVersionUID = -9122074452728842733L;
@@ -31,6 +45,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
     private final LoginForm loginForm;
     private final SimpleComboBoxModel<VersionSyncInfo> model;
     private String selectedVersion;
+    private final VersionSeeker seeker = new VersionSeeker();
 
     static {
         LOADING = VersionCellRenderer.LOADING;
@@ -68,6 +83,22 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             }
         });
         selectedVersion = lf.global.get("login.version");
+        ComboBoxFilter.decorate(this,
+                () -> versionList == null ? Collections.emptyList() : versionList,
+                (vs) -> {
+                    if (vs == null) {
+                        return IconText.EMPTY;
+                    }
+                    ImageIcon imageIcon = null;
+                    String text = VersionCellRenderer.getLabelFor(vs);
+                    if (TLauncher.getInstance().getLibraryManager()
+                            .hasLibrariesExplicitly(vs, VersionComboBox.showVersionForType.toString())) {
+                        imageIcon = VersionCellRenderer.getIconFor(VersionComboBox.showVersionForType);
+                    }
+                    return new IconText(imageIcon, text);
+                },
+                seeker
+        );
     }
 
     public VersionSyncInfo getVersion() {
@@ -129,13 +160,17 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
 
     public void onVersionsRefreshed(VersionManager vm) {
         updateList(manager);
+        seeker.updateLocale();
     }
+
+    private List<VersionSyncInfo> versionList;
 
     void updateList(VersionManager manager) {
         if (manager == null) {
             throw new NullPointerException();
         } else {
-            updateList(manager.getVersions(), null);
+            versionList = manager.getVersions(createFilter(), true);
+            updateList(versionList, null);
         }
     }
 
@@ -169,5 +204,92 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
 
     public void unblock(Object reason) {
         setEnabled(true);
+    }
+
+    private Filter createFilter() {
+        Configuration settings = TLauncher.getInstance().getSettings();
+        return new Filter(
+                settings.getVersionFilter(),
+                settings.getBoolean("minecraft.versions.only-installed") ?
+                        manager.getVersions(true).stream()
+                                .filter(VersionSyncInfo::isInstalled)
+                                .map(VersionSyncInfo::getID)
+                                .collect(Collectors.toList())
+                        : null
+        );
+    }
+
+    private static class Filter extends VersionFilter {
+        final VersionFilter delegate;
+        @Nullable
+        final List<String> installed;
+
+        Filter(VersionFilter delegate, @Nullable List<String> installed) {
+            this.delegate = delegate;
+            this.installed = installed;
+        }
+
+        @Override
+        public boolean satisfies(Version v) {
+            if (!delegate.satisfies(v)) {
+                return false;
+            }
+            if (installed != null && !installed.contains(v.getID())) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    private static class VersionSeeker implements BiPredicate<VersionSyncInfo, String>, LocalizableComponent {
+        private Map<ReleaseType, String> localizedReleaseTypeCache;
+
+        @Override
+        public boolean test(VersionSyncInfo vs, String termRaw) {
+            if (vs == null || vs.getID() == null) {
+                return false;
+            }
+            String term = normalize(termRaw);
+            String id = normalize(vs.getID().toLowerCase(Locale.ROOT));
+            if (id.contains(term)) {
+                return true;
+            }
+            String family = VersionFamily.guessFamilyOf(vs);
+            if (family != null && family.toLowerCase(Locale.ROOT).contains(term)) {
+                return true;
+            }
+            String localizedTypeName = localizedReleaseTypeCache.get(vs.getAvailableVersion().getReleaseType());
+            if (localizedTypeName != null) {
+                if (localizedTypeName.contains(term)) {
+                    return true;
+                }
+                if ((localizedTypeName + " " + id).contains(term)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void updateLocale() {
+            Map<ReleaseType, String> cache = new HashMap<>();
+            ReleaseType.valuesCollection().forEach(type -> {
+                String localizedTypeName = Localizable.nget("version." + type.name().toLowerCase(Locale.ROOT));
+                if (localizedTypeName != null) {
+                    cache.put(
+                            type,
+                            localizedTypeName.toLowerCase(Locale.ROOT)
+                    );
+                }
+            });
+            this.localizedReleaseTypeCache = cache;
+        }
+
+        private static String normalize(String str) {
+            str = str.toLowerCase(Locale.ROOT);
+            str = str.trim();
+            str = StringUtils.replaceChars(str, ",/", ".");
+            return str;
+        }
     }
 }

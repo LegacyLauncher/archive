@@ -42,21 +42,7 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
 
             if (getShowVersionsFor() != null && TLauncher.getInstance().getLibraryManager()
                     .hasLibrariesExplicitly(value, getShowVersionsFor().toString())) {
-                ImageIcon icon = null;
-                switch (getShowVersionsFor()) {
-                    case ELY:
-                    case ELY_LEGACY:
-                        icon = ELY_ICON;
-                        break;
-                    case MOJANG:
-                        icon = MOJANG_ICON;
-                        break;
-                    case MCLEAKS:
-                        icon = MCLEAKS_ICON;
-                        break;
-                    case PLAIN:
-                        break;
-                }
+                ImageIcon icon = getIconFor(getShowVersionsFor());
                 mainText.setIcon(icon);
                 if (icon != null) {
                     width += icon.getIconWidth() + mainText.getIconTextGap();
@@ -95,7 +81,34 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
         return mainText;
     }
 
+    public static ImageIcon getIconFor(Account.AccountType accountType) {
+        ImageIcon icon = null;
+        switch (accountType) {
+            case ELY:
+            case ELY_LEGACY:
+                icon = ELY_ICON;
+                break;
+            case MOJANG:
+                icon = MOJANG_ICON;
+                break;
+            case MCLEAKS:
+                icon = MCLEAKS_ICON;
+                break;
+            case PLAIN:
+                break;
+        }
+        return icon;
+    }
+
     public static String getLabelFor(VersionSyncInfo value) {
+        if (value == null) {
+            return "(null)";
+        } else if (value.equals(LOADING)) {
+            return Localizable.get("versions.loading");
+        } else if (value.equals(EMPTY)) {
+            return Localizable.get("versions.notfound.tip");
+        }
+
         LatestVersionSyncInfo asLatest = value instanceof LatestVersionSyncInfo ? (LatestVersionSyncInfo) value : null;
         ReleaseType type = value.getAvailableVersion().getReleaseType();
 
