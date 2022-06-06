@@ -1,2 +1,0 @@
---add-exports
-java.desktop/sun.awt=javafx.swing

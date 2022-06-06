@@ -26,7 +26,7 @@ public class Configuration extends SimpleConfiguration {
     private static final Lazy<List<Locale>> DEFAULT_LOCALES = Lazy.of(Configuration::getDefaultLocales);
 
     private ConfigurationDefaults defaults;
-    private Map<String, Object> constants;
+    private ArgumentParser.ParsedConfigEntryMap configFromArgs;
     private boolean firstRun;
     private final boolean externalLocation;
 
@@ -82,7 +82,7 @@ public class Configuration extends SimpleConfiguration {
     private void init(OptionSet set) {
         comments = " TLauncher " + TLauncher.getBrand() + " properties\n Created in " + TLauncher.getVersion();
         defaults = ConfigurationDefaults.getInstance();
-        constants = ArgumentParser.parse(set);
+        configFromArgs = ArgumentParser.extractConfigEntries(set);
 
         if (getDouble("settings.version") != ConfigurationDefaults.getVersion()) {
             LOGGER.warn("Configuration is being wiped due to version incapability");
@@ -90,8 +90,9 @@ public class Configuration extends SimpleConfiguration {
             clear();
         }
 
-        LOGGER.debug("Constants: {}", constants);
-        set(constants, false);
+        LOGGER.debug("Config entries from args: {}", configFromArgs);
+
+        configFromArgs.entries().forEach(c -> setForcefully(c.getPath(), c.getValue(), false));
 
         if (externalLocation) {
             LOGGER.debug("Using configuration from an external location");
@@ -121,10 +122,9 @@ public class Configuration extends SimpleConfiguration {
         LOGGER.info("UUID: {}", getClient());
 
         for (Entry<String, Object> defEntry : defaults.getMap().entrySet()) {
-            if (constants.containsKey(defEntry.getKey())) {
+            if (configFromArgs.isConstant(defEntry.getKey())) {
                 continue;
             }
-
             String value = get(defEntry.getKey());
             try {
                 PlainParser.parse(get(defEntry.getKey()), defEntry.getValue());
@@ -184,7 +184,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public boolean isSaveable(String key) {
-        return !constants.containsKey(key);
+        return !configFromArgs.isConstant(key);
     }
 
     public Locale getLocale() {
@@ -352,7 +352,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public void set(String key, Object value, boolean flush) {
-        if (!constants.containsKey(key)) {
+        if (!configFromArgs.isConstant(key)) {
             super.set(key, value, flush);
         }
     }
@@ -371,8 +371,8 @@ public class Configuration extends SimpleConfiguration {
         } else {
             Properties temp = copyProperties(properties);
 
-            for (String file : constants.keySet()) {
-                temp.remove(file);
+            for (String constant : configFromArgs.constants()) {
+                temp.remove(constant);
             }
 
             File file1 = (File) input;

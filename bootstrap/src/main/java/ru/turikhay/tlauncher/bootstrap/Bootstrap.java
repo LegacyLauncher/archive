@@ -188,6 +188,28 @@ public final class Bootstrap {
         if (bootstrapParsed.has(restartExec)) {
             bootstrap.setRestartCmd(Collections.singletonList(bootstrapParsed.valueOf(restartExec)));
             log("Restart cmd on self update:", bootstrap.getRestartCmd());
+        } else if ("dmg".equals(bootstrap.getPackageMode())) {
+            String appPath = System.getProperty("jpackage.app-path");
+            if (appPath == null) {
+                log("Current package mode is dmg, but jpackage.app-path is not set");
+            } else {
+                final String expectedPathSuffix = "/Contents/MacOS/TL";
+                if (appPath.endsWith(expectedPathSuffix)) {
+                    appPath = appPath.substring(0, appPath.length() - expectedPathSuffix.length());
+                    bootstrap.setRestartCmd(
+                            Arrays.asList(
+                                    "sh",
+                                    appPath + "/Contents/app/restart.sh",
+                                    appPath
+                            )
+                    );
+                    log("Picked up restart exec for jpackage:", bootstrap.getRestartCmd());
+                    bootstrap.bootBridge.addCapability("dmg-app-path", appPath);
+                } else {
+                    log("jpackage.app-path is not recognized:", appPath);
+                    log("Auto-restart will not be enabled");
+                }
+            }
         }
 
         if (bootstrap.isPackageMode()) {

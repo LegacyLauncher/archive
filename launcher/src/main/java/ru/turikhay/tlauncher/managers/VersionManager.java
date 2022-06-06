@@ -309,10 +309,6 @@ public class VersionManager extends InterruptibleComponent {
         return getVersions(TLauncher.getInstance() == null ? null : TLauncher.getInstance().getSettings().getVersionFilter(), includeLatest);
     }
 
-    public List<VersionSyncInfo> getVersions() {
-        return getVersions(true);
-    }
-
     private List<VersionSyncInfo> getVersions0(VersionFilter filter, boolean includeLatest) {
         if (filter == null) {
             filter = new VersionFilter();

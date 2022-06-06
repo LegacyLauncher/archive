@@ -1,34 +1,31 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
+import com.sun.jna.Platform;
+
 import java.awt.*;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 public enum OS {
-    LINUX("linux", "unix"),
-    WINDOWS("win"),
-    OSX("mac"),
-    SOLARIS("solaris", "sunos"),
-    UNKNOWN("unknown");
+    LINUX,
+    WINDOWS,
+    OSX,
+    UNKNOWN;
 
     public static final OS CURRENT;
-
     static {
-        String name = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT);
         OS current = UNKNOWN;
-
-        for (OS os : values()) {
-            for (String alias : os.aliases) {
-                if (name.contains(alias)) {
-                    current = os;
-                    break;
-                }
-            }
+        if (Platform.isWindows()) {
+            current = WINDOWS;
+        } else if (Platform.isLinux()) {
+            current = LINUX;
+        } else if (Platform.isMac()) {
+            current = OSX;
         }
-
         CURRENT = current;
     }
 
@@ -52,7 +49,6 @@ public enum OS {
             case OSX:
                 return Paths.get(userHome, "Library", "Application Support", path);
             case LINUX:
-            case SOLARIS:
             default:
                 return Paths.get(userHome, path);
         }
@@ -103,20 +99,12 @@ public enum OS {
         return true;
     }
 
-    private final String[] aliases;
-    private final String lowerCase;
-
-    OS(String... aliases) {
-        this.aliases = aliases;
-        this.lowerCase = name().toLowerCase(java.util.Locale.ROOT);
-    }
-
     public boolean isCurrent() {
         return this == CURRENT;
     }
 
     public String nameLowerCase() {
-        return lowerCase;
+        return name().toLowerCase(Locale.ROOT);
     }
 
     private static void log(Object... o) {
@@ -124,33 +112,22 @@ public enum OS {
     }
 
     public enum Arch {
-        x86("32"), x64("64"), UNKNOWN(null);
+        x86, x64;
 
         public static final Arch CURRENT;
-
         static {
-            String dataModel = System.getProperty("sun.arch.data.model");
-            Arch current = UNKNOWN;
-            if (dataModel != null) {
-                for (Arch arch : values()) {
-                    if (dataModel.equals(arch.determiner)) {
-                        current = arch;
-                        break;
-                    }
-                }
+            Arch current;
+            if (Platform.is64Bit()) {
+                current = Arch.x64;
+            } else {
+                // We'll hope that the current platform can emulate x86
+                current = Arch.x86;
             }
             CURRENT = current;
         }
 
-        private final String determiner, lowerCase;
-
-        Arch(String determiner) {
-            this.determiner = determiner;
-            this.lowerCase = name().toLowerCase(java.util.Locale.ROOT);
-        }
-
         public String nameLowerCase() {
-            return lowerCase;
+            return name().toLowerCase(Locale.ROOT);
         }
     }
 }

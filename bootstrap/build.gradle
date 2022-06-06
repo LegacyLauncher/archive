@@ -66,6 +66,7 @@ shadowJar {
     relocate("com.", "shaded.com.") {
         exclude("com.sun.jna.**")
         exclude("/com/sun/jna/**")
+        exclude("/com/apple/laf/**")
         exclude("com.formdev.**")
     }
     relocate("de.", "shaded.de.")

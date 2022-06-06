@@ -9,10 +9,7 @@ import ru.turikhay.util.MinecraftUtil;
 import ru.turikhay.util.OS;
 
 import java.lang.ref.WeakReference;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class ConfigurationDefaults {
     private static WeakReference<ConfigurationDefaults> ref;
@@ -35,7 +32,7 @@ public final class ConfigurationDefaults {
         d.put("settings.version", VERSION);
 
         d.put("minecraft.gamedir", MinecraftUtil.getDefaultWorkingDirectory().getAbsolutePath());
-        d.put("minecraft.gamedir.separate", Configuration.SeparateDirs.NONE);
+        d.put("minecraft.gamedir.separate", Configuration.SeparateDirs.NONE.name().toLowerCase(Locale.ROOT));
 
         d.put("minecraft.size", new IntegerArray(925, 530));
         d.put("minecraft.fullscreen", false);
@@ -45,6 +42,7 @@ public final class ConfigurationDefaults {
         }
         d.put("minecraft.versions.sub." + ReleaseType.SubType.REMOTE.name().toLowerCase(java.util.Locale.ROOT), true);
         d.put("minecraft.versions.sub." + ReleaseType.SubType.OLD_RELEASE.name().toLowerCase(java.util.Locale.ROOT), true);
+        d.put("minecraft.versions.only-installed", false);
 
         d.put("minecraft.jre.type", JavaManagerConfig.Recommended.TYPE);
 
