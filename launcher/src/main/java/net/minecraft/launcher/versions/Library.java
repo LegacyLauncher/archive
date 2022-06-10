@@ -11,10 +11,7 @@ import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.OS;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Library {
     protected static final StrSubstitutor SUBSTITUTOR;
@@ -34,7 +31,7 @@ public class Library {
     static {
         HashMap<String, String> map = new HashMap<>();
         map.put("platform", OS.CURRENT.getName());
-        map.put("arch", OS.Arch.CURRENT.getBit());
+        map.put("arch", OS.Arch.CURRENT.name().toLowerCase(Locale.ROOT));
         SUBSTITUTOR = new StrSubstitutor(map);
     }
 

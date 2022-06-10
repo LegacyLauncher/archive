@@ -95,6 +95,7 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
             }
         }
         VersionComboBox.showVersionForType = type;
+        loginForm.versions.comboBoxFilter.updateState();
     }
 
     public Account<? extends User> getAccount() {

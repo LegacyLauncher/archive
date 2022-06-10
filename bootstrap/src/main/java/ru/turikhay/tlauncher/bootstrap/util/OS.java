@@ -112,16 +112,24 @@ public enum OS {
     }
 
     public enum Arch {
-        x86, x64;
+        x86, x64, ARM, ARM64;
 
         public static final Arch CURRENT;
         static {
             Arch current;
             if (Platform.is64Bit()) {
-                current = Arch.x64;
+                if (Platform.isARM()) {
+                    current = Arch.ARM64;
+                } else {
+                    current = Arch.x64;
+                }
             } else {
-                // We'll hope that the current platform can emulate x86
-                current = Arch.x86;
+                if (Platform.isARM()) {
+                    current = Arch.ARM;
+                } else {
+                    // We'll hope that the current platform can emulate x86
+                    current = Arch.x86;
+                }
             }
             CURRENT = current;
         }

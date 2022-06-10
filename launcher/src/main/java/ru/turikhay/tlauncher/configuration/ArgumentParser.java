@@ -22,6 +22,7 @@ public class ArgumentParser {
         add("help", "Prints help");
         add("debug", "Prints help");
         add("settings", "Specifies path to settings file").needsArg();
+        addIgnored("no-gui");
         addIgnored("no-terminate");
         addConfig("directory", "minecraft.gamedir", "Specifies Minecraft directory");
         addIgnored("profiles");
