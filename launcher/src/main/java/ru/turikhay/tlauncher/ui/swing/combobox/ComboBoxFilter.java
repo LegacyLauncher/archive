@@ -39,6 +39,10 @@ public class ComboBoxFilter<T> {
         initComboKeyListener();
     }
 
+    public void updateState() {
+        filterEditor.updateState();
+    }
+
     private void prepareComboFiltering() {
         for (T item : this.valueProvider.get()) {
             this.comboBox.addItem(item);
@@ -166,12 +170,13 @@ public class ComboBoxFilter<T> {
         });
     }
 
-    public static <T> void decorate(JComboBox<T> comboBox,
-                                    Supplier<List<T>> valueProvider,
-                                    Function<T, IconText> textFunction,
-                                    BiPredicate<T, String> filter) {
+    public static <T> ComboBoxFilter<T> decorate(JComboBox<T> comboBox,
+                                                 Supplier<List<T>> valueProvider,
+                                                 Function<T, IconText> textFunction,
+                                                 BiPredicate<T, String> filter) {
         ComboBoxFilter<T> decorator =
                 new ComboBoxFilter<>(comboBox, valueProvider, filter, textFunction);
         decorator.init();
+        return decorator;
     }
 }

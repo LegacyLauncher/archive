@@ -26,6 +26,10 @@ class FilterEditor<T> extends BasicComboBoxEditor {
         inhibitSelectingOnFocusGain();
     }
 
+    public void updateState() {
+        setItem(selected);
+    }
+
     public void addChar() {
         if (!editing) {
             enableEditingMode();

@@ -27,10 +27,10 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
 
     SettingsMemorySlider(SettingsPanel s) {
         slider.setOpaque(false);
-        slider.setMinimum(OS.Arch.x64.isCurrent() ? 1024 : 512);
+        slider.setMinimum(OS.Arch.IS_64_BIT ? 1024 : 512);
         slider.setMaximum(OS.Arch.MAX_MEMORY);
-        slider.setMinorTickSpacing(OS.Arch.x64.isCurrent() ? 1024 : 256);
-        slider.setMajorTickSpacing(OS.Arch.x64.isCurrent() ? (OS.Arch.MAX_MEMORY > 8196 ? OS.Arch.MAX_MEMORY / 4096 * 1024 : 1024) : 512);
+        slider.setMinorTickSpacing(OS.Arch.IS_64_BIT ? 1024 : 256);
+        slider.setMajorTickSpacing(OS.Arch.IS_64_BIT ? (OS.Arch.MAX_MEMORY > 8196 ? OS.Arch.MAX_MEMORY / 4096 * 1024 : 1024) : 512);
         slider.setSnapToTicks(true);
         slider.setPaintLabels(true);
         slider.setPaintTicks(true);
@@ -120,18 +120,16 @@ public class SettingsMemorySlider extends BorderPanel implements EditorField {
         } else if (intVal == OS.Arch.PREFERRED_MEMORY) {
             value = SettingsMemorySlider.ValueType.OK;
         } else {
-            switch (OS.Arch.CURRENT) {
-                case x86:
-                    if (OS.Arch.TOTAL_RAM_MB > 0L && (long) intVal > OS.Arch.TOTAL_RAM_MB) {
-                        value = SettingsMemorySlider.ValueType.DANGER;
-                    } else if (intVal > OS.Arch.MAX_MEMORY) {
-                        value = SettingsMemorySlider.ValueType.WARNING;
-                    }
-                    break;
-                default:
-                    if (intVal > OS.Arch.TOTAL_RAM_MB) {
-                        value = SettingsMemorySlider.ValueType.DANGER;
-                    }
+            if (OS.Arch.IS_64_BIT) {
+                if (intVal > OS.Arch.TOTAL_RAM_MB) {
+                    value = SettingsMemorySlider.ValueType.DANGER;
+                }
+            } else {
+                if (OS.Arch.TOTAL_RAM_MB > 0L && (long) intVal > OS.Arch.TOTAL_RAM_MB) {
+                    value = SettingsMemorySlider.ValueType.DANGER;
+                } else if (intVal > OS.Arch.MAX_MEMORY) {
+                    value = SettingsMemorySlider.ValueType.WARNING;
+                }
             }
         }
 

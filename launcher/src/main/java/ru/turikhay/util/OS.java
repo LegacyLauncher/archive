@@ -247,17 +247,29 @@ public enum OS {
     }
 
     public enum Arch {
-        x86(32),
-        x64(64);
+        x86,
+        x64,
+        ARM,
+        ARM64;
 
         public static final Arch CURRENT;
+        public static final boolean IS_64_BIT = JNA.is64Bit().orElseGet(Arch::is64BitFallback);
         static {
             Arch current;
-            if (JNA.is64Bit().orElseGet(Arch::is64BitFallback)) {
-                current = Arch.x64;
+            boolean isMacOsARM = OS.OSX.isCurrent() && JNA.isARM().orElse(false);
+            if (isMacOsARM) {
+                if (IS_64_BIT) {
+                    current = Arch.ARM64;
+                } else {
+                    current = Arch.ARM;
+                }
             } else {
-                // We'll hope that the current platform can emulate x86
-                current = Arch.x86;
+                if (IS_64_BIT) {
+                    current = Arch.x64;
+                } else {
+                    // We'll hope that the current platform can emulate x86
+                    current = Arch.x86;
+                }
             }
             CURRENT = current;
         }
@@ -270,8 +282,6 @@ public enum OS {
         public static final int AVAILABLE_PROCESSORS;
         private static final int TOTAL_RAM_GB;
 
-        private final String sBit;
-
         static {
             TOTAL_RAM = getTotalRam();
             TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
@@ -279,14 +289,6 @@ public enum OS {
             PREFERRED_MEMORY = getPreferredMemory();
             MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
-        }
-
-        Arch(int bit) {
-            sBit = String.valueOf(bit);
-        }
-
-        public String getBit() {
-            return sBit;
         }
 
         public boolean isCurrent() {
@@ -315,28 +317,22 @@ public enum OS {
             // A lot of users have old pcs with 2-4gb ram and x64 os, so...
             if (TOTAL_RAM_GB == 2) return 768; // 2gb, any arch, 768mb
             if (TOTAL_RAM_GB < 2) return MIN_MEMORY; // less then 2gb, any arch, 512mb
-            if (CURRENT == x86) return 1024; // more that 2gb ram, x86, limited to 1024mb, so will use 1024mb
+            if (!IS_64_BIT) return 1024; // more that 2gb ram, x86, limited to 1024mb, so will use 1024mb
             if (TOTAL_RAM_GB > 4) return 2048; // more that 4gb ram, x64, use 2048mb
             return 1024; // 2 to 4 gb ram, use 1024mb
         }
 
         private static int getMaximumMemory() {
-            switch (CURRENT) {
-                case x86:
-                    return 1024;
-                case x64:
-                    if (TOTAL_RAM_GB == 3) {
-                        return 1536;
-                    }
-
-                    if (TOTAL_RAM_GB > 3) {
-                        return (TOTAL_RAM_GB - 2) * 1024;
-                    }
-
-                    return 1024;
-                default:
-                    return MIN_MEMORY;
+            if (!IS_64_BIT) {
+                return 1024;
             }
+            if (TOTAL_RAM_GB == 3) {
+                return 1536;
+            }
+            if (TOTAL_RAM_GB > 3) {
+                return (TOTAL_RAM_GB - 2) * 1024;
+            }
+            return 1024;
         }
 
         private static boolean is64BitFallback() {

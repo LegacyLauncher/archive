@@ -6,27 +6,28 @@ import ru.turikhay.util.OS;
 
 import java.util.Objects;
 
+import static ru.turikhay.util.OS.Arch.IS_64_BIT;
+
 public class JavaPlatform {
     private static final Logger LOGGER = LogManager.getLogger(JavaPlatform.class);
 
     public static final String CURRENT_PLATFORM = getCurrentPlatform();
 
     private static String getCurrentPlatform() {
-        boolean is64bit = OS.Arch.x64.isCurrent();
-
         switch (OS.CURRENT) {
             case LINUX:
-                return is64bit ? "linux" : "linux-i386";
+                return IS_64_BIT ? "linux" : "linux-i386";
             case WINDOWS:
-                return is64bit ? "windows-x64" : "windows-x86";
+                return IS_64_BIT ? "windows-x64" : "windows-x86";
             case OSX:
-                if (!is64bit) {
-                    LOGGER.warn("macOS x86 is not supported. How old is this computer?");
-                    return null;
+                switch (OS.Arch.CURRENT) {
+                    case ARM64:
+                        return "mac-os-arm64";
+                    case x64:
+                        return "mac-os";
                 }
-                return "mac-os";
             default:
-                LOGGER.warn("Current platform is unknown: {}", OS.CURRENT);
+                LOGGER.warn("Current platform is unknown: {} {}", OS.CURRENT, OS.Arch.CURRENT);
                 return null;
         }
     }
@@ -38,7 +39,7 @@ public class JavaPlatform {
             return OS.LINUX;
         } else if (platform.startsWith("windows")) {
             return OS.WINDOWS;
-        } else if (platform.equals("mac-os")) {
+        } else if (platform.startsWith("mac-os")) {
             return OS.OSX;
         } else {
             throw new IllegalArgumentException("unknown platform: " + platform);

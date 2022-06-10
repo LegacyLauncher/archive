@@ -78,6 +78,7 @@ workflow:
 
 .beta: &beta
   SHORT_BRAND: 'legacy_beta'
+  DMG_ENABLED: 'true'
 
 .aur: &aur
   SHORT_BRAND: 'aur'

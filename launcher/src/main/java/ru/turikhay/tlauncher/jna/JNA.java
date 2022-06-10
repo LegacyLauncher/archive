@@ -21,6 +21,10 @@ public class JNA {
         return ENABLED ? Optional.of(Platform.is64Bit()) : Optional.empty();
     }
 
+    public static Optional<Boolean> isARM() {
+        return ENABLED ? Optional.of(Platform.isARM()) : Optional.empty();
+    }
+
     public static Optional<OS> getCurrentOs() {
         if (!ENABLED) {
             return Optional.empty();
