@@ -8,7 +8,7 @@ app_dir="$bundle_name.app"
 dmg_path="TL_${short_brand}.dmg"
 
 # Remove quarantine flag that causes the app to be "damaged"
-#sudo xattr -r -d com.apple.quarantine "$app_dir"
+sudo xattr -r -d com.apple.quarantine "$app_dir"
 
 test -f "$dmg_path" && rm "$dmg_path"
 create-dmg \

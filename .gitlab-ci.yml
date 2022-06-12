@@ -21,6 +21,9 @@ workflow:
     - if: $CI_COMMIT_BRANCH == 'master'
       variables:
         RELEASE_GROUP: 'release'
+    - if: $CI_COMMIT_BRANCH =~ /-dmg$/
+      variables:
+        DMG_ENABLED: 'true'
     - if: $CI_COMMIT_BRANCH =~ /-no-ci$/
       when: never
     - when: always
