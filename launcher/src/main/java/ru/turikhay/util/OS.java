@@ -247,8 +247,8 @@ public enum OS {
     }
 
     public enum Arch {
-        x86,
-        x64,
+        x86("32"),
+        x64("64"),
         ARM,
         ARM64;
 
@@ -289,6 +289,20 @@ public enum OS {
             PREFERRED_MEMORY = getPreferredMemory();
             MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
+        }
+
+        private final String nativesName;
+
+        Arch(String nativesName) {
+            this.nativesName = nativesName;
+        }
+
+        Arch() {
+            this(null);
+        }
+
+        public String getNativesName() {
+            return nativesName == null ? name().toLowerCase(Locale.ROOT) : nativesName;
         }
 
         public boolean isCurrent() {
