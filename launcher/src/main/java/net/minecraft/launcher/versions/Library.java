@@ -31,7 +31,7 @@ public class Library {
     static {
         HashMap<String, String> map = new HashMap<>();
         map.put("platform", OS.CURRENT.getName());
-        map.put("arch", OS.Arch.CURRENT.name().toLowerCase(Locale.ROOT));
+        map.put("arch", OS.Arch.CURRENT.getNativesName().toLowerCase(Locale.ROOT));
         SUBSTITUTOR = new StrSubstitutor(map);
     }
 
