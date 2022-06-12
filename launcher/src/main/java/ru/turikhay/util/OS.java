@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.jna.JNA;
+import ru.turikhay.tlauncher.jna.JNAMacOs;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
 import java.awt.*;
@@ -108,7 +109,15 @@ public enum OS {
 
     public static String getSummary() {
         return String.format("%s (%s) %s, Java %s %s (%s), %s MB RAM, %sx CPU",
-                NAME, VERSION, JNA.getArch().orElse("n/a"), System.getProperty("java.version", "unknown"), System.getProperty("os.arch", "unknown"), Arch.CURRENT, Arch.TOTAL_RAM_MB, Arch.AVAILABLE_PROCESSORS);
+                NAME,
+                VERSION,
+                JNA.getArch().orElse("n/a"),
+                System.getProperty("java.version", "unknown"),
+                System.getProperty("os.arch", "unknown"),
+                Arch.CURRENT,
+                Arch.TOTAL_RAM_MB,
+                Arch.AVAILABLE_PROCESSORS
+        );
     }
 
     private static final java.util.List<Function<URI, Boolean>> OPEN_LINK_STRATEGIES = Collections.unmodifiableList(Arrays.asList(
@@ -247,8 +256,8 @@ public enum OS {
     }
 
     public enum Arch {
-        x86("32"),
-        x64("64"),
+        x86,
+        x64,
         ARM,
         ARM64;
 
@@ -256,13 +265,14 @@ public enum OS {
         public static final boolean IS_64_BIT = JNA.is64Bit().orElseGet(Arch::is64BitFallback);
         static {
             Arch current;
-            boolean isMacOsARM = OS.OSX.isCurrent() && JNA.isARM().orElse(false);
+            boolean isMacOsARM;
+            if (OS.OSX.isCurrent() && IS_64_BIT) {
+                isMacOsARM = JNA.isARM().orElse(false) || JNAMacOs.isUnderRosetta().orElse(false);
+            } else {
+                isMacOsARM = false;
+            }
             if (isMacOsARM) {
-                if (IS_64_BIT) {
-                    current = Arch.ARM64;
-                } else {
-                    current = Arch.ARM;
-                }
+                current = Arch.ARM64;
             } else {
                 if (IS_64_BIT) {
                     current = Arch.x64;
@@ -289,20 +299,6 @@ public enum OS {
             PREFERRED_MEMORY = getPreferredMemory();
             MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
-        }
-
-        private final String nativesName;
-
-        Arch(String nativesName) {
-            this.nativesName = nativesName;
-        }
-
-        Arch() {
-            this(null);
-        }
-
-        public String getNativesName() {
-            return nativesName == null ? name().toLowerCase(Locale.ROOT) : nativesName;
         }
 
         public boolean isCurrent() {
