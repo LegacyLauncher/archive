@@ -674,7 +674,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                     LOGGER.debug("Will use fallback recommended version: {}", recommendedJavaVersion);
                 }
             }
-            if (JavaPlatform.CURRENT_PLATFORM == null) {
+            if (JavaPlatform.CURRENT_PLATFORM_CANDIDATES.isEmpty()) {
                 LOGGER.warn("Current platform is unsupported");
                 jreType = new JavaManagerConfig.Current();
                 Alert.showWarning("", Localizable.get("launcher.warning.jre-platform-unknown"));
@@ -699,7 +699,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                     boolean runtimeNotSupported;
                     try {
                         remoteRuntimeOpt = javaManager.getFetcher().fetchNow()
-                                .getCurrentPlatformLatestRuntime(jreName);
+                                .getCurrentPlatformFirstRuntimeCandidate(jreName);
                         runtimeNotSupported = !remoteRuntimeOpt.isPresent(); // not present in the manifest
                     } catch (ExecutionException e) {
                         LOGGER.error("Couldn't fetch remote JRE list", e);

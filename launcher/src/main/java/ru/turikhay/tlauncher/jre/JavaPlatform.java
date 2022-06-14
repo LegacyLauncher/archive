@@ -4,6 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import static ru.turikhay.util.OS.Arch.IS_64_BIT;
@@ -11,24 +14,24 @@ import static ru.turikhay.util.OS.Arch.IS_64_BIT;
 public class JavaPlatform {
     private static final Logger LOGGER = LogManager.getLogger(JavaPlatform.class);
 
-    public static final String CURRENT_PLATFORM = getCurrentPlatform();
+    public static final List<String> CURRENT_PLATFORM_CANDIDATES = getCurrentPlatformCandidates();
 
-    private static String getCurrentPlatform() {
+    private static List<String> getCurrentPlatformCandidates() {
         switch (OS.CURRENT) {
             case LINUX:
-                return IS_64_BIT ? "linux" : "linux-i386";
+                return Collections.singletonList(IS_64_BIT ? "linux" : "linux-i386");
             case WINDOWS:
-                return IS_64_BIT ? "windows-x64" : "windows-x86";
+                return Collections.singletonList(IS_64_BIT ? "windows-x64" : "windows-x86");
             case OSX:
-                switch (OS.Arch.CURRENT) {
-                    case ARM64:
-                        return "mac-os-arm64";
-                    case x64:
-                        return "mac-os";
+                List<String> macOsPlatforms = new ArrayList<>();
+                if (OS.Arch.ARM64.isCurrent()) {
+                    macOsPlatforms.add("mac-os-arm64");
                 }
+                macOsPlatforms.add("mac-os");
+                return Collections.unmodifiableList(macOsPlatforms);
             default:
                 LOGGER.warn("Current platform is unknown: {} {}", OS.CURRENT, OS.Arch.CURRENT);
-                return null;
+                return Collections.emptyList();
         }
     }
 

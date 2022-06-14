@@ -61,7 +61,7 @@ public class JavaManager {
 
         Optional<JavaRuntimeRemote> remoteRuntimeOpt;
         try {
-            remoteRuntimeOpt = fetcher.fetch().get().getCurrentPlatformLatestRuntime(name);
+            remoteRuntimeOpt = fetcher.fetch().get().getCurrentPlatformFirstRuntimeCandidate(name);
         } catch (ExecutionException e) {
             LOGGER.warn("Couldn't fetch the remote list. Assuming {} is the latest version", name);
             return localRuntimeOpt;
@@ -111,7 +111,7 @@ public class JavaManager {
 
     public CompleteVersion.JavaVersion getFallbackRecommendedVersion(Version version, boolean debugging) {
         final String id = version.getID();
-        if (JavaPlatform.CURRENT_PLATFORM == null) {
+        if (JavaPlatform.CURRENT_PLATFORM_CANDIDATES.isEmpty()) {
             if (debugging) {
                 LOGGER.debug("Current platform is unsupported, and {} won't have fallback JRE", id);
             }

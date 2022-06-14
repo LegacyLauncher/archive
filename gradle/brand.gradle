@@ -7,6 +7,7 @@ ext {
             'legacy_beta'  : 'Beta',
             'mcl': 'for Mc-launcher.com',
             'aur': 'AUR',
+            'appt': 'для AppStorrent',
     ].getOrDefault(
             short_brand,
             short_brand

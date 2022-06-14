@@ -23,7 +23,7 @@ class JavaRuntimeInstallerDirectTest {
                 .create();
         String content = Request.Get(JavaRuntimeRemoteList.URL).execute().returnContent().toString();
         JavaRuntimeRemoteList remoteList = gson.fromJson(content, JavaRuntimeRemoteList.class);
-        JavaRuntimeRemote runtime = remoteList.getCurrentPlatformLatestRuntime("java-runtime-alpha").get();
+        JavaRuntimeRemote runtime = remoteList.getCurrentPlatformFirstRuntimeCandidate("java-runtime-alpha").get();
         JavaRuntimeInstallerDirect installer = new JavaRuntimeInstallerDirect(
                 new File("D:\\runtime"),
                 runtime

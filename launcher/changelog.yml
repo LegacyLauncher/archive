@@ -1,6 +1,6 @@
 ru_RU: >
-  <br/><b>148.2</b>:
-  <br/>– Корректное определение M1 при использовании Java для x86-64
+  <br/><b>148.2 – 148.3</b>:
+  <br/>– Исправления для M1
   <br/>
   <br/><b>148.1</b>:
   <br/>– Исправлена установка более старых версий (#160)
@@ -22,9 +22,10 @@ ru_RU: >
   <br/>– Другие небольшие улучшения и исправления
 
 en_US: >
-  <b>148.0</b>:
-  <br/>– Apple M1 support on 1.19
-  <br/>– Fixed Ely icon in the version list
+  <br/><b>148.0 - 148.3</b>:
+  <br/>– Apple M1 related improvements 
+  <br/>– Fixed older version installations (#160)
+  <br/>– Fixed Ely icon & overall size of the account list
   <br/>
   <br/><b>147.0</b>:
   <br/>– <a href="https://cdn.turikhay.ru/tlauncher/Teaser_VersionSearch.mp4">Implemented version list search</a>: click
