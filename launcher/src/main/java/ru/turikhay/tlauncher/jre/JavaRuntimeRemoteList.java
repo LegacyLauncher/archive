@@ -4,8 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static ru.turikhay.tlauncher.jre.JavaPlatform.CURRENT_PLATFORM;
+import static ru.turikhay.tlauncher.jre.JavaPlatform.CURRENT_PLATFORM_CANDIDATES;
 
 public class JavaRuntimeRemoteList {
     private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeRemoteList.class);
@@ -19,26 +20,24 @@ public class JavaRuntimeRemoteList {
         this.perPlatform = perPlatform;
     }
 
-    public List<JavaRuntimeRemote> getRuntimesFor(String platform) {
-        Platform pl = perPlatform.get(Objects.requireNonNull(platform, "platform"));
-        if (pl == null) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(pl.runtimes);
+    public List<JavaRuntimeRemote> getRuntimesFor(List<String> platformCandidates) {
+        return platformCandidates.stream()
+                .map(perPlatform::get)
+                .filter(Objects::nonNull)
+                .flatMap(platform -> platform.runtimes.stream())
+                .collect(Collectors.toList());
     }
 
-    public Optional<JavaRuntimeRemote> getLatestRuntime(String platform, String name) {
-        return getRuntimesFor(platform).stream()
-                .filter(r -> name.equals(r.getName()))
-                .max(Comparator.comparing(o -> o.getVersion().getReleased()));
+    public Optional<JavaRuntimeRemote> getRuntimeFirstCandidate(List<String> platformCandidates, String name) {
+        List<JavaRuntimeRemote> runtimeCandidates = getRuntimesFor(platformCandidates)
+                .stream()
+                .filter(runtime -> runtime.getName().equals(name))
+                .collect(Collectors.toList());
+        return runtimeCandidates.size() < 1 ? Optional.empty() : Optional.of(runtimeCandidates.get(0));
     }
 
-    public List<JavaRuntimeRemote> getCurrentPlatformRuntimes(String name) {
-        return getRuntimesFor(CURRENT_PLATFORM);
-    }
-
-    public Optional<JavaRuntimeRemote> getCurrentPlatformLatestRuntime(String name) {
-        return getLatestRuntime(CURRENT_PLATFORM, name);
+    public Optional<JavaRuntimeRemote> getCurrentPlatformFirstRuntimeCandidate(String name) {
+        return getRuntimeFirstCandidate(CURRENT_PLATFORM_CANDIDATES, name);
     }
 
     static class Platform {

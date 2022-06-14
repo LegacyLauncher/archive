@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
 
-import static ru.turikhay.tlauncher.jre.JavaPlatform.CURRENT_PLATFORM;
+import static ru.turikhay.tlauncher.jre.JavaPlatform.CURRENT_PLATFORM_CANDIDATES;
 
 public class JavaRuntimeLocalDiscoverer {
     private final File rootDir;
@@ -29,7 +29,12 @@ public class JavaRuntimeLocalDiscoverer {
     }
 
     public Optional<JavaRuntimeLocal> getCurrentPlatformRuntime(String name) {
-        return getRuntime(CURRENT_PLATFORM, name);
+        return CURRENT_PLATFORM_CANDIDATES
+                .stream()
+                .map(platform -> getRuntime(platform, name))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
     }
 
     private File getRuntimeDir(String platform, String name) {

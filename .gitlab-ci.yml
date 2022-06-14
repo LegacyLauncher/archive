@@ -88,6 +88,10 @@ workflow:
   PKGBUILD_ENABLED: 'true'
   PKGBUILD_PUSH: 'true'
 
+.appt: &appt
+  SHORT_BRAND: 'appt'
+  DMG_ENABLED: 'true'
+
 .dev: &dev
   SHORT_BRAND: $CI_COMMIT_BRANCH
 
@@ -110,7 +114,7 @@ workflow:
       for host in $SSH_HOSTS; do \
         echo "Uploading $ENTITY to $host"; \
         ssh $SSH_USER@$host mkdir -p $SSH_BRANDS_DIR/files/$SHORT_BRAND/$ENTITY; \
-        scp -v -r $ENTITY/build/update/$SHORT_BRAND/* $SSH_USER@$host:$SSH_BRANDS_DIR/files/$SHORT_BRAND/$ENTITY/; \
+        scp -v -r ${ENTITY_PATH:-$ENTITY}/build/update/$SHORT_BRAND/* $SSH_USER@$host:$SSH_BRANDS_DIR/files/$SHORT_BRAND/$ENTITY/; \
         ssh $SSH_USER@$host bash $SSH_BRANDS_DIR/deploy.sh $ENTITY $SHORT_BRAND; \
       done
 
@@ -260,6 +264,7 @@ workflow:
   variables:
     <<: *dev
     ENTITY: portable
+    ENTITY_PATH: packages/portable
   rules:
     - *dev_and_portable_only_rules
   dependencies: ['Build']
@@ -270,6 +275,7 @@ workflow:
   variables:
     <<: *dev
     ENTITY: installer
+    ENTITY_PATH: packages/installer
   rules:
     - *dev_and_installer_only_rules
   dependencies: ['Installer.exe']
@@ -315,6 +321,7 @@ workflow:
   variables:
     <<: *legacy
     ENTITY: portable
+    ENTITY_PATH: packages/portable
   rules:
     - *release_only_rules
   dependencies: ['Legacy']
@@ -334,6 +341,7 @@ workflow:
   variables:
     <<: *legacy
     ENTITY: installer
+    ENTITY_PATH: packages/installer
   rules:
     - *release_only_rules
   dependencies: ['Legacy: build installer']
@@ -416,6 +424,7 @@ workflow:
   variables:
     <<: *mcl
     ENTITY: installer
+    ENTITY_PATH: packages/installer
   rules:
     - *release_only_rules
   dependencies: ['MCL: build installer']
@@ -512,3 +521,38 @@ workflow:
     - 'AUR: .SRCINFO'
     - 'AUR: launcher'
     - 'AUR: bootstrap'
+
+'APPT':
+  <<: *build
+  variables:
+    <<: *appt
+  rules:
+    - *release_manual_only
+
+'APPT: libs':
+  <<: *upload_libraries
+  variables:
+    <<: *appt
+  rules:
+    - *release_only_rules
+  needs: ['APPT']
+
+'APPT: launcher':
+  <<: *deploy
+  variables:
+    <<: *appt
+    ENTITY: launcher
+  rules:
+    - *release_only_rules
+  dependencies: ['APPT']
+  needs: ['APPT', 'APPT: libs']
+
+'APPT: bootstrap':
+  <<: *deploy_bootstrap
+  variables:
+    <<: *appt
+    ENTITY: bootstrap
+  rules:
+    - *release_only_rules
+  dependencies: ['APPT']
+  needs: ['APPT', 'APPT: libs']
