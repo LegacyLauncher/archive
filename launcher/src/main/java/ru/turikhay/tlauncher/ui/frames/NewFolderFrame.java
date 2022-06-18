@@ -170,7 +170,7 @@ public class NewFolderFrame extends VActionFrame {
 
         suggestions.addAll(Arrays.asList(
                 MinecraftUtil.getSystemRelatedDirectory("Minecraft", false),
-                MinecraftUtil.getSystemRelatedDirectory("tlauncher/" + TLauncher.getBrand())
+                MinecraftUtil.getSystemRelatedDirectory("tlauncher/" + TLauncher.getShortBrand())
         ));
 
         for (File suggestion : suggestions) {

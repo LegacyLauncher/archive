@@ -1,39 +1,7 @@
 ru_RU: >
-  <br/><b>148.2 – 148.3</b>:
-  <br/>– Исправления для M1
-  <br/>
-  <br/><b>148.1</b>:
-  <br/>– Исправлена установка более старых версий (#160)
-  <br/>– Исправлен размер поля со списком аккаунтов
-  <br/>
-  <br/><b>148.0</b>:
-  <br/>– Поддержка процессоров M1 на 1.19
-  <br/>– Исправлена иконка Ely в списке версий
-  <br/>
-  <br/><b>147.0</b>:
-  <br/>– <a href="https://cdn.turikhay.ru/tlauncher/Teaser_VersionSearch.mp4">Поиск по списку версий</a>: щелкните по
-  нему и начните вводить название версии (напр. 1.16.5)
-  <br/>– Новая настройка «Только установленные» покажет в списке версий только установленные версии. Старая
-  настройка «Загружать с сервера» делает почти то же самое, но полное отключение загрузки списка версий может
-  быть нежелательным
-  <br/>– Новый аргумент «--launch» включает автозапуск: ранее оно включалось только из интерфейса и файла настроек
-  <br/>– Исправили и дополнили поведение аргумента «--account»: теперь он действительно выбирает указанный аккаунт.
-  А в случае его отсутствия, создаёт новый с таким же именем
-  <br/>– Другие небольшие улучшения и исправления
+  <br/><b>148.4</b>:
+  <br/>– Исправлено предложение сменить папку по умолчанию для новых пользователей
 
 en_US: >
-  <br/><b>148.0 - 148.3</b>:
-  <br/>– Apple M1 related improvements 
-  <br/>– Fixed older version installations (#160)
-  <br/>– Fixed Ely icon & overall size of the account list
-  <br/>
-  <br/><b>147.0</b>:
-  <br/>– <a href="https://cdn.turikhay.ru/tlauncher/Teaser_VersionSearch.mp4">Implemented version list search</a>: click
-  on it and start typing (e.g. 1.16.5)
-  <br/>– You can now configure version list to only show installed versions. It's different from "Remote from server"
-  option because the new option doesn't prevent the version list itself from loading
-  <br/>– New argument "--launch" activates "Delayed start" option. Previously it could only be done the interface
-  or by editing configuration file
-  <br/>– Fixed and improved "--account" argument: now it is working properly. Also if the account doesn't exist, it
-  will be created
-  <br/>– Other fixes and improvements
+  <br/><b>148.4</b>:
+  <br/>– Fixed default folder switch suggestion for new users

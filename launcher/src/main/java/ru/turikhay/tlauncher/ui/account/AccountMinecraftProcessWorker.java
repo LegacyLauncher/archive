@@ -199,7 +199,7 @@ class AccountMinecraftProcessWorker {
                     @Override
                     public void showProfileUnavailableMessage(String profileName) {
                         LOGGER.info("Profile is not available: {}", profileName);
-                        Alert.showError("", Localizable.get(locPrefix + "unavailable"));
+                        Alert.showError("", Localizable.get(prefix + "unavailable"));
                     }
                 }
         ).createProfile(token);
