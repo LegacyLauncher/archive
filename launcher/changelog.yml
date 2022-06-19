@@ -1,7 +1,7 @@
 ru_RU: >
-  <br/><b>148.4</b>:
-  <br/>– Исправлено предложение сменить папку по умолчанию для новых пользователей
+  <br/><b>148.5</b>:
+  <br/>– Обновление разрешенных для проксирования доменов
 
 en_US: >
-  <br/><b>148.4</b>:
-  <br/>– Fixed default folder switch suggestion for new users
+  <br/><b>148.5</b>:
+  <br/>– Updated list of allowed domains for proxy

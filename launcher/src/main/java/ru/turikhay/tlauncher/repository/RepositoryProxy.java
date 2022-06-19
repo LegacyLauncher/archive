@@ -19,6 +19,7 @@ public class RepositoryProxy {
 
     public static final List<String> PROXIFIED_HOSTS = Collections.unmodifiableList(Arrays.asList(
             "launchermeta.mojang.com",
+            "piston-meta.mojang.com",
             "libraries.minecraft.net",
             "launcher.mojang.com",
             "resources.download.minecraft.net",
