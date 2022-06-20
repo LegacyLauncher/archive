@@ -54,6 +54,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
@@ -444,18 +445,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new MinecraftException(true, "Insufficient space " + rootDir.getAbsolutePath() + "(" + freeSpace + ")", "free-space", rootDir);
         }
 
-        switch (settings.getSeparateDirs()) {
-            case NONE:
-                gameDir = rootDir;
-                break;
-            case FAMILY:
-                gameDir = new File(rootDir, "home/" + family);
-                break;
-            case VERSION:
-                gameDir = new File(rootDir, "home/" + version.getID());
-                break;
-        }
-
+        gameDir = getGameDir(rootDir, family, version.getID(), settings.getSeparateDirs());
 
         detectCharsetOnWindows();
 
@@ -552,11 +542,39 @@ public class MinecraftLauncher implements JavaProcessListener {
             boolean fullScreen = settings.getBoolean("minecraft.fullscreen");
 
 
-            ramSize = settings.getInteger("minecraft.memory");
-            if (ramSize < 512) {
-                throw new IllegalArgumentException("Invalid RAM size!");
+            String xmx = settings.get("minecraft.xmx");
+            if ("auto".equals(xmx)) {
+                Future<MemoryAllocationService.Hint> hintFuture = null;
+                MemoryAllocationService.Hint hint;
+                try {
+                    hintFuture = TLauncher.getInstance().getMemoryAllocationService().queryHint(
+                            new MemoryAllocationService.VersionContext(
+                                    version,
+                                    gameDir.toPath()
+                            )
+                    );
+                    hint = hintFuture.get();
+                } catch (InterruptedException e) {
+                    throw new MinecraftLauncherAborted(e);
+                } catch (ExecutionException e) {
+                    LOGGER.warn("Couldn't query hint for {}: {}", version.getID(), e);
+                    hint = TLauncher.getInstance().getMemoryAllocationService().getFallbackHint();
+                }
+                LOGGER.debug("Memory allocation hint for {}: {}", version.getID(), hint);
+                if (hint.isUnderAllocation()) {
+                    LOGGER.warn("Memory allocation service reported that setting desired memory " +
+                            "amount is not possible. Desired: {} MiB", hint.getDesired());
+                }
+                ramSize = hint.getActual();
+            } else {
+                ramSize = settings.getInteger("minecraft.xmx");
+                if (ramSize <= 0) {
+                    int fallbackRamSize = TLauncher.getInstance().getMemoryAllocationService().getFallbackHint().getActual();
+                    LOGGER.warn("Using fallback value for -Xmx ({}), because minecraft.memory <= 0 (= {})",
+                            fallbackRamSize, ramSize);
+                    ramSize = fallbackRamSize;
+                }
             }
-
 
             fullCommand = settings.getBoolean("gui.logger.fullcommand");
 
@@ -580,6 +598,19 @@ public class MinecraftLauncher implements JavaProcessListener {
 
                 downloadResources();
             }
+        }
+    }
+
+    public static File getGameDir(File rootDir, String family, String id, Configuration.SeparateDirs separateDirs) {
+        switch (separateDirs) {
+            case NONE:
+                return rootDir;
+            case FAMILY:
+                return new File(rootDir, "home/" + family);
+            case VERSION:
+                return new File(rootDir, "home/" + id);
+            default:
+                throw new RuntimeException("unknown value: " + separateDirs);
         }
     }
 

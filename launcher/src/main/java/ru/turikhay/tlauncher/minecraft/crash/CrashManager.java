@@ -1218,15 +1218,9 @@ public final class CrashManager {
                 String value = (String) spec.value(args);
 
                 if ("minecraft.memory".equals(key) && "fix".equals(value)) {
-                    int current = TLauncher.getInstance().getSettings().getInteger("minecraft.memory"), set;
-
-                    if (current > OS.Arch.PREFERRED_MEMORY) {
-                        set = OS.Arch.PREFERRED_MEMORY;
-                    } else {
-                        set = OS.Arch.MIN_MEMORY;
-                    }
-
-                    value = String.valueOf(set);
+                    LOGGER.info("Migrating minecraft.memory = fix => minecraft.xmx = \"auto\"");
+                    key = "minecraft.xmx";
+                    value = "auto";
                 }
                 LOGGER.info("Set configuration key {} = {}", key, value);
                 TLauncher.getInstance().getSettings().set(key, value);

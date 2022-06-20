@@ -144,6 +144,10 @@ public class Images {
         return getIcon(name, 16);
     }
 
+    public static Lazy<ImageIcon> getIcon16Lazy(String name) {
+        return Lazy.of(() -> getIcon16(name));
+    }
+
     public static ImageIcon getIcon24(String name) {
         return getIcon(name, 24);
     }

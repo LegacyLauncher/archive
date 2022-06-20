@@ -286,23 +286,24 @@ public enum OS {
 
         public static final long TOTAL_RAM;
         public static final long TOTAL_RAM_MB;
-        public static final int MIN_MEMORY = 512;
-        public static final int PREFERRED_MEMORY;
-        public static final int MAX_MEMORY;
         public static final int AVAILABLE_PROCESSORS;
-        private static final int TOTAL_RAM_GB;
 
         static {
             TOTAL_RAM = getTotalRam();
             TOTAL_RAM_MB = TOTAL_RAM / 1024L / 1024L;
-            TOTAL_RAM_GB = Math.round((float) TOTAL_RAM_MB / 1024.0F + 0.25F); // better round
-            PREFERRED_MEMORY = getPreferredMemory();
-            MAX_MEMORY = getMaximumMemory();
             AVAILABLE_PROCESSORS = getAvailableProcessors();
         }
 
         public boolean isCurrent() {
             return this == CURRENT;
+        }
+
+        public boolean isARM() {
+            return this == ARM || this == ARM64;
+        }
+
+        public boolean is64Bit() {
+            return this == x64 || this == ARM64;
         }
 
         private static long getTotalRam() {
@@ -321,28 +322,6 @@ public enum OS {
                 LOGGER.warn("Cannot query the number of available processors", var1);
                 return 1;
             }
-        }
-
-        private static int getPreferredMemory() {
-            // A lot of users have old pcs with 2-4gb ram and x64 os, so...
-            if (TOTAL_RAM_GB == 2) return 768; // 2gb, any arch, 768mb
-            if (TOTAL_RAM_GB < 2) return MIN_MEMORY; // less then 2gb, any arch, 512mb
-            if (!IS_64_BIT) return 1024; // more that 2gb ram, x86, limited to 1024mb, so will use 1024mb
-            if (TOTAL_RAM_GB > 4) return 2048; // more that 4gb ram, x64, use 2048mb
-            return 1024; // 2 to 4 gb ram, use 1024mb
-        }
-
-        private static int getMaximumMemory() {
-            if (!IS_64_BIT) {
-                return 1024;
-            }
-            if (TOTAL_RAM_GB == 3) {
-                return 1536;
-            }
-            if (TOTAL_RAM_GB > 3) {
-                return (TOTAL_RAM_GB - 2) * 1024;
-            }
-            return 1024;
         }
 
         private static boolean is64BitFallback() {

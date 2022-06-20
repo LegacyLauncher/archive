@@ -169,10 +169,10 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         minecraftTab.nextPane();
         jre = new EditorFieldHandler(JavaManagerConfig.PATH_JRE_TYPE, new JREComboBox(this));
         minecraftTab.add(new EditorPair("settings.jre.type.label", jre));
-        final SettingsMemorySlider memorySlider = new SettingsMemorySlider(this);
+        final MemorySlider memorySlider = new MemorySlider(sc.loginForm.tlauncher.getMemoryAllocationService());
 
         minecraftTab.nextPane();
-        memory = new EditorFieldHandler("minecraft.memory", memorySlider, warning);
+        memory = new EditorFieldHandler("minecraft.xmx", memorySlider, warning);
         minecraftTab.add(new EditorPair("settings.java.memory.label", memory));
 
         minecraftTab.nextPane();
