@@ -3,43 +3,84 @@ package net.minecraft.launcher.versions;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.minecraft.launcher.versions.CompleteVersion.FABRIC_PREFIX;
 import static net.minecraft.launcher.versions.CompleteVersion.FORGE_PREFIX;
 
 public class VersionFamily {
-    private static final Map<String, String> ID_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Guess> ID_CACHE = new ConcurrentHashMap<>();
 
-    public static String guessFamilyOf(VersionSyncInfo versionSyncInfo) {
+    public static Guess guessFamilyOf(VersionSyncInfo versionSyncInfo) {
         if (versionSyncInfo.getLocalCompleteVersion() != null) {
-            return versionSyncInfo.getLocalCompleteVersion().getFamily();
+            return new Guess(versionSyncInfo.getLocalCompleteVersion().getFamily(), true);
         }
         String id = versionSyncInfo.getAvailableVersion().getID();
-        String maybeCached = ID_CACHE.get(id);
+        Guess maybeCached = ID_CACHE.get(id);
         if (maybeCached != null) {
             return maybeCached;
         }
-        String family = doGuess(versionSyncInfo, id);
-        if (family != null) {
-            ID_CACHE.put(id, family);
+        Guess guess = doGuess(versionSyncInfo, id);
+        if (guess != null) {
+            ID_CACHE.put(id, guess);
         }
-        return family;
+        return guess;
     }
 
-    private static String doGuess(VersionSyncInfo versionSyncInfo, String id) {
+    private static Guess doGuess(VersionSyncInfo versionSyncInfo, String id) {
         switch (versionSyncInfo.getAvailableVersion().getReleaseType()) {
             case UNKNOWN:
             case OLD_ALPHA:
             case SNAPSHOT:
-                return versionSyncInfo.getAvailableVersion().getReleaseType().toString();
+                return new Guess(versionSyncInfo.getAvailableVersion().getReleaseType().toString(), true);
         }
         if (id.toLowerCase(java.util.Locale.ROOT).contains("forge")) {
-            return FORGE_PREFIX + "???";
+            return new Guess(FORGE_PREFIX + "???", false);
         }
         if (id.toLowerCase(java.util.Locale.ROOT).contains("fabric")) {
-            return FABRIC_PREFIX + "???";
+            return new Guess(FABRIC_PREFIX + "???", false);
         }
-        return CompleteVersion.getFamilyOf(id);
+        String family = CompleteVersion.getFamilyOf(id);
+        return family == null ? null : new Guess(family, true);
+    }
+
+    public static class Guess {
+        private final String family;
+        private final boolean confident;
+
+        public Guess(String family, boolean confident) {
+            this.family = family;
+            this.confident = confident;
+        }
+
+        public String getFamily() {
+            return family;
+        }
+
+        public boolean isConfident() {
+            return confident;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Guess guess = (Guess) o;
+            return confident == guess.confident && family.equals(guess.family);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(family, confident);
+        }
+
+        @Override
+        public String toString() {
+            return "Guess{" +
+                    "family='" + family + '\'' +
+                    ", confident=" + confident +
+                    '}';
+        }
     }
 }

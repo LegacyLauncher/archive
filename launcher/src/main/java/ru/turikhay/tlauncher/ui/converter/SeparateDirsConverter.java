@@ -62,8 +62,8 @@ public class SeparateDirsConverter extends LocalizableStringConverter<Configurat
         }
         switch (mode) {
             case FAMILY:
-                String family = VersionFamily.guessFamilyOf(versionSyncInfo);
-                return family == null ? null : homeDirPrefix + family;
+                VersionFamily.Guess guess = VersionFamily.guessFamilyOf(versionSyncInfo);
+                return guess == null ? null : homeDirPrefix + guess.getFamily();
             case VERSION:
                 return homeDirPrefix + versionSyncInfo.getAvailableVersion().getID();
         }

@@ -83,6 +83,7 @@ public final class TLauncher {
     private final JavaManager javaManager;
     private final MigrationManager migrationManager;
     private final ConnectivityManager connectivityManager;
+    private final MemoryAllocationService memoryAllocationService;
 
     private final Downloader downloader;
 
@@ -166,6 +167,9 @@ public final class TLauncher {
         migrationManager = new MigrationManager(this);
         connectivityManager = initConnectivityManager();
         connectivityManager.queueChecks();
+
+        memoryAllocationService = new MemoryAllocationService();
+        migrateMemoryValue();
 
         dispatcher.onBootStateChanged("Loading manager listener", 0.36);
         componentManager.loadComponent(ComponentManagerListenerHelper.class);
@@ -422,6 +426,21 @@ public final class TLauncher {
                 LOGGER.warn("Couldn't set system L&F: {}", systemLaf, e);
             }
         }
+    }
+
+    private void migrateMemoryValue() {
+        if (config.get("minecraft.memory") == null) {
+            return;
+        }
+        int oldValue = config.getInteger("minecraft.memory");
+        if (oldValue == memoryAllocationService.getFallbackHint().getActual()) {
+            LOGGER.info("Migrating to minecraft.xmx = \"auto\" because minecraft.memory = PREFERRED_MEMORY ({})",
+                    oldValue);
+            config.set("minecraft.xmx", "auto", false);
+        } else {
+            LOGGER.info("Migrating to minecraft.xmx = minecraft.memory = {}", oldValue);
+        }
+        config.set("minecraft.memory", null, false);
     }
 
     private void executeOnReadyJobs() {
@@ -798,6 +817,10 @@ public final class TLauncher {
 
     public String getBootstrapVersion() {
         return bridge.getBootstrapVersion();
+    }
+
+    public MemoryAllocationService getMemoryAllocationService() {
+        return memoryAllocationService;
     }
 
     static {

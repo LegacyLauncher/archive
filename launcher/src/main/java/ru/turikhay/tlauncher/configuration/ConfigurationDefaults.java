@@ -50,7 +50,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.args", null);
         d.put("minecraft.improvedargs", true);
 
-        d.put("minecraft.memory", OS.Arch.PREFERRED_MEMORY);
+        d.put("minecraft.xmx", "auto");
 
         d.put("minecraft.servers.promoted", true);
         d.put("minecraft.servers.promoted.ingame", true);

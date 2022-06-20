@@ -19,6 +19,7 @@ import ru.turikhay.tlauncher.ui.images.ImageIcon;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.settings.JREComboBox;
+import ru.turikhay.tlauncher.ui.settings.MemorySlider;
 import ru.turikhay.tlauncher.ui.swing.SimpleComboBoxModel;
 import ru.turikhay.tlauncher.ui.swing.VersionCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.combobox.ComboBoxFilter;
@@ -81,6 +82,8 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                 ((JREComboBox) loginForm.scene.settingsForm.get().jre.getComponent())
                         .selectedVersionChanged(selected);
                 loginForm.scene.settingsForm.get().useSeparateDir.getComponent().repaint();
+                ((MemorySlider) loginForm.scene.settingsForm.get().memory.getComponent())
+                        .updateForCurrentlySelectedVersion();
             }
         });
         selectedVersion = lf.global.get("login.version");
@@ -255,8 +258,8 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             if (id.contains(term)) {
                 return true;
             }
-            String family = VersionFamily.guessFamilyOf(vs);
-            if (family != null && family.toLowerCase(Locale.ROOT).contains(term)) {
+            VersionFamily.Guess familyGuess = VersionFamily.guessFamilyOf(vs);
+            if (familyGuess != null && familyGuess.getFamily().toLowerCase(Locale.ROOT).contains(term)) {
                 return true;
             }
             String localizedTypeName = localizedReleaseTypeCache.get(vs.getAvailableVersion().getReleaseType());
