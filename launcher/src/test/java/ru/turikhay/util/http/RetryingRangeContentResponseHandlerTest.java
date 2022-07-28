@@ -14,7 +14,7 @@ class RetryingRangeContentResponseHandlerTest {
 
     @Test
     void test() throws IOException {
-        final String url = "https://launchermeta.mojang.com/v1/packages/0586267ba40236e176925da17ca0d29dead3d30d/manifest.json";
+        final String url = "https://cdn.turikhay.ru/tlauncher/legacy_beta/bootstrap.json";
         Executor executor = Executor.newInstance();
 
         Request request0 = Request.Get(url);

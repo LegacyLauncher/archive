@@ -5,7 +5,7 @@ import ru.turikhay.util.StringUtil;
 public class AuthException extends Exception {
     private final String locPath;
     private final Object[] locVars;
-    private boolean softException;
+    protected boolean softException;
 
     AuthException(Throwable t, String locPath, Object... locVars) {
         super(t);

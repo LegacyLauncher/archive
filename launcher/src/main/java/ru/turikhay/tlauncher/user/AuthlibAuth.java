@@ -66,6 +66,9 @@ public abstract class AuthlibAuth<T extends AuthlibUser> implements Auth<T> {
             }
             throw new AuthUnknownException(e);
         }
+        AuthlibUserAttributes.validateUserAttributes(
+                Objects.requireNonNull(userAuthentication.getAuthenticatedToken(), "accessToken")
+        );
     }
 
     protected com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService createYggdrasilAuthenticationService(String clientToken) {
