@@ -93,6 +93,8 @@ public final class Bootstrap {
                 bootstrapParser.accepts("updateMetaFile", "points to update meta file").withRequiredArg().withValuesConvertedBy(new PathValueConverter());
         ArgumentAcceptingOptionSpec<String> restartExec =
                 bootstrapParser.accepts("restartExec", "instructs the bootstrap to run this executable after self update").withRequiredArg().ofType(String.class);
+        OptionSpecBuilder requireMinecraftAccount =
+                bootstrapParser.accepts("requireMinecraftAccount", "require minecraft account to use any other account kinds");
 
         OptionParser launcherParser = new OptionParser();
         launcherParser.allowsUnrecognizedOptions();
@@ -184,6 +186,9 @@ public final class Bootstrap {
         bootstrap.setPackageMode(bootstrapParsed.valueOf(packageMode));
         log("Package mode:", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "false");
         bootstrap.bootBridge.addCapability("package_mode", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "");
+
+        log("Require Minecraft account:", requireMinecraftAccount);
+        bootstrap.bootBridge.addCapability("require_minecraft_account", requireMinecraftAccount);
 
         if (bootstrapParsed.has(restartExec)) {
             bootstrap.setRestartCmd(Collections.singletonList(bootstrapParsed.valueOf(restartExec)));

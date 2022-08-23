@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class UserSet extends ManagedSet<User> {
     private final Map<String, Auth<? extends User>> authMap;
@@ -41,5 +42,14 @@ public final class UserSet extends ManagedSet<User> {
         }
 
         auth.validate(user);
+    }
+
+    public Optional<? extends User> findByType(String type) {
+        for (User user : getSet()) {
+            if (user.getType().equals(type)) {
+                return Optional.of(user);
+            }
+        }
+        return Optional.empty();
     }
 }
