@@ -187,8 +187,8 @@ public final class Bootstrap {
         log("Package mode:", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "false");
         bootstrap.bootBridge.addCapability("package_mode", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "");
 
-        log("Require Minecraft account:", requireMinecraftAccount);
-        bootstrap.bootBridge.addCapability("require_minecraft_account", requireMinecraftAccount);
+        log("Require Minecraft account:", bootstrapParsed.has(requireMinecraftAccount));
+        bootstrap.bootBridge.addCapability("require_minecraft_account", bootstrapParsed.has(requireMinecraftAccount));
 
         if (bootstrapParsed.has(restartExec)) {
             bootstrap.setRestartCmd(Collections.singletonList(bootstrapParsed.valueOf(restartExec)));
