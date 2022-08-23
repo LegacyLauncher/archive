@@ -51,41 +51,39 @@ public class ProfileManager extends RefreshableComponent {
 
     public ProfileManager(ComponentManager manager, File file) {
         super(manager);
-        if (file == null) {
-            throw new NullPointerException();
-        } else {
-            this.file = file;
-            listeners = new CopyOnWriteArrayList<>();
+        Objects.requireNonNull(file);
 
-            this.accountManager = new AccountManager();
-            authDatabase = new AuthenticatorDatabase(accountManager);
+        this.file = file;
+        listeners = new CopyOnWriteArrayList<>();
 
-            accountManager.addListener(set -> {
-                for (ProfileManagerListener l : listeners) {
-                    try {
-                        l.onProfilesRefreshed(ProfileManager.this);
-                    } catch (Exception e) {
-                        LOGGER.warn("Caught exception on one of profile manager listeners", e);
-                    }
-                }
+        this.accountManager = new AccountManager();
+        authDatabase = new AuthenticatorDatabase(accountManager);
 
+        accountManager.addListener(set -> {
+            for (ProfileManagerListener l : listeners) {
                 try {
-                    saveProfiles();
-                } catch (IOException var3) {
-                    LOGGER.warn("Could not save profiles", var3);
+                    l.onProfilesRefreshed(ProfileManager.this);
+                } catch (Exception e) {
+                    LOGGER.warn("Caught exception on one of profile manager listeners", e);
                 }
-            });
+            }
 
-            GsonBuilder builder = new GsonBuilder();
-            builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
-            builder.registerTypeAdapter(Date.class, new DateTypeAdapter(true));
-            builder.registerTypeAdapter(Instant.class, new InstantAdapter());
-            builder.registerTypeAdapter(File.class, new FileTypeAdapter());
-            builder.registerTypeAdapter(UserSet.class, accountManager.getTypeAdapter());
-            builder.registerTypeAdapter(UUIDTypeAdapter.class, new UUIDTypeAdapter());
-            builder.setPrettyPrinting();
-            gson = builder.create();
-        }
+            try {
+                saveProfiles();
+            } catch (IOException var3) {
+                LOGGER.warn("Could not save profiles", var3);
+            }
+        });
+
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
+        builder.registerTypeAdapter(Date.class, new DateTypeAdapter(true));
+        builder.registerTypeAdapter(Instant.class, new InstantAdapter());
+        builder.registerTypeAdapter(File.class, new FileTypeAdapter());
+        builder.registerTypeAdapter(UserSet.class, accountManager.getTypeAdapter());
+        builder.registerTypeAdapter(UUIDTypeAdapter.class, new UUIDTypeAdapter());
+        builder.setPrettyPrinting();
+        gson = builder.create();
     }
 
     public ProfileManager(ComponentManager manager) {

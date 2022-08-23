@@ -1,13 +1,18 @@
 package ru.turikhay.tlauncher.ui.account;
 
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
+import ru.turikhay.tlauncher.ui.frames.RequireMinecraftAccountFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.tlauncher.user.MinecraftUser;
+import ru.turikhay.tlauncher.user.MojangUser;
+import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
@@ -23,8 +28,11 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
 
     private final ExtendedButton mojang, minecraft, ely, free, idontknow;
 
+    private final boolean requireMinecraftAccount;
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
+
+        requireMinecraftAccount = TLauncher.getInstance().getCapability("require_minecraft_account", Boolean.class).orElse(false);
 
         grid = new ExtendedPanel();
         //grid.setBorder(BorderFactory.createLineBorder(Color.red));
@@ -37,10 +45,10 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
 
         String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
         String ACCOUNT_TYPE_PREFIX = LOC_PREFIX + "type.";
-        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", e -> AccountAdd.this.scene.multipane.showTip("add-account-ely"));
-        minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", e -> AccountAdd.this.scene.multipane.showTip("process-account-minecraft"));
-        mojang = addRow("logo-mojang", ACCOUNT_TYPE_PREFIX + "mojang", e -> AccountAdd.this.scene.multipane.showTip("add-account-mojang"));
-        free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", e -> AccountAdd.this.scene.multipane.showTip("add-account-plain"));
+        ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", createListenerFor("add-account-ely", false));
+        minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", createListenerFor("process-account-minecraft", true));
+        mojang = addRow("logo-mojang", ACCOUNT_TYPE_PREFIX + "mojang", createListenerFor("add-account-mojang", true));
+        free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", createListenerFor("add-account-plain", false));
         idontknow = addRow("info-circle", LOC_PREFIX + "hint", e -> Blocker.toggle(AccountAdd.this, "idontknow"));
 
         c.gridy++;
@@ -51,6 +59,21 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         grid.add(new ExtendedPanel(), c);
 
         setCenter(grid);
+    }
+
+    private ActionListener createListenerFor(String name, boolean isMinecraftAccount) {
+        return e -> {
+            if (requireMinecraftAccount && !isMinecraftAccount) {
+                UserSet userSet = TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet();
+                boolean hasMinecraftAccount = userSet.findByType(MinecraftUser.TYPE).isPresent();
+                boolean hasMojangAccount = userSet.findByType(MojangUser.TYPE).isPresent();
+                if (!hasMinecraftAccount && !hasMojangAccount) {
+                    new RequireMinecraftAccountFrame().showAtCenter();
+                    return;
+                }
+            }
+            AccountAdd.this.scene.multipane.showTip(name);
+        };
     }
 
     private ExtendedButton addRow(String image, String label, ActionListener action) {
@@ -108,9 +131,13 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     @Override
     public void block(Object var1) {
         if (!"idontknow".equals(var1)) {
-            Blocker.blockComponents(var1, free, idontknow);
+            Blocker.blockComponents(var1, mojang, free, ely, idontknow, minecraft);
         }
-        Blocker.blockComponents(var1, mojang, ely, minecraft);
+        if (requireMinecraftAccount) {
+            Blocker.blockComponents(var1, free, ely);
+        } else {
+            Blocker.blockComponents(var1, mojang, ely, minecraft);
+        }
     }
 
     @Override
