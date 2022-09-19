@@ -872,7 +872,7 @@ public final class TLauncher {
 
         setupErrorHandler();
 
-        LOGGER.info("Starting TL {} {}", getBrand(), getVersion());
+        LOGGER.info("Starting TL {} {}", getBrand(), U.getFormattedVersion(getVersion()));
         if (bridge.getBootstrapVersion() != null) {
             LOGGER.info("... using Bootstrap {}", bridge.getBootstrapVersion());
         }

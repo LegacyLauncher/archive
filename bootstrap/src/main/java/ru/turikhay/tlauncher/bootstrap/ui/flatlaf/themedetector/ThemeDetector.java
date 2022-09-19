@@ -1,16 +1,21 @@
 package ru.turikhay.tlauncher.bootstrap.ui.flatlaf.themedetector;
 
+import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration.Theme;
-import ru.turikhay.tlauncher.bootstrap.util.U;
+import ru.turikhay.tlauncher.portals.Portals;
 
-public abstract class ThemeDetector {
-    protected abstract Theme doDetectTheme();
-
-    public static Theme detectTheme() {
-        return new ThemeDetectorImpl().doDetectTheme();
+public final class ThemeDetector {
+    private ThemeDetector() {
     }
 
-    protected static void log(Object... o) {
-        U.log("[ThemeDetector]", o);
+    public static Theme detectTheme() {
+        switch (Portals.getPortal().getColorScheme()) {
+            case PREFER_LIGHT:
+            case NO_PREFERENCE:
+            default:
+                return FlatLafConfiguration.Theme.LIGHT;
+            case PREFER_DARK:
+                return FlatLafConfiguration.Theme.DARK;
+        }
     }
 }

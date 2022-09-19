@@ -401,7 +401,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
             @Override
             public void mouseClicked(MouseEvent e) {
                 JRESettingsWindow.this.setAlwaysOnTop(false);
-                OS.openLink("https://wiki.tlaun.ch/" + (comboBox.sp.global.isUSSRLocale() ? "" : "en:") + "guide:override-jre");
+                OS.openLink("https://wiki.tlaun.ch/" + (comboBox.sp.global.isLikelyRussianSpeakingLocale() ? "" : "en:") + "guide:override-jre");
             }
         });
         ExtendedPanel recommendedPathHint = new ExtendedPanel();

@@ -46,7 +46,7 @@ public final class ContributorsAlert {
 
         if (hasUpgraded && !contributorsHaveBeenShownBefore) {
             Locale ruLocale = LangConfiguration.ru_RU;
-            boolean isUssr = ruLocale != null && settings.isUSSRLocale();
+            boolean isUssr = ruLocale != null && settings.isLikelyRussianSpeakingLocale();
 
             List<String> contributorList = new ArrayList<>();
             int others = 0;

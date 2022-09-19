@@ -343,7 +343,7 @@ public class DownloaderThread extends ExtendedThread {
         LOGGER.debug("Downloaded {} in {} at {} KiB/s",
                 totalRead / 1024L + " KiB",
                 downloaded_e + " ms",
-                String.format("%.0f", downloadSpeed));
+                String.format(Locale.ROOT, "%.0f", downloadSpeed));
         onComplete();
     }
 

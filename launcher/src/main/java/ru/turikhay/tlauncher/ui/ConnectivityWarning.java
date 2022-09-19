@@ -231,7 +231,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
     private enum ConnectivityType {SOME, NONE}
 
     private String generateConnectivityLink(ConnectivityType type) {
-        final String wikiLangPrefix = TLauncher.getInstance().getSettings().isUSSRLocale() ? "" : "en:";
+        final String wikiLangPrefix = TLauncher.getInstance().getSettings().isLikelyRussianSpeakingLocale() ? "" : "en:";
         final String linkPrefix = tlaunchNotAvailable ? "https://web.archive.org/web/" : "";
         return String.format(Locale.ROOT,
                 "%shttps://wiki.tlaun.ch/%sconnectivity:%s",

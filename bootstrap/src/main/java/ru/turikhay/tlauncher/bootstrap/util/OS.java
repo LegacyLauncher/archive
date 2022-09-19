@@ -1,8 +1,8 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
 import com.sun.jna.Platform;
+import ru.turikhay.tlauncher.portals.Portals;
 
-import java.awt.*;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -68,12 +68,11 @@ public enum OS {
     public static boolean openUri(URI uri) {
         log("Opening URL: " + uri.toASCIIString());
         try {
-            Desktop.getDesktop().browse(uri);
+            return Portals.getPortal().openURI(uri);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 
     public static boolean openUrl(URL url) {
@@ -91,12 +90,11 @@ public enum OS {
 
     public static boolean openPath(File path) {
         try {
-            Desktop.getDesktop().open(path);
+            return Portals.getPortal().openFile(path.toPath());
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 
     public boolean isCurrent() {

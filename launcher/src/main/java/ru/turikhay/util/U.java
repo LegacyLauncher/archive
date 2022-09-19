@@ -486,6 +486,17 @@ public class U {
         );
     }
 
+    public static String getFormattedVersion(Version version) {
+        StringBuilder sb = new StringBuilder(getNormalVersion(version));
+        if (!version.getPreReleaseVersion().isEmpty()) {
+            sb.append("-").append(version.getPreReleaseVersion());
+        }
+        if (!version.getBuildMetadata().isEmpty()) {
+            sb.append("+").append(version.getBuildMetadata());
+        }
+        return sb.toString();
+    }
+
     public static String getMinorVersion(Version version) {
         return String.format(java.util.Locale.ROOT,
                 "%s%d.%d",

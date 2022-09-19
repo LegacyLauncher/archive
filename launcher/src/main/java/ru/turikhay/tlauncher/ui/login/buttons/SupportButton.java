@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.ui.login.buttons;
 
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.images.ImageIcon;
@@ -59,6 +60,12 @@ public class SupportButton extends LocalizableButton implements Blockable {
                 .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
         );
 
+        localeMap.put("uk_UA", new SupportMenu("info-circle")
+                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/ru?from=menu"))
+                .addSeparator()
+                .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
+        );
+
         localeMap.put("en_US", new SupportMenu("comments-o")
                 .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/intl?from=menu"))
                 .add("loginform.button.support.fb", Images.getIcon16("logo-facebook"), actionURL("https://tlaun.ch/fb?from=menu"))
@@ -102,10 +109,6 @@ public class SupportButton extends LocalizableButton implements Blockable {
     void setLocale(String locale) {
         if (menu != null) {
             menu.popup.setVisible(false);
-        }
-
-        if (locale.equals("uk_UA")) {
-            locale = "ru_RU";
         }
 
         menu = localeMap.get(locale);
@@ -152,13 +155,21 @@ public class SupportButton extends LocalizableButton implements Blockable {
         }
 
         String selectedLocale = TLauncher.getInstance().getSettings().getLocale().toString();
-        String newLocale = "en_US";
+        String newLocale = null;
 
         for (String locale : localeMap.keySet())
             if (locale.equals(selectedLocale)) {
                 newLocale = locale;
                 break;
             }
+
+        if (newLocale == null) {
+            if (Configuration.isLikelyRussianSpeakingLocale(selectedLocale)) {
+                newLocale = "ru_RU";
+            }  else {
+                newLocale = "en_US";
+            }
+        }
 
         setLocale(newLocale);
     }

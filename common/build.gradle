@@ -13,6 +13,9 @@ java {
 
 dependencies {
     implementation(libs.commons.lang3)
+    implementation(libs.bundles.dbus)
+    implementation(libs.bundles.jna)
+    implementation(libs.system.theme.detector)
 
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)

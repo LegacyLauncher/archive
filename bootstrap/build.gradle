@@ -36,7 +36,6 @@ compileModernJava {
 dependencies {
     modernImplementation(sourceSets.main.output)
     modernImplementation(project(":bridge"))
-    modernImplementation("com.github.Dansoftowner:jSystemThemeDetector:3.7")
 
     implementation(project(":bridge"))
     implementation(project(":common"))

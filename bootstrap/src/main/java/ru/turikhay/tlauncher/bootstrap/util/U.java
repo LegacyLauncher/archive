@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.bootstrap.util;
 
+import com.github.zafarkhaja.semver.Version;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -83,6 +84,22 @@ public final class U {
             U.log("[NIO]", "Can't query usable space on", fileStore, e);
             return -1;
         }
+    }
+
+    public static String getFormattedVersion(Version version) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(version.getMajorVersion());
+        sb.append(".");
+        sb.append(version.getMinorVersion());
+        sb.append(".");
+        sb.append(version.getPatchVersion());
+        if (!version.getPreReleaseVersion().isEmpty()) {
+            sb.append("-").append(version.getPreReleaseVersion());
+        }
+        if (!version.getBuildMetadata().isEmpty()) {
+            sb.append("+").append(version.getBuildMetadata());
+        }
+        return sb.toString();
     }
 
     private U() {

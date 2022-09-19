@@ -188,7 +188,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         fillPages(list);
         renderPage(0);
 
-        //buttonPanel.promotedItem.setVisible(Configuration.isUSSRLocale(TLauncher.getInstance().getLang().getLocale().toString()));
+        //buttonPanel.promotedItem.setVisible(Configuration.isLikelyRussianSpeakingLocale(TLauncher.getInstance().getLang().getLocale().toString()));
     }
 
     private static class Page {

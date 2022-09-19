@@ -99,7 +99,7 @@ public final class LangConfiguration {
     }
 
     private Locale selectBackingLocale() {
-        if (locale != ru_RU && Configuration.isUSSRLocale(locale.toString())) {
+        if (locale != ru_RU && Configuration.isLikelyRussianSpeakingLocale(locale.toString())) {
             loadLocale(ru_RU);
             return ru_RU;
         } else {
@@ -237,7 +237,7 @@ public final class LangConfiguration {
         if (locale == null || locale == Locale.US) {
             return null;
         }
-        return Configuration.isUSSRLocale(locale.toString()) ? ru_RU : Locale.US;
+        return Configuration.isLikelyRussianSpeakingLocale(locale.toString()) ? ru_RU : Locale.US;
     }
 
     private static final List<Locale> localeList;

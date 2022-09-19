@@ -13,10 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -147,7 +144,7 @@ public class ForgeProcessor {
         if (path_parts.length == 4)
             // group:id:version:classifier@extension
             // example: de.oceanlabs.mcp:mcp_config:1.16.4-20201102.104115:mappings@txt
-            return String.format("%1$s/%2$s/%3$s/%2$s-%3$s-%4$s.%5$s",
+            return String.format(Locale.ROOT, "%1$s/%2$s/%3$s/%2$s-%3$s-%4$s.%5$s",
                     path_parts[0].replace('.', '/'),
                     path_parts[1],
                     path_parts[2],
@@ -157,7 +154,7 @@ public class ForgeProcessor {
 
         if (path_parts.length == 3)
             // group:id:version@extension
-            return String.format("%1$s/%2$s/%3$s/%2$s-%3$s.%4$s",
+            return String.format(Locale.ROOT, "%1$s/%2$s/%3$s/%2$s-%3$s.%4$s",
                     path_parts[0].replace('.', '/'),
                     path_parts[1],
                     path_parts[2],
