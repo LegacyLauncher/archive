@@ -548,7 +548,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     }
 
     public void updateLocale() {
-        /*if (tlauncher.getSettings().isUSSRLocale()) {
+        /*if (tlauncher.getSettings().isLikelyRussianSpeakingLocale()) {
             add(serverTab);
         } else {
             remove(serverTab);

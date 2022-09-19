@@ -6,17 +6,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.jna.JNA;
 import ru.turikhay.tlauncher.jna.JNAMacOs;
+import ru.turikhay.tlauncher.portals.Portals;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 
-import java.awt.*;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Locale;
-import java.util.function.Function;
 
 public enum OS {
     LINUX("linux", "unix"),
@@ -32,6 +29,7 @@ public enum OS {
     public static final OS CURRENT = JNA.getCurrentOs().orElseGet(OS::detectOSFallback);
 
     public static final JavaVersion JAVA_VERSION;
+
     static {
         JavaVersion version;
         try {
@@ -108,7 +106,7 @@ public enum OS {
     }
 
     public static String getSummary() {
-        return String.format("%s (%s) %s, Java %s %s (%s), %s MB RAM, %sx CPU",
+        return String.format(Locale.ROOT, "%s (%s) %s, Java %s %s (%s), %s MB RAM, %sx CPU",
                 NAME,
                 VERSION,
                 JNA.getArch().orElse("n/a"),
@@ -119,34 +117,6 @@ public enum OS {
                 Arch.AVAILABLE_PROCESSORS
         );
     }
-
-    private static final java.util.List<Function<URI, Boolean>> OPEN_LINK_STRATEGIES = Collections.unmodifiableList(Arrays.asList(
-            uri -> {
-                LOGGER.info("Opening the link using Desktop.browse: \"{}\"", uri);
-
-                try {
-                    Desktop.getDesktop().browse(uri);
-                    return true;
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARN, "Opening the link using Desktop.browse failed: \"{}\"", uri, e);
-                    return false;
-                }
-            },
-            uri -> {
-                if (!LINUX.isCurrent()) return false;
-                LOGGER.info("Opening the link using xdg-open: \"{}\"", uri);
-
-                try {
-                    final Process process = new ProcessBuilder()
-                            .command("xdg-open", uri.toString())
-                            .start();
-                    return process.waitFor() == 0;
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARN, "Opening the link using xdg-open failed: \"{}\"", uri, e);
-                    return false;
-                }
-            }
-    ));
 
     public static boolean openLink(String _url, boolean alertError) {
         URL url;
@@ -171,9 +141,7 @@ public enum OS {
     }
 
     public static boolean openLink(URI uri, boolean alertError) {
-        for (Function<URI, Boolean> strategy : OPEN_LINK_STRATEGIES) {
-            if (strategy.apply(uri)) return true;
-        }
+        if (Portals.getPortal().openURI(uri)) return true;
 
         LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Opening the link failed: \"{}\"", uri);
         if (alertError) {
@@ -203,10 +171,6 @@ public enum OS {
         return openLink(url, true);
     }
 
-    private static void openPath(File path) throws Throwable {
-        Desktop.getDesktop().open(path);
-    }
-
     public static boolean openFolder(File folder, boolean alertError) {
         LOGGER.info("Trying to open folder: {}", folder);
         if (!folder.isDirectory()) {
@@ -214,8 +178,7 @@ public enum OS {
             return false;
         } else {
             try {
-                openPath(folder);
-                return true;
+                return Portals.getPortal().openFile(folder.toPath());
             } catch (Throwable var3) {
                 LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Failed to open folder: {}", folder, var3);
                 if (alertError) {
@@ -238,8 +201,7 @@ public enum OS {
             return false;
         } else {
             try {
-                openPath(file);
-                return true;
+                return Portals.getPortal().openFile(file.toPath());
             } catch (Throwable var3) {
                 LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Failed to open file: {}", file, var3);
                 if (alertError) {
@@ -263,6 +225,7 @@ public enum OS {
 
         public static final Arch CURRENT;
         public static final boolean IS_64_BIT = JNA.is64Bit().orElseGet(Arch::is64BitFallback);
+
         static {
             Arch current;
             boolean isMacOsARM;

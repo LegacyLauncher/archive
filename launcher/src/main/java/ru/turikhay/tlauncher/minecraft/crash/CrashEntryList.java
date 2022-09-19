@@ -267,7 +267,7 @@ public final class CrashEntryList {
 
         String locale = (TLauncher.getInstance() == null ? "en_US" : TLauncher.getInstance().getLang().getLocale()).toString();
         if (!map.containsKey(locale)) {
-            if (Configuration.isUSSRLocale(locale) && map.containsKey("ru_RU")) {
+            if (Configuration.isLikelyRussianSpeakingLocale(locale) && map.containsKey("ru_RU")) {
                 locale = "ru_RU";
             } else {
                 locale = "en_US";

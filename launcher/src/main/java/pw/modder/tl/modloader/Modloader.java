@@ -9,6 +9,7 @@ import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 public interface Modloader {
     CompleteVersion install(String versionName, String versionFamily, File versionsDir, File librariesDir) throws IOException;
@@ -32,7 +33,7 @@ public interface Modloader {
         public Forge(String minecraft, String version) {
             this.minecraft = minecraft;
             this.version = version;
-            this.url = String.format(FORGE_INSTALLER_URL, minecraft, version);
+            this.url = String.format(Locale.ROOT, FORGE_INSTALLER_URL, minecraft, version);
         }
 
         public Forge(String minecraft, String version, String url) {
@@ -116,7 +117,7 @@ public interface Modloader {
         @Override
         public CompleteVersion install(String versionName, String versionFamily, File versionsDir, File librariesDir) throws IOException {
             CompleteVersion completeVersion = U.getGson().fromJson(
-                    HttpClientUtils.execute(Request.Get(String.format(API_META_URL, minecraft, version)))
+                    HttpClientUtils.execute(Request.Get(String.format(Locale.ROOT, API_META_URL, minecraft, version)))
                             .returnContent().asString(),
                     CompleteVersion.class
             );

@@ -63,7 +63,7 @@ public class ContactUsFrame extends VActionFrame {
     }
 
     private interface LangValidator {
-        LangValidator ONLY_CIS = Configuration::isUSSRLocale;
+        LangValidator ONLY_CIS = Configuration::isLikelyRussianSpeakingLocale;
         LangValidator NOT_CIS = locale -> !ONLY_CIS.isValidFor(locale);
         LangValidator ANY = locale -> true;
 

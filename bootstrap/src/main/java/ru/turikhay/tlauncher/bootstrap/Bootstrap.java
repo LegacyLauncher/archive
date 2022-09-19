@@ -357,7 +357,10 @@ public final class Bootstrap {
         setTargetJar(targetJar);
         setTargetLibFolder(targetLibFolder);
 
-        this.bootBridge = new BootBridge(LocalBootstrapMeta.getInstance().getVersion().toString(), launcherArgs);
+        this.bootBridge = new BootBridge(
+                U.getFormattedVersion(LocalBootstrapMeta.getInstance().getVersion()),
+                launcherArgs
+        );
         bootBridge.addCapability("jna");
 
         boolean isNotBeta = !BootstrapMeta.BETA_BRANCH.equals(LocalBootstrapMeta.getInstance().getShortBrand());

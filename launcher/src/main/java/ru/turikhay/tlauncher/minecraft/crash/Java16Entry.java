@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.managers.JavaManager;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class Java16Entry extends PatternEntry {
@@ -100,6 +101,7 @@ public class Java16Entry extends PatternEntry {
             Reference: https://javaalmanac.io/bytecode/versions/
          */
         return String.format(
+                Locale.ROOT,
                 "%.0f%s", // -> "8", "18", "19 (probably)", "20 (probably)", ...
                 classFileVersion - 44.,
                 classFileVersion > 62 ? " " + Localizable.get(getLocPath("version.guessed")) : ""
