@@ -67,19 +67,17 @@ shadowJar {
         exclude("/com/sun/jna/**")
         exclude("/com/apple/laf/**")
         exclude("com.formdev.**")
+        exclude("com.rm5248.dbusjava.**")
     }
     relocate("de.", "shaded.de.")
     relocate("io.", "shaded.io.")
 //    relocate("joptsimple.", "shaded.joptsimple.")
-    relocate("org.", "shaded.org.")
+    relocate("org.", "shaded.org.") {
+        exclude("org.freedesktop.dbus.**")
+    }
     relocate("oshi.", "shaded.oshi.")
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
     relocate("net.", "shaded.net.")
-
-    minimize() {
-        exclude(dependency("net.java.dev.jna:.*"))
-        exclude(dependency("com.formdev:flatlaf"))
-    }
 
     exclude '*.md'
     exclude '*module-info.class'
