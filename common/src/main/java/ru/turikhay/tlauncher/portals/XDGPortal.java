@@ -92,9 +92,7 @@ public class XDGPortal implements Portal, Closeable {
             DBusConnection connection = DBusConnectionBuilder.forSessionBus().build();
             return Optional.of(new XDGPortal(connection));
         } catch (Throwable t) {
-            if (Boolean.parseBoolean(System.getProperty("tlauncher.debugXdg", "false"))) {
-                t.printStackTrace();
-            }
+            t.printStackTrace();
             return Optional.empty();
         }
     }

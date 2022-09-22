@@ -365,19 +365,13 @@ public class Configuration extends SimpleConfiguration {
         setForcefully(key, value, true);
     }
 
-    public void save() throws IOException {
-        if (!isSaveable()) {
-            throw new UnsupportedOperationException();
-        } else {
-            Properties temp = copyProperties(properties);
-
-            for (String constant : configFromArgs.constants()) {
-                temp.remove(constant);
-            }
-
-            File file1 = (File) input;
-            temp.store(new FileOutputStream(file1), comments);
+    @Override
+    protected Properties processSavingProperties(Properties og) {
+        Properties temp = copyProperties(properties);
+        for (String constant : configFromArgs.constants()) {
+            temp.remove(constant);
         }
+        return temp;
     }
 
     public <C extends Configurable> C get(Class<C> configurable) {
