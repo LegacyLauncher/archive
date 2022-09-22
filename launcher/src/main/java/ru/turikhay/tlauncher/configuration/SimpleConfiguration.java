@@ -8,6 +8,10 @@ import ru.turikhay.util.StringUtil;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -207,11 +211,19 @@ public class SimpleConfiguration implements AbstractConfiguration {
     public void save() throws IOException {
         if (!isSaveable()) {
             throw new UnsupportedOperationException();
-        } else {
-            File file = (File) input;
-            FileUtil.createFile(file);
-            properties.store(new FileOutputStream(file), comments);
         }
+        Properties propsToSave = processSavingProperties(properties);
+        File file = (File) input;
+        File tmpFile = new File(file.getAbsolutePath() + ".tmp");
+        FileUtil.createFile(tmpFile);
+        try (FileOutputStream stream = new FileOutputStream(tmpFile)) {
+            propsToSave.store(stream, comments);
+        }
+        saveAtomicallyIfPossible(tmpFile.toPath(), file.toPath());
+    }
+
+    protected Properties processSavingProperties(Properties og) {
+        return og;
     }
 
     public void store() {
@@ -359,5 +371,22 @@ public class SimpleConfiguration implements AbstractConfiguration {
         Properties properties = new Properties();
         copyProperties(src, properties, false);
         return properties;
+    }
+
+    private boolean useAtomicMove = true;
+
+    private void saveAtomicallyIfPossible(Path src, Path dest) throws IOException {
+        if (useAtomicMove) {
+            try {
+                Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                return;
+            } catch (AtomicMoveNotSupportedException aE) {
+                LOGGER.warn("Atomic move not supported: {} -> {}", src, dest, aE);
+                useAtomicMove = false;
+            }
+        } else {
+            LOGGER.debug("Non-atomic save: {}", dest);
+        }
+        Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
     }
 }

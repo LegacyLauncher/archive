@@ -63,19 +63,22 @@ shadowJar {
             project.configurations.modernRuntimeClasspath,
     ]
     relocate("com.", "shaded.com.") {
-        exclude("com.sun.jna.**")
-        exclude("/com/sun/jna/**")
+        exclude("com.sun.**")
+        exclude("/com/sun/**")
         exclude("/com/apple/laf/**")
         exclude("com.formdev.**")
         exclude("com.rm5248.dbusjava.**")
+        exclude("/com.rm5248/dbusjava/**")
+        exclude("com.kenai.**")
     }
     relocate("de.", "shaded.de.")
     relocate("io.", "shaded.io.")
 //    relocate("joptsimple.", "shaded.joptsimple.")
     relocate("org.", "shaded.org.") {
-        exclude("org.freedesktop.dbus.**")
+        exclude("org.freedesktop.**")
+        exclude("/org/freedesktop/**")
+        exclude("org.slf4j.**")
     }
-    relocate("oshi.", "shaded.oshi.")
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
     relocate("net.", "shaded.net.")
 
