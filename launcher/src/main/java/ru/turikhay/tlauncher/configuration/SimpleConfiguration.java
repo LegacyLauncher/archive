@@ -208,7 +208,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
         return false;
     }
 
-    public void save() throws IOException {
+    public synchronized void save() throws IOException {
         if (!isSaveable()) {
             throw new UnsupportedOperationException();
         }
@@ -219,7 +219,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
         try (FileOutputStream stream = new FileOutputStream(tmpFile)) {
             propsToSave.store(stream, comments);
         }
-        saveAtomicallyIfPossible(tmpFile.toPath(), file.toPath());
+        Files.move(tmpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     protected Properties processSavingProperties(Properties og) {
@@ -322,8 +322,9 @@ public class SimpleConfiguration implements AbstractConfiguration {
         if (file == null) {
             throw new NullPointerException();
         } else {
-            FileInputStream stream = new FileInputStream(file);
-            loadFromStream(properties, stream);
+            try (FileInputStream stream = new FileInputStream(file)) {
+                loadFromStream(properties, stream);
+            }
         }
     }
 
@@ -371,22 +372,5 @@ public class SimpleConfiguration implements AbstractConfiguration {
         Properties properties = new Properties();
         copyProperties(src, properties, false);
         return properties;
-    }
-
-    private boolean useAtomicMove = true;
-
-    private void saveAtomicallyIfPossible(Path src, Path dest) throws IOException {
-        if (useAtomicMove) {
-            try {
-                Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-                return;
-            } catch (AtomicMoveNotSupportedException aE) {
-                LOGGER.warn("Atomic move not supported: {} -> {}", src, dest, aE);
-                useAtomicMove = false;
-            }
-        } else {
-            LOGGER.debug("Non-atomic save: {}", dest);
-        }
-        Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
     }
 }
