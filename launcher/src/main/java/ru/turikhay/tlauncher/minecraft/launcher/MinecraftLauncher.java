@@ -1624,6 +1624,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
     }
 
+    private static final int ZGC_WINDOWS_BUILD = 17134;
+
     private void addOptimizedArguments(List<String> args) {
         int jreMajorVersion = getJreMajorVersion();
 
@@ -1635,11 +1637,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         // I want Kotlin's when {}
         // Is enough power and Java 15+ => ZGC
         // ZGC requires A LOT of heap on start
-        if (
-                (!OS.WINDOWS.isCurrent() || OS.VERSION.startsWith("1"))
-                        && jreMajorVersion >= 15
-                        && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192
-        ) {
+        boolean supportsZgc;
+        if (OS.WINDOWS.isCurrent()) {
+            supportsZgc = JNAWindows.getBuildNumber().filter(build -> build >= ZGC_WINDOWS_BUILD).isPresent();
+        } else {
+            supportsZgc = true;
+        }
+        if (supportsZgc && jreMajorVersion >= 15 && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192) {
             addZGCOptimizedArguments(args);
             return;
         }
@@ -2196,7 +2200,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
         if (buildOpt.get() < GPU_PREFERENCE_WINDOWS_BUILD) {
             LOGGER.info("Current Windows build ({}) doesn't support setting GPU preference " +
-                    "through registry", GPU_PREFERENCE_WINDOWS_BUILD);
+                    "through registry", buildOpt.get());
             return;
         }
         if (!Paths.get(jreExec).isAbsolute()) {

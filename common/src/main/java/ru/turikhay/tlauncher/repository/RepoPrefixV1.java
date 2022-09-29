@@ -3,7 +3,9 @@ package ru.turikhay.tlauncher.repository;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RepoPrefixV1 {
     private static final List<String> PREFIXES;
@@ -28,9 +30,14 @@ public class RepoPrefixV1 {
                         getList(props, "ru_prefixes", Collections.singletonList("ru01-www"))
                 )
         ).stream().flatMap(zone ->
-                domains.stream().map(domain ->
-                        String.format(Locale.ROOT, "https://%s.%s", zone, domain)
-                )
+                        Stream.of(
+                                domains.stream().map(domain -> String.format(Locale.ROOT, "https://%s", domain)),
+                                domains.stream().map(domain ->
+                                        String.format(Locale.ROOT, "https://%s.%s", zone, domain)
+                                )
+                        ).flatMap(
+                                Function.identity()
+                        )
         ).collect(
                 Collectors.toList()
         );

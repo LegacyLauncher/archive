@@ -68,8 +68,9 @@ shadowJar {
         exclude("/com/apple/laf/**")
         exclude("com.formdev.**")
         exclude("com.rm5248.dbusjava.**")
-        exclude("/com.rm5248/dbusjava/**")
+        exclude("/com/rm5248/dbusjava/**")
         exclude("com.kenai.**")
+        exclude("/com/kenai/**")
     }
     relocate("de.", "shaded.de.")
     relocate("io.", "shaded.io.")
