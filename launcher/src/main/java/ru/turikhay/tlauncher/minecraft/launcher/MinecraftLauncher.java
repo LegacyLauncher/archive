@@ -109,7 +109,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     private int ramSize;
     private OptionsFile optionsFile;
     private JavaProcessLauncher launcher;
-    private String programArgs;
     private boolean minecraftWorking;
     private long startupTime;
     private int exitCode;
@@ -525,13 +524,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new RuntimeException("Cannot create native files directory!", var5);
         }
 
-        programArgs = settings.get("minecraft.args");
-        if (programArgs != null && programArgs.isEmpty()) {
-            programArgs = null;
-        }
-
-        LOGGER.trace("Args: {}", programArgs);
-
         windowSize = settings.getClientWindowSize();
         LOGGER.trace("Window size: {}", windowSize);
         if (windowSize[0] < 1) {
@@ -897,9 +889,11 @@ public class MinecraftLauncher implements JavaProcessListener {
         ArrayList<String> jvmArgs = new ArrayList<>(), programArgs = new ArrayList<>();
         createJvmArgs(jvmArgs);
 
-        if (this.programArgs != null) {
-            programArgs.addAll(Arrays.asList(StringUtils.split(this.programArgs, ' ')));
-        }
+        javaManagerConfig.getMinecraftArgs().ifPresent(s -> {
+            List<String> userArgs = Arrays.asList(StringUtils.split(s, ' '));
+            LOGGER.info("Appending user args (after classpath): {}", userArgs);
+            programArgs.addAll(userArgs);
+        });
 
         launcher = new JavaProcessLauncher(charset, Objects.requireNonNull(jreExec, "jreExec"), new String[0]);
         launcher.directory(isLauncher ? rootDir : gameDir);
@@ -1660,9 +1654,11 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private void createJvmArgs(List<String> args) {
-        javaManagerConfig.getArgs().ifPresent(s ->
-                args.addAll(Arrays.asList(StringUtils.split(s, ' ')))
-        );
+        javaManagerConfig.getArgs().ifPresent(s -> {
+            List<String> userArgs = Arrays.asList(StringUtils.split(s, ' '));
+            LOGGER.info("Appending user JVM arguments: {}", userArgs);
+            args.addAll(userArgs);
+        });
         if (javaManagerConfig.useOptimizedArguments()) {
             addOptimizedArguments(args);
         }
