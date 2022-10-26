@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -53,8 +55,10 @@ public class XDGPortal implements Portal, Closeable {
     @Override
     public boolean openDirectory(Path path) {
         try {
-            int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_PATH);
-            fdOpenURIInterface.OpenDirectory("", new FileDescriptor(fd), Collections.emptyMap());
+            Map<String, Variant<?>> options = new HashMap<>();
+            options.put("writable", new Variant<>(false));
+            int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_RDONLY | CLibrary.O_CLOEXEC);
+            fdOpenURIInterface.OpenDirectory("", new FileDescriptor(fd), options);
             CLibrary.INSTANCE.close(fd);
             return true;
         } catch (ServiceUnknown e) {
@@ -65,8 +69,10 @@ public class XDGPortal implements Portal, Closeable {
     @Override
     public boolean openFile(Path path) {
         try {
-            int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_PATH);
-            fdOpenURIInterface.OpenFile("", new FileDescriptor(fd), Collections.emptyMap());
+            Map<String, Variant<?>> options = new HashMap<>();
+            options.put("writable", new Variant<>(false));
+            int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_RDONLY | CLibrary.O_CLOEXEC);
+            fdOpenURIInterface.OpenFile("", new FileDescriptor(fd), options);
             CLibrary.INSTANCE.close(fd);
             return true;
         } catch (ServiceUnknown e) {
@@ -123,6 +129,7 @@ public class XDGPortal implements Portal, Closeable {
 
         int close(int fd);
 
-        int O_PATH = 0x200000;     // 010000000 in octal
+        int O_RDONLY = 0;
+        int O_CLOEXEC = 0x80000;     // 002000000 in octal
     }
 }
