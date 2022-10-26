@@ -10,6 +10,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import net.minecraft.options.OptionsFile;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -830,22 +831,26 @@ public final class CrashManager {
                         LOGGER.info(LOG_FLUSHER, "{}└ [!!!] Corrupted zip: {}", subLevelBuffer, ioE.toString());
                         continue;
                     }
-                    // also compute md5 hash, just in case.
-                    // curseforge shows md5 of each file on the download page
-                    if (length > 0L) {
-                        String md5Message;
-                        try {
-                            md5Message = FileUtil.getMd5(file);
-                        } catch (IOException e) {
-                            md5Message = e.toString();
+                    try {
+                        // also compute md5 hash, just in case.
+                        // curseforge shows md5 of each file on the download page
+                        if (length > 0L) {
+                            String md5Message;
+                            try {
+                                md5Message = FileUtil.getMd5(file);
+                            } catch (IOException e) {
+                                md5Message = e.toString();
+                            }
+                            LOGGER.debug(LOG_FLUSHER, "{}├ md5 = {}", subLevelBuffer, md5Message);
                         }
-                        LOGGER.debug(LOG_FLUSHER, "{}├ md5 = {}", subLevelBuffer, md5Message);
-                    }
-                    boolean mcmod = tryMcModInfo(zipFile, subLevelBuffer);
-                    mcmod |= tryModsToml(zipFile, subLevelBuffer);
-                    mcmod |= tryFabricMod(zipFile, subLevelBuffer);
-                    if (!mcmod) {
-                        LOGGER.debug(LOG_FLUSHER, "{}└ [unknown mod format]", subLevelBuffer);
+                        boolean mcmod = tryMcModInfo(zipFile, subLevelBuffer);
+                        mcmod |= tryModsToml(zipFile, subLevelBuffer);
+                        mcmod |= tryFabricMod(zipFile, subLevelBuffer);
+                        if (!mcmod) {
+                            LOGGER.debug(LOG_FLUSHER, "{}└ [unknown mod format]", subLevelBuffer);
+                        }
+                    } finally {
+                        IOUtils.closeQuietly(zipFile);
                     }
                 } else if (file.isDirectory() && !skipDir) {
                     if (currentLevel == levelLimit) {

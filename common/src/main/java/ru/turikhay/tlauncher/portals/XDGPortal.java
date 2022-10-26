@@ -3,6 +3,7 @@ package ru.turikhay.tlauncher.portals;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import org.freedesktop.dbus.FileDescriptor;
+import org.freedesktop.dbus.connections.IDisconnectCallback;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.errors.ServiceUnknown;
@@ -18,21 +19,25 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 public class XDGPortal implements Portal, Closeable {
-    private final DBusConnection connection;
-    private final OpenURIInterface openURIInterface;
+    private final DBusConnection connection, fdConnection;
+    private final OpenURIInterface openURIInterface, fdOpenURIInterface;
     private final SettingsInterface settingsInterface;
 
-    private XDGPortal(DBusConnection connection) throws DBusException {
+    private XDGPortal(DBusConnection connection, DBusConnection fdConnection) throws DBusException {
         this.connection = connection;
+        this.fdConnection = fdConnection;
         this.openURIInterface = connection.getRemoteObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", OpenURIInterface.class);
+        this.fdOpenURIInterface = fdConnection.getRemoteObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", OpenURIInterface.class);
         this.settingsInterface = connection.getRemoteObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", SettingsInterface.class);
     }
 
     @Override
     public void close() throws IOException {
         connection.close();
+        fdConnection.close();
     }
 
     @Override
@@ -49,7 +54,7 @@ public class XDGPortal implements Portal, Closeable {
     public boolean openDirectory(Path path) {
         try {
             int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_PATH);
-            openURIInterface.OpenDirectory("", new FileDescriptor(fd), Collections.emptyMap());
+            fdOpenURIInterface.OpenDirectory("", new FileDescriptor(fd), Collections.emptyMap());
             CLibrary.INSTANCE.close(fd);
             return true;
         } catch (ServiceUnknown e) {
@@ -61,7 +66,7 @@ public class XDGPortal implements Portal, Closeable {
     public boolean openFile(Path path) {
         try {
             int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_PATH);
-            openURIInterface.OpenFile("", new FileDescriptor(fd), Collections.emptyMap());
+            fdOpenURIInterface.OpenFile("", new FileDescriptor(fd), Collections.emptyMap());
             CLibrary.INSTANCE.close(fd);
             return true;
         } catch (ServiceUnknown e) {
@@ -88,12 +93,26 @@ public class XDGPortal implements Portal, Closeable {
     }
 
     public static Optional<Portal> tryToCreate() {
+        Callable<DBusConnection> connectionFactory = () -> DBusConnectionBuilder.forSessionBus()
+                .withShared(false)
+                .withDisconnectCallback(new DBusDisconnectionLogger())
+                .build();
+
         try {
-            DBusConnection connection = DBusConnectionBuilder.forSessionBus().build();
-            return Optional.of(new XDGPortal(connection));
+            DBusConnection connection = connectionFactory.call();
+            DBusConnection fdConnection = connectionFactory.call();
+            return Optional.of(new XDGPortal(connection, fdConnection));
         } catch (Throwable t) {
-            t.printStackTrace();
+            t.printStackTrace(); // TODO remove after release
             return Optional.empty();
+        }
+    }
+
+    private static class DBusDisconnectionLogger implements IDisconnectCallback {
+        @Override
+        public void disconnectOnError(IOException e) {
+            System.err.println("DBus session terminated due to error:");
+            e.printStackTrace(System.err);
         }
     }
 
