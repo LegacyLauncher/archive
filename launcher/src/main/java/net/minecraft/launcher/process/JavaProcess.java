@@ -1,5 +1,7 @@
 package net.minecraft.launcher.process;
 
+import ru.turikhay.tlauncher.portals.Portals;
+
 import java.nio.charset.Charset;
 
 public class JavaProcess {
@@ -16,6 +18,7 @@ public class JavaProcess {
         this.charset = charset;
         monitor = new ProcessMonitor(this, charset);
         monitor.start();
+        Portals.getPortal().minecraftProcessCreated(process);
     }
 
     public Charset getCharset() {

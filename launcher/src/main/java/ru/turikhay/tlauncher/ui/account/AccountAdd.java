@@ -26,7 +26,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     private final ExtendedPanel grid;
     private final GridBagConstraints c;
 
-    private final ExtendedButton mojang, minecraft, ely, free, idontknow;
+    private final ExtendedButton minecraft, ely, free, idontknow;
 
     private final boolean requireMinecraftAccount;
     public AccountAdd(final AccountManagerScene scene) {
@@ -47,7 +47,6 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         String ACCOUNT_TYPE_PREFIX = LOC_PREFIX + "type.";
         ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", createListenerFor("add-account-ely", false));
         minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", createListenerFor("process-account-minecraft", true));
-        mojang = addRow("logo-mojang", ACCOUNT_TYPE_PREFIX + "mojang", createListenerFor("add-account-mojang", true));
         free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", createListenerFor("add-account-plain", false));
         idontknow = addRow("info-circle", LOC_PREFIX + "hint", e -> Blocker.toggle(AccountAdd.this, "idontknow"));
 
@@ -131,17 +130,17 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     @Override
     public void block(Object var1) {
         if (!"idontknow".equals(var1)) {
-            Blocker.blockComponents(var1, mojang, free, ely, idontknow, minecraft);
+            Blocker.blockComponents(var1, free, ely, idontknow, minecraft);
         }
         if (requireMinecraftAccount) {
             Blocker.blockComponents(var1, free, ely);
         } else {
-            Blocker.blockComponents(var1, mojang, ely, minecraft);
+            Blocker.blockComponents(var1, ely, minecraft);
         }
     }
 
     @Override
     public void unblock(Object var1) {
-        Blocker.unblockComponents(var1, mojang, free, ely, idontknow, minecraft);
+        Blocker.unblockComponents(var1, free, ely, idontknow, minecraft);
     }
 }

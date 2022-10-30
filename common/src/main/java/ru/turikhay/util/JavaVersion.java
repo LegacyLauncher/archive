@@ -3,6 +3,8 @@ package ru.turikhay.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,6 +13,8 @@ import java.util.regex.Pattern;
  * https://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
  */
 public final class JavaVersion implements Comparable<JavaVersion> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaVersion.class);
+
     public static final JavaVersion UNKNOWN =
             new JavaVersion("unknown", "unknown", 1, 0, 0, 0);
 
@@ -23,8 +27,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
             try {
                 version = parse(sVersion);
             } catch (RuntimeException rE) {
-                System.err.println("Could not parse java version: " + sVersion);
-                rE.printStackTrace();
+                LOGGER.warn("Could not parse java version: {}", sVersion, rE);
                 version = UNKNOWN;
             }
             CURRENT = version;

@@ -40,6 +40,7 @@ import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.pasta.PastaFormat;
+import ru.turikhay.tlauncher.portals.Portals;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -1902,6 +1903,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     @Override
     public void onJavaProcessEnded(JavaProcess jp) {
+        Portals.getPortal().minecraftProcessDestroyed(jp.getRawProcess());
+
         notifyClose();
 
         int exit = jp.getExitCode();

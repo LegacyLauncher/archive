@@ -76,9 +76,9 @@ class MemoryAllocationServiceTest {
             for (int i = 1024; i <= (os.is64Bit() ? 65536 : 4096); i += 512) {
                 service = new MemoryAllocationService(os, new MemoryInfo(i));
                 assertHint(1024, 1024, service, OLD_VERSION_CONTEXT);
-                assertHint(i >= 8000 ? 2048 : 1024, i >= 8000 ? 2048 : 1024, service, OLD_FORGE_VERSION_CONTEXT);
+                assertHint(i >= 6000 ? 2048 : 1024, i >= 6000 ? 2048 : 1024, service, OLD_FORGE_VERSION_CONTEXT);
                 assertHint(1024, 1024, service, V1_3_CONTEXT);
-                assertHint(i >= 8000 ? 2048 : 1024, i >= 8000 ? 2048 : 1024, service, V1_3_FORGE_CONTEXT);
+                assertHint(i >= 6000 ? 2048 : 1024, i >= 6000 ? 2048 : 1024, service, V1_3_FORGE_CONTEXT);
             }
         }
     }
@@ -102,7 +102,7 @@ class MemoryAllocationServiceTest {
             for (int i = 2560; i <= (os.is64Bit() ? 65536 : 4096); i += 512) {
                 service = new MemoryAllocationService(os, new MemoryInfo(i));
                 assertHint(os.is64Bit() ? 2048 : 1024, 2048, service, V1_13_CONTEXT);
-                if (i >= 8000) {
+                if (i >= 6000) {
                     assertHint(4096, 4096, service, V1_13_FORGE_CONTEXT);
                 } else {
                     assertHint(os.is64Bit() ? 2048 : 1024, 2048, service, V1_13_FORGE_CONTEXT);

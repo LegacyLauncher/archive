@@ -9,6 +9,7 @@ import joptsimple.OptionSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.slf4j.SLF4JServiceProvider;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
@@ -16,7 +17,6 @@ import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.configuration.*;
 import ru.turikhay.tlauncher.downloader.Downloader;
 import ru.turikhay.tlauncher.handlers.ExceptionHandler;
-import ru.turikhay.tlauncher.jna.JNA;
 import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.logger.LoggerBuffer;
 import ru.turikhay.tlauncher.logger.LoggerInterface;
@@ -43,6 +43,7 @@ import ru.turikhay.tlauncher.ui.notification.Notification;
 import ru.turikhay.tlauncher.user.*;
 import ru.turikhay.util.*;
 import ru.turikhay.util.async.ExtendedThread;
+import ru.turikhay.util.logging.DelegateServiceProvider;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -106,6 +107,9 @@ public final class TLauncher {
 
         this.bridge = bridge;
         checkReportsCapabilities();
+        getCapability("slf4jDelegateServiceProvider", DelegateServiceProvider.class).ifPresent(delegateServiceProvider ->
+                delegateServiceProvider.setProvider(new SLF4JServiceProvider())
+        );
         this.dispatcher = dispatcher;
         LOGGER.debug("Options: {}", bridge.getOptions() == null ? null : bridge.getOptions().length() + " code units");
 

@@ -1,5 +1,6 @@
 package net.minecraft.launcher.process;
 
+import ru.turikhay.tlauncher.portals.Portals;
 import ru.turikhay.util.OS;
 
 import java.io.File;
@@ -39,6 +40,8 @@ public class JavaProcessLauncher {
         if (process == null) {
             process = (new ProcessBuilder(getFullCommands())).directory(directory).redirectErrorStream(true);
         }
+
+        Portals.getPortal().enrichMinecraftProcess(process);
 
         return process;
     }
