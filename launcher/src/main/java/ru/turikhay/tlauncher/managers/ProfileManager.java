@@ -31,6 +31,9 @@ import ru.turikhay.util.json.InstantAdapter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -187,7 +190,12 @@ public class ProfileManager extends RefreshableComponent {
     public void saveProfiles() throws IOException {
         ProfileManager.RawProfileList raw = new ProfileManager.RawProfileList();
         raw.userSet = accountManager.getUserSet();
-        FileUtil.writeFile(file, gson.toJson(raw));
+        File tmpFile = new File(file.getAbsolutePath() + ".tmp");
+        FileUtil.createFile(tmpFile);
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(tmpFile.toPath()), StandardCharsets.UTF_8)) {
+            gson.toJson(raw, writer);
+        }
+        Files.move(tmpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     public AccountManager getAccountManager() {

@@ -85,7 +85,7 @@ public class MemoryAllocationService {
         }
         int baseRequirement = base.requirement.apply(new QueryContext(os, mem, versionCtx));
         int xmx = baseRequirement;
-        if (mem.total >= 8000 && versionCtx.isForge()) {
+        if (mem.total >= 6000 && versionCtx.isForge()) {
             xmx = Math.min(mem.safeMax, xmx * 2);
             LOGGER.debug("Detected Forge version: bumping x 2: {} -> {} MiB",
                     baseRequirement, xmx);
