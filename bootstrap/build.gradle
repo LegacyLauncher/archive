@@ -73,6 +73,8 @@ shadowJar {
         exclude("/com/rm5248/dbusjava/**")
         exclude("com.kenai.**")
         exclude("/com/kenai/**")
+        exclude("com.feralinteractive.**")
+        exclude("/com/feralinteractive/**")
     }
     relocate("de.", "shaded.de.")
     relocate("io.", "shaded.io.")
@@ -83,7 +85,10 @@ shadowJar {
         exclude("org.slf4j.**")
     }
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
-    relocate("net.", "shaded.net.")
+    relocate("net.", "shaded.net.") {
+        exclude("net.hadess.**")
+        exclude("/net/hadess/**")
+    }
 
     exclude '*.md'
     exclude '*module-info.class'
