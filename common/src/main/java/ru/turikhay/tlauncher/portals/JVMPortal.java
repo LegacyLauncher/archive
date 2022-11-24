@@ -1,15 +1,24 @@
 package ru.turikhay.tlauncher.portals;
 
 import com.jthemedetecor.OsThemeDetector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.turikhay.util.JavaVersion;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class JVMPortal implements Portal {
-    private final Desktop desktop = Desktop.getDesktop();
+    private static final Logger LOGGER = LoggerFactory.getLogger(JVMPortal.class);
+
+    private final Desktop desktop;
+
+    private JVMPortal(Desktop desktop) {
+        this.desktop = desktop;
+    }
 
     @Override
     public boolean openURI(URI uri) {
@@ -43,5 +52,16 @@ public class JVMPortal implements Portal {
             return detector.isDark() ? ColorScheme.PREFER_DARK : ColorScheme.PREFER_LIGHT;
         }
         return ColorScheme.NO_PREFERENCE;
+    }
+
+    public static Optional<JVMPortal> tryToCreate() {
+        Desktop desktop;
+        try {
+            desktop = Desktop.getDesktop();
+        } catch (UnsupportedOperationException e) {
+            LOGGER.warn("Desktop API not supported", e);
+            return Optional.empty();
+        }
+        return Optional.of(new JVMPortal(desktop));
     }
 }

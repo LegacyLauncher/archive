@@ -25,11 +25,17 @@ public class Portals {
                 // => older bootstrap version
             }
         }
-        portals.add(new JVMPortal());
-        if (portals.size() == 1) {
-            PORTAL = portals.get(0);
-        } else {
-            PORTAL = new PortalCombiner(portals);
+        JVMPortal.tryToCreate().ifPresent(portals::add);
+        switch (portals.size()) {
+            case 0:
+                PORTAL = new NoopPortal();
+                break;
+            case 1:
+                PORTAL = portals.get(0);
+                break;
+            default:
+                PORTAL = new PortalCombiner(portals);
+                break;
         }
     }
 }
