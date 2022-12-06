@@ -49,6 +49,10 @@ public final class ConfigurationDefaults {
         d.put("minecraft.javaargs", null);
         d.put("minecraft.args", null);
         d.put("minecraft.improvedargs", true);
+        d.put("minecraft.gpu", "SYSTEM");
+        if (OS.LINUX.isCurrent()) {
+            d.put("minecraft.gamemode", true);
+        }
 
         d.put("minecraft.xmx", "auto");
 

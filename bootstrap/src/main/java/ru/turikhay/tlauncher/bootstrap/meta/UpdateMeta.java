@@ -34,7 +34,7 @@ public class UpdateMeta {
         Compressor.init(); // init compressor
     }
 
-    private static final int INITIAL_TIMEOUT = 2000, MAX_ATTEMPTS = 3;
+    private static final int INITIAL_TIMEOUT = 10000, MAX_ATTEMPTS = 3;
 
     public static Task<UpdateMeta> fetchFor(final String shortBrand, ConnectionInterrupter interrupter) {
         Objects.requireNonNull(shortBrand, "brand");
@@ -51,36 +51,64 @@ public class UpdateMeta {
                     private final AtomicInteger i = new AtomicInteger();
                     @Override
                     public Thread newThread(Runnable r) {
-                        return new Thread(null, r, "UpdateMeta-" + i.getAndIncrement());
+                        Thread t = new Thread(null, r, "UpdateMeta-" + i.getAndIncrement());
+                        t.setDaemon(true);
+                        return t;
                     }
                 });
+                ScheduledThreadPoolExecutor delayer = new ScheduledThreadPoolExecutor(
+                        1, r -> {
+                            Thread t = new Thread(null, r, "UpdateMetaDelayScheduler");
+                            t.setDaemon(true);
+                            return t;
+                        });
+                delayer.setRemoveOnCancelPolicy(true);
                 CompletableFuture<UpdateMeta> completed = new CompletableFuture<>();
                 try {
                     List<CompletableFuture<UpdateMeta>> tasks = new ArrayList<>();
                     for (int i = 1; i <= MAX_ATTEMPTS; i++) {
                         final int attempt = i;
-                        urlPrefixes.stream()
-                                .map(prefix -> prefix + updatePath)
-                                .map(url -> CompletableFuture.supplyAsync(() ->
-                                        fetchAttempts(url, gson, attempt), executor)
-                                )
-                                .forEach(tasks::add);
+                        for (int k = 0; k < urlPrefixes.size(); k++) {
+                            CompletableFuture<Void> delay;
+                            if (i == 1 && k < 2) {
+                                delay = CompletableFuture.completedFuture(null);
+                            } else {
+                                delay = new CompletableFuture<>();
+                                delayer.schedule(() -> delay.complete(null), 5, TimeUnit.SECONDS);
+                            }
+                            final String url = urlPrefixes.get(k) + updatePath;
+                            tasks.add(delay.thenApplyAsync((__) -> fetchAttempts(url, gson, attempt), executor));
+                        }
                     }
                     tasks.forEach(f -> f.thenAccept(completed::complete));
-                    completed.whenComplete((__, t) -> tasks.forEach(c -> c.cancel(true)));
+                    completed.whenComplete((__, t) -> {
+                        tasks.forEach(c -> c.cancel(true));
+                    });
                     CompletableFuture<?> all = CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]));
                     all.whenComplete((__, t) -> {
                         if (t != null) {
-                            completed.completeExceptionally(new IOException("no update meta is available"));
+                            completed.completeExceptionally(new UpdateMetaFetchFailed());
                         }
                     });
                     try {
                         return completed.get(5, TimeUnit.SECONDS);
                     } catch (TimeoutException e) {
                         LOGGER.warn("Fetching update meta is taking too long");
-                        interrupter.mayInterruptConnection(() -> completed.cancel(true));
+                        if (interrupter != null) {
+                            interrupter.mayInterruptConnection(() -> completed.cancel(true));
+                        }
                     }
                     return completed.get();
+                } catch (CancellationException e) {
+                    LOGGER.info("Update meta request was cancelled");
+                    throw new UpdateMetaFetchFailed();
+                } catch (ExecutionException e) {
+                    Throwable cause = e.getCause();
+                    LOGGER.error("Update meta request failed", cause);
+                    if (cause instanceof Exception) {
+                        throw (Exception) cause;
+                    }
+                    throw e;
                 } finally {
                     completed.cancel(true);
                     executor.shutdown();
@@ -105,12 +133,10 @@ public class UpdateMeta {
             LOGGER.error("Bad url: {}", sUrl, e);
             throw new CompletionException("bad url: " + sUrl, e);
         }
-        if (Thread.interrupted()) {
-            throw new CompletionException(new InterruptedException());
-        }
         LOGGER.info("{} ({} / {}): Requesting {}", url.getHost(), attempt, MAX_ATTEMPTS, url);
         InputStream stream = null;
         try {
+            long start = System.currentTimeMillis();
             stream = setupConnection(url, attempt);
             if (url.getPath().endsWith(".signed")) {
                 LOGGER.debug("{} ({} / {}): Requiring valid signature", url.getHost(), attempt, MAX_ATTEMPTS);
@@ -129,7 +155,8 @@ public class UpdateMeta {
                 LOGGER.info("{} ({} / {}): Interrupted", url.getHost(), attempt, MAX_ATTEMPTS);
                 throw new CompletionException(new InterruptedException());
             }
-            LOGGER.info("{} ({} / {}): OK", url.getHost(), attempt, MAX_ATTEMPTS);
+            LOGGER.info("{} ({} / {}): OK ({} ms)", url.getHost(), attempt, MAX_ATTEMPTS,
+                    (System.currentTimeMillis() - start));
             return meta;
         } catch (UnknownHostException e) {
             LOGGER.warn("{} ({} / {}): Unknown host", url.getHost(), attempt, MAX_ATTEMPTS);

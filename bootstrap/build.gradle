@@ -114,7 +114,7 @@ task runDebug(type: JavaExec) {
     group = "Execution"
     description = "Run BootstrapDebug"
     classpath(sourceSets.modern.runtimeClasspath, sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
-    maxHeapSize = "128M"
+    maxHeapSize = "256M"
     mainClass.set("ru.turikhay.tlauncher.bootstrap.BootstrapDebug")
     if (System.getenv("JRE_EXECUTABLE")) {
         executable(System.getenv("JRE_EXECUTABLE"))

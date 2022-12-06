@@ -9,7 +9,7 @@ public class ActionOnLaunchConverter extends LocalizableStringConverter<Configur
     }
 
     public Configuration.ActionOnLaunch fromString(String from) {
-        return Configuration.ActionOnLaunch.get(from);
+        return Configuration.ActionOnLaunch.find(from).orElse(Configuration.ActionOnLaunch.getDefault());
     }
 
     public String toValue(Configuration.ActionOnLaunch from) {

@@ -85,6 +85,7 @@ public final class TLauncher {
     private final MigrationManager migrationManager;
     private final ConnectivityManager connectivityManager;
     private final MemoryAllocationService memoryAllocationService;
+    private final GPUManager gpuManager;
 
     private final Downloader downloader;
 
@@ -199,6 +200,12 @@ public final class TLauncher {
 
         if (config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
             config.set("client", UUID.randomUUID());
+        }
+
+        if (OS.LINUX.isCurrent()) {
+            gpuManager = SwitcherooControlGPUManager.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
+        } else {
+            gpuManager = GPUManager.Empty.INSTANCE;
         }
 
         preloadUI();
@@ -409,7 +416,7 @@ public final class TLauncher {
         if (config.containsKey("gui.systemlookandfeel")) {
             // pre-FlatLaf configuration
             setSystemLaf = config.getBoolean("gui.systemlookandfeel");
-            LOGGER.info("FlatLaf is not enabled because \"gui.systemlookandfeel\" is set to \""+ setSystemLaf +"\"");
+            LOGGER.info("FlatLaf is not enabled because \"gui.systemlookandfeel\" is set to \"" + setSystemLaf + "\"");
             if (FlatLaf.isSupported()) {
                 // already using system L&F
                 config.set(FlatLafConfiguration.KEY_STATE, setSystemLaf ?
@@ -869,6 +876,10 @@ public final class TLauncher {
 
     public static String getSupportEmail() {
         return "support@tln4.ru";
+    }
+
+    public GPUManager getGpuManager() {
+        return gpuManager;
     }
 
     public static void launch(BootBridge bridge) throws InterruptedException {

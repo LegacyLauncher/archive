@@ -1,5 +1,6 @@
 package net.minecraft.launcher.process;
 
+import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
 import ru.turikhay.tlauncher.portals.Portals;
 
 import java.nio.charset.Charset;
@@ -12,13 +13,15 @@ public class JavaProcess {
     private final Process process;
     private final ProcessMonitor monitor;
     private final Charset charset;
+    private final ProcessHook hook;
 
-    public JavaProcess(Process process, Charset charset) {
+    public JavaProcess(Process process, Charset charset, ProcessHook hook) {
         this.process = process;
         this.charset = charset;
+        this.hook = hook;
         monitor = new ProcessMonitor(this, charset);
         monitor.start();
-        Portals.getPortal().minecraftProcessCreated(process);
+        hook.processCreated(process);
     }
 
     public Charset getCharset() {
@@ -27,6 +30,10 @@ public class JavaProcess {
 
     public ProcessMonitor getMonitor() {
         return monitor;
+    }
+
+    public ProcessHook getHook() {
+        return hook;
     }
 
     public Process getRawProcess() {
@@ -59,7 +66,6 @@ public class JavaProcess {
         if (!isRunning() && runnable != null) {
             runnable.onJavaProcessEnded(this);
         }
-
     }
 
     public JavaProcessListener getExitRunnable() {

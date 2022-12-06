@@ -1,6 +1,6 @@
 package net.minecraft.launcher.process;
 
-import ru.turikhay.tlauncher.portals.Portals;
+import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
 import ru.turikhay.util.OS;
 
 import java.io.File;
@@ -16,6 +16,7 @@ public class JavaProcessLauncher {
     private final List<String> commands;
     private File directory;
     private ProcessBuilder process;
+    private ProcessHook hook = ProcessHook.None.INSTANCE;
 
     public JavaProcessLauncher(Charset charset, String jvmPath, String[] commands) {
         if (jvmPath == null) {
@@ -33,15 +34,14 @@ public class JavaProcessLauncher {
     }
 
     public JavaProcess start() throws IOException {
-        return new JavaProcess(createProcess().start(), charset);
+        return new JavaProcess(createProcess().start(), charset, hook);
     }
 
     public ProcessBuilder createProcess() {
         if (process == null) {
             process = (new ProcessBuilder(getFullCommands())).directory(directory).redirectErrorStream(true);
+            hook.enrichProcess(process);
         }
-
-        Portals.getPortal().enrichMinecraftProcess(process);
 
         return process;
     }
@@ -90,6 +90,14 @@ public class JavaProcessLauncher {
 
     public void addSplitCommands(Object commands) {
         addCommands(commands.toString().split(" "));
+    }
+
+    public ProcessHook getHook() {
+        return hook;
+    }
+
+    public void addHook(ProcessHook hook) {
+        this.hook = this.hook.then(hook);
     }
 
     public JavaProcessLauncher directory(File directory) {

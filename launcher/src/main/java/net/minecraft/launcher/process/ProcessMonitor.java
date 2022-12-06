@@ -54,6 +54,7 @@ public class ProcessMonitor {
                         StreamMonitorWait.class.getSimpleName());
                 return;
             }
+            process.getHook().processDestroyed(process.getRawProcess());
             if (process.getExitRunnable() != null) {
                 process.getExitRunnable().onJavaProcessEnded(process);
             }
