@@ -67,6 +67,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":bridge"))
     implementation(libs.bundles.jna)
+    implementation(libs.bundles.dbus)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)

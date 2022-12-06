@@ -14,8 +14,9 @@ import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.util.*;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Proxy;
 import java.net.URL;
@@ -200,7 +201,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public Configuration.ActionOnLaunch getActionOnLaunch() {
-        return Configuration.ActionOnLaunch.get(get("minecraft.onlaunch"));
+        return Configuration.ActionOnLaunch.find(get("minecraft.onlaunch")).orElse(Configuration.ActionOnLaunch.getDefault());
     }
 
     public LoggerType getLoggerType() {
@@ -394,7 +395,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public void setFlatLafConfiguration(Object configuration) {
-        if(!(configuration instanceof FlatLafConfiguration)) {
+        if (!(configuration instanceof FlatLafConfiguration)) {
             throw new IllegalArgumentException();
         }
         putAll(((FlatLafConfiguration) configuration).toMap());
@@ -434,36 +435,10 @@ public class Configuration extends SimpleConfiguration {
         EXIT,
         NOTHING;
 
-        public static boolean parse(String val) {
-            if (val == null) {
-                return false;
-            }
-
-            Configuration.ActionOnLaunch[] var4;
-            int var3 = (var4 = values()).length;
-
-            for (int var2 = 0; var2 < var3; ++var2) {
-                Configuration.ActionOnLaunch cur = var4[var2];
-                if (cur.toString().equalsIgnoreCase(val)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public static Configuration.ActionOnLaunch get(String val) {
-            Configuration.ActionOnLaunch[] var4;
-            int var3 = (var4 = values()).length;
-
-            for (int var2 = 0; var2 < var3; ++var2) {
-                Configuration.ActionOnLaunch cur = var4[var2];
-                if (cur.toString().equalsIgnoreCase(val)) {
-                    return cur;
-                }
-            }
-
-            return null;
+        @Nonnull
+        public static Optional<ActionOnLaunch> find(@Nullable String name) {
+            if (name == null) return Optional.empty();
+            return Arrays.stream(values()).filter(it -> it.toString().equalsIgnoreCase(name)).findAny();
         }
 
         public String toString() {

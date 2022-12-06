@@ -48,25 +48,4 @@ public class PortalCombiner implements Portal {
         }
         return ColorScheme.NO_PREFERENCE;
     }
-
-    @Override
-    public void enrichMinecraftProcess(ProcessBuilder process) {
-        for (Portal portal : portals) {
-            portal.enrichMinecraftProcess(process);
-        }
-    }
-
-    @Override
-    public void minecraftProcessCreated(Process process) {
-        for (Portal portal : portals) {
-            portal.minecraftProcessCreated(process);
-        }
-    }
-
-    @Override
-    public void minecraftProcessDestroyed(Process process) {
-        for (Portal portal : portals) {
-            portal.minecraftProcessDestroyed(process);
-        }
-    }
 }

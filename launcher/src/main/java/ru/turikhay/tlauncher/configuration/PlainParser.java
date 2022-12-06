@@ -27,7 +27,7 @@ class PlainParser {
                     } else if (defaultValue instanceof IntegerArray) {
                         IntegerArray.parseIntegerArray(value);
                     } else if (defaultValue instanceof Configuration.ActionOnLaunch) {
-                        if (!Configuration.ActionOnLaunch.parse(value)) {
+                        if (!Configuration.ActionOnLaunch.find(value).isPresent()) {
                             throw new ParseException("Cannot parse ActionOnLaunch");
                         }
                     } else if (defaultValue instanceof Configuration.LoggerType) {

@@ -16,10 +16,6 @@ public interface Portal {
         return false;
     }
 
-    default void enrichMinecraftProcess(ProcessBuilder process) {}
-    default void minecraftProcessCreated(Process process) {}
-    default void minecraftProcessDestroyed(Process process) {}
-
     default ColorScheme getColorScheme() {
         return ColorScheme.NO_PREFERENCE;
     }

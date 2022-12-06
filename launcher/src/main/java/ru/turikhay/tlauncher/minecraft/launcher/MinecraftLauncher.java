@@ -38,6 +38,7 @@ import ru.turikhay.tlauncher.managers.*;
 import ru.turikhay.tlauncher.minecraft.*;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
+import ru.turikhay.tlauncher.minecraft.launcher.hooks.GameModeHook;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.pasta.PastaFormat;
 import ru.turikhay.tlauncher.portals.Portals;
@@ -136,6 +137,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     }
 
     private final JavaManager javaManager;
+    private final GPUManager gpuManager;
 
     private JavaManagerConfig javaManagerConfig;
 
@@ -180,32 +182,33 @@ public class MinecraftLauncher implements JavaProcessListener {
     private MinecraftLauncher(ComponentManager manager, Downloader downloader, Configuration configuration, boolean forceUpdate, boolean exit) {
         if (manager == null) {
             throw new NullPointerException("Ti sovsem s duba ruhnul?");
-        } else if (downloader == null) {
-            throw new NullPointerException("Downloader is NULL!");
-        } else if (configuration == null) {
-            throw new NullPointerException("Configuration is NULL!");
-        } else {
-            parentThread = Thread.currentThread();
-            gson = new Gson();
-            dateAdapter = new DateTypeAdapter(true);
-            this.downloader = downloader;
-            settings = configuration;
-            assistants = manager.getComponentsOf(MinecraftLauncherAssistant.class);
-            vm = manager.getComponent(VersionManager.class);
-            am = manager.getComponent(AssetsManager.class);
-            pm = manager.getComponent(ProfileManager.class);
-            javaManager = TLauncher.getInstance().getJavaManager();
-            this.forceUpdate = forceUpdate;
-            assistLaunch = !exit;
-
-
-            listeners = Collections.synchronizedList(new ArrayList<>());
-            extListeners = Collections.synchronizedList(new ArrayList<>());
-            step = MinecraftLauncher.MinecraftLauncherStep.NONE;
-
-            LOGGER.info("Alternative Minecraft Launcher ({}) has initialized", ALTERNATIVE_VERSION);
-            LOGGER.info("Compatible with official version: {}", OFFICIAL_VERSION);
         }
+        if (downloader == null) {
+            throw new NullPointerException("Downloader is NULL!");
+        }
+        if (configuration == null) {
+            throw new NullPointerException("Configuration is NULL!");
+        }
+        parentThread = Thread.currentThread();
+        gson = new Gson();
+        dateAdapter = new DateTypeAdapter(true);
+        this.downloader = downloader;
+        settings = configuration;
+        assistants = manager.getComponentsOf(MinecraftLauncherAssistant.class);
+        vm = manager.getComponent(VersionManager.class);
+        am = manager.getComponent(AssetsManager.class);
+        pm = manager.getComponent(ProfileManager.class);
+        javaManager = TLauncher.getInstance().getJavaManager();
+        gpuManager = TLauncher.getInstance().getGpuManager();
+        this.forceUpdate = forceUpdate;
+        assistLaunch = !exit;
+
+        listeners = Collections.synchronizedList(new ArrayList<>());
+        extListeners = Collections.synchronizedList(new ArrayList<>());
+        step = MinecraftLauncher.MinecraftLauncherStep.NONE;
+
+        LOGGER.info("Alternative Minecraft Launcher ({}) has initialized", ALTERNATIVE_VERSION);
+        LOGGER.info("Compatible with official version: {}", OFFICIAL_VERSION);
     }
 
     public MinecraftLauncher(TLauncher t, boolean forceUpdate) {
@@ -1224,6 +1227,20 @@ public class MinecraftLauncher implements JavaProcessListener {
             deleteMod("tl.?skin.?cape.*\\.jar");
         }
 
+        String gpuName = settings.get("minecraft.gpu");
+        if (!gpuName.equals("SYSTEM")) {
+            Optional<GPUManager.GPU> gpu = gpuManager.findGPU(gpuName);
+            if (gpu.isPresent()) {
+                launcher.addHook(gpu.get().getHook());
+            } else {
+                LOGGER.warn("Unable to find GPU {}", gpuName);
+            }
+        }
+
+        if (settings.getBoolean("minecraft.gamemode")) {
+            GameModeHook.tryToCreate().ifPresent(launcher::addHook);
+        }
+
         if (fullCommand) {
             LOGGER.info("Full command (not escaped):");
             LOGGER.info(launcher.getCommandsAsString());
@@ -1786,7 +1803,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 Optional<String> old = Optional.ofNullable(env.put("_JAVA_OPTIONS", ""));
                 LOGGER.debug("Replaced process _JAVA_OPTIONS=\"" + old.orElse("null") + "\" with nothing");
             }
-            process = new JavaProcess(b.start(), charset);
+            process = new JavaProcess(b.start(), charset, launcher.getHook());
             process.safeSetExitRunnable(this);
             minecraftWorking = true;
             updateLoggerActions();
@@ -1903,8 +1920,6 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     @Override
     public void onJavaProcessEnded(JavaProcess jp) {
-        Portals.getPortal().minecraftProcessDestroyed(jp.getRawProcess());
-
         notifyClose();
 
         int exit = jp.getExitCode();

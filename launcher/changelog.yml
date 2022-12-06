@@ -1,5 +1,7 @@
 ru_RU: >
-  Исправления ошибок
+  Добавлен выбор видеокарт на Linux (использует switcheroo-control под капотом)
+  Добавлен выключатель для GameMode (так же только для Linux)
 
 en_US: >
-  Bug fixes
+  Add GPU selector for Linux (uses switcheroo-control under the hood)
+  Add GameMode switch (also Linux only)

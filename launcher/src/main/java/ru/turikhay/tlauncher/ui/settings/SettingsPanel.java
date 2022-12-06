@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.bootstrap.bridge.FlatLafConfiguration;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.managers.VersionLists;
+import ru.turikhay.tlauncher.minecraft.launcher.hooks.GameModeHook;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.tlauncher.ui.alert.Alert;
@@ -30,6 +31,7 @@ import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.util.Direction;
 import ru.turikhay.util.IntegerArray;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
@@ -54,6 +56,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorFieldHandler fullscreen;
     public final EditorFieldHandler jre;
     public final EditorFieldHandler memory;
+    public final EditorFieldHandler gpu;
     public final EditorGroupHandler versionHandler;
     public final EditorFieldHandler oldVersionsHandler; // temp
     public final EditorGroupHandler extraHandler;
@@ -175,12 +178,24 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         memory = new EditorFieldHandler("minecraft.xmx", memorySlider, warning);
         minecraftTab.add(new EditorPair("settings.java.memory.label", memory));
 
+        if (!tlauncher.getGpuManager().isEmpty()) {
+            minecraftTab.nextPane();
+            gpu = new EditorFieldHandler("minecraft.gpu", new GPUComboBox(this));
+            minecraftTab.add(new EditorPair("settings.gpu.label", gpu));
+        } else {
+            gpu = null;
+        }
+
         minecraftTab.nextPane();
 
         List<EditorHandler> extraHandlerList = new ArrayList<>();
         extraHandlerList.add(new EditorFieldHandler("ely.globally", new EditorCheckBox("settings.ely", true)));
         extraHandlerList.add(EditorPair.NEXT_COLUMN);
         extraHandlerList.add(new EditorFieldHandler("minecraft.servers.promoted.ingame", new EditorCheckBox("settings.promotion.ingame", true)));
+        if (OS.LINUX.isCurrent()) {
+            extraHandlerList.add(EditorPair.NEXT_COLUMN);
+            extraHandlerList.add(new EditorFieldHandler("minecraft.gamemode", new EditorCheckBox("settings.gamemode", true)));
+        }
         extraHandler = new EditorGroupHandler(extraHandlerList);
         minecraftTab.add(new EditorPair("settings.extra.label", extraHandlerList));
         minecraftTab.nextPane();

@@ -20,7 +20,6 @@ public class ContactUsFrame extends VActionFrame {
     private static final List<SupportService> supportServices = Arrays.asList(
             cisOnly("vk", "https://tlaun.ch/support/vk"),
             cisOnly("discord", "https://tlaun.ch/support/discord/ru"),
-            any("facebook", "https://tlaun.ch/support/fb"),
             notCis("discord", "https://tlaun.ch/support/discord/intl"),
             any("mail", "envelope-open", "mailto:" + TLauncher.getSupportEmail())
     );
