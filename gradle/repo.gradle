@@ -1,7 +1,7 @@
 ext {
     repo_domains = [ 'tlaun.ch', 'tln4.ru', '4nlt.com' ]
-    repo_domain_zones_eu = [ 'eu01-www', 'eu02-www' ]
-    repo_domain_zones_ru = [ 'ru01-www', 'ru02-www' ]
+    repo_domain_zones_eu = [ 'eu01-www', 'eu02-www', 'eu03-www' ]
+    repo_domain_zones_ru = [ 'ru01-www', 'ru02-www', 'ru03-www' ]
     repo_hosts = repo_domains.collect { rd ->
         [ rd ] + [ repo_domain_zones_eu, repo_domain_zones_ru ].flatten().collect { "$it.$rd" }
     }.flatten()

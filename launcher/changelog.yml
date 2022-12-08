@@ -1,7 +1,9 @@
 ru_RU: >
-  Добавлен выбор видеокарт на Linux (использует switcheroo-control под капотом)
+  Добавлен выбор видеокарт на Windows (выбор только между интегрированной и дискретной графикой)<br>
+  Добавлен выбор видеокарт на Linux (использует switcheroo-control под капотом)<br>
   Добавлен выключатель для GameMode (так же только для Linux)
 
 en_US: >
-  Add GPU selector for Linux (uses switcheroo-control under the hood)
+  Add GPU selector for Windows (can be only chosen between integrated and discrete GPUs)<br> 
+  Add GPU selector for Linux (uses switcheroo-control under the hood)<br>
   Add GameMode switch (also Linux only)

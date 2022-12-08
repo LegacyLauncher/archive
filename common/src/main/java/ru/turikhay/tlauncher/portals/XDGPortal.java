@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 public class XDGPortal implements Portal, Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(XDGPortal.class);
@@ -102,15 +103,17 @@ public class XDGPortal implements Portal, Closeable {
         }
     }
 
-    public static Optional<Portal> tryToCreate() {
-        Callable<DBusConnection> sessionFactory = () -> DBusConnectionBuilder.forSessionBus()
-                .withShared(false)
+    private static DBusConnection createSessionConnection(boolean shared) throws DBusException {
+        return DBusConnectionBuilder.forSessionBus()
+                .withShared(shared)
                 .withDisconnectCallback(new DBusDisconnectionLogger())
                 .build();
+    }
 
+    public static Optional<Portal> tryToCreate() {
         try {
-            DBusConnection session = sessionFactory.call();
-            DBusConnection fdSession = sessionFactory.call();
+            DBusConnection session = createSessionConnection(true);
+            DBusConnection fdSession = createSessionConnection(false);
             return Optional.of(new XDGPortal(session, fdSession));
         } catch (Throwable t) {
             LOGGER.warn("Couldn't open D-Bus connection", t); // TODO remove after release

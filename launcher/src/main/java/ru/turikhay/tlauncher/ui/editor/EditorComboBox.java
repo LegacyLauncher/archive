@@ -1,11 +1,20 @@
 package ru.turikhay.tlauncher.ui.editor;
 
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
+import ru.turikhay.tlauncher.ui.swing.ConverterCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedComboBox;
+
+import javax.swing.*;
 
 public class EditorComboBox<T> extends ExtendedComboBox<T> implements EditorField {
     private static final long serialVersionUID = -2320340434786516374L;
     private final boolean allowNull;
+
+    public EditorComboBox(ConverterCellRenderer<T> renderer, boolean allowNull) {
+        super(renderer);
+        setConverter(renderer.getConverter());
+        this.allowNull = allowNull;
+    }
 
     public EditorComboBox(StringConverter<T> converter, T[] values, boolean allowNull) {
         super(converter);
