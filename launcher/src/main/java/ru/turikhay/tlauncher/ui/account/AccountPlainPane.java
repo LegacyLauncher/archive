@@ -10,10 +10,14 @@ import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
 import ru.turikhay.tlauncher.ui.loc.LocalizableTextField;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
+import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
+import ru.turikhay.tlauncher.ui.theme.Theme;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.util.SwingUtil;
 
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 import java.awt.*;
 
 public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneCompCloseable {
@@ -46,6 +50,26 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         add(label, c);
 
         field = new LocalizableTextField();
+        field.getDocument().addDocumentListener(new DocumentChangeListener() {
+            private boolean wasValid = true;
+            @Override
+            public void documentChanged(DocumentEvent e) {
+                String v = field.getValue();
+                setValid(StringUtils.isEmpty(v) || isNameValid(v));
+            }
+
+            private void setValid(boolean valid) {
+                if (wasValid == valid) {
+                    return;
+                }
+                if (valid) {
+                    field.setBackground(UIManager.getColor("TextField.background"));
+                } else {
+                    field.setBackground(Theme.getTheme().getFailure());
+                }
+                this.wasValid = valid;
+            }
+        });
         field.setFont(field.getFont().deriveFont(field.getFont().getSize2D() + 4.f));
         field.setPlaceholder(LOC_PREFIX + "placeholder");
         c.insets = new Insets(SwingUtil.magnify(5), 0, 0, 0);
@@ -64,6 +88,11 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
 
             if (StringUtils.isBlank(username)) {
                 Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
+                return;
+            }
+
+            if (!isNameValid(username)) {
+                Alert.showLocError("account.manager.multipane.account-plain.invalid");
                 return;
             }
 
@@ -159,5 +188,9 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                 field.setValue(selected.getUsername());
             }
         }
+    }
+
+    private static boolean isNameValid(String name) {
+        return name != null && name.chars().noneMatch(ch -> ch <= 32 || ch >= 127);
     }
 }

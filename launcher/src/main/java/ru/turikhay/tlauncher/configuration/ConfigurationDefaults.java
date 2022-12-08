@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.configuration;
 
 import net.minecraft.launcher.versions.ReleaseType;
+import ru.turikhay.tlauncher.managers.GPUManager;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
 import ru.turikhay.tlauncher.ui.FlatLaf;
 import ru.turikhay.util.Direction;
@@ -49,7 +50,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.javaargs", null);
         d.put("minecraft.args", null);
         d.put("minecraft.improvedargs", true);
-        d.put("minecraft.gpu", "SYSTEM");
+        d.put("minecraft.gpu", GPUManager.GPU.DISCRETE.getName());
         if (OS.LINUX.isCurrent()) {
             d.put("minecraft.gamemode", true);
         }

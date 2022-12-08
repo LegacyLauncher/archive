@@ -11,7 +11,11 @@ url='https://tlaun.ch'
 arch=('any')
 license=('custom')
 depends=('java-runtime>=8')
-optdepends=('xorg-xrandr: Required for some old Minecraft versions')
+optdepends=(
+  'xorg-xrandr: Required for some old Minecraft versions'
+  'switcheroo-control: GPU selector'
+  'gamemode: Optimizing game performance'
+)
 
 #_bootstrap_version='@BOOTSTRAP_VERSION@'
 #_bootstrap_checksum='@BOOTSTRAP_CHECKSUM@'

@@ -203,10 +203,14 @@ public final class TLauncher {
         }
 
         if (OS.LINUX.isCurrent()) {
-            gpuManager = SwitcherooControlGPUManager.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
+            gpuManager = LinuxGpuManager.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
+        } else if (OS.WINDOWS.isCurrent()) {
+            gpuManager = WindowsGpuManager.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
         } else {
             gpuManager = GPUManager.Empty.INSTANCE;
         }
+
+        LOGGER.info("Loaded GPU manager: {}", gpuManager);
 
         preloadUI();
 
@@ -903,12 +907,12 @@ public final class TLauncher {
         dispatcher.onBootStarted();
 
 //        while (true) {
-            try {
-                new TLauncher(bridge, dispatcher);
-            } catch (Throwable t) {
-                LOGGER.fatal("Error launching TL", t);
-                dispatcher.onBootErrored(t);
-            }
+        try {
+            new TLauncher(bridge, dispatcher);
+        } catch (Throwable t) {
+            LOGGER.fatal("Error launching TL", t);
+            dispatcher.onBootErrored(t);
+        }
 //        }
     }
 

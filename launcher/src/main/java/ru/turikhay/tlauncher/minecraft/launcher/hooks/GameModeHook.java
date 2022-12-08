@@ -29,7 +29,6 @@ public class GameModeHook implements ProcessHook {
         if (JavaVersion.getCurrent().getMajor() >= 11) {
             try {
                 Callable<DBusConnection> systemFactory = () -> DBusConnectionBuilder.forSessionBus()
-                        .withShared(false)
                         .withDisconnectCallback(new XDGPortal.DBusDisconnectionLogger())
                         .build();
 

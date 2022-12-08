@@ -7,7 +7,7 @@ import javax.swing.*;
 public abstract class ConverterCellRenderer<T> implements ListCellRenderer<T> {
     protected final StringConverter<T> converter;
 
-    ConverterCellRenderer(StringConverter<T> converter) {
+    protected ConverterCellRenderer(StringConverter<T> converter) {
         if (converter == null) {
             throw new NullPointerException();
         } else {

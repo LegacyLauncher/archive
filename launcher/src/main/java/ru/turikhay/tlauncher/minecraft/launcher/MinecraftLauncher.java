@@ -1228,16 +1228,25 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         String gpuName = settings.get("minecraft.gpu");
-        if (!gpuName.equals("SYSTEM")) {
-            Optional<GPUManager.GPU> gpu = gpuManager.findGPU(gpuName);
-            if (gpu.isPresent()) {
-                launcher.addHook(gpu.get().getHook());
-            } else {
+        Optional<GPUManager.GPU> gpu;
+        if (gpuName.equalsIgnoreCase(GPUManager.GPU.DEFAULT.getName())) {
+            gpu = Optional.of(GPUManager.GPU.DEFAULT);
+            LOGGER.info("Using system GPU settings");
+        } else if (gpuName.equalsIgnoreCase(GPUManager.GPU.INTEGRATED.getName())) {
+            gpu = gpuManager.findIntegratedGPU();
+            gpu.ifPresent(value -> LOGGER.info("GPU name {} resolved to {}", gpuName, value.getName()));
+        } else if (gpuName.equalsIgnoreCase(GPUManager.GPU.DISCRETE.getName())) {
+            gpu = gpuManager.findDiscreteGPU();
+            gpu.ifPresent(value -> LOGGER.info("GPU name {} resolved to {}", gpuName, value.getName()));
+        } else {
+            gpu = gpuManager.findGPU(gpuName);
+            if (!gpu.isPresent()) {
                 LOGGER.warn("Unable to find GPU {}", gpuName);
             }
         }
+        gpu.ifPresent(value -> launcher.addHook(value.getHook(gpuManager)));
 
-        if (settings.getBoolean("minecraft.gamemode")) {
+        if (OS.LINUX.isCurrent() && settings.getBoolean("minecraft.gamemode")) {
             GameModeHook.tryToCreate().ifPresent(launcher::addHook);
         }
 
@@ -1285,8 +1294,6 @@ public class MinecraftLauncher implements JavaProcessListener {
       return;
     }
 */
-
-        setMaximumGPUPerformanceOnWindows();
 
         launchMinecraft();
     }
@@ -2197,74 +2204,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             loggingFileStream.close();
         }
         return file.getAbsolutePath();
-    }
-
-    private static final int GPU_PREFERENCE_WINDOWS_BUILD = 20190;
-    private static final String GPU_PREFERENCE_REG_KEY = "Software\\Microsoft\\DirectX\\UserGpuPreferences";
-    private static final String GPU_PREFERENCE_VALUE = "GpuPreference=2;";
-
-    private void setMaximumGPUPerformanceOnWindows() {
-        if (!OS.WINDOWS.isCurrent() || !settings.getBoolean("windows.gpuperf")) {
-            return;
-        }
-        Optional<Integer> buildOpt = JNAWindows.getBuildNumber();
-        if (!buildOpt.isPresent()) {
-            LOGGER.warn("Couldn't find current Windows build. Is JNA enabled? Setting GPU performance is disabled");
-            return;
-        }
-        if (buildOpt.get() < GPU_PREFERENCE_WINDOWS_BUILD) {
-            LOGGER.info("Current Windows build ({}) doesn't support setting GPU preference " +
-                    "through registry", buildOpt.get());
-            return;
-        }
-        if (!Paths.get(jreExec).isAbsolute()) {
-            LOGGER.warn("JRE executable is not absolute ({}), " +
-                    "setting GPU performance is disabled", jreExec);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.INFO)
-                    .withMessage("jreExec is not absolute")
-                    .withExtra("jreExec", jreExec)
-            );
-            return;
-        }
-        Optional<JNAWindows.Registry> registryOpt = JNAWindows.getRegistry();
-        if (!registryOpt.isPresent()) {
-            LOGGER.warn("Registry is not available");
-            return;
-        }
-        JNAWindows.Registry reg = registryOpt.get();
-        String currentValue;
-        try {
-            currentValue = reg.getString(HKEY_CURRENT_USER, GPU_PREFERENCE_REG_KEY, jreExec);
-        } catch (JNAException e) {
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't get GpuPreference")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withExtra("windowsBuild", buildOpt.get())
-                    .withExtra("jreExec", jreExec)
-            );
-            LOGGER.error("Couldn't fetch current GPU preference. Setting it was skipped.", e);
-            return;
-        }
-        if (currentValue != null) {
-            LOGGER.debug("Skipping setting GPU Preference. Current value for {}: {}",
-                    jreExec, currentValue);
-            return;
-        }
-        LOGGER.info("Setting GpuPreference value for {}: {}", jreExec, GPU_PREFERENCE_VALUE);
-        try {
-            reg.setString(HKEY_CURRENT_USER, GPU_PREFERENCE_REG_KEY, jreExec, GPU_PREFERENCE_VALUE);
-        } catch (JNAException e) {
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't set GpuPreference")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withExtra("windowsBuild", buildOpt.get())
-                    .withExtra("jreExec", jreExec)
-            );
-            LOGGER.error("Couldn't set current GPU preference", e);
-        }
     }
 
     public enum LoggerVisibility {

@@ -1,15 +1,18 @@
 package ru.turikhay.tlauncher.ui.settings;
 
 import ru.turikhay.tlauncher.managers.GPUManager;
-import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
 import ru.turikhay.tlauncher.ui.converter.StringConverter;
 import ru.turikhay.tlauncher.ui.editor.EditorComboBox;
 import ru.turikhay.tlauncher.ui.editor.EditorField;
+import ru.turikhay.tlauncher.ui.images.ImageIcon;
+import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
-import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
+import ru.turikhay.tlauncher.ui.swing.ConverterCellRenderer;
+import ru.turikhay.tlauncher.ui.swing.DefaultConverterCellRenderer;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
 
-import java.util.Collections;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,9 +24,10 @@ public class GPUComboBox extends BorderPanel implements EditorField {
     public GPUComboBox(SettingsPanel sp) {
         this.sp = sp;
 
-        List<GPUManager.GPU> gpus = sp.tlauncher.getGpuManager().discoveryGPUs();
-        comboBox = new EditorComboBox<>(new GPUConverter(gpus), null);
-        comboBox.addItem(DEFAULT_GPU);
+        GPUManager gpuManager = sp.tlauncher.getGpuManager();
+        List<GPUManager.GPU> gpus = gpuManager.discoveryGPUs();
+        comboBox = new EditorComboBox<>(new GPUCellRenderer(gpus, gpuManager), false);
+        GPUManager.GPU.GLOBAL_DEFINED.forEach(comboBox::addItem);
         gpus.forEach(comboBox::addItem);
 
         setCenter(comboBox);
@@ -57,35 +61,25 @@ public class GPUComboBox extends BorderPanel implements EditorField {
         return true;
     }
 
-    private static final GPUManager.GPU DEFAULT_GPU = new GPUManager.GPU("SYSTEM", true, ProcessHook.None.INSTANCE);
-
     private static class GPUConverter implements StringConverter<GPUManager.GPU> {
-        private static final Pattern PATTERN = Pattern.compile(".*\\[([^]]+)]");
 
         private final List<GPUManager.GPU> gpus;
+        private final GPUManager gpuManager;
 
-        public GPUConverter(List<GPUManager.GPU> gpus) {
+        GPUConverter(List<GPUManager.GPU> gpus, GPUManager gpuManager) {
             this.gpus = gpus;
+            this.gpuManager = gpuManager;
         }
 
         @Override
         public GPUManager.GPU fromString(String name) {
-            if (DEFAULT_GPU.getName().equals(name)) return DEFAULT_GPU;
-            return gpus.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(name)).findAny().orElse(null);
+            return GPUManager.GPU.GLOBAL_DEFINED.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(name)).findAny()
+                    .orElseGet(() -> gpus.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(name)).findAny().orElse(null));
         }
 
         @Override
         public String toString(GPUManager.GPU gpu) {
-            if (gpu == DEFAULT_GPU) {
-                return Localizable.get("settings.gpu.default.label");
-            }
-            String name = gpu.getName();
-            Matcher matcher = PATTERN.matcher(name);
-            if (matcher.matches()) {
-                return matcher.group(1);
-            } else {
-                return name;
-            }
+            return gpu.getDisplayName(gpuManager);
         }
 
         @Override
@@ -96,6 +90,38 @@ public class GPUComboBox extends BorderPanel implements EditorField {
         @Override
         public Class<GPUManager.GPU> getObjectClass() {
             return GPUManager.GPU.class;
+        }
+    }
+
+    private static class GPUCellRenderer extends ConverterCellRenderer<GPUManager.GPU> {
+        private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+
+        GPUCellRenderer(List<GPUManager.GPU> gpus, GPUManager gpuManager) {
+            super(new GPUConverter(gpus, gpuManager));
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<? extends GPUManager.GPU> list, GPUManager.GPU value, int index, boolean isSelected, boolean cellHasFocus) {
+            final JLabel label = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            label.setText(converter.toString(value));
+            final ImageIcon icon;
+            switch (value.getVendor()) {
+                case AMD:
+                    icon = Images.getIcon16("gpu-icon-amd");
+                    break;
+                case Nvidia:
+                    icon = Images.getIcon16("gpu-icon-nvidia");
+                    break;
+                case Intel:
+                    icon = Images.getIcon16("gpu-icon-intel");
+                    break;
+                case Unknown:
+                default:
+                    icon = null;
+                    break;
+            }
+            label.setIcon(icon);
+            return label;
         }
     }
 }
