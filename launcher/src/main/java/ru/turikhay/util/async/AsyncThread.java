@@ -6,6 +6,7 @@ public class AsyncThread {
     public static final ExecutorService SHARED_SERVICE = Executors.newCachedThreadPool(
             ExtendedThread::new
     );
+    public static final ScheduledExecutorService DELAYER = Executors.newSingleThreadScheduledExecutor();
 
     public static void execute(Runnable r) {
         SHARED_SERVICE.execute(wrap(r));
@@ -24,11 +25,7 @@ public class AsyncThread {
     }
 
     public static Future<?> after(long timeout, TimeUnit timeUnit, Runnable r) {
-        return future(() -> {
-            Thread.sleep(timeUnit.toMillis(timeout));
-            r.run();
-            return null; // hint to compiler to use Callable<>
-        });
+        return DELAYER.schedule(r, timeout, timeUnit);
     }
 
     public static Future<?> afterSeconds(long timeout, Runnable r) {

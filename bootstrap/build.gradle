@@ -34,8 +34,8 @@ compileModernJava {
 }
 
 dependencies {
-    modernImplementation(sourceSets.main.output)
-    modernImplementation(project(":bridge"))
+    modernCompileOnly(sourceSets.main.output)
+    modernCompileOnly(project(":bridge"))
 
     implementation(project(":bridge"))
     implementation(project(":common"))
@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.flatlaf)
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
+    implementation(libs.oshi)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -75,6 +76,7 @@ shadowJar {
         exclude("/com/kenai/**")
         exclude("com.feralinteractive.**")
         exclude("/com/feralinteractive/**")
+        exclude("com.oshi.**")
     }
     relocate("de.", "shaded.de.")
     relocate("io.", "shaded.io.")
@@ -135,6 +137,9 @@ task runDebug(type: JavaExec) {
     dependsOn(":launcher:buildLauncherRepo")
 
     if (System.getenv("JRE_LEGACY") == "true") {
+        javaLauncher.set javaToolchains.launcherFor {
+            languageVersion.set JavaLanguageVersion.of(8)
+        }
         dependsOn(":launcher:prepareLauncherDirJava8")
     } else {
         dependsOn(":launcher:prepareLauncherDir")

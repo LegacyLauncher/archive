@@ -6,8 +6,6 @@ import org.freedesktop.dbus.errors.ServiceUnknown;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.turikhay.tlauncher.managers.GPUManager;
-import ru.turikhay.tlauncher.managers.SwitcherooControlGPUManager;
 import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
 import ru.turikhay.tlauncher.portals.XDGPortal;
 import ru.turikhay.util.JavaVersion;
@@ -25,22 +23,20 @@ public class GameModeHook implements ProcessHook {
     }
 
 
-    public static Optional<ProcessHook> tryToCreate() {
-        if (JavaVersion.getCurrent().getMajor() >= 11) {
-            try {
-                Callable<DBusConnection> systemFactory = () -> DBusConnectionBuilder.forSessionBus()
-                        .withDisconnectCallback(new XDGPortal.DBusDisconnectionLogger())
-                        .build();
+    protected static Optional<ProcessHook> tryToCreate() {
+        try {
+            Callable<DBusConnection> systemFactory = () -> DBusConnectionBuilder.forSessionBus()
+                    .withDisconnectCallback(new XDGPortal.DBusDisconnectionLogger())
+                    .build();
 
-                try {
-                    return Optional.of(new GameModeHook(systemFactory.call()));
-                } catch (Throwable t) {
-                    return Optional.empty();
-                }
-            } catch (NoClassDefFoundError ignored) {
-                // java.lang.NoClassDefFoundError: org/freedesktop/dbus/**
-                // => older bootstrap version
+            try {
+                return Optional.of(new GameModeHook(systemFactory.call()));
+            } catch (Throwable t) {
+                return Optional.empty();
             }
+        } catch (NoClassDefFoundError ignored) {
+            // java.lang.NoClassDefFoundError: org/freedesktop/dbus/**
+            // => older bootstrap version
         }
 
         return Optional.empty();
@@ -67,6 +63,19 @@ public class GameModeHook implements ProcessHook {
             gameModeInterface.UnregisterGameByPID(callerPid, gamePid);
             LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}", callerPid, gamePid);
         } catch (ServiceUnknown ignored) {
+        }
+    }
+
+    public static class Loader {
+        private static final Logger LOGGER = LoggerFactory.getLogger(Loader.class);
+
+        public static Optional<ProcessHook> tryToCreate() {
+            if (JavaVersion.getCurrent().getMajor() >= 11) {
+                return GameModeHook.tryToCreate();
+            } else {
+                LOGGER.info("GameModeHook is not available because it requires Java 11+");
+            }
+            return Optional.empty();
         }
     }
 }

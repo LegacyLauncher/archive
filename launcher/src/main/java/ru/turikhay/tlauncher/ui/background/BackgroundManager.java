@@ -1,11 +1,13 @@
 package ru.turikhay.tlauncher.ui.background;
 
+import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.ui.MainPane;
 import ru.turikhay.tlauncher.ui.background.fx.MediaFxBackground;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLayeredPane;
+import ru.turikhay.util.JavaVersion;
 
 import javax.swing.*;
 
@@ -33,7 +35,11 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         OldAnimatedBackground oldAnimatedBackground = null;//new OldAnimatedBackground();
         FXWrapper<MediaFxBackground> _mediaFxBackground = null;
         try {
-            _mediaFxBackground = new FXWrapper<>(MediaFxBackground.class);
+            if (JavaVersion.getCurrent().getMajor() >= 11) {
+                _mediaFxBackground = new FXWrapper<>(MediaFxBackground.class);
+            } else {
+                LOGGER.info("MediaFxBackground is not be available because it requires Java 11+");
+            }
         } catch (Throwable t) {
             LOGGER.info("MediaFxBackground will not be available: {}", t.toString());
             LOGGER.debug("Detailed exception", t);

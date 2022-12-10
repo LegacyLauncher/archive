@@ -5,9 +5,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.jna.JNA;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.windows.dxdiag.DisplayDevice;
-import ru.turikhay.util.windows.dxdiag.DxDiag;
-import ru.turikhay.util.windows.dxdiag.DxDiagReport;
+import ru.turikhay.util.sysinfo.GraphicsCard;
+import ru.turikhay.util.sysinfo.SystemInfo;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -184,7 +183,7 @@ public class CrashEntry extends IEntry {
         return button;
     }
 
-    protected boolean requiresDxDiag() {
+    protected boolean requiresSysInfo() {
         return isCompatibleWith(OS.WINDOWS) && (getGraphicsCardPattern() != null || isArchIssue());
     }
 
@@ -212,29 +211,24 @@ public class CrashEntry extends IEntry {
         if (getGraphicsCardPattern() != null) {
             LOGGER.debug("graphics card pattern of {}: {}", getName(), getGraphicsCardPattern());
 
-            if (!DxDiag.canExecute()) {
-                LOGGER.debug("{} is not capable because it requires DXDiag scanner", getName());
-                return false;
-            }
-
-            DxDiagReport dxDiagReport;
+            SystemInfo systemInfo;
             try {
-                dxDiagReport = DxDiag.getInstanceTask().get();
+                systemInfo = getManager().getSystemInfoReporter().getReport().get();
             } catch (Exception e) {
-                LOGGER.debug("{} is not capable because DxDiag result is unavailable", getName());
+                LOGGER.debug("{} is not capable because system info report is unavailable", getName());
                 return false;
             }
 
-            List<DisplayDevice> deviceList = dxDiagReport.getDisplayDevices();
-            if (deviceList == null || deviceList.isEmpty()) {
-                LOGGER.debug("{} is not capable because display devices list is unavailable: {}",
-                        getName(), deviceList);
+            List<GraphicsCard> graphicsCards = systemInfo.getGraphicsCards();
+            if (graphicsCards == null || graphicsCards.isEmpty()) {
+                LOGGER.debug("{} is not capable because graphics devices list is unavailable: {}",
+                        getName(), graphicsCards);
                 return false;
             }
 
-            for (DisplayDevice device : deviceList) {
-                if (getGraphicsCardPattern().matcher(device.getCardName()).matches()) {
-                    LOGGER.debug("{} is capable, found device: {}", getName(), device);
+            for (GraphicsCard card : graphicsCards) {
+                if (getGraphicsCardPattern().matcher(card.getName()).matches()) {
+                    LOGGER.debug("{} is capable, found device: {}", getName(), card);
                     return true;
                 }
             }
@@ -243,7 +237,7 @@ public class CrashEntry extends IEntry {
         }
 
         if (isArchIssue()) {
-            if (OS.Arch.x86.isCurrent() && DxDiag.canExecute()) {
+            if (OS.Arch.x86.isCurrent()) {
                 boolean is64Bit;
 
                 Optional<Boolean> jnaIs64Bit = JNA.is64Bit();
@@ -252,7 +246,7 @@ public class CrashEntry extends IEntry {
                     LOGGER.info("JNA reported system is 64-bit: {}", is64Bit);
                 } else {
                     try {
-                        is64Bit = DxDiag.getInstanceTask().get().getSysInfo().is64Bit();
+                        is64Bit = getManager().getSystemInfoReporter().getReport().get().is64Bit();
                         LOGGER.info("DxDiag reported system is 64-bit: {}", is64Bit);
                     } catch (Exception e) {
                         LOGGER.warn("Could not detect if system is 64-bit");

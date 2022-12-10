@@ -119,7 +119,7 @@ workflow:
       done
 
 .build: &build
-  image: openjdk:17-jdk
+  image: docker.io/library/eclipse-temurin:17
   stage: Build
   script:
     - 'export GRADLE_USER_HOME=`pwd`/.gradle'

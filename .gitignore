@@ -21,5 +21,6 @@ build
 # IDEA may break if committed from newer versions or when левая пятка breaks everything.
 .idea/*
 !.idea/encodings.xml
+!.idea/runConfigurations
 
 logs/

@@ -3,9 +3,8 @@ package ru.turikhay.tlauncher.minecraft.crash;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.OS;
-import ru.turikhay.util.windows.dxdiag.DisplayDevice;
-import ru.turikhay.util.windows.dxdiag.DxDiag;
-import ru.turikhay.util.windows.dxdiag.DxDiagReport;
+import ru.turikhay.util.sysinfo.GraphicsCard;
+import ru.turikhay.util.sysinfo.SystemInfo;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +38,7 @@ public class GraphicsEntry extends PatternContainerEntry {
     }
 
     @Override
-    protected boolean requiresDxDiag() {
+    protected boolean requiresSysInfo() {
         return true;
     }
 
@@ -74,23 +73,19 @@ public class GraphicsEntry extends PatternContainerEntry {
             return true;
         }
 
-        if (!DxDiag.canExecute()) {
-            return true;
-        }
-
-        DxDiagReport report;
+        SystemInfo sysInfo;
 
         try {
-            report = DxDiag.getInstanceTask().get();
+            sysInfo = getManager().getSystemInfoReporter().getReport().get();
         } catch (Exception e) {
-            LOGGER.warn("Could not get DxDiag result", e);
+            LOGGER.warn("Could not get system info result", e);
             return true;
         }
 
         if (OS.VERSION.contains("10.")) {
-            Optional<DisplayDevice> intelGraphics = report.getDisplayDevice("intel");
+            Optional<GraphicsCard> intelGraphics = getDisplayDevice(sysInfo, "intel");
             if (intelGraphics.filter(card ->
-                    intelWin10BugCardNamePattern.matcher(card.getCardName()).matches()).isPresent()) {
+                    intelWin10BugCardNamePattern.matcher(card.getName()).matches()).isPresent()) {
                 LOGGER.info("Using DxDiag we found out that the machine is running on 1st or 2nd generation of " +
                         "Intel graphics chipset");
                 LOGGER.debug("External pattern: {}", intelWin10BugJrePattern);
@@ -111,9 +106,9 @@ public class GraphicsEntry extends PatternContainerEntry {
         }
 
         boolean
-                haveIntel = report.getDisplayDevice("intel").isPresent(),
-                haveNvidia = report.getDisplayDevice("nvidia").isPresent(),
-                haveAmd = report.getDisplayDevice("amd").isPresent() || report.getDisplayDevice("ati ").isPresent();
+                haveIntel = getDisplayDevice(sysInfo, "intel").isPresent(),
+                haveNvidia = getDisplayDevice(sysInfo, "nvidia").isPresent(),
+                haveAmd = getDisplayDevice(sysInfo, "amd").isPresent() || getDisplayDevice(sysInfo, "ati ").isPresent();
 
         if (haveIntel) {
             if (haveNvidia) {
@@ -162,6 +157,19 @@ public class GraphicsEntry extends PatternContainerEntry {
         }
 
         return true;
+    }
+
+    private static Optional<GraphicsCard> getDisplayDevice(SystemInfo systemInfo, String name) {
+        name = name.toLowerCase(java.util.Locale.ROOT);
+        for (GraphicsCard card : systemInfo.getGraphicsCards()) {
+            if (card.getName() == null) {
+                continue;
+            }
+            if (card.getName().toLowerCase(java.util.Locale.ROOT).contains(name)) {
+                return Optional.of(card);
+            }
+        }
+        return Optional.empty();
     }
 
     private class VarUrlAction implements Action {

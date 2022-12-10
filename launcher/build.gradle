@@ -4,9 +4,6 @@ import org.yaml.snakeyaml.Yaml
 
 import java.security.DigestInputStream
 import java.security.MessageDigest
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 plugins {
     id 'java'
@@ -41,33 +38,34 @@ configurations {
 }
 
 dependencies {
-    modernImplementation(sourceSets.main.output)
+    modernCompileOnly(sourceSets.main.output)
 
+    tlRuntime(libs.authlib)
+    tlRuntime(libs.bundles.httpcomponents)
+    tlRuntime(libs.bundles.log4j)
+    tlRuntime(libs.commons.compress)
+    tlRuntime(libs.commons.io)
+    tlRuntime(libs.commons.lang3)
+    tlRuntime(libs.gson)
     tlRuntime(libs.guava)
-    tlRuntime(libs.sentry)
-    tlRuntime(libs.slf4j.api)
     tlRuntime(libs.jackson.core)
     tlRuntime(libs.java.semver)
-    tlRuntime(libs.gson)
-    tlRuntime(libs.commons.io)
-    tlRuntime(libs.jopt.simple)
-    tlRuntime(libs.commons.compress)
-    tlRuntime(libs.xz)
-    tlRuntime(libs.jdom)
-    tlRuntime(libs.commons.lang3)
     tlRuntime(libs.java.statsd.client)
-    tlRuntime(libs.bundles.log4j)
-    tlRuntime(libs.bundles.httpcomponents)
-    tlRuntime(libs.nanohttpd)
-    tlRuntime(libs.toml4j)
-    tlRuntime(libs.authlib)
+    tlRuntime(libs.jdom)
+    tlRuntime(libs.jopt.simple)
     tlRuntime(libs.jvd)
+    tlRuntime(libs.nanohttpd)
     tlRuntime(libs.nstweaker)
+    tlRuntime(libs.sentry)
+    tlRuntime(libs.slf4j.api)
+    tlRuntime(libs.toml4j)
+    tlRuntime(libs.xz)
     annotationProcessor(libs.log4j.core)
-    implementation(project(":common"))
-    implementation(project(":bridge"))
-    implementation(libs.bundles.jna)
     implementation(libs.bundles.dbus)
+    implementation(libs.bundles.jna)
+    implementation(libs.oshi)
+    implementation(project(":bridge"))
+    implementation(project(":common"))
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -90,22 +88,17 @@ task buildLauncherRepo(type: Sync) {
 
 task prepareLauncherDir(type: Sync) {
     destinationDir = file("${buildDir}/tlRun")
-    dependsOn(compileModernJava)
 
-    from(compileModernJava)
-    from(compileJava)
-    from(processModernResources)
-    from(processResources)
+    from(sourceSets.main.output)
+    from(sourceSets.modern.output)
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 task prepareLauncherDirJava8(type: Sync) {
     destinationDir = file("${buildDir}/tlRun")
-    dependsOn(compileJava)
 
-    from(compileJava)
-    from(processResources)
+    from(sourceSets.main.output)
 }
 
 static def generateChecksum(File file) {
@@ -117,13 +110,21 @@ static def generateChecksum(File file) {
     }
 }
 
+static String formatShortArtifactNotation(ResolvedArtifact artifact) {
+    String name = artifact.moduleVersion.toString()
+    if (artifact.classifier != null) {
+        return "$name:${artifact.classifier}"
+    }
+    return name
+}
+
 processResources {
     def meta = [
             version   : product_version,
             shortBrand: short_brand,
             brand     : full_brand,
-            libraries : configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.collect { artifact ->
-                [name: artifact.moduleVersion.id.toString(), checksum: generateChecksum(artifact.file)]
+            libraries : configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.collect { ResolvedArtifact artifact ->
+                [name: formatShortArtifactNotation(artifact), checksum: generateChecksum(artifact.file)]
             },
             mainClass : System.getenv("MAIN_CLASS") ?: "ru.turikhay.tlauncher.TLauncher"
     ]
