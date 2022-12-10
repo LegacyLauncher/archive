@@ -21,6 +21,7 @@ log4j = "2.19.0"
 mockito = "4.1.0"
 nanohttpd = "2.3.1"
 nstweaker = "1.0"
+oshi = "6.4.0"
 raven = "7.8.6"
 sentry = "1.7.30"
 slf4j = "2.0.1"
@@ -60,6 +61,7 @@ mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 nstweaker = { module = "ru.turikhay.app:nstweaker", version.ref = "nstweaker" }
+oshi = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
 raven = { module = "com.getsentry.raven:raven", version.ref = "raven" }
 sentry = { module = "io.sentry:sentry", version.ref = "sentry" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
@@ -69,7 +71,7 @@ toml4j = { module = "com.moandjiezana.toml:toml4j", version.ref = "toml4j" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 
 [bundles]
-httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
-log4j = ["log4j-api", "log4j-core", "log4j-1-2-api", "log4j-slf4j-impl"]
-jna = ["jna", "jna-platform"]
 dbus = ["dbus-core", "dbus-transport-jnr-unixsocket", "dbus-native-fd"]
+httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
+jna = ["jna", "jna-platform"]
+log4j = ["log4j-api", "log4j-core", "log4j-1-2-api", "log4j-slf4j-impl"]

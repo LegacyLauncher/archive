@@ -1,6 +1,7 @@
 package ru.turikhay.tlauncher.managers;
 
 import org.freedesktop.dbus.connections.impl.DBusConnection;
+import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.errors.ServiceUnknown;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.Properties;
@@ -8,13 +9,13 @@ import org.freedesktop.dbus.types.Variant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.turikhay.tlauncher.minecraft.launcher.hooks.EnvHook;
+import ru.turikhay.tlauncher.portals.XDGPortal;
+import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.Lazy;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -73,5 +74,37 @@ public class SwitcherooControlGPUManager implements GPUManager {
     @Override
     public String toString() {
         return "SwitcherooControlGPUManager";
+    }
+
+    protected static Optional<GPUManager> tryToCreate() {
+        try {
+            Callable<DBusConnection> systemFactory = () -> DBusConnectionBuilder.forSystemBus()
+                    .withDisconnectCallback(new XDGPortal.DBusDisconnectionLogger())
+                    .build();
+            try {
+                return Optional.of(new SwitcherooControlGPUManager(systemFactory.call()));
+            } catch (Throwable t) {
+                LOGGER.info("SwitcherooControlGPUManager is not available: {}", t.toString());
+            }
+        } catch (NoClassDefFoundError ignored) {
+            LOGGER.info("SwitcherooControlGPUManager is not available because it requires " +
+                    "org.freedesktop.dbus to be in the classpath");
+            // java.lang.NoClassDefFoundError: org/freedesktop/dbus/**
+            // => older bootstrap version
+        }
+        return Optional.empty();
+    }
+
+    public static class Loader {
+        private static final Logger LOGGER = LoggerFactory.getLogger(Loader.class);
+
+        public static Optional<GPUManager> tryToCreate() {
+            if (JavaVersion.getCurrent().getMajor() >= 11) {
+                return SwitcherooControlGPUManager.tryToCreate();
+            } else {
+                LOGGER.info("SwitcherooControlGPUManager is not available because it requires Java 11+");
+            }
+            return Optional.empty();
+        }
     }
 }

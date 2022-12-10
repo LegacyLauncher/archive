@@ -38,6 +38,14 @@ public class DisplayDevice {
         return cardName;
     }
 
+    public String getManufacturer() {
+        return manufacturer;
+    }
+
+    public String getDriverVersion() {
+        return driverVersion;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)

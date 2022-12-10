@@ -138,7 +138,7 @@ public final class CrashEntryList {
             LOGGER.trace("{} crash entries were parsed", entryList.signatures.size());
 
             entryList.signatures.sort((entry1, entry2) -> {
-                boolean r1 = entry1.requiresDxDiag(), r2 = entry2.requiresDxDiag();
+                boolean r1 = entry1.requiresSysInfo(), r2 = entry2.requiresSysInfo();
                 if (r1 == r2) {
                     return 0;
                 }

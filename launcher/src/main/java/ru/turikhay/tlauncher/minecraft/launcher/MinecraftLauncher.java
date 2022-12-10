@@ -1247,7 +1247,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         gpu.ifPresent(value -> launcher.addHook(value.getHook(gpuManager)));
 
         if (OS.LINUX.isCurrent() && settings.getBoolean("minecraft.gamemode")) {
-            GameModeHook.tryToCreate().ifPresent(launcher::addHook);
+            GameModeHook.Loader.tryToCreate().ifPresent(launcher::addHook);
         }
 
         if (fullCommand) {

@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.ui.support;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.logger.Log4j2ContextHelper;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.pasta.PastaResult;
@@ -8,12 +10,19 @@ import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.frames.ProcessFrame;
 import ru.turikhay.util.StringUtil;
+import ru.turikhay.util.sysinfo.SystemInfo;
+import ru.turikhay.util.sysinfo.SystemInfoReporter;
 
 import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> {
+
+    private static final Logger LOGGER = LogManager.getLogger(SendInfoFrame.class);
+    private final SystemInfoReporter systemInfoReporter;
 
     public static final class SendInfoResponse {
         private final String link;
@@ -27,7 +36,8 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
         }
     }
 
-    public SendInfoFrame() {
+    public SendInfoFrame(SystemInfoReporter systemInfoReporter) {
+        this.systemInfoReporter = systemInfoReporter;
         setTitlePath("support.sending.title");
         getHead().setText("support.sending.head");
         setIcon("compress");
@@ -38,6 +48,17 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
         submit(new Process() {
             @Override
             protected SendInfoResponse get() throws Exception {
+                if (systemInfoReporter != null) {
+                    SystemInfo systemInfo;
+                    try {
+                        systemInfo = systemInfoReporter.getReport().get(5, TimeUnit.SECONDS);
+                    } catch (Exception ignored) {
+                        systemInfo = null;
+                    }
+                    if (systemInfo != null) {
+                        systemInfo.getLines().forEach(LOGGER::info);
+                    }
+                }
                 Pasta pasta = new Pasta();
                 pasta.setData(Log4j2ContextHelper.getCurrentLogFile());
 

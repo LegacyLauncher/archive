@@ -10,6 +10,8 @@ import ru.turikhay.tlauncher.ui.swing.extended.ExtendedLabel;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
+import ru.turikhay.util.sysinfo.OSHISystemInfoReporter;
+import ru.turikhay.util.sysinfo.SystemInfoReporter;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -50,7 +52,14 @@ public class PreSupportFrame extends VActionFrame {
         checkboxPanel.add(whatIsDiagnosticLabel);
     }
 
-    private final SendInfoFrame sendInfoFrame = new SendInfoFrame() {
+    private final SystemInfoReporter systemInfoReporter = OSHISystemInfoReporter.createIfAvailable().orElse(null);
+    {
+        if (systemInfoReporter != null) {
+            systemInfoReporter.queueReport();
+        }
+    }
+
+    private final SendInfoFrame sendInfoFrame = new SendInfoFrame(systemInfoReporter) {
         @Override
         protected void onSucceeded(Process process, SendInfoResponse result) {
             super.onSucceeded(process, result);
@@ -65,24 +74,6 @@ public class PreSupportFrame extends VActionFrame {
     };
 
     public PreSupportFrame() {
-        ProcessFrame<Void> dxdiagFlusher = new ProcessFrame<Void>() {
-            {
-                setTitlePath("loginform.button.support.processing.title");
-                getHead().setText("loginform.button.support.processing.head");
-                setIcon("life-ring");
-                pack();
-            }
-
-            protected void onSucceeded(Process process, Void result) {
-                super.onSucceeded(process, result);
-            }
-
-            protected void onCancelled() {
-                super.onCancelled();
-                PreSupportFrame.this.setVisible(true);
-            }
-        };
-
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {

@@ -55,13 +55,11 @@ public class JVMPortal implements Portal {
     }
 
     public static Optional<JVMPortal> tryToCreate() {
-        Desktop desktop;
-        try {
-            desktop = Desktop.getDesktop();
-        } catch (UnsupportedOperationException e) {
-            LOGGER.warn("Desktop API not supported", e);
+        if (!Desktop.isDesktopSupported()) {
+            LOGGER.warn("Desktop API is not supported");
             return Optional.empty();
         }
-        return Optional.of(new JVMPortal(desktop));
+
+        return Optional.of(new JVMPortal(Desktop.getDesktop()));
     }
 }

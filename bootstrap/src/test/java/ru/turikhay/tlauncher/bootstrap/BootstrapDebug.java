@@ -27,7 +27,7 @@ public class BootstrapDebug {
             throw new FileNotFoundException("launcher: " + launcherFile);
         }
 
-        Path libDir = Paths.get("../lib").toAbsolutePath();
+        Path libDir = Paths.get("../lib/" + BuildConfig.SHORT_BRAND).toAbsolutePath();
         if (!Files.isDirectory(libDir)) {
             throw new FileNotFoundException("libDir: " + libDir);
         }

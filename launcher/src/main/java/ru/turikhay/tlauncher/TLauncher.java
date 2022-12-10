@@ -203,7 +203,7 @@ public final class TLauncher {
         }
 
         if (OS.LINUX.isCurrent()) {
-            gpuManager = LinuxGpuManager.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
+            gpuManager = SwitcherooControlGPUManager.Loader.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
         } else if (OS.WINDOWS.isCurrent()) {
             gpuManager = WindowsGpuManager.tryToCreate().orElse(GPUManager.Empty.INSTANCE);
         } else {

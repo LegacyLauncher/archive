@@ -23,19 +23,6 @@ public class DxDiagReport {
         return displayDevices;
     }
 
-    public Optional<DisplayDevice> getDisplayDevice(String name) {
-        name = name.toLowerCase(java.util.Locale.ROOT);
-        for (DisplayDevice device : displayDevices) {
-            if (device.getCardName() == null) {
-                continue;
-            }
-            if (device.getCardName().toLowerCase(java.util.Locale.ROOT).contains(name)) {
-                return Optional.of(device);
-            }
-        }
-        return Optional.empty();
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)

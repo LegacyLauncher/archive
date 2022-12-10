@@ -57,11 +57,17 @@ public final class Library extends ToStringBuildable {
     }
 
     private String getFilename() {
-        return String.format(java.util.Locale.ROOT, "%s-%s.jar", getParts()[1], getParts()[2]);
+        final String[] parts = getParts();
+        if (parts.length == 4) {
+            return String.format(Locale.ROOT, "%s-%s-%s.jar", parts[1], parts[2], parts[3]);
+        } else {
+            return String.format(Locale.ROOT, "%s-%s.jar", parts[1], parts[2]);
+        }
     }
 
     private String getBaseDir() {
-        return String.format(java.util.Locale.ROOT, "%s/%s/%s", StringUtils.replaceChars(getParts()[0], '.', '/'), getParts()[1], getParts()[2]);
+        final String[] parts = getParts();
+        return String.format(java.util.Locale.ROOT, "%s/%s/%s", StringUtils.replaceChars(parts[0], '.', '/'), parts[1], parts[2]);
     }
 
     public String getPath() {
@@ -73,7 +79,7 @@ public final class Library extends ToStringBuildable {
 
     private String[] getParts() {
         if (parts == null) {
-            parts = StringUtils.split(Objects.requireNonNull(name, "name"), ":", 3);
+            parts = StringUtils.split(Objects.requireNonNull(name, "name"), ":", 4);
         }
         return parts;
     }

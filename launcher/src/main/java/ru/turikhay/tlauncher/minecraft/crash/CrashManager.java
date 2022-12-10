@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.ConfigurationDefaults;
+import ru.turikhay.util.sysinfo.*;
 import ru.turikhay.tlauncher.minecraft.launcher.ChildProcessLogger;
 import ru.turikhay.tlauncher.minecraft.launcher.MinecraftLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
@@ -29,7 +30,6 @@ import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.Time;
 import ru.turikhay.util.async.ExtendedThread;
-import ru.turikhay.util.windows.dxdiag.DxDiag;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -37,6 +37,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -65,10 +66,11 @@ public final class CrashManager {
     private final Map<String, BindableAction> actionsMap = new HashMap<>();
     private List<String> skipFolders = new ArrayList<>();
 
+    private final SystemInfoReporter systemInfoReporter = initSystemInfoPrinter();
+
     private final Entry
             generatedFilesSeekerEntry = new GeneratedFilesSeeker(),
             crashDescriptionSeeker = new CrashDescriptionSeeker(),
-            dxDiagAheadProcessorEntry = DxDiag.canExecute() ? new DxDiagAheadProcessor() : null,
             logFlusherEntry = new LogFlusherEntry();
 
     private final List<String> modVersionsFilter = Arrays.asList("forge", "fabric", "rift", "liteloader");
@@ -82,6 +84,10 @@ public final class CrashManager {
         addAction(new ExitAction());
         addAction(new SetOptionAction(launcher == null ? new OptionsFile(new File("test.txt")) : launcher.getOptionsFile()));
         addAction(new ForceUpdateAction());
+    }
+
+    SystemInfoReporter getSystemInfoReporter() {
+        return systemInfoReporter;
     }
 
     private void setupEntries() {
@@ -108,10 +114,16 @@ public final class CrashManager {
 
         addEntry(new GraphicsEntry(this));
         addEntry(new BadMainClassEntry(this));
-        if (dxDiagAheadProcessorEntry != null) {
-            addEntry(dxDiagAheadProcessorEntry);
-        }
         addEntry(logFlusherEntry);
+    }
+
+    private SystemInfoReporter initSystemInfoPrinter() {
+        Optional<SystemInfoReporter> oshi = OSHISystemInfoReporter.createIfAvailable();
+        if (OS.WINDOWS.isCurrent()) {
+            DxDiagSystemInfoReporter dxDiag = new DxDiagSystemInfoReporter();
+            return oshi.isPresent() ? new SequentialSystemInfoReporter(oshi.get(), dxDiag) : dxDiag;
+        }
+        return oshi.orElseGet(NoopSystemInfoReporter::new);
     }
 
     @Nonnull
@@ -383,6 +395,8 @@ public final class CrashManager {
 
             setupActions();
             setupEntries();
+
+            systemInfoReporter.queueReport();
 
             CrashEntry capableEntry = null;
 
@@ -679,17 +693,6 @@ public final class CrashManager {
         }
     }
 
-    private class DxDiagAheadProcessor extends Entry {
-        DxDiagAheadProcessor() {
-            super(CrashManager.this, "dxdiag ahead processor");
-        }
-
-        @Override
-        protected void execute() {
-            DxDiag.getInstance().queueTask(); // reset dxdiag if necessary
-        }
-    }
-
     private class LogFlusherEntry extends Entry {
         public LogFlusherEntry() {
             super(CrashManager.this, "log flusher");
@@ -711,11 +714,19 @@ public final class CrashManager {
                 writeDelimiter();
             }
 
-            if (DxDiag.canExecute() && TLauncher.getInstance() != null /*&& !TLauncher.getInstance().isDebug()*/) {
+            if (TLauncher.getInstance() != null) {
+                SystemInfo systemInfo;
                 try {
-                    LOGGER.info(DxDiag.getInstanceTask().get());
-                } catch (Exception e) {
-                    LOGGER.warn("Could not retrieve DxDiag", e);
+                    systemInfo = systemInfoReporter.getReport().get();
+                } catch (InterruptedException | ExecutionException e) {
+                    LOGGER.warn("Could not retrieve system info", e);
+                    systemInfo = null;
+                }
+                if (systemInfo == null) {
+                    LOGGER.warn("No system info is available");
+                } else {
+                    LOGGER.info("System info:");
+                    systemInfo.getLines().forEach(LOGGER::info);
                 }
             }
         }
