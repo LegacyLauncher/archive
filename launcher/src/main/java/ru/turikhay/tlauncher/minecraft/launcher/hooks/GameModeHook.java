@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.minecraft.launcher.hooks;
 
+import org.freedesktop.dbus.connections.IDisconnectCallback;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.errors.ServiceUnknown;
@@ -10,6 +11,7 @@ import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
 import ru.turikhay.tlauncher.portals.XDGPortal;
 import ru.turikhay.util.JavaVersion;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -26,7 +28,7 @@ public class GameModeHook implements ProcessHook {
     protected static Optional<ProcessHook> tryToCreate() {
         try {
             Callable<DBusConnection> systemFactory = () -> DBusConnectionBuilder.forSessionBus()
-                    .withDisconnectCallback(new XDGPortal.DBusDisconnectionLogger())
+                    .withDisconnectCallback(new DBusDisconnectionLogger())
                     .build();
 
             try {
@@ -63,6 +65,13 @@ public class GameModeHook implements ProcessHook {
             gameModeInterface.UnregisterGameByPID(callerPid, gamePid);
             LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}", callerPid, gamePid);
         } catch (ServiceUnknown ignored) {
+        }
+    }
+
+    private static class DBusDisconnectionLogger implements IDisconnectCallback {
+        @Override
+        public void disconnectOnError(IOException e) {
+            LOGGER.error("DBus session terminated due to an error", e);
         }
     }
 

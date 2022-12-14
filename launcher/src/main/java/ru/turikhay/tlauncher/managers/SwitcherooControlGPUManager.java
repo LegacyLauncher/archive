@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.managers;
 
+import org.freedesktop.dbus.connections.IDisconnectCallback;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.errors.ServiceUnknown;
@@ -14,6 +15,7 @@ import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.Lazy;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -79,7 +81,7 @@ public class SwitcherooControlGPUManager implements GPUManager {
     protected static Optional<GPUManager> tryToCreate() {
         try {
             Callable<DBusConnection> systemFactory = () -> DBusConnectionBuilder.forSystemBus()
-                    .withDisconnectCallback(new XDGPortal.DBusDisconnectionLogger())
+                    .withDisconnectCallback(new DBusDisconnectionLogger())
                     .build();
             try {
                 return Optional.of(new SwitcherooControlGPUManager(systemFactory.call()));
@@ -94,6 +96,14 @@ public class SwitcherooControlGPUManager implements GPUManager {
         }
         return Optional.empty();
     }
+
+    private static class DBusDisconnectionLogger implements IDisconnectCallback {
+        @Override
+        public void disconnectOnError(IOException e) {
+            LOGGER.error("DBus session terminated due to an error", e);
+        }
+    }
+
 
     public static class Loader {
         private static final Logger LOGGER = LoggerFactory.getLogger(Loader.class);

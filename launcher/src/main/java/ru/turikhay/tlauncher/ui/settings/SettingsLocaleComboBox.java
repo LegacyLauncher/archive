@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.settings;
 
+import ru.turikhay.tlauncher.configuration.LangConfiguration;
 import ru.turikhay.tlauncher.ui.converter.LocaleConverter;
 import ru.turikhay.tlauncher.ui.editor.EditorComboBox;
 import ru.turikhay.tlauncher.ui.editor.EditorField;
@@ -24,7 +25,7 @@ public class SettingsLocaleComboBox extends BorderPanel implements EditorField, 
     public SettingsLocaleComboBox(SettingsPanel panel) {
         this.panel = panel;
 
-        comboBox = new EditorComboBox<>(new LocaleConverter(), panel.global.getLocales());
+        comboBox = new EditorComboBox<>(new LocaleConverter(), LangConfiguration.getAvailableLocales().toArray(new Locale[0]));
         setCenter(comboBox);
 
         hint = new ExtendedLabel();

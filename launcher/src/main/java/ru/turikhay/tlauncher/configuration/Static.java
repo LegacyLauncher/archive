@@ -3,7 +3,6 @@ package ru.turikhay.tlauncher.configuration;
 
 import ru.turikhay.tlauncher.repository.RepoPrefixV1;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,6 @@ public final class Static {
     }
 
     private static final List<String> SERVER_LIST = Collections.emptyList();
-    private static final List<String> LANG_LIST = Collections.unmodifiableList(Arrays.asList("en_US", "ru_RU", "uk_UA", "pt_BR", "vi", "tr_TR", "fr_FR", "id_ID", "pl_PL", "it_IT", "de_DE", "ro_RO", "zh_CN"));
 
     private static boolean isLegacy() {
         return getShortBrand().startsWith("legacy");
@@ -86,10 +84,6 @@ public final class Static {
 
     public static List<String> getServerList() {
         return SERVER_LIST;
-    }
-
-    public static List<String> getLangList() {
-        return LANG_LIST;
     }
 
     private Static() {

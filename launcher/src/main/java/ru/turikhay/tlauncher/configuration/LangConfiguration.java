@@ -4,12 +4,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.util.Lazy;
 import ru.turikhay.util.U;
 
+import java.io.Console;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class LangConfiguration {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -233,29 +243,46 @@ public final class LangConfiguration {
         }
     }
 
-    private static Locale getBackupLocaleFor(Locale locale) {
-        if (locale == null || locale == Locale.US) {
-            return null;
+    private static final Lazy<List<Locale>> localeList = Lazy.of(() -> {
+        URL url = LangConfiguration.class.getResource("/lang");
+        if (url == null) {
+            LOGGER.fatal("No available locales");
+            return Collections.emptyList();
         }
-        return Configuration.isLikelyRussianSpeakingLocale(locale.toString()) ? ru_RU : Locale.US;
-    }
 
-    private static final List<Locale> localeList;
+        final List<Locale> locales;
+        final Function<Stream<Path>, List<Locale>> locator = stream -> stream.map(it -> it.getFileName().toString())
+                .filter(it -> it.startsWith("lang_") && it.endsWith(".properties"))
+                .map(it -> it.substring("lang_".length(), it.length() - ".properties".length()).replace('_', '-'))
+                .map(Locale::forLanguageTag)
+                .sorted(LocaleComparator.INSTANCE)
+                .collect(Collectors.toList());
 
-    static {
-        List<Locale> list = new ArrayList<>(Static.getLangList().size());
-        Static.getLangList().forEach(locale -> {
-            Locale l = U.getLocale(locale);
-            if (l == null) {
-                LOGGER.warn("{} is not supported", locale);
-            } else {
-                list.add(U.getLocale(locale));
+        URI uri = url.toURI();
+        if (uri.getScheme().equals("jar")) {
+            try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap(), LangConfiguration.class.getClassLoader())) {
+                try (Stream<Path> stream = Files.walk(fs.getPath("/lang"), 1).skip(1)) {
+                    locales = locator.apply(stream);
+                }
             }
-        });
-        localeList = Collections.unmodifiableList(list);
-    }
+        } else {
+            try (Stream<Path> stream = Files.walk(Paths.get(uri), 1).skip(1)) {
+                locales = locator.apply(stream);
+            }
+        }
+        return Collections.unmodifiableList(locales);
+    });
 
     public static List<Locale> getAvailableLocales() {
-        return localeList;
+        return localeList.get();
+    }
+
+    private static class LocaleComparator implements Comparator<Locale> {
+        public static final Comparator<Locale> INSTANCE = new LocaleComparator();
+
+        @Override
+        public int compare(Locale o1, Locale o2) {
+            return o1.toString().compareTo(o2.toString());
+        }
     }
 }
