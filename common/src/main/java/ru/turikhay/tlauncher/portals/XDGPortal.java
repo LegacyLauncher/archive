@@ -121,7 +121,7 @@ public class XDGPortal implements Portal, Closeable {
         }
     }
 
-    public static class DBusDisconnectionLogger implements IDisconnectCallback {
+    private static class DBusDisconnectionLogger implements IDisconnectCallback {
         @Override
         public void disconnectOnError(IOException e) {
             LOGGER.error("DBus session terminated due to an error", e);

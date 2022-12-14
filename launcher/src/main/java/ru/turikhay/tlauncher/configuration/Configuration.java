@@ -24,7 +24,6 @@ import java.util.*;
 
 public class Configuration extends SimpleConfiguration {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Lazy<List<Locale>> DEFAULT_LOCALES = Lazy.of(Configuration::getDefaultLocales);
 
     private ConfigurationDefaults defaults;
     private ArgumentParser.ParsedConfigEntryMap configFromArgs;
@@ -142,10 +141,11 @@ public class Configuration extends SimpleConfiguration {
             locale = Locale.getDefault();
         }
 
-        if (!DEFAULT_LOCALES.get().contains(locale)) {
+
+        if (!LangConfiguration.getAvailableLocales().contains(locale)) {
             LOGGER.debug("We don't have localization for {}", locale);
 
-            if (isLikelyRussianSpeakingLocale(locale.toString()) && DEFAULT_LOCALES.get().contains(LangConfiguration.ru_RU)) {
+            if (isLikelyRussianSpeakingLocale(locale.toString()) && LangConfiguration.getAvailableLocales().contains(LangConfiguration.ru_RU)) {
                 locale = LangConfiguration.ru_RU;
             } else {
                 locale = Locale.US;
@@ -194,10 +194,6 @@ public class Configuration extends SimpleConfiguration {
 
     public boolean isLikelyRussianSpeakingLocale() {
         return isLikelyRussianSpeakingLocale(getLocale().toString());
-    }
-
-    public Locale[] getLocales() {
-        return DEFAULT_LOCALES.get().toArray(new Locale[0]);
     }
 
     public Configuration.ActionOnLaunch getActionOnLaunch() {
@@ -404,23 +400,6 @@ public class Configuration extends SimpleConfiguration {
     public File getFile() {
         return !isSaveable() ? null : (File) input;
     }
-
-    private static List<Locale> getDefaultLocales() {
-        ArrayList<Locale> l = new ArrayList<>();
-        for (String locale : Static.getLangList()) {
-            Locale loc = U.getLocale(locale);
-            if (loc == null) {
-                LOGGER.warn("Default locale is unavailable: {}", locale);
-                Sentry.capture(new EventBuilder()
-                        .withLevel(Event.Level.WARNING)
-                        .withMessage("default locale is unavailable: " + locale)
-                );
-            }
-            l.add(loc);
-        }
-        return l;
-    }
-
 
     public static boolean isLikelyRussianSpeakingLocale(String l) {
         return "ru_RU".equals(l) || "uk_UA".equals(l) || "be_BY".equals(l);
