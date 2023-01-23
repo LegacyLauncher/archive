@@ -41,11 +41,6 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
             lf.scene.setSidePanel(DefaultScene.SidePanel.NOTICES);
         });
         updateNoticeEntry();
-        LocalizableMenuItem migrationStatus = LocalizableMenuItem.newItem("mojang-migration.button", "migration-icon", e ->
-                lf.scene.getMainPane().getRootFrame().getLauncher().getMigrationManager().showMigrationFrame()
-        );
-        popup.addSeparator();
-        popup.add(migrationStatus);
         setPreferredSize(new Dimension(30, getHeight()));
         addActionListener(e -> callPopup());
         lf.scene.getMainPane().getRootFrame().getNotices().addListener(this, true);

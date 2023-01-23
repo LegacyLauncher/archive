@@ -82,7 +82,6 @@ public final class TLauncher {
     private final VersionManager versionManager;
     private final ProfileManager profileManager;
     private final JavaManager javaManager;
-    private final MigrationManager migrationManager;
     private final ConnectivityManager connectivityManager;
     private final MemoryAllocationService memoryAllocationService;
     private final GPUManager gpuManager;
@@ -169,7 +168,6 @@ public final class TLauncher {
         FileUtil.createFolder(jreRootDir);
         javaManager = new JavaManager(jreRootDir);
 
-        migrationManager = new MigrationManager(this);
         connectivityManager = initConnectivityManager();
         connectivityManager.queueChecks();
 
@@ -214,8 +212,6 @@ public final class TLauncher {
 
         preloadUI();
 
-        migrationManager.queueMigrationCheck();
-
         if (elyByCheckEntry != null && profileManager.getAccountManager().getUserSet().getSet().stream().anyMatch(u ->
                 u.getType().equals(ElyUser.TYPE))) {
             // show notification if Ely accounts are not available
@@ -239,7 +235,7 @@ public final class TLauncher {
             connectivityManager.queueCheck(authServerCheckEntry);
         }
 
-        Optional<String> packageModeOpt = getCapability("package_mode", String.class);
+        Optional<String> packageModeOpt = getPackageMode();
         if (packageModeOpt.filter(m -> m.equals("dmg")).isPresent()) {
             Optional<String> dmgAppPathOpt = getCapability("dmg-app-path", String.class);
             if (!dmgAppPathOpt.isPresent()) {
@@ -513,10 +509,6 @@ public final class TLauncher {
         return javaManager;
     }
 
-    public MigrationManager getMigrationManager() {
-        return migrationManager;
-    }
-
     public Downloader getDownloader() {
         return downloader;
     }
@@ -766,10 +758,6 @@ public final class TLauncher {
             if (uiListeners != null) {
                 uiListeners.updateLocale();
             }
-
-            if (migrationManager != null && migrationManager.getFrame() != null) {
-                migrationManager.getFrame().updateLocale();
-            }
         });
     }
 
@@ -884,6 +872,10 @@ public final class TLauncher {
 
     public GPUManager getGpuManager() {
         return gpuManager;
+    }
+
+    public Optional<String> getPackageMode() {
+        return getCapability("package_mode", String.class);
     }
 
     public static void launch(BootBridge bridge) throws InterruptedException {

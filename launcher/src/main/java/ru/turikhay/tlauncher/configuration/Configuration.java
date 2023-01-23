@@ -94,7 +94,7 @@ public class Configuration extends SimpleConfiguration {
 
         configFromArgs.entries().forEach(c -> setForcefully(c.getPath(), c.getValue(), false));
 
-        if (externalLocation) {
+        if (externalLocation && !Objects.equals(TLauncher.getInstance().getPackageMode().orElse(null), "flatpak")) {
             LOGGER.debug("Using configuration from an external location");
 
             File defFile = getDefaultFile();

@@ -1,7 +1,6 @@
 package net.minecraft.launcher.process;
 
 import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
-import ru.turikhay.tlauncher.portals.Portals;
 
 import java.nio.charset.Charset;
 
@@ -49,12 +48,7 @@ public class JavaProcess {
     }
 
     public boolean isRunning() {
-        try {
-            process.exitValue();
-            return false;
-        } catch (IllegalThreadStateException var2) {
-            return true;
-        }
+        return process.isAlive();
     }
 
     public void setExitRunnable(JavaProcessListener runnable) {

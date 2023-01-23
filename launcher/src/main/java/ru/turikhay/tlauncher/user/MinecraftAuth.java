@@ -47,6 +47,7 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
             throw ioE;
         }
         LOGGER.info("Profile validated: {}", profile);
+        user.setProfile(profile);
     }
 
     private void refreshMinecraftAccessToken(MinecraftUser user) throws AuthException, IOException {
