@@ -7,10 +7,6 @@ import ru.turikhay.util.OS;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public interface GPUManager {
     default boolean isEmpty() {
@@ -70,51 +66,79 @@ public interface GPUManager {
         }
     }
 
-    class GPU {
+    abstract class GPU {
         private final String name;
         private final Vendor vendor;
         private final boolean isDefault;
-        private final Function<GPUManager, ProcessHook> hook;
 
-        public static final GPU DEFAULT = new GPU("SYSTEM", Vendor.Unknown, false, ProcessHook.None.INSTANCE) {
+        public static final GPU DEFAULT = new GPU("SYSTEM", Vendor.Unknown, false) {
             @Override
             public String getDisplayName(GPUManager gpuManager) {
                 return Localizable.get("settings.gpu.default.label");
+            }
+
+            @Override
+            public ProcessHook getHook(GPUManager gpuManager) {
+                return ProcessHook.None.INSTANCE;
             }
         };
         public static final GPU INTEGRATED, DISCRETE;
 
         static {
             if (OS.WINDOWS.isCurrent()) {
-                INTEGRATED = new GPU("INTEGRATED", Vendor.Unknown, false,
-                        new WindowsGpuPreferenceHook(WindowsGpuPreferenceHook.Preference.MinimumPower)) {
+                INTEGRATED = new GPU("INTEGRATED", Vendor.Unknown, false) {
                     @Override
                     public String getDisplayName(GPUManager gpuManager) {
                         return Localizable.get("settings.gpu.integrated.label");
                     }
+
+                    @Override
+                    public ProcessHook getHook(GPUManager gpuManager) {
+                        if (WindowsGpuPreferenceHook.isSupported()) {
+                            return new WindowsGpuPreferenceHook(WindowsGpuPreferenceHook.Preference.MinimumPower);
+                        } else {
+                            return ProcessHook.None.INSTANCE;
+                        }
+                    }
                 };
-                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, false,
-                        new WindowsGpuPreferenceHook(WindowsGpuPreferenceHook.Preference.HighPerformance)) {
+                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, false) {
                     @Override
                     public String getDisplayName(GPUManager gpuManager) {
                         return Localizable.get("settings.gpu.discrete.label");
                     }
+
+                    @Override
+                    public ProcessHook getHook(GPUManager gpuManager) {
+                        if (WindowsGpuPreferenceHook.isSupported()) {
+                            return new WindowsGpuPreferenceHook(WindowsGpuPreferenceHook.Preference.HighPerformance);
+                        } else {
+                            return ProcessHook.None.INSTANCE;
+                        }
+                    }
                 };
             } else {
-                INTEGRATED = new GPU("INTEGRATED", Vendor.Unknown, false,
-                        (manager) -> manager.findIntegratedGPU().map(gpu -> gpu.getHook(manager)).orElse(ProcessHook.None.INSTANCE)) {
+                INTEGRATED = new GPU("INTEGRATED", Vendor.Unknown, false) {
                     @Override
                     public String getDisplayName(GPUManager gpuManager) {
                         return gpuManager.findIntegratedGPU().map(it -> Localizable.get("settings.gpu.integrated.specific.label", it.getDisplayName(gpuManager)))
                                 .orElse(Localizable.get("settings.gpu.integrated.label"));
                     }
+
+                    @Override
+                    public ProcessHook getHook(GPUManager gpuManager) {
+                        return gpuManager.findIntegratedGPU().map(gpu -> gpu.getHook(gpuManager)).orElse(ProcessHook.None.INSTANCE);
+                    }
                 };
-                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, false,
-                        (manager) -> manager.findDiscreteGPU().map(gpu -> gpu.getHook(manager)).orElse(ProcessHook.None.INSTANCE)) {
+                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, false) {
                     @Override
                     public String getDisplayName(GPUManager gpuManager) {
-                        return gpuManager.findIntegratedGPU().map(it -> Localizable.get("settings.gpu.discrete.specific.label", it.getDisplayName(gpuManager)))
+                        return gpuManager.findDiscreteGPU().map(it -> Localizable.get("settings.gpu.discrete.specific.label", it.getDisplayName(gpuManager)))
                                 .orElse(Localizable.get("settings.gpu.discrete.label"));
+                    }
+
+                    @Override
+                    public ProcessHook getHook(GPUManager gpuManager) {
+                        return gpuManager.findDiscreteGPU().map(gpu -> gpu.getHook(gpuManager)).orElse(ProcessHook.None.INSTANCE);
                     }
                 };
             }
@@ -122,19 +146,10 @@ public interface GPUManager {
 
         public static final List<GPU> GLOBAL_DEFINED = Collections.unmodifiableList(Arrays.asList(DEFAULT, INTEGRATED, DISCRETE));
 
-        public GPU(String name, Vendor vendor, boolean isDefault, Function<GPUManager, ProcessHook> hook) {
+        public GPU(String name, Vendor vendor, boolean isDefault) {
             this.name = name;
             this.vendor = vendor;
             this.isDefault = isDefault;
-            this.hook = hook;
-        }
-
-        public GPU(String name, Vendor vendor, boolean isDefault, Supplier<ProcessHook> hook) {
-            this(name, vendor, isDefault, (manager) -> hook.get());
-        }
-
-        public GPU(String name, Vendor vendor, boolean isDefault, ProcessHook hook) {
-            this(name, vendor, isDefault, () -> hook);
         }
 
         public String getName() {
@@ -153,12 +168,10 @@ public interface GPUManager {
             return isDefault;
         }
 
-        public ProcessHook getHook(GPUManager gpuManager) {
-            return hook.apply(gpuManager);
-        }
+        public abstract ProcessHook getHook(GPUManager gpuManager);
     }
 
-    public enum Vendor {
+    enum Vendor {
         Unknown,
         AMD,
         Intel,

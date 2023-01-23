@@ -97,6 +97,9 @@ public class JavaProcessLauncher {
     }
 
     public void addHook(ProcessHook hook) {
+        if (this.process != null) {
+            throw new IllegalStateException("Could not add hook after process being created");
+        }
         this.hook = this.hook.then(hook);
     }
 

@@ -9,8 +9,8 @@ import org.freedesktop.dbus.interfaces.Properties;
 import org.freedesktop.dbus.types.Variant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
 import ru.turikhay.tlauncher.minecraft.launcher.hooks.EnvHook;
-import ru.turikhay.tlauncher.portals.XDGPortal;
 import ru.turikhay.util.JavaVersion;
 import ru.turikhay.util.Lazy;
 
@@ -47,7 +47,7 @@ public class SwitcherooControlGPUManager implements GPUManager {
                         env.put(key, value);
                     }
                     LOGGER.info("Found GPU: {}, vendor: {}, isDefault: {}", name, vendor, isDefault);
-                    return new GPUManager.GPU(name, vendor, isDefault, new EnvHook(env)) {
+                    return new GPUManager.GPU(name, vendor, isDefault) {
                         @Override
                         public String getDisplayName(GPUManager gpuManager) {
                             String name = getName();
@@ -57,6 +57,11 @@ public class SwitcherooControlGPUManager implements GPUManager {
                             } else {
                                 return name;
                             }
+                        }
+
+                        @Override
+                        public ProcessHook getHook(GPUManager gpuManager) {
+                            return new EnvHook(env);
                         }
                     };
                 }).collect(Collectors.toList());

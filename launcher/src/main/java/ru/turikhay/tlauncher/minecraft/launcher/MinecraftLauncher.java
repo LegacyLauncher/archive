@@ -29,7 +29,6 @@ import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
 import ru.turikhay.tlauncher.downloader.DownloadableContainer;
 import ru.turikhay.tlauncher.downloader.Downloader;
-import ru.turikhay.tlauncher.jna.JNAException;
 import ru.turikhay.tlauncher.jna.JNAWindows;
 import ru.turikhay.tlauncher.jre.JavaPlatform;
 import ru.turikhay.tlauncher.jre.JavaRuntimeLocal;
@@ -41,7 +40,6 @@ import ru.turikhay.tlauncher.minecraft.crash.CrashManager;
 import ru.turikhay.tlauncher.minecraft.launcher.hooks.GameModeHook;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.pasta.PastaFormat;
-import ru.turikhay.tlauncher.portals.Portals;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.loc.Localizable;
@@ -52,7 +50,6 @@ import ru.turikhay.util.async.AsyncThread;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -66,8 +63,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import static com.sun.jna.platform.win32.WinReg.HKEY_CURRENT_USER;
 
 public class MinecraftLauncher implements JavaProcessListener {
     private static final Logger LOGGER = LogManager.getLogger(MinecraftLauncher.class);
@@ -1195,6 +1190,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
         programArgs.addAll(version.addArguments(ArgumentType.GAME, featureMatcher, argumentsSubstitutor));
 
+        fixArguments(jvmArgs, ArgumentType.JVM);
+        fixArguments(programArgs, ArgumentType.GAME);
+
         if (!isLauncher && server != null) {
             programArgs.addAll(Arrays.asList("--server", server.getAddress()));
             if (server.getPort() != Server.DEFAULT_PORT) {
@@ -1296,6 +1294,15 @@ public class MinecraftLauncher implements JavaProcessListener {
 */
 
         launchMinecraft();
+    }
+
+    private void fixArguments(List<String> args, ArgumentType type) {
+        if (type == ArgumentType.JVM) {
+            if (ramSize >= 2048) {
+                args.removeIf(it -> it.startsWith("-Xss"));
+                args.add("-Xss2M");
+            }
+        }
     }
 
     private void deleteMod(String... names) {
@@ -1814,12 +1821,12 @@ public class MinecraftLauncher implements JavaProcessListener {
             process.safeSetExitRunnable(this);
             minecraftWorking = true;
             updateLoggerActions();
-        } catch (Exception var3) {
+        } catch (Exception e) {
             notifyClose();
-            if (var3.getMessage().contains("CreateProcess error=2,")) {
-                throw new MinecraftException(false, "Executable is not found: \"" + var3.getMessage() + "\"", "exec-not-found");
+            if (e.getMessage() != null && e.getMessage().contains("CreateProcess error=2,")) {
+                throw new MinecraftException(false, "Executable is not found: \"" + e.getMessage() + "\"", "exec-not-found");
             }
-            throw new MinecraftException(true, "Cannot start the game!", "start", var3);
+            throw new MinecraftException(true, "Cannot start the game!", "start", e);
         }
 
         postLaunch();

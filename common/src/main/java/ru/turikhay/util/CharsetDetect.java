@@ -46,9 +46,8 @@ public class CharsetDetect {
         } catch (IOException e) {
             throw new RuntimeException("cannot start the process", e);
         }
-        try {
+        try (Scanner scanner = new Scanner(process.getInputStream())) {
             Pattern pattern = Pattern.compile("^Charset: \"(.+)\"$");
-            Scanner scanner = new Scanner(process.getInputStream());
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 Matcher matcher = pattern.matcher(line);

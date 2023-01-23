@@ -49,7 +49,7 @@ public class MinecraftUser extends User {
         setMinecraftToken(minecraftToken);
     }
 
-    void setProfile(MinecraftOAuthProfile profile) {
+    public void setProfile(MinecraftOAuthProfile profile) {
         this.profile = Objects.requireNonNull(profile, "profile");
     }
 
