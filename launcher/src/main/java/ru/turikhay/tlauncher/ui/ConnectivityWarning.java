@@ -88,7 +88,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
                 .sorted()
                 .collect(Collectors.toList());
 
-        tlaunchNotAvailable = entries.stream().anyMatch(e -> e.getName().equals("tlaun.ch") && !e.isReachable());
+        tlaunchNotAvailable = entries.stream().anyMatch(e -> e.getName().equals("llaun.ch") && !e.isReachable());
         noConnection = entries.stream().allMatch(e -> e.isDone() && !e.isReachable());
         List<ConnectivityManager.Entry> unreachableEntries = entries.stream()
                 .filter(ConnectivityManager.Entry::isQueued)
@@ -234,7 +234,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
         final String wikiLangPrefix = TLauncher.getInstance().getSettings().isLikelyRussianSpeakingLocale() ? "" : "en:";
         final String linkPrefix = tlaunchNotAvailable ? "https://web.archive.org/web/" : "";
         return String.format(Locale.ROOT,
-                "%shttps://wiki.tlaun.ch/%sconnectivity:%s",
+                "%shttps://wiki.llaun.ch/%sconnectivity:%s",
                 linkPrefix,
                 wikiLangPrefix,
                 type.name().toLowerCase(Locale.ROOT)

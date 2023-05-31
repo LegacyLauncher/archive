@@ -241,9 +241,9 @@ public final class UserInterface implements IInterface {
         }
     }
 
-    public static void showFatalError(FatalExceptionType type, String clientId) {
+    public static void showFatalError(FatalExceptionType type) {
         if (isHeaded()) {
-            FatalExceptionHandler.handle(type, clientId);
+            FatalExceptionHandler.handle(type);
         } else {
             HeadlessInterface.printFatalException(type);
         }

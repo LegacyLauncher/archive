@@ -36,7 +36,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
     static final String SERVER_FULL_URL = SERVER_ADDRESS + SERVER_ENTRY_POINT, QUERY_CODE_KEY = "code", QUERY_STATE_KEY = "state";
     private static final int PORT_CREATING_TRIES = 5, SERVER_BACKLOG = 1, SERVER_STOP_DELAY = 5;
 
-    static final String TOKEN_EXCHANGE_SUCCESS = ElyAuth.ACCOUNT_BASE + "/oauth2/code/success?appName=TLauncher";
+    static final String TOKEN_EXCHANGE_SUCCESS = ElyAuth.ACCOUNT_BASE + "/oauth2/code/success?appName=Legacy%20Launcher";
 
     HttpServerAdapter server;
 
@@ -302,7 +302,7 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
 
     static final String SERVER_RESPONSE =
             "<!DOCTYPE html>" +
-                    "<html><head><title>TLauncher</title></head>" +
+                    "<html><head><title>Legacy Launcher</title></head>" +
                     "<body>" +
                     "${text}" +
                     "</body>" +

@@ -36,7 +36,7 @@ public class SettingsLocaleComboBox extends BorderPanel implements EditorField, 
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                OS.openLink("https://tlaun.ch/l10n?locale=" + SettingsLocaleComboBox.this.panel.global.getLocale());
+                OS.openLink("https://llaun.ch/l10n");
             }
         });
         setSouth(hint);

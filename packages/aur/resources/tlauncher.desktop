@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=TL
+Name=Legacy Launcher
 Comment=Simple, light and fast Minecraft launcher
 Icon=minecraft
 Exec=/usr/bin/tlauncher

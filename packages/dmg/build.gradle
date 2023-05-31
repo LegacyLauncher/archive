@@ -9,7 +9,7 @@ def jreZipDownload = "https://cdn.azul.com/zulu/bin/zulu17.38.21-ca-fx-jre17.0.5
 def jreZipSha256 = "7483050a347894c13a6538dc42a1bfaad75939784c92f1e67433ca9a16929547"
 def jreZipEntry = "zulu17.38.21-ca-fx-jre17.0.5-macosx_x64/zulu-17.jre"
 
-def bundleName = "TL ${full_brand}".toString()
+def bundleName = "Legacy Launcher ${full_brand}".toString()
 def dmgDir = "$buildDir/dmg/$short_brand"
 def contentsDir = "$dmgDir/${bundleName}.app/Contents"
 

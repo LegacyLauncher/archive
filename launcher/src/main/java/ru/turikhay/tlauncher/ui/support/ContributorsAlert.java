@@ -71,7 +71,7 @@ public final class ContributorsAlert {
 
             StringBuilder b = new StringBuilder();
 
-            b.append("<b>TLauncher</b> ");
+            b.append("<b>Legacy Launcher</b> ");
             b.append(isUssr ? "переведён на" : "is translated to");
             b.append(" <b>");
             b.append(locale.getDisplayName(locale));

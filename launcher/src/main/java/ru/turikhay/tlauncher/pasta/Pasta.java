@@ -5,6 +5,7 @@ import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -12,7 +13,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.logger.LogFile;
 import ru.turikhay.util.CharsetData;
 import ru.turikhay.util.CharsetDataHttpEntity;
@@ -36,9 +36,7 @@ import static ru.turikhay.tlauncher.pasta.PastaResult.PastaUploaded;
 
 public class Pasta {
     private static final Logger LOGGER = LogManager.getLogger(Pasta.class);
-
-    private static final String APP_KEY = "kByB9b8MdAbgMq66";
-    private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s&format=%s";
+    private static final String CREATE_PASTE_URL = "https://pasta.llaun.ch/create/v1";
 
     private static final int
             RESPONSE_OK = 201,
@@ -147,20 +145,8 @@ public class Pasta {
 
     private PastaUploaded makeRequest(HttpClient httpClient, CharsetData data, PastaFormat format)
             throws IOException {
-        String clientId;
-        if (TLauncher.getInstance() != null) {
-            clientId = TLauncher.getInstance().getSettings().getClient().toString();
-        } else {
-            clientId = "test";
-        }
-        HttpPost httpPost = new HttpPost(
-                String.format(java.util.Locale.ROOT,
-                        CREATE_PASTE_URL,
-                        URLEncoder.encode(APP_KEY, "UTF-8"),
-                        URLEncoder.encode(clientId, "UTF-8"),
-                        URLEncoder.encode(format.value(), "UTF-8")
-                )
-        );
+        HttpPost httpPost = new HttpPost(CREATE_PASTE_URL);
+        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, format.getContentType().withCharset(StandardCharsets.UTF_8).toString());
         httpPost.setEntity(new CharsetDataHttpEntity(data));
         HttpResponse response = httpClient.execute(httpPost);
         int statusCode = response.getStatusLine().getStatusCode();

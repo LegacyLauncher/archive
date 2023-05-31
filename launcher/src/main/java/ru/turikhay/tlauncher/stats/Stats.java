@@ -16,6 +16,8 @@ import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +28,7 @@ import java.util.concurrent.*;
 public final class Stats {
     private static final Logger LOGGER = LogManager.getLogger(Stats.class);
 
-    private static final URL STATS_BASE = Http.constantURL("https://stats.tlaun.ch/v1");
+    private static final URL STATS_BASE = Http.constantURL("https://stats.llaun.ch/v2");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
     private static String lastResult;
@@ -100,7 +102,7 @@ public final class Stats {
     private static Future<?> submitDenunciation(final Stats.Args args) {
         if (allow) {
             return service.submit((Callable<Void>) () -> {
-                String result = Stats.performGetRequest(Stats.STATS_BASE, Stats.toRequest(args));
+                String result = Stats.performPostRequest(Stats.STATS_BASE, Stats.toRequest(args));
 
                 if (StringUtils.isNotEmpty(result)) {
                     lastResult = result;
@@ -135,13 +137,18 @@ public final class Stats {
         return connection;
     }
 
-    public static String performGetRequest(URL url, String request) throws IOException {
+    public static String performPostRequest(URL url, String request) throws IOException {
         Objects.requireNonNull(url);
         Objects.requireNonNull(request);
-        url = new URL(url.toString() + '?' + request);
         HttpURLConnection connection = createUrlConnection(url);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        connection.setDoOutput(true);
+        LOGGER.trace("Writing data to {}", url);
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8)) {
+            writer.write(request);
+        }
         LOGGER.trace("Reading data from {}", url);
-
         try (InputStream inputStream = connection.getInputStream()) {
             String e = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
             LOGGER.debug("{} responded with {}: {}", url, connection.getResponseCode(), e);

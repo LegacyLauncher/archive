@@ -80,7 +80,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     private void init(OptionSet set) {
-        comments = " TLauncher " + TLauncher.getBrand() + " properties\n Created in " + TLauncher.getVersion();
+        comments = " Legacy Launcher " + TLauncher.getBrand() + " properties\n Created in " + TLauncher.getVersion();
         defaults = ConfigurationDefaults.getInstance();
         configFromArgs = ArgumentParser.extractConfigEntries(set);
 

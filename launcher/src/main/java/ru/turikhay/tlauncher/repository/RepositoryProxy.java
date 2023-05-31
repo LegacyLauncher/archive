@@ -24,7 +24,8 @@ public class RepositoryProxy {
             "launcher.mojang.com",
             "resources.download.minecraft.net",
             "files.minecraftforge.net",
-            "maven.fabricmc.net"
+            "maven.fabricmc.net",
+            "piston-data.mojang.com"
     ));
     private static final List<String> PROXIES = Collections.unmodifiableList(
             RepoPrefixV1.prefixesCdnLast().stream().map(prefix -> String.format(Locale.ROOT,

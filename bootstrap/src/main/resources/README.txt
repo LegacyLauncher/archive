@@ -1,8 +1,8 @@
-TL;DR: If you're reading this file please open TL with Java, not with archiver!
+TL;DR: If you're reading this file please open Legacy Launcher with Java, not with archiver!
 
-Hello! Thanks for installing TL!
+Hello! Thanks for installing Legacy Launcher!
 If an archive with this file was opened instead of our launcher:
-1. Click TL.jar with right mouse button
+1. Click LL.jar with right mouse button
 2. Select "properties"
 3. Select "change..." in the "Application" row
 4. Select Java in opened window
@@ -17,18 +17,17 @@ in your distro repos and install it using package manager (apt, apt-get, pacman,
 Using macOS? Install Java from java.com/download
 
 Have troubles? Or questions? Need help? Here is some useful links:
-  Our Facebook page: tlaun.ch/fb
-  Our VK page: tlaun.ch/vk
-  Our Discord server: tlaun.ch/discord/intl
+  Our VK page: llaun.ch/vk
+  Our Discord server: llaun.ch/discord/intl
   Our support e-mail: support@tln4.ru
 
-TL download links:
+Legacy Launcher download links:
   Stable:
-    Exe (for Windows): tlaun.ch/dl/mcl/exe
-    Jar (for Windows, Linux, macOS): tlaun.ch/dl/mcl/jar
+    Exe (for Windows): llaun.ch/dl/mcl/exe
+    Jar (for Windows, Linux, macOS): llaun.ch/dl/mcl/jar
   Beta (latest):
-    Exe (for Windows): tlaun.ch/latest/exe
-    Jar (for Windows, Linux, macOS): tlaun.ch/latest/jar
+    Exe (for Windows): llaun.ch/latest/exe
+    Jar (for Windows, Linux, macOS): llaun.ch/latest/jar
 
 
 
@@ -58,10 +57,10 @@ TL download links:
 
 
 ===========================================
-     TL features for experienced users
+     Legacy Launcher features for experienced users
 ===========================================
 * This arguments can be used in tl.bootargs file in same folder launcher is
-* or as Java arguments (java THIS-ARGUMENTS -jar TL.jar)
+* or as Java arguments (java THIS-ARGUMENTS -jar LL.jar)
 * It's recommended to use OS-specific tl.bootargs file: tl-[OS].bootargs
 * OS- and Arch-spefic tl.bootargs is also supported: tl-[OS]-[ARCH].bootargs
 * [OS] is replaced with user's OS name (windows, linux, macos)
@@ -78,7 +77,7 @@ Can be used for moving launcher files to other hard drive
 
 ===========================================
 * This arguments can be used in tl.args file in same folder launcher is
-* or as TL arguments (java -jar TL.jar THIS-ARGUMENTS)
+* or as Legacy Launcher arguments (java -jar LL.jar THIS-ARGUMENTS)
 
 Overrides game folder path. Locks this setting in the launcher
 Used for Portable client mode
@@ -90,7 +89,7 @@ Overrides Java arguments. Locks this setting in the launcher
 Overrides Minecraft arguments. Locks this setting in the launcher
 --margs <arguments>
 
-Overrides TL settings file
+Overrides Legacy Launcher settings file
 Used for Portable client mode
 --settings <path/to/file>
 
@@ -103,4 +102,4 @@ Set default version selected on launcher startup
 Overrides launcher background. Locks this setting in the launcher
 --background <path/to/file>
 
-More: https://wiki.tlaun.ch/guide:portable-client (Sorry, russian only)
+More: https://wiki.llaun.ch/guide:portable-client (Sorry, russian only)

@@ -1,5 +1,5 @@
 {
-  "revision": 26,
+  "revision": 27,
   "required": "1.122.3",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap", "__MACOSX"],
   "variables": {
@@ -7,17 +7,17 @@
     "oom-pattern": ".*java.lang.OutOfMemoryError: .+$",
     "forge-pattern": ".*(?i:forge).*",
     "intel-bug-jre-link": "https://yadi.sk/d/dvzmBSqttQXhy/Java%208%20update%2045/Installers",
-    "intel-nvidia-select-url": "https://tlaun.ch/wiki/guide:gpu-select:nvidia",
+    "intel-nvidia-select-url": "https://wiki.llaun.ch/guide:gpu-select:nvidia",
     "nvidia-driver-update": {
-      "ru_RU": "https://tlaun.ch/wiki/update:driver:nvidia",
+      "ru_RU": "https://wiki.llaun.ch/update:driver:nvidia",
       "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
     },
     "amd-driver-update": {
-      "ru_RU": "https://tlaun.ch/wiki/update:driver:amd",
+      "ru_RU": "https://wiki.llaun.ch/update:driver:amd",
       "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
     },
     "intel-driver-update": {
-      "ru_RU": "https://tlaun.ch/wiki/update:driver:intel",
+      "ru_RU": "https://wiki.llaun.ch/update:driver:intel",
       "en_US": "https://www.howtogeek.com/135976/how-to-update-your-graphics-drivers-for-maximum-gaming-performance/"
     }
   },
@@ -52,13 +52,13 @@
     {
       "text": "install-java64",
       "actions": [
-        "browse --www https://tlaun.ch/wiki/update:java"
+        "browse --www https://wiki.llaun.ch/update:java"
       ]
     },
     {
       "text": "update-java",
       "actions": [
-        "browse --www https://tlaun.ch/wiki/update:java"
+        "browse --www https://wiki.llaun.ch/update:java"
       ]
     },
     {
@@ -213,31 +213,6 @@
       "buttons": [
         "open-mods"
       ]
-    },
-    {
-      "name": "forge13-configs",
-      "pattern": ".*com\\.electronwill\\.nightconfig\\.core\\.io\\.ParsingException: Not enough data available.*",
-      "title": {
-        "ru_RU": "Ошибка проверки конфигурации Forge",
-        "en_US": "Error parsing Forge config files"
-      },
-      "body": {
-        "ru_RU": "Откройте папку игры и удалите в ней папку config. Попробуйте другой мир",
-        "en_US": "Remove config folder in game folder. Try other Minecraft world"
-      },
-      "buttons": [
-        {
-          "name": "open-mc",
-          "text": {
-            "ru_RU": "Открыть папку игры",
-            "en_US": "Open game folder"
-          },
-          "actions": [
-            "browse --folder ."
-          ]
-        }
-      ],
-      "version": "${forge-pattern}"
     },
     {
       "name": "stoneblock-craftpresense-issue",

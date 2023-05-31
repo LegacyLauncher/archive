@@ -3,8 +3,8 @@ package ru.turikhay.tlauncher.managers;
 import org.freedesktop.dbus.connections.IDisconnectCallback;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
-import org.freedesktop.dbus.errors.ServiceUnknown;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.freedesktop.dbus.interfaces.Properties;
 import org.freedesktop.dbus.types.Variant;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ public class SwitcherooControlGPUManager implements GPUManager {
                         }
                     };
                 }).collect(Collectors.toList());
-            } catch (ServiceUnknown ignored) {
+            } catch (DBusExecutionException ignored) {
                 LOGGER.warn("Switcheroo-Control is unavailable");
                 return Collections.emptyList();
             }

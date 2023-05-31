@@ -26,13 +26,13 @@ public class RepoPrefixV1 {
         } catch (Exception e) {
             LOGGER.warn("Couldn't load internal repo list: ", e);
         }
-        final List<String> domains = getList(props, "domains", Arrays.asList("tlaun.ch", "tln4.ru"));
+        final List<String> domains = getList(props, "domains", Arrays.asList("llaun.ch", "lln4.ru"));
         List<String> prefixes = combine(
                 shuffle(
-                        getList(props, "eu_prefixes", Collections.singletonList("eu01-www"))
+                        getList(props, "eu_prefixes", Collections.singletonList("eu1"))
                 ),
                 shuffle(
-                        getList(props, "ru_prefixes", Collections.singletonList("ru01-www"))
+                        getList(props, "ru_prefixes", Collections.singletonList("ru1"))
                 )
         ).stream().flatMap(zone ->
                         Stream.of(
@@ -46,7 +46,7 @@ public class RepoPrefixV1 {
         ).collect(
                 Collectors.toList()
         );
-        CDN_PREFIXES = getList(props, "cdn_prefixes", Collections.singletonList("https://cdn.turikhay.ru/tln4"));
+        CDN_PREFIXES = getList(props, "cdn_prefixes", Collections.singletonList("https://cdn.turikhay.ru/lln4"));
         PREFIXES = Collections.unmodifiableList(prefixes);
     }
 

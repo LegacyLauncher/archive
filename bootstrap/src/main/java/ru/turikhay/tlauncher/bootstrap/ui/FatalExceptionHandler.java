@@ -9,12 +9,10 @@ final class FatalExceptionHandler {
 
     private final ResourceBundle b = UserInterface.getResourceBundle();
     private final FatalExceptionType exceptionType;
-    private final String clientId;
     private final MessageHost host;
 
-    private FatalExceptionHandler(FatalExceptionType exceptionType, String clientId) {
+    private FatalExceptionHandler(FatalExceptionType exceptionType) {
         this.exceptionType = exceptionType;
-        this.clientId = clientId;
         this.host = new MessageHost();
     }
 
@@ -36,7 +34,7 @@ final class FatalExceptionHandler {
     }
 
     private Runnable pastaAction() {
-        return new PastaAction(host, clientId);
+        return new PastaAction(host);
     }
 
     private void contactDirectly() {
@@ -97,8 +95,8 @@ final class FatalExceptionHandler {
         }
     }
 
-    static void handle(FatalExceptionType type, String clientId) {
-        FatalExceptionHandler handler = new FatalExceptionHandler(type, clientId);
+    static void handle(FatalExceptionType type) {
+        FatalExceptionHandler handler = new FatalExceptionHandler(type);
         handler.showMessage();
         handler.waitForClose();
     }

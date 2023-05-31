@@ -13,7 +13,7 @@ public final class Lazy<T> implements Callable<T> {
     private Callable<T> initializer; // gc collectable
 
     private boolean calledOnce;
-    private Exception exception;
+    private Throwable exception;
     private T value;
 
     private Lazy(Callable<T> initializer) {
@@ -38,6 +38,10 @@ public final class Lazy<T> implements Callable<T> {
             value = initializer.call();
         } catch (Exception e) {
             LOGGER.debug("Initialization exception on {}", initializer, e);
+            exception = e;
+            throw new LazyInitException(e);
+        } catch (Throwable e) {
+            LOGGER.warn("Severe initialization error on {}", initializer, e);
             exception = e;
             throw new LazyInitException(e);
         } finally {

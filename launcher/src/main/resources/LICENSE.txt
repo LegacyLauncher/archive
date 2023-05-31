@@ -17,7 +17,7 @@ which legal code can be found at: https://opensource.org/licenses/mit-license.ph
 
 This software includes content made by Mojang and licensed under Minecraft EULA,
 which can be found at: https://account.mojang.com/documents/minecraft_eula
-It was modified to be compatible with extra features that TLauncher includes.
+It was modified to be compatible with extra features that Legacy Launcher includes.
 
 This software uses Hamburg icon pack (by former pc.de Team) and WPZOOM Developer
 icon pack under CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/deed.en

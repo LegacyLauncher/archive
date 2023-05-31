@@ -249,9 +249,9 @@ public class TLauncherFrame extends JFrame {
         updateTitle();
         String title;
         if (TLauncher.getInstance().isDebug()) {
-            title = String.format(java.util.Locale.ROOT, "TL %s [%s]", brand, U.memoryStatus());
+            title = String.format(java.util.Locale.ROOT, "Legacy Launcher %s [%s]", brand, U.memoryStatus());
         } else {
-            title = String.format(java.util.Locale.ROOT, "TL %s", brand);
+            title = String.format(java.util.Locale.ROOT, "Legacy Launcher %s", brand);
         }
 
         setTitle(title);
