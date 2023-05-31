@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>true</dontWrapJar>
+  <headerType>gui</headerType>
+  <obj>w32api/crt2.o</obj>
+  <!-- You have to use modified obj files to make hybrid x64/x86 JRE dir selection work -->
+  <!-- Copy hybrid_jre_head directory into your launch4j installation path -->
+  <obj>hybrid_jre_head\guihead.o</obj>
+  <obj>hybrid_jre_head\head.o</obj>
+  <jar>launcher\bootstrap.jar</jar>
+  <outfile>..\baseResources\TL.exe</outfile>
+  <errTitle></errTitle>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl>http://java.com/download</downloadUrl>
+  <supportUrl></supportUrl>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest></manifest>
+  <icon>icon.ico</icon>
+  <var>_JAVA_OPTIONS=-Dtlauncher.launch4j=true</var>
+  <jre>
+    <path>jre;x86</path>
+    <bundledJre64Bit>false</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion></minVersion>
+    <maxVersion></maxVersion>
+    <jdkPreference>preferJre</jdkPreference>
+    <runtimeBits>64/32</runtimeBits>
+    <opt>-Xmx128m -Dtlauncher.bootstrap.restartExec=TL.exe</opt>
+  </jre>
+</launch4jConfig>

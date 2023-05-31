@@ -5,7 +5,7 @@ plugins {
 }
 
 def mainIss = [
-        name: "TL ${full_brand}".toString(),
+        name: "Legacy Launcher ${full_brand}".toString(),
         version: "0.0.0.0",
         id: generateUUIDFromString(short_brand.toString()),
         short_brand: short_brand.toString(),

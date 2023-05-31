@@ -7,7 +7,7 @@ pkgver='@LAUNCHER_VERSION@'
 pkgrel=@PKGREL@
 epoch=1
 pkgdesc='@PKGDESC@'
-url='https://tlaun.ch'
+url='https://llaun.ch'
 arch=('any')
 license=('custom')
 depends=('java-runtime>=8')
@@ -22,7 +22,7 @@ optdepends=(
 #_launcher_version='@LAUNCHER_VERSION@'
 #_launcher_checksum='@LAUNCHER_CHECKSUM@'
 
-_repo='https://tlaun.ch/repo'
+_repo='https://llaun.ch/repo'
 # Try one of these if the above one fails:
 @ALTERNATE_REPO_COMMENT@
 

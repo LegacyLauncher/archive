@@ -9,11 +9,6 @@ import javax.swing.*;
 
 public class Alert {
     private static final Logger LOGGER = LogManager.getLogger(Alert.class);
-
-    private static final String PREFIX = "TLauncher : ";
-    private static final String MISSING_TITLE = "MISSING TITLE";
-    private static final String MISSING_MESSAGE = "MISSING MESSAGE";
-    private static final String MISSING_QUESTION = "MISSING QUESTION";
     private static String DEFAULT_TITLE = "An error occurred";
     private static String DEFAULT_MESSAGE = "An unexpected error occurred";
 
@@ -151,7 +146,7 @@ public class Alert {
     }
 
     private static String getTitle(String title) {
-        return "TL : " + (title == null ? "" : title);
+        return "LL : " + (title == null ? "" : title);
     }
 
     private static String getLoc(String path, String fallbackMessage) {

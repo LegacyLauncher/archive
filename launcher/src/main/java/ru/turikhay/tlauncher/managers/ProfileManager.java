@@ -40,9 +40,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ProfileManager extends RefreshableComponent {
     private static final Logger LOGGER = LogManager.getLogger(ProfileManager.class);
-
-    public static final String DEFAULT_PROFILE_NAME = "TLauncher";
-    public static final String OLD_PROFILE_FILENAME = "launcher_profiles.json";
     public static final String DEFAULT_PROFILE_FILENAME = "tlauncher_profiles.json";
 
     private final AccountManager accountManager;

@@ -54,20 +54,20 @@ public class SupportButton extends LocalizableButton implements Blockable {
 
     {
         localeMap.put("ru_RU", new SupportMenu("info-circle")
-                .add("loginform.button.support.vk", Images.getIcon16("logo-vk"), actionURL("https://tlaun.ch/vk?from=menu"))
-                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/ru?from=menu"))
+                .add("loginform.button.support.vk", Images.getIcon16("logo-vk"), actionURL("https://llaun.ch/vk"))
+                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://llaun.ch/discord/ru"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
         );
 
         localeMap.put("uk_UA", new SupportMenu("info-circle")
-                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/ru?from=menu"))
+                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://llaun.ch/discord/ru"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
         );
 
         localeMap.put("en_US", new SupportMenu("comments-o")
-                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://tlaun.ch/discord/intl?from=menu"))
+                .add("loginform.button.support.discord", Images.getIcon16("logo-discord"), actionURL("https://llaun.ch/discord/intl"))
                 .addSeparator()
                 .add("loginform.button.support", Images.getIcon16("life-ring"), showSupportFrame)
         );

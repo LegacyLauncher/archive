@@ -3,8 +3,7 @@ authlib = "1.5.24"
 commons-compress = "1.21"
 commons-io = "2.11.0"
 commons-lang3 = "3.12.0"
-dbus = "4.2.1"
-dbus-native-fd = "2.0"
+dbus = "4.3.0"
 flatlaf = "2.2"
 gson = "2.8.9"
 guava = "31.0.1-jre"
@@ -16,6 +15,7 @@ jdom = "2.0.2"
 jna = "5.13.0"
 jopt-simple = "5.0.4" # Locked, see 92d9c564
 junit5 = "5.8.2"
+junixsocket = "2.6.2"
 jvd = "1.0"
 log4j = "2.19.0"
 mockito = "4.1.0"
@@ -35,8 +35,6 @@ commons-compress = { module = "org.apache.commons:commons-compress", version.ref
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 dbus-core = { module = "com.github.hypfvieh:dbus-java-core", version.ref = "dbus" }
-dbus-native-fd = { module = "com.rm5248:dbus-java-nativefd", version.ref = "dbus-native-fd" }
-dbus-transport-jnr-unixsocket = { module = "com.github.hypfvieh:dbus-java-transport-jnr-unixsocket", version.ref = "dbus" }
 flatlaf = { module = "com.formdev:flatlaf", version.ref = "flatlaf" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -51,6 +49,7 @@ jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 jopt-simple = { module = "net.sf.jopt-simple:jopt-simple", version.ref = "jopt-simple" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+junixsocket-core = { module = "com.kohlschutter.junixsocket:junixsocket-core", version.ref = "junixsocket" }
 jvd = { module = "ru.turikhay:jvd", version.ref = "jvd" }
 log4j-1-2-api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
@@ -71,7 +70,6 @@ toml4j = { module = "com.moandjiezana.toml:toml4j", version.ref = "toml4j" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 
 [bundles]
-dbus = ["dbus-core", "dbus-transport-jnr-unixsocket", "dbus-native-fd"]
 httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
 jna = ["jna", "jna-platform"]
 log4j = ["log4j-api", "log4j-core", "log4j-1-2-api", "log4j-slf4j-impl"]

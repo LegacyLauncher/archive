@@ -6,6 +6,7 @@ import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
+import net.legacylauncher.LegacyLauncher;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +31,7 @@ import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.tlauncher.sentry.SentryConfigurer;
 import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.FlatLaf;
+import ru.turikhay.tlauncher.ui.LLaunchFrame;
 import ru.turikhay.tlauncher.ui.TLauncherFrame;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.frames.FirstRunNotice;
@@ -63,7 +65,7 @@ import java.util.stream.Collectors;
 import static ru.turikhay.tlauncher.managers.ConnectivityManager.*;
 
 public final class TLauncher {
-    private static final Logger LOGGER = LogManager.getLogger(TLauncher.class);
+    private static final Logger LOGGER = LogManager.getLogger(LegacyLauncher.class);
 
     private final boolean debug, ready;
 
@@ -341,6 +343,24 @@ public final class TLauncher {
                 }
                 LOGGER.debug("Selecting user: {}", selectedUser);
                 profileManager.getAccountManager().getUserSet().select(selectedUser);
+            }
+        });
+
+        executeWhenReady(() -> {
+            if (!config.getBoolean("llaunch-announced") && LLaunchFrame.isNotPostTlaunchEra()) {
+                SwingUtilities.invokeLater(() -> {
+                    frame.mp.defaultScene.notificationPanel.addNotification(
+                            "llaunch-announced",
+                            new Notification(
+                                    "ll-square",
+                                    () -> {
+                                        config.set("llaunch-announced", true);
+                                        frame.mp.defaultScene.notificationPanel.removeNotification("llaunch-announced");
+                                        LLaunchFrame.showInstance();
+                                    }
+                            )
+                    );
+                });
             }
         });
 
@@ -883,7 +903,7 @@ public final class TLauncher {
 
         setupErrorHandler();
 
-        LOGGER.info("Starting TL {} {}", getBrand(), U.getFormattedVersion(getVersion()));
+        LOGGER.info("Starting Legacy Launcher {} {}", getBrand(), U.getFormattedVersion(getVersion()));
         if (bridge.getBootstrapVersion() != null) {
             LOGGER.info("... using Bootstrap {}", bridge.getBootstrapVersion());
         }
@@ -902,7 +922,7 @@ public final class TLauncher {
         try {
             new TLauncher(bridge, dispatcher);
         } catch (Throwable t) {
-            LOGGER.fatal("Error launching TL", t);
+            LOGGER.fatal("Error launching Legacy Launcher", t);
             dispatcher.onBootErrored(t);
         }
 //        }

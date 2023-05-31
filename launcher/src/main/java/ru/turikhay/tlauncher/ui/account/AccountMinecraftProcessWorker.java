@@ -157,26 +157,20 @@ class AccountMinecraftProcessWorker {
     private final LocalServerUrlProducer urlProducer = new LocalServerUrlProducer();
 
     private MicrosoftOAuthCodeRequestStrategy initBrowser() {
-        try {
-            return new LocalServerStrategy(
-                    new DefaultExternalBrowser(),
-                    urlProducer,
-                    new NanoHttpdLocalServer(
-                            new OAuthUrlParser(),
-                            urlProducer
-                    ),
-                    new LocalServerConfiguration(
-                            "localhost",
-                            Arrays.asList(46521, 47522, 48523, 49524),
-                            "",
-                            "https://tlaun.ch/msft-auth-success" +
-                                    "?tl_version=" + URLEncoder.encode(TLauncher.getVersion().toString(), "UTF-8")
-                                    + "&locale=" + URLEncoder.encode(TLauncher.getInstance().getLang().getLocale().toString(), "UTF-8")
-                    )
-            );
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("unsupported encoding", e);
-        }
+        return new LocalServerStrategy(
+                new DefaultExternalBrowser(),
+                urlProducer,
+                new NanoHttpdLocalServer(
+                        new OAuthUrlParser(),
+                        urlProducer
+                ),
+                new LocalServerConfiguration(
+                        "localhost",
+                        Arrays.asList(46521, 47522, 48523, 49524),
+                        "",
+                        "https://llaun.ch/msft-auth-success"
+                )
+        );
     }
 
     private MinecraftOAuthProfile handleProfileCreation(MinecraftServicesToken token) throws IOException, ProfileCreationAbortedException {

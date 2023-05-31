@@ -16,11 +16,9 @@ class PastaAction implements Runnable {
     private final ResourceBundle b = UserInterface.getResourceBundle();
 
     private final MessageHost host;
-    private final String clientId;
 
-    PastaAction(MessageHost host, String clientId) {
+    PastaAction(MessageHost host) {
         this.host = host;
-        this.clientId = clientId;
     }
 
     @Override
@@ -39,7 +37,7 @@ class PastaAction implements Runnable {
     }
 
     private void sendPasta() throws PastaException {
-        Pasta pasta = new Pasta(clientId, getLogsContent());
+        Pasta pasta = new Pasta(getLogsContent());
         PastaLink link = pasta.send();
         host.showMessage(new SingleButtonMessage(
                 b.getString("pasta.success.text"),

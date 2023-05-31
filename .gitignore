@@ -24,3 +24,7 @@ build
 !.idea/runConfigurations
 
 logs/
+
+# Дарова, Eclipse (и VSCode)
+.settings/
+*/bin/

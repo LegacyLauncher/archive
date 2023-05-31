@@ -6,8 +6,8 @@ import org.freedesktop.dbus.FileDescriptor;
 import org.freedesktop.dbus.connections.IDisconnectCallback;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
-import org.freedesktop.dbus.errors.ServiceUnknown;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
@@ -18,29 +18,24 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
 
 public class GameModeHook implements ProcessHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(GameModeHook.class);
 
     private final GameModeInterface gameModeInterface;
-    private final GameModeInterface gameModeInterfaceFd;
 
-    public GameModeHook(DBusConnection session, DBusConnection sessionFd) throws DBusException {
+    public GameModeHook(DBusConnection session) throws DBusException {
         this.gameModeInterface = session.getRemoteObject("com.feralinteractive.GameMode", "/com/feralinteractive/GameMode", GameModeInterface.class);
-        this.gameModeInterfaceFd = sessionFd.getRemoteObject("com.feralinteractive.GameMode", "/com/feralinteractive/GameMode", GameModeInterface.class);
-    }
-
-    private static DBusConnection createSessionConnection(boolean shared) throws DBusException {
-        return DBusConnectionBuilder.forSessionBus()
-                .withShared(shared)
-                .withDisconnectCallback(new DBusDisconnectionLogger())
-                .build();
     }
 
     protected static Optional<ProcessHook> tryToCreate() {
         try {
+            Callable<DBusConnection> sessionFactory = () -> DBusConnectionBuilder.forSessionBus()
+                    .withDisconnectCallback(new DBusDisconnectionLogger())
+                    .build();
             try {
-                return Optional.of(new GameModeHook(createSessionConnection(true), createSessionConnection(false)));
+                return Optional.of(new GameModeHook(sessionFactory.call()));
             } catch (Throwable t) {
                 return Optional.empty();
             }
@@ -112,14 +107,14 @@ public class GameModeHook implements ProcessHook {
             }
             if (callerPidFd >= 0 && gamePidFd >= 0) {
                 fdMap.put(process, new GameModeEntry(callerPid, gamePid, new FileDescriptor(callerPidFd), new FileDescriptor(gamePidFd)));
-                gameModeInterfaceFd.RegisterGameByPIDFd(new FileDescriptor(callerPidFd), new FileDescriptor(gamePidFd));
+                gameModeInterface.RegisterGameByPIDFd(new FileDescriptor(callerPidFd), new FileDescriptor(gamePidFd));
                 LOGGER.info("Minecraft process registered in GameMode. Pids: {} / {}, FDs: {} / {}", callerPid, gamePid, callerPidFd, gamePidFd);
             } else {
                 fdMap.put(process, new GameModeEntry(callerPid, gamePid));
                 gameModeInterface.RegisterGameByPID(callerPid, gamePid);
                 LOGGER.info("Minecraft process registered in GameMode. Pids: {} / {}", callerPid, gamePid);
             }
-        } catch (ServiceUnknown ignored) {
+        } catch (DBusExecutionException ignored) {
         }
     }
 
@@ -136,7 +131,7 @@ public class GameModeHook implements ProcessHook {
                 LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}", callerPid, gamePid);
             } else {
                 if (entry.getCallerPidFd() != null && entry.getGamePidFd() != null) {
-                    gameModeInterfaceFd.UnregisterGameByPIDFd(entry.getCallerPidFd(), entry.getGamePidFd());
+                    gameModeInterface.UnregisterGameByPIDFd(entry.getCallerPidFd(), entry.getGamePidFd());
                     LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}, FDs: {} / {}",
                             entry.getCallerPid(), entry.getGamePid(), entry.getCallerPidFd().getIntFileDescriptor(), entry.getGamePidFd().getIntFileDescriptor());
                     CLibrary.INSTANCE.close(entry.getGamePidFd().getIntFileDescriptor());
@@ -146,7 +141,7 @@ public class GameModeHook implements ProcessHook {
                     LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}", entry.getCallerPid(), entry.getGamePid());
                 }
             }
-        } catch (ServiceUnknown ignored) {
+        } catch (DBusExecutionException ignored) {
         }
     }
 

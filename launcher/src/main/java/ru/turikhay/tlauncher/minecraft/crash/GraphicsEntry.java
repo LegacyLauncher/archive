@@ -113,12 +113,12 @@ public class GraphicsEntry extends PatternContainerEntry {
         if (haveIntel) {
             if (haveNvidia) {
                 setToUpdateDrivers("Intel", "NVIDIA");
-                newButton("intel-nvidia-select", new VarUrlAction("intel-nvidia-select-url", "https://tlaun.ch/wiki/guide:gpu-select:nvidia"));
+                newButton("intel-nvidia-select", new VarUrlAction("intel-nvidia-select-url", "https://wiki.llaun.ch/guide:gpu-select:nvidia"));
                 return true;
             }
             if (haveAmd) {
                 setToUpdateDrivers("Intel", "AMD");
-                newButton("intel-amd-select", new VarUrlAction("intel-nvidia-select-url", "https://tlaun.ch/wiki/guide:gpu-select:amd"));
+                newButton("intel-amd-select", new VarUrlAction("intel-nvidia-select-url", "https://wiki.llaun.ch/guide:gpu-select:amd"));
                 return true;
             }
             return setToUpdateDrivers("Intel");
@@ -148,7 +148,7 @@ public class GraphicsEntry extends PatternContainerEntry {
             nameBuilder.append(", ").append(manufacturerName);
 
             String manufacturer = manufacturerName.toLowerCase(java.util.Locale.ROOT);
-            newButton("driver-update", new VarUrlAction(manufacturer + "-driver-update", "https://tlaun.ch/wiki/update:driver:" + manufacturer), manufacturerName);
+            newButton("driver-update", new VarUrlAction(manufacturer + "-driver-update", "https://wiki.llaun.ch/update:driver:" + manufacturer), manufacturerName);
         }
         setPath("update-driver", nameBuilder.substring(", ".length()));
 

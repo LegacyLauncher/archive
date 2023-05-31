@@ -6,8 +6,8 @@ import org.freedesktop.dbus.FileDescriptor;
 import org.freedesktop.dbus.connections.IDisconnectCallback;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
-import org.freedesktop.dbus.errors.ServiceUnknown;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.freedesktop.dbus.types.UInt32;
 import org.freedesktop.dbus.types.Variant;
 import org.slf4j.Logger;
@@ -24,27 +24,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.function.Function;
 
 public class XDGPortal implements Portal, Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(XDGPortal.class);
 
-    private final DBusConnection session, fdSession;
-    private final OpenURIInterface openURIInterface, fdOpenURIInterface;
+    private final DBusConnection session;
+    private final OpenURIInterface openURIInterface;
     private final SettingsInterface settingsInterface;
 
-    private XDGPortal(DBusConnection session, DBusConnection fdSession) throws DBusException {
+    private XDGPortal(DBusConnection session) throws DBusException {
         this.session = session;
-        this.fdSession = fdSession;
         this.openURIInterface = session.getRemoteObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", OpenURIInterface.class);
-        this.fdOpenURIInterface = fdSession.getRemoteObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", OpenURIInterface.class);
         this.settingsInterface = session.getRemoteObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", SettingsInterface.class);
     }
 
     @Override
     public void close() throws IOException {
         session.close();
-        fdSession.close();
     }
 
     @Override
@@ -52,7 +48,7 @@ public class XDGPortal implements Portal, Closeable {
         try {
             openURIInterface.OpenURI("", uri.toString(), Collections.emptyMap());
             return true;
-        } catch (ServiceUnknown e) {
+        } catch (DBusExecutionException e) {
             return false;
         }
     }
@@ -63,10 +59,10 @@ public class XDGPortal implements Portal, Closeable {
             Map<String, Variant<?>> options = new HashMap<>();
             options.put("writable", new Variant<>(false));
             int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_RDONLY | CLibrary.O_CLOEXEC);
-            fdOpenURIInterface.OpenDirectory("", new FileDescriptor(fd), options);
+            openURIInterface.OpenDirectory("", new FileDescriptor(fd), options);
             CLibrary.INSTANCE.close(fd);
             return true;
-        } catch (ServiceUnknown e) {
+        } catch (DBusExecutionException e) {
             return false;
         }
     }
@@ -77,10 +73,10 @@ public class XDGPortal implements Portal, Closeable {
             Map<String, Variant<?>> options = new HashMap<>();
             options.put("writable", new Variant<>(false));
             int fd = CLibrary.INSTANCE.open(path.toString(), CLibrary.O_RDONLY | CLibrary.O_CLOEXEC);
-            fdOpenURIInterface.OpenFile("", new FileDescriptor(fd), options);
+            openURIInterface.OpenFile("", new FileDescriptor(fd), options);
             CLibrary.INSTANCE.close(fd);
             return true;
-        } catch (ServiceUnknown e) {
+        } catch (DBusExecutionException e) {
             return false;
         }
     }
@@ -98,23 +94,18 @@ public class XDGPortal implements Portal, Closeable {
                 case 2:
                     return ColorScheme.PREFER_LIGHT;
             }
-        } catch (ServiceUnknown e) {
+        } catch (DBusExecutionException e) {
             return ColorScheme.NO_PREFERENCE;
         }
     }
 
-    private static DBusConnection createSessionConnection(boolean shared) throws DBusException {
-        return DBusConnectionBuilder.forSessionBus()
-                .withShared(shared)
-                .withDisconnectCallback(new DBusDisconnectionLogger())
-                .build();
-    }
 
     public static Optional<Portal> tryToCreate() {
+        Callable<DBusConnection> sessionFactory = () -> DBusConnectionBuilder.forSessionBus()
+                .withDisconnectCallback(new DBusDisconnectionLogger())
+                .build();
         try {
-            DBusConnection session = createSessionConnection(true);
-            DBusConnection fdSession = createSessionConnection(false);
-            return Optional.of(new XDGPortal(session, fdSession));
+            return Optional.of(new XDGPortal(sessionFactory.call()));
         } catch (Throwable t) {
             LOGGER.warn("Couldn't open D-Bus connection", t); // TODO remove after release
             return Optional.empty();

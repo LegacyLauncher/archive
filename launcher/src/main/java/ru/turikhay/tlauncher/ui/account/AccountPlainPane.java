@@ -191,6 +191,6 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
     }
 
     private static boolean isNameValid(String name) {
-        return name != null && name.chars().noneMatch(ch -> ch <= 32 || ch >= 127);
+        return name != null && name.length() <= 16 && name.chars().noneMatch(ch -> ch <= 32 || ch >= 127);
     }
 }

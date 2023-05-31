@@ -275,7 +275,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
                 accountsList.add(Box.createRigidArea(new Dimension(0, HALF_BORDER)));
                 LocalizableButton helpButton = new LocalizableButton("mojang-migration.help.button");
                 helpButton.addActionListener(e -> OS.openLink(TLauncher.getInstance().getSettings().isLikelyRussianSpeakingLocale() ?
-                        "https://tlaun.ch/movehelpru" : "https://tlaun.ch/movehelp")
+                        "https://llaun.ch/movehelpru" : "https://llaun.ch/movehelp")
                 );
                 LocalizableButton nadoButton = new LocalizableButton("mojang-migration.nado.button");
                 nadoButton.addActionListener(e -> Alert.showLocMessage("mojang-migration.nado"));
@@ -313,7 +313,7 @@ public class MigrationFrame extends ExtendedFrame implements LocalizableComponen
         setTitle(Localizable.get("mojang-migration.title"));
 
         final String explanationLink = TLauncher.getInstance().getSettings().isLikelyRussianSpeakingLocale() ?
-                "https://tlaun.ch/movefaqru" : "https://tlaun.ch/movefaq";
+                "https://llaun.ch/movefaqru" : "https://llaun.ch/movefaq";
         StringBuilder explanation = new StringBuilder();
         explanation.append(Localizable.get("mojang-migration.body.explanation.text"));
         if (startDate != null) {

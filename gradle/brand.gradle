@@ -3,7 +3,7 @@ ext {
 
     full_brand = System.getenv("BRAND") ?: [
             'develop': 'Dev',
-            'legacy': 'Legacy',
+            'legacy': 'Stable',
             'legacy_beta'  : 'Beta',
             'mcl': 'for Mc-launcher.com',
             'aur': 'AUR',

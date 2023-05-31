@@ -10,22 +10,18 @@ import ru.turikhay.tlauncher.bootstrap.util.U;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class Pasta {
-    private static final String CREATE_PASTE_URL = "https://pasta.tlaun.ch/create/v1?app_key=%s&client=%s";
-    private static final String APP_KEY = "MWEmWNwX9HyJbFQb";
+    private static final String CREATE_PASTE_URL = "https://pasta.llaun.ch/create/v1";
 
-    private final String clientId, content;
+    private final String content;
 
-    public Pasta(String clientId, String content) {
-        this.clientId = clientId;
+    public Pasta(String content) {
         this.content = content;
     }
 
@@ -104,17 +100,9 @@ public class Pasta {
     }
 
     private URL createUrl() {
-        String clientId = this.clientId == null ? "bootstrap" : this.clientId;
         URL url;
         try {
-            url = new URL(
-                    String.format(java.util.Locale.ROOT, CREATE_PASTE_URL,
-                            URLEncoder.encode(APP_KEY, "UTF-8"),
-                            URLEncoder.encode(clientId, "UTF-8")
-                    )
-            );
-        } catch (UnsupportedEncodingException e) {
-            throw new Error("UTF-8 not supported", e);
+            url = new URL(CREATE_PASTE_URL);
         } catch (MalformedURLException e) {
             throw new RuntimeException("couldn't create url", e);
         }

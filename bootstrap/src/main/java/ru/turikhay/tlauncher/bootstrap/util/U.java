@@ -10,11 +10,14 @@ import java.net.URISyntaxException;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Locale;
 
 public final class U {
     public static void log(String prefix, Object... o) {
         synchronized (System.out) {
+            System.out.print(Instant.now().toString());
+            System.out.print(' ');
             System.out.print(prefix);
             System.out.print(' ');
             if (o == null) {

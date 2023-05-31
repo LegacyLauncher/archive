@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.login.buttons;
 
+import ru.turikhay.tlauncher.ui.LLaunchFrame;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -35,6 +36,9 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
         accountManager = new LocalizableMenuItem("loginform.button.settings.account");
         accountManager.addActionListener(e -> lf.pane.openAccountEditor());
         popup.add(accountManager);
+        if (LLaunchFrame.isNotPostTlaunchEra()) {
+            popup.add(LocalizableMenuItem.newItem("llaunch.menuItem", "ll-square", (e) -> LLaunchFrame.showInstance()));
+        }
         notices = LocalizableMenuItem.newItem("loginform.button.settings.notices", e -> {
             //lf.scene.getMainPane().openNoticeScene();
             lf.scene.setNoticeSidePanelEnabled(true);

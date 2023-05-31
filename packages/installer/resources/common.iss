@@ -1,5 +1,5 @@
-﻿#define Publisher "TL"
-#define URL "https://tlaun.ch"
+﻿#define Publisher "Legacy Launcher Team"
+#define URL "https://llaun.ch"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.

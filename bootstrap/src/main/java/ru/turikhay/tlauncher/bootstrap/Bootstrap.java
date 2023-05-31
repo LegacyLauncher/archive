@@ -303,8 +303,7 @@ public final class Bootstrap {
             bootstrap.getUserInterface().dispose();
         }
 
-        UserInterface.showFatalError(exceptionType,
-                bridge == null || bridge.getClient() == null ? null : bridge.getClient().toString());
+        UserInterface.showFatalError(exceptionType);
     }
 
     private final InternalLauncher internal;
@@ -845,7 +844,7 @@ public final class Bootstrap {
             }
             if (brokenPath != null) {
                 appendLine(message, "Please do not run (any) Java application which path contains folder name that ends with «!»");
-                appendLine(message, "Не запускайте Java-приложения в директориях, чей путь содержит «!». Переместите TLauncher в другую папку.");
+                appendLine(message, "Не запускайте Java-приложения в директориях, чей путь содержит «!». Переместите Legacy Launcher в другую папку.");
             }
             if (tempDirUnwriteable) {
                 appendLine(message, "Could not access temporary folder. Please check your hard drive.");

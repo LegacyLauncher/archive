@@ -84,6 +84,7 @@ shadowJar {
     relocate("org.", "shaded.org.") {
         exclude("org.freedesktop.**")
         exclude("/org/freedesktop/**")
+        exclude("org.newsclub.**")
         exclude("org.slf4j.**")
     }
     relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
@@ -190,7 +191,7 @@ task generateUpdateJson {
         def meta = [
                 version : product_version,
                 checksum: jarFileChecksum,
-                url     : [ "https://tlaun.ch/${downloadPath}" ] + repo_hosts.collect { host ->
+                url     : [ "https://llaun.ch/${downloadPath}" ] + repo_hosts.collect { host ->
                     ["http", "https"].collect {scheme ->
                         "${scheme}://${host}/${downloadPath}"
                     }
