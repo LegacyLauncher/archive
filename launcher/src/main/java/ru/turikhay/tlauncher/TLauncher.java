@@ -87,6 +87,7 @@ public final class TLauncher {
     private final ConnectivityManager connectivityManager;
     private final MemoryAllocationService memoryAllocationService;
     private final GPUManager gpuManager;
+    private final PromotedStoreManager promotedStoreManager;
 
     private final Downloader downloader;
 
@@ -211,6 +212,8 @@ public final class TLauncher {
         }
 
         LOGGER.info("Loaded GPU manager: {}", gpuManager);
+
+        promotedStoreManager = new PromotedStoreManager();
 
         preloadUI();
 
@@ -892,6 +895,10 @@ public final class TLauncher {
 
     public GPUManager getGpuManager() {
         return gpuManager;
+    }
+
+    public PromotedStoreManager getPromotedStoreManager() {
+        return promotedStoreManager;
     }
 
     public Optional<String> getPackageMode() {

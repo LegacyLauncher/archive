@@ -1,11 +1,9 @@
+# Maintainer: turikhay <me@turikhay.com>
 # Maintainer: McModder <aur @ modder.pw>
 # Contributor: SaMaLerO <smlr[at]ukr[dot]net>
-# PLEASE do not mark it out-of date because "2.xx is released"
-# *2.xx a separate project with same name from other dev team*
 pkgname='@PKGNAME@'
 pkgver='@LAUNCHER_VERSION@'
 pkgrel=@PKGREL@
-epoch=1
 pkgdesc='@PKGDESC@'
 url='https://llaun.ch'
 arch=('any')
@@ -56,17 +54,17 @@ sha256sums=(
 
 package() {
   # install launch script and .desktop file
-  install -Dm0644 "${srcdir}/tlauncher.desktop" "${pkgdir}/usr/share/applications/tlauncher.desktop"
-  install -Dm0755 "${srcdir}/tlauncher.bash" "${pkgdir}/usr/bin/tlauncher"
+  install -Dm0644 "${srcdir}/legacylauncher.desktop" "${pkgdir}/usr/share/applications/legacylauncher.desktop"
+  install -Dm0755 "${srcdir}/legacylauncher.bash" "${pkgdir}@EXEC_PATH@"
 
   # install icons
   for size in 256x256 192x192 128x128 96x96 64x64 48x48; do
-    install -Dm0644 "${srcdir}/minecraft.${size}.png" "${pkgdir}/usr/share/icons/hicolor/${size}/apps/minecraft.png"
+    install -Dm0644 "${srcdir}/minecraft.${size}.png" "${pkgdir}/usr/share/icons/hicolor/${size}/apps/legacylauncher.png"
   done
 
   # install launcher
-  install -Dm0644 "${srcdir}/@BOOTSTRAP_JAR@" "${pkgdir}/opt/tlauncher/bootstrap.jar"
-  install -Dm0644 "${srcdir}/@LAUNCHER_JAR@" "${pkgdir}/opt/tlauncher/launcher.jar"
+  install -Dm0644 "${srcdir}/@BOOTSTRAP_JAR@" "${pkgdir}@APP_DIR@/bootstrap.jar"
+  install -Dm0644 "${srcdir}/@LAUNCHER_JAR@" "${pkgdir}@APP_DIR@/launcher.jar"
 
   # install libraries
 @LAUNCHER_LIBRARIES_INSTALLS@

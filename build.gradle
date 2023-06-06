@@ -3,16 +3,16 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'org.yaml', name: 'snakeyaml', version: '1.30'
+        classpath group: 'org.yaml', name: 'snakeyaml', version: '1.33'
     }
 }
 
 plugins {
     id "java"
-    id "org.openjfx.javafxplugin" version "0.0.10" apply false
-    id "com.github.johnrengelman.shadow" version "7.0.0" apply false
-    id "com.github.gmazzo.buildconfig" version "3.0.3" apply false
-    id "de.undercouch.download" version "5.1.0" apply false
+    id "org.openjfx.javafxplugin" version "0.0.14" apply false
+    id "com.github.johnrengelman.shadow" version "8.1.1" apply false
+    id "com.github.gmazzo.buildconfig" version "4.0.4" apply false
+    id "de.undercouch.download" version "5.4.0" apply false
 }
 
 allprojects {

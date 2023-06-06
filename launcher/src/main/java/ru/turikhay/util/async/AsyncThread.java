@@ -24,6 +24,21 @@ public class AsyncThread {
         return SHARED_SERVICE.submit(wrap(c));
     }
 
+    public static <V> CompletableFuture<V> completableFuture(Callable<V> c) {
+        CompletableFuture<V> f = new CompletableFuture<>();
+        AsyncThread.execute(() -> {
+            V v;
+            try {
+                v = c.call();
+            } catch (Throwable t) {
+                f.completeExceptionally(t);
+                return;
+            }
+            f.complete(v);
+        });
+        return f;
+    }
+
     public static Future<?> after(long timeout, TimeUnit timeUnit, Runnable r) {
         return DELAYER.schedule(r, timeout, timeUnit);
     }

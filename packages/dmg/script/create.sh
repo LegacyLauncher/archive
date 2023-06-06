@@ -5,7 +5,7 @@ short_brand="@short_brand@"
 full_brand="@full_brand@"
 
 app_dir="$bundle_name.app"
-dmg_path="TL_${short_brand}.dmg"
+dmg_path="LegacyLauncher_${short_brand}.dmg"
 
 # Remove quarantine flag that causes the app to be "damaged"
 sudo xattr -r -d com.apple.quarantine "$app_dir"

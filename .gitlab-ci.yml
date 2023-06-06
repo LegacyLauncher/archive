@@ -142,7 +142,7 @@ workflow:
 
 .installer: &installer
   image:
-    name: amake/innosetup@68d4059f953d5c35d97e642f76bccb510eb7e472f1873ded5865ba5940e7f28e
+    name: amake/innosetup:latest
     entrypoint: [""]
   stage: Build
   script:
@@ -176,7 +176,7 @@ workflow:
 
 .gen_srcinfo: &gen_srcinfo
   image:
-    name: whynothugo/makepkg@52f3064753caf65d09fd86239f1052aab0c191dd56dc265320f3c61ecc375067
+    name: whynothugo/makepkg:latest
     entrypoint: [""]
   stage: Build
   script:
@@ -349,7 +349,7 @@ workflow:
 
 'Legacy: source.zip':
   stage: Build
-  image: joshkeegan/zip@7354c42af9bd06aa94141289c28e96b479752b970c89b4d9a9a5acc4f0bba68d
+  image: joshkeegan/zip:latest
   script:
     - mkdir -p source/build/update/$SHORT_BRAND
     - zip -rv9 source/build/update/$SHORT_BRAND/source.zip . -x ".git/*" ".gradle/*" "source/*" ".gitlab-ci.yml"
