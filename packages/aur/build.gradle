@@ -9,6 +9,10 @@ plugins {
 
 LinkedHashMap<String, Object> pkgInfo = []
 
+// If you'd like to change these, check resource files, too
+String appDir = "/opt/legacylauncher"
+String execPath = "/usr/bin/legacylauncher"
+
 task collectPkgBuildInfo() {
     afterEvaluate {
         dependsOn ":bootstrap:assemble", ":launcher:assemble"
@@ -37,7 +41,7 @@ task collectPkgBuildInfo() {
                 "${group.replace('.', '/')}/${name}/$version/${fileName}"
             }
             launcherLibs.add("\"\${_repo}/libraries/${path}\"")
-            launcherLibsInstalls.add("install -Dm0644 \"\${srcdir}/${fileName}\" \"\${pkgdir}/opt/tlauncher/lib/${path}\"")
+            launcherLibsInstalls.add("install -Dm0644 \"\${srcdir}/${fileName}\" \"\${pkgdir}${appDir}/lib/${path}\"")
             checksums.add("'${generateChecksum(artifact.file)}' # ${artifact.moduleVersion.id}")
         }
 
@@ -58,7 +62,7 @@ task collectPkgBuildInfo() {
         def bootstrapChecksum = generateChecksum(tasks.getByPath(':bootstrap:shadowJar').outputs.files.singleFile)
 
         pkgInfo.putAll([
-                'PKGNAME': System.getenv("PKGBUILD_PKGNAME") ?: "tlauncher",
+                'PKGNAME': System.getenv("PKGBUILD_PKGNAME") ?: "legacylauncher",
                 'PKGDESC': System.getenv("PKGBUILD_PKGDESC") ?: "Freeware Minecraft launcher",
                 'PKGREL': "1",
                 'BRAND': short_brand,
@@ -71,8 +75,10 @@ task collectPkgBuildInfo() {
                 'RESOURCE_LIST': collect(resourceList),
                 'CHECKSUMS': collect(checksums),
                 'LAUNCHER_LIBRARIES_INSTALLS': collect(launcherLibsInstalls),
-                'BOOTSTRAP_JAR': "tl-bootstrap-${bootstrapVersion}-${bootstrapChecksum.substring(0, 8)}.jar".toString(),
-                'LAUNCHER_JAR': "tl-launcher-${launcherVersion}-${launcherChecksum.substring(0, 8)}.jar".toString(),
+                'BOOTSTRAP_JAR': "legacylauncher-bootstrap-${bootstrapVersion}-${bootstrapChecksum.substring(0, 8)}.jar".toString(),
+                'LAUNCHER_JAR': "legacylauncher-launcher-${launcherVersion}-${launcherChecksum.substring(0, 8)}.jar".toString(),
+                'APP_DIR': appDir,
+                'EXEC_PATH': execPath,
         ])
     }
 }
@@ -86,6 +92,7 @@ task generatePkgBuild(type: Copy) {
 }
 
 task copyPkgBuildResources(type: Copy) {
+    dependsOn collectPkgBuildInfo
     from "$projectDir/resources"
     into "$buildDir/aur/${short_brand}"
 }

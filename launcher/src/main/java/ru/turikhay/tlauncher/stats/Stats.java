@@ -16,7 +16,6 @@ import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -86,6 +85,10 @@ public final class Stats {
     }
 
     public static void submitNoticeStatus(boolean enabled) {
+    }
+
+    public static void showInterestInBuying(boolean promotedStore) {
+        submitDenunciation(newAction("interested_in_buying").add("promoted_store", String.valueOf(promotedStore)));
     }
 
     private static Stats.Args newAction(String name) {

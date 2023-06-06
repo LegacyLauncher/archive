@@ -38,6 +38,7 @@ class ColorfulIcons {
         register("plug-1", ORANGE);
         register("hourglass-start", ORANGE);
         register("question", BLUE);
+        register("gift-1", DARKER_ORANGE);
     }
 
     private static void register(String iconName, Color color) {

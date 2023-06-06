@@ -1,34 +1,42 @@
 package ru.turikhay.tlauncher.ui.account;
 
 import ru.turikhay.tlauncher.TLauncher;
+import ru.turikhay.tlauncher.configuration.LangConfiguration;
+import ru.turikhay.tlauncher.managers.PromotedStoreManager;
+import ru.turikhay.tlauncher.stats.Stats;
 import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.frames.RequireMinecraftAccountFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
+import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.extended.BorderPanel;
-import ru.turikhay.tlauncher.ui.swing.extended.ExtendedButton;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
 import ru.turikhay.tlauncher.user.MinecraftUser;
 import ru.turikhay.tlauncher.user.MojangUser;
 import ru.turikhay.tlauncher.user.UserSet;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.Optional;
 
-public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable {
+public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable, LocalizableComponent {
 
     private final AccountManagerScene scene;
 
     private final ExtendedPanel grid;
     private final GridBagConstraints c;
 
-    private final ExtendedButton minecraft, ely, free, idontknow;
+    private final LocalizableButton minecraft, ely, free, idontknow, promotedStore;
 
     private final boolean requireMinecraftAccount;
+
+    private final String LOC_PREFIX;
+
     public AccountAdd(final AccountManagerScene scene) {
         this.scene = scene;
 
@@ -43,10 +51,23 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = -1;
 
-        String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
+        LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
         String ACCOUNT_TYPE_PREFIX = LOC_PREFIX + "type.";
         ely = addRow("logo-ely", ACCOUNT_TYPE_PREFIX + "ely", createListenerFor("add-account-ely", false));
         minecraft = addRow("logo-microsoft", ACCOUNT_TYPE_PREFIX + "minecraft", createListenerFor("process-account-minecraft", true));
+
+        promotedStore = addRow("gift-1", LOC_PREFIX + "buy-minecraft", e -> {
+            String url = "https://minecraft.net";
+            boolean promotedStore = false;
+            Optional<String> urlOpt = psm().getInfoNow().map(PromotedStoreManager.Info::getUrl);
+            if (urlOpt.isPresent()) {
+                url = urlOpt.get();
+                promotedStore = true;
+            }
+            Stats.showInterestInBuying(promotedStore);
+            OS.openLink(url);
+        });
+
         free = addRow("user-circle-o", ACCOUNT_TYPE_PREFIX + "free", createListenerFor("add-account-plain", false));
         idontknow = addRow("info-circle", LOC_PREFIX + "hint", e -> Blocker.toggle(AccountAdd.this, "idontknow"));
 
@@ -58,6 +79,8 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         grid.add(new ExtendedPanel(), c);
 
         setCenter(grid);
+
+        updateLocale();
     }
 
     private ActionListener createListenerFor(String name, boolean isMinecraftAccount) {
@@ -75,7 +98,7 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         };
     }
 
-    private ExtendedButton addRow(String image, String label, ActionListener action) {
+    private LocalizableButton addRow(String image, String label, ActionListener action) {
         c.gridy++;
 
         LocalizableButton button = new LocalizableButton(label);
@@ -142,5 +165,24 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
     @Override
     public void unblock(Object var1) {
         Blocker.unblockComponents(var1, free, ely, idontknow, minecraft);
+    }
+
+    @Override
+    public void updateLocale() {
+        if (!scene.getMainPane().getRootFrame().getLauncher().getLang().getLocale().equals(LangConfiguration.ru_RU)) {
+            promotedStore.setEnabled(true);
+            return;
+        }
+        promotedStore.setEnabled(false);
+        psm().requestOrGetInfo().whenComplete((info, t) -> {
+            if (info != null) {
+                SwingUtil.later(() -> promotedStore.setText(LOC_PREFIX + "buy-minecraft-price", info.getPrice()));
+            }
+            SwingUtil.later(() -> promotedStore.setEnabled(true));
+        });
+    }
+
+    private PromotedStoreManager psm() {
+        return scene.getMainPane().getRootFrame().getLauncher().getPromotedStoreManager();
     }
 }
