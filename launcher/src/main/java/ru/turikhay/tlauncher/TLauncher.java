@@ -7,6 +7,7 @@ import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import net.legacylauncher.LegacyLauncher;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +53,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.*;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -61,6 +64,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ru.turikhay.tlauncher.managers.ConnectivityManager.*;
 
@@ -364,6 +368,53 @@ public final class TLauncher {
                             )
                     );
                 });
+            }
+        });
+
+        executeWhenReady(() -> {
+            boolean found;
+            if (OS.LINUX.isCurrent()) {
+                Path linuxFractureiser = FileUtils.getUserDirectory().toPath()
+                        .resolve(".config")
+                        .resolve(".data")
+                        .resolve("lib.jar");
+                found = Files.isRegularFile(linuxFractureiser);
+                if (found) {
+                    LOGGER.info("fractureiser detected in {}", linuxFractureiser);
+                }
+            } else if (OS.WINDOWS.isCurrent()) {
+                String appData = System.getenv("APPDATA");
+                if (appData == null) {
+                    appData = System.getProperty("user.home") + "\\AppData";
+                }
+                String localAppData = System.getenv("LOCALAPPDATA");
+                if (localAppData == null) {
+                    localAppData = System.getProperty("user.home") + "\\AppData\\Local";
+                }
+                boolean edge, startup;
+                Path edgePath = new File(localAppData + "\\Microsoft Edge").toPath();
+                edge = Stream.of(
+                        ".ref",
+                        "client.jar",
+                        "lib.dll",
+                        "libWebGL64.jar"
+                ).anyMatch(p ->
+                        Files.isRegularFile(edgePath.resolve(p))
+                );
+                if (edge) {
+                    LOGGER.warn("fractureiser trace detected in the \"Microsoft Edge\" dir");
+                }
+                startup = new File(appData + "\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\run.bat").isFile();
+                if (startup) {
+                    LOGGER.warn("Possible fractureiser trace detected in the Startup directory");
+                }
+                found = edge || startup;
+            } else {
+                return; // not affected
+            }
+            if (found) {
+                Stats.fractureiserTraceDetected();
+                Alert.showWarning("", Localizable.get("fractureiser.detected"));
             }
         });
 

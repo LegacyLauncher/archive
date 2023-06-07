@@ -5,6 +5,7 @@ import io.sentry.Sentry;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
+import me.cortex.jarscanner.Detector;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessListener;
@@ -50,12 +51,18 @@ import ru.turikhay.util.async.AsyncThread;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -672,6 +679,8 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void downloadResources() throws MinecraftException {
         checkStep(MinecraftLauncher.MinecraftLauncherStep.COLLECTING, MinecraftLauncher.MinecraftLauncherStep.DOWNLOADING);
+
+        executeJarScanner();
 
         boolean fastCompare;
         if (versionSync.isInstalled()) {
@@ -2211,6 +2220,147 @@ public class MinecraftLauncher implements JavaProcessListener {
             loggingFileStream.close();
         }
         return file.getAbsolutePath();
+    }
+
+    private void executeJarScanner() throws MinecraftLauncherAborted {
+        if (settings.getBoolean("jarscanner")) {
+            LOGGER.info("jarscanner skipped: already scanned");
+            return;
+        }
+        Path modsFolder = gameDir.toPath().resolve("mods");
+        if (!Files.isDirectory(modsFolder)) {
+            LOGGER.info("jarscanner skipped: no mods folder");
+            return;
+        }
+        for (MinecraftExtendedListener type1 : extListeners) {
+            type1.onMinecraftMalwareScanning();
+        }
+        settings.set("jarscanner", true); // don't lock out from playing if something goes wrong
+        long startTime = System.currentTimeMillis();
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        AtomicBoolean found = new AtomicBoolean();
+        try {
+            Files.walkFileTree(modsFolder, new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (!file.toString().endsWith(".jar")) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    JarFile jarFile;
+                    try {
+                        //noinspection resource
+                        jarFile = new JarFile(file.toFile());
+                    } catch (Exception e) {
+                        LOGGER.warn("Couldn't open {}", file);
+                        return FileVisitResult.CONTINUE;
+                    }
+                    service.submit(() ->
+                            scanJarFile(jarFile, (infectedEntry) -> {
+                                LOGGER.warn("jarscanner detected in {}: {}", file, infectedEntry);
+                                found.set(true);
+                                service.shutdownNow();
+                                Stats.jarscannedDetected(
+                                        file.getFileName().toString(),
+                                        infectedEntry,
+                                        FileUtil.getChecksum(file.toFile(), "SHA-256")
+                                );
+                            })
+                    );
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            LOGGER.error("Couldn't walk mods folder; skipping it entirely", e);
+            settings.set("jarscanner", true);
+            return;
+        }
+        service.shutdown();
+        boolean terminated;
+        int minutes = 1;
+        while (true) {
+            try {
+                terminated = service.awaitTermination(minutes, TimeUnit.MINUTES);
+            } catch (InterruptedException ignored) {
+                service.shutdownNow();
+                throw new MinecraftLauncherAborted("jarscanner aborted");
+            }
+            if (terminated) {
+                break;
+            }
+            if (!Alert.showQuestion("", Localizable.get("jarscanner.takes-time"))) {
+                LOGGER.info("User chose to skip scanning");
+                service.shutdownNow();
+                return;
+            }
+            LOGGER.info("User chose to continue scanning; will ask again in 10 minutes");
+            minutes = 10;
+        }
+        long delta = System.currentTimeMillis() - startTime;
+        LOGGER.info("jarscanner done in {} ms", delta);
+        Stats.jarscannedCompleted(delta / 1000L);
+        if (found.get()) {
+            LOGGER.warn("jarscanner has detected malware signatures");
+            settings.set("jarscanner", false); // try again
+            Alert.showError("", Localizable.get("jarscanner.detected"));
+            throw new MinecraftLauncherAborted("jarscanner detected malware");
+        } else {
+            LOGGER.info("jarscanner hasn't detected malware signatures");
+            if (delta >= 30_000) {
+                Alert.showMessage("", Localizable.get("jarscanner.not-detected"));
+            }
+        }
+    }
+
+    private void scanJarFile(JarFile jarFile, Consumer<String> callback) {
+        try {
+            scanJarFile0(jarFile, callback);
+        } catch (IOException e) {
+            LOGGER.warn("Error scanning: {}", jarFile.getName(), e);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    private void scanJarFile0(JarFile jarFile, Consumer<String> callback) throws IOException, InterruptedException {
+        LOGGER.info("Scanning: {} ({} entries)", jarFile.getName(), jarFile.size());
+        try {
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+                JarEntry entry = entries.nextElement();
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                if (entry.getName().endsWith(".class")) {
+                    byte[] classBytes;
+                    try (InputStream stream = jarFile.getInputStream(entry)) {
+                        classBytes = IOUtils.toByteArray(stream);
+                    }
+                    if (Detector.scanClass(classBytes)) {
+                        callback.accept(entry.getName());
+                        return;
+                    }
+                }
+            }
+        } finally {
+            jarFile.close();
+        }
     }
 
     public enum LoggerVisibility {

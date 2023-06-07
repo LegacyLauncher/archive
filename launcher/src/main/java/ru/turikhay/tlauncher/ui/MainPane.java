@@ -128,6 +128,11 @@ public class MainPane extends ExtendedLayeredPane {
             }
 
             @Override
+            public void onMinecraftMalwareScanning() {
+                progress.get().onMinecraftMalwareScanning();
+            }
+
+            @Override
             public void onMinecraftDownloading() {
                 progress.get().onMinecraftDownloading();
             }

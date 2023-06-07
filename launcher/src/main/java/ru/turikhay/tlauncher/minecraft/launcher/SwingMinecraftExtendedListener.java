@@ -26,6 +26,11 @@ public class SwingMinecraftExtendedListener extends SwingMinecraftListener imple
     }
 
     @Override
+    public void onMinecraftMalwareScanning() {
+        SwingUtil.later(listener::onMinecraftMalwareScanning);
+    }
+
+    @Override
     public void onMinecraftDownloading() {
         SwingUtil.later(listener::onMinecraftDownloading);
     }

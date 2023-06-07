@@ -18,6 +18,7 @@ repositories {
             artifact()
         }
         mavenContent {
+            includeGroup("me.cortex")
             includeGroup("ru.turikhay")
             includeGroup("ru.turikhay.app")
         }
