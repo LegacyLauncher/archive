@@ -91,6 +91,18 @@ public final class Stats {
         submitDenunciation(newAction("interested_in_buying").add("promoted_store", String.valueOf(promotedStore)));
     }
 
+    public static void jarscannedCompleted(long seconds) {
+        submitDenunciation(newAction("jarscanner_completed").add("seconds", String.valueOf(seconds)));
+    }
+
+    public static void jarscannedDetected(String name, String entry, String sha256) {
+        submitDenunciation(newAction("jarscanner_detected").add("file_name", name).add("entry", entry).add("sha256", sha256));
+    }
+
+    public static void fractureiserTraceDetected() {
+        submitDenunciation(newAction("fractureiser_detected"));
+    }
+
     private static Stats.Args newAction(String name) {
         return new Stats.Args()
                 .add("client", TLauncher.getInstance().getSettings().getClient().toString())

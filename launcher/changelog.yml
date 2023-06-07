@@ -1,9 +1,13 @@
 ru_RU: >
   <b>Самое главное</b>: мы поменяли название на Legacy Launcher.<br/>
   Всё остальное на месте. В том числе баги и их исправления.<br/>
-  Добавили кнопку «Купить Minecraft» в список доступных типов аккаунтов для тех, кто об нас периодически спрашивает.
+  <br/>
+  В этом срочном обновлении помогаем пользователю обнаружить следы вируса fractureiser,
+  который распространялся вместе с модами для Minecraft.
 
 en_US: >
   <b>Most importantly,</b>, we're called Legacy Launcher now.<br/>
   Everything else is the same. Including bugs and their fixes.<br/>
-  We've also added "Buy Minecraft" button into the available account types list.
+  <br/>
+  In this urgent update we try to help you detect traces of "fractureiser": it is a
+  malware that infected some Minecraft mods.

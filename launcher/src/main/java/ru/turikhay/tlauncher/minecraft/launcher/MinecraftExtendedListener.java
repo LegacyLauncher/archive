@@ -7,6 +7,8 @@ public interface MinecraftExtendedListener extends MinecraftListener {
 
     void onMinecraftCheckingJre();
 
+    void onMinecraftMalwareScanning();
+
     void onMinecraftDownloading();
 
     void onMinecraftReconstructingAssets();

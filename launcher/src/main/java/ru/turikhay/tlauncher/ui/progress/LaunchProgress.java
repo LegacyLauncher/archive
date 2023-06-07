@@ -42,6 +42,11 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
         setWestString("launcher.step.checking-jre");
     }
 
+    @Override
+    public void onMinecraftMalwareScanning() {
+        setWestString("launcher.step.jarscanner");
+    }
+
     public void onMinecraftDownloading() {
         setWestString("launcher.step.downloading");
     }
