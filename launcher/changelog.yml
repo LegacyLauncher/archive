@@ -2,12 +2,13 @@ ru_RU: >
   <b>Самое главное</b>: мы поменяли название на Legacy Launcher.<br/>
   Всё остальное на месте. В том числе баги и их исправления.<br/>
   <br/>
-  В этом срочном обновлении помогаем пользователю обнаружить следы вируса fractureiser,
-  который распространялся вместе с модами для Minecraft.
+  Обновили утилиту, которая помогает обнаружить fractureiser.<br/>
+  Исправили ошибку, при которой Сетевая игра была недоступна у тех,
+  кто выключил отображение скинов Ely.by
 
 en_US: >
   <b>Most importantly,</b>, we're called Legacy Launcher now.<br/>
   Everything else is the same. Including bugs and their fixes.<br/>
   <br/>
-  In this urgent update we try to help you detect traces of "fractureiser": it is a
-  malware that infected some Minecraft mods.
+  We've upgraded fracutriser detection tool<br/>
+  Fixed an issue with Multiplayer that prevented some players from accessing it.

@@ -9,7 +9,7 @@ gson = "2.8.9"
 guava = "31.0.1-jre"
 httpcomponents = "4.5.13"
 jackson = "2.13.0"
-jarscaner = "1.0"
+jarscanner = "1.1"
 java-semver = "0.9.0"
 java-statsd-client = "3.1.0"
 jdom = "2.0.2"
@@ -42,7 +42,7 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 httpcomponents-fluent-hc = { module = "org.apache.httpcomponents:fluent-hc", version.ref = "httpcomponents" }
 httpcomponents-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "httpcomponents" }
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
-jarscaner = { module = "me.cortex:jarscaner", version.ref = "jarscaner" }
+jarscanner = { module = "me.cortex:jarscanner", version.ref = "jarscanner" }
 java-semver = { module = "com.github.zafarkhaja:java-semver", version.ref = "java-semver" }
 java-statsd-client = { module = "com.timgroup:java-statsd-client", version.ref = "java-statsd-client" }
 jdom = { module = "org.jdom:jdom", version.ref = "jdom" }
