@@ -2332,9 +2332,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             throw new MinecraftLauncherAborted("jarscanner detected malware");
         } else {
             LOGGER.info("jarscanner hasn't detected malware signatures");
-            if (delta >= 30_000) {
-                Alert.showMessage("", Localizable.get("jarscanner.not-detected"));
-            }
         }
     }
 
