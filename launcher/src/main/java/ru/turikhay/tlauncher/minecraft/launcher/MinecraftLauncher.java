@@ -1195,6 +1195,16 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
 
+        if (librariesForType == Account.AccountType.PLAIN) {
+            // no ely authlib
+            jvmArgs.addAll(Arrays.asList(
+                    "-Dminecraft.api.auth.host=https://0.0.0.0",
+                    "-Dminecraft.api.account.host=https://0.0.0.0",
+                    "-Dminecraft.api.session.host=https://0.0.0.0",
+                    "-Dminecraft.api.services.host=https://0.0.0.0"
+            ));
+        }
+
         StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
         programArgs.addAll(version.addArguments(ArgumentType.GAME, featureMatcher, argumentsSubstitutor));
@@ -2222,8 +2232,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         return file.getAbsolutePath();
     }
 
+    private static final int JARSCANNER_VERSION = 2;
+
     private void executeJarScanner() throws MinecraftLauncherAborted {
-        if (settings.getBoolean("jarscanner")) {
+        if (settings.getInteger("jarscanner") >= JARSCANNER_VERSION) {
             LOGGER.info("jarscanner skipped: already scanned");
             return;
         }
@@ -2235,7 +2247,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         for (MinecraftExtendedListener type1 : extListeners) {
             type1.onMinecraftMalwareScanning();
         }
-        settings.set("jarscanner", true); // don't lock out from playing if something goes wrong
+        settings.set("jarscanner", JARSCANNER_VERSION); // don't lock out from playing if something goes wrong
         long startTime = System.currentTimeMillis();
         ExecutorService service = Executors.newFixedThreadPool(2);
         AtomicBoolean found = new AtomicBoolean();
@@ -2263,7 +2275,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                             scanJarFile(jarFile, (infectedEntry) -> {
                                 LOGGER.warn("jarscanner detected in {}: {}", file, infectedEntry);
                                 found.set(true);
-                                service.shutdownNow();
+//                                service.shutdownNow();
                                 Stats.jarscannedDetected(
                                         file.getFileName().toString(),
                                         infectedEntry,
@@ -2286,7 +2298,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             });
         } catch (IOException e) {
             LOGGER.error("Couldn't walk mods folder; skipping it entirely", e);
-            settings.set("jarscanner", true);
+            settings.set("jarscanner", JARSCANNER_VERSION);
             return;
         }
         service.shutdown();
@@ -2315,7 +2327,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         Stats.jarscannedCompleted(delta / 1000L);
         if (found.get()) {
             LOGGER.warn("jarscanner has detected malware signatures");
-            settings.set("jarscanner", false); // try again
+            settings.set("jarscanner", 0); // try again
             Alert.showError("", Localizable.get("jarscanner.detected"));
             throw new MinecraftLauncherAborted("jarscanner detected malware");
         } else {

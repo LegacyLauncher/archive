@@ -60,7 +60,7 @@ dependencies {
     tlRuntime(libs.slf4j.api)
     tlRuntime(libs.toml4j)
     tlRuntime(libs.xz)
-    tlRuntime(libs.jarscaner)
+    tlRuntime(libs.jarscanner)
     annotationProcessor(libs.log4j.core)
     implementation(libs.dbus.core)
     implementation(libs.junixsocket.core)
