@@ -369,7 +369,7 @@ public class DownloaderThread extends ExtendedThread {
                     }
                 }
                 int responseCode = connection.getResponseCode();
-                if (responseCode != 200) {
+                if (responseCode < 200 || responseCode > 299) {
                     if (responseCode == 301 || responseCode == 302 || responseCode == 307 || responseCode == 308) {
                         String newLocation = connection.getHeaderField("Location");
                         LOGGER.info("Following redirect ({}) {} -> {}", responseCode, connection.getURL(), newLocation);
@@ -381,7 +381,7 @@ public class DownloaderThread extends ExtendedThread {
                         connection = openConnection(newLocation);
                         continue;
                     } else {
-                        throw new IOException("expected 200 response; got " + connection.getResponseCode());
+                        throw new IOException("expected 2xx response; got " + connection.getResponseCode());
                     }
                 }
                 connected = true;

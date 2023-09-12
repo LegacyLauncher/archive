@@ -1,14 +1,5 @@
 ru_RU: >
-  <b>Самое главное</b>: мы поменяли название на Legacy Launcher.<br/>
-  Всё остальное на месте. В том числе баги и их исправления.<br/>
-  <br/>
-  Обновили утилиту, которая помогает обнаружить fractureiser.<br/>
-  Исправили ошибку, при которой Сетевая игра была недоступна у тех,
-  кто выключил отображение скинов Ely.by
+  Исправлена загрузка файлов, которые скачались неполностью.
 
 en_US: >
-  <b>Most importantly,</b>, we're called Legacy Launcher now.<br/>
-  Everything else is the same. Including bugs and their fixes.<br/>
-  <br/>
-  We've upgraded fracutriser detection tool<br/>
-  Fixed an issue with Multiplayer that prevented some players from accessing it.
+  Fixed handling of partially downloaded files.
