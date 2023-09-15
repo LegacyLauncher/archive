@@ -1714,7 +1714,22 @@ public class MinecraftLauncher implements JavaProcessListener {
             addOptimizedArguments(args);
         }
 
-        args.add("-Xms" + Math.min(ramSize, 2048) + "M"); // Pre-allocate some heap
+        long xms = Math.min(ramSize, 2048);
+        OptionalLong freeRamOpt = OS.Arch.getFreeRam();
+        if (freeRamOpt.isPresent()) {
+            long freeRam = freeRamOpt.getAsLong() / 1024L / 1024L; // B -> MiB
+            if (freeRam <= 0) {
+                LOGGER.warn("System reported {} MiB of free RAM", freeRam);
+            } else if (freeRam < 2560) {
+                LOGGER.warn("Insufficient free RAM: {}", freeRam);
+                LOGGER.warn("Will pre-allocate some memory, but might still crash");
+                xms = Math.max(freeRam / 2, 512);
+            }
+        } else {
+            LOGGER.warn("Couldn't query free RAM in the system");
+        }
+
+        args.add("-Xms" + xms + "M"); // Pre-allocate some heap
         args.add("-Xmx" + ramSize + "M");
 
         if (librariesForType == Account.AccountType.MCLEAKS) {

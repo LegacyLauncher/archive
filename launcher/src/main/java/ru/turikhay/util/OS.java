@@ -14,6 +14,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
 import java.util.Locale;
+import java.util.OptionalLong;
 
 public enum OS {
     LINUX("linux", "unix"),
@@ -275,6 +276,14 @@ public enum OS {
             } catch (Throwable var1) {
                 LOGGER.warn("Cannot query total physical memory size!", var1);
                 return 0L;
+            }
+        }
+
+        public static OptionalLong getFreeRam() {
+            try {
+                return OptionalLong.of(((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize());
+            } catch (Throwable var1) {
+                return OptionalLong.empty();
             }
         }
 

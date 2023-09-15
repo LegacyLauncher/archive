@@ -1,5 +1,5 @@
 ru_RU: >
-  Исправлена загрузка файлов, которые скачались неполностью.
+  Обход ошибки на macOS при запуске с недостаточной памятью в системе
 
 en_US: >
-  Fixed handling of partially downloaded files.
+  Workaround for macOS when launching with insufficient RAM in the system
