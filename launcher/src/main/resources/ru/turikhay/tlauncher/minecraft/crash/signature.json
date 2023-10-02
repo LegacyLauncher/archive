@@ -1,5 +1,5 @@
 {
-  "revision": 27,
+  "revision": 28,
   "required": "1.122.3",
   "skip-folders": ["millenaire", "millenaire-custom", "hats", "mcheli", "ruins", "voxelMap", "__MACOSX"],
   "variables": {
@@ -556,6 +556,21 @@
       "buttons": [
         "install-java64"
       ]
+    },
+    {
+      "name": "system-oom-mac",
+      "os": [
+        "osx"
+      ],
+      "title": {
+        "ru_RU": "Недостаточно памяти для запуска",
+        "en_US": "Insufficient RAM to start Minecraft"
+      },
+      "body": {
+        "ru_RU": "В системе очень мало свободной оперативной памяти. Закройте все остальные приложения. Уменьшите объем выделенной памяти под Minecraft в настройках.",
+        "en_US": "There was insufficient memory for Minecraft to launch. Close all other applications. Decrease memory amount in the launcher settings."
+      },
+      "exitCode": 137
     }
   ]
 }
