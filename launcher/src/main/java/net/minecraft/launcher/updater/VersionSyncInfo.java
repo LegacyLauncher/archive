@@ -191,7 +191,13 @@ public class VersionSyncInfo {
         return completeLocal;
     }
 
-    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types, boolean firstIteration) throws IOException {
+    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types) throws IOException {
+        if (Arrays.stream(types).noneMatch(it -> Account.AccountType.PLAIN.toString().equals(it))) {
+            String[] newTypes = Arrays.copyOf(types, types.length + 1);
+            newTypes[newTypes.length - 1] = Account.AccountType.PLAIN.toString();
+            types = newTypes;
+        }
+
         Set<Downloadable> neededFiles = new HashSet<>();
 
         CompleteVersion version0 = getCompleteVersion(force), version;
@@ -209,10 +215,6 @@ public class VersionSyncInfo {
             return neededFiles;
         } else {
             Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
-
-            if (firstIteration || Arrays.stream(types).anyMatch(it -> it.equals(Account.AccountType.PLAIN.toString()))) {
-                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, types, false));
-            }
 
             Iterator<Library> var9 = libraries.iterator();
             while (true) {
@@ -249,7 +251,7 @@ public class VersionSyncInfo {
     }
 
     public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types) throws IOException {
-        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, types, true);
+        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, types);
     }
 
     public static VersionSyncInfo createEmpty() {
