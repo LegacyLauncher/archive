@@ -1,8 +1,17 @@
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(buildUsingJava)
+    }
 }
 
-tasks.withType(AbstractArchiveTask) {
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.convention(8)
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
 }
@@ -28,6 +37,12 @@ repositories {
         name("Minecraft")
         mavenContent {
             includeGroup("com.mojang")
+        }
+    }
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+        mavenContent {
+            snapshotsOnly()
         }
     }
 }

@@ -1,13 +1,9 @@
 import groovy.json.JsonBuilder
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 import java.nio.charset.Charset
 import java.security.DigestInputStream
 import java.security.MessageDigest
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-
 
 plugins {
     id 'java'
@@ -20,38 +16,54 @@ apply from: '../gradle/java.gradle'
 apply from: '../gradle/javafx.gradle'
 
 sourceSets {
-    modern
+    java11 {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+        java {
+            srcDirs = files("src/main/java11")
+        }
+    }
+    dev {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+    }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+compileJava11Java {
+    options.release.set(11)
 }
 
-compileModernJava {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+compileTestJava {
+    options.release.set(11)
 }
+
+compileDevJava {
+    options.release.set(11)
+}
+
+evaluationDependsOn(":common")
 
 dependencies {
-    modernCompileOnly(sourceSets.main.output)
-    modernCompileOnly(project(":bridge"))
-
     implementation(project(":bridge"))
     implementation(project(":common"))
-    implementation(libs.raven)
-    implementation(libs.jopt.simple)
-    implementation(libs.java.statsd.client)
-    implementation(libs.java.semver)
-    implementation(libs.commons.lang3)
     implementation(libs.commons.compress)
-    implementation(libs.gson)
     implementation(libs.commons.io)
-    implementation(libs.bundles.jna)
     implementation(libs.flatlaf)
+    implementation(libs.gson)
+    implementation(libs.java.semver)
+    implementation(libs.java.statsd.client)
+    implementation(libs.jopt.simple)
+    implementation(libs.oshi)
+    implementation(libs.raven)
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
-    implementation(libs.oshi)
+
+    java11CompileOnly(project(":common").sourceSets.java11.output)
+    java11Implementation(libs.bundles.dbus)
+    java11Implementation(libs.junixsocket.core)
+    java11Implementation(project(":dbus-java-transport-junixsocket"))
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -63,7 +75,7 @@ dependencies {
 shadowJar {
     configurations = [
             project.configurations.runtimeClasspath,
-            project.configurations.modernRuntimeClasspath,
+            project.configurations.java11RuntimeClasspath,
     ]
     relocate("com.", "shaded.com.") {
         exclude("com.sun.**")
@@ -87,8 +99,10 @@ shadowJar {
         exclude("org.newsclub.**")
         exclude("org.slf4j.**")
     }
-    relocate("ru.turikhay.util.windows.wmi", "shaded.ru.turikhay.util.windows.wmi")
+    relocate("net.legacylauncher.util.windows.wmi", "shaded.net.legacylauncher.util.windows.wmi")
     relocate("net.", "shaded.net.") {
+        exclude("net.legacylauncher.**")
+        exclude("/net/legacylauncher/**")
         exclude("net.hadess.**")
         exclude("/net/hadess/**")
     }
@@ -104,21 +118,22 @@ shadowJar {
     }
 
     into('META-INF/versions/11') {
-        from sourceSets.modern.output
+        from sourceSets.java11.output
     }
 
     manifest.attributes(
-            'Main-Class': 'ru.turikhay.tlauncher.bootstrap.BootstrapStarter',
+            'Main-Class': 'net.legacylauncher.bootstrap.BootstrapStarter',
             'Multi-Release': true
     )
 }
 
+evaluationDependsOn(":launcher")
+
 task runDebug(type: JavaExec) {
     group = "Execution"
     description = "Run BootstrapDebug"
-    classpath(sourceSets.modern.runtimeClasspath, sourceSets.main.runtimeClasspath, sourceSets.test.runtimeClasspath)
     maxHeapSize = "256M"
-    mainClass.set("ru.turikhay.tlauncher.bootstrap.BootstrapDebug")
+    mainClass.set("net.legacylauncher.bootstrap.BootstrapDebug")
     if (System.getenv("JRE_EXECUTABLE")) {
         executable(System.getenv("JRE_EXECUTABLE"))
     }
@@ -135,15 +150,19 @@ task runDebug(type: JavaExec) {
     }
     args("--debug")
 
-    dependsOn(":launcher:buildLauncherRepo")
+    def librariesDir = project(":launcher").tasks.named("buildLauncherRepo", Sync).get()
+    def launcherJar = project(":launcher").tasks.named("jar", Jar).get()
+    dependsOn(librariesDir, launcherJar)
+    environment("LL_LAUNCHER_JAR", launcherJar.archiveFile.get().asFile)
+    environment("LL_LIBRARIES_DIR", librariesDir.destinationDir)
 
     if (System.getenv("JRE_LEGACY") == "true") {
         javaLauncher.set javaToolchains.launcherFor {
             languageVersion.set JavaLanguageVersion.of(8)
         }
-        dependsOn(":launcher:prepareLauncherDirJava8")
+        classpath(sourceSets.dev.runtimeClasspath)
     } else {
-        dependsOn(":launcher:prepareLauncherDir")
+        classpath(sourceSets.java11.runtimeClasspath, sourceSets.dev.runtimeClasspath)
     }
 }
 
@@ -158,7 +177,7 @@ static def generateChecksum(File file) {
 
 buildConfig {
     className("BuildConfig")
-    packageName("ru.turikhay.tlauncher.bootstrap")
+    packageName("net.legacylauncher.bootstrap")
 
     useJavaOutput()
 
@@ -177,7 +196,12 @@ processResources {
     inputs.property("meta", meta)
 
     doLast {
-        new File(destinationDir, "ru/turikhay/tlauncher/bootstrap/meta.json").text = new JsonBuilder(meta).toString()
+        ["ru/turikhay/tlauncher/bootstrap/meta.json", "META-INF/bootstrap-meta.json"].collect {
+            new File(destinationDir, it)
+        }.forEach {
+            it.parentFile.mkdirs()
+            it.text = new JsonBuilder(meta).toString()
+        }
     }
 }
 

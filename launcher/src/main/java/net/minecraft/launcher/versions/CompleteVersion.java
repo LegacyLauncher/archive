@@ -2,6 +2,10 @@ package net.minecraft.launcher.versions;
 
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
+import net.legacylauncher.managers.VersionManager;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.OS;
+import net.legacylauncher.util.json.ExposeExclusion;
 import net.minecraft.launcher.updater.AssetIndexInfo;
 import net.minecraft.launcher.updater.DownloadInfo;
 import net.minecraft.launcher.updater.VersionList;
@@ -14,10 +18,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.managers.VersionManager;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.json.ExposeExclusion;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,11 +1,11 @@
 package pw.modder.tl.modloader;
 
+import net.legacylauncher.util.U;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.http.client.fluent.Request;
 import pw.modder.http.HttpClientUtils;
 import pw.modder.tl.modloader.extractor.ForgeExtractor;
 import pw.modder.tl.modloader.extractor.ForgeProcessor;
-import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,10 +1,10 @@
 package net.minecraft.launcher.updater;
 
+import net.legacylauncher.downloader.Downloadable;
+import net.legacylauncher.downloader.RetryDownloadException;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.FileUtil;
 import net.minecraft.launcher.versions.CompleteVersion;
-import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.downloader.RetryDownloadException;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.FileUtil;
 
 import java.io.File;
 

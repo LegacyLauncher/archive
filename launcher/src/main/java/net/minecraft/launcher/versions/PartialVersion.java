@@ -1,8 +1,8 @@
 package net.minecraft.launcher.versions;
 
 import com.google.gson.annotations.Expose;
+import net.legacylauncher.repository.Repository;
 import net.minecraft.launcher.updater.VersionList;
-import ru.turikhay.tlauncher.repository.Repository;
 
 import java.util.Date;
 

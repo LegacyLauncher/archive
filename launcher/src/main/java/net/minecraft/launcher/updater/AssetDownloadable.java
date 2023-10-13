@@ -1,12 +1,12 @@
 package net.minecraft.launcher.updater;
 
+import net.legacylauncher.downloader.Downloadable;
+import net.legacylauncher.downloader.RetryDownloadException;
+import net.legacylauncher.managers.AssetsManager;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.downloader.RetryDownloadException;
-import ru.turikhay.tlauncher.managers.AssetsManager;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;

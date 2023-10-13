@@ -1,10 +1,10 @@
 package pw.modder.tl.modloader.extractor;
 
 import com.google.gson.annotations.Expose;
+import net.legacylauncher.util.U;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
 import org.apache.commons.io.IOUtils;
-import ru.turikhay.util.U;
 
 import java.io.File;
 import java.io.IOException;

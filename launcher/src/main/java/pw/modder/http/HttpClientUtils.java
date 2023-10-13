@@ -1,9 +1,9 @@
 package pw.modder.http;
 
+import net.legacylauncher.util.EHttpClient;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import ru.turikhay.util.EHttpClient;
 
 import java.io.IOException;
 

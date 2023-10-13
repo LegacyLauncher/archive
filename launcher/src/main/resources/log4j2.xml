@@ -42,13 +42,15 @@
         </SwingLogger>
     </Appenders>
     <Loggers>
-        <Logger name="ru.turikhay" level="debug" />
-        <Logger name="net.minecraft" level="debug" />
-        <Logger name="ru.turikhay.tlauncher.user.minecraft" level="trace" />
+        <Logger name="net.legacylauncher" level="debug"/>
+        <Logger name="net.legacylauncher.ipc" level="info"/>
+        <Logger name="net.legacylauncher.dbus.transport.junixsocket" level="info"/>
+        <Logger name="net.legacylauncher.user.minecraft" level="trace"/>
+        <Logger name="net.minecraft" level="debug"/>
         <Root level="info">
-            <AppenderRef ref="console" />
-            <AppenderRef ref="file" />
-            <AppenderRef ref="swingLogger" />
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+            <AppenderRef ref="swingLogger"/>
         </Root>
     </Loggers>
 </Configuration>

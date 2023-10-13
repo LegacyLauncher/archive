@@ -1,24 +1,23 @@
 package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
+import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.downloader.Downloadable;
+import net.legacylauncher.managers.VersionManager;
+import net.legacylauncher.minecraft.auth.Account;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.FileUtil;
+import net.legacylauncher.util.OS;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
-import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.managers.VersionManager;
-import ru.turikhay.tlauncher.minecraft.auth.Account;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.OS;
+import org.checkerframework.checker.units.qual.A;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class VersionSyncInfo {
     protected Version localVersion;
@@ -192,18 +191,17 @@ public class VersionSyncInfo {
         return completeLocal;
     }
 
-    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type, boolean firstIteration) throws IOException {
+    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types, boolean firstIteration) throws IOException {
         Set<Downloadable> neededFiles = new HashSet<>();
 
         CompleteVersion version0 = getCompleteVersion(force), version;
-        if (type != null && !version0.isProceededFor(type.toString())) {
-            if (firstIteration) {
-                version = TLauncher.getInstance().getLibraryManager().processExplicitly(version0, type.toString());
-            } else {
-                version = TLauncher.getInstance().getLibraryManager().process(version0, type.toString());
-            }
-        } else {
+        ArrayList<String> unprocessedTypes = new ArrayList<>();
+        Arrays.stream(types).filter(it -> !version0.isProceededFor(it)).collect(Collectors.toCollection(() -> unprocessedTypes));
+
+        if (unprocessedTypes.isEmpty()) {
             version = version0;
+        } else {
+            version = LegacyLauncher.getInstance().getLibraryManager().process(version0, unprocessedTypes.toArray(new String[0]));
         }
 
         Repository source = hasRemote() ? remoteVersion.getSource() : null;
@@ -212,11 +210,8 @@ public class VersionSyncInfo {
         } else {
             Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
 
-            if (firstIteration) {
-                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, type, false));
-            }
-            if (type != Account.AccountType.PLAIN) {
-                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, Account.AccountType.PLAIN, false));
+            if (firstIteration || Arrays.stream(types).anyMatch(it -> it.equals(Account.AccountType.PLAIN.toString()))) {
+                neededFiles.addAll(getRequiredDownloadables(os, featureMatcher, targetDirectory, force, types, false));
             }
 
             Iterator<Library> var9 = libraries.iterator();
@@ -253,8 +248,8 @@ public class VersionSyncInfo {
         }
     }
 
-    public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, Account.AccountType type) throws IOException {
-        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, type, true);
+    public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types) throws IOException {
+        return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, types, true);
     }
 
     public static VersionSyncInfo createEmpty() {

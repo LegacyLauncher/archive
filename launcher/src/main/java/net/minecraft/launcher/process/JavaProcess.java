@@ -1,6 +1,6 @@
 package net.minecraft.launcher.process;
 
-import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
+import net.legacylauncher.minecraft.launcher.ProcessHook;
 
 import java.nio.charset.Charset;
 

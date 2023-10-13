@@ -1,6 +1,6 @@
 package net.minecraft.launcher.updater;
 
-import ru.turikhay.util.FileUtil;
+import net.legacylauncher.util.FileUtil;
 
 import java.io.IOException;
 import java.io.InputStream;

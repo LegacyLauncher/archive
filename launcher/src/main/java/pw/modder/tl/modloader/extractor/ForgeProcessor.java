@@ -1,13 +1,13 @@
 package pw.modder.tl.modloader.extractor;
 
 import com.google.common.base.Charsets;
+import net.legacylauncher.util.FileUtil;
+import net.legacylauncher.util.OS;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.http.client.fluent.Request;
 import pw.modder.http.HttpClientUtils;
-import ru.turikhay.util.FileUtil;
-import ru.turikhay.util.OS;
 
 import java.io.File;
 import java.io.IOException;

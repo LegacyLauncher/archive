@@ -1,11 +1,11 @@
 package net.minecraft.launcher.updater;
 
 import com.google.gson.JsonSyntaxException;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.OS;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.Version;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.OS;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

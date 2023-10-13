@@ -1,5 +1,4 @@
 import groovy.json.JsonBuilder
-
 import org.yaml.snakeyaml.Yaml
 
 import java.security.DigestInputStream
@@ -15,59 +14,68 @@ apply from: '../gradle/java.gradle'
 apply from: '../gradle/javafx.gradle'
 
 sourceSets {
-    modern
+    java11 {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+        java {
+            srcDirs = files("src/main/java11")
+        }
+    }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-compileModernJava {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+compileJava11Java {
+    options.release.set(11)
 }
 
 compileTestJava {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    options.release.set(11)
 }
 
 configurations {
-    implementation.extendsFrom(tlRuntime)
+    // exclude runtimeOnly stuff (like javafx) from *meta.json
+    exportedClasspath {
+        canBeConsumed = false
+        canBeResolved = true
+        extendsFrom(runtimeClasspath, java11RuntimeClasspath)
+        // TODO this line removes JavaFX from debug runs
+        exclude(group: 'org.openjfx')
+    }
 }
 
-dependencies {
-    modernCompileOnly(sourceSets.main.output)
+evaluationDependsOn(":common")
 
-    tlRuntime(libs.authlib)
-    tlRuntime(libs.bundles.httpcomponents)
-    tlRuntime(libs.bundles.log4j)
-    tlRuntime(libs.commons.compress)
-    tlRuntime(libs.commons.io)
-    tlRuntime(libs.commons.lang3)
-    tlRuntime(libs.gson)
-    tlRuntime(libs.guava)
-    tlRuntime(libs.jackson.core)
-    tlRuntime(libs.java.semver)
-    tlRuntime(libs.java.statsd.client)
-    tlRuntime(libs.jdom)
-    tlRuntime(libs.jopt.simple)
-    tlRuntime(libs.jvd)
-    tlRuntime(libs.nanohttpd)
-    tlRuntime(libs.nstweaker)
-    tlRuntime(libs.sentry)
-    tlRuntime(libs.slf4j.api)
-    tlRuntime(libs.toml4j)
-    tlRuntime(libs.xz)
-    tlRuntime(libs.jarscanner)
+dependencies {
+    compileOnly(project(":bridge")) // bootstrap-java will inject it, all others don't need and don't use it
+
     annotationProcessor(libs.log4j.core)
-    implementation(libs.dbus.core)
-    implementation(libs.junixsocket.core)
-    implementation(libs.bundles.jna)
-    implementation(libs.oshi)
-    implementation(project(":bridge"))
+
     implementation(project(":common"))
+    implementation(libs.authlib)
+    implementation(libs.bundles.httpcomponents)
+    implementation(libs.bundles.log4j)
+    implementation(libs.commons.compress)
+    implementation(libs.commons.io)
+    implementation(libs.flatlaf)
+    implementation(libs.gson)
+    implementation(libs.guava)
+    implementation(libs.jackson.core)
+    implementation(libs.jarscanner)
+    implementation(libs.java.semver)
+    implementation(libs.java.statsd.client)
+    implementation(libs.jdom)
+    implementation(libs.jopt.simple)
+    implementation(libs.jvd)
+    implementation(libs.nanohttpd)
+    implementation(libs.nstweaker)
+    implementation(libs.oshi)
+    implementation(libs.sentry)
+    implementation(libs.toml4j)
+    implementation(libs.xz)
+
+    java11CompileOnly(project(":common").sourceSets.java11.output)
+    java11Implementation(libs.bundles.dbus)
+    java11RuntimeOnly(project(":dbus-java-transport-junixsocket"))
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -78,7 +86,8 @@ dependencies {
 
 task buildLauncherRepo(type: Sync) {
     destinationDir = file("${rootProject.rootDir}/lib/${short_brand}")
-    configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+    inputs.files(configurations.exportedClasspath)
+    configurations.exportedClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
         def path = artifact.moduleVersion.id.with {
             "${group.replace('.', '/')}/${name}/$version"
         }
@@ -86,21 +95,6 @@ task buildLauncherRepo(type: Sync) {
             from(artifact.file)
         }
     }
-}
-
-task prepareLauncherDir(type: Sync) {
-    destinationDir = file("${buildDir}/tlRun")
-
-    from(sourceSets.main.output)
-    from(sourceSets.modern.output)
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-task prepareLauncherDirJava8(type: Sync) {
-    destinationDir = file("${buildDir}/tlRun")
-
-    from(sourceSets.main.output)
 }
 
 static def generateChecksum(File file) {
@@ -120,21 +114,39 @@ static String formatShortArtifactNotation(ResolvedArtifact artifact) {
     return name
 }
 
-processResources {
-    def meta = [
-            version   : product_version,
-            shortBrand: short_brand,
-            brand     : full_brand,
-            libraries : configurations.tlRuntime.resolvedConfiguration.resolvedArtifacts.collect { ResolvedArtifact artifact ->
-                [name: formatShortArtifactNotation(artifact), checksum: generateChecksum(artifact.file)]
-            },
-            mainClass : System.getenv("MAIN_CLASS") ?: "ru.turikhay.tlauncher.TLauncher"
-    ]
+static void writeMeta(File file, Map<String, Object> content) {
+    file.parentFile.mkdirs()
+    file.text = new JsonBuilder(content).toString();
+}
 
-    inputs.property("meta", meta)
+processResources {
+    inputs.files(configurations.exportedClasspath)
+    inputs.property("product_version", product_version)
+    inputs.property("short_brand", short_brand)
+    inputs.property("full_brand", full_brand)
 
     doLast {
-        new File(destinationDir, "ru/turikhay/tlauncher/meta.json").text = new JsonBuilder(meta).toString()
+        def meta = [
+                version   : product_version,
+                shortBrand: short_brand,
+                brand     : full_brand,
+                libraries : configurations.exportedClasspath.resolvedConfiguration.resolvedArtifacts.collect { ResolvedArtifact artifact ->
+                    [name: formatShortArtifactNotation(artifact), checksum: generateChecksum(artifact.file)]
+                },
+        ]
+
+        // meta for old bootstrap-java
+        writeMeta(new File(destinationDir, "ru/turikhay/tlauncher/meta.json"), meta + [
+                mainClass: 'net.legacylauncher.LegacyLauncherBridged',
+        ])
+
+        // meta for *modern* bootstraps :)
+        writeMeta(new File(destinationDir, "META-INF/launcher-meta.json"), meta + [
+                bridgedEntryPoint: 'net.legacylauncher.LegacyLauncherBridged',
+                entryPoint       : 'net.legacylauncher.LegacyLauncherEntrypoint',
+                repositories     : (repo_hosts.collect { "https://$it" } + repo_cdn_path_prefixes).collect { "$it/repo/libraries" },
+                javaVersion      : '[11,)', // recommended java version as per https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
+        ])
     }
 }
 
@@ -187,7 +199,7 @@ task generateSha256File {
 
 buildConfig {
     className("BuildConfig")
-    packageName("ru.turikhay.tlauncher.configuration")
+    packageName("net.legacylauncher.configuration")
 
     useJavaOutput()
 
@@ -201,10 +213,8 @@ assemble {
 }
 
 jar {
-    from(project(":common").sourceSets.main.output)
-
     into('META-INF/versions/11') {
-        from sourceSets.modern.output
+        from sourceSets.java11.output
     }
 
     manifest.attributes(

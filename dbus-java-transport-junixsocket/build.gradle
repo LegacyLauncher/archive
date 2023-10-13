@@ -1,0 +1,30 @@
+plugins {
+    id 'java-library'
+}
+
+apply from: '../gradle/java.gradle'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+compileJava {
+    options.release.set(11)
+}
+
+compileTestJava {
+    options.release.set(11)
+}
+
+dependencies {
+    implementation(libs.bundles.dbus)
+    implementation(libs.junixsocket.core)
+
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+}
+
+test {
+    useJUnitPlatform()
+}

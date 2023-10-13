@@ -1,16 +1,16 @@
 package net.minecraft.launcher.updater;
 
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.repository.RepositoryProxy;
+import net.legacylauncher.util.EHttpClient;
+import net.legacylauncher.util.OS;
+import net.legacylauncher.util.Time;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import org.apache.commons.io.IOExceptionList;
 import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.tlauncher.repository.RepositoryProxy;
-import ru.turikhay.util.EHttpClient;
-import ru.turikhay.util.OS;
-import ru.turikhay.util.Time;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

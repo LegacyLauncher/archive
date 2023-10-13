@@ -1,11 +1,11 @@
 package net.minecraft.launcher;
 
+import net.legacylauncher.util.U;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,6 +1,6 @@
 package net.minecraft.launcher.versions;
 
-import ru.turikhay.util.OS;
+import net.legacylauncher.util.OS;
 
 import java.util.Map;
 import java.util.regex.Matcher;

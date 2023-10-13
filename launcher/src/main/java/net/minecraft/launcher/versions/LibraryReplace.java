@@ -1,10 +1,10 @@
 package net.minecraft.launcher.versions;
 
+import net.legacylauncher.downloader.Downloadable;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.OS;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.OS;
 
 import java.io.File;
 import java.util.ArrayList;

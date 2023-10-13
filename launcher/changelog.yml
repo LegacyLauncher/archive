@@ -1,14 +1,24 @@
 ru_RU: >
-  <b>Самое главное</b>: мы поменяли название на Legacy Launcher.<br/>
-  Всё остальное на месте. В том числе баги и их исправления.<br/>
+  <b>Эээээксперименты!</b><br/>
+  Мы добавили экспериментальные настройки.<br/>
+  Пока доступны только через файл конфигурации лаунчера.<br/>
+  В экспериментах можно включить нестандартные оптимизации<br/>
+  для запуска игры и принудительно обновить некоторые библиотеки.<br/>
+  Список доступных экспериментов можно посмотреть в файле конфигурации.<br/> 
   <br/>
-  Обновили утилиту, которая помогает обнаружить fractureiser.<br/>
-  Исправили ошибку, при которой Сетевая игра была недоступна у тех,
-  кто выключил отображение скинов Ely.by
-
+  Также:<br/>
+  Починили баг, из-за которого загрузка файлов превышала 100%.</br>
+  Обновили оптимизированные аргументы, улучшили начальное выделение памяти игре.<br/>
+  Прочие исправления багов и оптимизации
 en_US: >
-  <b>Most importantly,</b>, we're called Legacy Launcher now.<br/>
-  Everything else is the same. Including bugs and their fixes.<br/>
+  <b>Uh, experiments!</b><br/>
+  We've added experimental settings.<br/>
+  For now available only through the launcher configuration file.<br/>
+  In the experiments you can enable non-standard optimizations<br/>
+  to run the game and forcibly update some game libraries.<br/>
+  You can see the list of available experiments in the configuration file.<br/>
   <br/>
-  We've upgraded fracutriser detection tool<br/>
-  Fixed an issue with Multiplayer that prevented some players from accessing it.
+  Other changes:<br/>
+  Fixed a bug that was causing file downloads to go beyond 100%<br/>
+  Updated optimized arguments, improved initial memory allocation for the game<br/>
+  Other fixes and optimizations

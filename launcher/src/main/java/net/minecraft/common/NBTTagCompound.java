@@ -1,6 +1,6 @@
 package net.minecraft.common;
 
-import ru.turikhay.util.U;
+import net.legacylauncher.util.U;
 
 import java.io.DataInput;
 import java.io.DataOutput;

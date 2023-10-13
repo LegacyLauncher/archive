@@ -1,8 +1,8 @@
 package net.minecraft.launcher.updater;
 
+import net.legacylauncher.util.FileUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import ru.turikhay.util.FileUtil;
 
 import java.io.File;
 import java.util.*;

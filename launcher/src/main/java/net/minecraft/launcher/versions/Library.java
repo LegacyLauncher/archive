@@ -1,17 +1,20 @@
 package net.minecraft.launcher.versions;
 
+import net.legacylauncher.downloader.Downloadable;
+import net.legacylauncher.downloader.Sha1Downloadable;
+import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.OS;
 import net.minecraft.launcher.updater.DownloadInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import ru.turikhay.tlauncher.downloader.Downloadable;
-import ru.turikhay.tlauncher.downloader.Sha1Downloadable;
-import ru.turikhay.tlauncher.repository.Repository;
-import ru.turikhay.util.OS;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Library {
     protected static final StrSubstitutor SUBSTITUTOR;
@@ -76,11 +79,19 @@ public class Library {
     }
 
     public String getPlainName() {
-        String[] split = name.split(":", 3);
+        String[] split = name.split(":", 4);
         if (split.length < 3) {
             throw new IllegalArgumentException("bad library: " + name);
         }
-        return split[0] + "." + split[1];
+        StringBuilder sb = new StringBuilder();
+        sb.append(split[0]);
+        sb.append(":");
+        sb.append(split[1]);
+        if (split.length == 4) {
+            sb.append("::");
+            sb.append(split[3]);
+        }
+        return sb.toString();
     }
 
     public List<Rule> getRules() {

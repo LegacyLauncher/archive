@@ -1,14 +1,16 @@
 package ru.turikhay.tlauncher.bootstrap.bridge;
 
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 public final class BootEventDispatcher implements BootListener {
     private final BootBridge bridge;
 
-    private boolean booting, working;
     private double percentage;
 
     private Throwable error;
+
+    private final CountDownLatch closeLatch = new CountDownLatch(1);
 
     BootEventDispatcher(BootBridge bridge) {
         if(bridge == null) {
@@ -31,22 +33,15 @@ public final class BootEventDispatcher implements BootListener {
 
     @Override
     public void onBootStarted() throws InterruptedException {
-        if(booting || working) {
-            throw new IllegalStateException("booting: " + booting + "; working:" + working);
-        }
         checkInterrupted();
         for (BootListener l : bridge.listenerList) {
             l.onBootStarted();
         }
-        booting = true;
         log("Boot started");
     }
 
     @Override
     public void onBootStateChanged(String stepName, double percentage) throws InterruptedException {
-        if(!booting || working) {
-            throw new IllegalStateException("booting: " + booting + "; working:" + working);
-        }
         if(percentage < this.percentage) {
             throw new IllegalArgumentException("percentage is lower than prevoius value: " + percentage + " (expecting bigger than " + this.percentage + ")");
         }
@@ -63,15 +58,10 @@ public final class BootEventDispatcher implements BootListener {
 
     @Override
     public void onBootSucceeded() throws InterruptedException {
-        if(!booting || working) {
-            throw new IllegalStateException("booting: " + booting + "; working:" + working);
-        }
         checkInterrupted();
         for (BootListener l : bridge.listenerList) {
             l.onBootSucceeded();
         }
-        booting = false;
-        working = true;
         log("Boot finished");
     }
 
@@ -81,13 +71,9 @@ public final class BootEventDispatcher implements BootListener {
             l.onBootErrored(t);
         }
 
-        booting = false;
-        working = false;
         error = t;
 
-        synchronized (this) {
-            notifyAll();
-        }
+        closeLatch.countDown();
 
         log("Boot errored");
         t.printStackTrace();
@@ -96,11 +82,7 @@ public final class BootEventDispatcher implements BootListener {
     void waitUntilClose() throws InterruptedException, BootException {
         checkInterrupted();
 
-        while(booting || working) {
-            synchronized (this) {
-                wait();
-            }
-        }
+        closeLatch.await();
 
         if(error != null) {
             throw new BootException(error);
@@ -110,10 +92,7 @@ public final class BootEventDispatcher implements BootListener {
     public void requestClose() {
         log("Close operation requested");
 
-        working = false;
-        synchronized(this) {
-            notifyAll();
-        }
+        closeLatch.countDown();
 
         new Thread(() -> {
             try {

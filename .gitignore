@@ -22,6 +22,7 @@ build
 .idea/*
 !.idea/encodings.xml
 !.idea/runConfigurations
+*.iml
 
 logs/
 

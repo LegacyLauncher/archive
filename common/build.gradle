@@ -1,26 +1,48 @@
 plugins {
-    id 'java'
+    id 'java-library'
 }
 
 apply from: '../gradle/java.gradle'
 
-version 'unspecified'
+version project(":launcher").version
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+sourceSets {
+    java11 {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+        java {
+            srcDirs = files("src/main/java11")
+        }
+    }
+}
+
+compileJava11Java {
+    options.release.set(11)
 }
 
 dependencies {
-    implementation(libs.bundles.jna)
-    implementation(libs.commons.lang3)
-    implementation(libs.dbus.core)
-    implementation(libs.junixsocket.core)
-    implementation(libs.slf4j.api)
+    api(libs.slf4j.api)
+    api(libs.bundles.jna)
+    api(libs.commons.lang3)
+
     implementation(libs.system.theme.detector)
+    java11Implementation(libs.bundles.dbus)
+    java11Implementation(libs.junixsocket.core)
+    java11Implementation(project(":dbus-java-transport-junixsocket"))
 
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
+}
+
+jar {
+    into('META-INF/versions/11') {
+        from sourceSets.java11.output
+    }
+
+    manifest.attributes(
+            'Multi-Release': true
+    )
 }
 
 test {
@@ -38,8 +60,8 @@ processResources {
     inputs.property("repoProperties", repoProperties)
 
     doLast {
-        file("$destinationDir/ru/turikhay/tlauncher/repository/repositories_v1.properties").withWriter('UTF-8') { writer ->
-            repoProperties.each {entry ->
+        file("$destinationDir/net/legacylauncher/repository/repositories_v1.properties").withWriter('UTF-8') { writer ->
+            repoProperties.each { entry ->
                 writer.append("$entry.key=$entry.value\n")
             }
         }

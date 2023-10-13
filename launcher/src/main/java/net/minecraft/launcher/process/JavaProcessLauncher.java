@@ -1,7 +1,7 @@
 package net.minecraft.launcher.process;
 
-import ru.turikhay.tlauncher.minecraft.launcher.ProcessHook;
-import ru.turikhay.util.OS;
+import net.legacylauncher.minecraft.launcher.ProcessHook;
+import net.legacylauncher.util.OS;
 
 import java.io.File;
 import java.io.IOException;

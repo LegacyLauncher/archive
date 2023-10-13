@@ -2,10 +2,10 @@ package pw.modder.tl.modloader;
 
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
+import net.legacylauncher.util.U;
 import net.minecraft.launcher.versions.Library;
 import org.apache.http.client.fluent.Request;
 import pw.modder.http.HttpClientUtils;
-import ru.turikhay.util.U;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
