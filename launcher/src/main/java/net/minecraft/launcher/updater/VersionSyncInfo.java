@@ -192,6 +192,9 @@ public class VersionSyncInfo {
     }
 
     Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types) throws IOException {
+        if (types == null) {
+            types = new String[] { Account.AccountType.PLAIN.toString() };
+        }
         if (Arrays.stream(types).noneMatch(it -> Account.AccountType.PLAIN.toString().equals(it))) {
             String[] newTypes = Arrays.copyOf(types, types.length + 1);
             newTypes[newTypes.length - 1] = Account.AccountType.PLAIN.toString();
