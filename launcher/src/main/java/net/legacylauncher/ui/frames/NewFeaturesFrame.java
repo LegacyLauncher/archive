@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.frames;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.loc.LocalizableCheckbox;
@@ -20,7 +20,7 @@ public class NewFeaturesFrame extends VActionFrame {
 
     final LocalizableButton okayButton;
 
-    public NewFeaturesFrame(final TLauncherFrame frame) {
+    public NewFeaturesFrame(final LegacyLauncherFrame frame) {
         super(SwingUtil.magnify(500));
 
         getHead().setIcon(Images.getIcon32("plus-square"));

@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.swing.extended;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.SwingUtil;
 
@@ -62,7 +62,7 @@ public class VPanel extends ExtendedPanel {
     }
 
     public final void setMagnifyGaps(boolean magnify) {
-        this.magnify = !OS.WINDOWS.isCurrent() && TLauncherFrame.magnifyDimensions > 1. && magnify;
+        this.magnify = !OS.WINDOWS.isCurrent() && LegacyLauncherFrame.magnifyDimensions > 1. && magnify;
         checkMagnifyGaps();
     }
 

@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.loc;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.center.CenterPanel;
 import net.legacylauncher.ui.text.ExtendedTextField;
 
@@ -13,7 +13,7 @@ public class LocalizableTextField extends ExtendedTextField implements Localizab
         super(panel, null, value);
         setValue(value);
         setPlaceholder(placeholderPath);
-        setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
     }
 
     public LocalizableTextField(CenterPanel panel, String placeholderPath) {

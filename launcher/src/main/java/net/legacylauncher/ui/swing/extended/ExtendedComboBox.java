@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.swing.extended;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.converter.StringConverter;
 import net.legacylauncher.ui.swing.DefaultConverterCellRenderer;
 import net.legacylauncher.ui.swing.SimpleComboBoxModel;
@@ -17,7 +17,7 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
         setModel(new SimpleComboBoxModel<>());
         setRenderer(renderer);
         setOpaque(false);
-        setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         ((JComponent) getEditor().getEditorComponent()).setOpaque(false);
     }
 

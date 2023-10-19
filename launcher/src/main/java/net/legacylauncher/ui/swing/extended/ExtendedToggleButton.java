@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.swing.extended;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.theme.Theme;
 
 import javax.swing.*;
@@ -18,7 +18,7 @@ public class ExtendedToggleButton extends JToggleButton {
 
     private void init() {
         Theme.setup(this);
-        setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
     }
 }

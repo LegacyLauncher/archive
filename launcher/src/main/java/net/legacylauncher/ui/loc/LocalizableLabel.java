@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.loc;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.swing.extended.ExtendedLabel;
 
 public class LocalizableLabel extends ExtendedLabel implements LocalizableComponent {
@@ -11,7 +11,7 @@ public class LocalizableLabel extends ExtendedLabel implements LocalizableCompon
 
     public LocalizableLabel(String path, Object... vars) {
         setText(path, vars);
-        setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
     }
 
     public LocalizableLabel(String path) {

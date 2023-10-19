@@ -25,7 +25,7 @@ import net.legacylauncher.repository.Repository;
 import net.legacylauncher.sentry.SentryConfigurer;
 import net.legacylauncher.stats.Stats;
 import net.legacylauncher.ui.FlatLaf;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.frames.FirstRunNotice;
 import net.legacylauncher.ui.frames.NewFolderFrame;
@@ -97,7 +97,7 @@ public final class LegacyLauncher {
 
     private final UIListeners uiListeners;
 
-    private TLauncherFrame frame;
+    private LegacyLauncherFrame frame;
 
     private final long sessionStartTime;
 
@@ -196,7 +196,7 @@ public final class LegacyLauncher {
 
         SwingUtil.wait(() -> {
             bootstrapIPC.onBootProgress("Loading frame", 0.65);
-            frame = new TLauncherFrame(this);
+            frame = new LegacyLauncherFrame(this);
 
             bootstrapIPC.onBootProgress("Post-init UI", 0.8);
             initAndRefreshUI();
@@ -598,7 +598,7 @@ public final class LegacyLauncher {
         return uiListeners;
     }
 
-    public TLauncherFrame getFrame() {
+    public LegacyLauncherFrame getFrame() {
         return frame;
     }
 
@@ -686,7 +686,7 @@ public final class LegacyLauncher {
 
     private void initConfig() {
         SentryConfigurer.setUser(config.getClient());
-        TLauncherFrame.setFontSize(config.getFontSize());
+        LegacyLauncherFrame.setFontSize(config.getFontSize());
         if (!config.getBoolean("connection.ssl")) {
             LOGGER.warn("Disabling SSL certificate/hostname validation. IT IS NOT SECURE.");
             try {

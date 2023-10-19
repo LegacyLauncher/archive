@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.swing.extended;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.ImageIcon;
 import net.legacylauncher.ui.theme.Theme;
 
@@ -47,7 +47,7 @@ public class ExtendedButton extends JButton {
     private void init() {
         setForeground(Theme.getTheme().getForeground());
         setBackground(Theme.getTheme().getBackground());
-        setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

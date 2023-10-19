@@ -30,7 +30,7 @@ import java.awt.event.ComponentEvent;
 public class MainPane extends ExtendedLayeredPane {
     private static final Logger LOGGER = LogManager.getLogger(MainPane.class);
 
-    private final TLauncherFrame rootFrame;
+    private final LegacyLauncherFrame rootFrame;
     private final boolean repaintEveryTime;
     private PseudoScene scene;
     public final BackgroundManager background;
@@ -41,7 +41,7 @@ public class MainPane extends ExtendedLayeredPane {
     public final DelayedComponent<NoticeScene> noticeScene;
     public final DelayedComponent<RevertFontSize> revertFont;
 
-    MainPane(final TLauncherFrame frame) {
+    MainPane(final LegacyLauncherFrame frame) {
         super(null);
         rootFrame = frame;
         repaintEveryTime = OS.LINUX.isCurrent();
@@ -269,7 +269,7 @@ public class MainPane extends ExtendedLayeredPane {
         setScene(noticeScene.get());
     }
 
-    public TLauncherFrame getRootFrame() {
+    public LegacyLauncherFrame getRootFrame() {
         return rootFrame;
     }
 
@@ -295,10 +295,10 @@ public class MainPane extends ExtendedLayeredPane {
 
     private boolean shouldShowRevertFont() {
         float size = (float) rootFrame.getConfiguration().getInteger("gui.font.old");
-        if (size < TLauncherFrame.minFontSize || size > TLauncherFrame.maxFontSize)
-            size = TLauncherFrame.maxFontSize;
+        if (size < LegacyLauncherFrame.minFontSize || size > LegacyLauncherFrame.maxFontSize)
+            size = LegacyLauncherFrame.maxFontSize;
         float oldSize = size;
-        return TLauncherFrame.getFontSize() != oldSize;
+        return LegacyLauncherFrame.getFontSize() != oldSize;
     }
 
     public class RevertFontSize extends ExtendedPanel implements LocalizableComponent {
@@ -308,8 +308,8 @@ public class MainPane extends ExtendedLayeredPane {
         private RevertFontSize() {
             float size = (float) rootFrame.getConfiguration().getInteger("gui.font.old");
 
-            if (size < TLauncherFrame.minFontSize || size > TLauncherFrame.maxFontSize)
-                size = TLauncherFrame.maxFontSize;
+            if (size < LegacyLauncherFrame.minFontSize || size > LegacyLauncherFrame.maxFontSize)
+                size = LegacyLauncherFrame.maxFontSize;
 
             float oldSize = size;
             oldSizeInt = (int) size;

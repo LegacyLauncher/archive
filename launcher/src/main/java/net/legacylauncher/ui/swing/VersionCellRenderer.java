@@ -2,7 +2,7 @@ package net.legacylauncher.ui.swing;
 
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.minecraft.auth.Account;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.ImageIcon;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.loc.Localizable;
@@ -27,7 +27,7 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
 
     public Component getListCellRendererComponent(JList<? extends VersionSyncInfo> list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
         JLabel mainText = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-        mainText.setFont(mainText.getFont().deriveFont(TLauncherFrame.getFontSize()));
+        mainText.setFont(mainText.getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         mainText.setAlignmentY(0.5F);
 
         if (value == null) {

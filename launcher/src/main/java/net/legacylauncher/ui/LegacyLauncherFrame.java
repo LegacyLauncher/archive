@@ -30,16 +30,16 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
-public class TLauncherFrame extends JFrame {
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(TLauncherFrame.class);
+public class LegacyLauncherFrame extends JFrame {
+    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(LegacyLauncherFrame.class);
 
     public static final Dimension minSize = new Dimension(700, 600);
     public static final Dimension maxSize = new Dimension(1920, 1080);
     public static final float minFontSize = 12, maxFontSize = 18;
     private static float fontSize = 12f;
     public static double magnifyDimensions = 1.;
-    private final TLauncherFrame instance = this;
-    private final LegacyLauncher tlauncher;
+    private final LegacyLauncherFrame instance = this;
+    private final LegacyLauncher legacyLauncher;
     private final Configuration settings;
     private final LangConfiguration lang;
     private final int[] windowSize;
@@ -58,8 +58,8 @@ public class TLauncherFrame extends JFrame {
         magnifyDimensions = (fontSize * 16.f / 12.f) / 16.f;
     }
 
-    public TLauncherFrame(LegacyLauncher t) {
-        tlauncher = t;
+    public LegacyLauncherFrame(LegacyLauncher t) {
+        legacyLauncher = t;
         settings = t.getSettings();
         lang = t.getLang();
         windowSize = settings.getLauncherWindowSize();
@@ -98,20 +98,24 @@ public class TLauncherFrame extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                if (!settings.getBoolean("feedback") && tlauncher.getBootConfig().getFeedback() != null) {
-                    String url;
-                    if (tlauncher.getBootConfig().getFeedback().containsKey(tlauncher.getSettings().getLocale().toString())) {
-                        url = tlauncher.getBootConfig().getFeedback().get(tlauncher.getSettings().getLocale().toString());
-                    } else if (tlauncher.getBootConfig().getFeedback().containsKey("global")) {
-                        url = tlauncher.getBootConfig().getFeedback().get("global");
-                    } else {
-                        instance.setVisible(false);
-                        LegacyLauncher.kill();
-                        return;
-                    }
-                    settings.set("feedback", true);
-                    new FeedbackFrame(TLauncherFrame.this, url);
+                if (settings.getBoolean("feedback") || legacyLauncher.getBootConfig().getFeedback() == null) {
+                    instance.setVisible(false);
+                    LegacyLauncher.kill();
+                    return;
                 }
+
+                String url;
+                if (legacyLauncher.getBootConfig().getFeedback().containsKey(legacyLauncher.getSettings().getLocale().toString())) {
+                    url = legacyLauncher.getBootConfig().getFeedback().get(legacyLauncher.getSettings().getLocale().toString());
+                } else if (legacyLauncher.getBootConfig().getFeedback().containsKey("global")) {
+                    url = legacyLauncher.getBootConfig().getFeedback().get("global");
+                } else {
+                    instance.setVisible(false);
+                    LegacyLauncher.kill();
+                    return;
+                }
+                settings.set("feedback", true);
+                new FeedbackFrame(LegacyLauncherFrame.this, url);
             }
         });
         addComponentListener(new ExtendedComponentAdapter(this) {
@@ -147,7 +151,7 @@ public class TLauncherFrame extends JFrame {
             }
         });
         addWindowStateListener(e -> {
-            int newState = TLauncherFrame.getExtendedStateFor(e.getNewState());
+            int newState = LegacyLauncherFrame.getExtendedStateFor(e.getNewState());
             if (newState != -1) {
                 settings.set("gui.window", newState);
             }
@@ -163,7 +167,7 @@ public class TLauncherFrame extends JFrame {
         updateMaxPoint();
         Dragger.ready(settings, maxPoint);
         if (LegacyLauncher.getInstance().isDebug()) {
-            new TLauncherFrame.TitleUpdaterThread();
+            new LegacyLauncherFrame.TitleUpdaterThread();
         } else {
             setWindowTitle();
         }
@@ -199,7 +203,7 @@ public class TLauncherFrame extends JFrame {
     }
 
     public LegacyLauncher getLauncher() {
-        return tlauncher;
+        return legacyLauncher;
     }
 
     public NoticeManager getNotices() {
@@ -216,7 +220,7 @@ public class TLauncherFrame extends JFrame {
 
     public void updateLocales() {
         try {
-            tlauncher.reloadLocale();
+            legacyLauncher.reloadLocale();
         } catch (Exception var2) {
             LOGGER.warn("Cannot reload settings", var2);
             return;
@@ -356,7 +360,7 @@ public class TLauncherFrame extends JFrame {
     }
 
     public static URL getRes(String uri) {
-        return TLauncherFrame.class.getResource(uri);
+        return LegacyLauncherFrame.class.getResource(uri);
     }
 
     private class TitleUpdaterThread extends ExtendedThread {

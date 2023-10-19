@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.notice;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blockable;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.center.CenterPanel;
@@ -26,7 +26,7 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
     }
 
     public NoticePanel(NoticeManager manager) {
-        this(manager, TLauncherFrame.getFontSize());
+        this(manager, LegacyLauncherFrame.getFontSize());
     }
 
     public final Notice getNotice() {

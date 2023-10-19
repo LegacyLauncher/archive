@@ -1,6 +1,6 @@
 package net.legacylauncher.util;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.Images;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -94,11 +94,11 @@ public class SwingUtil {
     }
 
     public static int magnify(int i) {
-        return (int) Math.rint(i * TLauncherFrame.magnifyDimensions);
+        return (int) Math.rint(i * LegacyLauncherFrame.magnifyDimensions);
     }
 
     public static float magnify(float i) {
-        return (float) (i * TLauncherFrame.magnifyDimensions);
+        return (float) (i * LegacyLauncherFrame.magnifyDimensions);
     }
 
     public static Dimension magnify(Dimension d) {

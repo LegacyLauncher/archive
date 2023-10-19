@@ -2,7 +2,7 @@ package net.legacylauncher.ui.notice;
 
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.stats.Stats;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.BlockableButton;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.center.CenterPanel;
@@ -95,7 +95,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         }
         Page page = new Page();
         for (final Notice notice : noticeList) {
-            NoticeWrapper wrapper = new NoticeWrapper(noticeManager, TLauncherFrame.getFontSize(), getWidth() - SwingUtil.magnify(NoticeWrapper.GAP) * 2 - getInsets().left - getInsets().right - SwingUtil.magnify(NOTICE_IMAGE_SIZE) - SwingUtil.magnify(32), SwingUtil.magnify(NOTICE_IMAGE_SIZE));
+            NoticeWrapper wrapper = new NoticeWrapper(noticeManager, LegacyLauncherFrame.getFontSize(), getWidth() - SwingUtil.magnify(NoticeWrapper.GAP) * 2 - getInsets().left - getInsets().right - SwingUtil.magnify(NOTICE_IMAGE_SIZE) - SwingUtil.magnify(32), SwingUtil.magnify(NOTICE_IMAGE_SIZE));
             /*final LocalizableMenuItem showAtMenuItem = LocalizableMenuItem.newItem("notice.sidepanel.popup.show-at-menu", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {

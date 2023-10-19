@@ -1,7 +1,7 @@
 package net.legacylauncher.ui.login.buttons;
 
 import net.legacylauncher.stats.Stats;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blockable;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.images.DelayedIcon;
@@ -85,7 +85,7 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
             }
 
         });
-        button.setFont(getFont().deriveFont(Font.BOLD).deriveFont(TLauncherFrame.getFontSize() * 1.5f));
+        button.setFont(getFont().deriveFont(Font.BOLD).deriveFont(LegacyLauncherFrame.getFontSize() * 1.5f));
         setCenter(button);
 
         promotedNoticeButton = new LocalizableButton();

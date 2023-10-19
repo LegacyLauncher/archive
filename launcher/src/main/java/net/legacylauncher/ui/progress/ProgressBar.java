@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.progress;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.theme.Theme;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.SwingUtil;
@@ -52,7 +52,7 @@ public class ProgressBar extends JProgressBar {
         }
 
         Theme.setup(this);
-        setFont(getFont().deriveFont(TLauncherFrame.getFontSize()));
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
     }
 

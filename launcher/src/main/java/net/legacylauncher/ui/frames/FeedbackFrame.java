@@ -2,7 +2,7 @@ package net.legacylauncher.ui.frames;
 
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.stats.Stats;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.util.OS;
@@ -15,7 +15,7 @@ import java.awt.event.WindowEvent;
 
 public class FeedbackFrame extends VActionFrame {
 
-    public FeedbackFrame(final TLauncherFrame frame, final String url) {
+    public FeedbackFrame(final LegacyLauncherFrame frame, final String url) {
         super(SwingUtil.magnify(600));
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);

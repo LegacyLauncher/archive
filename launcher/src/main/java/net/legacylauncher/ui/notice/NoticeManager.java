@@ -3,7 +3,7 @@ package net.legacylauncher.ui.notice;
 import net.legacylauncher.configuration.BootConfiguration;
 import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.stats.Stats;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blockable;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.util.U;
@@ -19,7 +19,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     private static final int HIDDEN_DELAY = 1000 * 60 * 60 * 24 * 7; // 1 week
 
-    private final TLauncherFrame frame;
+    private final LegacyLauncherFrame frame;
 
     private final List<NoticeManagerListener> listeners = new ArrayList<>();
     private final Map<Locale, List<Notice>> byLocaleMap = new HashMap<>();
@@ -28,7 +28,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
     private Notice selectedNotice, promotedNotice;
     private boolean forceSelected;
 
-    NoticeManager(TLauncherFrame frame, Map<String, List<Notice>> config) {
+    NoticeManager(LegacyLauncherFrame frame, Map<String, List<Notice>> config) {
         this.frame = frame;
 
         if (!config.isEmpty()) {
@@ -58,7 +58,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                     noticeList.add(notice);
 
                     NoticeTextSize textSize = new NoticeTextSize(notice);
-                    textSize.get(new ParamPair(TLauncherFrame.getFontSize(), -1));
+                    textSize.get(new ParamPair(LegacyLauncherFrame.getFontSize(), -1));
 
                     cachedSizeMap.put(notice, textSize);
                 }
@@ -89,7 +89,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
         }
     }
 
-    public NoticeManager(TLauncherFrame frame, BootConfiguration config) {
+    public NoticeManager(LegacyLauncherFrame frame, BootConfiguration config) {
         this(frame, config.getNotices());
     }
 

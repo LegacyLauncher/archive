@@ -2,7 +2,7 @@ package net.legacylauncher.ui.scenes;
 
 import net.legacylauncher.stats.Stats;
 import net.legacylauncher.ui.MainPane;
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.images.ImageIcon;
 import net.legacylauncher.ui.images.Images;
@@ -30,7 +30,7 @@ public class NoticeScene extends PseudoScene implements ResizeableComponent {
     private final NoticePanel noticePanel;
     private final ButtonPanel buttonPanel;
 
-    private final float fontSize = TLauncherFrame.getFontSize() + ADDED_FONT_SIZE;
+    private final float fontSize = LegacyLauncherFrame.getFontSize() + ADDED_FONT_SIZE;
 
     public NoticeScene(MainPane main) {
         super(main);

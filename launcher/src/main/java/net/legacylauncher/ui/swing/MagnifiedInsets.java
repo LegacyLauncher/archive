@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.swing;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 
 import java.awt.*;
 
@@ -15,10 +15,10 @@ public class MagnifiedInsets extends Insets {
      * @param right  the inset from the right.
      */
     public MagnifiedInsets(int top, int left, int bottom, int right) {
-        super((int) (top * TLauncherFrame.magnifyDimensions),
-                (int) (left * TLauncherFrame.magnifyDimensions),
-                (int) (bottom * TLauncherFrame.magnifyDimensions),
-                (int) (right * TLauncherFrame.magnifyDimensions)
+        super((int) (top * LegacyLauncherFrame.magnifyDimensions),
+                (int) (left * LegacyLauncherFrame.magnifyDimensions),
+                (int) (bottom * LegacyLauncherFrame.magnifyDimensions),
+                (int) (right * LegacyLauncherFrame.magnifyDimensions)
         );
     }
 

@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.settings;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.editor.EditorField;
 import net.legacylauncher.ui.editor.EditorIntegerField;
@@ -23,8 +23,8 @@ public class SettingsFontSlider extends BorderPanel implements EditorField {
 
     SettingsFontSlider() {
         slider.setOpaque(false);
-        slider.setMinimum((int) TLauncherFrame.minFontSize);
-        slider.setMaximum((int) TLauncherFrame.maxFontSize);
+        slider.setMinimum((int) LegacyLauncherFrame.minFontSize);
+        slider.setMaximum((int) LegacyLauncherFrame.maxFontSize);
         slider.setMinorTickSpacing(2);
         slider.setMajorTickSpacing(4);
         slider.setSnapToTicks(true);

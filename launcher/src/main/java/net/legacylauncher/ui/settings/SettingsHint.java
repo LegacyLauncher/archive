@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.settings;
 
-import net.legacylauncher.ui.TLauncherFrame;
+import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.editor.EditorHandler;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableComponent;
@@ -16,7 +16,7 @@ public class SettingsHint extends EditorHandler implements LocalizableComponent 
 
     public SettingsHint(String path) {
         super(path);
-        this.label = new EditorPane(new LocalizableLabel().getFont().deriveFont(SwingUtil.magnify(TLauncherFrame.getFontSize() * .8f)));
+        this.label = new EditorPane(new LocalizableLabel().getFont().deriveFont(SwingUtil.magnify(LegacyLauncherFrame.getFontSize() * .8f)));
         label.setMargin(new Insets(0, SwingUtil.magnify(5), 0, 0));
     }
 
