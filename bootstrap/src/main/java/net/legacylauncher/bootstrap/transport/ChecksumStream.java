@@ -1,23 +1,22 @@
 package net.legacylauncher.bootstrap.transport;
 
-import net.legacylauncher.bootstrap.util.Sha256Sign;
-import net.legacylauncher.bootstrap.util.WeakObjectPool;
-
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.util.Objects;
+import java.security.NoSuchAlgorithmException;
 
 public class ChecksumStream extends FilterInputStream {
-    private final WeakObjectPool.ObjectRef<MessageDigest> ref;
-    private MessageDigest digest;
+    private final MessageDigest digest;
     private byte[] byteDigest;
 
     public ChecksumStream(InputStream stream) {
         super(stream);
-        this.ref = Sha256Sign.getDigest();
-        this.digest = Objects.requireNonNull(ref.get(), "calc ref");
+        try {
+            this.digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not supported", e);
+        }
     }
 
     public byte[] digest() {
@@ -52,8 +51,6 @@ public class ChecksumStream extends FilterInputStream {
     @Override
     public void close() throws IOException {
         byteDigest = digest.digest();
-        digest = null;
-        ref.free();
         super.close();
     }
 }

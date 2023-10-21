@@ -1,7 +1,7 @@
 package net.legacylauncher.bootstrap.exception;
 
-import org.junit.jupiter.api.Test;
 import net.legacylauncher.bootstrap.util.OS;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

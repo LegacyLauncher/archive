@@ -1,0 +1,8 @@
+--packageMode
+windows
+
+@bootstrap_args@
+
+--
+
+@launcher_args@

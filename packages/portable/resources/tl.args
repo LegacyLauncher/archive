@@ -1,0 +1,11 @@
+--packageMode
+portable
+
+@bootstrap_args@
+
+--
+
+@launcher_args@
+
+--directory
+./game

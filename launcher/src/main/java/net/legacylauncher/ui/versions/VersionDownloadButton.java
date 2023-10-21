@@ -154,7 +154,7 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
                 for (VersionSyncInfo var21 : list) {
                     try {
                         var21.resolveCompleteVersion(var20, forceDownload);
-                        VersionSyncInfoContainer errors = var20.downloadVersion(var21, null, forceDownload);
+                        VersionSyncInfoContainer errors = var20.downloadVersion(var21, new String[]{}, forceDownload);
                         if (aborted) {
                             return;
                         }

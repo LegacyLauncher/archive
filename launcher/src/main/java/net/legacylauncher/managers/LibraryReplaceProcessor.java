@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Unbox;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -108,7 +109,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
                 .collect(Collectors.toList());
     }
 
-    public CompleteVersion process(CompleteVersion original, String... types) {
+    public CompleteVersion process(CompleteVersion original, @Nonnull String... types) {
         CompleteVersion result = original;
         for (String type : types) {
             result = processExplicitly(result, type);

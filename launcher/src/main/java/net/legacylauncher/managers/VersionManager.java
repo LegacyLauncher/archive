@@ -15,6 +15,7 @@ import net.minecraft.launcher.versions.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -393,7 +394,7 @@ public class VersionManager extends InterruptibleComponent {
         return getInstalledVersions(LegacyLauncher.getInstance() == null ? null : LegacyLauncher.getInstance().getSettings().getVersionFilter());
     }
 
-    public VersionSyncInfoContainer downloadVersion(VersionSyncInfo syncInfo, String[] types, boolean force) throws IOException {
+    public VersionSyncInfoContainer downloadVersion(VersionSyncInfo syncInfo, @Nonnull String[] types, boolean force) throws IOException {
         Rule.FeatureMatcher featureMatcher = new CurrentLaunchFeatureMatcher();
         VersionSyncInfoContainer container = new VersionSyncInfoContainer(syncInfo);
 

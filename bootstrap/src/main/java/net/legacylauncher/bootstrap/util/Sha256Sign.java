@@ -1,6 +1,5 @@
 package net.legacylauncher.bootstrap.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -8,34 +7,26 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Sha256Sign {
-    private static final WeakObjectPool<MessageDigest> SHA256Pool = new WeakObjectPool<>(() -> {
-        try {
-            return MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException nsaE) {
-            throw new Error(nsaE);
+public final class Sha256Sign {
+    public static String toString(byte[] bytes) {
+        StringBuilder builder = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            String s = Integer.toString(((int) b) & 0xFF, 16);
+            for (int i = 2 - s.length(); i > 0; i--) {
+                builder.append('0');
+            }
+            builder.append(s);
         }
-    });
-
-    public static WeakObjectPool.ObjectRef<MessageDigest> getDigest() {
-        return SHA256Pool.get();
-    }
-
-    public static String toString(byte[] b) {
-        return String.format(java.util.Locale.ROOT, "%064x", new java.math.BigInteger(1, b));
-    }
-
-    public static byte[] digest(byte[] b) {
-        try {
-            return digest(new ByteArrayInputStream(b));
-        } catch (IOException e) {
-            throw new Error("unexpected ioE", e);
-        }
+        return builder.toString();
     }
 
     public static byte[] digest(InputStream in) throws IOException {
-        WeakObjectPool.ObjectRef<MessageDigest> digestRef = SHA256Pool.get();
-        final MessageDigest digest = digestRef.get();
+        final MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not supported", e);
+        }
         try {
             byte[] dataBytes = new byte[1024];
             int nread;
@@ -45,7 +36,6 @@ public class Sha256Sign {
             return digest.digest();
         } finally {
             digest.reset();
-            digestRef.free();
         }
     }
 

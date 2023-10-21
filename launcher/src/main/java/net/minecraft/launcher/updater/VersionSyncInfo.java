@@ -14,6 +14,7 @@ import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
 import org.checkerframework.checker.units.qual.A;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -191,10 +192,7 @@ public class VersionSyncInfo {
         return completeLocal;
     }
 
-    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types) throws IOException {
-        if (types == null) {
-            types = new String[] { Account.AccountType.PLAIN.toString() };
-        }
+    Set<Downloadable> getRequiredDownloadables(OS os, Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, @Nonnull String[] types) throws IOException {
         if (Arrays.stream(types).noneMatch(it -> Account.AccountType.PLAIN.toString().equals(it))) {
             String[] newTypes = Arrays.copyOf(types, types.length + 1);
             newTypes[newTypes.length - 1] = Account.AccountType.PLAIN.toString();
@@ -253,7 +251,7 @@ public class VersionSyncInfo {
         }
     }
 
-    public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, String[] types) throws IOException {
+    public Set<Downloadable> getRequiredDownloadables(Rule.FeatureMatcher featureMatcher, File targetDirectory, boolean force, @Nonnull String[] types) throws IOException {
         return getRequiredDownloadables(OS.CURRENT, featureMatcher, targetDirectory, force, types);
     }
 
