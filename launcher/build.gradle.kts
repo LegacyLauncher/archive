@@ -1,6 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import com.fasterxml.jackson.module.kotlin.*
 import org.gradle.jvm.tasks.Jar
 import java.security.MessageDigest
 
@@ -208,7 +210,7 @@ val generateUpdateJson by tasks.registering {
 
         val changelog = when (System.getenv("INCLUDE_CHANGELOG")) {
             "true" -> file("changelog.yml").reader().use { reader ->
-                ObjectMapper().readTree(reader)
+                YAMLMapper().readValue<Map<String, String>>(reader)
             }
 
             else -> null

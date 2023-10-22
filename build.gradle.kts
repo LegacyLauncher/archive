@@ -6,6 +6,7 @@ buildscript {
     }
     dependencies {
         classpath("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.3")
+        classpath("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3")
     }
 }
 
