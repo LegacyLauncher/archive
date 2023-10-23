@@ -71,10 +71,10 @@ dependencies {
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {
-    configurations {
-        addLater(project.configurations.runtimeClasspath)
-        addLater(project.configurations.named("java11RuntimeClasspath"))
-    }
+    configurations = listOf(
+        project.configurations.runtimeClasspath.get(),
+        project.configurations[java11.runtimeClasspathConfigurationName],
+    )
 
     relocate("com.", "shaded.com.") {
         exclude("com.sun.**")

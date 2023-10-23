@@ -189,11 +189,18 @@ public class PlayButton extends BorderPanel implements Blockable, LoginForm.Logi
         repaint();
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        button.setText(enabled ? state.getPath() : PlayButtonState.BLOCKED.getPath());
+    }
+
     public enum PlayButtonState {
         REINSTALL("loginform.enter.reinstall"),
         INSTALL("loginform.enter.install"),
         PLAY("loginform.enter"),
-        CANCEL("loginform.enter.cancel");
+        CANCEL("loginform.enter.cancel"),
+        BLOCKED("loginform.enter.blocked");
 
         private final String path;
 

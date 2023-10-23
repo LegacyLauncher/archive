@@ -77,11 +77,27 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         buttons = new ButtonPanel(this);
         versions = new VersionComboBox(this);
         checkbox = new CheckBoxPanel(this);
+        processListeners.add(new LoginProcessListener() {
+            @Override
+            public void loggingIn() throws LoginException {
+                pane.progress.get().loggingIn();
+            }
+
+            @Override
+            public void loginFailed() {
+                pane.progress.get().loginFailed();
+            }
+
+            @Override
+            public void loginSucceed() {
+                pane.progress.get().loginSucceed();
+            }
+        });
         processListeners.add(autologin);
         processListeners.add(new LoginProcessListener() {
             @Override
-            public void logginingIn() throws LoginException {
-                settings.get().logginingIn();
+            public void loggingIn() throws LoginException {
+                settings.get().loggingIn();
             }
 
             @Override
@@ -99,7 +115,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         processListeners.add(accounts);
         processListeners.add(new LoginListener() {
             @Override
-            public void logginingIn() throws LoginException {
+            public void loggingIn() throws LoginException {
                 VersionSyncInfo sync = versions.getVersion();
                 if (!sync.isInstalled() || !sync.hasRemote()) {
                     return;
@@ -150,7 +166,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             for (LoginProcessListener listener : processListeners) {
                 try {
                     //log("Listener:", listener);
-                    listener.logginingIn();
+                    listener.loggingIn();
                 } catch (LoginWaitException loginError) {
                     LOGGER.debug("Caught a wait task");
 
@@ -389,7 +405,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     public abstract static class LoginListener implements LoginForm.LoginProcessListener {
-        public abstract void logginingIn() throws LoginException;
+        public abstract void loggingIn() throws LoginException;
 
         public void loginFailed() {
         }
@@ -399,7 +415,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     public interface LoginProcessListener {
-        void logginingIn() throws LoginException;
+        void loggingIn() throws LoginException;
 
         void loginFailed();
 

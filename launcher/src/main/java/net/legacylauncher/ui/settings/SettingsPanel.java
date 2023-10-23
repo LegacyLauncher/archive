@@ -539,7 +539,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
 
     }
 
-    public void logginingIn() throws LoginException {
+    public void loggingIn() throws LoginException {
         boolean ok;
         if (!tlauncher.getSettings().isFirstRun() && anyChanges()) {
             ok = askToSaveChanges();

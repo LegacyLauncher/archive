@@ -55,7 +55,7 @@ public class CheckBoxPanel extends BlockablePanel implements LoginForm.LoginProc
         add(forceupdate);
     }
 
-    public void logginingIn() throws LoginException {
+    public void loggingIn() throws LoginException {
         VersionSyncInfo syncInfo = loginForm.versions.getVersion();
         if (syncInfo != null) {
             boolean supporting = syncInfo.hasRemote();

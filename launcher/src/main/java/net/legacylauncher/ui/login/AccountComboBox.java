@@ -111,7 +111,7 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
         }
     }
 
-    public void logginingIn() throws LoginException {
+    public void loggingIn() throws LoginException {
         if (loginForm.versions.getVersion() != null &&
                 loginForm.versions.getVersion().getAvailableVersion().getReleaseType() == ReleaseType.LAUNCHER) {
             return;

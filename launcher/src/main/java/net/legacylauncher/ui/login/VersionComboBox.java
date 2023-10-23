@@ -113,7 +113,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
         return selected != null && !selected.equals(LOADING) && !selected.equals(EMPTY) ? selected : null;
     }
 
-    public void logginingIn() throws LoginException {
+    public void loggingIn() throws LoginException {
         VersionSyncInfo selected = getVersion();
         if (selected == null) {
             throw new LoginWaitException("Version list is empty, refreshing", () -> {

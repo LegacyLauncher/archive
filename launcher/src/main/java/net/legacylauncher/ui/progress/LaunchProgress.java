@@ -5,8 +5,10 @@ import net.legacylauncher.minecraft.launcher.MinecraftException;
 import net.legacylauncher.minecraft.launcher.MinecraftExtendedListener;
 
 import java.awt.*;
+import net.legacylauncher.ui.login.LoginException;
+import net.legacylauncher.ui.login.LoginForm;
 
-public class LaunchProgress extends DownloaderProgress implements MinecraftExtendedListener {
+public class LaunchProgress extends DownloaderProgress implements MinecraftExtendedListener, LoginForm.LoginProcessListener {
     private static final long serialVersionUID = -1003141285749311799L;
 
     public LaunchProgress(Component parentComp) {
@@ -26,7 +28,6 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
     }
 
     public void onMinecraftPrepare() {
-        setupBar();
     }
 
     public void onMinecraftCollecting() {
@@ -92,5 +93,17 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
     }
 
     public void onCrashManagerInit(CrashManager manager) {
+    }
+
+    public void loggingIn() throws LoginException {
+        setupBar();
+        setWestString("launcher.step.logging-in");
+    }
+
+    public void loginFailed() {
+        stopProgress();
+    }
+
+    public void loginSucceed() {
     }
 }

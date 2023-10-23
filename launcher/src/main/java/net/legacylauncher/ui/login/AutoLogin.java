@@ -95,7 +95,7 @@ public class AutoLogin implements LoginForm.LoginProcessListener {
         return timeout;
     }
 
-    public void logginingIn() throws LoginException {
+    public void loggingIn() throws LoginException {
         setActive(false);
     }
 
