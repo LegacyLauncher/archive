@@ -1,5 +1,5 @@
 ru_RU: >
-  Исправление подсчёта памяти при запуске с недостаточной памятью в системе
+  Исправлено удаление рекламных серверов из списка внутри игры
 
 en_US: >
-  Fixed an issue that occurred when launched with insufficient RAM in the system
+  Small bug fixes

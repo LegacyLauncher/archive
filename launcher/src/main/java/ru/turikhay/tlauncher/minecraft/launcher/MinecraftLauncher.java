@@ -118,7 +118,6 @@ public class MinecraftLauncher implements JavaProcessListener {
     private int exitCode;
     private Server server;
     private List<PromotedServer> promotedServers;
-    private List<PromotedServer> outdatedPromotedServers;
     private PromotedServerAddStatus promotedServerAddStatus = PromotedServerAddStatus.NONE;
     private int serverId;
     private static boolean ASSETS_WARNING_SHOWN;
@@ -314,10 +313,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         this.serverId = id;
     }
 
-    public void setPromotedServers(List<PromotedServer> serverList, List<PromotedServer> outdatedServerList) {
+    public void setPromotedServers(List<PromotedServer> serverList) {
         this.promotedServers = new ArrayList<>(serverList);
-        this.outdatedPromotedServers = outdatedServerList;
-
         Collections.shuffle(promotedServers);
     }
 
@@ -930,25 +927,21 @@ public class MinecraftLauncher implements JavaProcessListener {
                                 "We'll have to overwrite it as it can't be read by Minecraft neither", e);
                         exisingServerList = new LinkedHashSet<>();
                     }
+                    if (settings.getBoolean("minecraft.servers.promoted.ingame")) {
+                        exisingServerList.removeIf(s -> {
+                            boolean markedAsPromoted = s.getName().startsWith("§r");
+                            if (markedAsPromoted) {
+                                LOGGER.info("Removing promoted server: {}", s);
+                            }
+                            return markedAsPromoted;
+                        });
+                    }
                 } else {
                     FileUtil.createFile(file);
                     exisingServerList = new LinkedHashSet<>();
                 }
                 if (server != null) {
                     nbtServerList.add(new NBTServer(server));
-                }
-                if (outdatedPromotedServers != null) {
-                    Iterator<NBTServer> i = exisingServerList.iterator();
-                    while (i.hasNext()) {
-                        NBTServer existingServer = i.next();
-                        for (PromotedServer outdatedServer : outdatedPromotedServers) {
-                            if (existingServer.equals(outdatedServer) && existingServer.getName().equals(outdatedServer.getName())) {
-                                LOGGER.debug("Removed outdated server: {}", existingServer);
-                                i.remove();
-                                break;
-                            }
-                        }
-                    }
                 }
                 if (settings.getBoolean("minecraft.servers.promoted.ingame")) {
                     if (promotedServers != null) {
