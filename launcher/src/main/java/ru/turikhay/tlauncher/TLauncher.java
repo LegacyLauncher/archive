@@ -228,22 +228,6 @@ public final class TLauncher {
             connectivityManager.queueCheck(elyByCheckEntry);
         }
 
-        if (authServerCheckEntry != null) {
-            if (profileManager.getAccountManager().getUserSet().getSet().stream()
-                    .anyMatch(u -> u.getType().equals(MojangUser.TYPE) || u.getType().equals(MinecraftUser.TYPE))
-            ) {
-                bumpAuthServerCheckPriority();
-            } else {
-                authServerCheckEntry.getTask().thenRun(() -> {
-                    AuthServerChecker checker = (AuthServerChecker) authServerCheckEntry.getChecker();
-                    if (checker.getDetectedThirdPartyAuthenticator() != null) {
-                        bumpAuthServerCheckPriority();
-                    }
-                });
-            }
-            connectivityManager.queueCheck(authServerCheckEntry);
-        }
-
         Optional<String> packageModeOpt = getPackageMode();
         if (packageModeOpt.filter(m -> m.equals("dmg")).isPresent()) {
             Optional<String> dmgAppPathOpt = getCapability("dmg-app-path", String.class);
@@ -423,7 +407,7 @@ public final class TLauncher {
 
     private static final String PONG_RESPONSE = "Pong!\n";
     private static final String LAUNCHERMETA = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
-    private Entry authServerCheckEntry, elyByCheckEntry;
+    private Entry elyByCheckEntry;
 
     private ConnectivityManager initConnectivityManager() {
         List<ConnectivityManager.Entry> entries = new ArrayList<>();
@@ -436,12 +420,6 @@ public final class TLauncher {
                 "official_repo",
                 LAUNCHERMETA
         ).withPriority(1000));
-        entries.add(
-                authServerCheckEntry = AuthServerChecker
-                        .createEntry()
-                        .withPriority(-500) // will be set to 1000 if third party authenticator is detected
-                // or Mojang/Microsoft accounts are presented
-        );
         elyByCheckEntry = checkByValidJson(
                 "account.ely.by",
                 "https://account.ely.by/api/minecraft/session/profile/ffb3378cd561502fa78a08494be68811"
@@ -463,11 +441,6 @@ public final class TLauncher {
                         .withPriority(-1000)
         );
         return new ConnectivityManager(this, entries);
-    }
-
-    private void bumpAuthServerCheckPriority() {
-        authServerCheckEntry.withPriority(1000);
-        authServerCheckEntry.getTask().thenRun(connectivityManager::showNotificationOnceIfNeeded);
     }
 
     private void migrateFromOldJreConfig() {

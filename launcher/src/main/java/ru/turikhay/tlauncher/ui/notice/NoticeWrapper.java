@@ -1,5 +1,6 @@
 package ru.turikhay.tlauncher.ui.notice;
 
+import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.images.DelayedIcon;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -137,6 +138,18 @@ class NoticeWrapper extends BorderPanel {
                 }
                 if (notice.getAction() != null) {
                     action.popup.clearMenu();
+                    if (notice.getErid() != null) {
+                        JMenuItem eridItem = new JMenuItem("Реклама. Erid: " + notice.getErid());
+                        eridItem.addActionListener(e1 ->
+                                Alert.showMessage(
+                                        "",
+                                        "Маркер рекламного сообщения (согласно № 347-ФЗ):",
+                                        notice.getErid()
+                                )
+                        );
+                        action.popup.registerItem(eridItem);
+                        action.popup.registerItem(null);
+                    }
                     NoticeAction noticeAction = notice.getAction();
                     for (JMenuItem item : noticeAction.getMenuItemList()) {
                         action.popup.registerItem(item);

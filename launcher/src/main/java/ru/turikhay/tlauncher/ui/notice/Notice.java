@@ -8,16 +8,17 @@ import java.util.Objects;
 
 public final class Notice {
     private final int id, pos;
-    private final String text;
+    private final String text, erid;
     private final NoticeImage image;
     private final NoticeAction action;
 
     private boolean promoted;
 
-    Notice(int id, int pos, String text, NoticeImage image, NoticeAction action) {
+    Notice(int id, int pos, String text, String erid, NoticeImage image, NoticeAction action) {
         this.id = id;
         this.pos = pos;
         this.text = StringUtil.requireNotBlank(text, "text");
+        this.erid = erid;
         this.image = Objects.requireNonNull(image, "image");
         this.action = action;
     }
@@ -32,6 +33,10 @@ public final class Notice {
 
     public String getText() {
         return text;
+    }
+
+    public String getErid() {
+        return erid;
     }
 
     public NoticeImage getImage() {
@@ -55,6 +60,7 @@ public final class Notice {
                 .append("id", id)
                 .append("pos", pos)
                 .append("text", text.length() > 30 ? text.substring(0, 27) + "..." : text)
+                .append("erid", erid)
                 .append("image", image)
                 .append("action", action)
                 .build();

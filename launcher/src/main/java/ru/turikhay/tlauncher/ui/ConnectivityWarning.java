@@ -1,7 +1,6 @@
 package ru.turikhay.tlauncher.ui;
 
 import ru.turikhay.tlauncher.TLauncher;
-import ru.turikhay.tlauncher.managers.AuthServerChecker;
 import ru.turikhay.tlauncher.managers.ConnectivityManager;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -151,17 +150,6 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
                                 (officialRepoUnavailable ? "not_ok" : "ok");
                     } else {
                         path = "connectivity.warning.list.hint." + entry.getName();
-                        if (entry.getChecker() instanceof AuthServerChecker &&
-                                ((AuthServerChecker) entry.getChecker()).getDetectedThirdPartyAuthenticator() != null) {
-                            path += ".third_party";
-                            String thirdPartyAuthenticatorName =
-                                    ((AuthServerChecker) entry.getChecker()).getDetectedThirdPartyAuthenticator().getName();
-                            if (thirdPartyAuthenticatorName == null) {
-                                path += ".unknown";
-                            } else {
-                                vars = new Object[]{thirdPartyAuthenticatorName};
-                            }
-                        }
                     }
                     if (Localizable.nget(path) != null) {
                         LocalizableHTMLLabel hint = new LocalizableHTMLLabel(path, vars);
