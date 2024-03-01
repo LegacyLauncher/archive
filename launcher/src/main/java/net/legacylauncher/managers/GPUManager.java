@@ -7,7 +7,6 @@ import net.legacylauncher.util.OS;
 
 import javax.annotation.Nonnull;
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.*;
 
 public interface GPUManager extends Closeable {
@@ -68,7 +67,7 @@ public interface GPUManager extends Closeable {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
         }
     }
 

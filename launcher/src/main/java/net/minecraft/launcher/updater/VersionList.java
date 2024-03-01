@@ -3,12 +3,7 @@ package net.minecraft.launcher.updater;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.repository.RepositoryProxy;
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.Time;
 import net.legacylauncher.util.json.ExposeExclusion;
@@ -26,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -85,7 +81,7 @@ public abstract class VersionList {
                     } else {
                         input = url.openConnection().getInputStream();
                     }
-                    reader = new InputStreamReader(input, FileUtil.DEFAULT_CHARSET);
+                    reader = new InputStreamReader(input, StandardCharsets.UTF_8);
                 }
                 complete = gson.fromJson(reader, CompleteVersion.class);
             } finally {
@@ -116,21 +112,13 @@ public abstract class VersionList {
     public RawVersionList getRawList() throws IOException {
         Object lock = new Object();
         Time.start(lock);
-        RawVersionList list;
         String input;
+
         try (InputStreamReader reader = getUrl("versions/versions.json")) {
             input = IOUtils.toString(reader);
         }
-        try {
-            list = gson.fromJson(input, RawVersionList.class);
-        } catch (RuntimeException e) {
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't parse remote repository")
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
-            throw e;
-        }
+
+        RawVersionList list = gson.fromJson(input, RawVersionList.class);
 
         for (PartialVersion version : list.versions) {
             version.setVersionList(this);

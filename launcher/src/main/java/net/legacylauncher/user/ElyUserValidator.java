@@ -2,7 +2,6 @@ package net.legacylauncher.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.git.MapTokenResolver;
@@ -17,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -108,7 +108,7 @@ class ElyUserValidator {
 
         HttpURLConnection connection = setupConnection(ElyAuth.TOKEN_EXCHANGE);
         connection.setDoOutput(true);
-        IOUtils.write(request, connection.getOutputStream(), FileUtil.getCharset());
+        IOUtils.write(request, connection.getOutputStream(), StandardCharsets.UTF_8);
 
         Response<TokenRefreshResponse> tokenRefreshResponse = parse(connection, TokenRefreshResponse.class);
 
@@ -166,7 +166,7 @@ class ElyUserValidator {
     }
 
     private <T> T parse(InputStream input, Class<T> clazz) throws IOException {
-        String response = IOUtils.toString(input, FileUtil.getCharset());
+        String response = IOUtils.toString(input, StandardCharsets.UTF_8);
         LOGGER.debug("response: {}", response);
         try {
             return gson.fromJson(response, clazz);

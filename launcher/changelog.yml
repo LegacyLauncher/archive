@@ -1,24 +1,16 @@
 ru_RU: >
-  <b>Эээээксперименты!</b><br/>
-  Мы добавили экспериментальные настройки.<br/>
-  Пока доступны только через файл конфигурации лаунчера.<br/>
-  В экспериментах можно включить нестандартные оптимизации<br/>
-  для запуска игры и принудительно обновить некоторые библиотеки.<br/>
-  Список доступных экспериментов можно посмотреть в файле конфигурации.<br/> 
-  <br/>
-  Также:<br/>
-  Починили баг, из-за которого загрузка файлов превышала 100%.</br>
-  Обновили оптимизированные аргументы, улучшили начальное выделение памяти игре.<br/>
-  Прочие исправления багов и оптимизации
+  Привет, давно не виделись.<br/><br/>
+  – Ускорен запуск лаунчера при нестабильном (или частично блокируемым) доступе в Интернет<br/>
+  – Улучшена загрузка файлов игры из репозиториев<br/>
+  – Поддержка команды-враппера для запуска игры (например, mangohud, prime-run, и т.д.)<br/>
+  – Разрешены кириллические никнеймы (с предупреждением о том, что они могут не заработать)<br/>
+  – При добавлении нового аккаунта в лаунчер появилась возможность выбора аккаунта Microsoft, на который куплена игра<br/>
+  – Другие многочисленные исправления и улучшения<br/>
 en_US: >
-  <b>Uh, experiments!</b><br/>
-  We've added experimental settings.<br/>
-  For now available only through the launcher configuration file.<br/>
-  In the experiments you can enable non-standard optimizations<br/>
-  to run the game and forcibly update some game libraries.<br/>
-  You can see the list of available experiments in the configuration file.<br/>
-  <br/>
-  Other changes:<br/>
-  Fixed a bug that was causing file downloads to go beyond 100%<br/>
-  Updated optimized arguments, improved initial memory allocation for the game<br/>
-  Other fixes and optimizations
+  Hi, it's been a while!<br/><br/>
+  – Improved launcher startup times with unstable (or partially blocked) Internet access
+  – Improved file download stability
+  – Added support for a wrapper command (e.g., mangohud, prime-run, etc.)
+  – Allowed non-Latin nicknames (including a warning that these might not work at all)
+  – It's now possible to select a Microsoft account that was used to purchase the game
+  – Other fixes and improvements

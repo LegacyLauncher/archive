@@ -19,7 +19,6 @@ public final class BootConfiguration {
     private final Map<String, List<String>> repositories = new HashMap<>();
     private final Map<String, List<Notice>> notices = new HashMap<>();
     private final Map<String, List<PromotedServer>> promotedServers = new HashMap<>();
-    private final Map<String, List<PromotedServer>> outdatedPromotedServers = new HashMap<>();
     private final Map<String, String> feedback = new HashMap<>();
     private final Map<String, UrlNotificationObject> notifications = new HashMap<>();
     private int allowNoticeDisable;
@@ -42,10 +41,6 @@ public final class BootConfiguration {
 
     public Map<String, List<PromotedServer>> getPromotedServers() {
         return promotedServers;
-    }
-
-    public Map<String, List<PromotedServer>> getOutdatedPromotedServers() {
-        return outdatedPromotedServers;
     }
 
     public Map<String, String> getFeedback() {

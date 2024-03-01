@@ -89,7 +89,7 @@ public final class CrashEntryList {
             JsonObject root = json.getAsJsonObject();
 
             Version required = versionSerializer.deserialize(root.get("required"), Version.class, context);
-            if (LegacyLauncher.getVersion().lessThan(required)) {
+            if (LegacyLauncher.getVersion().isLowerThan(required)) {
                 throw new IncompatibleEntryList(required);
             }
 

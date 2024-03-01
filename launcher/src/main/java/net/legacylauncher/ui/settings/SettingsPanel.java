@@ -26,6 +26,7 @@ import net.legacylauncher.ui.support.ContributorsAlert;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
 import net.legacylauncher.ui.swing.extended.ExtendedButton;
 import net.legacylauncher.util.*;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 import net.minecraft.launcher.versions.ReleaseType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +59,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
     public final EditorGroupHandler extraHandler;
     public final EditorFieldHandler launcherResolution;
     public final EditorFieldHandler laf;
-    public final EditorFieldHandler font;
     public final EditorFieldHandler background;
     public final EditorFieldHandler loginFormDirection;
     public final EditorFieldHandler logger;
@@ -208,8 +208,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             }
         });
         tlauncherTab.add(new EditorPair("settings.clientres.label", launcherResolution));
-        font = new EditorFieldHandler("gui.font", new SettingsFontSlider(), restart);
-        tlauncherTab.add(new EditorPair("settings.fontsize.label", font));
         loginFormDirection = new EditorFieldHandler("gui.direction.loginform", new EditorComboBox<>(new DirectionConverter(), Direction.values()));
         loginFormDirection.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {

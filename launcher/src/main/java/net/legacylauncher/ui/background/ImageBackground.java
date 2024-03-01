@@ -1,17 +1,13 @@
 package net.legacylauncher.ui.background;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.handlers.ExceptionHandler;
 import net.legacylauncher.ui.FlatLaf;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.swing.extended.ExtendedComponentAdapter;
-import net.legacylauncher.util.FlatLafConfiguration;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,9 +17,9 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Optional;
 
 public final class ImageBackground extends JComponent implements ISwingBackground {
@@ -107,7 +103,7 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             if (U.makeURL(path) == null) {
                 File file = new File(path);
                 if (file.isFile()) {
-                    input = new FileInputStream(file);
+                    input = Files.newInputStream(file.toPath());
                 } else {
                     throw new FileNotFoundException(path);
                 }
@@ -126,11 +122,6 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 image = ImageIO.read(input);
             } catch (Exception e) {
                 LOGGER.error("Could not load image: {}", path, e);
-                Sentry.capture(new EventBuilder()
-                        .withMessage("image not found: " + path)
-                        .withLevel(Event.Level.ERROR)
-                        .withSentryInterface(new ExceptionInterface(e))
-                );
                 return;
             }
 

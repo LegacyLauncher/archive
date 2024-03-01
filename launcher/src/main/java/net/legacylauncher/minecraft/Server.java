@@ -108,8 +108,11 @@ public class Server {
         if (!(o instanceof Server)) {
             return false;
         }
-        Server s = (Server) o;
-        return getFullAddress().equalsIgnoreCase(s.getFullAddress());
+        return isSame((Server) o);
+    }
+
+    public boolean isSame(Server server) {
+        return getFullAddress().equalsIgnoreCase(server.getFullAddress());
     }
 
     @Override

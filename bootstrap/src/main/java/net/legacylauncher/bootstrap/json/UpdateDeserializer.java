@@ -4,14 +4,12 @@ import com.google.gson.*;
 import net.legacylauncher.bootstrap.meta.RemoteBootstrapMeta;
 import net.legacylauncher.bootstrap.meta.RemoteLauncherMeta;
 import net.legacylauncher.bootstrap.meta.UpdateMeta;
-import net.legacylauncher.bootstrap.util.U;
 
 import java.lang.reflect.Type;
 
 public class UpdateDeserializer implements JsonDeserializer<UpdateMeta> {
     @Override
     public UpdateMeta deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        U.log("[UpdateDeserializer]", "Deserializing");
         JsonObject object = jsonElement.getAsJsonObject();
         return new UpdateMeta(
                 Json.parse(ctx, object, "bootstrap_java", RemoteBootstrapMeta.class, false),

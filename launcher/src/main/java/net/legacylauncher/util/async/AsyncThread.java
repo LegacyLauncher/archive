@@ -1,5 +1,7 @@
 package net.legacylauncher.util.async;
 
+import net.legacylauncher.util.shared.FutureUtils;
+
 import java.util.concurrent.*;
 
 public class AsyncThread {
@@ -59,6 +61,10 @@ public class AsyncThread {
 
     public static Future<?> afterSeconds(long timeout, Runnable r) {
         return after(timeout, TimeUnit.SECONDS, r);
+    }
+
+    public static <T> CompletableFuture<T> supplyInterruptible(Callable<T> task) {
+        return FutureUtils.supplyInterruptible(task, SHARED_SERVICE);
     }
 
     private static Runnable wrap(final Runnable r) {

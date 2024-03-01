@@ -2,7 +2,7 @@
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.fasterxml.jackson.module.kotlin.*
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.gradle.jvm.tasks.Jar
 import java.security.MessageDigest
 
@@ -10,8 +10,9 @@ import java.security.MessageDigest
 plugins {
     java
     `jvm-test-suite`
-    id("org.openjfx.javafxplugin")
-    id("com.github.gmazzo.buildconfig")
+    alias(libs.plugins.javafx)
+    alias(libs.plugins.buildconfig)
+    net.legacylauncher.brand
 }
 
 val java11: SourceSet by sourceSets.creating {
@@ -25,17 +26,19 @@ val java11: SourceSet by sourceSets.creating {
 }
 
 val compileJava11Java by tasks.getting(JavaCompile::class) {
-    options.release.set(11)
+    options.release = 11
 }
 
 val compileTestJava by tasks.getting(JavaCompile::class) {
-    options.release.set(11)
+    options.release = 11
 }
 
 val exportedClasspath by configurations.resolvable("exportedClasspath") {
     extendsFrom(configurations.runtimeClasspath.get(), configurations["java11RuntimeClasspath"])
     // TODO this line removes JavaFX from debug runs
     exclude(group = "org.openjfx")
+    // we don't need an empty jar
+    exclude(group = "com.google.guava", module = "listenablefuture")
 }
 
 evaluationDependsOn(projects.common.identityPath.path)
@@ -45,6 +48,7 @@ dependencies {
 
     annotationProcessor(libs.log4j.core)
 
+    implementation(projects.utils)
     implementation(projects.common)
     implementation(libs.authlib)
     implementation(libs.bundles.httpcomponents)
@@ -64,7 +68,6 @@ dependencies {
     implementation(libs.nanohttpd)
     implementation(libs.nstweaker)
     implementation(libs.oshi)
-    implementation(libs.sentry)
     implementation(libs.toml4j)
     implementation(libs.xz)
 
@@ -76,7 +79,6 @@ dependencies {
     testImplementation(libs.mockito.core)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.mockito.junit.jupiter)
-    testRuntimeOnly(libs.mockito.inline)
 }
 
 fun resolveLauncherClasspath(): Collection<ResolvedArtifact> {
@@ -87,12 +89,8 @@ fun resolveLauncherClasspath(): Collection<ResolvedArtifact> {
 
 val launcherClasspath: Provider<Collection<ResolvedArtifact>> by ext.invoke { providers.provider(::resolveLauncherClasspath) }
 
-val shortBrand: String by rootProject.ext
-val fullBrand: String by rootProject.ext
-val productVersion: String by ext
-
 val buildLauncherRepo by tasks.registering(Sync::class) {
-    destinationDir = rootDir.resolve("lib/${shortBrand}")
+    into(layout.buildDirectory.dir("launcherLibs"))
     inputs.files(exportedClasspath)
     resolveLauncherClasspath().forEach { artifact ->
         val path = with(artifact.moduleVersion.id) {
@@ -135,20 +133,17 @@ fun writeMeta(file: File, content: Map<String, Any>) {
     }
 }
 
-val repoHosts: Collection<String> by rootProject.ext
-val repoCdnPathPrefixes: Collection<String> by rootProject.ext
-
 val processResources by tasks.getting(ProcessResources::class) {
     inputs.files(exportedClasspath)
-    inputs.property("productVersion", productVersion)
-    inputs.property("shortBrand", shortBrand)
-    inputs.property("fullBrand", fullBrand)
+    inputs.property("productVersion", brand.version.get())
+    inputs.property("shortBrand", brand.brand.get())
+    inputs.property("fullBrand", brand.displayName.get())
 
     doLast {
         val meta = mapOf(
-            "version" to productVersion,
-            "shortBrand" to shortBrand,
-            "brand" to fullBrand,
+            "version" to brand.version.get(),
+            "shortBrand" to brand.brand.get(),
+            "brand" to brand.displayName.get(),
             "libraries" to resolveLauncherClasspath().map { artifact ->
                 mapOf(
                     "name" to formatShortArtifactNotation(artifact),
@@ -171,7 +166,8 @@ val processResources by tasks.getting(ProcessResources::class) {
             meta + mapOf(
                 "bridgedEntryPoint" to "net.legacylauncher.LegacyLauncherBridged",
                 "entryPoint" to "net.legacylauncher.LegacyLauncherEntrypoint",
-                "repositories" to (repoHosts.map { "https://$it" } + repoCdnPathPrefixes).map { "$it/repo/libraries" },
+                "repositories" to (brand.repoHosts.get()
+                    .map { "https://$it" } + brand.repoCdnPathPrefixes.get()).map { "$it/repo/libraries" },
                 "javaVersion" to "[11,)", // recommended java version as per https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
             )
         )
@@ -193,16 +189,16 @@ object UrlComparator : Comparator<String> {
 val generateUpdateJson by tasks.registering {
     dependsOn(jar)
 
-    inputs.property("productVersion", productVersion)
-    inputs.property("repoHosts", repoHosts)
+    inputs.property("productVersion", brand.version.get())
+    inputs.property("repoHosts", brand.repoHosts.get())
     inputs.file("changelog.yml")
-    val updateJsonFile = layout.buildDirectory.file("update/${shortBrand}/launcher.json")
+    val updateJsonFile = layout.buildDirectory.file("update/${brand.brand.get()}/launcher.json")
     outputs.file(updateJsonFile)
 
     doLast {
         val jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
-        val downloadPath = "repo/update/${shortBrand}/launcher/${jarFileChecksum}.jar"
-        val downloadUrlList = repoHosts.flatMap { host ->
+        val downloadPath = "repo/update/${brand.brand.get()}/launcher/${jarFileChecksum}.jar"
+        val downloadUrlList = brand.repoHosts.get().flatMap { host ->
             listOf("https", "http").map { scheme ->
                 "$scheme://$host/$downloadPath"
             }
@@ -217,7 +213,7 @@ val generateUpdateJson by tasks.registering {
         }
 
         val meta = mapOf(
-            "version" to productVersion,
+            "version" to brand.version.get(),
             "checksum" to jarFileChecksum,
             "url" to downloadUrlList,
             "description" to changelog,
@@ -231,13 +227,13 @@ val generateUpdateJson by tasks.registering {
 
 val copyJarAndRename by tasks.registering(Copy::class) {
     from(jar)
-    into(layout.buildDirectory.dir("update/$shortBrand"))
+    into(layout.buildDirectory.dir("update/${brand.brand.get()}"))
     rename { "launcher.jar" }
 }
 
 val generateSha256File by tasks.registering {
     dependsOn(jar)
-    val file = layout.buildDirectory.file("update/${shortBrand}/launcher.jar.sha256")
+    val file = layout.buildDirectory.file("update/${brand.brand.get()}/launcher.jar.sha256")
     outputs.file(file)
     doLast {
         file.get().asFile.writeText(generateChecksum(jar.outputs.files.singleFile))
@@ -250,9 +246,9 @@ buildConfig {
 
     useJavaOutput()
 
-    buildConfigField("String", "SHORT_BRAND", "\"${shortBrand}\"")
-    buildConfigField("String", "FULL_BRAND", "\"${fullBrand}\"")
-    buildConfigField("String", "VERSION", "\"${productVersion}\"")
+    buildConfigField("String", "SHORT_BRAND", "\"${brand.brand.get()}\"")
+    buildConfigField("String", "FULL_BRAND", "\"${brand.displayName.get()}\"")
+    buildConfigField("String", "VERSION", "\"${brand.version.get()}\"")
 }
 
 val assemble: Task by tasks.getting {

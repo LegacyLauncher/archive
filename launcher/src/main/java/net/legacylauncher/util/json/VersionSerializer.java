@@ -8,7 +8,7 @@ import java.lang.reflect.Type;
 public class VersionSerializer implements JsonSerializer<Version>, JsonDeserializer<Version> {
     @Override
     public Version deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        return json == null ? null : Version.valueOf(json.getAsString());
+        return json == null ? null : Version.parse(json.getAsString());
     }
 
     @Override

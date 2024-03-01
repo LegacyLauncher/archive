@@ -111,7 +111,7 @@ public class DownloadableContainer {
 
     }
 
-    void onComplete(Downloadable d) throws RetryDownloadException {
+    void onComplete(Downloadable d) {
         for (DownloadableContainerHandler handler : handlers) {
             handler.onComplete(this, d);
         }

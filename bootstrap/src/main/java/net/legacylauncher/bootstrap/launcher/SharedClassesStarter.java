@@ -1,6 +1,8 @@
 package net.legacylauncher.bootstrap.launcher;
 
 import net.legacylauncher.bootstrap.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 
 import java.lang.reflect.InvocationTargetException;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class SharedClassesStarter extends AbstractStarter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SharedClassesStarter.class);
     private final LocalLauncher launcher;
     private final BootBridge bridge;
 
@@ -24,7 +27,7 @@ public class SharedClassesStarter extends AbstractStarter {
         List<Path> classpath = buildClassPath(launcher);
 
         for (Path path : classpath) {
-            log("Classpath entry:", path);
+            LOGGER.info("Classpath entry: {}", path);
         }
 
         URLClassLoader childCl = new URLClassLoader(toURLs(classpath), Thread.currentThread().getContextClassLoader());

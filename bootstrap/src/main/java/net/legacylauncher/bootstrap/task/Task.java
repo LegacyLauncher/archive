@@ -2,7 +2,8 @@ package net.legacylauncher.bootstrap.task;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import net.legacylauncher.bootstrap.util.U;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Task<T> implements Callable<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Task.class);
     Task<?> bindingTask, boundTask;
     private double boundTaskProgressStart;
     private double boundTaskProgressDelta;
@@ -22,11 +24,9 @@ public abstract class Task<T> implements Callable<T> {
     private List<TaskListener<? super T>> listeners = new ArrayList<>();
 
     private final String name;
-    private final String logPrefix;
 
     public Task(String name) {
         this.name = name;
-        logPrefix = "[" + getClass().getSimpleName() + ":" + name + ']';
     }
 
     public final String getName() {
@@ -43,7 +43,7 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     public final void interrupt() {
-        log("interrupted");
+        LOGGER.warn("interrupted");
 
         this.interrupted = true;
         interrupted();
@@ -79,7 +79,7 @@ public abstract class Task<T> implements Callable<T> {
             throw e = ex;
         } finally {
             if (interrupted) {
-                log("interruption confirmed");
+                LOGGER.warn("interruption confirmed");
                 updateProgress(-1.);
                 for (TaskListener<? super T> listener : listeners) {
                     listener.onTaskInterrupted(this);
@@ -87,12 +87,12 @@ public abstract class Task<T> implements Callable<T> {
             } else {
                 if (e == null) {
                     updateProgress(1.);
-                    log("Done!");
+                    LOGGER.info("Done!");
                     for (TaskListener<? super T> listener : listeners) {
                         listener.onTaskSucceeded(this);
                     }
                 } else {
-                    log("Failed:", e);
+                    LOGGER.error("Failed", e);
                     for (TaskListener<? super T> listener : listeners) {
                         listener.onTaskErrored(this, e);
                     }
@@ -197,8 +197,4 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     protected abstract T execute() throws Exception;
-
-    protected void log(Object... o) {
-        U.log(logPrefix, o);
-    }
 }

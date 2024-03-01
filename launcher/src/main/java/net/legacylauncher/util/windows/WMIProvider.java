@@ -1,7 +1,7 @@
 package net.legacylauncher.util.windows;
 
 import net.legacylauncher.util.async.AsyncThread;
-import net.legacylauncher.util.windows.wmi.WMI;
+import net.legacylauncher.util.shared.WMI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

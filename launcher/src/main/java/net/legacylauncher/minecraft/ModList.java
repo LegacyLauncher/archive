@@ -1,14 +1,14 @@
 package net.legacylauncher.minecraft;
 
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.U;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.LibraryType;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class ModList {
     }
 
     public void save(File file) throws IOException {
-        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), FileUtil.getCharset())) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
             U.getGson().toJson(this, writer);
         }
     }

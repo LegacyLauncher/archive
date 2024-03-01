@@ -51,10 +51,7 @@ public class GPUComboBox extends BorderPanel implements EditorField {
 
     @Override
     public boolean isValueValid() {
-        if (!comboBox.isValueValid()) {
-            return false;
-        }
-        return true;
+        return comboBox.isValueValid();
     }
 
     private static class GPUConverter implements StringConverter<GPUManager.GPU> {

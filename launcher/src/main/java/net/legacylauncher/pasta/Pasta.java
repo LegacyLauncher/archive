@@ -1,9 +1,5 @@
 package net.legacylauncher.pasta;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.logger.LogFile;
 import net.legacylauncher.util.CharsetData;
 import net.legacylauncher.util.CharsetDataHttpEntity;
@@ -82,14 +78,6 @@ public class Pasta {
             result = doPaste();
         } catch (Throwable e) {
             LOGGER.error("Could not upload paste", e);
-            if (!(e instanceof PastaException)) {
-                Sentry.capture(new EventBuilder()
-                        .withMessage("pasta not sent")
-                        .withExtra("sample", getSample())
-                        .withLevel(Event.Level.ERROR)
-                        .withSentryInterface(new ExceptionInterface(e))
-                );
-            }
             result = new PastaFailed(this, e);
         }
 

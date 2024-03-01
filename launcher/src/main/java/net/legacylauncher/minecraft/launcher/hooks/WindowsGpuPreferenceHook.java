@@ -1,9 +1,5 @@
 package net.legacylauncher.minecraft.launcher.hooks;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.jna.JNAException;
 import net.legacylauncher.jna.JNAWindows;
@@ -48,11 +44,6 @@ public class WindowsGpuPreferenceHook implements ProcessHook {
         if (!path.isAbsolute()) {
             LOGGER.warn("JRE executable is not absolute ({}), " +
                     "setting GPU performance is disabled", path);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.INFO)
-                    .withMessage("jreExec is not absolute")
-                    .withExtra("jreExec", path)
-            );
             return;
         }
         Optional<JNAWindows.Registry> registryOpt = JNAWindows.getRegistry();
@@ -66,13 +57,6 @@ public class WindowsGpuPreferenceHook implements ProcessHook {
         try {
             currentValue = reg.getString(HKEY_CURRENT_USER, GPU_PREFERENCE_REG_KEY, path.toString());
         } catch (JNAException e) {
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't get GpuPreference")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withExtra("windowsBuild", buildOpt.get())
-                    .withExtra("jreExec", path)
-            );
             LOGGER.error("Couldn't fetch current GPU preference. Setting it was skipped.", e);
             return;
         }
@@ -85,13 +69,6 @@ public class WindowsGpuPreferenceHook implements ProcessHook {
         try {
             reg.setString(HKEY_CURRENT_USER, GPU_PREFERENCE_REG_KEY, path.toString(), expectedValue);
         } catch (JNAException e) {
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't set GpuPreference")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withExtra("windowsBuild", buildOpt.get())
-                    .withExtra("jreExec", path)
-            );
             LOGGER.error("Couldn't set current GPU preference", e);
         }
     }

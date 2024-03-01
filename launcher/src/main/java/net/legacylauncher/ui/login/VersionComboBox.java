@@ -238,10 +238,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             if (!delegate.satisfies(v)) {
                 return false;
             }
-            if (installed != null && !installed.contains(v.getID())) {
-                return false;
-            }
-            return true;
+            return installed == null || installed.contains(v.getID());
         }
     }
 

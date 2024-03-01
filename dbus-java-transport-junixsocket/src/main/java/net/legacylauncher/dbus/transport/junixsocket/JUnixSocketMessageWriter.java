@@ -18,7 +18,6 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
 
     private final AFUNIXSocketChannel socket;
     private final boolean hasFileDescriptorSupport;
-    private ByteBuffer buffer;
 
     public JUnixSocketMessageWriter(AFUNIXSocketChannel socket, boolean hasFileDescriptorSupport) {
         this.socket = socket;
@@ -51,29 +50,6 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
             return;
         }
 
-        int totalSize = 0;
-
-        for (byte[] bytes : wireData) {
-            if (bytes == null) break;
-            totalSize += bytes.length;
-        }
-
-        if (buffer == null || buffer.capacity() < totalSize) {
-            buffer = ByteBuffer.allocateDirect(totalSize);
-        } else {
-            buffer.limit(totalSize);
-        }
-
-        for (byte[] bytes : wireData) {
-            if (logger.isTraceEnabled()) {
-                logger.trace("{}", bytes == null ? "(buffer was null)" : Hexdump.format(bytes));
-            }
-
-            if (bytes == null) break;
-
-            buffer.put(bytes);
-        }
-
         if (hasFileDescriptorSupport) {
             List<org.freedesktop.dbus.FileDescriptor> fdsList = msg.getFiledescriptors();
             if (!fdsList.isEmpty()) {
@@ -91,9 +67,15 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
             }
         }
 
-        buffer.flip();
-        socket.write(buffer);
-        buffer.clear();
+        for (byte[] bytes : wireData) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("{}", bytes == null ? "(buffer was null)" : Hexdump.format(bytes));
+            }
+
+            if (bytes == null) break;
+
+            socket.write(ByteBuffer.wrap(bytes));
+        }
 
         if (hasFileDescriptorSupport && !msg.getFiledescriptors().isEmpty()) {
             socket.setOutboundFileDescriptors((FileDescriptor[]) null);

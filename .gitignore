@@ -10,8 +10,6 @@ proguard.log
 **/Thumbs.db
 **/.DS_Store
 
-/lib/*
-
 # Ignore Gradle project-specific cache directory
 .gradle
 
@@ -23,8 +21,6 @@ build
 !.idea/encodings.xml
 !.idea/runConfigurations
 *.iml
-
-logs/
 
 # Дарова, Eclipse (и VSCode)
 .settings/

@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -133,7 +134,7 @@ public class AssetsManager extends LauncherComponent {
             tempIndexFile = File.createTempFile("tlauncher-assets", null);
             tempIndexFile.deleteOnExit();
 
-            try (Writer writer = new OutputStreamWriter(new FileOutputStream(tempIndexFile), StandardCharsets.UTF_8)) {
+            try (Writer writer = new OutputStreamWriter(Files.newOutputStream(tempIndexFile.toPath()), StandardCharsets.UTF_8)) {
                 IOUtils.copy(json, writer);
             }
 
@@ -145,8 +146,8 @@ public class AssetsManager extends LauncherComponent {
 
         if (save) {
             synchronized (assetsFlushLock) {
-                try (InputStream in = new FileInputStream(tempIndexFile);
-                     OutputStream out = new FileOutputStream(indexFile)) {
+                try (InputStream in = Files.newInputStream(tempIndexFile.toPath());
+                     OutputStream out = Files.newOutputStream(indexFile.toPath())) {
                     IOUtils.copy(in, out);
                 } finally {
                     tempIndexFile.delete();
@@ -221,8 +222,8 @@ public class AssetsManager extends LauncherComponent {
     public static void decompress(File compressedInput, File uncompressedOutput, String expectHash) throws IOException {
         String hash;
 
-        try (InputStream in = new GZIPInputStream(new FileInputStream(compressedInput));
-             OutputStream out = new FileOutputStream(uncompressedOutput)) {
+        try (InputStream in = new GZIPInputStream(Files.newInputStream(compressedInput.toPath()));
+             OutputStream out = Files.newOutputStream(uncompressedOutput.toPath())) {
             hash = FileUtil.copyAndDigest(in, out, "SHA", 40);
         }
 

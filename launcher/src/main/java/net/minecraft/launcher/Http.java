@@ -1,7 +1,6 @@
 package net.minecraft.launcher;
 
 import net.legacylauncher.util.U;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class Http {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -50,7 +50,7 @@ public class Http {
         Validate.notNull(post);
         Validate.notNull(contentType);
         HttpURLConnection connection = createUrlConnection(url);
-        byte[] postAsBytes = post.getBytes(Charsets.UTF_8);
+        byte[] postAsBytes = post.getBytes(StandardCharsets.UTF_8);
         connection.setRequestProperty("Content-Type", contentType + "; charset=utf-8");
         connection.setRequestProperty("Content-Length", "" + postAsBytes.length);
         connection.setDoOutput(true);
@@ -67,13 +67,12 @@ public class Http {
         LOGGER.trace("Reading data from {}", url);
         InputStream inputStream = null;
 
-        String var10;
         try {
             inputStream = connection.getInputStream();
-            String e = IOUtils.toString(inputStream, Charsets.UTF_8);
+            String e = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
             LOGGER.trace("Successful read, server response was {}", connection.getResponseCode());
             LOGGER.trace("Response: {}", e);
-            var10 = e;
+            return e;
         } catch (IOException var18) {
             IOUtils.closeQuietly(inputStream);
             inputStream = connection.getErrorStream();
@@ -83,14 +82,12 @@ public class Http {
             }
 
             LOGGER.error("Reading error page from {}", url);
-            String result = IOUtils.toString(inputStream, Charsets.UTF_8);
+            String result = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
             LOGGER.error("Successful read, server response was {}", connection.getResponseCode());
             LOGGER.error("Response: {}", result);
-            var10 = result;
+            return result;
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
-
-        return var10;
     }
 }

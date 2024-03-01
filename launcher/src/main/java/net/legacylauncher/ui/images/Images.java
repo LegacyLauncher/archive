@@ -1,9 +1,5 @@
 package net.legacylauncher.ui.images;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.util.Lazy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -117,22 +113,11 @@ public class Images {
 
     private static BufferedImage reportMissingAndReturnEmptyImage(ResourceNotFoundException e) {
         LOGGER.error("Missing resource", e);
-        Sentry.capture(new EventBuilder()
-                .withLevel(Event.Level.ERROR)
-                .withMessage("missing resource: " + e.getMessage())
-                .withSentryInterface(new ExceptionInterface(e))
-        );
         return ONE_PIX.get();
     }
 
     private static BufferedImage reportLoadErrorAndReturnEmptyImage(ResourceLoadException e) {
         LOGGER.error("Resource cannot be loaded", e);
-        Sentry.capture(new EventBuilder()
-                .withLevel(Event.Level.ERROR)
-                .withMessage("resource loading error")
-                .withSentryInterface(new ExceptionInterface(e))
-                .withExtra("resourceUrl", String.valueOf(e.getUrl()))
-        );
         return ONE_PIX.get();
     }
 

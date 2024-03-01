@@ -1,9 +1,5 @@
 package net.legacylauncher.handlers;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.background.ImageBackground;
 import net.legacylauncher.util.U;
@@ -31,23 +27,17 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             OutOfMemoryError asOOM = (OutOfMemoryError) e;
             if (!reduceMemory(asOOM)) {
                 if (scanTrace(e) && toShowError(e)) {
-                    Sentry.capture(new EventBuilder()
-                            .withLevel(Event.Level.ERROR)
-                            .withMessage("uncaught exception: " + e)
-                            .withSentryInterface(new ExceptionInterface(e))
-                            .withExtra("thread", t.getName())
-                    );
                     try {
                         Alert.showError("Exception in thread " + t.getName(), e);
-                    } catch (Exception var5) {
-                        var5.printStackTrace();
+                    } catch (Exception e1) {
+                        LOGGER.warn("Cannot show alert window", e1);
                     }
                 } else {
                     LOGGER.debug("Hidden exception in thread {}", t.getName(), e);
                 }
             }
-        } catch (Throwable t0) {
-            t0.printStackTrace();
+        } catch (Throwable e1) {
+            LOGGER.error("Something gone totally wrong, I'll die soon ;(", e1);
         }
     }
 

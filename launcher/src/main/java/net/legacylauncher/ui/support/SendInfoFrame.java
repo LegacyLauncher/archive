@@ -14,8 +14,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 
 public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> {
@@ -103,7 +107,7 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
             if (explorer.getSelectedFile() != null) {
                 File file = explorer.getSelectedFile();
                 try (InputStreamReader reader = Log4j2ContextHelper.getCurrentLogFile().read();
-                     OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)
+                     OutputStreamWriter writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)
                 ) {
                     IOUtils.copy(reader, writer);
                 } catch (Exception error) {

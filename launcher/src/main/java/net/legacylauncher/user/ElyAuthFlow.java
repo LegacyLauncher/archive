@@ -1,12 +1,12 @@
 package net.legacylauncher.user;
 
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.async.AsyncThread;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,7 +73,7 @@ public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Call
 
         URL url;
         try {
-            url = new URL(String.format(java.util.Locale.ROOT, OAUTH2_AUTH_REQUEST, URLEncoder.encode(redirect_uri, FileUtil.getCharset().name()), state));
+            url = new URL(String.format(java.util.Locale.ROOT, OAUTH2_AUTH_REQUEST, URLEncoder.encode(redirect_uri, StandardCharsets.UTF_8.name()), state));
         } catch (Exception e) {
             throw new Error(e);
         }

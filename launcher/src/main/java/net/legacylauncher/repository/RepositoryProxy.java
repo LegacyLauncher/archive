@@ -1,7 +1,6 @@
 package net.legacylauncher.repository;
 
 import net.legacylauncher.util.EHttpClient;
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import org.apache.http.client.fluent.Request;
@@ -11,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -196,7 +196,7 @@ public class RepositoryProxy {
 
         private static String encodeUrl(URL url) {
             try {
-                return URLEncoder.encode(url.toExternalForm(), FileUtil.getCharset().name());
+                return URLEncoder.encode(url.toExternalForm(), StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException e) {
                 throw new Error("UTF-8 not supported?");
             }

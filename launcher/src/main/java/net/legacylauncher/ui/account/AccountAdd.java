@@ -22,7 +22,6 @@ import net.legacylauncher.util.SwingUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.util.Optional;
 
 public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable, LocalizableComponent {
 

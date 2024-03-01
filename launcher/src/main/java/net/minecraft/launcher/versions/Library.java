@@ -1,5 +1,6 @@
 package net.minecraft.launcher.versions;
 
+import com.google.gson.annotations.Expose;
 import net.legacylauncher.downloader.Downloadable;
 import net.legacylauncher.downloader.Sha1Downloadable;
 import net.legacylauncher.repository.Repository;
@@ -18,6 +19,8 @@ import java.util.Map;
 
 public class Library {
     protected static final StrSubstitutor SUBSTITUTOR;
+
+    @Deprecated // don't use it directly, use getName()
     protected String name;
     protected List<Rule> rules;
     protected Map<OS, String> natives;
@@ -30,6 +33,11 @@ public class Library {
     protected Boolean mod;
     protected Boolean downloadOnly;
     protected String type;
+
+    @Expose
+    private String extractedName;
+    @Expose
+    private String[] splitName;
 
     static {
         HashMap<String, String> map = new HashMap<>();
@@ -45,7 +53,6 @@ public class Library {
         this.name = name;
         this.url = url;
         this.checksum = checksum;
-
     }
 
     @Override
@@ -57,7 +64,7 @@ public class Library {
         Library library = (Library) o;
 
         return new EqualsBuilder()
-                .append(name, library.name)
+                .append(getName(), library.getName())
                 .append(rules, library.rules)
                 .append(natives, library.natives)
                 .append(extract, library.extract)
@@ -67,7 +74,7 @@ public class Library {
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(name)
+                .append(getName())
                 .append(rules)
                 .append(natives)
                 .append(extract)
@@ -75,11 +82,21 @@ public class Library {
     }
 
     public String getName() {
-        return name;
+        if (extractedName == null) {
+            extractedName = extractName(name);
+        }
+        return extractedName;
+    }
+
+    private String[] getSplitName() {
+        if (splitName == null) {
+            splitName = getName().split(":", 4);
+        }
+        return splitName;
     }
 
     public String getPlainName() {
-        String[] split = name.split(":", 4);
+        String[] split = getSplitName();
         if (split.length < 3) {
             throw new IllegalArgumentException("bad library: " + name);
         }
@@ -142,7 +159,7 @@ public class Library {
         if (name == null) {
             throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
         } else {
-            String[] parts = name.split(":", 4);
+            String[] parts = getSplitName();
             if (parts.length < 3) {
                 throw new IllegalArgumentException("bad library name: " + name);
             }
@@ -166,7 +183,7 @@ public class Library {
         if (name == null) {
             throw new IllegalStateException("Cannot get artifact filename of empty/blank artifact");
         } else {
-            String[] parts = name.split(":", 4);
+            String[] parts = getSplitName();
             String result;
             if (classifier == null) {
                 if (parts.length == 4) {
@@ -177,9 +194,19 @@ public class Library {
             } else {
                 result = String.format(java.util.Locale.ROOT, "%s-%s-%s.jar", parts[1], parts[2], classifier);
             }
-
             return SUBSTITUTOR.replace(result);
         }
+    }
+
+    private static String extractName(String rawName) {
+        String[] artifactTypeSplit = rawName.split("@", 2);
+        String name;
+        if (artifactTypeSplit.length == 2) {
+            name = artifactTypeSplit[0];
+        } else {
+            name = rawName;
+        }
+        return name;
     }
 
     public boolean hasEmptyUrl() {
@@ -187,7 +214,7 @@ public class Library {
     }
 
     public String toString() {
-        return "Library{name=\"" + name + "\", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", mod=" + mod + ", downloadOnly=\"+" + downloadOnly + "\"}";
+        return "Library{name=\"" + getName() + "\", rules=" + rules + ", natives=" + natives + ", extract=" + extract + ", mod=" + mod + ", downloadOnly=\"+" + downloadOnly + "\"}";
     }
 
     public Downloadable getDownloadable(Repository versionSource, Rule.FeatureMatcher featureMatcher, File file, OS os) {

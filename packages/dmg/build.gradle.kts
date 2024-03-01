@@ -4,25 +4,23 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     base
-    id("de.undercouch.download")
+    alias(libs.plugins.download)
+    net.legacylauncher.brand
 }
 
-val jreZipDownload = "https://cdn.azul.com/zulu/bin/zulu17.38.21-ca-fx-jre17.0.5-macosx_x64.zip"
-val jreZipSha256 = "7483050a347894c13a6538dc42a1bfaad75939784c92f1e67433ca9a16929547"
-val jreZipEntry = "zulu17.38.21-ca-fx-jre17.0.5-macosx_x64/zulu-17.jre"
+val jreZipDownload = "https://cdn.azul.com/zulu/bin/zulu21.32.17-ca-fx-jre21.0.2-macosx_x64.zip"
+val jreZipSha256 = "49c9ab085278660c7f3236a70be07a9d15077ce6815f97239d3d3a066c6ad1dd"
+val jreZipEntry = "zulu21.32.17-ca-fx-jre21.0.2-macosx_x64/zulu-21.jre"
 val jreZipFile = layout.buildDirectory.file("jreZip/macOsJre.zip")
 
-val shortBrand: String by rootProject.ext
-val fullBrand: String by rootProject.ext
-
-val bundleName = "Legacy Launcher $fullBrand"
+val bundleName = "Legacy Launcher ${brand.displayName.get()}"
 
 evaluationDependsOn(projects.launcher.identityPath.path)
 
 val tokens = mapOf(
     "bundle_name" to bundleName,
-    "short_brand" to shortBrand,
-    "full_brand" to fullBrand,
+    "short_brand" to brand.brand.get(),
+    "full_brand" to brand.displayName.get(),
     "version" to projects.launcher.version
 )
 
@@ -40,7 +38,7 @@ val downloadMacOsJre by tasks.registering(Download::class) {
 }
 
 val prepareDmgBuild by tasks.registering(Sync::class) {
-    into(layout.buildDirectory.dir("dmg/$shortBrand"))
+    into(layout.buildDirectory.dir("dmg/${brand.brand.get()}"))
 
     from("TL.icns")
     from("background/background.tiff")

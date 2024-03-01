@@ -5,11 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.MalformedJsonException;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
-import net.legacylauncher.pasta.Pasta;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.MinecraftUtil;
@@ -32,8 +27,6 @@ import java.util.Set;
 
 public class LocalVersionList extends StreamVersionList {
     private static final Logger LOGGER = LogManager.getLogger(LocalVersionList.class);
-
-    private final JsonParser jsonParser = new JsonParser();
 
     private File baseDirectory;
     private File baseVersionsDir;
@@ -119,13 +112,6 @@ public class LocalVersionList extends StreamVersionList {
                             LOGGER.warn("Invalid json file {}", id, e);
                         } else {
                             LOGGER.warn("Could not parse local version \"{}\"", id, e);
-                            Sentry.capture(new EventBuilder()
-                                    .withMessage("couldn't parse local version")
-                                    .withSentryInterface(new ExceptionInterface(e))
-                                    .withExtra("version", id)
-                                    .withExtra("input", Pasta.pasteJson(input))
-                                    .withLevel(Event.Level.ERROR)
-                            );
                         }
                         if (e instanceof JsonSyntaxException) {
                             renameJsonFile(jsonFile);
@@ -191,7 +177,7 @@ public class LocalVersionList extends StreamVersionList {
     }
 
     protected InputStream getInputStream(String uri) throws IOException {
-        return new FileInputStream(new File(baseDirectory, uri));
+        return Files.newInputStream(new File(baseDirectory, uri).toPath());
     }
 
     public boolean hasAllFiles(CompleteVersion version, OS os) {

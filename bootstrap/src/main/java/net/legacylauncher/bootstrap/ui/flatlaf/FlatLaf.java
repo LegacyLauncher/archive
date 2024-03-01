@@ -1,16 +1,18 @@
 package net.legacylauncher.bootstrap.ui.flatlaf;
 
 import com.formdev.flatlaf.*;
-import net.legacylauncher.util.FlatLafConfiguration;
 import net.legacylauncher.bootstrap.ui.UserInterface;
 import net.legacylauncher.bootstrap.ui.flatlaf.themedetector.ThemeDetector;
-import net.legacylauncher.bootstrap.util.U;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 
 public class FlatLaf {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlatLaf.class);
 
     public static void initialize(FlatLafConfiguration config) {
         if(config.isEnabled()) {
@@ -18,12 +20,12 @@ public class FlatLaf {
             setUIProperties(config.getUiPropertiesFiles().get(theme));
             setLaf(theme, config.getThemeFiles().get(theme));
         } else {
-            log("FlatLaf is not enabled. Skipping initialization");
+            LOGGER.info("FlatLaf is not enabled. Skipping initialization");
         }
     }
 
     private static FlatLafConfiguration.Theme detectTheme() {
-        log("Detecting system theme");
+        LOGGER.info("Detecting system theme");
         return ThemeDetector.detectTheme();
     }
 
@@ -49,7 +51,7 @@ public class FlatLaf {
                         useSystemTheme = true;
                         break;
                     default:
-                        log("unknown theme id", themeFile);
+                        LOGGER.warn("Unknown theme id: {}", themeFile);
                         laf = new FlatLightLaf();
                         break;
                 }
@@ -58,7 +60,7 @@ public class FlatLaf {
             }
         }
         if (useSystemTheme) {
-            log("System L&F is selected for theme ", theme);
+            LOGGER.info("System L&F is selected for theme {}", theme);
             if (theme == FlatLafConfiguration.Theme.DARK) {
                 UIManager.put("laf.dark", true);
             }
@@ -81,50 +83,30 @@ public class FlatLaf {
     }
 
     private static com.formdev.flatlaf.FlatLaf loadLafFromThemeFile(String themeFile) {
-        log("Loading L&F theme from", themeFile);
+        LOGGER.info("Loading L&F theme from {}", themeFile);
         try(FileInputStream in = new FileInputStream(themeFile)) {
             return IntelliJTheme.createLaf(in);
         } catch (IOException e) {
-            log("Couldn't load IntelliJ theme from file:", themeFile, e);
+            LOGGER.error("Couldn't load IntelliJ theme from file: {}", themeFile, e);
             return null;
         }
     }
 
     private static void setLaf(com.formdev.flatlaf.FlatLaf lookAndFeel) {
-        log("Setting L&F:", lookAndFeel);
+        LOGGER.info("Setting L&F: {}", lookAndFeel);
         try {
             UIManager.setLookAndFeel(lookAndFeel);
         } catch (Exception e) {
-            log("Couldn't set L&F", e);
+            LOGGER.error("Couldn't set L&F", e);
         }
-//        if (updateWindows) {
-//            updateLafInWindows();
-//        }
     }
 
     private static void setUIProperties(String uiPropertiesFile) {
         if(uiPropertiesFile == null) {
-            log("No UI properties file, skipping");
+            LOGGER.info("No UI properties file, skipping");
             return;
         }
-        log("Setting addon properties file: ", uiPropertiesFile);
+        LOGGER.info("Setting addon properties file: {}", uiPropertiesFile);
         Addon.PROPERTIES_FILE = uiPropertiesFile;
-    }
-
-//    private static void updateLafInWindows() {
-//        for (Window window : Window.getWindows()) {
-//            updateLafInWindowsRecursively(window);
-//        }
-//    }
-//
-//    private static void updateLafInWindowsRecursively(Window window) {
-//        for (Window childWindow : window.getOwnedWindows()) {
-//            updateLafInWindowsRecursively(childWindow);
-//        }
-//        SwingUtilities.updateComponentTreeUI(window);
-//    }
-
-    private static void log(Object... o) {
-        U.log("[FlatLaf]", o);
     }
 }

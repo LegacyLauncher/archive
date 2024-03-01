@@ -24,7 +24,7 @@ public final class Json {
     public static GsonBuilder build() {
         return ExposeExclusion.setup(new GsonBuilder())
                 .registerTypeAdapter(Locale.class, new LocaleDeserializer())
-                .registerTypeAdapter(Version.class, new VersionJsonizer());
+                .registerTypeAdapter(Version.class, new VersionSerializer());
     }
 
     public static JsonElement require(JsonObject o, String key) {

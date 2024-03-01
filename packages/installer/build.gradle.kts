@@ -4,22 +4,21 @@ import java.util.*
 
 plugins {
     base
+    alias(libs.plugins.download)
+    net.legacylauncher.brand
 }
 
 evaluationDependsOn(projects.launcher.identityPath.path)
 
-val shortBrand: String by rootProject.ext
-val fullBrand: String by rootProject.ext
-
 val mainIss = mapOf(
-    "name" to "Legacy Launcher $fullBrand",
+    "name" to "Legacy Launcher ${brand.displayName.get()}",
     "version" to "${projects.launcher.version}.0",
-    "id" to generateUUIDFromString(shortBrand),
-    "short_brand" to shortBrand,
+    "id" to generateUUIDFromString(brand.brand.get()),
+    "short_brand" to brand.brand.get(),
 )
 
 val prepareInstaller by tasks.registering(Sync::class) {
-    into(layout.buildDirectory.file("innosetup/$shortBrand"))
+    into(layout.buildDirectory.file("innosetup/${brand.brand.get()}"))
 
     val portable = projects.packages.portable.dependencyProject
 
@@ -83,7 +82,7 @@ val assemble: Task by tasks.getting {
 
     doLast {
         prepareInstaller.get().destinationDir.mkdirs()
-        layout.buildDirectory.dir("update/$shortBrand").get().asFile.mkdirs()
+        layout.buildDirectory.dir("update/${brand.brand.get()}").get().asFile.mkdirs()
     }
 }
 

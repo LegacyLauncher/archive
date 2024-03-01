@@ -3,6 +3,8 @@ package net.legacylauncher.bootstrap.task;
 import net.legacylauncher.bootstrap.exception.FileLockedException;
 import net.legacylauncher.bootstrap.util.Sha256Sign;
 import net.legacylauncher.bootstrap.util.U;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class DownloadTask extends Task<Void> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadTask.class);
     private final List<URL> urlList;
     private final Path file;
     private final String sha256;
@@ -43,13 +46,13 @@ public class DownloadTask extends Task<Void> {
         updateProgress(-1.);
 
         if (Files.isRegularFile(file) && sha256 != null) {
-            log("File exists, checking checksum: ", sha256);
+            LOGGER.info("File exists, checking checksum: {}", sha256);
             String hash = Sha256Sign.calc(file);
             if (sha256.equalsIgnoreCase(hash)) {
-                log("File is the same. Download skipped.");
+                LOGGER.info("File is the same. Download skipped.");
                 return null;
             } else {
-                log("File might be corrupted: ", hash);
+                LOGGER.warn("File might be corrupted: {}", hash);
             }
         }
 
@@ -58,15 +61,15 @@ public class DownloadTask extends Task<Void> {
         for (URL url : urlList) {
             try {
                 downloadUrl(url);
-            } catch (FileLockedException locked) {
-                log("File is locked:", locked);
-                throw locked;
-            } catch (IOException ioE) {
-                log("Failed to download:", url, ioE);
+            } catch (FileLockedException e) {
+                LOGGER.error("File is locked", e);
+                throw e;
+            } catch (IOException e) {
+                LOGGER.error("Failed to download: {}", url, e);
                 if (error == null) {
-                    error = ioE;
+                    error = e;
                 } else {
-                    error.addSuppressed(ioE);
+                    error.addSuppressed(e);
                 }
                 continue;
             }
@@ -80,7 +83,7 @@ public class DownloadTask extends Task<Void> {
     }
 
     protected void downloadUrl(URL url) throws IOException, TaskInterruptedException {
-        log("Downloading:", url);
+        LOGGER.info("Downloading: {}", url);
 
         URLConnection connection = url.openConnection(U.getProxy());
         double contentLength;
@@ -107,22 +110,22 @@ public class DownloadTask extends Task<Void> {
                 checkInterrupted();
             }
 
-            log("Downloaded", read, " bytes out of", connection.getContentLengthLong());
+            LOGGER.info("Downloaded {}  bytes out of {}", read, connection.getContentLengthLong());
 
             if (sha256 != null) {
-                log("Checking SHA256... Expected: ", sha256);
+                LOGGER.info("Checking SHA256... Expected: {}", sha256);
                 out.close();
 
                 String gotSha256 = Sha256Sign.calc(temp);
-                log("Got: ", gotSha256);
+                LOGGER.info("Got: {}", gotSha256);
 
                 if (!sha256.equalsIgnoreCase(gotSha256)) {
-                    log("Invalid checksum");
+                    LOGGER.error("Invalid checksum");
                     throw new IOException("invalid checksum. expected: " + sha256 + "; got: " + gotSha256);
                 }
             }
 
-            log("Downloaded successfully, copying back...");
+            LOGGER.info("Downloaded successfully, copying back...");
 
             out.close();
 
@@ -134,13 +137,13 @@ public class DownloadTask extends Task<Void> {
                     Files.copy(temp, file, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     if (copyAttemptFailures.size() == 5) {
-                        log("File is locked. Giving up trying to copy it", e);
+                        LOGGER.error("File is locked. Giving up trying to copy it", e);
                         copyAttemptFailures.forEach(e::addSuppressed);
                         throw e;
                     }
                     copyAttemptFailures.add(e);
 
-                    log("File is probably locked. Let's wait some time...", e);
+                    LOGGER.warn("File is probably locked. Let's wait some time...", e);
 
                     try {
                         Thread.sleep(FileLockedException.LOCK_COOLDOWN);

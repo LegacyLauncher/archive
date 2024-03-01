@@ -7,9 +7,10 @@ import java.security.MessageDigest
 plugins {
     java
     `jvm-test-suite`
-    id("com.github.johnrengelman.shadow")
-    id("org.openjfx.javafxplugin")
-    id("com.github.gmazzo.buildconfig")
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.javafx)
+    alias(libs.plugins.buildconfig)
+    net.legacylauncher.brand
 }
 
 val java11: SourceSet by sourceSets.creating {
@@ -29,21 +30,22 @@ val dev: SourceSet by sourceSets.creating {
 }
 
 val compileJava11Java by tasks.getting(JavaCompile::class) {
-    options.release.set(11)
+    options.release = 11
 }
 
 
 val compileTestJava by tasks.getting(JavaCompile::class) {
-    options.release.set(11)
+    options.release = 11
 }
 
 val compileDevJava by tasks.getting(JavaCompile::class) {
-    options.release.set(11)
+    options.release = 11
 }
 
 evaluationDependsOn(projects.common.identityPath.path)
 
 dependencies {
+    implementation(projects.utils)
     implementation(projects.bridge)
     implementation(projects.common)
     implementation(libs.commons.compress)
@@ -54,7 +56,6 @@ dependencies {
     implementation(libs.java.statsd.client)
     implementation(libs.jopt.simple)
     implementation(libs.oshi)
-    implementation(libs.raven)
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
 
@@ -67,7 +68,6 @@ dependencies {
     testImplementation(libs.mockito.core)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.mockito.junit.jupiter)
-    testRuntimeOnly(libs.mockito.inline)
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {
@@ -98,7 +98,8 @@ val shadowJar by tasks.getting(ShadowJar::class) {
         exclude("org.newsclub.**")
         exclude("org.slf4j.**")
     }
-    relocate("net.legacylauncher.util.windows.wmi", "shaded.net.legacylauncher.util.windows.wmi")
+    // relocate shared utils in order to *not* break Java 8 instances
+    relocate("net.legacylauncher.util.shared", "net.legacylauncher.bootstrap.util.shared")
     relocate("net.", "shaded.net.") {
         exclude("net.legacylauncher.**")
         exclude("/net/legacylauncher/**")
@@ -128,11 +129,9 @@ val shadowJar by tasks.getting(ShadowJar::class) {
 
 evaluationDependsOn(projects.launcher.identityPath.path)
 
-val runDebug by tasks.registering(JavaExec::class) {
+fun JavaExec.commonRun() {
     group = "Execution"
-    description = "Run BootstrapDebug"
     maxHeapSize = "256M"
-    mainClass.set("net.legacylauncher.bootstrap.BootstrapDebug")
 
     System.getenv("JRE_EXECUTABLE")?.let {
         executable(it)
@@ -146,27 +145,62 @@ val runDebug by tasks.registering(JavaExec::class) {
         jvmArgs("-Dsun.java2d.uiScale=$it")
     }
 
-    jvmArgs("-Dtlauncher.logFolder=${rootDir}/logs")
+
+    jvmArgs("-Dtlauncher.logFolder=${layout.buildDirectory.dir("logs").get().asFile}")
     jvmArgs("-Dtlauncher.systemCharset=${Charset.defaultCharset().name()}")
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-Dapple.awt.application.appearance=system")
     }
+}
+
+val runDebug by tasks.registering(JavaExec::class) {
+    commonRun()
+
+    description = "Run BootstrapDebug"
+    mainClass = "net.legacylauncher.bootstrap.BootstrapDebug"
+
     args("--debug")
 
-
-    val librariesDir = projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo").get()
-    val launcherJar = projects.launcher.dependencyProject.tasks.named<Jar>("jar").get()
+    val librariesDir by projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo")
+    val launcherJar by projects.launcher.dependencyProject.tasks.named<Jar>("jar")
     dependsOn(librariesDir, launcherJar)
     environment("LL_LAUNCHER_JAR", launcherJar.archiveFile.get().asFile)
     environment("LL_LIBRARIES_DIR", librariesDir.destinationDir)
 
     if (System.getenv("JRE_LEGACY") == "true") {
-        javaLauncher.set(javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(8))
-        })
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(8)
+        }
         classpath(dev.runtimeClasspath)
     } else {
         classpath(java11.runtimeClasspath, dev.runtimeClasspath)
+    }
+}
+
+val runRelease by tasks.registering(JavaExec::class) {
+    commonRun()
+
+    description = "Run Bootstrap"
+    mainClass = "net.legacylauncher.bootstrap.BootstrapStarterDebug"
+
+    val librariesDir by projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo")
+    val launcherJar by projects.launcher.dependencyProject.tasks.named<Jar>("jar")
+    dependsOn(librariesDir, launcherJar)
+
+    args(
+        "--ignoreUpdate", "--ignoreSelfUpdate",
+        "--targetJar", launcherJar.archiveFile.get().asFile,
+        "--targetLibFolder", librariesDir.destinationDir,
+        "--",
+        "--debug"
+    )
+
+    classpath(shadowJar)
+
+    if (System.getenv("JRE_LEGACY") == "true") {
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(8)
+        }
     }
 }
 
@@ -186,26 +220,22 @@ fun generateChecksum(file: File, algorithm: String = "SHA-256"): String = file.i
     digest.digest().encodeHex()
 }
 
-val shortBrand: String by rootProject.ext
-val fullBrand: String by rootProject.ext
-val productVersion: String by ext
-
 buildConfig {
     className("BuildConfig")
     packageName("net.legacylauncher.bootstrap")
 
     useJavaOutput()
 
-    buildConfigField("String", "SHORT_BRAND", "\"${shortBrand}\"")
-    buildConfigField("String", "FULL_BRAND", "\"${fullBrand}\"")
-    buildConfigField("String", "VERSION", "\"${productVersion}\"")
+    buildConfigField("String", "SHORT_BRAND", brand.brand.map { "\"$it\"" })
+    buildConfigField("String", "FULL_BRAND", brand.displayName.map { "\"$it\"" })
+    buildConfigField("String", "VERSION", brand.version.map { "\"$it\"" })
 }
 
 val processResources by tasks.getting(ProcessResources::class) {
     val meta = mapOf(
-        "version" to productVersion,
-        "shortBrand" to shortBrand,
-        "brand" to fullBrand,
+        "version" to brand.version.get(),
+        "shortBrand" to brand.brand.get(),
+        "brand" to brand.displayName.get(),
     )
 
     inputs.property("meta", meta)
@@ -225,9 +255,6 @@ val processResources by tasks.getting(ProcessResources::class) {
     }
 }
 
-val repoHosts: Collection<String> by rootProject.ext
-val repoDomains: Collection<String> by rootProject.ext
-
 object UrlComparator : Comparator<String> {
     override fun compare(o1: String, o2: String): Int = when {
         o1.startsWith("https") -> when {
@@ -242,20 +269,20 @@ object UrlComparator : Comparator<String> {
 
 val generateUpdateJson by tasks.registering {
     dependsOn(shadowJar)
-    inputs.property("productVersion", productVersion)
-    inputs.property("repoHosts", repoHosts)
-    val updateJsonFile = layout.buildDirectory.file("update/${shortBrand}/bootstrap.json")
+    inputs.property("productVersion", brand.version.get())
+    inputs.property("repoHosts", brand.repoHosts.get())
+    val updateJsonFile = layout.buildDirectory.file("update/${brand.brand.get()}/bootstrap.json")
     outputs.file(updateJsonFile)
 
     doLast {
         val jarFileChecksum = generateChecksum(shadowJar.outputs.files.singleFile)
-        val downloadPath = "repo/update/${shortBrand}/bootstrap/${jarFileChecksum}.jar"
+        val downloadPath = "repo/update/${brand.brand.get()}/bootstrap/${jarFileChecksum}.jar"
         val meta = mapOf(
-            "version" to productVersion,
+            "version" to brand.version.get(),
             "checksum" to jarFileChecksum,
-            "url" to repoDomains.map { domain ->
+            "url" to brand.repoDomains.get().map { domain ->
                 "https://$domain/$downloadPath"
-            } + repoHosts.flatMap { host ->
+            } + brand.repoHosts.get().flatMap { host ->
                 listOf("https", "http").map { scheme ->
                     "$scheme://$host/$downloadPath"
                 }
@@ -270,13 +297,13 @@ val generateUpdateJson by tasks.registering {
 
 val copyJarAndRename by tasks.registering(Copy::class) {
     from(shadowJar)
-    into(layout.buildDirectory.dir("update/$shortBrand"))
+    into(layout.buildDirectory.dir("update/${brand.brand.get()}"))
     rename { "bootstrap.jar" }
 }
 
 val generateSha256File by tasks.registering {
     dependsOn(shadowJar)
-    val file = layout.buildDirectory.file("update/${shortBrand}/bootstrap.jar.sha256")
+    val file = layout.buildDirectory.file("update/${brand.brand.get()}/bootstrap.jar.sha256")
     outputs.file(file)
     doLast {
         file.get().asFile.writeText(generateChecksum(shadowJar.outputs.files.singleFile))

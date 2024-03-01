@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.settings;
 
-import net.legacylauncher.util.JavaVersion;
+import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.JavaVersionDetector;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;

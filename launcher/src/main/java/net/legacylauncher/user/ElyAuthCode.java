@@ -2,7 +2,6 @@ package net.legacylauncher.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.git.MapTokenResolver;
@@ -128,11 +127,11 @@ public final class ElyAuthCode {
     }
 
     <T> T parse(InputStream in, Class<T> clazz) {
-        return gson.fromJson(new InputStreamReader(in, FileUtil.getCharset()), clazz);
+        return gson.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), clazz);
     }
 
     private AuthDetailedException detailed(byte[] data) {
-        return new AuthDetailedException(new String(data, FileUtil.getCharset()));
+        return new AuthDetailedException(new String(data, StandardCharsets.UTF_8));
     }
 
     HttpURLConnection setupExchangeConnection() throws IOException {
@@ -153,7 +152,7 @@ public final class ElyAuthCode {
 
         connection.setDoOutput(true);
         LOGGER.debug("Writing request...");
-        IOUtils.write(request, connection.getOutputStream(), FileUtil.getCharset());
+        IOUtils.write(request, connection.getOutputStream(), StandardCharsets.UTF_8);
         LOGGER.debug("Done, reading response");
 
         return connection;

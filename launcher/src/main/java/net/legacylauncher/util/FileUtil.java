@@ -7,7 +7,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,19 +22,9 @@ import java.util.zip.ZipInputStream;
 public class FileUtil {
     private static final Logger LOGGER = LogManager.getLogger(FileUtil.class);
 
-    public static final String DEFAULT_CHARSET = "UTF-8";
-
-    public static Charset getCharset() {
-        try {
-            return Charset.forName(DEFAULT_CHARSET);
-        } catch (Exception var1) {
-            throw new Error(DEFAULT_CHARSET + " is not supported", var1);
-        }
-    }
-
     public static void writeFile(File file, String text) throws IOException {
         createFile(file);
-        BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+        BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
         OutputStreamWriter ow = new OutputStreamWriter(os, StandardCharsets.UTF_8);
         ow.write(text);
         ow.close();
@@ -52,7 +41,7 @@ public class FileUtil {
         DigestInputStream stream = null;
 
         try {
-            stream = new DigestInputStream(new FileInputStream(file), MessageDigest.getInstance(algorithm));
+            stream = new DigestInputStream(Files.newInputStream(file.toPath()), MessageDigest.getInstance(algorithm));
             byte[] ignored = new byte[65536];
 
             int read;
@@ -99,7 +88,7 @@ public class FileUtil {
     private static byte[] createChecksum(File file, String algorithm) throws IOException {
         BufferedInputStream fis = null;
         try {
-            fis = new BufferedInputStream(new FileInputStream(file));
+            fis = new BufferedInputStream(Files.newInputStream(file.toPath()));
             byte[] e = new byte[1024];
             MessageDigest complete = MessageDigest.getInstance(algorithm);
             int numRead;
@@ -168,8 +157,8 @@ public class FileUtil {
             createFile(dest);
         }
 
-        try (BufferedInputStream is = new BufferedInputStream(new FileInputStream(source));
-             BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(dest))) {
+        try (BufferedInputStream is = new BufferedInputStream(Files.newInputStream(source.toPath()));
+             BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(dest.toPath()))) {
             byte[] buffer = new byte[1024];
 
             int length;
@@ -191,7 +180,7 @@ public class FileUtil {
             File parent = file.getParentFile();
             if (parent != null && !parent.equals(file)) {
                 File[] list = parent.listFiles();
-                if (list != null && list.length <= 0) {
+                if (list != null && list.length == 0) {
                     deleteFile(parent);
                 }
             }
@@ -237,7 +226,7 @@ public class FileUtil {
     public byte[] getFile(File archive, String requestedFile) throws IOException {
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-             ZipInputStream in = new ZipInputStream(new FileInputStream(archive))) {
+             ZipInputStream in = new ZipInputStream(Files.newInputStream(archive.toPath()))) {
 
             while (true) {
                 ZipEntry entry;

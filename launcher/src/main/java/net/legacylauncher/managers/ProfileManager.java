@@ -3,17 +3,11 @@ package net.legacylauncher.managers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.component.RefreshableComponent;
 import net.legacylauncher.minecraft.auth.AccountMigrator;
 import net.legacylauncher.minecraft.auth.AuthenticatorDatabase;
 import net.legacylauncher.minecraft.auth.LegacyAccount;
 import net.legacylauncher.minecraft.auth.UUIDTypeAdapter;
-import net.legacylauncher.pasta.Pasta;
-import net.legacylauncher.pasta.PastaFormat;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.user.McleaksUser;
 import net.legacylauncher.user.User;
@@ -114,7 +108,7 @@ public class ProfileManager extends RefreshableComponent {
         LOGGER.debug("Refreshing profiles from: {}", file);
         File oldFile = new File(file.getParentFile(), "launcher_profiles.json");
         if (!oldFile.isFile()) {
-            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(oldFile), StandardCharsets.UTF_8)) {
+            try (OutputStreamWriter writer = new OutputStreamWriter(Files.newOutputStream(oldFile.toPath()), StandardCharsets.UTF_8)) {
                 gson.toJson(new OldProfileList(), writer);
             } catch (Exception var17) {
                 LOGGER.warn("Cannot write into {}", oldFile, var17);
@@ -126,7 +120,7 @@ public class ProfileManager extends RefreshableComponent {
         File readFile = file.isFile() ? file : oldFile;
         String saveBackup = null;
 
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(readFile), StandardCharsets.UTF_8)) {
+        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(readFile.toPath()), StandardCharsets.UTF_8)) {
             object = gson.fromJson(reader, JsonObject.class);
         } catch (Exception var15) {
             LOGGER.warn("Cannot read from {}", readFile, var15);
@@ -151,12 +145,6 @@ public class ProfileManager extends RefreshableComponent {
             }
         } catch (Exception e) {
             LOGGER.error("Error parsing profile list: {}", readFile, e);
-            Sentry.capture(new EventBuilder()
-                    .withMessage("bad profile list")
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withLevel(Event.Level.ERROR)
-                    .withExtra("data", Pasta.paste(String.valueOf(object), PastaFormat.JSON))
-            );
             saveBackup = "errored";
         }
 
@@ -165,7 +153,7 @@ public class ProfileManager extends RefreshableComponent {
             try {
                 FileUtil.createFile(backupFile);
                 try (FileOutputStream backupOut = new FileOutputStream(backupFile)) {
-                    IOUtils.write(outputJson, backupOut, FileUtil.getCharset());
+                    IOUtils.write(outputJson, backupOut, StandardCharsets.UTF_8);
                 }
             } catch (Exception e) {
                 LOGGER.error("Could not save backup into {}", backupFile, e);

@@ -71,7 +71,7 @@ public class TokenReplacingReader extends Reader {
         if (tokenValue == null) {
             tokenValue = "${" + tokenNameBuffer + "}";
         }
-        if (tokenValue.length() == 0) {
+        if (tokenValue.isEmpty()) {
             return read();
         }
         return tokenValue.charAt(tokenValueIndex++);
@@ -109,10 +109,6 @@ public class TokenReplacingReader extends Reader {
 
     public boolean ready() throws IOException {
         return pushbackReader.ready();
-    }
-
-    public boolean markSupported() {
-        return false;
     }
 
     public void mark(int readAheadLimit) {

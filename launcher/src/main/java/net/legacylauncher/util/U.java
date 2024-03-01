@@ -276,7 +276,7 @@ public class U {
         if (i <= max) return 1;
         for (int x = max; x > 1; x--)
             if (i % x == 0) return x;
-        return (int) Math.ceil(i / max);
+        return (int) Math.ceil((double) i / max);
     }
 
     public static StringBuilder stackTrace(Throwable e) {
@@ -391,7 +391,7 @@ public class U {
     }
 
     public static <T> T getRandom(List<? extends T> col) {
-        if (col == null || col.size() == 0) return null;
+        if (col == null || col.isEmpty()) return null;
         return col.size() == 1 ? col.get(0) : col.get(ThreadLocalRandom.current().nextInt(col.size()));
     }
 
@@ -477,32 +477,12 @@ public class U {
         return date;
     }
 
-    public static String getNormalVersion(Version version) {
-        return String.format(java.util.Locale.ROOT,
-                "%d.%d.%d",
-                version.getMajorVersion(),
-                version.getMinorVersion(),
-                version.getPatchVersion()
-        );
-    }
-
-    public static String getFormattedVersion(Version version) {
-        StringBuilder sb = new StringBuilder(getNormalVersion(version));
-        if (!version.getPreReleaseVersion().isEmpty()) {
-            sb.append("-").append(version.getPreReleaseVersion());
-        }
-        if (!version.getBuildMetadata().isEmpty()) {
-            sb.append("+").append(version.getBuildMetadata());
-        }
-        return sb.toString();
-    }
-
     public static String getMinorVersion(Version version) {
         return String.format(java.util.Locale.ROOT,
                 "%s%d.%d",
-                version.getMajorVersion() == 1 ? "" : version.getMajorVersion() + ".",
-                version.getMinorVersion(),
-                version.getPatchVersion()
+                version.majorVersion() == 1 ? "" : version.majorVersion() + ".",
+                version.minorVersion(),
+                version.patchVersion()
         );
     }
 

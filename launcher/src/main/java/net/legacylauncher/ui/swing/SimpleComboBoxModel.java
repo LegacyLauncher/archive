@@ -71,7 +71,7 @@ public class SimpleComboBoxModel<E> extends DefaultComboBoxModel<E> {
     }
 
     public void addElements(Collection<E> list) {
-        if (list.size() != 0) {
+        if (!list.isEmpty()) {
             int size = list.size();
             int index0 = objects.size();
             int index1 = index0 + size - 1;

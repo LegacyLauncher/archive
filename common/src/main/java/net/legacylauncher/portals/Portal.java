@@ -23,12 +23,12 @@ public interface Portal extends Closeable {
     }
 
     @Override
-    default void close() throws IOException {};
+    default void close() throws IOException {
+    }
 
     enum ColorScheme {
         NO_PREFERENCE,
         PREFER_DARK,
         PREFER_LIGHT,
-        ;
     }
 }

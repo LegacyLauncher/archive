@@ -1,14 +1,11 @@
 package net.legacylauncher.downloader;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.repository.IRepo;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.ExtendedThread;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,6 +13,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.*;
 
 public class DownloaderThread extends ExtendedThread {
@@ -63,7 +61,7 @@ public class DownloaderThread extends ExtendedThread {
     private boolean isHTML(File file) {
         byte[] buffer = new byte[HTML_SIGNATURE.length];
 
-        try (InputStream is = new FileInputStream(file)) {
+        try (InputStream is = Files.newInputStream(file.toPath())) {
             int read = 0;
             while (read < HTML_SIGNATURE.length) {
                 int i = is.read(buffer, read, buffer.length - read);
@@ -154,7 +152,7 @@ public class DownloaderThread extends ExtendedThread {
 
         if (current.hasRepository()) {
             List<IRepo> list = current.getRepository().getRelevant().getList();
-            int attempt = 1, max = list.size();
+            int attempt = 1, max = 2;
 
             while (attempt <= max) {
                 for (IRepo repo : list) {
@@ -168,24 +166,21 @@ public class DownloaderThread extends ExtendedThread {
                         }
                         downloadURL(connection, timeout, skip, length);
                         return;
-                    } catch (PartialDownloadException | AbortedDownloadException e) {
+                    } catch (PartialDownloadException | GaveUpDownloadException | AbortedDownloadException e) {
                         throw e;
                     } catch (IOException e) {
                         LOGGER.debug("Failed to download: {}",
                                 connection == null ? current.getURL() : connection.getURL(), e);
-                        current.getRepository().getList().markInvalid(repo);
+                        if (!(e instanceof InvalidResponseCodeException) || !((InvalidResponseCodeException) e).isClientError()) {
+                            // only mark repo as invalid if it's server error
+                            current.getRepository().getList().markInvalid(repo);
+                        }
                         if (cause == null) {
                             cause = e;
                         } else {
                             cause.addSuppressed(e);
                         }
                     } catch (Throwable e) {
-                        Sentry.capture(new EventBuilder()
-                                .withLevel(Event.Level.ERROR)
-                                .withMessage("downloader exception: " + e)
-                                .withSentryInterface(new ExceptionInterface(e))
-                                .withExtra("current", current)
-                        );
                         LOGGER.error("Unknown error occurred while downloading {}", current.getURL(), e);
                         if (cause == null) {
                             cause = e;
@@ -202,19 +197,13 @@ public class DownloaderThread extends ExtendedThread {
                 connection = openConnection(current.getURL());
                 downloadURL(connection, timeout, skip, length);
                 return;
-            } catch (PartialDownloadException | AbortedDownloadException e) {
+            } catch (PartialDownloadException | GaveUpDownloadException | AbortedDownloadException e) {
                 throw e;
             } catch (IOException e) {
                 LOGGER.debug("Failed to download: {}",
                         connection == null ? current.getURL() : connection.getURL(), e);
                 cause = e;
             } catch (Throwable e) {
-                Sentry.capture(new EventBuilder()
-                        .withLevel(Event.Level.ERROR)
-                        .withMessage("downloader exception: " + e)
-                        .withSentryInterface(new ExceptionInterface(e))
-                        .withExtra("current", current)
-                );
                 LOGGER.error("Unknown error occurred while downloading {}", current.getURL(), e);
                 cause = e;
             }
@@ -273,41 +262,48 @@ public class DownloaderThread extends ExtendedThread {
         long downloaded_e;
         double downloadSpeed;
 
+        FileOutputStream out = null;
         try (InputStream in = connection.getInputStream()) {
             int curread = in.read(buffer);
-            try (OutputStream out = new FileOutputStream(temp, skip > 0)) {
-                while (curread > -1) {
-                    if (!launched) {
-                        out.close();
-                        throw new AbortedDownloadException();
+            try {
+                out = new FileOutputStream(temp, skip > 0);
+            } catch (IOException ioE) {
+                // fs error, should give up to prevent self-DDoS
+                throw new GaveUpDownloadException(current, ioE);
+            }
+            while (curread > -1) {
+                if (!launched) {
+                    out.close();
+                    throw new AbortedDownloadException();
+                }
+
+                totalRead += curread;
+                read += curread;
+                out.write(buffer, 0, curread);
+                curread = in.read(buffer);
+                if (curread == -1) {
+                    break;
+                }
+
+                long speed_e = System.currentTimeMillis() - speed_s;
+                if (speed_e >= 50L) {
+                    speed_s = System.currentTimeMillis();
+                    downloaded_e = speed_s - downloaded_s;
+                    downloadSpeed = length > 0L ? (double) ((float) totalRead / (float) length) : 0.0D;
+                    double copies = downloaded_e > 0L ? (double) totalRead / (double) downloaded_e : 0.0D;
+
+                    if (speed_s - timer > NOTIFY_TIMER) {
+                        timer = speed_s;
+                        LOGGER.info("Downloading {} [{}%, {} KiB/s]", connection.getURL(),
+                                String.format(Locale.ROOT, "%.0f", downloadSpeed * 100.), copies);
                     }
 
-                    totalRead += curread;
-                    read += curread;
-                    out.write(buffer, 0, curread);
-                    curread = in.read(buffer);
-                    if (curread == -1) {
-                        break;
-                    }
-
-                    long speed_e = System.currentTimeMillis() - speed_s;
-                    if (speed_e >= 50L) {
-                        speed_s = System.currentTimeMillis();
-                        downloaded_e = speed_s - downloaded_s;
-                        downloadSpeed = length > 0L ? (double) ((float) totalRead / (float) length) : 0.0D;
-                        double copies = downloaded_e > 0L ? (double) totalRead / (double) downloaded_e : 0.0D;
-
-                        if (speed_s - timer > NOTIFY_TIMER) {
-                            timer = speed_s;
-                            LOGGER.info("Downloading {} [{}%, {} KiB/s]", connection.getURL(), downloadSpeed * 100., copies);
-                        }
-
-                        onProgress(downloadSpeed, copies);
-                    }
+                    onProgress(downloadSpeed, copies);
                 }
             }
         } finally {
             connection.disconnect();
+            IOUtils.closeQuietly(out);
         }
 
         if (length > 0 && totalRead != length) {
@@ -330,7 +326,7 @@ public class DownloaderThread extends ExtendedThread {
         }
 
         List<File> copies = current.getAdditionalDestinations();
-        if (copies.size() > 0) {
+        if (!copies.isEmpty()) {
 
             for (File copy : copies) {
                 LOGGER.debug("Copying {} -> {}", file, copy);
@@ -365,7 +361,7 @@ public class DownloaderThread extends ExtendedThread {
                 connection.connect();
                 if (skip > 0) {
                     if (connection.getResponseCode() != 206) {
-                        throw new IOException("expected 206 response for partial content");
+                        throw new InvalidResponseCodeException(connection.getURL().toString(), connection.getResponseCode(), 206);
                     }
                 }
                 int responseCode = connection.getResponseCode();
@@ -381,7 +377,7 @@ public class DownloaderThread extends ExtendedThread {
                         connection = openConnection(newLocation);
                         continue;
                     } else {
-                        throw new IOException("expected 2xx response; got " + connection.getResponseCode());
+                        throw new InvalidResponseCodeException(connection.getURL().toString(), connection.getResponseCode());
                     }
                 }
                 connected = true;

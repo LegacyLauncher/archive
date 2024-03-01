@@ -145,13 +145,13 @@ public class CenterPanel extends VPanel implements Blockable {
 
     public boolean setError(String message) {
         messageLabel.setForeground(theme.getFailure());
-        messageLabel.setText(message != null && message.length() != 0 ? message : " ");
+        messageLabel.setText(message != null && !message.isEmpty() ? message : " ");
         return false;
     }
 
     protected boolean setMessage(String message, Object... vars) {
         messageLabel.setForeground(theme.getFocus());
-        messageLabel.setText(message != null && message.length() != 0 ? message : " ", vars);
+        messageLabel.setText(message != null && !message.isEmpty() ? message : " ", vars);
         return true;
     }
 

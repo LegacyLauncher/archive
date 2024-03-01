@@ -7,12 +7,14 @@ import net.legacylauncher.bootstrap.ui.message.Button;
 import net.legacylauncher.bootstrap.ui.message.MessageHost;
 import net.legacylauncher.bootstrap.ui.message.ProcessMessage;
 import net.legacylauncher.bootstrap.ui.message.SingleButtonMessage;
-import net.legacylauncher.bootstrap.util.U;
 import net.legacylauncher.bootstrap.util.stream.OutputRedirectBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ResourceBundle;
 
 class PastaAction implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PastaAction.class);
     private final ResourceBundle b = UserInterface.getResourceBundle();
 
     private final MessageHost host;
@@ -29,7 +31,7 @@ class PastaAction implements Runnable {
                     try {
                         sendPasta();
                     } catch (PastaException e) {
-                        U.log("[Pasta]", e);
+                        LOGGER.error("Pasta submission failed", e);
                         sendPastaFailed();
                     }
                 }

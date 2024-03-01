@@ -88,7 +88,7 @@ public abstract class AbstractDBusStarter extends AbstractStarter implements Clo
                     LOGGER.warn("Starter unable to complete tasks within the given period of time");
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.warn("Interrupted during dbus termination", e);
             }
         }
     }
@@ -99,13 +99,21 @@ public abstract class AbstractDBusStarter extends AbstractStarter implements Clo
     }
 
     private static BusAddress createDynamicSession(boolean listeningAddress) {
+        String busAddress;
         if (AFSocket.supports(AFSocketCapability.CAPABILITY_UNIX_DOMAIN)) {
             // let's use abstract unix socket if the host supports it
-            return BusAddress.of(createDynamicSessionAddress(listeningAddress, AFSocket.supports(AFSocketCapability.CAPABILITY_ABSTRACT_NAMESPACE)));
+            busAddress = createDynamicSessionAddress(listeningAddress, AFSocket.supports(AFSocketCapability.CAPABILITY_ABSTRACT_NAMESPACE));
         } else {
             // fallback to tcp session (i'm looking at you, windows!)
-            return BusAddress.of(TransportBuilder.createDynamicSession("TCP", listeningAddress));
+            busAddress = TransportBuilder.createDynamicSession("TCP", listeningAddress);
         }
+        if (busAddress == null || busAddress.isBlank()) {
+            throw new IllegalArgumentException("Unable to create dynamic bus address.\n" +
+                    "Unix sockets supported: " + AFSocket.supports(AFSocketCapability.CAPABILITY_UNIX_DOMAIN) + "\n" +
+                    "Unix abstract namespace supported: " + AFSocket.supports(AFSocketCapability.CAPABILITY_ABSTRACT_NAMESPACE)  + "\n" +
+                    "Registered transports: " + TransportBuilder.getRegisteredBusTypes());
+        }
+        return BusAddress.of(busAddress);
     }
 
     private static final String ALPHABET = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789";

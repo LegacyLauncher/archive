@@ -3,7 +3,6 @@ package net.legacylauncher.managers;
 import net.legacylauncher.minecraft.launcher.hooks.WindowsGpuPreferenceHook;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +30,7 @@ public class WindowsGpuManager implements GPUManager {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
     }
 
     public static Optional<GPUManager> tryToCreate() {

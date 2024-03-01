@@ -1,9 +1,5 @@
 package net.legacylauncher.user;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import net.legacylauncher.user.minecraft.strategy.gos.GameOwnershipValidationException;
@@ -42,9 +38,6 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
             profile = requester.requestProfile(user.getMinecraftToken());
         } catch (MinecraftProfileRequestException e) {
             throw wrap(e);
-        } catch (IOException ioE) {
-            captureIOException("requesting profile", ioE);
-            throw ioE;
         }
         LOGGER.info("Profile validated: {}", profile);
         user.setProfile(profile);
@@ -61,18 +54,12 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
             mcsToken = mcsAuthenticator.minecraftServicesAuthenticate(xstsToken);
         } catch (MinecraftServicesAuthenticationException e) {
             throw wrap(e);
-        } catch (IOException ioE) {
-            captureIOException("mcs auth", ioE);
-            throw ioE;
         }
         GameOwnershipValidator ownershipValidator = new GameOwnershipValidator();
         try {
             ownershipValidator.checkGameOwnership(mcsToken);
         } catch (GameOwnershipValidationException e) {
             throw wrap(e);
-        } catch (IOException ioE) {
-            captureIOException("checking ownership", ioE);
-            throw ioE;
         }
         user.setMinecraftToken(mcsToken);
     }
@@ -85,9 +72,6 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
             xboxLiveToken = xboxLiveAuthenticator.xboxLiveAuthenticate(user.getMicrosoftToken());
         } catch (XboxLiveAuthenticationException e) {
             throw wrap(e);
-        } catch (IOException ioE) {
-            captureIOException("xbox live auth", ioE);
-            throw ioE;
         }
         XSTSAuthenticator xstsAuthenticator = new XSTSAuthenticator();
         XboxServiceAuthenticationResponse xstsToken;
@@ -95,9 +79,6 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
             xstsToken = xstsAuthenticator.xstsAuthenticate(xboxLiveToken.getToken());
         } catch (XSTSAuthenticationException e) {
             throw wrap(e);
-        } catch (IOException ioE) {
-            captureIOException("xsts auth", ioE);
-            throw ioE;
         }
         return xstsToken;
     }
@@ -109,28 +90,13 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
             token = refresher.refreshToken(user.getMicrosoftToken());
         } catch (MicrosoftOAuthTokenRefreshException e) {
             throw wrap(e);
-        } catch (IOException ioE) {
-            captureIOException("refreshing msft", ioE);
-            throw ioE;
         }
         user.setMicrosoftToken(token);
     }
 
     private static AuthException wrap(MinecraftAuthenticationException e) {
         LOGGER.error("Couldn't validate the user", e);
-        Sentry.capture(new EventBuilder()
-                .withLevel(Event.Level.ERROR)
-                .withSentryInterface(new ExceptionInterface(e))
-                .withMessage("couldn't validate Microsoft user")
-        );
         return new AuthException(e.toString(), e.getShortKey());
     }
 
-    private static void captureIOException(String phase, IOException e) {
-        Sentry.capture(new EventBuilder()
-                .withLevel(Event.Level.ERROR)
-                .withSentryInterface(new ExceptionInterface(e))
-                .withMessage("i/o validating Microsoft user while " + phase)
-        );
-    }
 }

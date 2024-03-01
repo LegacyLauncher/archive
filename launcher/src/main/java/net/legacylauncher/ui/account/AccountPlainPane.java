@@ -4,24 +4,23 @@ import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.managers.AccountManager;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.ui.alert.Alert;
-import net.legacylauncher.ui.background.fx.FxAudioPlayer;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.loc.LocalizableButton;
+import net.legacylauncher.ui.loc.LocalizableHTMLLabel;
 import net.legacylauncher.ui.loc.LocalizableLabel;
 import net.legacylauncher.ui.loc.LocalizableTextField;
 import net.legacylauncher.ui.scenes.AccountManagerScene;
 import net.legacylauncher.ui.swing.DocumentChangeListener;
+import net.legacylauncher.ui.swing.extended.ExtendedCheckbox;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
-import net.legacylauncher.ui.theme.Theme;
 import net.legacylauncher.user.User;
-import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.SwingUtil;
-import net.legacylauncher.util.async.AsyncThread;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneCompCloseable {
     private static final String[] DISALLOWED = {"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay", "ErickSkrauch"};
@@ -29,6 +28,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
 
     private final AccountManagerScene scene;
     private final LocalizableTextField field;
+    private final ExtendedCheckbox invalidNameAwareCheckbox;
 
     private final PaneMode mode;
 
@@ -53,25 +53,36 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         c.gridy++;
         add(label, c);
 
+        ExtendedPanel invalidNameAwarePane = new ExtendedPanel();
+        GridBagConstraints ac = new GridBagConstraints();
+        ac.gridy = 0;
+        ac.gridx = 0;
+        ac.anchor = GridBagConstraints.WEST;
+        invalidNameAwareCheckbox = new ExtendedCheckbox();
+        invalidNameAwarePane.add(invalidNameAwareCheckbox, ac);
+        ac.gridx++;
+        LocalizableHTMLLabel invalidNameAwareLabel = new LocalizableHTMLLabel(LOC_PREFIX + "invalid-name-aware-checkbox");
+        invalidNameAwareLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                invalidNameAwareCheckbox.doClick();
+            }
+        });
+        invalidNameAwareLabel.setLabelWidth(SwingUtil.magnify(260));
+        invalidNameAwarePane.add(invalidNameAwareLabel, ac);
+
         field = new LocalizableTextField();
         field.getDocument().addDocumentListener(new DocumentChangeListener() {
-            private boolean wasValid = true;
             @Override
             public void documentChanged(DocumentEvent e) {
-                String v = field.getValue();
-                setValid(StringUtils.isEmpty(v) || isNameValid(v));
-            }
-
-            private void setValid(boolean valid) {
-                if (wasValid == valid) {
-                    return;
-                }
-                if (valid) {
-                    field.setBackground(UIManager.getColor("TextField.background"));
+                String value = field.getValue();
+                boolean invalid;
+                if (value == null) {
+                    invalid = false;
                 } else {
-                    field.setBackground(Theme.getTheme().getFailure());
+                    invalid = isNameInvalid(value);
                 }
-                this.wasValid = valid;
+                invalidNameAwarePane.setVisible(invalid);
             }
         });
         field.setFont(field.getFont().deriveFont(field.getFont().getSize2D() + 4.f));
@@ -79,6 +90,9 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         c.insets = new Insets(SwingUtil.magnify(5), 0, 0, 0);
         c.gridy++;
         add(field, c);
+
+        c.gridy++;
+        add(invalidNameAwarePane, c);
 
         final LocalizableButton button = new LocalizableButton(LOC_PREFIX + (mode == PaneMode.EDIT ? "edit" : "save"));
         button.addActionListener(e -> {
@@ -90,13 +104,13 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                 return;
             }
 
-            if (StringUtils.isBlank(username)) {
-                Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
+            if (isNameInvalid(username) && !invalidNameAwareCheckbox.getState()) {
+                Alert.showLocError("account.manager.multipane.account-plain.invalid");
                 return;
             }
 
-            if (!isNameValid(username)) {
-                Alert.showLocError("account.manager.multipane.account-plain.invalid");
+            if (StringUtils.isBlank(username)) {
+                Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
                 return;
             }
 
@@ -192,12 +206,13 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
             Account<? extends User> selected = scene.list.getSelected();
             if (selected != null && selected.getType() == Account.AccountType.PLAIN) {
                 field.setValue(selected.getUsername());
+                invalidNameAwareCheckbox.setSelected(isNameInvalid(field.getValue()));
             }
         }
     }
 
-    private static boolean isNameValid(String name) {
-        return name != null && name.length() <= 16 && name.chars().noneMatch(ch -> ch <= 32 || ch >= 127);
+    private static boolean isNameInvalid(String name) {
+        return name == null || name.length() > 16 || name.chars().anyMatch(ch -> ch <= 32 || ch >= 127);
     }
 
     private void updateNostalgicBackground(String username, boolean newState) {

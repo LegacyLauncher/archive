@@ -31,7 +31,7 @@ public class ForkStarter extends AbstractDBusStarter {
         List<Path> classpath = buildClassPath(launcher);
 
         for (Path path : classpath) {
-            log("Classpath entry:", path);
+            LOGGER.info("Classpath entry: {}", path);
         }
 
         ProcessBuilder builder = new ProcessBuilder();
@@ -45,9 +45,7 @@ public class ForkStarter extends AbstractDBusStarter {
         dbusServerReady.get();
         process = builder.start();
 
-        process.onExit().thenAccept((result) -> {
-            LOGGER.debug("Child process closed with exit code {}", result.exitValue());
-        });
+        process.onExit().thenAccept((result) -> LOGGER.debug("Child process closed with exit code {}", result.exitValue()));
 
         return null;
     }

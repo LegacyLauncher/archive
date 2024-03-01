@@ -84,7 +84,7 @@ class NanoHttpdAdapter extends NanoHTTPD {
     private Response ok() {
         boolean redirect = successRedirectUrl != null;
         Response response = newResponse(
-                redirect ? Response.Status.FOUND : Response.Status.OK,
+                redirect ? Response.Status.TEMPORARY_REDIRECT : Response.Status.OK,
                 "Success"
         );
         if (redirect) {

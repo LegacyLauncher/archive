@@ -1,6 +1,7 @@
 package net.minecraft.common;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -69,7 +70,7 @@ public class CompressedStreamTools {
 
     private static void write(NBTTagCompound par0NBTTagCompound, File par1File) throws IOException {
 
-        try (DataOutputStream var2 = new DataOutputStream(new FileOutputStream(par1File))) {
+        try (DataOutputStream var2 = new DataOutputStream(Files.newOutputStream(par1File.toPath()))) {
             write(par0NBTTagCompound, var2);
         }
 
@@ -79,7 +80,7 @@ public class CompressedStreamTools {
         if (!par0File.exists()) {
             return null;
         } else {
-            DataInputStream var1 = new DataInputStream(new FileInputStream(par0File));
+            DataInputStream var1 = new DataInputStream(Files.newInputStream(par0File.toPath()));
 
             NBTTagCompound var2;
             try {

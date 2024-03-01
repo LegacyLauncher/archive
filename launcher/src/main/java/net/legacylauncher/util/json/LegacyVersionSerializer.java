@@ -31,7 +31,7 @@ public class LegacyVersionSerializer extends VersionSerializer {
 
         Matcher matcher;
         if (val > 0.0 && (matcher = legacyVersionPattern.matcher(str)).matches()) {
-            return Version.forIntegers(
+            return Version.of(
                     pi(matcher.group(1)),
                     pi(matcher.group(2) + (ne(matcher.group(3)) ? matcher.group(3) : "0")),
                     ne(matcher.group(4)) ? pi(matcher.group(4)) : 0

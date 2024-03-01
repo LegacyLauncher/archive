@@ -5,6 +5,7 @@ import joptsimple.OptionSet;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.FlatLaf;
 import net.legacylauncher.util.*;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
 import org.apache.logging.log4j.LogManager;
@@ -317,11 +318,11 @@ public class Configuration extends SimpleConfiguration {
         return newId;
     }
 
-    private final Version zeroVersion = Version.forIntegers(0, 0, 0);
+    private final Version zeroVersion = Version.of(0, 0, 0);
 
     public Version getVersion(String path) {
         try {
-            return Version.valueOf(get(path));
+            return Version.parse(get(path));
         } catch (RuntimeException rE) {
             return zeroVersion;
         }

@@ -2,10 +2,6 @@ package net.legacylauncher.minecraft.crash;
 
 import com.google.gson.*;
 import com.moandjiezana.toml.Toml;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.legacylauncher.LegacyLauncher;
@@ -36,6 +32,7 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
@@ -142,11 +139,6 @@ public final class CrashManager {
             external = loadEntries(Compressor.uncompressMarked(Repository.EXTRA_VERSION_REPO.get("libraries/signature.json")), "external");
         } catch (Exception e) {
             LOGGER.warn("Could not load external entries", e);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.WARNING)
-                    .withMessage("cannot load external crash entries")
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
             return null;
         }
 
@@ -242,7 +234,7 @@ public final class CrashManager {
     private CrashEntryList loadEntries(InputStream input, String type) throws Exception {
         LOGGER.trace("Loading {} entries...", type);
 
-        try (Reader reader = new InputStreamReader(input, FileUtil.DEFAULT_CHARSET)) {
+        try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, CrashEntryList.class);
         }
     }
@@ -317,7 +309,7 @@ public final class CrashManager {
             return PatternEntry.getScanner(getProcessLogger());
         } else {
             LOGGER.info("Crash report file exist. We'll scan it.");
-            return new Scanner(new InputStreamReader(new FileInputStream(crashFile), FileUtil.getCharset()));
+            return new Scanner(new InputStreamReader(Files.newInputStream(crashFile.toPath()), StandardCharsets.UTF_8));
         }
     }
 
@@ -349,11 +341,6 @@ public final class CrashManager {
                 }
                 return;
             } catch (Exception e) {
-                Sentry.capture(new EventBuilder()
-                        .withMessage("crash manager crashed")
-                        .withSentryInterface(new ExceptionInterface(e))
-                        .withExtra("crash", crash)
-                );
                 for (CrashManagerListener listener : listeners) {
                     listener.onCrashManagerFailed(CrashManager.this, e);
                 }
@@ -749,7 +736,7 @@ public final class CrashManager {
                 LOGGER.info("Reading file: {}", file);
 
                 try (Scanner scanner = new Scanner(
-                        new InputStreamReader(new FileInputStream(file), charset)
+                        new InputStreamReader(Files.newInputStream(file.toPath()), charset)
                 )) {
                     while (scanner.hasNextLine()) {
                         LOGGER.info(LOG_FLUSHER, scanner.nextLine());

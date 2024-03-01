@@ -2,10 +2,6 @@ package net.legacylauncher.jre;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
@@ -44,11 +40,6 @@ public class JavaRuntimeRemoteListFetcher {
             return Objects.requireNonNull(remoteList, "remoteList");
         } catch (Exception e) {
             LOGGER.warn("Failed", e);
-            Sentry.capture(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't fetch remote runtime list")
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
             throw e;
         }
     }

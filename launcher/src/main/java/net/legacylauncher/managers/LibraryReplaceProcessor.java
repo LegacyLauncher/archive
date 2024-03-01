@@ -36,7 +36,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
     private boolean refreshed, allowElyEverywhere;
 
-    public LibraryReplaceProcessor(ComponentManager manager) throws Exception {
+    public LibraryReplaceProcessor(ComponentManager manager) {
         super(manager);
     }
 

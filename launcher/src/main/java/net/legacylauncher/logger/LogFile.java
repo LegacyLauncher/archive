@@ -40,7 +40,7 @@ public class LogFile implements CharsetData {
     @Override
     public InputStream stream() throws IOException {
         createIfNotExist();
-        return new BufferedInputStream(new FileInputStream(file));
+        return new BufferedInputStream(Files.newInputStream(file.toPath()));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class LogFile implements CharsetData {
 
     public OutputStreamWriter write() throws IOException {
         createIfNotExist();
-        return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
+        return new OutputStreamWriter(new BufferedOutputStream(Files.newOutputStream(file.toPath())), charset);
     }
 
     private void createIfNotExist() throws IOException {

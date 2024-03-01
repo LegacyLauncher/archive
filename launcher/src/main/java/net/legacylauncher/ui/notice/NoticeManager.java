@@ -163,11 +163,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     private NoticeTextSize getTextSize(Notice notice) {
         Objects.requireNonNull(notice, "notice");
-        NoticeTextSize cachedSize = cachedSizeMap.get(notice);
-        if (cachedSize == null) {
-            cachedSizeMap.put(notice, cachedSize = new NoticeTextSize(notice));
-        }
-        return cachedSize;
+        return cachedSizeMap.computeIfAbsent(notice, NoticeTextSize::new);
     }
 
     Dimension getTextSize(Notice notice, ParamPair param) {

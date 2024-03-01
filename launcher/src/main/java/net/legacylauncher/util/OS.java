@@ -5,6 +5,7 @@ import net.legacylauncher.jna.JNA;
 import net.legacylauncher.jna.JNAMacOs;
 import net.legacylauncher.portals.Portals;
 import net.legacylauncher.ui.alert.Alert;
+import net.legacylauncher.util.shared.JavaVersion;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,9 +66,6 @@ public enum OS {
     public static boolean is(OS... any) {
         if (any == null) {
             throw new NullPointerException();
-        }
-        if (any.length == 0) {
-            return false;
         }
         for (OS compare : any) {
             if (CURRENT == compare) {

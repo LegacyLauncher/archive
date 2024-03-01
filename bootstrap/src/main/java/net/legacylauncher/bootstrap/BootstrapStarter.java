@@ -1,10 +1,10 @@
 package net.legacylauncher.bootstrap;
 
-import net.legacylauncher.util.JavaVersion;
-import org.apache.commons.lang3.StringUtils;
-import net.legacylauncher.bootstrap.launcher.ProcessStarter;
 import net.legacylauncher.bootstrap.util.OS;
-import net.legacylauncher.bootstrap.util.U;
+import net.legacylauncher.util.shared.JavaVersion;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -15,14 +15,13 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public final class BootstrapStarter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BootstrapStarter.class);
+
     public static void main(String[] args) throws Exception {
-        int exitCode = start(args, false);
-        if (exitCode != 0) {
-            System.exit(exitCode);
-        }
+        start(args, false);
     }
 
-    static int start(String[] args, boolean waitForClose) throws Exception {
+    static void start(String[] args, boolean debug) throws Exception {
         Path currentDir = Paths.get(System.getProperty("tlauncher.bootstrap.dir", "."));
 
         List<String> jvmArgs = new ArrayList<>();
@@ -30,24 +29,16 @@ public final class BootstrapStarter {
         jvmArgs.addAll(loadExternalArgs(currentDir, "bootargs"));
 
         List<String> appArgs = new ArrayList<>();
+        appArgs.add(Bootstrap.class.getName());
         Collections.addAll(appArgs, args);
         appArgs.addAll(loadExternalArgs(currentDir, "args"));
 
-        Set<Path> classPath = new LinkedHashSet<>(ProcessStarter.getDefinedClasspath());
+        Set<Path> classPath = new LinkedHashSet<>(BoostrapRestarter.getDefinedClasspath());
         classPath.add(getCurrentJar());
 
-        Process process = ProcessStarter
-                .startJarProcess(currentDir, classPath, Bootstrap.class.getName(), jvmArgs, appArgs)
-                .inheritIO()
-                .start();
-
-        log("Inherit process started");
-
-        if (!waitForClose) {
-            return 0;
-        }
-
-        return process.waitFor();
+        BoostrapRestarter starter = BoostrapRestarter.create();
+        int exitCode = starter.start(currentDir, jvmArgs, classPath, appArgs, debug);
+        System.exit(exitCode);
     }
 
     private static List<String> loadJvmArgs() {
@@ -71,7 +62,7 @@ public final class BootstrapStarter {
                 String arg = "-D" + propKey + "=" + value;
                 jvmArgs.add(arg);
 
-                log("Transferring property: ", arg);
+                LOGGER.info("Transferring property: {}", arg);
             }
         }
         return jvmArgs;
@@ -102,11 +93,11 @@ public final class BootstrapStarter {
         }
 
         if (externalArgsFile != null) {
-            log("Loading arguments from file:", externalArgsFile);
+            LOGGER.info("Loading arguments from file: {}", externalArgsFile);
             try {
                 return loadArgsFromFile(externalArgsFile);
-            } catch (IOException ioE) {
-                log("Cannot load arguments from file:", externalArgsFile, ioE);
+            } catch (IOException e) {
+                LOGGER.error("Cannot load arguments from file: {}", externalArgsFile, e);
             }
         }
         return Collections.emptyList();
@@ -135,9 +126,5 @@ public final class BootstrapStarter {
 
     private static Path getCurrentJar() throws URISyntaxException {
         return Paths.get(BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-    }
-
-    private static void log(Object... o) {
-        U.log("[BootstrapStarter]", o);
     }
 }

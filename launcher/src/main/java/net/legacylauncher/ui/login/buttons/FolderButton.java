@@ -21,12 +21,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 public class FolderButton extends LocalizableButton implements Unblockable {
     private final LoginForm lf;
 
     final JPopupMenu menu = new JPopupMenu();
-    final LocalizableMenuItem openFamily, openRoot;
+    final LocalizableMenuItem openFamily, openRoot, openMods;
 
     {
         menu.add(openFamily = LocalizableMenuItem.newItem("loginform.button.folder.family", e -> {
@@ -37,6 +38,8 @@ public class FolderButton extends LocalizableButton implements Unblockable {
         }));
 
         menu.add(openRoot = LocalizableMenuItem.newItem("loginform.button.folder.root", e -> openDefFolder()));
+
+        menu.add(openMods = LocalizableMenuItem.newItem("loginform.button.folder.mods", e -> openModsFolder()));
     }
 
     FolderButton(LoginForm loginform) {
@@ -47,20 +50,23 @@ public class FolderButton extends LocalizableButton implements Unblockable {
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (getFamilyFolder() == null) {
+                menu.removeAll();
+
+                CompleteVersion complete = getSelectedVersion();
+                if (complete == null) {
                     openDefFolder();
-                } else {
-                    menu.removeAll();
-
-                    CompleteVersion complete = getSelectedVersion();
-                    if (complete != null) {
-                        menu.add(openFamily);
-                        openFamily.setVariables(complete.getFamily());
-                    }
-
-                    menu.add(openRoot);
-                    menu.show(FolderButton.this, 0, getHeight());
+                    return;
                 }
+                if (getFamilyFolder() != null) {
+                    menu.add(openFamily);
+                    openFamily.setVariables(complete.getFamily());
+                }
+                String id = complete.getID().toLowerCase(Locale.ROOT);
+                if (id.contains("forge") || id.contains("fabric")) {
+                    menu.add(openMods);
+                }
+                menu.add(openRoot);
+                menu.show(FolderButton.this, 0, getHeight());
             }
         });
     }
@@ -115,5 +121,17 @@ public class FolderButton extends LocalizableButton implements Unblockable {
 
     private void openDefFolder() {
         openFolder(MinecraftUtil.getWorkingDirectory(false));
+    }
+
+    private void openModsFolder() {
+        CompleteVersion v = getSelectedVersion();
+        if (v == null) {
+            return;
+        }
+        File rootFolder = getFamilyFolder();
+        if (rootFolder == null) {
+            rootFolder = MinecraftUtil.getWorkingDirectory(false);
+        }
+        openFolder(new File(rootFolder, "mods"));
     }
 }

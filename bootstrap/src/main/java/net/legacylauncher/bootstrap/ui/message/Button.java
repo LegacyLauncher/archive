@@ -44,22 +44,4 @@ public class Button {
             }
         });
     }
-
-    public static Button openLink(String text, final String link) {
-        return new Button(text, () -> {
-            URL url;
-            try {
-                url = new URL(link);
-                if (!OS.openUrl(url)) {
-                    throw new RuntimeException();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                UserInterface.showError(UserInterface.getLString(
-                        "button.url.fail",
-                        "Couldn't open the link. Please copy & paste it youself."
-                ), link);
-            }
-        });
-    }
 }

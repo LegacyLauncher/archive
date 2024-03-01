@@ -12,7 +12,7 @@ import net.legacylauncher.ui.swing.extended.BorderPanel;
 import net.legacylauncher.ui.swing.extended.ExtendedFrame;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.ui.theme.Theme;
-import net.legacylauncher.util.JavaVersion;
+import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
@@ -54,6 +54,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     private final LocalizableTextField mcArgsField;
     private final LocalizableCheckbox useOptimizedArgsCheckbox;
     private final LocalizableLabel settingsSavedLabel;
+    private final LocalizableTextField wrapperCommandField;
 
     private boolean saveValues;
 
@@ -121,6 +122,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
 
         initJvmArgs(cfgs, c);
         mcArgsField = addConfig(cfgs, c, "mc-args");
+        wrapperCommandField = addConfig(cfgs, c, "wrapper-command");
 
         add(cfgs);
 
@@ -198,6 +200,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         useOptimizedArgsCheckbox.setSelected(javaManagerConfig.useOptimizedArguments());
         jvmArgsField.setValue(javaManagerConfig.getArgs().orElse(null));
         mcArgsField.setValue(javaManagerConfig.getMinecraftArgs().orElse(null));
+        wrapperCommandField.setValue(javaManagerConfig.getWrapperCommand().orElse(null));
 
         saveValues = true;
     }
@@ -210,6 +213,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         JavaManagerConfig javaManagerConfig = comboBox.sp.global.get(JavaManagerConfig.class);
         javaManagerConfig.setArgs(jvmArgsField.getValue());
         javaManagerConfig.setMcArgs(mcArgsField.getValue());
+        javaManagerConfig.setWrapperCommand(wrapperCommandField.getValue());
         javaManagerConfig.setUseOptimizedArguments(useOptimizedArgsCheckbox.isSelected());
         if (!javaManagerConfigOld.equals(javaManagerConfig)) {
             comboBox.sp.global.set(javaManagerConfig);

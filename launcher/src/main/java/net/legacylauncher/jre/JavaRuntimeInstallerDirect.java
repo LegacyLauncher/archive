@@ -14,6 +14,7 @@ import org.tukaani.xz.LZMAInputStream;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -174,9 +175,9 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
             downloadAndCheck(runtimeFile.getLzmaDownload(), lzmaFile);
             LOGGER.debug("Decompressing: {}", lzmaFile.getAbsolutePath());
             try (LZMAInputStream input =
-                         new LZMAInputStream(new BufferedInputStream(new FileInputStream(lzmaFile)));
+                         new LZMAInputStream(new BufferedInputStream(Files.newInputStream(lzmaFile.toPath())));
                  OutputStream output =
-                         new BufferedOutputStream(new FileOutputStream(realFile))
+                         new BufferedOutputStream(Files.newOutputStream(realFile.toPath()))
             ) {
                 IOUtils.copy(input, output);
             } catch (IOException e) {
@@ -198,7 +199,7 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
             HttpGet get = new HttpGet(downloadInfo.getUrl());
             try (
                     InputStream in = client.execute(get).getEntity().getContent();
-                    OutputStream out = new BufferedOutputStream(new FileOutputStream(file))
+                    OutputStream out = new BufferedOutputStream(Files.newOutputStream(file.toPath()))
             ) {
                 IOUtils.copy(in, out);
             } catch (InterruptedIOException interrupted) {

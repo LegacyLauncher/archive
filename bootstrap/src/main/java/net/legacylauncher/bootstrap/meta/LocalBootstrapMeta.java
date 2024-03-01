@@ -6,7 +6,7 @@ import net.legacylauncher.bootstrap.json.ToStringBuildable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class LocalBootstrapMeta extends ToStringBuildable implements BootstrapMeta {
-    private static final Version VERSION = Version.valueOf(BuildConfig.VERSION);
+    private static final Version VERSION = Version.parse(BuildConfig.VERSION);
     private static final LocalBootstrapMeta INSTANCE = new LocalBootstrapMeta();
 
     public static LocalBootstrapMeta getInstance() {

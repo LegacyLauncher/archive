@@ -5,60 +5,16 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.3")
-        classpath("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3")
+        classpath(libs.jackson.module.kotlin)
+        classpath(libs.jackson.dataformat.yaml)
     }
 }
 
 plugins {
-    id("org.openjfx.javafxplugin") version "0.1.0" apply false
-    id("com.github.johnrengelman.shadow") version "8.1.1" apply false
-    id("com.github.gmazzo.buildconfig") version "4.1.2" apply false
-    id("de.undercouch.download") version "5.5.0" apply false
-}
-
-val shortBrand: String by ext.invoke { System.getenv("SHORT_BRAND") ?: "develop" }
-val fullBrand: String by ext.invoke {
-    when (shortBrand) {
-        "develop" -> "Dev"
-        "legacy" -> "Stable"
-        "legacy_beta" -> "Beta"
-        "mcl" -> "for Mc-launcher.com"
-        "aur" -> "AUR"
-        "appt" -> "для AppStorrent"
-        else -> shortBrand
-    }
-}
-val repoDomains: Collection<String> by ext.invoke {
-    listOf("llaun.ch", "lln4.ru")
-}
-val repoDomainsZonesEu: Collection<String> by ext.invoke {
-    listOf("eu1", "eu2", "eu3")
-}
-val repoDomainsZonesRu: Collection<String> by ext.invoke {
-    listOf("ru1", "ru2", "ru3")
-}
-val repoHosts: Collection<String> by ext.invoke {
-    repoDomains.flatMap { domain ->
-        (repoDomainsZonesEu + repoDomainsZonesRu).map { zone ->
-            "$zone.$domain"
-        }
-    }
-}
-val repoCdnPathPrefixes: Collection<String> by ext.invoke {
-    listOf("https://cdn.turikhay.ru/lln4")
+    alias(libs.plugins.javafx) apply false
 }
 
 subprojects {
-    val productVersion: String by ext.invoke {
-        "${project.version}+${
-            shortBrand.replace(
-                Regex("[^\\dA-Za-z\\-]"),
-                "-"
-            )
-        }${System.getenv("VERSION_SUFFIX") ?: ""}"
-    }
-
     plugins.withId("java-base") {
         repositories {
             mavenCentral()
@@ -96,13 +52,13 @@ subprojects {
             targetCompatibility = JavaVersion.toVersion(targetJavaCompatibility.toInt())
             toolchain {
                 val buildUsingJava: String by ext
-                languageVersion.set(JavaLanguageVersion.of(buildUsingJava))
+                languageVersion = JavaLanguageVersion.of(buildUsingJava)
             }
         }
 
         tasks.withType<JavaCompile>().configureEach {
             options.encoding = "UTF-8"
-            options.release.set(targetJavaCompatibility.toInt())
+            options.release = targetJavaCompatibility.toInt()
         }
     }
 
@@ -114,7 +70,7 @@ subprojects {
 
     plugins.withId("org.openjfx.javafxplugin") {
         extensions.configure<JavaFXOptions>("javafx") {
-            version = "11.0.2"
+            version = "17.0.9"
             configuration = when (project.name) {
                 "launcher" -> "implementation"
                 else -> "runtimeOnly"

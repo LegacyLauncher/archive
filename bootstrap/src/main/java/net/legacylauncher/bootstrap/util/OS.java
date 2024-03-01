@@ -2,6 +2,8 @@ package net.legacylauncher.bootstrap.util;
 
 import com.sun.jna.Platform;
 import net.legacylauncher.portals.Portals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URI;
@@ -16,6 +18,7 @@ public enum OS {
     OSX,
     UNKNOWN;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OS.class);
     public static final OS CURRENT;
     static {
         OS current = UNKNOWN;
@@ -66,11 +69,11 @@ public enum OS {
     }
 
     public static boolean openUri(URI uri) {
-        log("Opening URL: " + uri.toASCIIString());
+        LOGGER.info("Opening URL: {}", uri.toASCIIString());
         try {
             return Portals.getPortal().openURI(uri);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to open URL {}", uri, e);
             return false;
         }
     }
@@ -81,7 +84,7 @@ public enum OS {
         try {
             uri = url.toURI();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to open URL {}", url, e);
             return false;
         }
 
@@ -92,7 +95,7 @@ public enum OS {
         try {
             return Portals.getPortal().openFile(path.toPath());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to open file {}", path, e);
             return false;
         }
     }
@@ -103,10 +106,6 @@ public enum OS {
 
     public String nameLowerCase() {
         return name().toLowerCase(Locale.ROOT);
-    }
-
-    private static void log(Object... o) {
-        U.log("[OS]", o);
     }
 
     public enum Arch {

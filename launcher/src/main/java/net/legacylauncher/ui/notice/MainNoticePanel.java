@@ -85,11 +85,7 @@ public class MainNoticePanel extends NoticePanel implements ResizeableComponent 
         noticeSeen();
 
         List<Notice> l = manager.getForCurrentLocale();
-        if (l == null || l.size() <= 3) {
-            openNoticeScene.setEnabled(false);
-        } else {
-            openNoticeScene.setEnabled(true);
-        }
+        openNoticeScene.setEnabled(l != null && l.size() > 3);
     }
 
     @Override

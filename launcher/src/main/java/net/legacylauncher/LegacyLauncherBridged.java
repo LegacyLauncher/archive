@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public class LegacyLauncherBridged {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyLauncher.class);
 
-    public static void launch(BootBridge bridge) throws InterruptedException {
+    public static void launch(BootBridge bridge) {
         LegacyLauncher.launch(new Shim(bridge), SystemDefaultResolverIPC.INSTANCE);
     }
 

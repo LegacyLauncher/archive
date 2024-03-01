@@ -3,10 +3,10 @@ package net.legacylauncher.ui.progress;
 import net.legacylauncher.minecraft.crash.CrashManager;
 import net.legacylauncher.minecraft.launcher.MinecraftException;
 import net.legacylauncher.minecraft.launcher.MinecraftExtendedListener;
-
-import java.awt.*;
 import net.legacylauncher.ui.login.LoginException;
 import net.legacylauncher.ui.login.LoginForm;
+
+import java.awt.*;
 
 public class LaunchProgress extends DownloaderProgress implements MinecraftExtendedListener, LoginForm.LoginProcessListener {
     private static final long serialVersionUID = -1003141285749311799L;
@@ -84,11 +84,11 @@ public class LaunchProgress extends DownloaderProgress implements MinecraftExten
     public void onMinecraftClose() {
     }
 
-    public void onMinecraftError(Throwable e) {
+    public void onMinecraftError(Throwable throwable) {
         stopProgress();
     }
 
-    public void onMinecraftKnownError(MinecraftException e) {
+    public void onMinecraftKnownError(MinecraftException exception) {
         stopProgress();
     }
 

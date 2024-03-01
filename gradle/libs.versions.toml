@@ -1,33 +1,35 @@
 [versions]
 authlib = "1.5.24"
-commons-compress = "1.21"
-commons-io = "2.11.0"
-commons-lang3 = "3.12.0"
-dbus = "4.3.1"
-flatlaf = "2.2"
+buildconfig-plugin = "5.3.5"
+commons-compress = "1.26.0"
+commons-io = "2.15.1"
+commons-lang3 = "3.14.0"
+dbus = "4.3.2"
+download-plugin = "5.6.0"
+flatlaf = "3.4"
 gson = "2.8.9"
-guava = "31.0.1-jre"
+guava = "33.0.0-jre"
 httpcomponents = "4.5.14"
-jackson = "2.13.0"
+jackson = "2.16.1"
 jarscanner = "1.1"
-java-semver = "0.9.0"
+java-semver = "0.10.2"
 java-statsd-client = "3.1.0"
+javafx-plugin = "0.1.0"
 jdom = "2.0.2"
-jna = "5.13.0"
+jna = "5.14.0"
 jopt-simple = "5.0.4" # Locked, see 92d9c564
-junit5 = "5.8.2"
-junixsocket = "2.7.0"
+junit5 = "5.10.2"
+junixsocket = "2.9.0"
 jvd = "1.0"
-log4j = "2.20.0"
-mockito = "4.1.0"
+log4j = "2.23.0"
+mockito = "5.10.0"
 nanohttpd = "2.3.1"
 nstweaker = "1.0"
-oshi = "6.4.0"
-raven = "7.8.6"
-sentry = "1.7.30"
-slf4j = "2.0.1"
-system-theme-detector = "3.7"
-toml4j = "0.7.2"
+oshi = "6.4.13"
+shadow-plugin = "8.1.1"
+slf4j = "2.0.12"
+system-theme-detector = "3.8"
+toml4j = "0.7.3"
 xz = "1.9"
 
 [libraries]
@@ -43,6 +45,8 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 httpcomponents-fluent-hc = { module = "org.apache.httpcomponents:fluent-hc", version.ref = "httpcomponents" }
 httpcomponents-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "httpcomponents" }
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 jarscanner = { module = "me.cortex:jarscanner", version.ref = "jarscanner" }
 java-semver = { module = "com.github.zafarkhaja:java-semver", version.ref = "java-semver" }
 java-statsd-client = { module = "com.timgroup:java-statsd-client", version.ref = "java-statsd-client" }
@@ -59,17 +63,14 @@ log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 log4j-slf4j-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
-mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 nstweaker = { module = "ru.turikhay.app:nstweaker", version.ref = "nstweaker" }
 oshi = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
-raven = { module = "com.getsentry.raven:raven", version.ref = "raven" }
-sentry = { module = "io.sentry:sentry", version.ref = "sentry" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 system-theme-detector = { module = "com.github.Dansoftowner:jSystemThemeDetector", version.ref = "system-theme-detector" }
-toml4j = { module = "com.moandjiezana.toml:toml4j", version.ref = "toml4j" }
+toml4j = { module = "io.hotmoka:toml4j", version.ref = "toml4j" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 
 [bundles]
@@ -77,3 +78,9 @@ dbus = ["dbus-core", "dbus-transport-tcp"]
 httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
 jna = ["jna", "jna-platform"]
 log4j = ["log4j-api", "log4j-core", "log4j-1-2-api", "log4j-slf4j-impl"]
+
+[plugins]
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig-plugin" }
+download = { id = "de.undercouch.download", version.ref = "download-plugin" }
+javafx = { id = "org.openjfx.javafxplugin", version.ref = "javafx-plugin" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-plugin" }

@@ -1,14 +1,15 @@
 package net.legacylauncher.bootstrap.ui;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import net.legacylauncher.bootstrap.exception.FatalExceptionType;
 import net.legacylauncher.bootstrap.meta.UpdateMeta;
 import net.legacylauncher.bootstrap.task.Task;
 import net.legacylauncher.bootstrap.task.TaskListener;
 import net.legacylauncher.bootstrap.ui.swing.SwingImageIcon;
-import net.legacylauncher.bootstrap.util.U;
 import net.legacylauncher.bootstrap.util.UTF8Control;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class UserInterface implements IInterface {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserInterface.class);
     public static final String DEFAULT_LOCALE = "en_US";
     static final int BORDER_SIZE = 20, TASK_DEPTH = 2;
 
@@ -33,7 +35,7 @@ public final class UserInterface implements IInterface {
         try {
             b = ResourceBundle.getBundle("bootstrap", new UTF8Control());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.warn("No localization bundle loaded, have a nice day", e);
         }
         resourceBundle = b;
     }
@@ -94,7 +96,7 @@ public final class UserInterface implements IInterface {
         this.taskListener = new TaskListener<Object>() {
             @Override
             public void onTaskStarted(Task<?> task) {
-                log("Task started");
+                LOGGER.info("Task started");
 
                 if (frame.isDisplayable()) {
                     frame.setLocationRelativeTo(null);
@@ -111,7 +113,7 @@ public final class UserInterface implements IInterface {
                 if (frame.isDisplayable()) {
                     int newValue = percentage < 0. ? -1 : (int) (percentage * 100.);
                     if (progressBar.getValue() - newValue != 0) {
-                        log("Task updated:", percentage);
+                        LOGGER.info("Task updated: {}", percentage);
 
                         Task<?> childTask = getChildTask(task, TASK_DEPTH);
                         if (childTask.getProgress() < 0) {
@@ -135,7 +137,7 @@ public final class UserInterface implements IInterface {
 
             @Override
             public void onTaskInterrupted(Task<?> task) {
-                log("Task interrupted");
+                LOGGER.warn("Task interrupted");
                 if (frame.isDisplayable()) {
                     frame.dispose();
                 }
@@ -143,7 +145,7 @@ public final class UserInterface implements IInterface {
 
             @Override
             public void onTaskSucceeded(Task<?> task) {
-                log("Task succeed");
+                LOGGER.info("Task succeed");
                 if (frame.isDisplayable()) {
                     progressBar.setValue(100);
                     frame.dispose();
@@ -203,9 +205,7 @@ public final class UserInterface implements IInterface {
     public static UserInterface createInterface() throws InterruptedException {
         AtomicReference<UserInterface> ref = new AtomicReference<>();
         try {
-            SwingUtilities.invokeAndWait(() -> {
-                ref.set(new UserInterface());
-            });
+            SwingUtilities.invokeAndWait(() -> ref.set(new UserInterface()));
         } catch (InvocationTargetException e) {
             throw new RuntimeException("couldn't init UserInterface", e);
         }
@@ -217,7 +217,7 @@ public final class UserInterface implements IInterface {
     }
 
     public static String getLocale() {
-        return getLString("locale", "en_US");
+        return getLString("locale", DEFAULT_LOCALE);
     }
 
     public static String getLString(String key, String defaultValue) {
@@ -280,11 +280,7 @@ public final class UserInterface implements IInterface {
         try {
             UIManager.setLookAndFeel(systemLaf);
         } catch (Exception e) {
-            log("Couldn't set system L&F:", systemLaf, e);
+            LOGGER.error("Couldn't set system L&F: {}", systemLaf, e);
         }
-    }
-
-    private static void log(Object... o) {
-        U.log("[UI]", o);
     }
 }

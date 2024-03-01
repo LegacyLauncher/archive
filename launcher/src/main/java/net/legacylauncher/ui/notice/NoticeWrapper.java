@@ -6,6 +6,7 @@ import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
 import net.legacylauncher.ui.swing.extended.ExtendedButton;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
+import net.legacylauncher.util.OS;
 import net.legacylauncher.util.SwingUtil;
 
 import javax.swing.*;
@@ -137,6 +138,14 @@ class NoticeWrapper extends BorderPanel {
                 }
                 if (notice.getAction() != null) {
                     action.popup.clearMenu();
+                    if (notice.getErid() != null) {
+                        JMenuItem eridItem = new JMenuItem("Реклама. Erid: " + notice.getErid());
+                        eridItem.addActionListener(e1 ->
+                                OS.openLink("https://erid.ads.llaun.ch/#erid=" + notice.getErid())
+                        );
+                        action.popup.registerItem(eridItem);
+                        action.popup.registerItem(null);
+                    }
                     NoticeAction noticeAction = notice.getAction();
                     for (JMenuItem item : noticeAction.getMenuItemList()) {
                         action.popup.registerItem(item);

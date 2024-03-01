@@ -10,21 +10,20 @@ import java.util.*
 
 plugins {
     base
-    id("de.undercouch.download")
+    alias(libs.plugins.download)
+    net.legacylauncher.brand
 }
 
-val shortBrand: String by rootProject.ext
-
-val portableBaseBuildDir = layout.buildDirectory.dir("portableBase/$shortBrand")
+val portableBaseBuildDir = layout.buildDirectory.dir("portableBase/${brand.brand.get()}")
 
 val jreVersions = mapOf(
     "x64" to mapOf(
-        "url" to "https://cdn.azul.com/zulu/bin/zulu17.34.19-ca-fx-jre17.0.3-win_x64.zip",
-        "sha256" to "6067b31c1de84c13040fcbf43ec179e0bf14994697c27f6c97d040ca9ce7684b",
+        "url" to "https://cdn.azul.com/zulu/bin/zulu21.32.17-ca-fx-jre21.0.2-win_x64.zip",
+        "sha256" to "a4a803b5091d9200e508019d3a0090bf0e2a2f74ea752cf0622db93583d390d0",
     ),
     "x86" to mapOf(
-        "url" to "https://cdn.azul.com/zulu/bin/zulu17.34.19-ca-fx-jre17.0.3-win_i686.zip",
-        "sha256" to "cc8a9a585c1eb658fe0527d103f2c1ba02a1d2531242fd137a55dff5a3e537ef",
+        "url" to "https://cdn.azul.com/zulu/bin/zulu17.48.15-ca-fx-jre17.0.10-win_i686.zip",
+        "sha256" to "7208a3fadae4897ccc33e7bafad8c5c1f4699376fb2910d82cc3d42498bb9f4d",
     ),
 )
 
@@ -44,7 +43,7 @@ jreVersions.forEach { (arch, jre) ->
 }
 
 val preparePortableBaseBuild by tasks.registering(Sync::class) {
-    into(layout.buildDirectory.dir("portableBase/$shortBrand"))
+    into(layout.buildDirectory.dir("portableBase/${brand.brand.get()}"))
 
     from(file("baseResources"))
 
@@ -62,7 +61,7 @@ val preparePortableBaseBuild by tasks.registering(Sync::class) {
 }
 
 val preparePortableBuild by tasks.registering(Sync::class) {
-    into(layout.buildDirectory.dir("portable/$shortBrand"))
+    into(layout.buildDirectory.dir("portable/${brand.brand.get()}"))
 
     from(preparePortableBaseBuild)
 
@@ -110,8 +109,8 @@ val preparePortableBuild by tasks.registering(Sync::class) {
 
 val zipPortableBuild by tasks.registering(Zip::class) {
     from(preparePortableBuild)
-    destinationDirectory.set(layout.buildDirectory.dir("update/$shortBrand"))
-    archiveFileName.set("portable.zip")
+    destinationDirectory = layout.buildDirectory.dir("update/${brand.brand.get()}")
+    archiveFileName = "portable.zip"
     isPreserveFileTimestamps = true
 }
 

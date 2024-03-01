@@ -1,7 +1,7 @@
 package net.legacylauncher.portals;
 
 import net.legacylauncher.portals.dbus.XDGPortal;
-import net.legacylauncher.util.JavaVersion;
+import net.legacylauncher.util.shared.JavaVersion;
 
 import java.util.ArrayList;
 import java.util.List;

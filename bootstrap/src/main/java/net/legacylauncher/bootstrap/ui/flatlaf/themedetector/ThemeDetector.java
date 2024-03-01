@@ -2,7 +2,7 @@ package net.legacylauncher.bootstrap.ui.flatlaf.themedetector;
 
 
 import net.legacylauncher.portals.Portals;
-import net.legacylauncher.util.FlatLafConfiguration;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 
 public final class ThemeDetector {
     private ThemeDetector() {

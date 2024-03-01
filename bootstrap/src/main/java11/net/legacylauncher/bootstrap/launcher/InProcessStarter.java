@@ -2,6 +2,8 @@ package net.legacylauncher.bootstrap.launcher;
 
 import net.legacylauncher.bootstrap.ipc.DBusBootstrapIPC;
 import net.legacylauncher.bootstrap.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,6 +14,7 @@ import java.util.Objects;
 import java.util.concurrent.Future;
 
 public class InProcessStarter extends AbstractDBusStarter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InProcessStarter.class);
     private InProcessStarter(LocalLauncher launcher, DBusBootstrapIPC ipc) {
         super(launcher, ipc);
     }
@@ -22,7 +25,7 @@ public class InProcessStarter extends AbstractDBusStarter {
         List<Path> classpath = buildClassPath(launcher);
 
         for (Path path : classpath) {
-            log("Classpath entry:", path);
+            LOGGER.info("Classpath entry: {}", path);
         }
 
         URLClassLoader classLoader = new URLClassLoader("launcher", toURLs(classpath), ClassLoader.getPlatformClassLoader());

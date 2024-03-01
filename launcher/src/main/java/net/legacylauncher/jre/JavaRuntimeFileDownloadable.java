@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.tukaani.xz.LZMAInputStream;
 
 import java.io.*;
+import java.nio.file.Files;
 
 public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeFileDownloadable.class);
@@ -56,8 +57,8 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     private void doExtract() throws RetryDownloadException {
         LOGGER.debug("Extracting {}", lzmaDestination.getAbsolutePath());
         try (LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
-                new FileInputStream(lzmaDestination)));
-             OutputStream output = new BufferedOutputStream(new FileOutputStream(destination))
+                Files.newInputStream(lzmaDestination.toPath())));
+             OutputStream output = new BufferedOutputStream(Files.newOutputStream(destination.toPath()))
         ) {
             IOUtils.copy(input, output);
         } catch (IOException e) {

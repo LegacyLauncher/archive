@@ -1,6 +1,7 @@
 package net.legacylauncher.util;
 
 import net.legacylauncher.util.async.AsyncThread;
+import net.legacylauncher.util.shared.JavaVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.jvd.JavaVersionDetectorMain;

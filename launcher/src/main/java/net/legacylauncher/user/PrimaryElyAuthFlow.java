@@ -1,12 +1,7 @@
 package net.legacylauncher.user;
 
 import com.sun.net.httpserver.HttpServer;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.ui.loc.Localizable;
-import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.async.ExtendedThread;
 import net.legacylauncher.util.git.MapTokenResolver;
 import net.legacylauncher.util.git.TokenReplacingReader;
@@ -22,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -139,22 +135,17 @@ public class PrimaryElyAuthFlow extends ElyAuthFlow<PrimaryElyAuthFlowListener> 
                         response = "\r\n";
                     }
 
-                    httpExchange.getResponseHeaders().set("Content-Type", "text/html; charset=" + FileUtil.getCharset().name());
+                    httpExchange.getResponseHeaders().set("Content-Type", "text/html; charset=" + StandardCharsets.UTF_8.name());
                     if (responseStatus == HttpURLConnection.HTTP_MOVED_TEMP) {
                         httpExchange.getResponseHeaders().set("Location", TOKEN_EXCHANGE_SUCCESS);
                     }
-                    httpExchange.sendResponseHeaders(responseStatus, response.getBytes(FileUtil.getCharset()).length);
+                    httpExchange.sendResponseHeaders(responseStatus, response.getBytes(StandardCharsets.UTF_8).length);
 
                     OutputStream out = httpExchange.getResponseBody();
-                    IOUtils.write(response, out, FileUtil.getCharset());
+                    IOUtils.write(response, out, StandardCharsets.UTF_8);
                     out.close();
                 } catch (Exception e) {
                     LOGGER.error("Interrupting watchdog because of Server (port {}) failure", port, e);
-                    Sentry.capture(new EventBuilder()
-                            .withMessage("internal server crashed")
-                            .withSentryInterface(new ExceptionInterface(e))
-                            .withLevel(Event.Level.ERROR)
-                    );
                     HttpServerAdapter.this.watchdog.interrupt();
                 }
             });

@@ -21,6 +21,7 @@ import net.legacylauncher.util.OS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -183,13 +184,13 @@ public class MainPane extends ExtendedLayeredPane {
             }
 
             @Override
-            public void onMinecraftError(Throwable var1) {
-                progress.get().onMinecraftError(var1);
+            public void onMinecraftError(Throwable throwable) {
+                progress.get().onMinecraftError(throwable);
             }
 
             @Override
-            public void onMinecraftKnownError(MinecraftException var1) {
-                progress.get().onMinecraftKnownError(var1);
+            public void onMinecraftKnownError(MinecraftException exception) {
+                progress.get().onMinecraftKnownError(exception);
             }
 
             @Override
@@ -319,8 +320,7 @@ public class MainPane extends ExtendedLayeredPane {
             revertButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    defaultScene.settingsForm.get().font.setValue(oldSizeInt);
-                    defaultScene.settingsForm.get().saveValues();
+                    rootFrame.getConfiguration().set("gui.font", rootFrame.getConfiguration().getInteger("gui.font.old"), false);
 
                     Alert.showLocMessage("revert.font.approved");
 
@@ -337,7 +337,7 @@ public class MainPane extends ExtendedLayeredPane {
                 MainPane.this.repaint();
             });
 
-            add(revertButton, closeButton);
+            add(new JComponent[]{revertButton, closeButton});
 
             updateLocale();
         }

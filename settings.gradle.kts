@@ -6,6 +6,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "legacy-launcher"
 
+include(":utils")
 include(":bootstrap")
 include(":bridge")
 include(":common")

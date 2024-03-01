@@ -1,18 +1,15 @@
 package net.legacylauncher.bootstrap.ssl;
 
-import com.getsentry.raven.event.Event;
-import com.getsentry.raven.event.EventBuilder;
-import com.getsentry.raven.event.interfaces.ExceptionInterface;
-import net.legacylauncher.bootstrap.Bootstrap;
-import net.legacylauncher.bootstrap.util.U;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -23,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FixSSL {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FixSSL.class);
 
     private static boolean IS_FIXED = false;
 
@@ -34,12 +32,7 @@ public class FixSSL {
         try {
             addLetsEncryptIntoTrustStore();
         } catch (Exception e) {
-            U.log("[FixSSL]", "Couldn't add LetsEncrypt root certificate", e);
-            Bootstrap.SENTRY.sendEvent(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("couldn't add LetsEncrypt root certificates")
-                    .withSentryInterface(new ExceptionInterface(e))
-            );
+            LOGGER.error("Couldn't add LetsEncrypt root certificate", e);
         }
     }
 
@@ -47,7 +40,7 @@ public class FixSSL {
                                                           Map<String, Certificate> letsEncryptStore) {
         for (Certificate letsEncryptCert : letsEncryptStore.values()) {
             if (!jreTrustStore.containsValue(letsEncryptCert)) {
-                U.log("[FixSSL]", "JRE trust store doesn't contain", letsEncryptCert);
+                LOGGER.info("JRE trust store doesn't contain {}", letsEncryptCert);
                 return false;
             }
         }
@@ -67,7 +60,7 @@ public class FixSSL {
 
     private static Map<String, Certificate> loadJreTrustStore() throws Exception {
         File cacertsFile = new File(System.getProperty("java.home"), "lib/security/cacerts");
-        return loadStore(new FileInputStream(cacertsFile), "changeit");
+        return loadStore(Files.newInputStream(cacertsFile.toPath()), "changeit");
     }
 
     private static Map<String, Certificate> loadLetsEncryptStore() throws Exception {
@@ -87,7 +80,7 @@ public class FixSSL {
     }
 
     private static void useNewKeyStoreGlobally(KeyStore keyStore) throws Exception {
-        U.log("[FixSSL]", "Adding LetsEncrypt into trust store");
+        LOGGER.info("Adding LetsEncrypt into trust store");
         TrustManagerFactory instance = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         instance.init(keyStore);
         final SSLContext tls = SSLContext.getInstance("TLS");

@@ -553,7 +553,7 @@ public class CompleteVersion implements Version, Cloneable {
             result.assetIndex = assetIndex;
         }
 
-        if (downloads != null && downloads.size() > 0) {
+        if (downloads != null && !downloads.isEmpty()) {
             result.downloads = downloads;
         }
 

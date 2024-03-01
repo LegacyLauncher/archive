@@ -36,9 +36,9 @@ public enum ModpackType {
             list.put(value.name, value);
         }
 
-        version_1_13 = Version.valueOf("1.13.0");
-        version_1_12_2 = Version.valueOf("1.12.2");
-        version_1_7_10 = Version.valueOf("1.7.10");
+        version_1_13 = Version.parse("1.13.0");
+        version_1_12_2 = Version.parse("1.12.2");
+        version_1_7_10 = Version.parse("1.7.10");
     }
 
     public static ModpackType getByName(String name, String version) {
@@ -51,18 +51,18 @@ public enum ModpackType {
 
         Version semVer;
         try {
-            semVer = Version.valueOf(version);
+            semVer = Version.parse(version);
         } catch (ParseException e) {
             return NONE;
         }
 
-        if (semVer.greaterThanOrEqualTo(version_1_13))
+        if (semVer.isHigherThanOrEquivalentTo(version_1_13))
             return FORGE_1_13;
 
         if (semVer.equals(version_1_12_2))
             return FORGE_LEGACY_ABSOLUTE;
 
-        if (semVer.greaterThanOrEqualTo(version_1_7_10))
+        if (semVer.isHigherThanOrEquivalentTo(version_1_7_10))
             return FORGE_LEGACY;
 
         return NONE;

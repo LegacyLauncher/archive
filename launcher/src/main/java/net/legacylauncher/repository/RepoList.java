@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -161,13 +162,13 @@ public class RepoList {
         final File temp = File.createTempFile("tlauncher-repo", null);
         temp.deleteOnExit();
 
-        try (OutputStream out = new FileOutputStream(temp)) {
+        try (OutputStream out = Files.newOutputStream(temp.toPath())) {
             IOUtils.copy(new BufferedInputStream(in, FILE_BUFFER), out);
         } finally {
             GLOBAL_BUFFER.addAndGet(-FILE_BUFFER);
         }
 
-        return new FilterInputStream(new FileInputStream(temp)) {
+        return new FilterInputStream(Files.newInputStream(temp.toPath())) {
             public void close() throws IOException {
                 super.close();
                 temp.delete();

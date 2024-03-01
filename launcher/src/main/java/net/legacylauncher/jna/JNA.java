@@ -6,7 +6,7 @@ import net.legacylauncher.util.OS;
 import java.util.Optional;
 
 public class JNA {
-    static boolean ENABLED;
+    static final boolean ENABLED;
     static {
         boolean enabled = true;
         try {

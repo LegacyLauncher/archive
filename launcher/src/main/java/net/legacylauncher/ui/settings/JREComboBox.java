@@ -11,7 +11,7 @@ import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
-import net.legacylauncher.util.JavaVersion;
+import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.OS;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;

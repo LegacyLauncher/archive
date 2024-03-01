@@ -33,13 +33,13 @@ public class SwingMinecraftListener implements MinecraftListener {
     }
 
     @Override
-    public void onMinecraftError(Throwable var1) {
-        SwingUtil.later(() -> listener.onMinecraftError(var1));
+    public void onMinecraftError(Throwable throwable) {
+        SwingUtil.later(() -> listener.onMinecraftError(throwable));
     }
 
     @Override
-    public void onMinecraftKnownError(MinecraftException var1) {
-        SwingUtil.later(() -> listener.onMinecraftKnownError(var1));
+    public void onMinecraftKnownError(MinecraftException exception) {
+        SwingUtil.later(() -> listener.onMinecraftKnownError(exception));
     }
 
     @Override

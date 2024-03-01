@@ -1,6 +1,5 @@
 package net.legacylauncher.ui.support;
 
-import net.legacylauncher.ui.frames.ProcessFrame;
 import net.legacylauncher.ui.frames.VActionFrame;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.loc.Localizable;
@@ -61,12 +60,12 @@ public class PreSupportFrame extends VActionFrame {
 
     private final SendInfoFrame sendInfoFrame = new SendInfoFrame(systemInfoReporter) {
         @Override
-        protected void onSucceeded(ProcessFrame.Process process, SendInfoResponse result) {
+        protected void onSucceeded(Process process, SendInfoResponse result) {
             super.onSucceeded(process, result);
             PreSupportFrame.this.setVisible(false);
         }
 
-        protected void onFailed(ProcessFrame.Process process, Exception e) {
+        protected void onFailed(Process process, Exception e) {
             super.onFailed(process, e);
             sendDiagnosticCheckbox.setSelected(false);
             PreSupportFrame.this.setVisible(true);

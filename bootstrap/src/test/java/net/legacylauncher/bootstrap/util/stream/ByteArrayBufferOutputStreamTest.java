@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -21,10 +22,10 @@ public class ByteArrayBufferOutputStreamTest {
 
     @Test
     public void testSimpleWrites() throws IOException {
-        stream.write('\u0046');
+        stream.write('F');
         stream.write(new byte[]{111, 111});
         stream.write(new byte[]{0, 33, 0}, 1, 1);
-        assertEquals(stream.buffer().toString("UTF-8"), "Foo!");
+        assertEquals(stream.buffer().toString(StandardCharsets.UTF_8), "Foo!");
     }
 
     @Test

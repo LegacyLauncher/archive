@@ -30,7 +30,7 @@ class RetryingRangeContentResponseHandlerTest {
 
     private static class OneChunkPerTime extends RetryingRangeContentResponseHandler {
         public OneChunkPerTime(Request request, Executor executor) {
-            super(request, executor, false);
+            super(request, executor);
         }
 
         @Override

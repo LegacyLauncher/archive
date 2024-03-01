@@ -28,7 +28,7 @@ public class VersionListCellRenderer extends VersionCellRenderer {
             }
 
             java.util.List<VersionSyncInfo> downloadingInfo = handler.downloading;
-            if (downloadingInfo != null && downloadingInfo.size() > 0) {
+            if (downloadingInfo != null && !downloadingInfo.isEmpty()) {
                 VersionSyncInfo compare = downloadingInfo.get(0);
                 ImageIcon icon = compare.equals(value) ? downloading : null;
                 label.setIcon(icon);

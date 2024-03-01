@@ -1,12 +1,10 @@
 package net.legacylauncher.bootstrap.task;
 
-import com.getsentry.raven.event.Event;
-import com.getsentry.raven.event.EventBuilder;
-import com.getsentry.raven.event.interfaces.ExceptionInterface;
-import net.legacylauncher.bootstrap.Bootstrap;
-import net.legacylauncher.bootstrap.util.U;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ExceptionHandler implements Thread.UncaughtExceptionHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
     private static final ExceptionHandler instance = new ExceptionHandler();
 
     public static ExceptionHandler get() {
@@ -18,13 +16,6 @@ public final class ExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        Bootstrap.SENTRY.sendEvent(new EventBuilder()
-                .withLevel(Event.Level.ERROR)
-                .withMessage("uncaught exception: " + e.toString())
-                .withSentryInterface(new ExceptionInterface(e))
-                .withExtra("thread", t.getName())
-        );
-        U.log("[ExceptionHandler]", "Error at " + t.getName());
-        e.printStackTrace();
+        LOGGER.error("Error at {}", t.getName(), e);
     }
 }

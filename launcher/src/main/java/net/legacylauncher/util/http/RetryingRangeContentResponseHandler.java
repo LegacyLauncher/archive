@@ -1,8 +1,5 @@
 package net.legacylauncher.util.http;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -26,17 +23,10 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
 
     private final Request request;
     private final Executor executor;
-    private final boolean enableSentryReporting;
-
-    public RetryingRangeContentResponseHandler(Request request, Executor executor,
-                                               boolean enableSentryReporting) {
-        this.request = request;
-        this.executor = executor;
-        this.enableSentryReporting = enableSentryReporting;
-    }
 
     public RetryingRangeContentResponseHandler(Request request, Executor executor) {
-        this(request, executor, true);
+        this.request = request;
+        this.executor = executor;
     }
 
     @Override
@@ -56,9 +46,7 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
                     request, read, length);
             EntityUtils.consume(entity);
             LOGGER.warn("Enabling retrying range download");
-            int retryRequestCount = 0;
             while (read < length) {
-                retryRequestCount++;
                 LOGGER.debug("Downloading range {}: {} / {}",
                         request, read, length);
                 RangeResponseHandler handler = new RangeResponseHandler(read, buffer);
@@ -69,15 +57,6 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
                 read = handler.totalRead;
             }
             LOGGER.debug("Done range downloading {}: {} / {}", request, read, length);
-            if (enableSentryReporting) {
-                Sentry.capture(new EventBuilder()
-                        .withLevel(Event.Level.WARNING)
-                        .withMessage("partial download success")
-                        .withExtra("request", request.toString())
-                        .withExtra("count", retryRequestCount)
-                        .withExtra("length", length)
-                );
-            }
         }
         return new Content(buffer.toByteArray(), ContentType.getOrDefault(entity));
     }
@@ -114,28 +93,8 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
             final StatusLine statusLine = response.getStatusLine();
             int statusCode = statusLine.getStatusCode();
             if (statusCode == 200) {
-                if (enableSentryReporting) {
-                    Sentry.capture(new EventBuilder()
-                            .withLevel(Event.Level.ERROR)
-                            .withMessage("server doesn't seem to support partial downloads")
-                            .withExtra("request", request.toString())
-                            .withExtra("response", response.toString())
-                            .withExtra("start", start)
-                            .withExtra("totalRead", totalRead)
-                    );
-                }
                 throw new HttpResponseException(200, "Expected partial download response");
             } else if (statusCode != 206) {
-                if (enableSentryReporting) {
-                    Sentry.capture(new EventBuilder()
-                            .withLevel(Event.Level.ERROR)
-                            .withMessage("partial download failed: " + response.getStatusLine().toString())
-                            .withExtra("request", request.toString())
-                            .withExtra("response", response.toString())
-                            .withExtra("start", start)
-                            .withExtra("totalRead", totalRead)
-                    );
-                }
                 throw new HttpResponseException(statusCode, statusLine.getReasonPhrase());
             }
             return handleEntity(response.getEntity());

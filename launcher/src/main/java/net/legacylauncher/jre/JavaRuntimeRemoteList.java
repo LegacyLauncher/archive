@@ -36,7 +36,7 @@ public class JavaRuntimeRemoteList {
                 .stream()
                 .filter(runtime -> runtime.getName().equals(name))
                 .collect(Collectors.toList());
-        return runtimeCandidates.size() < 1 ? Optional.empty() : Optional.of(runtimeCandidates.get(0));
+        return runtimeCandidates.isEmpty() ? Optional.empty() : Optional.of(runtimeCandidates.get(0));
     }
 
     public Optional<JavaRuntimeRemote> getCurrentPlatformFirstRuntimeCandidate(String name) {

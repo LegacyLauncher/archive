@@ -1,16 +1,14 @@
 package net.legacylauncher.bootstrap;
 
-import com.getsentry.raven.DefaultRavenFactory;
-import com.getsentry.raven.Raven;
-import com.getsentry.raven.dsn.Dsn;
-import com.getsentry.raven.event.Event;
-import com.getsentry.raven.event.EventBuilder;
-import com.getsentry.raven.event.User;
-import com.getsentry.raven.event.interfaces.ExceptionInterface;
+import com.github.zafarkhaja.semver.Version;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
+import net.legacylauncher.afterlife.DoomsdayMessageV1;
 import net.legacylauncher.bootstrap.exception.FatalExceptionType;
 import net.legacylauncher.bootstrap.ipc.BootstrapIPC;
 import net.legacylauncher.bootstrap.ipc.BootstrapIPCProvider;
@@ -27,50 +25,31 @@ import net.legacylauncher.bootstrap.ui.UserInterface;
 import net.legacylauncher.bootstrap.ui.flatlaf.FlatLaf;
 import net.legacylauncher.bootstrap.util.*;
 import net.legacylauncher.bootstrap.util.stream.OutputRedirectBuffer;
-import net.legacylauncher.util.FlatLafConfiguration;
-import net.legacylauncher.util.JavaVersion;
-import net.legacylauncher.util.windows.wmi.WMI;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
+import net.legacylauncher.util.shared.JavaVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public final class Bootstrap {
-    public static final Raven SENTRY = new DefaultRavenFactory().createRavenInstance(
-            new Dsn("https://3ece46580a3c4d4e900f41d20397d229:8fbceaeb066e4fcab40f9740d04eebab@sentry.ely.by/45")
-    );
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
 
     static {
-        SENTRY.addBuilderHelper(eventBuilder -> eventBuilder
-                .withServerName(OS.CURRENT.name())
-                .withTag(
-                        "java",
-                        JavaVersion.getCurrent() == JavaVersion.UNKNOWN ?
-                                "unknown" : String.valueOf(JavaVersion.getCurrent().getMajor())
-                )
-                .withTag("java_version", System.getProperty("java.version"))
-                .withTag("os", System.getProperty("os.name") + " " + System.getProperty("os.version"))
-                .withTag("os_arch", System.getProperty("os.arch")));
         FixSSL.addLetsEncryptCertSupportIfNeeded();
     }
 
     static Bootstrap createBootstrap(String[] rawArgs) throws InterruptedException {
-        log("Starting bootstrap...");
+        LOGGER.info("Starting bootstrap...");
 
         LocalBootstrapMeta localBootstrapMeta = LocalBootstrapMeta.getInstance();
-        /*log("Starting bootstrap...");
-
-
-
-        Bootstrap bootstrap = new Bootstrap(!parsed.has(forceHeadlessMode));
-        LocalBootstrapMeta localBootstrapMeta = bootstrap.getMeta();
-        log("Version: " + localBootstrapMeta.getVersion());*/
 
         Path
                 defaultFile = Objects.requireNonNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation"),
@@ -127,12 +106,12 @@ public final class Bootstrap {
         boolean disallowBetaSwitch = false;
         if (bootstrapParsed.has(brandParser)) {
             String brand = bootstrapParsed.valueOf(brandParser);
-            log("Picked up brand from arguments: ", brand);
+            LOGGER.info("Picked up brand from arguments: {}", brand);
             localBootstrapMeta.setShortBrand(brand);
             // disallow switching if branch is set by an argument
             disallowBetaSwitch = true;
         }
-        log("Short brand: ", localBootstrapMeta.getShortBrand());
+        LOGGER.info("Short brand: {}", localBootstrapMeta.getShortBrand());
 
         OptionSet launcherParsed = launcherParser.parse(args.getLauncher());
 
@@ -151,7 +130,7 @@ public final class Bootstrap {
             bootstrap.whenIPCReady(ipc -> ipc.setMetadata("can_switch_to_beta_branch", Boolean.FALSE));
         }
 
-        log("Version: " + localBootstrapMeta.getVersion());
+        LOGGER.info("Version: {}", localBootstrapMeta.getVersion());
 
         bootstrap.setupUserInterface(bootstrapParsed.has(forceHeadlessMode));
 
@@ -160,7 +139,7 @@ public final class Bootstrap {
             targetJar = Objects.requireNonNull(LocalLauncher.getDefaultFileLocation(localBootstrapMeta.getShortBrand()), "defaultFileLocation");
         }
         bootstrap.setTargetJar(targetJar);
-        log("Target jar:", bootstrap.getTargetJar());
+        LOGGER.info("Target jar: {}", bootstrap.getTargetJar());
 
         Path targetLibFolder = bootstrapParsed.valueOf(targetLibFolderParser); // can be null
         if (targetLibFolder == null) {
@@ -176,34 +155,34 @@ public final class Bootstrap {
             }
         }
         bootstrap.setTargetLibFolder(targetLibFolder);
-        log("Target lib folder:", bootstrap.getTargetLibFolder());
+        LOGGER.info("Target lib folder: {}", bootstrap.getTargetLibFolder());
 
         bootstrap.setUpdateMetaFile(bootstrapParsed.valueOf(targetUpdateFile));
-        log("Update meta file:", bootstrap.getUpdateMetaFile());
+        LOGGER.info("Update meta file: {}", bootstrap.getUpdateMetaFile());
 
         bootstrap.setIgnoreUpdate(bootstrapParsed.has(forceUpdateParser));
-        log("Ignore launcher update:", bootstrap.getIgnoreUpdate());
+        LOGGER.info("Ignore launcher update: {}", bootstrap.getIgnoreUpdate());
 
         bootstrap.setIgnoreSelfUpdate(bootstrapParsed.has(ignoreSelfUpdateParser));
-        log("Ignore self update:", bootstrap.getIgnoreSelfUpdate());
+        LOGGER.info("Ignore self update: {}", bootstrap.getIgnoreSelfUpdate());
 
         bootstrap.setPackageMode(bootstrapParsed.valueOf(packageMode));
-        log("Package mode:", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "false");
+        LOGGER.info("Package mode: {}", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : "false");
         bootstrap.whenIPCReady(ipc -> ipc.setMetadata("package_mode", bootstrap.isPackageMode() ? bootstrap.getPackageMode() : ""));
 
-        log("Require Minecraft account:", bootstrapParsed.has(requireMinecraftAccount));
+        LOGGER.info("Require Minecraft account: {}", bootstrapParsed.has(requireMinecraftAccount));
         bootstrap.whenIPCReady(ipc -> ipc.setMetadata("require_minecraft_account", bootstrapParsed.has(requireMinecraftAccount)));
 
-        log("Fork:", bootstrapParsed.has(fork));
+        LOGGER.info("Fork: {}", bootstrapParsed.has(fork));
         bootstrap.setFork(bootstrapParsed.has(fork));
 
         if (bootstrapParsed.has(restartExec)) {
             bootstrap.setRestartCmd(Collections.singletonList(bootstrapParsed.valueOf(restartExec)));
-            log("Restart cmd on self update:", bootstrap.getRestartCmd());
+            LOGGER.info("Restart cmd on self update: {}", bootstrap.getRestartCmd());
         } else if ("dmg".equals(bootstrap.getPackageMode())) {
             String appPath = System.getProperty("jpackage.app-path");
             if (appPath == null) {
-                log("Current package mode is dmg, but jpackage.app-path is not set");
+                LOGGER.warn("Current package mode is dmg, but jpackage.app-path is not set");
             } else {
                 final String expectedPathSuffix = "/Contents/MacOS/TL";
                 if (appPath.endsWith(expectedPathSuffix)) {
@@ -215,12 +194,12 @@ public final class Bootstrap {
                                     appPath
                             )
                     );
-                    log("Picked up restart exec for jpackage:", bootstrap.getRestartCmd());
+                    LOGGER.info("Picked up restart exec for jpackage: {}", bootstrap.getRestartCmd());
                     String finalAppPath = appPath;
                     bootstrap.whenIPCReady(ipc -> ipc.setMetadata("dmg-app-path", finalAppPath));
                 } else {
-                    log("jpackage.app-path is not recognized:", appPath);
-                    log("Auto-restart will not be enabled");
+                    LOGGER.warn("jpackage.app-path is not recognized: {}", appPath);
+                    LOGGER.warn("Auto-restart will not be enabled");
                 }
             }
         }
@@ -235,8 +214,8 @@ public final class Bootstrap {
             if (ignoreUpdate) {
                 bootstrap.setIgnoreSelfUpdate(true);
                 bootstrap.setIgnoreUpdate(true);
-                log("Package mode: Ignore self update set to", bootstrap.getIgnoreSelfUpdate());
-                log("Package mode: Ignore update set to", bootstrap.getIgnoreUpdate());
+                LOGGER.info("Package mode: Ignore self update set to {}", bootstrap.getIgnoreSelfUpdate());
+                LOGGER.info("Package mode: Ignore update set to {}", bootstrap.getIgnoreUpdate());
             }
         }
 
@@ -251,7 +230,7 @@ public final class Bootstrap {
             if (value != null) {
                 jvmArgs.add("--" + key);
                 jvmArgs.add(value);
-                log("Found JVM arg: ", key, " ", value);
+                LOGGER.info("Found JVM arg: {} = {}", key, value);
             }
         }
 
@@ -268,50 +247,36 @@ public final class Bootstrap {
             bootstrap = createBootstrap(args);
             bootstrap.defTask().call();
         } catch (TaskInterruptedException interrupted) {
-            log("Default task was interrupted");
+            LOGGER.warn("Default task was interrupted");
         } catch (InterruptedException interrupted) {
-            log("Interrupted");
+            LOGGER.warn("Interrupted");
         } catch (Exception e) {
-            e.printStackTrace();
-            handleFatalError(bootstrap, e, true);
+            LOGGER.error("Fatal error", e);
+            handleFatalError(bootstrap, e);
             System.exit(-1);
         }
         System.exit(0);
     }
 
-    static void handleFatalError(Bootstrap bootstrap, Throwable e, boolean sendSentry) {
+    static void handleFatalError(Bootstrap bootstrap, Throwable e) {
         FatalExceptionType exceptionType = FatalExceptionType.getType(e);
         BootstrapIPC ipc = bootstrap == null ? null : bootstrap.ipc;
 
-        if (sendSentry) {
-            EventBuilder b = new EventBuilder()
-                    .withMessage("fatal error")
-                    .withLevel(Event.Level.FATAL)
-                    .withSentryInterface(new ExceptionInterface(e))
-                    .withTag("type", exceptionType.name());
-            if (OS.WINDOWS.isCurrent()) {
-                try {
-                    b.withExtra("avList", WMI.getAVSoftwareList());
-                } catch (Exception eAV) {
-                    log("Could not get AV list", eAV);
-                }
+        boolean doomsDay = false;
+        if (exceptionType == FatalExceptionType.INTERNET_CONNECTIVITY) {
+            DoomsdayMessageV1 message = DoomsdayMessage.requestSyncOrNull();
+            if (message != null) {
+                LOGGER.warn("Found Doomsday message: {}", message);
+                UserInterface.showError(message.getMessageOrDefault(), null);
+                doomsDay = true;
             }
-            Object client = ipc != null ? ipc.getMetadata("client") : null;
-            if (client instanceof String && !((String) client).isEmpty()) {
-                SENTRY.getContext().setUser(new User(
-                        (String) client,
-                        (String) client,
-                        null,
-                        null
-                ));
-            }
-            SENTRY.sendEvent(b);
         }
-
         if (bootstrap != null) {
             bootstrap.getUserInterface().dispose();
         }
-
+        if (doomsDay) {
+            return;
+        }
         UserInterface.showFatalError(exceptionType);
     }
 
@@ -337,31 +302,11 @@ public final class Bootstrap {
         this.bootstrapJar = bootstrapJar;
         this.config = config;
 
-        String client = config.getClient();
-        if (client != null) {
-            SENTRY.getContext().setUser(new User(
-                    client,
-                    client,
-                    null,
-                    null
-            ));
-        }
-        SENTRY.addBuilderHelper(eventBuilder -> eventBuilder
-                .withRelease(
-                        String.format(java.util.Locale.ROOT,
-                                "%d.%d.%d",
-                                LocalBootstrapMeta.getInstance().getVersion().getMajorVersion(),
-                                LocalBootstrapMeta.getInstance().getVersion().getMinorVersion(),
-                                LocalBootstrapMeta.getInstance().getVersion().getPatchVersion()
-                        )
-                )
-                .withEnvironment(LocalBootstrapMeta.getInstance().getShortBrand()));
-
         InternalLauncher internal = null;
         try {
             internal = new InternalLauncher();
         } catch (LauncherNotFoundException e) {
-            log("Internal launcher is not located in the classpath");
+            LOGGER.info("Internal launcher is not located in the classpath");
         }
         this.internal = internal;
 
@@ -375,10 +320,10 @@ public final class Bootstrap {
         whenIPCReady(ipc -> ipc.setMetadata("can_switch_to_beta_branch", isNotBeta));
         if (config.isSwitchToBeta()) {
             if (isNotBeta) {
-                log("Configuration tells us to switch to beta branch");
+                LOGGER.info("Configuration tells us to switch to beta branch");
                 switchToBeta = true;
             } else {
-                log("Configuration tells us to switch to beta branch, but we're already on beta");
+                LOGGER.info("Configuration tells us to switch to beta branch, but we're already on beta");
             }
         }
 
@@ -391,19 +336,19 @@ public final class Bootstrap {
             String guiSystemLookAndFeel = Bootstrap.this.config.get("gui.systemlookandfeel");
             boolean preFlatLafConfiguration = !flatLafConfig.getState().isPresent() && guiSystemLookAndFeel != null;
             if (preFlatLafConfiguration) {
-                log("Detected pre-FlatLaf configuration");
+                LOGGER.info("Detected pre-FlatLaf configuration");
             }
             if (preFlatLafConfiguration && "true".equals(guiSystemLookAndFeel) || flatLafConfig.getState().filter(s -> s == FlatLafConfiguration.State.SYSTEM).isPresent()) {
-                log("Using system L&F");
+                LOGGER.info("Using system L&F");
                 UserInterface.setSystemLookAndFeel();
             } else if (preFlatLafConfiguration && "false".equals(guiSystemLookAndFeel)) {
-                log("Not setting L&F on pre-FlatLaf configuration because gui.systemlookandfeel == false");
+                LOGGER.info("Not setting L&F on pre-FlatLaf configuration because gui.systemlookandfeel == false");
             } else {
                 if (flatLafConfig.isEnabled()) {
-                    log("Using FlatLaf configuration");
+                    LOGGER.info("Using FlatLaf configuration");
                     FlatLaf.initialize(flatLafConfig);
                 } else {
-                    log("Not setting L&F because FlatLaf is not enabled");
+                    LOGGER.info("Not setting L&F because FlatLaf is not enabled");
                 }
             }
             // flags bootstrap took care of setting L&F
@@ -420,22 +365,22 @@ public final class Bootstrap {
             return;
         }
 
-        log("Setting up user interface");
+        LOGGER.info("Setting up user interface");
         if (forceHeadlessMode) {
-            log("Forcing headless mode");
+            LOGGER.info("Forcing headless mode");
         } else {
-            log("Trying to load user interface");
+            LOGGER.info("Trying to load user interface");
             try {
                 ui = UserInterface.createInterface();
-                log("UI loaded");
+                LOGGER.info("UI loaded");
                 return;
-            } catch (RuntimeException rE) {
-                log("User interface is not loaded:", rE);
+            } catch (RuntimeException e) {
+                LOGGER.warn("User interface is not loaded:", e);
             }
         }
 
         ui = new HeadlessInterface();
-        log("Headless mode loaded");
+        LOGGER.info("Headless mode loaded");
     }
 
     IInterface getUserInterface() {
@@ -526,20 +471,20 @@ public final class Bootstrap {
         RemoteBootstrapMeta remoteMeta = Objects.requireNonNull(updateMeta, "updateMeta").getBootstrap();
 
         if (remoteMeta == null) {
-            log("RemoteBootstrap meta is not available");
+            LOGGER.warn("RemoteBootstrap meta is not available");
             return null;
         }
 
-        log("RemoteBootstrap meta", remoteMeta);
+        LOGGER.info("RemoteBootstrap meta: {}", remoteMeta);
 
         Objects.requireNonNull(remoteMeta, "RemoteBootstrap meta");
         Objects.requireNonNull(remoteMeta.getDownload(), "RemoteBootstrap download URL");
 
-        log("Local bootstrap version: " + LocalBootstrapMeta.getInstance().getVersion());
-        log("Remote bootstrap version: " + remoteMeta.getVersion());
+        LOGGER.info("Local bootstrap version: {}", LocalBootstrapMeta.getInstance().getVersion());
+        LOGGER.info("Remote bootstrap version: {}", remoteMeta.getVersion());
 
-        if (LocalBootstrapMeta.getInstance().getVersion().greaterThan(remoteMeta.getVersion())) {
-            log("Local bootstrap version is newer than remote one");
+        if (LocalBootstrapMeta.getInstance().getVersion().isHigherThan(remoteMeta.getVersion())) {
+            LOGGER.warn("Local bootstrap version is newer than remote one");
             return null;
         }
 
@@ -547,14 +492,14 @@ public final class Bootstrap {
         try {
             localBootstrapChecksum = Sha256Sign.calc(bootstrapJar);
         } catch (Exception e) {
-            log("Could not get local bootstrap checksum", e);
+            LOGGER.error("Could not get local bootstrap checksum", e);
             return null;
         }
 
-        log("Remote bootstrap checksum of selected package: " + remoteMeta.getDownload());
+        LOGGER.info("Remote bootstrap checksum of selected package: {}", remoteMeta.getDownload());
 
-        log("Local bootstrap checksum: " + localBootstrapChecksum);
-        log("Remote bootstrap checksum: " + remoteMeta.getDownload().getChecksum());
+        LOGGER.info("Local bootstrap checksum: {}", localBootstrapChecksum);
+        LOGGER.info("Remote bootstrap checksum: {}", remoteMeta.getDownload().getChecksum());
 
         if (localBootstrapChecksum.equalsIgnoreCase(remoteMeta.getDownload().getChecksum())) {
             return null;
@@ -579,18 +524,18 @@ public final class Bootstrap {
             @Override
             protected LocalLauncherTask execute() throws Exception {
                 RemoteLauncher remoteLauncher = updateMeta == null ? null : new RemoteLauncher(updateMeta.getLauncher(switchToBeta));
-                log("Remote launcher: " + remoteLauncher);
+                LOGGER.info("Remote launcher: {}", remoteLauncher);
 
                 final boolean ignoreUpdate = getIgnoreUpdate();
 
                 LocalLauncherTask localLauncherTask = bindTo(getLocalLauncher(remoteLauncher), .0, ignoreUpdate ? 1. : .25);
                 LocalLauncher localLauncher = localLauncherTask.getLauncher();
                 LocalLauncherMeta localLauncherMeta = localLauncher.getMeta();
-                log("Local launcher: " + localLauncher);
+                LOGGER.info("Local launcher: {}", localLauncher);
                 printVersion(localLauncherMeta);
 
                 if (!ignoreUpdate) {
-                    log("Downloading libraries...");
+                    LOGGER.info("Downloading libraries...");
                     bindTo(downloadLibraries(localLauncherMeta), .25, 1.);
                 }
 
@@ -603,7 +548,7 @@ public final class Bootstrap {
         return new Task<Void>("startLauncher") {
             @Override
             protected Void execute() throws Exception {
-                log("Starting launcher...");
+                LOGGER.info("Starting launcher...");
 
                 ipc.addListener(new BootstrapIPC.Listener() {
                     @Override
@@ -625,6 +570,8 @@ public final class Bootstrap {
                 }
             }
 
+            private final AtomicBoolean updateMetaRequesting = new AtomicBoolean();
+
             @Override
             protected Void execute() throws Exception {
                 printVersion(null);
@@ -641,18 +588,26 @@ public final class Bootstrap {
                         signedStream.validateSignature();
                     }
                 } else {
+                    updateMetaRequesting.set(true);
                     try {
+                        UpdateMeta.ConnectionInterrupter interrupter = createInterrupter();
                         updateMeta = bindTo(
                                 UpdateMeta.fetchFor(
                                         LocalBootstrapMeta.getInstance().getShortBrand(),
-                                        createInterrupter()
+                                        callback -> {
+                                            if (updateMetaRequesting.get() && interrupter != null) {
+                                                interrupter.mayInterruptConnection(callback);
+                                            }
+                                        }
                                 ),
                                 .0,
                                 .25
                         );
                     } catch (UpdateMeta.UpdateMetaFetchFailed e) {
-                        log(e);
+                        LOGGER.error("Update meta fetch failed", e);
                         updateMeta = null;
+                    } finally {
+                        updateMetaRequesting.set(false);
                     }
                 }
 
@@ -660,7 +615,7 @@ public final class Bootstrap {
                     DownloadEntry downloadEntry = getBootstrapUpdate(updateMeta);
                     if (downloadEntry != null) {
                         if (getIgnoreSelfUpdate()) {
-                            log("Bootstrap self update ignored:",
+                            LOGGER.info("Bootstrap self update ignored: {}",
                                     updateMeta.getBootstrap() == null ? null : updateMeta.getBootstrap().getVersion());
                         } else {
                             Updater updater = new Updater("bootstrapUpdate", bootstrapJar, downloadEntry);
@@ -680,7 +635,13 @@ public final class Bootstrap {
                 initIPC(localLauncher);
 
                 if (updateMeta != null) {
-                    ipc.setLauncherConfiguration(updateMeta.getOptions());
+                    try {
+                        Gson gson = new Gson();
+                        JsonElement json = gson.fromJson(updateMeta.getOptions(), JsonElement.class);
+                        ipc.setLauncherConfiguration(gson.toJson(json));
+                    } catch (JsonSyntaxException e) {
+                        ipc.setLauncherConfiguration(updateMeta.getOptions());
+                    }
                 }
                 if (localLauncherTask.isUpdated() && updateMeta != null) {
                     addUpdateMessage(updateMeta.getLauncher(switchToBeta));
@@ -690,7 +651,7 @@ public final class Bootstrap {
 
                 checkInterrupted();
 
-                log("Idle state: Waiting for launcher the close");
+                LOGGER.info("Idle state: Waiting for launcher the close");
                 ipc.waitUntilClose();
 
                 return null;
@@ -701,7 +662,7 @@ public final class Bootstrap {
     private void lowerRequirementsIfNeeded() throws Exception {
         FileStat bootstrapStat = fileStat(bootstrapJar);
         if (!bootstrapStat.writeable && !getIgnoreSelfUpdate()) {
-            log("Bootstrap jar not writeable, disable self updating");
+            LOGGER.warn("Bootstrap jar not writeable, disable self updating");
             setIgnoreSelfUpdate(true);
         }
 
@@ -712,7 +673,7 @@ public final class Bootstrap {
 
         FileStat launcherStat = fileStat(getTargetJar());
         if (launcherStat.exists && !launcherStat.writeable && !getIgnoreUpdate()) {
-            log("Launcher jar not writeable, disable updating");
+            LOGGER.warn("Launcher jar not writeable, disable updating");
             setIgnoreUpdate(true);
         }
 
@@ -720,7 +681,7 @@ public final class Bootstrap {
 
         FileStat libStat = fileStat(getTargetLibFolder());
         if (!libStat.writeable && !getIgnoreUpdate()) {
-            log("Libs directory not writeable, disable updating");
+            LOGGER.warn("Libs directory not writeable, disable updating");
             setIgnoreUpdate(true);
         }
     }
@@ -738,7 +699,8 @@ public final class Bootstrap {
             return;
         }
         String updateTitle = UserInterface.getLString("update.launcher.title", "Launcher was updated");
-        ipc.addLauncherReleaseNotes(U.getFormattedVersion(remoteLauncherMeta.getVersion()), updateTitle, description);
+        Version version = remoteLauncherMeta.getVersion();
+        ipc.addLauncherReleaseNotes(version.toString(), updateTitle, description);
     }
 
     private void printVersion(LocalLauncherMeta localLauncherMeta) {
@@ -750,7 +712,7 @@ public final class Bootstrap {
             @Override
             protected LocalLauncherTask execute() throws Exception {
                 updateProgress(0.);
-                log("Getting local launcher...");
+                LOGGER.info("Getting local launcher...");
 
                 RemoteLauncherMeta remoteLauncherMeta = remote == null ? null : Objects.requireNonNull(remote.getMeta(), "RemoteLauncherMeta");
 
@@ -758,12 +720,12 @@ public final class Bootstrap {
                 try {
                     local = new LocalLauncher(getTargetJar(), getTargetLibFolder());
                 } catch (LauncherNotFoundException lnfE) {
-                    log("Could not find local launcher:", lnfE);
+                    LOGGER.error("Could not find local launcher:", lnfE);
 
                     if (internal == null) {
                         local = null;
                     } else {
-                        log("... replacing it with internal one:", internal);
+                        LOGGER.warn("... replacing it with internal one: {}", internal);
                         local = bindTo(internal.toLocalLauncher(getTargetJar(), getTargetLibFolder()), .0, .1);
                     }
                 }
@@ -772,7 +734,7 @@ public final class Bootstrap {
 
                 if (local != null) {
                     if (remote == null) {
-                        log("We have local launcher, but have no remote.");
+                        LOGGER.warn("We have local launcher, but have no remote.");
                         return new LocalLauncherTask(local);
                     }
 
@@ -781,7 +743,7 @@ public final class Bootstrap {
                     try {
                         localLauncherMeta = Objects.requireNonNull(local.getMeta(), "LocalLauncherMeta");
                     } catch (IOException ioE) {
-                        log("Could not get local launcher meta:", ioE);
+                        LOGGER.error("Could not get local launcher meta:", ioE);
                         localLauncherMeta = null;
                     }
 
@@ -794,22 +756,22 @@ public final class Bootstrap {
                         Objects.requireNonNull(localLauncherMeta.getBrand(), "LocalLauncher brand");
 
                         if (!localLauncherMeta.getVersion().equals(remote.getMeta().getVersion())) {
-                            log("Local version doesn't match remote");
+                            LOGGER.info("Local version doesn't match remote");
                             if (getIgnoreUpdate()) {
-                                log("... nevermind");
+                                LOGGER.info("... nevermind");
                             } else {
                                 doUpdate = true;
                             }
                         } else if (!getIgnoreUpdate()) {
                             String localLauncherHash = Sha256Sign.calc(local.getFile());
-                            log("Local SHA256: " + localLauncherHash);
-                            log("Remote SHA256: " + remoteLauncherMeta.getChecksum());
+                            LOGGER.info("Local SHA256: {}", localLauncherHash);
+                            LOGGER.info("Remote SHA256: {}", remoteLauncherMeta.getChecksum());
 
                             if (!localLauncherHash.equalsIgnoreCase(remoteLauncherMeta.getChecksum())) {
-                                log("... local SHA256 checksum is not the same as remote");
+                                LOGGER.warn("... local SHA256 checksum is not the same as remote");
                                 doUpdate = true;
                             } else {
-                                log("All done, local launcher is up to date.");
+                                LOGGER.info("All done, local launcher is up to date.");
                             }
                         }
 
@@ -832,11 +794,6 @@ public final class Bootstrap {
                     if (local == null) {
                         throw ioE;
                     }
-                    SENTRY.sendEvent(new EventBuilder()
-                            .withLevel(Event.Level.ERROR)
-                            .withMessage("couldn't download remote launcher")
-                            .withSentryInterface(new ExceptionInterface(ioE))
-                    );
                     return new LocalLauncherTask(local);
                 }
 
@@ -882,7 +839,7 @@ public final class Bootstrap {
         public void showErrorIfNeeded() {
             String message = formatMessage();
             if (!message.isEmpty()) {
-                log("Preconditions failed:", message);
+                LOGGER.error("Preconditions failed: {}", message);
                 UserInterface.showError(message, brokenPath);
                 throw new RuntimeException("precodintions failed");
             }
@@ -896,17 +853,7 @@ public final class Bootstrap {
 
         JavaVersion current = JavaVersion.getCurrent();
 
-        if (current == JavaVersion.UNKNOWN) {
-            SENTRY.sendEvent(new EventBuilder()
-                    .withLevel(Event.Level.WARNING)
-                    .withMessage("unknown java version: " + System.getProperty("java.version"))
-            );
-        } else if (current.compareTo(SUPPORTED_JAVA_VERSION) < 0) {
-            SENTRY.sendEvent(new EventBuilder()
-                    .withLevel(Event.Level.ERROR)
-                    .withMessage("old java version")
-                    .withExtra("ssl_fix", FixSSL.isFixed())
-            );
+        if (current != JavaVersion.UNKNOWN && current.compareTo(SUPPORTED_JAVA_VERSION) < 0) {
             result.javaVersionUnsupported = true;
             return result;
         }
@@ -956,12 +903,33 @@ public final class Bootstrap {
     private static FileStat fileStat(Path path) {
         final boolean readable = Files.isReadable(path);
         final boolean writeable = Files.isWritable(path);
-        final boolean enoughSpace = U.queryFreeSpace(path) > 64 * 1024L;
+        final boolean enoughSpace = queryFreeSpace(path) > 64 * 1024L;
         return new FileStat(Files.exists(path), readable, writeable, enoughSpace);
     }
 
-    private static void log(Object... o) {
-        U.log("[Bootstrap]", o);
+    private static long queryFreeSpace(Path path) {
+        FileSystem fileSystem = path.getFileSystem();
+        if (fileSystem.isReadOnly()) {
+            LOGGER.warn("Filesystem is read-only for {}", path);
+            return 0;
+        }
+        FileStore fileStore;
+        try {
+            fileStore = fileSystem.provider().getFileStore(path);
+        } catch (IOException e) {
+            LOGGER.warn("Couldn't get file store of {}", path, e);
+            return -1;
+        }
+        if (fileStore.isReadOnly()) {
+            LOGGER.warn("File store is read-only {}", fileStore);
+            return 0;
+        }
+        try {
+            return fileStore.getUsableSpace();
+        } catch (IOException e) {
+            LOGGER.warn("Can't query usable space on {}", fileStore, e);
+            return -1;
+        }
     }
 
     private void whenIPCReady(Consumer<BootstrapIPC> callback) {
@@ -976,7 +944,8 @@ public final class Bootstrap {
         if (this.ipc != null) {
             throw new IllegalStateException("IPC already initialized");
         }
-        String bootstrapVersion = U.getFormattedVersion(LocalBootstrapMeta.getInstance().getVersion());
+        Version version = LocalBootstrapMeta.getInstance().getVersion();
+        String bootstrapVersion = version.toString();
         this.ipc = BootstrapIPCProvider.createIPC(bootstrapVersion, launcherArgs, this, localLauncher);
         for (Consumer<BootstrapIPC> callback : ipcReady) {
             callback.accept(ipc);

@@ -3,7 +3,6 @@ package net.legacylauncher.managers;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.component.ComponentDependence;
 import net.legacylauncher.component.InterruptibleComponent;
-import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.util.Time;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncObject;
@@ -32,7 +31,7 @@ public class VersionManager extends InterruptibleComponent {
     private final Object versionFlushLock, latestVersionsSync;
     private boolean hadRemote;
 
-    public VersionManager(ComponentManager manager) throws Exception {
+    public VersionManager(ComponentManager manager) {
         super(manager);
         VersionLists list = manager.getComponent(VersionLists.class);
         localList = list.getLocal();

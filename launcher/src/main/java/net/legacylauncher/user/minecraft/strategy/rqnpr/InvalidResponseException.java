@@ -1,7 +1,7 @@
 package net.legacylauncher.user.minecraft.strategy.rqnpr;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class InvalidResponseException extends Exception {
     private final String response;
@@ -27,7 +27,7 @@ public class InvalidResponseException extends Exception {
 
     public JsonObject getResponseAsJson() {
         try {
-            return (JsonObject) new JsonParser().parse(response);
+            return new GsonBuilder().create().fromJson(response, JsonObject.class);
         } catch (RuntimeException rE) {
             return null;
         }

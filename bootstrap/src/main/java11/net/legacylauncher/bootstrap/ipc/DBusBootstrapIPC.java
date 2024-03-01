@@ -165,9 +165,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
                 stateLock.unlock();
             }
         });
-        forwarder.addSigHandler(Launcher1.OnCloseRequest.class, signal -> {
-            DBusBootstrapIPC.this.requestClose();
-        });
+        forwarder.addSigHandler(Launcher1.OnCloseRequest.class, signal -> DBusBootstrapIPC.this.requestClose());
     }
 
     private static abstract class State {

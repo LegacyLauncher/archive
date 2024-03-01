@@ -1,18 +1,24 @@
 package net.legacylauncher.bootstrap.ui;
 
-import org.apache.commons.io.IOUtils;
 import net.legacylauncher.bootstrap.ui.message.Button;
 import net.legacylauncher.bootstrap.ui.message.MessageHost;
 import net.legacylauncher.bootstrap.ui.message.SingleButtonMessage;
 import net.legacylauncher.bootstrap.ui.message.TextAreaMessage;
-import net.legacylauncher.bootstrap.util.U;
 import net.legacylauncher.bootstrap.util.stream.OutputRedirectBuffer;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ResourceBundle;
 
 public class SaveLogsAction implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SaveLogsAction.class);
     private final ResourceBundle b = UserInterface.getResourceBundle();
 
     private final MessageHost host;
@@ -36,11 +42,11 @@ public class SaveLogsAction implements Runnable {
             if (!logsDir.isDirectory() && !logsDir.mkdir()) {
                 throw new IOException("could not create directory: " + logsDir.getAbsolutePath());
             }
-            writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
+            writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8);
             IOUtils.copy(new StringReader(content), writer);
             writer.flush();
-        } catch (IOException ioE) {
-            U.log("[SaveLogs]", ioE);
+        } catch (IOException e) {
+            LOGGER.error("Saving logs failed", e);
             saveLogsFailed();
             return;
         } finally {
@@ -49,7 +55,7 @@ public class SaveLogsAction implements Runnable {
                     writer.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.warn("Jezz, we don't event able to close writer, something gone hardly wrong", e);
             }
         }
 

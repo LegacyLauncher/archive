@@ -12,20 +12,13 @@ public class JavaManagerConfig implements Configurable {
             PATH_ARGS = "minecraft.javaargs",
             PATH_MC_ARGS = "minecraft.args",
             PATH_JRE_TYPE = "minecraft.jre.type",
-            PATH_USE_OPTIMIZED_ARGS = "minecraft.improvedargs";
+            PATH_USE_OPTIMIZED_ARGS = "minecraft.improvedargs",
+            PATH_WRAPPER_COMMAND = "minecraft.wrapper-command";
 
     private String rootDir;
-    private String args, mcArgs;
+    private String args, mcArgs, wrapperCommand;
     private JreType jreType;
     private boolean useOptimizedArguments;
-
-    public JavaManagerConfig(String rootDir, String args, String mcArgs, JreType jreType, boolean useOptimizedArguments) {
-        this.rootDir = rootDir;
-        this.args = args;
-        this.mcArgs = mcArgs;
-        this.jreType = jreType;
-        this.useOptimizedArguments = useOptimizedArguments;
-    }
 
     public JavaManagerConfig() {
     }
@@ -54,6 +47,10 @@ public class JavaManagerConfig implements Configurable {
         return getJreType().orElse(new Recommended());
     }
 
+    public Optional<String> getWrapperCommand() {
+        return Optional.ofNullable(wrapperCommand);
+    }
+
     public void setRootDir(String rootDir) {
         this.rootDir = rootDir;
     }
@@ -76,6 +73,10 @@ public class JavaManagerConfig implements Configurable {
 
     public void setUseOptimizedArguments(boolean useOptimizedArguments) {
         this.useOptimizedArguments = useOptimizedArguments;
+    }
+
+    public void setWrapperCommand(String wrapperCommand) {
+        this.wrapperCommand = wrapperCommand;
     }
 
     @Override
@@ -106,6 +107,7 @@ public class JavaManagerConfig implements Configurable {
         }
         this.jreType = jreType;
 
+        this.wrapperCommand = configuration.get(PATH_WRAPPER_COMMAND);
         this.useOptimizedArguments = configuration.getBoolean(PATH_USE_OPTIMIZED_ARGS);
     }
 
@@ -119,6 +121,7 @@ public class JavaManagerConfig implements Configurable {
         } else {
             configuration.set(PATH_JRE_TYPE, this.jreType.getType());
         }
+        configuration.set(PATH_WRAPPER_COMMAND, this.wrapperCommand);
         configuration.set(PATH_USE_OPTIMIZED_ARGS, this.useOptimizedArguments);
     }
 
@@ -129,11 +132,12 @@ public class JavaManagerConfig implements Configurable {
 
         JavaManagerConfig that = (JavaManagerConfig) o;
 
-        if (useOptimizedArguments != that.useOptimizedArguments) return false;
         if (!Objects.equals(rootDir, that.rootDir)) return false;
         if (!Objects.equals(args, that.args)) return false;
         if (!Objects.equals(mcArgs, that.mcArgs)) return false;
-        return Objects.equals(jreType, that.jreType);
+        if (!Objects.equals(jreType, that.jreType)) return false;
+        if (!Objects.equals(wrapperCommand, that.wrapperCommand)) return false;
+        return useOptimizedArguments == that.useOptimizedArguments;
     }
 
     @Override
@@ -142,7 +146,8 @@ public class JavaManagerConfig implements Configurable {
         result = 31 * result + (args != null ? args.hashCode() : 0);
         result = 31 * result + (mcArgs != null ? mcArgs.hashCode() : 0);
         result = 31 * result + (jreType != null ? jreType.hashCode() : 0);
-        result = 31 * result + (useOptimizedArguments ? 1 : 0);
+        result = 31 * result + (wrapperCommand != null ? wrapperCommand.hashCode() : 0);
+        result = 31 * result + Boolean.hashCode(useOptimizedArguments);
         return result;
     }
 

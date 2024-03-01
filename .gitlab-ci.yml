@@ -119,8 +119,10 @@ workflow:
       done
 
 .build: &build
-  image: docker.io/library/eclipse-temurin:17
+  image: docker.io/library/eclipse-temurin:21-alpine
   stage: Build
+  before_script:
+    - apk add --no-cache git
   script:
     - 'export GRADLE_USER_HOME=`pwd`/.gradle'
     - '[[ $RELEASE_GROUP != "dev" ]] && export INCLUDE_CHANGELOG=true'
@@ -137,7 +139,7 @@ workflow:
       - packages/portable/build/update/$SHORT_BRAND
       - packages/installer/build/innosetup/$SHORT_BRAND
       - packages/dmg/build/dmg/$SHORT_BRAND
-      - lib
+      - launcher/build/launcherLibs
     <<: *expires
 
 .installer: &installer
@@ -161,7 +163,7 @@ workflow:
     - >
       for host in $SSH_HOSTS; do \
         echo "Uploading libraries to $host"; \
-        scp -v -r lib/$SHORT_BRAND/* $SSH_USER@$host:$SSH_LIBRARIES_DIR/; \
+        scp -v -r launcher/build/launcherLibs/* $SSH_USER@$host:$SSH_LIBRARIES_DIR/; \
       done
 
 .deploy: &deploy

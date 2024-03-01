@@ -1,13 +1,13 @@
 package net.legacylauncher.repository;
 
 import net.legacylauncher.LegacyLauncher;
-import net.legacylauncher.util.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +54,7 @@ public enum Repository {
     }
 
     public InputStreamReader read(String path) throws IOException {
-        return new InputStreamReader(get(path), FileUtil.DEFAULT_CHARSET);
+        return new InputStreamReader(get(path), StandardCharsets.UTF_8);
     }
 
     public boolean isRemote() {

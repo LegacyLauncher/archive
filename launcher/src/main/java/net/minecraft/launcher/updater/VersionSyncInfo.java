@@ -12,7 +12,6 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
 import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
-import org.checkerframework.checker.units.qual.A;
 
 import javax.annotation.Nonnull;
 import java.io.File;

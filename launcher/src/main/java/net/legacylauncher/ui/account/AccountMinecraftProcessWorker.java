@@ -1,9 +1,5 @@
 package net.legacylauncher.ui.account;
 
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.ui.alert.Alert;
@@ -90,11 +86,6 @@ class AccountMinecraftProcessWorker {
     private void showError(Exception e) {
         setState("error");
         stopProgress();
-        Sentry.capture(new EventBuilder()
-                .withLevel(Event.Level.ERROR)
-                .withMessage("microsoft auth failed")
-                .withSentryInterface(new ExceptionInterface(e))
-        );
         if (e instanceof MinecraftAuthenticationException) {
             String key = ((MinecraftAuthenticationException) e).getShortKey();
             Alert.showLocError(

@@ -53,7 +53,7 @@ class AlertPanel extends ExtendedPanel {
     }
 
     private static Dimension getPrefSize(String str, int prefWidth, int maxHeight, FontMetrics metrics, Insets insets) {
-        if (str == null || str.length() == 0) {
+        if (str == null || str.isEmpty()) {
             return new Dimension(0, 0);
         }
 

@@ -64,12 +64,12 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
         }
     }
 
-    public void onMinecraftError(Throwable e) {
-        Alert.showLocError("launcher.error.title", "launcher.error.unknown", e);
+    public void onMinecraftError(Throwable throwable) {
+        Alert.showLocError("launcher.error.title", "launcher.error.unknown", throwable);
     }
 
-    public void onMinecraftKnownError(MinecraftException e) {
-        Alert.showError(lang.get("launcher.error.title"), lang.get("launcher.error." + e.getLangPath(), (Object[]) e.getLangVars()), e.getCause());
+    public void onMinecraftKnownError(MinecraftException exception) {
+        Alert.showError(lang.get("launcher.error.title"), lang.get("launcher.error." + exception.getLangPath(), (Object[]) exception.getLangVars()), exception.getCause());
     }
 
     @Override

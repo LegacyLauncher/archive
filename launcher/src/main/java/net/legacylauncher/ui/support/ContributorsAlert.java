@@ -1,19 +1,20 @@
 package net.legacylauncher.ui.support;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.configuration.SimpleConfiguration;
 import net.legacylauncher.ui.alert.Alert;
-import net.legacylauncher.util.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -29,7 +30,11 @@ public final class ContributorsAlert {
             return;
         }
         if (contributors == null) {
-            contributors = (JsonObject) new JsonParser().parse(new InputStreamReader(ContributorsAlert.class.getResourceAsStream("/lang/_contrib.json"), FileUtil.getCharset()));
+            try (InputStream is = ContributorsAlert.class.getResourceAsStream("/lang/_contrib.json")) {
+                assert is != null;
+                InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+                contributors = new GsonBuilder().create().fromJson(reader, JsonObject.class);
+            }
         }
         if (proofreaders == null) {
             proofreaders = new SimpleConfiguration(ContributorsAlert.class.getResource("/lang/_proofr.properties"));
@@ -38,7 +43,7 @@ public final class ContributorsAlert {
         Configuration settings = LegacyLauncher.getInstance().getSettings();
         Locale locale = settings.getLocale();
 
-        boolean hasUpgraded = LegacyLauncher.getVersion().greaterThanOrEqualTo(settings.getVersion("update.asked")),
+        boolean hasUpgraded = LegacyLauncher.getVersion().isHigherThanOrEquivalentTo(settings.getVersion("update.asked")),
                 contributorsHaveBeenShownBefore = locale.toString().equals(settings.get("contributors"));
 
         settings.set("contributors", locale.toString());
@@ -51,7 +56,7 @@ public final class ContributorsAlert {
             List<String> contributorList = new ArrayList<>();
             int others = 0;
 
-            JsonArray contribArray = (JsonArray) contributors.get(locale.toString());
+            JsonArray contribArray = contributors.getAsJsonArray(locale.toString());
 
             if (contribArray == null) {
                 return;
@@ -83,7 +88,7 @@ public final class ContributorsAlert {
                 b.append(isUssr ? "этим людям" : "these people");
                 b.append(":\n");
                 for (String contributor : contributorList) {
-                    b.append("\n\u2022 <b>").append(contributor).append("</b>");
+                    b.append("\n• <b>").append(contributor).append("</b>");
                 }
                 if (others > 0) {
                     b.append("\n ... and ").append(others).append(" others");

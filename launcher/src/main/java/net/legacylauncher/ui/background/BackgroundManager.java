@@ -5,7 +5,7 @@ import net.legacylauncher.ui.MainPane;
 import net.legacylauncher.ui.background.fx.FxAudioPlayer;
 import net.legacylauncher.ui.background.fx.MediaFxBackground;
 import net.legacylauncher.ui.swing.extended.ExtendedLayeredPane;
-import net.legacylauncher.util.JavaVersion;
+import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.Lazy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,8 +1,9 @@
 package net.legacylauncher.bootstrap.transport;
 
-import org.apache.commons.io.IOUtils;
 import net.legacylauncher.bootstrap.util.Sha256Sign;
-import net.legacylauncher.bootstrap.util.U;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +17,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
 public class SignedStream extends ChecksumStream {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SignedStream.class);
     static final PublicKey PUBLIC_KEY;
 
     static {
@@ -102,7 +104,7 @@ public class SignedStream extends ChecksumStream {
             signatureRef.update(data);
             return signatureRef.verify(signature);
         } catch (SignatureException sign) {
-            U.log("could not verify signature", sign);
+            LOGGER.error("could not verify signature", sign);
             return false;
         } catch (Exception e) {
             throw new Error("verification error", e);

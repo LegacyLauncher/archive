@@ -11,9 +11,9 @@ public interface MinecraftListener {
 
     void onMinecraftClose();
 
-    void onMinecraftError(Throwable var1);
+    void onMinecraftError(Throwable throwable);
 
-    void onMinecraftKnownError(MinecraftException var1);
+    void onMinecraftKnownError(MinecraftException exception);
 
     void onCrashManagerInit(CrashManager manager);
 }

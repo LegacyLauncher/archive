@@ -58,7 +58,7 @@ public class JUnixSocketUnixTransport extends AbstractUnixTransport {
             socket.connect(unixSocketAddress);
         }
 
-        socket.setAncillaryReceiveBufferSize(1024);
+        socket.ensureAncillaryReceiveBufferSize(1024);
 
         return socket;
     }

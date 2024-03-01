@@ -160,7 +160,6 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
             case ADD:
                 username = null;
                 oldToken = null;
-                LocalizableButton removeButton;
 
                 c.gridy++;
                 content.add(new LocalizableLabel(LOC_PREFIX + "token"), c);
@@ -212,7 +211,7 @@ public class AccountMcleaksPane extends BorderPanel implements AccountMultipaneC
                 c.gridy++;
                 content.add(panel, c);
 
-                removeButton = new LocalizableButton("account.manager.multipane.remove-account");
+                LocalizableButton removeButton = new LocalizableButton("account.manager.multipane.remove-account");
                 removeButton.addActionListener(e -> {
                     Account<? extends User> account = scene.list.getSelected();
                     if (account != null && account.getType().equals(Account.AccountType.MCLEAKS)) {

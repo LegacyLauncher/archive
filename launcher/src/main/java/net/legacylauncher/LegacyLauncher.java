@@ -1,10 +1,6 @@
 package net.legacylauncher;
 
 import com.github.zafarkhaja.semver.Version;
-import io.sentry.Sentry;
-import io.sentry.event.Event;
-import io.sentry.event.EventBuilder;
-import io.sentry.event.interfaces.ExceptionInterface;
 import joptsimple.OptionSet;
 import net.legacylauncher.configuration.*;
 import net.legacylauncher.downloader.Downloader;
@@ -22,7 +18,6 @@ import net.legacylauncher.minecraft.launcher.MinecraftLauncher;
 import net.legacylauncher.minecraft.launcher.MinecraftListener;
 import net.legacylauncher.portals.Portals;
 import net.legacylauncher.repository.Repository;
-import net.legacylauncher.sentry.SentryConfigurer;
 import net.legacylauncher.stats.Stats;
 import net.legacylauncher.ui.FlatLaf;
 import net.legacylauncher.ui.LegacyLauncherFrame;
@@ -36,12 +31,14 @@ import net.legacylauncher.ui.logger.SwingLogger;
 import net.legacylauncher.ui.login.LoginForm;
 import net.legacylauncher.ui.notice.NoticeManager;
 import net.legacylauncher.ui.notification.Notification;
-import net.legacylauncher.user.*;
+import net.legacylauncher.user.ElyUser;
+import net.legacylauncher.user.PlainUser;
+import net.legacylauncher.user.User;
 import net.legacylauncher.util.*;
 import net.legacylauncher.util.async.ExtendedThread;
 import net.legacylauncher.util.logging.DelegateServiceProvider;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.slf4j.SLF4JServiceProvider;
@@ -54,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
@@ -233,22 +229,6 @@ public final class LegacyLauncher {
             connectivityManager.queueCheck(elyByCheckEntry);
         }
 
-        if (authServerCheckEntry != null) {
-            if (profileManager.getAccountManager().getUserSet().getSet().stream()
-                    .anyMatch(u -> u.getType().equals(MojangUser.TYPE) || u.getType().equals(MinecraftUser.TYPE))
-            ) {
-                bumpAuthServerCheckPriority();
-            } else {
-                authServerCheckEntry.getTask().thenRun(() -> {
-                    AuthServerChecker checker = (AuthServerChecker) authServerCheckEntry.getChecker();
-                    if (checker.getDetectedThirdPartyAuthenticator() != null) {
-                        bumpAuthServerCheckPriority();
-                    }
-                });
-            }
-            connectivityManager.queueCheck(authServerCheckEntry);
-        }
-
         Optional<String> packageModeOpt = getPackageMode();
         if (packageModeOpt.filter(m -> m.equals("dmg")).isPresent()) {
             Optional<String> dmgAppPathOpt = getMetadata("dmg-app-path", String.class);
@@ -258,18 +238,16 @@ public final class LegacyLauncher {
                 String dmgAppPath = dmgAppPathOpt.get();
                 if (dmgAppPath.startsWith("/Volumes/")) {
                     LOGGER.info("Application seems to be running from a .dmg image");
-                    SwingUtilities.invokeLater(() -> {
-                        frame.mp.defaultScene.notificationPanel.addNotification(
-                                "macos-copy-icon",
-                                new Notification(
-                                        "macos-copy-icon",
-                                        () -> Alert.showMessage(
-                                                "",
-                                                Localizable.get("macos.please-install-notification")
-                                        )
-                                )
-                        );
-                    });
+                    SwingUtilities.invokeLater(() -> frame.mp.defaultScene.notificationPanel.addNotification(
+                            "macos-copy-icon",
+                            new Notification(
+                                    "macos-copy-icon",
+                                    () -> Alert.showMessage(
+                                            "",
+                                            Localizable.get("macos.please-install-notification")
+                                    )
+                            )
+                    ));
                 }
             }
         }
@@ -278,26 +256,14 @@ public final class LegacyLauncher {
             if (getBootstrapVersion() != null) {
                 Version version;
                 try {
-                    version = Version.valueOf(getBootstrapVersion());
+                    version = Version.parse(getBootstrapVersion());
                 } catch (RuntimeException e) {
                     LOGGER.warn("Couldn't parse bootstrap version: {}", getBootstrapVersion(), e);
-                    Sentry.capture(new EventBuilder()
-                            .withLevel(Event.Level.ERROR)
-                            .withMessage("couldn't parse bootstrap version")
-                            .withSentryInterface(new ExceptionInterface(e))
-                    );
                     return;
                 }
-                if (version.compareTo(Version.forIntegers(1, 5, 13)) == 0) {
+                if (version.compareTo(Version.of(1, 5, 13)) == 0) {
                     LOGGER.info("Detected deprecated bootstrap version: {}", version);
                     LOGGER.info("Collecting environment information for an upcoming upgrade");
-                    String gameDir = config.get("minecraft.gamedir");
-                    Sentry.capture(new EventBuilder()
-                            .withLevel(Event.Level.INFO)
-                            .withMessage("Deprecated bootstrap: gameDir")
-                            .withTag("gameDirAbsolute", String.valueOf(Paths.get(gameDir).isAbsolute()))
-                            .withExtra("gameDir", StringUtils.replace(gameDir, System.getProperty("user.name"), "***"))
-                    );
                 }
             }
         });
@@ -407,29 +373,27 @@ public final class LegacyLauncher {
 
         personalNoticeManager.queueRequest(
                 config.getClient(),
-                U.getFormattedVersion(getVersion()),
+                getVersion().toString(),
                 bootstrapIPC.getBootstrapRelease().name,
                 bootstrapIPC.getBootstrapRelease().version,
                 config.getLocale()
         );
-        executeWhenReady(() -> {
-            personalNoticeManager.getRequestOnce().thenAcceptAsync(payload -> {
-                if (payload.getNotices().isEmpty()) {
-                    return;
-                }
-                frame.mp.defaultScene.noticePanel.load();
-                NoticeManager notices = frame.getNotices();
-                notices.addNoticeForCurrentLocale(payload.getNotices());
-                notices.selectRandom();
-            }, SwingUtil.executor());
-        });
+        executeWhenReady(() -> personalNoticeManager.getRequestOnce().thenAcceptAsync(payload -> {
+            if (payload.getNotices().isEmpty()) {
+                return;
+            }
+            frame.mp.defaultScene.noticePanel.load();
+            NoticeManager notices = frame.getNotices();
+            notices.addNoticeForCurrentLocale(payload.getNotices());
+            notices.selectRandom();
+        }, SwingUtil.executor()));
 
         executeOnReadyJobs();
     }
 
     private static final String PONG_RESPONSE = "Pong!\n";
     private static final String LAUNCHERMETA = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
-    private Entry authServerCheckEntry, elyByCheckEntry;
+    private Entry elyByCheckEntry;
 
     private ConnectivityManager initConnectivityManager() {
         List<ConnectivityManager.Entry> entries = new ArrayList<>();
@@ -442,12 +406,6 @@ public final class LegacyLauncher {
                 "official_repo",
                 LAUNCHERMETA
         ).withPriority(1000));
-        entries.add(
-                authServerCheckEntry = AuthServerChecker
-                        .createEntry(resolverIPC)
-                        .withPriority(-500) // will be set to 1000 if third party authenticator is detected
-                // or Mojang/Microsoft accounts are presented
-        );
         elyByCheckEntry = checkByValidJson(
                 "account.ely.by",
                 "https://account.ely.by/api/minecraft/session/profile/ffb3378cd561502fa78a08494be68811"
@@ -461,19 +419,10 @@ public final class LegacyLauncher {
         // entries with negative priority are pretty much ignored, and only shown when there are other
         // entries that are not available
         entries.add(
-                checkByContent("launcher.mojang.com", "https://launcher.mojang.com", "")
-                        .withPriority(-500)
-        );
-        entries.add(
                 checkRepoByValidJson("official_repo_proxy", Repository.PROXIFIED_REPO, LAUNCHERMETA)
                         .withPriority(-1000)
         );
         return new ConnectivityManager(this, entries);
-    }
-
-    private void bumpAuthServerCheckPriority() {
-        authServerCheckEntry.withPriority(1000);
-        authServerCheckEntry.getTask().thenRun(connectivityManager::showNotificationOnceIfNeeded);
     }
 
     private void migrateFromOldJreConfig() {
@@ -633,13 +582,7 @@ public final class LegacyLauncher {
             promotedServerList.addAll(bootConfig.getPromotedServers().get("global"));
         }
 
-        List<PromotedServer> outdatedServerList = new ArrayList<>();
-        if (bootConfig.getOutdatedPromotedServers().containsKey(getSettings().getLocale().toString())) {
-            outdatedServerList.addAll(bootConfig.getOutdatedPromotedServers().get(getSettings().getLocale().toString()));
-        } else if (bootConfig.getOutdatedPromotedServers().containsKey("global")) {
-            outdatedServerList.addAll(bootConfig.getOutdatedPromotedServers().get("global"));
-        }
-        launcher.setPromotedServers(promotedServerList, outdatedServerList);
+        launcher.setPromotedServers(promotedServerList);
 
         return launcher;
     }
@@ -685,7 +628,6 @@ public final class LegacyLauncher {
     }
 
     private void initConfig() {
-        SentryConfigurer.setUser(config.getClient());
         LegacyLauncherFrame.setFontSize(config.getFontSize());
         if (!config.getBoolean("connection.ssl")) {
             LOGGER.warn("Disabling SSL certificate/hostname validation. IT IS NOT SECURE.");
@@ -785,7 +727,7 @@ public final class LegacyLauncher {
 
         setupErrorHandler();
 
-        LOGGER.info("Starting Legacy Launcher {} {}", getBrand(), U.getFormattedVersion(getVersion()));
+        LOGGER.info("Starting Legacy Launcher {} {}", getBrand(), getVersion().toString());
         BootstrapIPC.BootstrapRelease bootstrapRelease = ipc.getBootstrapRelease();
         LOGGER.info("... using {} {}", bootstrapRelease.name, bootstrapRelease.version);
         LOGGER.info("... with dns resolver {}", resolver.describe());
@@ -926,7 +868,7 @@ public final class LegacyLauncher {
     }
 
     static {
-        SEMVER = Objects.requireNonNull(Version.valueOf(BuildConfig.VERSION), "semver");
+        SEMVER = Objects.requireNonNull(Version.parse(BuildConfig.VERSION), "semver");
     }
 
     public static String getBrand() {
@@ -1007,6 +949,5 @@ public final class LegacyLauncher {
 
     static {
         System.setProperty("java.net.useSystemProxies", "true");
-        SentryConfigurer.configure(getVersion(), getShortBrand());
     }
 }

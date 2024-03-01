@@ -1,11 +1,7 @@
 package net.legacylauncher.bootstrap.pasta;
 
-import com.getsentry.raven.event.Event;
-import com.getsentry.raven.event.EventBuilder;
-import com.getsentry.raven.event.interfaces.ExceptionInterface;
-import org.apache.commons.io.IOUtils;
-import net.legacylauncher.bootstrap.Bootstrap;
 import net.legacylauncher.bootstrap.util.U;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -27,7 +23,7 @@ public class Pasta {
 
     public PastaLink send() throws PastaException {
         URL url = createUrl();
-        IOException e = null;
+        PastaException pastaException = new PastaException("Exhausted attempts limit");
         for (int attempt = 1; attempt <= 3; attempt++) {
             try {
                 return makeRequest(url);
@@ -40,17 +36,20 @@ public class Pasta {
                         throw new RuntimeException("interrupted", interrupted);
                     }
                 }
-                e = tmr;
+                if (pastaException.getCause() == null) {
+                    pastaException.initCause(tmr);
+                } else {
+                    pastaException.addSuppressed(tmr);
+                }
             } catch (IOException ioE) {
-                Bootstrap.SENTRY.sendEvent(new EventBuilder()
-                        .withLevel(Event.Level.ERROR)
-                        .withMessage("pasta not sent")
-                        .withSentryInterface(new ExceptionInterface(ioE))
-                );
-                e = ioE;
+                if (pastaException.getCause() == null) {
+                    pastaException.initCause(ioE);
+                } else {
+                    pastaException.addSuppressed(ioE);
+                }
             }
         }
-        throw new PastaException("Exhausted attempts limit", e);
+        throw pastaException;
     }
 
     private PastaLink makeRequest(URL url) throws IOException, PastaException {

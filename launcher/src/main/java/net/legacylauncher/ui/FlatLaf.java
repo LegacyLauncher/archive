@@ -6,8 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.portals.Portals;
-import net.legacylauncher.util.FlatLafConfiguration;
 import net.legacylauncher.util.Lazy;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,10 +19,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.legacylauncher.util.FlatLafConfiguration.getVersion;
+import static net.legacylauncher.util.shared.FlatLafConfiguration.getVersion;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class FlatLaf {
@@ -72,7 +74,7 @@ public class FlatLaf {
 
     public static BufferedImage loadDefaultBackgroundFromThemeFile(String themeFile) {
         if (!themeFile.startsWith(":")) { // not a selector
-            try (InputStreamReader reader = new InputStreamReader(new FileInputStream(themeFile), StandardCharsets.UTF_8)) {
+            try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Paths.get(themeFile)), StandardCharsets.UTF_8)) {
                 JsonElement json = JsonParser.parseReader(reader);
                 JsonObject o = json.getAsJsonObject();
                 if (o.has("_tl")) {

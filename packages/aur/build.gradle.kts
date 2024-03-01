@@ -3,6 +3,7 @@ import java.security.MessageDigest
 
 plugins {
     base
+    net.legacylauncher.brand
 }
 
 val pkgInfo = mutableMapOf<String, Any?>()
@@ -14,18 +15,14 @@ val execPath = "/usr/bin/legacylauncher"
 evaluationDependsOn(projects.bootstrap.identityPath.path)
 evaluationDependsOn(projects.launcher.identityPath.path)
 
-val shortBrand: String by rootProject.ext
-val repoCdnPathPrefixes: Collection<String> by rootProject.ext
-val repoHosts: Collection<String> by rootProject.ext
-
 val collectPkgBuildInfo by tasks.registering {
     dependsOn(projects.bootstrap.dependencyProject.tasks.named("assemble"))
     dependsOn(projects.launcher.dependencyProject.tasks.named("assemble"))
 
     doLast {
-        val alternateRepoComment = repoCdnPathPrefixes.map { cdnPath ->
+        val alternateRepoComment = brand.repoCdnPathPrefixes.get().map { cdnPath ->
             "#_repo='${cdnPath}/repo'"
-        } + repoHosts.map { host ->
+        } + brand.repoHosts.get().map { host ->
             "#_repo='https://${host}/repo'"
         }
 
@@ -70,7 +67,7 @@ val collectPkgBuildInfo by tasks.registering {
             "PKGNAME" to (System.getenv("PKGBUILD_PKGNAME") ?: "legacylauncher"),
             "PKGDESC" to (System.getenv("PKGBUILD_PKGDESC") ?: "Freeware Minecraft launcher"),
             "PKGREL" to "1",
-            "BRAND" to shortBrand,
+            "BRAND" to brand.brand.get(),
             "LAUNCHER_VERSION" to launcherVersion,
             "ALTERNATE_REPO_COMMENT" to alternateRepoComment.joinToString("\n"),
             "LAUNCHER_CHECKSUM" to launcherChecksum,
@@ -90,7 +87,7 @@ val collectPkgBuildInfo by tasks.registering {
 
 val createPkgBuild by tasks.registering(Sync::class) {
     dependsOn(collectPkgBuildInfo)
-    into(layout.buildDirectory.dir("aur/${shortBrand}"))
+    into(layout.buildDirectory.dir("aur/${brand.brand.get()}"))
 
     from("PKGBUILD") {
         filter<ReplaceTokens>("tokens" to pkgInfo)

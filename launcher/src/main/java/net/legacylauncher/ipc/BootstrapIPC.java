@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Basically a copy of {@link net.legacylauncher.Bootstrap1} interface, but we should not use Bootstrap1 directly as it requires java 11
+ * Basically a copy of {@link net.legacylauncher.ipc.Bootstrap1} interface, but we should not use Bootstrap1 directly as it requires java 11
  */
 public interface BootstrapIPC extends Closeable {
     // general metadata block

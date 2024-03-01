@@ -9,7 +9,7 @@ How do I use it? https://wiki.llaun.ch/en:guide:portable-client
 -- Портативная сборка Legacy Launcher --
 
 Legacy Launcher – свободный и бесплатный лаунчер для Minecraft.
-Данная сборка содержит минимальный набор файлов для создания портативной сборки TL
+Данная сборка содержит минимальный набор файлов для создания портативной сборки.
 
 Как запустить? TL.exe (переименовывать не рекомендуется)
 Как использовать? https://wiki.llaun.ch/guide:portable-client

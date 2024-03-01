@@ -2,7 +2,6 @@ package pw.modder.hashing;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 
@@ -29,11 +28,11 @@ public class MurmurHash2 {
 
         // TODO fix shitcode
         int lengthMatching;
-        try (BufferedInputStream is = new BufferedInputStream(new FileInputStream(file))) {
+        try (BufferedInputStream is = new BufferedInputStream(Files.newInputStream(file.toPath()))) {
             lengthMatching = countMatchingBytes(is, normalized);
         }
 
-        try (BufferedInputStream is = new BufferedInputStream(new FileInputStream(file))) {
+        try (BufferedInputStream is = new BufferedInputStream(Files.newInputStream(file.toPath()))) {
             return hash32(is, lengthMatching, normalized);
         }
     }

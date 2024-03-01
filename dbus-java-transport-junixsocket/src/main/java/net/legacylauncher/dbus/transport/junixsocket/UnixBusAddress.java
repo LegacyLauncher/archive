@@ -32,6 +32,8 @@ public class UnixBusAddress extends BusAddress implements IFileBasedBusAddress {
 
     @Override
     public void updatePermissions(String _fileOwner, String _fileGroup, Set<PosixFilePermission> _fileUnixPermissions) {
-        Util.setFilePermissions(getPath(), _fileOwner, _fileGroup, _fileUnixPermissions);
+        if (hasPath() && !isAbstract()) {
+            Util.setFilePermissions(getPath(), _fileOwner, _fileGroup, _fileUnixPermissions);
+        }
     }
 }

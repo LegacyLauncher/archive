@@ -367,12 +367,12 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     }
 
-    public void onMinecraftError(Throwable e) {
+    public void onMinecraftError(Throwable throwable) {
         Blocker.unblock(this, "launch");
         changeState(LoginForm.LoginState.STOPPED);
     }
 
-    public void onMinecraftKnownError(MinecraftException e) {
+    public void onMinecraftKnownError(MinecraftException exception) {
         Blocker.unblock(this, "launch");
         changeState(LoginForm.LoginState.STOPPED);
     }

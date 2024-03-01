@@ -26,9 +26,10 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class LegacyLauncherFrame extends JFrame {
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(LegacyLauncherFrame.class);
@@ -287,7 +288,7 @@ public class LegacyLauncherFrame extends JFrame {
         try {
             if (themeFile != null && new File(themeFile).isFile()) {
                 name = themeFile;
-                in = new FileInputStream(themeFile);
+                in = Files.newInputStream(Paths.get(themeFile));
             } else {
                 name = "modern";
                 in = Theme.class.getResourceAsStream("theme.properties");
