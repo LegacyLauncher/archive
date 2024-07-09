@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 public class PortalCombiner implements Portal {
     private final Collection<Portal> portals;
@@ -48,6 +49,15 @@ public class PortalCombiner implements Portal {
             if (colorScheme != ColorScheme.NO_PREFERENCE) return colorScheme;
         }
         return ColorScheme.NO_PREFERENCE;
+    }
+
+    @Override
+    public AutoCloseable subscribeForColorSchemeChanges(Consumer<ColorScheme> callback) {
+        for (Portal portal : portals) {
+            AutoCloseable closeable = portal.subscribeForColorSchemeChanges(callback);
+            if (closeable != EmptyCloseable.INSTANCE) return closeable;
+        }
+        return EmptyCloseable.INSTANCE;
     }
 
     @Override

@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.swing.ResizeableComponent;
 import net.legacylauncher.ui.swing.extended.ExtendedComponentAdapter;
 import net.legacylauncher.ui.swing.extended.ExtendedLayeredPane;
@@ -11,17 +12,14 @@ import net.legacylauncher.util.OS;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.ExtendedThread;
 import net.legacylauncher.util.async.FxRunnable;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+@Slf4j
 public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane implements ISwingBackground {
-    private static final Logger LOGGER = LogManager.getLogger(FXWrapper.class);
-
     private final Class<T> clazz;
 
     private FXInitializer init; // null if already initialized
@@ -35,8 +33,9 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
 
         init = new FXInitializer();
 
-        addComponentListener(new ExtendedComponentAdapter(this, 200) {
-            public void onComponentResized(ComponentEvent e) {
+        addComponentListener(new ExtendedComponentAdapter(this) {
+            @Override
+            public void onComponentResized() {
                 if (wrapper != null) {
                     wrapper.onResize();
                 }
@@ -54,7 +53,7 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
         }
 
         if (init.isAlive()) {
-            LOGGER.trace("FX is initializing so far...");
+            log.trace("FX is initializing so far...");
         } else {
             init.start();
         }
@@ -111,7 +110,7 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
                 try {
                     wrapper.background.loadBackground(path);
                 } catch (Exception e) {
-                    LOGGER.error("could not load fx background: {}", path, e);
+                    log.error("could not load fx background: {}", path, e);
                 }
             }
         }, OS.WINDOWS.isCurrent()); // TODO make special setting to join the fx loading thread?
@@ -135,7 +134,7 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
 
                     setScene(scene);
                 } catch (Exception e) {
-                    LOGGER.error("Could not create background", exception[0] = e);
+                    log.error("Could not create background", exception[0] = e);
                 }
             });
 
@@ -148,7 +147,7 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
                 try {
                     Platform.exit();
                 } catch (Exception e) {
-                    LOGGER.error("Could not exit JavaFX", e);
+                    log.error("Could not exit JavaFX", e);
                 }
 
                 throw exception[0];
@@ -157,7 +156,7 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
             FXWrapper.this.add(this);
             onResize();
 
-            LOGGER.debug("FX background successfully created: {}", background);
+            log.debug("FX background successfully created: {}", background);
         }
 
         @Override
@@ -175,10 +174,10 @@ public class FXWrapper<T extends IFXBackground> extends ExtendedLayeredPane impl
             checkCurrent();
 
             try {
-                LOGGER.trace("Initializing...");
+                log.trace("Initializing...");
                 wrapper = new JFX();
             } catch (Exception e) {
-                LOGGER.error("Could not init FX background", e);
+                log.error("Could not init FX background", e);
             }
 
             init = null;

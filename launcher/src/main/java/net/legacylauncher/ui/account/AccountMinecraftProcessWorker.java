@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.account;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.ui.alert.Alert;
@@ -31,19 +32,17 @@ import net.legacylauncher.user.minecraft.strategy.preq.create.ProfileCreatorUser
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 import net.legacylauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
 import net.legacylauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
+import net.legacylauncher.util.SwingException;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 class AccountMinecraftProcessWorker {
-    private static final Logger LOGGER = LogManager.getLogger(AccountMinecraftProcessWorker.class);
-
     private final AccountMinecraftProcess parent;
     private final String locPrefix;
 
@@ -57,13 +56,23 @@ class AccountMinecraftProcessWorker {
     private void run() {
         try {
             doRun();
+        } catch (SwingException e) {
+            try {
+                throw e.unpackException();
+            } catch (InterruptedException | TimeoutException e1) {
+                setState("cancelled");
+                stopProgress();
+            } catch (Throwable e1) {
+                log.error("Something went wrong while authenticating", e1);
+                showError(e1);
+            }
         } catch (InterruptedException | TimeoutException e) {
             setState("cancelled");
             stopProgress();
         } catch (MinecraftAuthenticationException e) {
             stopProgress();
             if (e instanceof GameOwnershipValidationException && ((GameOwnershipValidationException) e).isKnownNotToOwn()) {
-                LOGGER.info("User does not own Minecraft or not yet migrated their Mojang account");
+                log.info("User does not own Minecraft or not yet migrated their Mojang account");
                 setState("dont-own");
                 Alert.showLocError(
                         locPrefix + "dont-own.alert.title",
@@ -72,18 +81,18 @@ class AccountMinecraftProcessWorker {
                 );
             } else if (e instanceof CodeRequestCancelledException) {
                 setState("cancelled");
-                LOGGER.info("User cancelled OAuth code request: {}", e.toString());
+                log.info("User cancelled OAuth code request: {}", e.toString());
             } else {
-                LOGGER.warn("Authentication failed", e);
+                log.warn("Authentication failed", e);
                 showError(e);
             }
         } catch (Exception e) {
-            LOGGER.error("Something went wrong while authenticating", e);
+            log.error("Something went wrong while authenticating", e);
             showError(e);
         }
     }
 
-    private void showError(Exception e) {
+    private void showError(Throwable e) {
         setState("error");
         stopProgress();
         if (e instanceof MinecraftAuthenticationException) {
@@ -127,7 +136,7 @@ class AccountMinecraftProcessWorker {
         try {
             minecraftProfile = new MinecraftProfileRequester().requestProfile(minecraftToken);
         } catch (ProfileNotCreatedException e) {
-            LOGGER.info("User starts Minecraft for the first time");
+            log.info("User starts Minecraft for the first time");
             minecraftProfile = handleProfileCreation(minecraftToken);
         }
         MinecraftUser minecraftUser = new MinecraftProfileConverter().convertToMinecraftUser(msftToken, minecraftToken, minecraftProfile);
@@ -181,7 +190,7 @@ class AccountMinecraftProcessWorker {
 
                     @Override
                     public void showProfileUnavailableMessage(String profileName) {
-                        LOGGER.info("Profile is not available: {}", profileName);
+                        log.info("Profile is not available: {}", profileName);
                         Alert.showError("", Localizable.get(prefix + "unavailable"));
                     }
                 }

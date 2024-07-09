@@ -2,7 +2,7 @@ package net.legacylauncher.ui.images;
 
 import java.awt.*;
 
-public interface MultiResInterface {
+interface MultiResInterface {
     MultiResInterface INSTANCE = new MultiResInterfaceImpl();
 
     boolean isEnabled();

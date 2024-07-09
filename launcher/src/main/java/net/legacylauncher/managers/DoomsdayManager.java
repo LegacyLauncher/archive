@@ -7,8 +7,8 @@ import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
 import net.legacylauncher.util.shared.FutureUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
@@ -21,7 +21,7 @@ public class DoomsdayManager {
         CompletableFuture<DoomsdayMessageV1> result = FutureUtils.fastestOf(
                 DoomsdayMessageV1.URL_LIST
                         .stream()
-                        .map(Request::Get)
+                        .map(Request::get)
                         .map((request) -> AsyncThread.supplyInterruptible(() ->
                                 U.getGson().fromJson(EHttpClient.toString(client, request), DoomsdayMessageV1.class).validate()
                         ))
@@ -32,10 +32,10 @@ public class DoomsdayManager {
         return result;
     });
 
-    public static CompletableFuture<DoomsdayMessageV1> queryMessage() {
-        return LAZY.get();
+    private DoomsdayManager() {
     }
 
-    private DoomsdayManager() {
+    public static CompletableFuture<DoomsdayMessageV1> queryMessage() {
+        return LAZY.get();
     }
 }

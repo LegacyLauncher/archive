@@ -1,5 +1,6 @@
 package net.legacylauncher.ui;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.minecraft.crash.CrashManager;
@@ -18,8 +19,6 @@ import net.legacylauncher.ui.swing.DelayedComponentLoader;
 import net.legacylauncher.ui.swing.extended.ExtendedLayeredPane;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.util.OS;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,9 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
+@Slf4j
 public class MainPane extends ExtendedLayeredPane {
-    private static final Logger LOGGER = LogManager.getLogger(MainPane.class);
-
     private final LegacyLauncherFrame rootFrame;
     private final boolean repaintEveryTime;
     private PseudoScene scene;
@@ -46,13 +44,13 @@ public class MainPane extends ExtendedLayeredPane {
         super(null);
         rootFrame = frame;
         repaintEveryTime = OS.LINUX.isCurrent();
-        LOGGER.trace("Creating background...");
+        log.trace("Creating background...");
         background = new BackgroundManager(this);
         add(background);
-        LOGGER.trace("Init Default scene...");
+        log.trace("Init Default scene...");
         defaultScene = new DefaultScene(this);
         add(defaultScene);
-        LOGGER.trace("Init Account manager scene...");
+        log.trace("Init Account manager scene...");
         accountManager = new DelayedComponent<>(new DelayedComponentLoader<AccountManagerScene>() {
             @Override
             public AccountManagerScene loadComponent() {
@@ -72,7 +70,7 @@ public class MainPane extends ExtendedLayeredPane {
             }
         });
         //(accountManager);
-        LOGGER.trace("Init Version manager scene...");
+        log.trace("Init Version manager scene...");
         versionManager = new DelayedComponent<>(new DelayedComponentLoader<VersionManagerScene>() {
             @Override
             public VersionManagerScene loadComponent() {
@@ -112,7 +110,7 @@ public class MainPane extends ExtendedLayeredPane {
                 onResize();
             }
         });
-        frame.getLauncher().getUIListeners().registerMinecraftLauncherListener(new MinecraftExtendedListener() {
+        frame.getLauncher().getUiListeners().registerMinecraftLauncherListener(new MinecraftExtendedListener() {
             @Override
             public void onMinecraftCollecting() {
                 progress.get().onMinecraftCollecting();

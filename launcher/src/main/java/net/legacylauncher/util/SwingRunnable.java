@@ -1,10 +1,11 @@
 package net.legacylauncher.util;
 
+@FunctionalInterface
 public interface SwingRunnable extends Runnable {
     void doRun() throws Exception;
 
     @Override
-    default void run() throws SwingRunnableException {
+    default void run() {
         try {
             doRun();
         } catch (Exception e) {

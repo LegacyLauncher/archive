@@ -5,6 +5,7 @@ import net.legacylauncher.util.async.AsyncThread;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
@@ -44,6 +45,7 @@ public class ComboBoxFilter<T> {
     }
 
     private void prepareComboFiltering() {
+        this.comboBox.removeAllItems();
         for (T item : this.valueProvider.get()) {
             this.comboBox.addItem(item);
         }
@@ -112,8 +114,10 @@ public class ComboBoxFilter<T> {
         );
     }
 
+    private PopupMenuListener popupMenuListener;
+
     private void initComboPopupListener() {
-        comboBox.addPopupMenuListener(new PopupMenuListener() {
+         popupMenuListener = new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
             }
@@ -131,7 +135,8 @@ public class ComboBoxFilter<T> {
             public void popupMenuCanceled(PopupMenuEvent e) {
                 resetFilterComponent();
             }
-        });
+        };
+        comboBox.addPopupMenuListener(popupMenuListener);
     }
 
     private final AtomicInteger modelCounter = new AtomicInteger();
@@ -168,6 +173,13 @@ public class ComboBoxFilter<T> {
                 matchingItems.forEach(model::addElement);
             });
         });
+    }
+
+    public void cleanUp() {
+        comboBox.removePopupMenuListener(popupMenuListener);
+        comboBox.removeAllItems();
+        comboBox.setEditor(new BasicComboBoxEditor());
+        comboBox.setEditable(false);
     }
 
     public static <T> ComboBoxFilter<T> decorate(JComboBox<T> comboBox,

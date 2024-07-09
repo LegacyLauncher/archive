@@ -1,6 +1,7 @@
 package net.legacylauncher.ipc;
 
-import org.apache.http.impl.conn.SystemDefaultDnsResolver;
+
+import org.apache.hc.client5.http.SystemDefaultDnsResolver;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -34,5 +35,10 @@ public final class SystemDefaultResolverIPC implements ResolverIPC {
     @Override
     public InetAddress[] resolve(String host) throws UnknownHostException {
         return SystemDefaultDnsResolver.INSTANCE.resolve(host);
+    }
+
+    @Override
+    public String resolveCanonicalHostname(String host) throws UnknownHostException {
+        return SystemDefaultDnsResolver.INSTANCE.resolveCanonicalHostname(host);
     }
 }

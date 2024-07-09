@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.login;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.downloader.Downloadable;
 import net.legacylauncher.downloader.Downloader;
 import net.legacylauncher.downloader.DownloaderListener;
@@ -26,23 +27,21 @@ import net.legacylauncher.ui.swing.DelayedComponent;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.user.AuthException;
 import net.legacylauncher.user.User;
+import net.legacylauncher.util.SwingException;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
-import net.legacylauncher.util.async.LoopedThread;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ReleaseType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 public class LoginForm extends CenterPanel implements MinecraftListener, AuthenticatorListener<User>, VersionManagerListener, DownloaderListener, CrashManagerListener {
-    private static final Logger LOGGER = LogManager.getLogger(LoginForm.class);
     private final List<LoginForm.LoginStateListener> stateListeners = Collections.synchronizedList(new ArrayList<>());
     private final List<LoginForm.LoginProcessListener> processListeners = Collections.synchronizedList(new ArrayList<>());
     public final DefaultScene scene;
@@ -53,8 +52,6 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     public final CheckBoxPanel checkbox;
     public final ButtonPanel buttons;
     public final AutoLogin autologin;
-    private final LoginForm.StartThread startThread;
-    private final LoginForm.StopThread stopThread;
     private LoginForm.LoginState state;
     private Server server;
     private int serverId;
@@ -70,14 +67,12 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         this.scene = scene;
         pane = scene.getMainPane();
         settings = scene.settingsForm;
-        startThread = new LoginForm.StartThread();
-        stopThread = new LoginForm.StopThread();
         autologin = new AutoLogin(this);
         accounts = new AccountComboBox(this);
         buttons = new ButtonPanel(this);
         versions = new VersionComboBox(this);
         checkbox = new CheckBoxPanel(this);
-        processListeners.add(new LoginProcessListener() {
+        processListeners.add(new SwingLoginProcessListener(new LoginProcessListener() {
             @Override
             public void loggingIn() throws LoginException {
                 pane.progress.get().loggingIn();
@@ -92,9 +87,9 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             public void loginSucceed() {
                 pane.progress.get().loginSucceed();
             }
-        });
+        }));
         processListeners.add(autologin);
-        processListeners.add(new LoginProcessListener() {
+        processListeners.add(new SwingLoginProcessListener(new LoginProcessListener() {
             @Override
             public void loggingIn() throws LoginException {
                 settings.get().loggingIn();
@@ -109,7 +104,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
             public void loginSucceed() {
                 settings.get().loginSucceed();
             }
-        });
+        }));
         processListeners.add(checkbox);
         processListeners.add(versions);
         processListeners.add(accounts);
@@ -137,7 +132,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                         local.getAssetIndex() != null &&
                         "legacy".equals(local.getAssetIndex().getId())) {
                     if (Alert.showLocQuestion("versions.damaged-json")) {
-                        checkbox.forceupdate.setSelected(true);
+                        SwingUtil.wait(() -> checkbox.forceupdate.setSelected(true));
                     }
                 }
             }
@@ -156,7 +151,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         add(buttons);
         tlauncher.getVersionManager().addListener(new SwingVersionManagerListener(this));
         tlauncher.getDownloader().addListener(this);
-        tlauncher.getUIListeners().registerMinecraftLauncherListener(this);
+        tlauncher.getUiListeners().registerMinecraftLauncherListener(this);
     }
 
     private void runProcess() {
@@ -168,19 +163,19 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                     //log("Listener:", listener);
                     listener.loggingIn();
                 } catch (LoginWaitException loginError) {
-                    LOGGER.debug("Caught a wait task");
+                    log.debug("Caught a wait task");
 
                     block("wait-task");
                     try {
                         loginError.getWaitTask().runTask();
                     } catch (LoginException e) {
-                        LOGGER.error("Caught an error on a wait task of {}", listener, e);
+                        log.error("Caught an error on a wait task of {}", listener, e);
                         error = e;
                     } finally {
                         unblock("wait-task");
                     }
                 } catch (LoginException e) {
-                    LOGGER.error("Caught an error on listener {}", listener, e);
+                    log.error("Caught an error on listener {}", listener, e);
                     error = e;
                 }
 
@@ -202,7 +197,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         }
 
         if (error != null) {
-            LOGGER.warn("Login process has ended with an error.");
+            log.warn("Login process has ended with an error.");
         } else {
             if (accounts.getAccount() != null) {
                 global.setForcefully("login.account", accounts.getAccount().getUsername(), false);
@@ -213,7 +208,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
             changeState(LoginForm.LoginState.LAUNCHING);
 
-            LOGGER.debug("Calling Minecraft Launcher...");
+            log.debug("Calling Minecraft Launcher...");
             String versionName = requestedVersion == null ? versions.getVersion().getID() : requestedVersion.getID();
             boolean forceUpdate = checkbox.forceupdate.isSelected();
             AsyncThread.execute(() -> tlauncher.newMinecraftLauncher(versionName, server, serverId, forceUpdate).start());
@@ -243,11 +238,11 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public void startLauncher(VersionSyncInfo requestedVersion, Server server, int serverId) {
         if (!Blocker.isBlocked(this)) {
-            LOGGER.debug("Starting launcher: {}", requestedVersion);
+            log.debug("Starting launcher: {}", requestedVersion);
             Blocker.block(this, "starting");
             AsyncThread.execute(() -> {
                 while (tlauncher.getLibraryManager().isRefreshing()) {
-                    LOGGER.debug("Waiting for library manager...");
+                    log.debug("Waiting for library manager...");
                     U.sleepFor(500L);
                 }
                 SwingUtil.later(() -> {
@@ -259,7 +254,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                         this.server = server;
                         this.serverId = serverId;
                         autologin.setActive(false);
-                        startThread.iterate();
+                        AsyncThread.execute(this::runProcess);
                     } finally {
                         Blocker.unblock(this, "starting");
                     }
@@ -269,7 +264,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     public void stopLauncher() {
-        stopThread.iterate();
+        AsyncThread.execute(this::stopProcess);
     }
 
     private void changeState(LoginForm.LoginState state) {
@@ -422,6 +417,34 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         void loginSucceed();
     }
 
+    public static class SwingLoginProcessListener implements LoginProcessListener {
+        private final LoginProcessListener delegate;
+
+        public SwingLoginProcessListener(LoginProcessListener delegate) {
+            this.delegate = delegate;
+        }
+
+        public void loggingIn() throws LoginException {
+            try {
+                SwingUtil.wait(delegate::loggingIn);
+            } catch (SwingException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof LoginException) {
+                    throw (LoginException) cause;
+                }
+                throw e;
+            }
+        }
+
+        public void loginFailed() {
+            SwingUtil.wait(delegate::loginFailed);
+        }
+
+        public void loginSucceed() {
+            SwingUtil.wait(delegate::loginSucceed);
+        }
+    }
+
     public enum LoginState {
         LAUNCHING,
         STOPPING,
@@ -431,35 +454,5 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
 
     public interface LoginStateListener {
         void loginStateChanged(LoginForm.LoginState state);
-    }
-
-    class StartThread extends LoopedThread {
-        StartThread() {
-            startAndWait();
-        }
-
-        protected void iterateOnce() {
-            try {
-                runProcess();
-            } catch (Throwable e) {
-                Alert.showError(e);
-            }
-
-        }
-    }
-
-    class StopThread extends LoopedThread {
-        StopThread() {
-            startAndWait();
-        }
-
-        protected void iterateOnce() {
-            try {
-                stopProcess();
-            } catch (Throwable e) {
-                Alert.showError(e);
-            }
-
-        }
     }
 }

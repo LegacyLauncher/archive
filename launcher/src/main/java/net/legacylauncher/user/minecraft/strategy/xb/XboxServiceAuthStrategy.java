@@ -4,7 +4,7 @@ import net.legacylauncher.user.minecraft.strategy.rqnpr.GsonParser;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.Parser;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.RequestAndParseStrategy;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.Requester;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 public abstract class XboxServiceAuthStrategy
         extends RequestAndParseStrategy<String, XboxServiceAuthenticationResponse> {

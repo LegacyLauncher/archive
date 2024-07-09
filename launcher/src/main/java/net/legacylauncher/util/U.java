@@ -3,10 +3,9 @@ package net.legacylauncher.util;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.async.ExtendedThread;
 import org.apache.commons.lang3.LocaleUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.io.File;
@@ -18,9 +17,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Slf4j
 public class U {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private static String toLog(String prefix, Object... append) {
         StringBuilder b = new StringBuilder();
         boolean first = true;
@@ -271,14 +269,6 @@ public class U {
         return a / k;
     }
 
-
-    public static int getMaxMultiply(int i, int max) {
-        if (i <= max) return 1;
-        for (int x = max; x > 1; x--)
-            if (i % x == 0) return x;
-        return (int) Math.ceil((double) i / max);
-    }
-
     public static StringBuilder stackTrace(Throwable e) {
         StringBuilder trace = rawStackTrace(e);
         Thread thread = Thread.currentThread();
@@ -462,7 +452,7 @@ public class U {
         try {
             return LocaleUtils.toLocale(tag);
         } catch (RuntimeException e) {
-            LOGGER.warn("Couldn't parse locale: {}", tag, e);
+            log.warn("Couldn't parse locale: {}", tag, e);
             return null;
         }
     }

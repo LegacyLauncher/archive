@@ -1,7 +1,6 @@
 package net.legacylauncher.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -19,9 +18,8 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@Slf4j
 public class FileUtil {
-    private static final Logger LOGGER = LogManager.getLogger(FileUtil.class);
-
     public static void writeFile(File file, String text) throws IOException {
         createFile(file);
         BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
@@ -126,18 +124,17 @@ public class FileUtil {
         try {
             return getChecksum0(file, algorithm);
         } catch (IOException ioE) {
-            LOGGER.debug("Couldn't compute {} for {}", algorithm, file.getAbsolutePath(), ioE);
+            log.debug("Couldn't compute {} for {}", algorithm, file.getAbsolutePath(), ioE);
             return null;
         }
     }
 
-    private static void close(Closeable a) {
+    private static void close(Closeable closeable) {
         try {
-            a.close();
-        } catch (Exception var2) {
-            var2.printStackTrace();
+            closeable.close();
+        } catch (Exception e) {
+            log.warn("Exception during closing a resource", e);
         }
-
     }
 
     public static File getRunningJar() {
@@ -186,7 +183,7 @@ public class FileUtil {
             }
         } else {
             if (fileExists(file)) {
-                LOGGER.warn("Could not delete file: {}", path, new RuntimeException());
+                log.warn("Could not delete file: {}", path, new RuntimeException());
             }
         }
     }

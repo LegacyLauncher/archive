@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class JVMPortal implements Portal {
     private static final Logger LOGGER = LoggerFactory.getLogger(JVMPortal.class);
@@ -46,6 +47,11 @@ public class JVMPortal implements Portal {
     @Override
     public ColorScheme getColorScheme() {
         return JVMPortalColorSchemeDetector.getColorScheme();
+    }
+
+    @Override
+    public AutoCloseable subscribeForColorSchemeChanges(Consumer<ColorScheme> callback) {
+        return JVMPortalColorSchemeDetector.subscribeForColorSchemeChanges(callback);
     }
 
     public static Optional<JVMPortal> tryToCreate() {

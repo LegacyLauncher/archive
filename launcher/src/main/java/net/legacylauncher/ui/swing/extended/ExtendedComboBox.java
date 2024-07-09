@@ -13,7 +13,6 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
     private StringConverter<T> converter;
 
     public ExtendedComboBox(ListCellRenderer<T> renderer) {
-        Theme.setup(this);
         setModel(new SimpleComboBoxModel<>());
         setRenderer(renderer);
         setOpaque(false);
@@ -64,5 +63,11 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
 
     protected T convert(String from) {
         return converter == null ? null : converter.fromString(from);
+    }
+
+    @Override
+    public void updateUI() {
+        Theme.setup(this);
+        super.updateUI();
     }
 }

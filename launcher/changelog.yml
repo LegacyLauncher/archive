@@ -1,16 +1,16 @@
 ru_RU: >
   Привет, давно не виделись.<br/><br/>
-  – Ускорен запуск лаунчера при нестабильном (или частично блокируемым) доступе в Интернет<br/>
-  – Улучшена загрузка файлов игры из репозиториев<br/>
-  – Поддержка команды-враппера для запуска игры (например, mangohud, prime-run, и т.д.)<br/>
-  – Разрешены кириллические никнеймы (с предупреждением о том, что они могут не заработать)<br/>
-  – При добавлении нового аккаунта в лаунчер появилась возможность выбора аккаунта Microsoft, на который куплена игра<br/>
+  – Улучшена работа загрузчика файлов<br/>
+  – Динамическая смена темы лаунчера<br/>
+  – Галочка скинов Ely.by теперь устанавливается для конкретных аккаунтов<br/>
+  – Улучшена поддержка NeoForge и Babric<br/>
+  – Восстановлена работа скинов на аккаунтах "без пароля" с отключенными скинами Ely.by<br/>
   – Другие многочисленные исправления и улучшения<br/>
 en_US: >
   Hi, it's been a while!<br/><br/>
-  – Improved launcher startup times with unstable (or partially blocked) Internet access
-  – Improved file download stability
-  – Added support for a wrapper command (e.g., mangohud, prime-run, etc.)
-  – Allowed non-Latin nicknames (including a warning that these might not work at all)
-  – It's now possible to select a Microsoft account that was used to purchase the game
-  – Other fixes and improvements
+  – File downloader improvements<br/>
+  – Dynamic Look&Feel<br/>
+  – Ely.by skins checkbox is per-account now<br/>
+  – Improved NeoForge and Babric support<br/>
+  – Restored skins when using "Free" account with disabled Ely.by skins<br/>
+  – Other fixes and improvements<br/>

@@ -208,11 +208,13 @@ class LoggerFrame extends JFrame implements LocalizableComponent {
             }
         });
         addComponentListener(listenerThread = new ExtendedComponentAdapter(this) {
-            public void onComponentResized(ComponentEvent e) {
+            @Override
+            public void onComponentResized() {
                 delayedSave();
             }
 
-            public void onComponentMoved(ComponentEvent e) {
+            @Override
+            public void onComponentMoved() {
                 delayedSave();
             }
         });

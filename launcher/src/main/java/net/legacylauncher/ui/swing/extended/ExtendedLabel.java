@@ -12,7 +12,6 @@ public class ExtendedLabel extends JLabel {
 
     public ExtendedLabel(String text, Icon icon, int horizontalAlignment) {
         super(text, icon, horizontalAlignment);
-        Theme.setup(this);
         setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
     }
@@ -56,5 +55,11 @@ public class ExtendedLabel extends JLabel {
             super.paintComponent(g);
             g.setComposite(oldComposite);
         }
+    }
+
+    @Override
+    public void updateUI() {
+        Theme.setup(this);
+        super.updateUI();
     }
 }

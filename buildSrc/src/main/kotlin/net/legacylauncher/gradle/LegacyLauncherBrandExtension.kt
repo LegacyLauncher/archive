@@ -13,4 +13,6 @@ interface LegacyLauncherBrandExtension {
     val repoDomainsZonesRu: ListProperty<String>
     val repoHosts: ListProperty<String>
     val repoCdnPathPrefixes: ListProperty<String>
+
+    val supportEmail: Property<String>
 }

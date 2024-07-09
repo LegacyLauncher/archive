@@ -41,10 +41,6 @@ public class AccountManagerScene extends PseudoScene {
         multipane.registerTip(new AccountElyProcess(this));
         multipane.registerTip(new NoAccountEdit(this, Account.AccountType.ELY));
 
-        multipane.registerTip(new AccountMcleaksStart(this));
-        multipane.registerTip(new AccountMcleaksPane(this, PaneMode.ADD));
-        multipane.registerTip(new AccountMcleaksPane(this, PaneMode.EDIT));
-
         multipane.registerTip(new AccountMinecraftProcess(this));
         multipane.registerTip(new NoAccountEdit(this, Account.AccountType.MINECRAFT));
 

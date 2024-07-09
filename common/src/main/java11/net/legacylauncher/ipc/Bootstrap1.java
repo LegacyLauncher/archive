@@ -5,7 +5,9 @@ import org.freedesktop.dbus.TypeRef;
 import org.freedesktop.dbus.annotations.DBusInterfaceName;
 import org.freedesktop.dbus.annotations.DBusProperty;
 import org.freedesktop.dbus.annotations.Position;
+import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.DBusInterface;
+import org.freedesktop.dbus.messages.DBusSignal;
 import org.freedesktop.dbus.types.Variant;
 
 import java.util.List;
@@ -27,11 +29,6 @@ public interface Bootstrap1 extends DBusInterface {
         return OBJECT_PATH;
     }
 
-    interface LauncherArguments extends TypeRef<List<String>> {
-    }
-
-    // general metadata block
-
     /**
      * Returns known release notes for given launcher version
      *
@@ -40,11 +37,13 @@ public interface Bootstrap1 extends DBusInterface {
      */
     Map<String, ReleaseNotes> GetLauncherReleaseNotes(String launcherVersion);
 
-    // general purpose metadata block
 
     void SetMetadata(String key, Variant<?> value);
 
     Variant<?> GetMetadata(String key);
+
+    interface LauncherArguments extends TypeRef<List<String>> {
+    }
 
     class BootstrapRelease extends Struct {
         @Position(0)
@@ -67,6 +66,12 @@ public interface Bootstrap1 extends DBusInterface {
         public ReleaseNotes(String title, String body) {
             this.title = title;
             this.body = body;
+        }
+    }
+
+    class AboutToClose extends DBusSignal {
+        public AboutToClose(String _objectPath) throws DBusException {
+            super(_objectPath);
         }
     }
 }

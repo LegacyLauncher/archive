@@ -35,10 +35,15 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
             erid = root.get("erid").getAsString();
         }
 
+        String eridUrl = null;
+        if (root.has("erid_url")) {
+            eridUrl = root.get("erid_url").getAsString();
+        }
+
         NoticeImage image = parseImage(root, context);
         NoticeAction action = parseAction(id, root, context);
 
-        Notice notice = new Notice(id, pos, text, erid, image, action);
+        Notice notice = new Notice(id, pos, text, erid, eridUrl, image, action);
         if (root.has("promoted") && root.get("promoted").getAsBoolean()) {
             notice.setPromoted(true);
         }

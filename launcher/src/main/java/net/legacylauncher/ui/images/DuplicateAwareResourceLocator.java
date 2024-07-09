@@ -6,12 +6,12 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DuplicateAwareResourceLocator implements ImageResourceLocator {
+class DuplicateAwareResourceLocator implements ImageResourceLocator {
     private static final Pattern PATTERN = Pattern.compile("(.+)-\\d+(\\..+)");
 
     private final ImageResourceLocator parentLoader;
 
-    public DuplicateAwareResourceLocator(ImageResourceLocator parentLoader) {
+    DuplicateAwareResourceLocator(ImageResourceLocator parentLoader) {
         this.parentLoader = Objects.requireNonNull(parentLoader);
     }
 

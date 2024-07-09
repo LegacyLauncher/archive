@@ -2,21 +2,19 @@ package net.legacylauncher.user.minecraft.strategy.preq;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.*;
-import org.apache.http.client.fluent.Request;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
 
+@Slf4j
 public class MinecraftProfileRequester
         extends RequestAndParseStrategy<MinecraftServicesToken, MinecraftOAuthProfile> {
-    private static final Logger LOGGER = LogManager.getLogger(MinecraftProfileRequester.class);
-
     public MinecraftProfileRequester() {
         this(new HttpClientRequester<>(token ->
-                Request.Get("https://api.minecraftservices.com/minecraft/profile")
+                Request.get("https://api.minecraftservices.com/minecraft/profile")
                         .addHeader("Authorization", "Bearer " + token.getAccessToken()))
         );
     }
@@ -27,7 +25,7 @@ public class MinecraftProfileRequester
 
     MinecraftProfileRequester(Requester<MinecraftServicesToken> requester,
                               Parser<MinecraftOAuthProfile> parser) {
-        super(LOGGER, requester, parser);
+        super(log, requester, parser);
     }
 
     public MinecraftOAuthProfile requestProfile(MinecraftServicesToken token)

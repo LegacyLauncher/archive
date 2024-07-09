@@ -48,7 +48,12 @@ public class LocalizableRadioButton extends JRadioButton implements LocalizableC
     }
 
     private void init() {
-        Theme.setup(this);
         setOpaque(false);
+    }
+
+    @Override
+    public void updateUI() {
+        Theme.setup(this);
+        super.updateUI();
     }
 }

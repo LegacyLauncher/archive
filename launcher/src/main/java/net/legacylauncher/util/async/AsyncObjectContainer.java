@@ -1,5 +1,7 @@
 package net.legacylauncher.util.async;
 
+import net.legacylauncher.util.shared.FutureUtils;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +20,7 @@ public class AsyncObjectContainer<T> {
 
         synchronized (objects) {
             for (AsyncObject<T> object : objects)
-                object.start();
+                object.queue();
 
             boolean hasRemaining;
 

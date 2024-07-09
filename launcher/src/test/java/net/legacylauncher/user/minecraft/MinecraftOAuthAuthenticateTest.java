@@ -1,5 +1,6 @@
 package net.legacylauncher.user.minecraft;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.MinecraftUser;
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.MinecraftAuthenticationException;
@@ -21,8 +22,6 @@ import net.legacylauncher.user.minecraft.strategy.preq.create.MinecraftProfileCr
 import net.legacylauncher.user.minecraft.strategy.preq.create.ProfileCreatorUserInterface;
 import net.legacylauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
 import net.legacylauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +31,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class MinecraftOAuthAuthenticateTest {
-    private static final Logger LOGGER = LogManager.getLogger(MinecraftOAuthAuthenticateTest.class);
-
     @Test
     @Disabled
     void usingLocalServer() throws InterruptedException, MinecraftAuthenticationException, IOException, TimeoutException {
@@ -64,7 +62,7 @@ public class MinecraftOAuthAuthenticateTest {
                 new MinecraftProfileConverter()
         );
         MinecraftUser authenticate = flow.authenticate();
-        LOGGER.info(authenticate);
+        log.info("{}", authenticate);
     }
 
     @Test
@@ -91,7 +89,7 @@ public class MinecraftOAuthAuthenticateTest {
                 new MinecraftProfileConverter()
         );
         MinecraftUser authenticate = flow.authenticate();
-        LOGGER.info(authenticate);
+        log.info("{}", authenticate);
     }
 
     private final ProfileCreatorUserInterface profileCreatorUserInterface = new ProfileCreatorUserInterface() {

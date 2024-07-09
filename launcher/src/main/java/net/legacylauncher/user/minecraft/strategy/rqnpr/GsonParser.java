@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.legacylauncher.exceptions.ParseException;
 import net.legacylauncher.minecraft.auth.UUIDTypeAdapter;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.lang.reflect.Type;
 import java.util.UUID;

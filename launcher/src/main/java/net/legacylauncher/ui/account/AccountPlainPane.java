@@ -5,14 +5,12 @@ import net.legacylauncher.managers.AccountManager;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.images.Images;
-import net.legacylauncher.ui.loc.LocalizableButton;
-import net.legacylauncher.ui.loc.LocalizableHTMLLabel;
-import net.legacylauncher.ui.loc.LocalizableLabel;
-import net.legacylauncher.ui.loc.LocalizableTextField;
+import net.legacylauncher.ui.loc.*;
 import net.legacylauncher.ui.scenes.AccountManagerScene;
 import net.legacylauncher.ui.swing.DocumentChangeListener;
 import net.legacylauncher.ui.swing.extended.ExtendedCheckbox;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
+import net.legacylauncher.user.PlainUser;
 import net.legacylauncher.user.User;
 import net.legacylauncher.util.SwingUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +27,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
     private final AccountManagerScene scene;
     private final LocalizableTextField field;
     private final ExtendedCheckbox invalidNameAwareCheckbox;
+    private final ExtendedCheckbox elySkins;
 
     private final PaneMode mode;
 
@@ -94,6 +93,10 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         c.gridy++;
         add(invalidNameAwarePane, c);
 
+        elySkins = new LocalizableCheckbox("account.button.ely.toggle", true);
+        c.gridy++;
+        add(elySkins, c);
+
         final LocalizableButton button = new LocalizableButton(LOC_PREFIX + (mode == PaneMode.EDIT ? "edit" : "save"));
         button.addActionListener(e -> {
             String username = field.getValue();
@@ -141,7 +144,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                         return;
             }
 
-            User user = AccountManager.getPlainAuth().authorize(username);
+            User user = AccountManager.getPlainAuth().authorize(username, elySkins.getState());
             LegacyLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
             AccountPlainPane.this.scene.list.select(new Account<>(user));
             AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
@@ -207,6 +210,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
             if (selected != null && selected.getType() == Account.AccountType.PLAIN) {
                 field.setValue(selected.getUsername());
                 invalidNameAwareCheckbox.setSelected(isNameInvalid(field.getValue()));
+                elySkins.setState(((PlainUser) selected.getUser()).isElySkins());
             }
         }
     }

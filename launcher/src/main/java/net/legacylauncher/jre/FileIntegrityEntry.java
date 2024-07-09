@@ -1,15 +1,13 @@
 package net.legacylauncher.jre;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.FileUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.Objects;
 
+@Slf4j
 public class FileIntegrityEntry {
-    private static final Logger LOGGER = LogManager.getLogger(FileIntegrityEntry.class);
-
     private final String path;
     private final String sha1;
     private final long lastModifiedNanos;
@@ -27,14 +25,14 @@ public class FileIntegrityEntry {
     public boolean isTamperedWithAt(File directory) {
         File file = resolve(directory);
         if (!file.isFile()) {
-            LOGGER.debug("File doesn't exist: {}", file.getAbsolutePath());
+            log.debug("File doesn't exist: {}", file.getAbsolutePath());
             return true;
         }
         String sha1 = FileUtil.getSHA(file);
         if (this.sha1.equals(sha1)) {
             return false;
         }
-        LOGGER.debug("File was tampered with: {} (got {}, expected {})", file.getAbsolutePath(), sha1, this.sha1);
+        log.debug("File was tampered with: {} (got {}, expected {})", file.getAbsolutePath(), sha1, this.sha1);
         return true;
         /* TODO lastModified может быть записан с разной точностью в зависимости от платформы.
                 пока не проверяем.

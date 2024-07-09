@@ -1,11 +1,10 @@
 package net.legacylauncher.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.Time;
 import net.legacylauncher.util.U;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -17,9 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Slf4j
 public class RepoList {
-    private static final Logger LOGGER = LogManager.getLogger(RepoList.class);
-
     private static final int FILE_BUFFER = 1024 * 8; // 8 kb
     private static final long GLOBAL_BUFFER_MAX = 1024 * 1024 * 10; // 10 mb
     private static final AtomicLong GLOBAL_BUFFER = new AtomicLong();
@@ -58,7 +56,7 @@ public class RepoList {
         Object total = new Object();
         Time.start(total);
 
-        LOGGER.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path, timeout / 1000, proxy);
+        log.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path, timeout / 1000, proxy);
         int attempt = 0;
 
         for (IRepo repo : l) {
@@ -80,11 +78,11 @@ public class RepoList {
             try {
                 InputStream result = read(connect(repo, path, timeout, proxy, attempt));
                 long[] deltas = Time.stop(total, current);
-                LOGGER.debug("Fetched successfully from {}: \"{}\": {} ms; total: {} ms, attempt: {}",
+                log.debug("Fetched successfully from {}: \"{}\": {} ms; total: {} ms, attempt: {}",
                         name, _path, deltas[1], deltas[0], attempt);
                 return result;
             } catch (IOException ioE) {
-                LOGGER.error("Failed to fetch from {}: \"{}\": attempt: {}, exception: {}",
+                log.error("Failed to fetch from {}: \"{}\": attempt: {}, exception: {}",
                         name, _path, attempt, ioE.toString());
                 if (ex == null) {
                     ex = ioE;
@@ -127,7 +125,7 @@ public class RepoList {
         try {
             return readIntoFile(in);
         } catch (BufferException repoException) {
-            LOGGER.error("Could not read into file from {}", name, repoException);
+            log.error("Could not read into file from {}", name, repoException);
         }
 
         //log("Reading directly", in);

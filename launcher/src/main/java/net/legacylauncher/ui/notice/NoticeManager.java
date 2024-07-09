@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.notice;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.configuration.BootConfiguration;
 import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.stats.Stats;
@@ -7,16 +8,13 @@ import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blockable;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.util.U;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.util.List;
 import java.util.*;
 
+@Slf4j
 public final class NoticeManager implements LocalizableComponent, Blockable {
-    private static final Logger LOGGER = LogManager.getLogger(NoticeManager.class);
-
     private static final int HIDDEN_DELAY = 1000 * 60 * 60 * 24 * 7; // 1 week
 
     private final LegacyLauncherFrame frame;
@@ -37,22 +35,22 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                 Locale locale = U.getLocale(entry.getKey());
 
                 if (locale == null) {
-                    LOGGER.warn("Couldn't parse locale: {}", key);
+                    log.warn("Couldn't parse locale: {}", key);
                     continue;
                 }
                 if (entry.getValue() == null) {
-                    LOGGER.warn("Notice list is null: {}", key);
+                    log.warn("Notice list is null: {}", key);
                     continue;
                 }
                 if (entry.getValue().isEmpty()) {
-                    LOGGER.debug("Notice list is empty: {}", key);
+                    log.debug("Notice list is empty: {}", key);
                     continue;
                 }
 
                 List<Notice> noticeList = new ArrayList<>();
                 for (Notice notice : entry.getValue()) {
                     if (notice == null) {
-                        LOGGER.warn("Found null selectedNotice in {}", key);
+                        log.warn("Found null selectedNotice in {}", key);
                         continue;
                     }
                     noticeList.add(notice);
@@ -67,7 +65,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
                 noticeList.sort(Comparator.comparingInt(Notice::getPos));
 
                 byLocaleMap.put(locale, Collections.unmodifiableList(noticeList));
-                LOGGER.debug("Added {} notices for {}", noticeList.size(), locale);
+                log.debug("Added {} notices for {}", noticeList.size(), locale);
             }
 
             if (frame != null) {
@@ -85,7 +83,7 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
             }
             selectRandom();
         } else {
-            LOGGER.debug("Notice map is empty");
+            log.debug("Notice map is empty");
         }
     }
 

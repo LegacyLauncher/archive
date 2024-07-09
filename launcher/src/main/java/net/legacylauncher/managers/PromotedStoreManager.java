@@ -1,15 +1,18 @@
 package net.legacylauncher.managers;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import net.legacylauncher.util.EHttpClient;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.fluent.Request;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +24,7 @@ public class PromotedStoreManager {
             AsyncThread.completableTimeout(10, TimeUnit.SECONDS, () ->
                     U.getGson().fromJson(
                             EHttpClient.toString(
-                                    Request.Get("https://api.llaun.ch/v1/promotedStore")
+                                    Request.get("https://api.llaun.ch/v1/promotedStore")
                                             .addHeader(HttpHeaders.ACCEPT, "application/json")
                             ),
                             Info.class
@@ -49,10 +52,13 @@ public class PromotedStoreManager {
         });
     }
 
+    @EqualsAndHashCode
+    @ToString
+    @Getter
     public static class Info {
         private String id;
         private String url;
-        private String price;
+        private Map<String, String> text;
 
         public Info() {
         }
@@ -60,40 +66,6 @@ public class PromotedStoreManager {
         public Info(String id, String url) {
             this.id = id;
             this.url = url;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public String getPrice() {
-            return price;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Info)) return false;
-            Info info = (Info) o;
-            return Objects.equals(id, info.id) && Objects.equals(url, info.url) && Objects.equals(price, info.price);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(id, url, price);
-        }
-
-        @Override
-        public String toString() {
-            return "Info{" +
-                    "id='" + id + '\'' +
-                    ", url='" + url + '\'' +
-                    ", price='" + price + '\'' +
-                    '}';
         }
     }
 }

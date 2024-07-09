@@ -1,9 +1,8 @@
 package net.legacylauncher.user.minecraft.strategy.oareq.embed;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.exceptions.ParseException;
 import net.legacylauncher.user.minecraft.strategy.oareq.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -13,9 +12,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrategy {
-    private static final Logger LOGGER = LogManager.getLogger(EmbeddedBrowserStrategy.class);
-
     private final ExecutorService urlThread = Executors.newSingleThreadExecutor();
     private final EmbeddedBrowser browser;
     private final EmbeddedBrowserUrlProducer urlProducer;
@@ -64,15 +62,15 @@ public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrateg
     }
 
     private void urlNavigated(String url) {
-        LOGGER.trace("Navigated: {}", url);
+        log.trace("Navigated: {}", url);
         String code = null;
         try {
             code = parser.parseAndValidate(url);
         } catch (ParseException e) {
-            LOGGER.trace("Couldn't parse: {}", e.toString());
+            log.trace("Couldn't parse: {}", e.toString());
             return;
         } catch (MicrosoftOAuthCodeRequestException e) {
-            LOGGER.warn("Parser returned: {}", e.toString());
+            log.warn("Parser returned: {}", e.toString());
             this.exception = e;
         }
         this.code = code == null ? null :
@@ -84,7 +82,7 @@ public class EmbeddedBrowserStrategy implements MicrosoftOAuthCodeRequestStrateg
         try {
             JavaFXBrowser.checkAvailable();
         } catch (Error e) {
-            LOGGER.info("JavaFX Browser not available: {}", e.toString());
+            log.info("JavaFX Browser not available: {}", e.toString());
             return false;
         }
         return true;

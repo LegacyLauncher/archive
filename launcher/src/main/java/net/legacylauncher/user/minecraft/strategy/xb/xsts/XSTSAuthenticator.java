@@ -3,25 +3,23 @@ package net.legacylauncher.user.minecraft.strategy.xb.xsts;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.HttpClientRequester;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.InvalidResponseException;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.InvalidStatusCodeException;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.Requester;
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthStrategy;
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.ContentType;
 
 import java.io.IOException;
 
+@Slf4j
 public class XSTSAuthenticator extends XboxServiceAuthStrategy {
-    private static final Logger LOGGER = LogManager.getLogger(XSTSAuthenticator.class);
-
     public XSTSAuthenticator() {
-        super(LOGGER, new HttpClientRequester<>(xboxLiveToken ->
-                Request.Post("https://xsts.auth.xboxlive.com/xsts/authorize")
+        super(log, new HttpClientRequester<>(xboxLiveToken ->
+                Request.post("https://xsts.auth.xboxlive.com/xsts/authorize")
                         .bodyString(
                                 String.format(java.util.Locale.ROOT, "{\"Properties\":{\"SandboxId\":\"RETAIL\",\"UserTokens\":[\"%s\"]},\"RelyingParty\": \"rp://api.minecraftservices.com/\",\"TokenType\": \"JWT\"}", xboxLiveToken),
                                 ContentType.APPLICATION_JSON
@@ -30,7 +28,25 @@ public class XSTSAuthenticator extends XboxServiceAuthStrategy {
     }
 
     XSTSAuthenticator(Requester<String> requester) {
-        super(LOGGER, requester);
+        super(log, requester);
+    }
+
+    private static XSTSAuthenticationException parseXErr(JsonObject response) {
+        if (response.has("XErr")) {
+            JsonElement xErr = response.get("XErr");
+            if (xErr instanceof JsonPrimitive) {
+                String code = xErr.getAsString();
+                switch (code) {
+                    case "2148916233":
+                        return new NoXboxAccountException();
+                    case "2148916235":
+                        return new CountryNotAuthorizedException();
+                    case "2148916238":
+                        return new ChildAccountException();
+                }
+            }
+        }
+        return null;
     }
 
     public XboxServiceAuthenticationResponse xstsAuthenticate(String xboxLiveToken)
@@ -51,23 +67,5 @@ public class XSTSAuthenticator extends XboxServiceAuthStrategy {
             }
             throw new XSTSAuthenticationException(e);
         }
-    }
-
-    private static XSTSAuthenticationException parseXErr(JsonObject response) {
-        if (response.has("XErr")) {
-            JsonElement xErr = response.get("XErr");
-            if (xErr instanceof JsonPrimitive) {
-                String code = xErr.getAsString();
-                switch (code) {
-                    case "2148916233":
-                        return new NoXboxAccountException();
-                    case "2148916235":
-                        return new CountryNotAuthorizedException();
-                    case "2148916238":
-                        return new ChildAccountException();
-                }
-            }
-        }
-        return null;
     }
 }

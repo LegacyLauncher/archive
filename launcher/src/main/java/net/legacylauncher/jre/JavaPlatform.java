@@ -1,8 +1,7 @@
 package net.legacylauncher.jre;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.OS;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,9 +10,8 @@ import java.util.Objects;
 
 import static net.legacylauncher.util.OS.Arch.IS_64_BIT;
 
+@Slf4j
 public class JavaPlatform {
-    private static final Logger LOGGER = LogManager.getLogger(JavaPlatform.class);
-
     public static final List<String> CURRENT_PLATFORM_CANDIDATES = getCurrentPlatformCandidates();
 
     private static List<String> getCurrentPlatformCandidates() {
@@ -30,7 +28,7 @@ public class JavaPlatform {
                 macOsPlatforms.add("mac-os");
                 return Collections.unmodifiableList(macOsPlatforms);
             default:
-                LOGGER.warn("Current platform is unknown: {} {}", OS.CURRENT, OS.Arch.CURRENT);
+                log.warn("Current platform is unknown: {} {}", OS.CURRENT, OS.Arch.CURRENT);
                 return Collections.emptyList();
         }
     }

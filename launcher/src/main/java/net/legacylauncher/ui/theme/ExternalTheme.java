@@ -1,9 +1,8 @@
 package net.legacylauncher.ui.theme;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.exceptions.ParseException;
 import net.legacylauncher.util.IntegerArray;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.io.IOException;
@@ -11,9 +10,8 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 
+@Slf4j
 public final class ExternalTheme extends ChildTheme {
-    private static final Logger LOGGER = LogManager.getLogger(ExternalTheme.class);
-
     private final Properties properties = new Properties();
 
     ExternalTheme(String name, InputStream input) throws IOException {
@@ -45,7 +43,7 @@ public final class ExternalTheme extends ChildTheme {
                 }
             }
         } catch (RuntimeException rE) {
-            LOGGER.warn("Could not parse color: {}", key, rE);
+            log.warn("Could not parse color: {}", key, rE);
             properties.remove(key);
             return defaultColor;
         }
@@ -69,7 +67,7 @@ public final class ExternalTheme extends ChildTheme {
                 throw new ParseException("illegal value [0, " + maxValue + "]: " + key);
             }
         } catch (RuntimeException rE) {
-            LOGGER.warn("Could not parse integer at: {} = {}", key, value, rE);
+            log.warn("Could not parse integer at: {} = {}", key, value, rE);
             return defValue;
         }
 

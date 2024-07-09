@@ -2,6 +2,7 @@ package net.legacylauncher.minecraft.launcher.hooks;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.minecraft.launcher.ProcessHook;
 import org.freedesktop.dbus.FileDescriptor;
 import org.freedesktop.dbus.connections.IDisconnectCallback;
@@ -9,8 +10,6 @@ import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -19,9 +18,8 @@ import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 
+@Slf4j
 public class GameModeHook implements ProcessHook {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GameModeHook.class);
-
     private final DBusConnection connection;
     private final GameModeInterface gameModeInterface;
 
@@ -108,11 +106,11 @@ public class GameModeHook implements ProcessHook {
             if (callerPidFd >= 0 && gamePidFd >= 0) {
                 fdMap.put(process, new GameModeEntry(callerPid, gamePid, new FileDescriptor(callerPidFd), new FileDescriptor(gamePidFd)));
                 gameModeInterface.RegisterGameByPIDFd(new FileDescriptor(callerPidFd), new FileDescriptor(gamePidFd));
-                LOGGER.info("Minecraft process registered in GameMode. Pids: {} / {}, FDs: {} / {}", callerPid, gamePid, callerPidFd, gamePidFd);
+                log.info("Minecraft process registered in GameMode. Pids: {} / {}, FDs: {} / {}", callerPid, gamePid, callerPidFd, gamePidFd);
             } else {
                 fdMap.put(process, new GameModeEntry(callerPid, gamePid));
                 gameModeInterface.RegisterGameByPID(callerPid, gamePid);
-                LOGGER.info("Minecraft process registered in GameMode. Pids: {} / {}", callerPid, gamePid);
+                log.info("Minecraft process registered in GameMode. Pids: {} / {}", callerPid, gamePid);
             }
         } catch (DBusExecutionException ignored) {
         }
@@ -123,21 +121,21 @@ public class GameModeHook implements ProcessHook {
         try {
             GameModeEntry entry = fdMap.remove(process);
             if (entry == null) {
-                LOGGER.warn("GameMode registration lost (that's a bug), trying to unregister with generic way...");
+                log.warn("GameMode registration lost (that's a bug), trying to unregister with generic way...");
                 int callerPid = (int) ProcessHandle.current().pid();
                 int gamePid = (int) process.pid();
                 gameModeInterface.UnregisterGameByPID(callerPid, gamePid);
-                LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}", callerPid, gamePid);
+                log.info("Minecraft process unregistered in GameMode. Pids: {} / {}", callerPid, gamePid);
             } else {
                 if (entry.getCallerPidFd() != null && entry.getGamePidFd() != null) {
                     gameModeInterface.UnregisterGameByPIDFd(entry.getCallerPidFd(), entry.getGamePidFd());
-                    LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}, FDs: {} / {}",
+                    log.info("Minecraft process unregistered in GameMode. Pids: {} / {}, FDs: {} / {}",
                             entry.getCallerPid(), entry.getGamePid(), entry.getCallerPidFd().getIntFileDescriptor(), entry.getGamePidFd().getIntFileDescriptor());
                     CLibrary.INSTANCE.close(entry.getGamePidFd().getIntFileDescriptor());
                     CLibrary.INSTANCE.close(entry.getCallerPidFd().getIntFileDescriptor());
                 } else {
                     gameModeInterface.UnregisterGameByPID(entry.getCallerPid(), entry.getGamePid());
-                    LOGGER.info("Minecraft process unregistered in GameMode. Pids: {} / {}", entry.getCallerPid(), entry.getGamePid());
+                    log.info("Minecraft process unregistered in GameMode. Pids: {} / {}", entry.getCallerPid(), entry.getGamePid());
                 }
             }
         } catch (DBusExecutionException ignored) {
@@ -152,7 +150,7 @@ public class GameModeHook implements ProcessHook {
     private static class DBusDisconnectionLogger implements IDisconnectCallback {
         @Override
         public void disconnectOnError(IOException e) {
-            LOGGER.error("DBus session terminated due to an error", e);
+            log.error("DBus session terminated due to an error", e);
         }
     }
 

@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.settings;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.managers.JavaManagerConfig;
@@ -25,11 +26,11 @@ import net.legacylauncher.ui.scenes.DefaultScene;
 import net.legacylauncher.ui.support.ContributorsAlert;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
 import net.legacylauncher.ui.swing.extended.ExtendedButton;
-import net.legacylauncher.util.*;
+import net.legacylauncher.util.Direction;
+import net.legacylauncher.util.IntegerArray;
+import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.shared.FlatLafConfiguration;
 import net.minecraft.launcher.versions.ReleaseType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -43,8 +44,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.*;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
+@Slf4j
 public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginProcessListener, LocalizableComponent {
-    private static final Logger LOGGER = LogManager.getLogger(SettingsPanel.class);
     final DefaultScene scene;
     private final TabbedEditorPanel.EditorPanelTab minecraftTab;
     public final EditorFieldHandler directory;
@@ -185,8 +188,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         minecraftTab.nextPane();
 
         List<EditorHandler> extraHandlerList = new ArrayList<>();
-        extraHandlerList.add(new EditorFieldHandler("ely.globally", new EditorCheckBox("settings.ely", true)));
-        extraHandlerList.add(EditorPair.NEXT_COLUMN);
         extraHandlerList.add(new EditorFieldHandler("minecraft.servers.promoted.ingame", new EditorCheckBox("settings.promotion.ingame", true)));
         if (GameModeHookLoader.isAvailable()) {
             extraHandlerList.add(EditorPair.NEXT_COLUMN);
@@ -243,8 +244,9 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         ));
         laf.addListener(new EditorFieldChangeListener() {
             protected void onChange(String oldValue, String newValue) {
-                if (SettingsPanel.this.ready && newValue != null) {
-                    Alert.showLocWarning("", "settings.laf.restart", null);
+                if (ready) {
+                    sc.getMainPane().getRootFrame().updateLaf();
+                    Alert.showLocWarning("", "settings.laf.restart-to-apply", null);
                 }
             }
         });
@@ -255,7 +257,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         try {
             backgroundExplorer = mediaFxAvailable ? MediaFileExplorer.newExplorer() : ImageFileExplorer.newExplorer();
         } catch (Exception e) {
-            LOGGER.warn("Could not load FileExplorer", e);
+            log.warn("Could not load FileExplorer", e);
         }
 
         background = new EditorFieldHandler("gui.background", new EditorFileField("settings.slide.list.prompt." + (mediaFxAvailable ? "media" : "image"), backgroundExplorer, true, true));
@@ -573,7 +575,7 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
             String value = handler.getValue();
             String existingValue = global.get(path);
             if (!Objects.equals(value, existingValue)) {
-                LOGGER.debug("Found changes: {}", path);
+                log.debug("Found changes: {}", path);
                 return true;
             }
         }
@@ -593,5 +595,14 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         }
         scene.setSidePanel(null);
         return true;
+    }
+
+    @Override
+    public void updateUI() {
+        if (ready) {
+            checkValues();
+            updateUINullable(popup);
+        }
+        super.updateUI();
     }
 }

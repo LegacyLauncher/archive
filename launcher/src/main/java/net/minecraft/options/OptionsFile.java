@@ -1,9 +1,8 @@
 package net.minecraft.options;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,8 +15,8 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class OptionsFile {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern LINE_PATTERN = Pattern.compile("^(.+?):(.+)$");
 
     private final Map<String, String> options = new LinkedHashMap<>();
@@ -63,7 +62,7 @@ public final class OptionsFile {
                 if (m.matches()) {
                     options.put(m.group(1), m.group(2));
                 } else {
-                    LOGGER.warn("Line skipped while parsing {}: {}", file, line);
+                    log.warn("Line skipped while parsing {}: {}", file, line);
                 }
             }
         }

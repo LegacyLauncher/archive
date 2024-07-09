@@ -3,6 +3,7 @@ package net.minecraft.launcher.updater;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.Time;
@@ -14,8 +15,6 @@ import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,9 +24,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
 
+@Slf4j
 public abstract class VersionList {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     protected final Gson gson;
     protected final Map<String, Version> byName = new HashMap<>();
     protected final List<Version> versions = Collections.synchronizedList(new ArrayList<>());
@@ -124,7 +122,7 @@ public abstract class VersionList {
             version.setVersionList(this);
         }
 
-        LOGGER.info("Got {} in {} ms", getClass().getSimpleName(), Time.stop(lock));
+        log.info("Got {} in {} ms", getClass().getSimpleName(), Time.stop(lock));
         return list;
     }
 
@@ -141,12 +139,12 @@ public abstract class VersionList {
         for (Entry<ReleaseType, String> entry : versionList.latest.entrySet()) {
             ReleaseType releaseType = entry.getKey();
             if (releaseType == null) {
-                LOGGER.warn("Unknown release type for latest version entry: {}", entry);
+                log.warn("Unknown release type for latest version entry: {}", entry);
             } else {
                 Version version = getVersion(entry.getValue());
 
                 if (version == null) {
-                    LOGGER.warn("Cannot find version for latest version entry: {}", entry);
+                    log.warn("Cannot find version for latest version entry: {}", entry);
                 } else {
                     latest.put(releaseType, version);
                 }
@@ -163,7 +161,7 @@ public abstract class VersionList {
         if (version.getID() == null) {
             throw new IllegalArgumentException("Cannot add blank version");
         } else if (getVersion(version.getID()) != null) {
-            LOGGER.warn("Version '{}' is already tracked", version.getID());
+            log.warn("Version '{}' is already tracked", version.getID());
             return version;
         } else {
             versions.add(version);

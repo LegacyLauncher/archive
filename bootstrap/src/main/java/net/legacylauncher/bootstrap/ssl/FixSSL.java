@@ -1,7 +1,6 @@
 package net.legacylauncher.bootstrap.ssl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -19,9 +18,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class FixSSL {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FixSSL.class);
-
     private static boolean IS_FIXED = false;
 
     public static boolean isFixed() {
@@ -32,7 +30,7 @@ public class FixSSL {
         try {
             addLetsEncryptIntoTrustStore();
         } catch (Exception e) {
-            LOGGER.error("Couldn't add LetsEncrypt root certificate", e);
+            log.error("Couldn't add LetsEncrypt root certificate", e);
         }
     }
 
@@ -40,7 +38,7 @@ public class FixSSL {
                                                           Map<String, Certificate> letsEncryptStore) {
         for (Certificate letsEncryptCert : letsEncryptStore.values()) {
             if (!jreTrustStore.containsValue(letsEncryptCert)) {
-                LOGGER.info("JRE trust store doesn't contain {}", letsEncryptCert);
+                log.info("JRE trust store doesn't contain {}", letsEncryptCert);
                 return false;
             }
         }
@@ -80,7 +78,7 @@ public class FixSSL {
     }
 
     private static void useNewKeyStoreGlobally(KeyStore keyStore) throws Exception {
-        LOGGER.info("Adding LetsEncrypt into trust store");
+        log.info("Adding LetsEncrypt into trust store");
         TrustManagerFactory instance = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         instance.init(keyStore);
         final SSLContext tls = SSLContext.getInstance("TLS");

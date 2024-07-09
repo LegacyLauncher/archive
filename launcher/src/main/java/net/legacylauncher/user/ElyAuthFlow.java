@@ -1,8 +1,7 @@
 package net.legacylauncher.user;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.net.URL;
 import java.net.URLEncoder;
@@ -15,8 +14,8 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+@Slf4j
 public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Callable<ElyAuthCode> {
-    private static final Logger LOGGER = LogManager.getLogger(ElyAuthFlow.class);
 
     // client_id=tlauncher&response_type=code&scope=account_info+minecraft_server_session&redirect_uri=http://localhost:80
     static final String OAUTH2_BASE = ElyAuth.ACCOUNT_BASE + "/oauth2/v1";
@@ -54,7 +53,7 @@ public abstract class ElyAuthFlow<L extends ElyAuthFlowListener> implements Call
             }
             throw interrupted;
         } catch (Exception e) {
-            LOGGER.error("Error fetching code", e);
+            log.error("Error fetching code", e);
             for (L listener : listenerList) {
                 listener.strategyErrored(this, e);
             }

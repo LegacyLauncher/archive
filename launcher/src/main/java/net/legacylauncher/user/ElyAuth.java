@@ -1,14 +1,12 @@
 package net.legacylauncher.user;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Objects;
 
+@Slf4j
 public final class ElyAuth implements Auth<ElyUser> {
-    private static final Logger LOGGER = LogManager.getLogger(ElyAuth.class);
-
     static final String CLIENT_ID = "tlauncher";
     static final String CLIENT_SECRET = "SbOVmJHBCjMV1NsewphGgA2SbyrVjN7IBcOte6b1HR7JGup2";
 
@@ -32,13 +30,13 @@ public final class ElyAuth implements Auth<ElyUser> {
     private ElyAuthCode fetchCodeImpl(ElyAuthFlow<?> flow) throws Exception {
         Objects.requireNonNull(flow);
 
-        LOGGER.debug("Trying to get code using {}", flow);
+        log.debug("Trying to get code using {}", flow);
         try {
             return flow.call();
         } catch (InterruptedException interrupted) {
             throw interrupted;
         } catch (Exception e) {
-            LOGGER.error("Couldn't fetch code", e);
+            log.error("Couldn't fetch code", e);
             throw e;
         }
     }
@@ -50,7 +48,7 @@ public final class ElyAuth implements Auth<ElyUser> {
         try {
             validator.validateUser();
         } catch (IOException e) {
-            LOGGER.warn("Ely returned error", e);
+            log.warn("Ely returned error", e);
             throw AuthException.soft(new AuthUnavailableException(e));
         }
     }

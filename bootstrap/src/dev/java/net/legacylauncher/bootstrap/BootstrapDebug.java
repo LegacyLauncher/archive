@@ -1,12 +1,11 @@
 package net.legacylauncher.bootstrap;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.launcher.LocalLauncher;
 import net.legacylauncher.bootstrap.launcher.LocalLauncherTask;
 import net.legacylauncher.bootstrap.meta.UpdateMeta;
 import net.legacylauncher.bootstrap.task.Task;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,9 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Slf4j
 public class BootstrapDebug {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BootstrapDebug.class);
-
     public static void main(String[] args) throws Exception {
         Path bootstrapJar;
         try {
@@ -71,7 +69,7 @@ public class BootstrapDebug {
                         UpdateMeta.ConnectionInterrupter.Callback::onConnectionInterrupted
                 ).call().getOptions();
             } catch (Exception e) {
-                LOGGER.error("Unable to fetch update meta", e);
+                log.error("Unable to fetch update meta", e);
                 return null;
             }
         }

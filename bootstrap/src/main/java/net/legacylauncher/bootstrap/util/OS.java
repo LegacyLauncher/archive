@@ -1,9 +1,8 @@
 package net.legacylauncher.bootstrap.util;
 
 import com.sun.jna.Platform;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.portals.Portals;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URI;
@@ -12,13 +11,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 
+@Slf4j
 public enum OS {
     LINUX,
     WINDOWS,
     OSX,
     UNKNOWN;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OS.class);
     public static final OS CURRENT;
     static {
         OS current = UNKNOWN;
@@ -69,11 +68,11 @@ public enum OS {
     }
 
     public static boolean openUri(URI uri) {
-        LOGGER.info("Opening URL: {}", uri.toASCIIString());
+        log.info("Opening URL: {}", uri.toASCIIString());
         try {
             return Portals.getPortal().openURI(uri);
         } catch (Exception e) {
-            LOGGER.error("Unable to open URL {}", uri, e);
+            log.error("Unable to open URL {}", uri, e);
             return false;
         }
     }
@@ -84,7 +83,7 @@ public enum OS {
         try {
             uri = url.toURI();
         } catch (Exception e) {
-            LOGGER.error("Unable to open URL {}", url, e);
+            log.error("Unable to open URL {}", url, e);
             return false;
         }
 
@@ -95,7 +94,7 @@ public enum OS {
         try {
             return Portals.getPortal().openFile(path.toPath());
         } catch (Exception e) {
-            LOGGER.error("Unable to open file {}", path, e);
+            log.error("Unable to open file {}", path, e);
             return false;
         }
     }

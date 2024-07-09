@@ -10,6 +10,8 @@ import net.minecraft.launcher.updater.VersionSyncInfo;
 import javax.swing.*;
 import java.util.List;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class VersionRefreshButton extends ExtendedButton implements VersionHandlerListener, Blockable {
     private static final long serialVersionUID = -7148657244927244061L;
     private static final String PREFIX = "version.manager.refresher.";
@@ -78,6 +80,12 @@ public class VersionRefreshButton extends ExtendedButton implements VersionHandl
 
     public void unblock(Object reason) {
         setEnabled(true);
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(menu);
+        super.updateUI();
     }
 
     enum ButtonState {

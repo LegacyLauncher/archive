@@ -141,7 +141,7 @@ class NoticeWrapper extends BorderPanel {
                     if (notice.getErid() != null) {
                         JMenuItem eridItem = new JMenuItem("Реклама. Erid: " + notice.getErid());
                         eridItem.addActionListener(e1 ->
-                                OS.openLink("https://erid.ads.llaun.ch/#erid=" + notice.getErid())
+                                OS.openLink(notice.getEridUrl())
                         );
                         action.popup.registerItem(eridItem);
                         action.popup.registerItem(null);

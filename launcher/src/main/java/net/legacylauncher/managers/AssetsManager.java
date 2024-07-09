@@ -1,6 +1,7 @@
 package net.legacylauncher.managers;
 
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.component.ComponentDependence;
 import net.legacylauncher.component.LauncherComponent;
 import net.legacylauncher.downloader.Downloadable;
@@ -16,8 +17,6 @@ import net.minecraft.launcher.updater.AssetIndex;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -25,10 +24,9 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
+@Slf4j
 @ComponentDependence({VersionManager.class, VersionLists.class})
 public class AssetsManager extends LauncherComponent {
-    private static final Logger LOGGER = LogManager.getLogger(AssetsManager.class);
-
     private final Gson gson = U.getGson();
     private final Object assetsFlushLock = new Object();
 
@@ -70,7 +68,7 @@ public class AssetsManager extends LauncherComponent {
             try {
                 list = getRemoteResourceFilesList(version, baseDirectory, true);
             } catch (Exception var7) {
-                LOGGER.error("Cannot get remote assets list. Trying to use the local one.", var7);
+                log.error("Cannot get remote assets list. Trying to use the local one.", var7);
             }
         }
 
@@ -82,7 +80,7 @@ public class AssetsManager extends LauncherComponent {
             try {
                 list = getRemoteResourceFilesList(version, baseDirectory, true);
             } catch (Exception var6) {
-                LOGGER.error("Gave up trying to get assets list", var6);
+                log.error("Gave up trying to get assets list", var6);
             }
         }
 
@@ -93,14 +91,14 @@ public class AssetsManager extends LauncherComponent {
         String indexName = version.getAssetIndex().getId();
         File indexesFolder = new File(baseDirectory, "assets/indexes/");
         File indexFile = new File(indexesFolder, indexName + ".json");
-        LOGGER.debug("Reading indexes from file {}", indexFile);
+        log.debug("Reading indexes from file {}", indexFile);
 
         AssetIndex index;
         try (Reader reader = new FileReader(indexFile)) {
             AssetIndex obj = gson.fromJson(reader, AssetIndex.class);
             index = Objects.requireNonNull(obj);
         } catch (Exception e) {
-            LOGGER.error("could not read index file {}", indexFile, e);
+            log.error("could not read index file {}", indexFile, e);
             return null;
         }
 
@@ -121,10 +119,10 @@ public class AssetsManager extends LauncherComponent {
         Reader json;
 
         if (StringUtils.isBlank(version.getAssetIndex().getUrl())) {
-            LOGGER.debug("Reading from repository...");
+            log.debug("Reading from repository...");
             json = Repository.OFFICIAL_VERSION_REPO.read("indexes/" + indexName + ".json");
         } else {
-            LOGGER.debug("Reading from index: {}", version.getAssetIndex().getUrl());
+            log.debug("Reading from index: {}", version.getAssetIndex().getUrl());
             json = new StringReader(RepositoryProxy.requestMaybeProxy(version.getAssetIndex().getUrl()));
         }
 
@@ -153,14 +151,14 @@ public class AssetsManager extends LauncherComponent {
                     tempIndexFile.delete();
                 }
             }
-            LOGGER.debug("Assets index has been saved into file: {}", indexFile);
+            log.debug("Assets index has been saved into file: {}", indexFile);
         }
 
         return result;
     }
 
     public ResourceChecker checkResources(CompleteVersion version, File baseDirectory, boolean local, boolean fast) throws AssetsNotFoundException {
-        LOGGER.debug("Checking resources...");
+        log.debug("Checking resources...");
 
         List<AssetIndex.AssetObject> list;
         if (local) {
@@ -170,7 +168,7 @@ public class AssetsManager extends LauncherComponent {
         }
 
         if (list == null) {
-            LOGGER.warn("Cannot check resources, because assets list is unavailable");
+            log.warn("Cannot check resources, because assets list is unavailable");
             throw new AssetsNotFoundException();
         } else {
             return new ResourceChecker(baseDirectory, list, fast);
@@ -202,7 +200,7 @@ public class AssetsManager extends LauncherComponent {
             try {
                 decompress(compressedAssetFile, assetFile, local.getHash());
             } catch (IOException ioE) {
-                LOGGER.error("Could not decompress assets", ioE);
+                log.error("Could not decompress assets", ioE);
                 return false;
             }
             return true;
@@ -288,7 +286,7 @@ public class AssetsManager extends LauncherComponent {
         }
 
         private void check() {
-            LOGGER.info("Executing {} assets comparison", fast ? "fast" : "deep");
+            log.info("Executing {} assets comparison", fast ? "fast" : "deep");
 
             List<AssetIndex.AssetObject> result = new ArrayList<>();
             Time.start();

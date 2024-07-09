@@ -1,5 +1,6 @@
 package net.minecraft.launcher.updater;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.EHttpClient;
@@ -8,9 +9,7 @@ import net.legacylauncher.util.Time;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import org.apache.commons.io.IOExceptionList;
-import org.apache.http.client.fluent.Request;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,8 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 public class OfficialVersionList extends RemoteVersionList {
-    private static final Logger LOGGER = LogManager.getLogger(OfficialVersionList.class);
+    private static final String LAUNCHER_META_PREFIX = "https://launchermeta.mojang.com/mc/game/";
 
     public OfficialVersionList() {
     }
@@ -39,12 +39,12 @@ public class OfficialVersionList extends RemoteVersionList {
             Object currentUrlLock = new Object();
             Time.start(currentUrlLock);
             try {
-                LOGGER.debug("Fetching official repository: {}", url);
+                log.debug("Fetching official repository: {}", url);
                 String content;
                 try {
-                    content = EHttpClient.toString(Request.Get(url));
+                    content = EHttpClient.toString(Request.get(url));
                 } catch (IOException ioE) {
-                    LOGGER.warn("Official repository is not available: {}", url, ioE);
+                    log.warn("Official repository is not available: {}", url, ioE);
                     ioEList.add(ioE);
                     continue;
                 }
@@ -52,17 +52,17 @@ public class OfficialVersionList extends RemoteVersionList {
                 try {
                     rawVersionList = Objects.requireNonNull(gson.fromJson(content, RawVersionList.class));
                 } catch (RuntimeException e) {
-                    LOGGER.warn("Couldn't parse official repository response: {}", content, e);
+                    log.warn("Couldn't parse official repository response: {}", content, e);
                     ioEList.add(new IOException("invalid json", e));
                     continue;
                 }
-                LOGGER.info("Got OfficialVersionList in {} ms", Time.stop(currentUrlLock));
+                log.info("Got OfficialVersionList in {} ms", Time.stop(currentUrlLock));
                 return process(rawVersionList);
             } finally {
                 Time.stop(currentUrlLock);
             }
         }
-        LOGGER.warn("Official repository is not reachable");
+        log.warn("Official repository is not reachable");
         throw new IOExceptionList(ioEList);
     }
 
@@ -77,8 +77,6 @@ public class OfficialVersionList extends RemoteVersionList {
     public boolean hasAllFiles(CompleteVersion var1, OS var2) {
         return true;
     }
-
-    private static final String LAUNCHER_META_PREFIX = "https://launchermeta.mojang.com/mc/game/";
 
     @Override
     protected InputStreamReader getUrl(String var1) throws IOException {

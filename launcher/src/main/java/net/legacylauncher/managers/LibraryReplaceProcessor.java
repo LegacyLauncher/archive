@@ -2,6 +2,7 @@ package net.legacylauncher.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.component.InterruptibleComponent;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.repository.Repository;
@@ -13,17 +14,14 @@ import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import net.minecraft.launcher.versions.json.PatternTypeAdapter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Unbox;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class LibraryReplaceProcessor extends InterruptibleComponent {
-    private static final Logger LOGGER = LogManager.getLogger(LibraryReplaceProcessor.class);
     private static final String PATCHY_TYPE = "patchy";
 
     private final List<LibraryReplaceProcessorListener> listeners = Collections.synchronizedList(new ArrayList<>());
@@ -119,10 +117,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
     }
 
     public CompleteVersion processExplicitly(CompleteVersion original, String type) {
-        LOGGER.debug("Processing version {} for type {}", original.getID(), type);
+        log.debug("Processing version {} for type {}", original.getID(), type);
 
         if (original.isProceededFor(type)) {
-            LOGGER.debug("... already proceeded");
+            log.debug("... already proceeded");
             return original;
         }
 
@@ -131,10 +129,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
         List<LibraryReplace> libraries = getLibraries(original, type);
         for (LibraryReplace replacementLib : libraries) {
-            LOGGER.debug("Now processing: {}", replacementLib.getName());
+            log.debug("Now processing: {}", replacementLib.getName());
 
             if (target.getLibraries().contains(replacementLib)) {
-                LOGGER.debug("... already contains");
+                log.debug("... already contains");
                 continue;
             }
 
@@ -146,15 +144,15 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
                     while (requiredIterator.hasNext()) {
                         Library requiredLib = requiredIterator.next();
                         if (library.getPlainName().equals(requiredLib.getPlainName())) {
-                            LOGGER.debug("... replacing required at index {}: {} -> {}",
-                                    Unbox.box(i), library.getName(), requiredLib.getName());
+                            log.debug("... replacing required at index {}: {} -> {}",
+                                    i, library.getName(), requiredLib.getName());
                             target.getLibraries().set(i, requiredLib);
                             requiredIterator.remove();
                         }
                     }
                 }
                 if (!requiredLibs.isEmpty()) {
-                    LOGGER.debug("... prepending required: {}", requiredLibs.stream().map(Library::getName).collect(Collectors.joining(", ")));
+                    log.debug("... prepending required: {}", requiredLibs.stream().map(Library::getName).collect(Collectors.joining(", ")));
                     target.getLibraries().addAll(0, requiredLibs);
                 }
             }
@@ -164,12 +162,12 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
                 for (int i = 0; i < target.getLibraries().size(); i++) {
                     Library library = target.getLibraries().get(i);
                     if (pattern.matcher(library.getName()).matches()) {
-                        LOGGER.debug("... replacing at index {}: {}", Unbox.box(i), library.getName());
+                        log.debug("... replacing at index {}: {}", i, library.getName());
                         target.getLibraries().set(i, replacementLib);
                     }
                 }
             } else {
-                LOGGER.debug("... prepending: {}", replacementLib.getName());
+                log.debug("... prepending: {}", replacementLib.getName());
                 target.getLibraries().add(0, replacementLib);
             }
 
@@ -194,13 +192,13 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
     }
 
     @Override
-    protected boolean refresh(int session) {
+    protected boolean refresh(int refreshID) {
         if (refreshed) {
             //log("Already refreshed");
             return true;
         }
 
-        LOGGER.debug("Refreshing libraries...");
+        log.debug("Refreshing libraries...");
 
         for (LibraryReplaceProcessorListener l : listeners) {
             l.onLibraryReplaceRefreshing(this);
@@ -209,7 +207,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         try {
             refreshDirectly();
         } catch (Exception e) {
-            LOGGER.warn("Ely refresh failed", e);
+            log.warn("Ely refresh failed", e);
             return false;
         } finally {
             for (LibraryReplaceProcessorListener l : listeners) {
@@ -217,7 +215,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
             }
         }
 
-        LOGGER.debug("Refreshed successfully");
+        log.debug("Refreshed successfully");
         return true;
     }
 
@@ -232,7 +230,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
 
         synchronized (libraries) {
             libraries.clear();
-            LOGGER.debug("Got replaces: " + String.join(", ", resp.libraries.keySet()));
+            log.debug("Got replaces: " + String.join(", ", resp.libraries.keySet()));
             libraries.putAll(resp.libraries);
             if (!libraries.containsKey(Account.AccountType.ELY_LEGACY.toString()) && resp.libraries.containsKey(Account.AccountType.ELY.toString())) {
                 libraries.put(Account.AccountType.ELY_LEGACY.toString(), resp.libraries.get(Account.AccountType.ELY.toString()));

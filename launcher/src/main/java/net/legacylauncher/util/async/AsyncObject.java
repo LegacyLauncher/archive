@@ -1,14 +1,15 @@
 package net.legacylauncher.util.async;
 
-public abstract class AsyncObject<E> extends ExtendedThread {
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
+public abstract class AsyncObject<E> implements Callable<E> {
     private AsyncObjectContainer<E> container;
 
-    private boolean gotValue;
-    private E value;
-    private AsyncObjectGotErrorException error;
+    private Future<E> future;
 
     protected AsyncObject() {
-        super("AsyncObject");
     }
 
     public final AsyncObjectContainer<E> getContainer() {
@@ -19,34 +20,38 @@ public abstract class AsyncObject<E> extends ExtendedThread {
         this.container = container;
     }
 
-    @Override
-    public void run() {
-        try {
-            value = execute();
-        } catch (Throwable e) {
-            error = new AsyncObjectGotErrorException(this, e);
+    public void queue() {
+        if (future != null) {
+            throw new IllegalStateException();
         }
+        future = AsyncThread.future(this);
+    }
 
-        gotValue = true;
-
-        if (container != null) {
-            container.release();
+    @Override
+    public E call() throws Exception {
+        try {
+            return execute();
+        } finally {
+            if (container != null) {
+                container.release();
+            }
         }
     }
 
     public E getValue() throws AsyncObjectNotReadyException, AsyncObjectGotErrorException {
-        if (error != null)
-            throw error;
-
-        if (!gotValue)
+        if (!future.isDone()) {
             throw new AsyncObjectNotReadyException();
-
-        return value;
+        }
+        try {
+            return future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("interruped", e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            throw new AsyncObjectGotErrorException(this, cause);
+        }
     }
 
-    public AsyncObjectGotErrorException getError() {
-        return error;
-    }
-
-    protected abstract E execute() throws AsyncObjectGotErrorException;
+    protected abstract E execute() throws Exception;
 }

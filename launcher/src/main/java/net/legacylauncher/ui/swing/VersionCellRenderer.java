@@ -23,7 +23,6 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
 
     private static final net.legacylauncher.ui.images.ImageIcon ELY_ICON = Images.getIcon16("logo-ely");
     private static final net.legacylauncher.ui.images.ImageIcon MOJANG_ICON = Images.getIcon16("logo-mojang");
-    private static final net.legacylauncher.ui.images.ImageIcon MCLEAKS_ICON = Images.getIcon16("logo-mcleaks");
 
     public Component getListCellRendererComponent(JList<? extends VersionSyncInfo> list, VersionSyncInfo value, int index, boolean isSelected, boolean cellHasFocus) {
         JLabel mainText = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -90,9 +89,6 @@ public class VersionCellRenderer implements ListCellRenderer<VersionSyncInfo> {
                 break;
             case MOJANG:
                 icon = MOJANG_ICON;
-                break;
-            case MCLEAKS:
-                icon = MCLEAKS_ICON;
                 break;
             case PLAIN:
                 break;

@@ -9,13 +9,10 @@ import net.legacylauncher.ui.scenes.AccountManagerScene;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.util.SwingUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 
 public class AccountMinecraftProcess extends BorderPanel implements AccountMultipaneCompCloseable {
-    private static final Logger LOGGER = LogManager.getLogger(AccountMinecraftProcess.class);
     final String LOC_PREFIX = LOC_PREFIX_PATH + multipaneName() + ".";
 
     final AccountManagerScene scene;

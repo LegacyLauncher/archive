@@ -2,6 +2,7 @@ package net.legacylauncher.ui.listener;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.managers.VersionManager;
@@ -16,17 +17,14 @@ import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
+@Slf4j
 public class VersionManagerUIListener implements VersionManagerListener {
-    private static final Logger LOGGER = LogManager.getLogger(VersionManagerUIListener.class);
-
     private final Configuration settings;
 
     private final Gson gson;
@@ -73,7 +71,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
                 try {
                     FileUtil.deleteFile(listFile);
                 } catch (Exception e) {
-                    LOGGER.warn("Could not delete version index file: {}", listFile, e);
+                    log.warn("Could not delete version index file: {}", listFile, e);
                 }
             }
             return;
@@ -81,7 +79,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
 
         SimpleVersionList oldList = list == null ? fetchListFromFile() : list;
         if (oldList == null) {
-            LOGGER.debug("Old list is empty, saving current one for the next time.");
+            log.debug("Old list is empty, saving current one for the next time.");
 
             saveList(list = fetchListFromManager(vm));
 
@@ -156,9 +154,9 @@ public class VersionManagerUIListener implements VersionManagerListener {
 
                     int k = 0;
                     for (SimpleVersion version : versionList) {
-                        LOGGER.debug("New version: {}", version);
+                        log.debug("New version: {}", version);
                         if (++k == 5) {
-                            LOGGER.debug("... and probably more new versions");
+                            log.debug("... and probably more new versions");
                             text.append(Localizable.get("version.manager.alert.more", versionList.size() - k + 1)).append('\n');
                             break;
                         }
@@ -182,7 +180,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
         try (Writer writer = new OutputStreamWriter(Files.newOutputStream(listFile.toPath()), StandardCharsets.UTF_8)) {
             gson.toJson(versionList, writer);
         } catch (Exception e) {
-            LOGGER.error("Could not write version list file: {}", listFile, e);
+            log.error("Could not write version list file: {}", listFile, e);
             throw new RuntimeException(e);
         }
     }
@@ -191,7 +189,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
         try (Reader reader = new InputStreamReader(Files.newInputStream(listFile.toPath()), StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, SimpleVersionList.class);
         } catch (Exception e) {
-            LOGGER.error("Could not read version list from file: {}", listFile, e);
+            log.error("Could not read version list from file: {}", listFile, e);
             return null;
         }
     }
@@ -204,7 +202,7 @@ public class VersionManagerUIListener implements VersionManagerListener {
             }
             return versionList;
         } catch (Exception e) {
-            LOGGER.error("Could not fetch list from manager", e);
+            log.error("Could not fetch list from manager", e);
             throw new RuntimeException(e);
         }
     }

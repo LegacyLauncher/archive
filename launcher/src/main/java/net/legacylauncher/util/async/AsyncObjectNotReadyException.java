@@ -1,6 +1,6 @@
 package net.legacylauncher.util.async;
 
-class AsyncObjectNotReadyException extends AsyncObjectException {
+public class AsyncObjectNotReadyException extends AsyncObjectException {
     private static final long serialVersionUID = -653075370156820781L;
 
 }

@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 public class JUnixSocketMessageWriter implements IMessageWriter {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(JUnixSocketMessageWriter.class);
 
     private final AFUNIXSocketChannel socket;
     private final boolean hasFileDescriptorSupport;
@@ -27,7 +27,7 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
     @Override
     public void close() throws IOException {
         if (socket.isOpen()) {
-            logger.debug("Closing Message Writer");
+            LOGGER.debug("Closing Message Writer");
             socket.close();
         }
     }
@@ -39,14 +39,14 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
 
     @Override
     public void writeMessage(Message msg) throws IOException {
-        logger.debug("<= {}", msg);
+        LOGGER.debug("<= {}", msg);
 
         if (msg == null) return;
 
         byte[][] wireData = msg.getWireData();
 
         if (wireData == null) {
-            logger.warn("Message {} wire-data was null!", msg);
+            LOGGER.warn("Message {} wire-data was null!", msg);
             return;
         }
 
@@ -61,15 +61,15 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
 
                     socket.setOutboundFileDescriptors(fds);
                 } catch (IOException e) {
-                    logger.error("Unable to extract FileDescriptor", e);
+                    LOGGER.error("Unable to extract FileDescriptor", e);
                     return;
                 }
             }
         }
 
         for (byte[] bytes : wireData) {
-            if (logger.isTraceEnabled()) {
-                logger.trace("{}", bytes == null ? "(buffer was null)" : Hexdump.format(bytes));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("{}", bytes == null ? "(buffer was null)" : Hexdump.format(bytes));
             }
 
             if (bytes == null) break;
@@ -81,6 +81,6 @@ public class JUnixSocketMessageWriter implements IMessageWriter {
             socket.setOutboundFileDescriptors((FileDescriptor[]) null);
         }
 
-        logger.trace("Message sent: {}", msg);
+        LOGGER.trace("Message sent: {}", msg);
     }
 }

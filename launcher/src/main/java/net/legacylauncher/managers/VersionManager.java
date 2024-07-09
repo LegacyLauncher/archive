@@ -1,5 +1,6 @@
 package net.legacylauncher.managers;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.component.ComponentDependence;
 import net.legacylauncher.component.InterruptibleComponent;
@@ -11,8 +12,6 @@ import net.legacylauncher.util.async.AsyncObjectGotErrorException;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.updater.*;
 import net.minecraft.launcher.versions.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -20,10 +19,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
+@Slf4j
 @ComponentDependence({AssetsManager.class, VersionLists.class, LibraryReplaceProcessor.class})
 public class VersionManager extends InterruptibleComponent {
-    private static final Logger LOGGER = LogManager.getLogger(VersionManager.class);
-
     private final LocalVersionList localList;
     private final RemoteVersionList[] remoteLists;
     private Map<ReleaseType, Version> latestVersions;
@@ -67,9 +65,9 @@ public class VersionManager extends InterruptibleComponent {
         local |= !manager.getLauncher().getSettings().getBoolean("minecraft.versions.sub.remote");
         hadRemote |= !local;
         if (local) {
-            LOGGER.info("Refreshing versions locally...");
+            log.info("Refreshing versions locally...");
         } else {
-            LOGGER.info("Refreshing versions remotely...");
+            log.info("Refreshing versions remotely...");
             synchronized (listeners) {
 
                 for (VersionManagerListener result : listeners) {
@@ -90,7 +88,7 @@ public class VersionManager extends InterruptibleComponent {
         }
 
         if (isCancelled(refreshID)) {
-            LOGGER.info("Version refresh has been cancelled ({} ms)", Time.stop(lock1));
+            log.info("Version refresh has been cancelled ({} ms)", Time.stop(lock1));
             return false;
         } else {
             if (e1 != null) {
@@ -100,7 +98,7 @@ public class VersionManager extends InterruptibleComponent {
                     }
                 }
 
-                LOGGER.error("Cannot refresh versions ({} ms)", Time.stop(lock1), e1);
+                log.error("Cannot refresh versions ({} ms)", Time.stop(lock1), e1);
                 return true;
             } else {
                 if (!local) {
@@ -130,14 +128,14 @@ public class VersionManager extends InterruptibleComponent {
                     latestVersions = U.sortMap(latestVersions, ReleaseType.values());
                 }
 
-                LOGGER.info("Versions has been refreshed ({} ms)", Time.stop(lock1));
+                log.info("Versions has been refreshed ({} ms)", Time.stop(lock1));
                 refreshList[refreshID] = false;
                 synchronized (listeners) {
                     for (VersionManagerListener listener : listeners) {
                         try {
                             listener.onVersionsRefreshed(this);
                         } catch (Exception e) {
-                            LOGGER.warn("Caught listener exception:", e);
+                            log.warn("Caught listener exception:", e);
                         }
                     }
 
@@ -168,7 +166,7 @@ public class VersionManager extends InterruptibleComponent {
                 if (checkConsistency(set, checkEntry)) {
                     continue;
                 }
-                LOGGER.warn("Version list {} depends on unavailable {}",
+                log.warn("Version list {} depends on unavailable {}",
                         object.getVersionList(), checkObject.getVersionList());
                 return false;
             }
@@ -176,8 +174,8 @@ public class VersionManager extends InterruptibleComponent {
         return true;
     }
 
-    protected boolean refresh(int queueID) {
-        return refresh(queueID, false);
+    protected boolean refresh(int refreshID) {
+        return refresh(refreshID, false);
     }
 
     public void startRefresh(boolean local) {
@@ -194,7 +192,7 @@ public class VersionManager extends InterruptibleComponent {
             try {
                 startRefresh(local);
             } catch (Exception var2) {
-                LOGGER.error("Couldn't refresh versions", var2);
+                log.error("Couldn't refresh versions", var2);
             }
         });
     }
@@ -259,30 +257,26 @@ public class VersionManager extends InterruptibleComponent {
                 }
             }
 
-            Version var10 = localList.getVersion(name);
-            if (var10 instanceof CompleteVersion && ((CompleteVersion) var10).getInheritsFrom() != null) {
+            Version localVersion = localList.getVersion(name);
+            if (localVersion instanceof CompleteVersion && ((CompleteVersion) localVersion).getInheritsFrom() != null) {
                 if (inheritance == null) {
                     inheritance = new ArrayList<>();
                 }
                 try {
-                    var10 = ((CompleteVersion) var10).resolve(this, false, inheritance);
-                } catch (Exception var9) {
-                    LOGGER.warn("Can't resolve version {}", var10.getID(), var9);
-                    var10 = null;
+                    localVersion = ((CompleteVersion) localVersion).resolve(this, false, inheritance);
+                } catch (Exception e) {
+                    log.warn("Can't resolve version {}", localVersion.getID(), e);
+                    localVersion = null;
                 }
             }
 
-            Version var11 = null;
+            String finalName = name;
+            Optional<Version> remoteVersion = Arrays.stream(remoteLists)
+                    .map(list -> list.getVersion(finalName))
+                    .filter(Objects::nonNull)
+                    .findFirst();
 
-            for (RemoteVersionList var12 : remoteLists) {
-                Version currentVersion = var12.getVersion(name);
-                if (currentVersion != null) {
-                    var11 = currentVersion;
-                    break;
-                }
-            }
-
-            return var10 == null && var11 == null ? null : new VersionSyncInfo(var10, var11);
+            return localVersion == null && !remoteVersion.isPresent() ? null : new VersionSyncInfo(localVersion, remoteVersion.orElse(null));
         }
     }
 
@@ -413,10 +407,10 @@ public class VersionManager extends InterruptibleComponent {
         try {
             container.addAll(syncInfo.getRequiredDownloadables(featureMatcher, baseDirectory, force, types));
         } catch (IOException ioE) {
-            LOGGER.warn("Could not fetch required downloads for {}", syncInfo.getID(), ioE);
+            log.warn("Could not fetch required downloads for {}", syncInfo.getID(), ioE);
         }
 
-        LOGGER.debug("Required for version " + syncInfo.getID() + ':', container.getList());
+        log.debug("Required for version " + syncInfo.getID() + ':', container.getList());
 
         File destination = new File(baseDirectory, "versions/" + completeVersion.getID() + "/" + completeVersion.getID() + ".jar");
 
@@ -426,7 +420,7 @@ public class VersionManager extends InterruptibleComponent {
 
         VersionDownloadable jarDownloadable = new VersionDownloadable(completeVersion, destination, syncInfo.getRemote() != null ? syncInfo.getRemote().getSource() : null);
 
-        LOGGER.debug("Jar for {}: {}", syncInfo.getID(), jarDownloadable);
+        log.debug("Jar for {}: {}", syncInfo.getID(), jarDownloadable);
 
         container.add(jarDownloadable);
         return container;
@@ -447,7 +441,7 @@ public class VersionManager extends InterruptibleComponent {
             try {
                 return remoteList.getRawList();
             } catch (Exception var2) {
-                LOGGER.error("Error refreshing {}", remoteList, var2);
+                log.error("Error refreshing {}", remoteList, var2);
                 throw new AsyncObjectGotErrorException(this, var2);
             }
         }

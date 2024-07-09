@@ -16,8 +16,6 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +27,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CompleteVersion implements Version, Cloneable {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     String id;
     String jar;
     String url;
@@ -293,7 +289,13 @@ public class CompleteVersion implements Version, Cloneable {
     public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher) {
         ArrayList<Library> result = new ArrayList<>();
 
+        Set<String> resolvedLibs = new HashSet<>();
+
         for (Library library : libraries) {
+            if (!resolvedLibs.add(library.getPlainName())) {
+                continue;
+            }
+
             if (library.appliesToCurrentEnvironment(matcher)) {
                 result.add(library);
             }
@@ -412,7 +414,8 @@ public class CompleteVersion implements Version, Cloneable {
     public CompleteVersion resolve(VersionManager vm, boolean useLatest, List<String> inheritance) throws IOException {
         if (vm == null) {
             throw new NullPointerException("version manager");
-        } else if (inheritsFrom == null) {
+        }
+        if (inheritsFrom == null) {
             if (family == null || family.equals(FORGE_PREFIX) || family.equals(FABRIC_PREFIX)) {
                 String family_;
 
@@ -438,22 +441,22 @@ public class CompleteVersion implements Version, Cloneable {
             return this.clone();
         } else if (inheritance.contains(id)) {
             throw new CompleteVersion.DuplicateInheritanceException();
-        } else {
-            if (jar == null) {
-                jar = inheritsFrom;
-            }
-            inheritance.add(id);
-            VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom, inheritance);
-            if (parentSyncInfo == null) {
-                throw new CompleteVersion.ParentNotFoundException();
-            } else {
-                CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheritance);
-
-                resolveFamily(result.family);
-
-                return copyInto(result);
-            }
         }
+
+        if (jar == null) {
+            jar = inheritsFrom;
+        }
+        inheritance.add(id);
+        VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom, inheritance);
+        if (parentSyncInfo == null) {
+            throw new CompleteVersion.ParentNotFoundException();
+        }
+
+        CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheritance);
+
+        resolveFamily(result.family);
+
+        return copyInto(result);
     }
 
     public CompleteVersion copyInto(CompleteVersion result) {

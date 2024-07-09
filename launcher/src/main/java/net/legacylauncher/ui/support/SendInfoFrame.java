@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.support;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.logger.Log4j2ContextHelper;
 import net.legacylauncher.pasta.Pasta;
 import net.legacylauncher.pasta.PastaResult;
@@ -10,8 +11,6 @@ import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.sysinfo.SystemInfo;
 import net.legacylauncher.util.sysinfo.SystemInfoReporter;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.io.File;
@@ -22,9 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> {
-
-    private static final Logger LOGGER = LogManager.getLogger(SendInfoFrame.class);
     private final SystemInfoReporter systemInfoReporter;
 
     public static final class SendInfoResponse {
@@ -59,7 +57,7 @@ public class SendInfoFrame extends ProcessFrame<SendInfoFrame.SendInfoResponse> 
                         systemInfo = null;
                     }
                     if (systemInfo != null) {
-                        systemInfo.getLines().forEach(LOGGER::info);
+                        systemInfo.getLines().forEach(log::info);
                     }
                 }
                 Pasta pasta = new Pasta();

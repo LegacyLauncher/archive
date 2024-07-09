@@ -1,8 +1,7 @@
 package net.legacylauncher.minecraft.launcher;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.logger.LogFile;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -10,9 +9,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
+@Slf4j
 public class ChildProcessLogger implements Closeable {
-    private static final Logger LOGGER = LogManager.getLogger(ChildProcessLogger.class);
-
     private final LogFile logFile;
     private Writer writer;
 
@@ -27,17 +25,17 @@ public class ChildProcessLogger implements Closeable {
 
     public void log(String line) {
         if (writer == null) {
-            LOGGER.warn("Tried to log after closing: {}", line);
+            log.warn("Tried to log after closing: {}", line);
             return;
         }
         try {
             writer.write(line);
             writer.write('\n');
         } catch (IOException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Couldn't write into logger", e);
+            if (log.isDebugEnabled()) {
+                log.debug("Couldn't write into logger", e);
             } else {
-                LOGGER.warn("Couldn't write into logger: {}", e.toString());
+                log.warn("Couldn't write into logger: {}", e.toString());
             }
         }
     }

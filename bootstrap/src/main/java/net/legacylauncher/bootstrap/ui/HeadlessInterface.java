@@ -2,17 +2,16 @@ package net.legacylauncher.bootstrap.ui;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.exception.FatalExceptionType;
 import net.legacylauncher.bootstrap.task.Task;
 import net.legacylauncher.bootstrap.task.TaskListener;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
+@Slf4j
 public final class HeadlessInterface implements IInterface {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HeadlessInterface.class);
     private static Gson gson;
     private final TaskListener<Object> listener;
 
@@ -59,7 +58,7 @@ public final class HeadlessInterface implements IInterface {
     }
 
     private static void printEvent(Event event) {
-        LOGGER.info("Got event: {}", gson().toJson(Objects.requireNonNull(event, "event")));
+        log.info("Got event: {}", gson().toJson(Objects.requireNonNull(event, "event")));
     }
 
     private static Gson gson() {

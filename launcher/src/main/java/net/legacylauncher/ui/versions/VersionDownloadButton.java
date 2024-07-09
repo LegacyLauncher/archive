@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class VersionDownloadButton extends ExtendedButton implements VersionHandlerListener, Unblockable {
     private static final String SELECTION_BLOCK = "selection";
     private static final String PREFIX = "version.manager.downloader.";
@@ -242,6 +244,12 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
     }
 
     public void onVersionDownload(List<VersionSyncInfo> list) {
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(menu);
+        super.updateUI();
     }
 
     public enum ButtonState {

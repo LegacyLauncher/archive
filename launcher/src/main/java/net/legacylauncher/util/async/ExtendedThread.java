@@ -1,9 +1,12 @@
 package net.legacylauncher.util.async;
 
+import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.handlers.ExceptionHandler;
 import net.legacylauncher.util.U;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class ExtendedThread extends Thread {
     private static final AtomicInteger threadNum = new AtomicInteger();
     private volatile ExtendedThread.ExtendedThreadCaller caller;
@@ -13,6 +16,7 @@ public class ExtendedThread extends Thread {
     public ExtendedThread(Runnable runnable, String name) {
         super(runnable, (name == null ? "ExtendedThread" : name) + "#" + threadNum.incrementAndGet());
         setDaemon(true);
+        setUncaughtExceptionHandler(ExceptionHandler.getInstance());
         monitor = new Object();
         caller = new ExtendedThread.ExtendedThreadCaller();
     }
@@ -55,11 +59,10 @@ public class ExtendedThread extends Thread {
                 while (blockReason != null) {
                     try {
                         monitor.wait();
-                    } catch (InterruptedException var4) {
-                        var4.printStackTrace();
+                    } catch (InterruptedException e) {
+                        log.error("Interrupted during waiting", e);
                     }
                 }
-
             }
         }
     }
@@ -101,7 +104,7 @@ public class ExtendedThread extends Thread {
         }
     }
 
-    static class ExtendedThreadCaller extends RuntimeException {
+    public static class ExtendedThreadCaller extends RuntimeException {
         ExtendedThreadCaller() {
         }
     }

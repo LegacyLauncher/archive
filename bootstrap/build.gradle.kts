@@ -1,15 +1,16 @@
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 import java.nio.charset.Charset
 import java.security.MessageDigest
 
 plugins {
     java
     `jvm-test-suite`
-    alias(libs.plugins.shadow)
     alias(libs.plugins.javafx)
     alias(libs.plugins.buildconfig)
+    alias(libs.plugins.lombok)
+    alias(libs.plugins.spring.boot)
     net.legacylauncher.brand
 }
 
@@ -29,17 +30,28 @@ val dev: SourceSet by sourceSets.creating {
     compileClasspath += sourceSets.main.get().output
 }
 
+val boot: SourceSet by sourceSets.creating {}
+
 val compileJava11Java by tasks.getting(JavaCompile::class) {
     options.release = 11
 }
-
 
 val compileTestJava by tasks.getting(JavaCompile::class) {
     options.release = 11
 }
 
 val compileDevJava by tasks.getting(JavaCompile::class) {
-    options.release = 11
+    if (System.getenv("JRE_LEGACY") == "true") {
+        targetCompatibility = "8"
+        sourceCompatibility = "8"
+    } else {
+        options.release = 11
+    }
+}
+
+val compileBootJava by tasks.getting(JavaCompile::class) {
+    targetCompatibility = "8"
+    sourceCompatibility = "8"
 }
 
 evaluationDependsOn(projects.common.identityPath.path)
@@ -68,62 +80,40 @@ dependencies {
     testImplementation(libs.mockito.core)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.mockito.junit.jupiter)
+
+    "bootCompileOnly"(libs.spring.boot.loader)
 }
 
-val shadowJar by tasks.getting(ShadowJar::class) {
-    configurations = listOf(
-        project.configurations.runtimeClasspath.get(),
-        project.configurations[java11.runtimeClasspathConfigurationName],
-    )
-
-    relocate("com.", "shaded.com.") {
-        exclude("com.sun.**")
-        exclude("/com/sun/**")
-        exclude("/com/apple/laf/**")
-        exclude("com.formdev.**")
-        exclude("com.rm5248.dbusjava.**")
-        exclude("/com/rm5248/dbusjava/**")
-        exclude("com.kenai.**")
-        exclude("/com/kenai/**")
-        exclude("com.feralinteractive.**")
-        exclude("/com/feralinteractive/**")
-        exclude("com.oshi.**")
-    }
-    relocate("de.", "shaded.de.")
-    relocate("io.", "shaded.io.")
-//    relocate("joptsimple.", "shaded.joptsimple.")
-    relocate("org.", "shaded.org.") {
-        exclude("org.freedesktop.**")
-        exclude("/org/freedesktop/**")
-        exclude("org.newsclub.**")
-        exclude("org.slf4j.**")
-    }
-    // relocate shared utils in order to *not* break Java 8 instances
-    relocate("net.legacylauncher.util.shared", "net.legacylauncher.bootstrap.util.shared")
-    relocate("net.", "shaded.net.") {
-        exclude("net.legacylauncher.**")
-        exclude("/net/legacylauncher/**")
-        exclude("net.hadess.**")
-        exclude("/net/hadess/**")
-    }
-
-    exclude("*.md")
-    exclude("*module-info.class")
-    exclude("LICENSE")
-    exclude("META-INF/LICENSE*")
-    exclude("META-INF/NOTICE*")
-
-    dependencies {
-        exclude(dependency("org.openjfx:.*"))
-    }
-
+val jar by tasks.getting(Jar::class) {
     into("META-INF/versions/11") {
         from(java11.output)
     }
 
     manifest.attributes(
         "Main-Class" to "net.legacylauncher.bootstrap.BootstrapStarter",
-        "Multi-Release" to true,
+        "Multi-Release" to "true",
+    )
+}
+
+val bootClasspath: Configuration by configurations.creating {
+    extendsFrom(configurations.runtimeClasspath.get())
+    extendsFrom(project.configurations[java11.runtimeClasspathConfigurationName])
+    exclude(group = "org.openjfx")
+}
+
+val bootJar by tasks.getting(BootJar::class) {
+    mainClass.set("net.legacylauncher.bootstrap.BootstrapStarter")
+    classpath = files(bootClasspath, jar)
+    from(boot.output)
+}
+
+val devJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("dev")
+    from(sourceSets.main.map { it.output })
+    from(dev.output)
+    manifest.attributes(
+        "Main-Class" to "net.legacylauncher.bootstrap.BootstrapStarter",
+        "Multi-Release" to "true",
     )
 }
 
@@ -163,7 +153,7 @@ val runDebug by tasks.registering(JavaExec::class) {
 
     val librariesDir by projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo")
     val launcherJar by projects.launcher.dependencyProject.tasks.named<Jar>("jar")
-    dependsOn(librariesDir, launcherJar)
+    dependsOn(librariesDir, launcherJar, devJar)
     environment("LL_LAUNCHER_JAR", launcherJar.archiveFile.get().asFile)
     environment("LL_LIBRARIES_DIR", librariesDir.destinationDir)
 
@@ -181,7 +171,7 @@ val runRelease by tasks.registering(JavaExec::class) {
     commonRun()
 
     description = "Run Bootstrap"
-    mainClass = "net.legacylauncher.bootstrap.BootstrapStarterDebug"
+    mainClass = "org.springframework.boot.loader.JarLauncher"
 
     val librariesDir by projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo")
     val launcherJar by projects.launcher.dependencyProject.tasks.named<Jar>("jar")
@@ -195,7 +185,7 @@ val runRelease by tasks.registering(JavaExec::class) {
         "--debug"
     )
 
-    classpath(shadowJar)
+    classpath(bootJar)
 
     if (System.getenv("JRE_LEGACY") == "true") {
         javaLauncher = javaToolchains.launcherFor {
@@ -231,7 +221,7 @@ buildConfig {
     buildConfigField("String", "VERSION", brand.version.map { "\"$it\"" })
 }
 
-val processResources by tasks.getting(ProcessResources::class) {
+val processBootResources by tasks.getting(ProcessResources::class) {
     val meta = mapOf(
         "version" to brand.version.get(),
         "shortBrand" to brand.brand.get(),
@@ -241,16 +231,10 @@ val processResources by tasks.getting(ProcessResources::class) {
     inputs.property("meta", meta)
 
     doLast {
-        setOf(
-            "ru/turikhay/tlauncher/bootstrap/meta.json",
-            "META-INF/bootstrap-meta.json",
-        ).map {
-            destinationDir.resolve(it)
-        }.forEach { file ->
-            file.parentFile.mkdirs()
-            file.writer().use { writer ->
-                ObjectMapper().writeValue(writer, meta)
-            }
+        val file = destinationDir.resolve("META-INF/bootstrap-meta.json")
+        file.parentFile.mkdirs()
+        file.writer().use { writer ->
+            ObjectMapper().writeValue(writer, meta)
         }
     }
 }
@@ -268,14 +252,14 @@ object UrlComparator : Comparator<String> {
 }
 
 val generateUpdateJson by tasks.registering {
-    dependsOn(shadowJar)
+    dependsOn(bootJar)
     inputs.property("productVersion", brand.version.get())
     inputs.property("repoHosts", brand.repoHosts.get())
     val updateJsonFile = layout.buildDirectory.file("update/${brand.brand.get()}/bootstrap.json")
     outputs.file(updateJsonFile)
 
     doLast {
-        val jarFileChecksum = generateChecksum(shadowJar.outputs.files.singleFile)
+        val jarFileChecksum = generateChecksum(bootJar.outputs.files.singleFile)
         val downloadPath = "repo/update/${brand.brand.get()}/bootstrap/${jarFileChecksum}.jar"
         val meta = mapOf(
             "version" to brand.version.get(),
@@ -296,17 +280,17 @@ val generateUpdateJson by tasks.registering {
 }
 
 val copyJarAndRename by tasks.registering(Copy::class) {
-    from(shadowJar)
+    from(bootJar)
     into(layout.buildDirectory.dir("update/${brand.brand.get()}"))
     rename { "bootstrap.jar" }
 }
 
 val generateSha256File by tasks.registering {
-    dependsOn(shadowJar)
+    dependsOn(bootJar)
     val file = layout.buildDirectory.file("update/${brand.brand.get()}/bootstrap.jar.sha256")
     outputs.file(file)
     doLast {
-        file.get().asFile.writeText(generateChecksum(shadowJar.outputs.files.singleFile))
+        file.get().asFile.writeText(generateChecksum(bootJar.outputs.files.singleFile))
     }
 }
 

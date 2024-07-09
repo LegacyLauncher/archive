@@ -1,5 +1,6 @@
 package net.legacylauncher.bootstrap.ui;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.pasta.Pasta;
 import net.legacylauncher.bootstrap.pasta.PastaException;
 import net.legacylauncher.bootstrap.pasta.PastaLink;
@@ -8,13 +9,11 @@ import net.legacylauncher.bootstrap.ui.message.MessageHost;
 import net.legacylauncher.bootstrap.ui.message.ProcessMessage;
 import net.legacylauncher.bootstrap.ui.message.SingleButtonMessage;
 import net.legacylauncher.bootstrap.util.stream.OutputRedirectBuffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ResourceBundle;
 
+@Slf4j
 class PastaAction implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PastaAction.class);
     private final ResourceBundle b = UserInterface.getResourceBundle();
 
     private final MessageHost host;
@@ -31,7 +30,7 @@ class PastaAction implements Runnable {
                     try {
                         sendPasta();
                     } catch (PastaException e) {
-                        LOGGER.error("Pasta submission failed", e);
+                        log.error("Pasta submission failed", e);
                         sendPastaFailed();
                     }
                 }

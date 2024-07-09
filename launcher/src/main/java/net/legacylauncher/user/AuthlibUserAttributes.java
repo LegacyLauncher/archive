@@ -1,20 +1,30 @@
 package net.legacylauncher.user;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.util.EntityUtils;
+
+import lombok.SneakyThrows;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 import java.io.IOException;
 import java.util.Locale;
 
 public class AuthlibUserAttributes {
     public static void validateUserAttributes(String accessToken) throws IOException, AuthException {
-        HttpResponse response = Request.Get("https://api.minecraftservices.com/player/attributes")
+        Request.get("https://api.minecraftservices.com/player/attributes")
                 .addHeader("Authorization", "Bearer " + accessToken)
                 .execute()
-                .returnResponse();
+                .handleResponse(response -> {
+                    handleResponse(response);
+                    return null;
+                });
+    }
+
+    @SneakyThrows(AuthException.class)
+    private static void handleResponse(ClassicHttpResponse response) throws IOException, ParseException {
         String body = EntityUtils.toString(response.getEntity());
-        int statusCode = response.getStatusLine().getStatusCode();
+        int statusCode = response.getCode();
         switch (statusCode) {
             case 200:
                 return;

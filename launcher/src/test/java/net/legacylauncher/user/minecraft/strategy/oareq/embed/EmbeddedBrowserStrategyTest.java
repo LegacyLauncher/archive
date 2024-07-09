@@ -1,19 +1,17 @@
 package net.legacylauncher.user.minecraft.strategy.oareq.embed;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
 import net.legacylauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class EmbeddedBrowserStrategyTest {
-    private static final Logger LOGGER = LogManager.getLogger(EmbeddedBrowserStrategyTest.class);
-
     @Test
     @Disabled
     void test() throws InterruptedException, MicrosoftOAuthCodeRequestException, TimeoutException {
@@ -24,7 +22,7 @@ public class EmbeddedBrowserStrategyTest {
                 new OAuthUrlParser()
         );
         MicrosoftOAuthExchangeCode microsoftOAuthExchangeCode = strategy.requestMicrosoftOAuthCode();
-        LOGGER.info("Code: {}", microsoftOAuthExchangeCode);
+        log.info("Code: {}", microsoftOAuthExchangeCode);
     }
 
 }

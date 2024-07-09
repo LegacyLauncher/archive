@@ -1,5 +1,6 @@
 package net.legacylauncher.bootstrap.ipc;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.launcher.ForkStarter;
 import net.legacylauncher.bootstrap.launcher.InProcessStarter;
 import net.legacylauncher.bootstrap.launcher.LocalLauncher;
@@ -24,19 +25,19 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DBusBootstrapIPC implements BootstrapIPC {
 
     private final String bootstrapVersion;
     private final List<String> launcherArgs;
     private final boolean fork;
-    private String launcherConfiguration = "{}";
     private final Collection<Listener> listeners = new CopyOnWriteArrayList<>();
     private final ConcurrentMap<String, Variant<?>> metadata = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Map<String, Bootstrap1.ReleaseNotes>> releaseNotes = new ConcurrentHashMap<>();
-
-    private volatile State state = Running.INSTANCE;
     private final Lock stateLock = new ReentrantLock();
     private final Condition stoppedCondition = stateLock.newCondition();
+    private String launcherConfiguration = "{}";
+    private volatile State state = Running.INSTANCE;
 
     public DBusBootstrapIPC(String bootstrapVersion, String[] launcherArgs, boolean fork) {
         this.bootstrapVersion = bootstrapVersion;
@@ -166,6 +167,16 @@ public class DBusBootstrapIPC implements BootstrapIPC {
             }
         });
         forwarder.addSigHandler(Launcher1.OnCloseRequest.class, signal -> DBusBootstrapIPC.this.requestClose());
+        addListener(new Listener() {
+            @Override
+            public void onClosing() {
+                try {
+                    forwarder.sendMessage(new Bootstrap1.AboutToClose(Bootstrap1.OBJECT_PATH));
+                } catch (DBusException e) {
+                    log.warn("Cannot send close ack", e);
+                }
+            }
+        });
     }
 
     private static abstract class State {

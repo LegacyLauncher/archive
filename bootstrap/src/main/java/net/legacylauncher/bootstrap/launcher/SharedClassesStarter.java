@@ -1,8 +1,8 @@
 package net.legacylauncher.bootstrap.launcher;
 
+import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.bootstrap.meta.LocalLauncherMeta;
 import net.legacylauncher.bootstrap.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootBridge;
 
 import java.lang.reflect.InvocationTargetException;
@@ -12,8 +12,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 public class SharedClassesStarter extends AbstractStarter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SharedClassesStarter.class);
     private final LocalLauncher launcher;
     private final BootBridge bridge;
 
@@ -22,18 +22,26 @@ public class SharedClassesStarter extends AbstractStarter {
         this.bridge = bridge;
     }
 
+    public static Task<Void> start(final LocalLauncher launcher, final BootBridge bridge) {
+        Objects.requireNonNull(launcher, "LocalLauncher");
+        Objects.requireNonNull(bridge, "BootBridge");
+
+        return new SharedClassesStarter(launcher, bridge);
+    }
+
     @Override
     protected Void execute() throws Exception {
         List<Path> classpath = buildClassPath(launcher);
 
         for (Path path : classpath) {
-            LOGGER.info("Classpath entry: {}", path);
+            log.info("Classpath entry: {}", path);
         }
 
-        URLClassLoader childCl = new URLClassLoader(toURLs(classpath), Thread.currentThread().getContextClassLoader());
-        Class<?> clazz = Class.forName(launcher.getMeta().getBridgedEntryPoint(), true, childCl);
+        URLClassLoader childCl = new ChildFirstClassloader(toURLs(classpath), Thread.currentThread().getContextClassLoader());
+        LocalLauncherMeta.Entrypoint entrypoint = launcher.getMeta().getEntrypoint(LocalLauncherMeta.EntrypointType.Bridge);
+        Class<?> clazz = Class.forName(entrypoint.getType(), true, childCl);
 
-        Method method = clazz.getMethod("launch", BootBridge.class);
+        Method method = clazz.getMethod(entrypoint.getMethod(), BootBridge.class);
 
         try {
             method.invoke(null, bridge);
@@ -50,12 +58,5 @@ public class SharedClassesStarter extends AbstractStarter {
     @Override
     protected void interrupted() {
         bridge.setInterrupted();
-    }
-
-    public static Task<Void> start(final LocalLauncher launcher, final BootBridge bridge) {
-        Objects.requireNonNull(launcher, "LocalLauncher");
-        Objects.requireNonNull(bridge, "BootBridge");
-
-        return new SharedClassesStarter(launcher, bridge);
     }
 }

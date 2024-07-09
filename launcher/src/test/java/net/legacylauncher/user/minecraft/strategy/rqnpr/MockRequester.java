@@ -2,10 +2,12 @@ package net.legacylauncher.user.minecraft.strategy.rqnpr;
 
 public class MockRequester {
     public static <A> Requester<A> returning(String result) {
-        return new MockStringRequester<>(a -> result);
+        return (logger, argument) -> result;
     }
 
     public static <A> Requester<A> throwing(InvalidResponseException e) {
-        return new MockThrowingRequester.InvalidResponse<>(e);
+        return (logger, argument) -> {
+            throw e;
+        };
     }
 }

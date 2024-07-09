@@ -1,12 +1,12 @@
 package net.legacylauncher.bootstrap;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.util.OS;
 import net.legacylauncher.util.shared.JavaVersion;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -14,9 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+@Slf4j
 public final class BootstrapStarter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BootstrapStarter.class);
-
     public static void main(String[] args) throws Exception {
         start(args, false);
     }
@@ -29,12 +28,24 @@ public final class BootstrapStarter {
         jvmArgs.addAll(loadExternalArgs(currentDir, "bootargs"));
 
         List<String> appArgs = new ArrayList<>();
-        appArgs.add(Bootstrap.class.getName());
+
+        BootstrapJarLocation currentJarLocation = getCurrentJarLocation();
+        Set<Path> classPath = new LinkedHashSet<>(BoostrapRestarter.getDefinedClasspath());
+        String mainClass;
+        if (currentJarLocation instanceof PlainJar) {
+            classPath.add(((PlainJar) currentJarLocation).getPath());
+            mainClass = Bootstrap.class.getName();
+        } else if (currentJarLocation instanceof JarInJar) {
+            classPath.add(((JarInJar) currentJarLocation).getOuterJar());
+            jvmArgs.add("-Dloader.main=" + Bootstrap.class.getName());
+            mainClass = "org.springframework.boot.loader.PropertiesLauncher";
+        } else {
+            throw new IllegalStateException("Unknown jar location implementation: " + currentJarLocation);
+        }
+
+        appArgs.add(mainClass);
         Collections.addAll(appArgs, args);
         appArgs.addAll(loadExternalArgs(currentDir, "args"));
-
-        Set<Path> classPath = new LinkedHashSet<>(BoostrapRestarter.getDefinedClasspath());
-        classPath.add(getCurrentJar());
 
         BoostrapRestarter starter = BoostrapRestarter.create();
         int exitCode = starter.start(currentDir, jvmArgs, classPath, appArgs, debug);
@@ -62,7 +73,7 @@ public final class BootstrapStarter {
                 String arg = "-D" + propKey + "=" + value;
                 jvmArgs.add(arg);
 
-                LOGGER.info("Transferring property: {}", arg);
+                log.info("Transferring property: {}", arg);
             }
         }
         return jvmArgs;
@@ -93,11 +104,11 @@ public final class BootstrapStarter {
         }
 
         if (externalArgsFile != null) {
-            LOGGER.info("Loading arguments from file: {}", externalArgsFile);
+            log.info("Loading arguments from file: {}", externalArgsFile);
             try {
                 return loadArgsFromFile(externalArgsFile);
             } catch (IOException e) {
-                LOGGER.error("Cannot load arguments from file: {}", externalArgsFile, e);
+                log.error("Cannot load arguments from file: {}", externalArgsFile, e);
             }
         }
         return Collections.emptyList();
@@ -124,7 +135,48 @@ public final class BootstrapStarter {
         }
     }
 
-    private static Path getCurrentJar() throws URISyntaxException {
-        return Paths.get(BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+    private static BootstrapJarLocation getCurrentJarLocation() throws URISyntaxException {
+        URI uri = BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+        if ("jar".equals(uri.getScheme())) {
+            String part = uri.getSchemeSpecificPart();
+            int i = part.indexOf("!/");
+            if (i > 0) {
+                return new JarInJar(uri, Paths.get(URI.create(part.substring(0, i))));
+            }
+        }
+        return new PlainJar(Paths.get(uri));
+    }
+
+    private interface BootstrapJarLocation {
+    }
+
+    private static class PlainJar implements BootstrapJarLocation {
+        private final Path path;
+
+        PlainJar(Path path) {
+            this.path = path;
+        }
+
+        Path getPath() {
+            return path;
+        }
+    }
+
+    private static class JarInJar implements BootstrapJarLocation {
+        private final URI fullUri;
+        private final Path outerJar;
+
+        JarInJar(URI fullUri, Path outerJar) {
+            this.fullUri = fullUri;
+            this.outerJar = outerJar;
+        }
+
+        public URI getFullUri() {
+            return fullUri;
+        }
+
+        public Path getOuterJar() {
+            return outerJar;
+        }
     }
 }

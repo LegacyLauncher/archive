@@ -1,19 +1,17 @@
 package net.minecraft.launcher.updater;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.downloader.Downloadable;
 import net.legacylauncher.downloader.RetryDownloadException;
 import net.legacylauncher.managers.AssetsManager;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.util.FileUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 
+@Slf4j
 public class AssetDownloadable extends Downloadable {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private final AssetIndex.AssetObject asset;
     private final File folder;
 
@@ -43,7 +41,7 @@ public class AssetDownloadable extends Downloadable {
                 }
             }
         } else {
-            LOGGER.error("Invalid hash: {}; expected: {}", gotHash, expectHash);
+            log.error("Invalid hash: {}; expected: {}", gotHash, expectHash);
             throw new RetryDownloadException(gotHash + ';' + expectHash);
         }
     }

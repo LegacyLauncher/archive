@@ -3,10 +3,9 @@ package net.legacylauncher.configuration;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.managers.JavaManagerConfig;
 import net.legacylauncher.util.OS;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -167,9 +166,8 @@ public class ArgumentParser {
         void execute();
     }
 
+    @Slf4j
     private static class IgnoredArgAttachment implements ActionAttachment {
-        private static final Logger LOGGER = LogManager.getLogger(IgnoredArgAttachment.class);
-
         final String name;
 
         public IgnoredArgAttachment(String name) {
@@ -178,7 +176,7 @@ public class ArgumentParser {
 
         @Override
         public void execute() {
-            LOGGER.warn("Argument {} is ignored", name);
+            log.warn("Argument {} is ignored", name);
         }
     }
 

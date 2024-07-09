@@ -23,12 +23,19 @@ public class DoomsdayMessage {
 
     private static DoomsdayMessageV1 makeRequest() throws Exception {
         Gson gson = new Gson();
-        ExecutorService executor = Executors.newFixedThreadPool(URL_LIST.size(), r -> new Thread(r, "DoomsdayMessage"));
-        return FutureUtils.fastestOf(
-                URL_LIST.stream()
-                        .map(url -> makeSingleRequest(url, gson, executor))
-                        .collect(Collectors.toList())
-        ).get();
+        ExecutorService executor = Executors.newFixedThreadPool(
+                URL_LIST.size(),
+                r -> new Thread(r, "DoomsdayMessage")
+        );
+        try {
+            return FutureUtils.fastestOf(
+                    URL_LIST.stream()
+                            .map(url -> makeSingleRequest(url, gson, executor))
+                            .collect(Collectors.toList())
+            ).get();
+        } finally {
+            executor.shutdown();
+        }
     }
 
     private static CompletableFuture<DoomsdayMessageV1> makeSingleRequest(String _url, Gson gson, Executor executor) {

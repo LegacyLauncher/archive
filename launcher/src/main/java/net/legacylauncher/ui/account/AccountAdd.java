@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.account;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.managers.PromotedStoreManager;
@@ -8,6 +9,7 @@ import net.legacylauncher.ui.block.Blockable;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.frames.RequireMinecraftAccountFrame;
 import net.legacylauncher.ui.images.Images;
+import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.ui.scenes.AccountManagerScene;
@@ -23,6 +25,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
+@Slf4j
 public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable, LocalizableComponent {
 
     private final AccountManagerScene scene;
@@ -173,7 +176,20 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         promotedStore.setEnabled(false);
         psm().requestOrGetInfo().whenComplete((info, t) -> {
             if (info != null) {
-                SwingUtil.later(() -> promotedStore.setText(LOC_PREFIX + "buy-minecraft-price", info.getPrice()));
+                SwingUtil.later(() -> {
+                    String text = info.getText().get(Localizable.get().getLocale().toString());
+                    if (text == null) {
+                        text = info.getText().get("en_US");
+                    }
+                    if (text == null) {
+                        text = Localizable.get(LOC_PREFIX + "buy-minecraft");
+                    }
+                    if (text == null) {
+                        log.warn("promoted store text is null");
+                    } else {
+                        promotedStore.setText(text);
+                    }
+                });
             }
             SwingUtil.later(() -> promotedStore.setEnabled(true));
         });

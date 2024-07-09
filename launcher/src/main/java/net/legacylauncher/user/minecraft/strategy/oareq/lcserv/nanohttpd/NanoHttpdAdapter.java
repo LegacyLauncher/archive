@@ -1,25 +1,28 @@
 package net.legacylauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd;
 
 import fi.iki.elonen.NanoHTTPD;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.exceptions.ParseException;
-import net.legacylauncher.user.minecraft.strategy.oareq.*;
+import net.legacylauncher.user.minecraft.strategy.oareq.CodeRequestCancelledException;
+import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
+import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
+import net.legacylauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
 import net.legacylauncher.user.minecraft.strategy.oareq.lcserv.LocalServerSelectedConfiguration;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import java.net.URI;
+
+@Slf4j
 class NanoHttpdAdapter extends NanoHTTPD {
-    private static final Logger LOGGER = LogManager.getLogger(NanoHttpdAdapter.class);
-
     private final String expectedState;
     private final LockExchange lock;
     private final OAuthUrlParser urlParser;
-    private final RedirectUrl redirectUrl;
+    private final URI redirectUrl;
     private final String successRedirectUrl;
 
     NanoHttpdAdapter(LocalServerSelectedConfiguration configuration,
                      LockExchange lock,
                      OAuthUrlParser urlParser,
-                     RedirectUrl redirectUrl, String successRedirectUrl) {
+                     URI redirectUrl, String successRedirectUrl) {
         super(configuration.getHost(), configuration.getPort());
         this.expectedState = configuration.getState();
         this.lock = lock;
@@ -30,23 +33,23 @@ class NanoHttpdAdapter extends NanoHTTPD {
 
     @Override
     public Response serve(IHTTPSession session) {
-        LOGGER.debug("New request: {}", session.getUri());
+        log.debug("New request: {}", session.getUri());
         if (!session.getMethod().equals(Method.GET)) {
-            LOGGER.debug("Not a GET request");
+            log.debug("Not a GET request");
             return badRequest();
         }
-        if (session.getUri().equals(redirectUrl.getUrl().getPath())) {
-            LOGGER.debug("Not redirect url");
+        if (session.getUri().equals(redirectUrl.getPath())) {
+            log.debug("Not redirect url");
             return badRequest();
         }
         if (expectedState != null) {
             if (!session.getParameters().containsKey("state")) {
-                LOGGER.debug("No \"state\" parameter");
+                log.debug("No \"state\" parameter");
                 return badRequest();
             }
             String state = session.getParameters().get("state").get(0);
             if (!state.equals(expectedState)) {
-                LOGGER.warn("Expected state: {}, but got: {}", expectedState, state);
+                log.warn("Expected state: {}, but got: {}", expectedState, state);
                 return badRequest();
             }
         }
@@ -54,13 +57,13 @@ class NanoHttpdAdapter extends NanoHTTPD {
         try {
             code = urlParser.parseAndValidate(session.getUri() + "?" + session.getQueryParameterString());
         } catch (ParseException e) {
-            LOGGER.debug("Not valid request");
+            log.debug("Not valid request");
             return badRequest();
         } catch (CodeRequestCancelledException e) {
-            LOGGER.info("Cancelled");
+            log.info("Cancelled");
             return handleCancel(e);
         } catch (MicrosoftOAuthCodeRequestException e) {
-            LOGGER.info("Returned an error");
+            log.info("Returned an error");
             return handleError(e);
         }
         return handleCode(code);

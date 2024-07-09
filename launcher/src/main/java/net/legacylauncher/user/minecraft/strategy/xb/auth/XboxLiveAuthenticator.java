@@ -1,5 +1,6 @@
 package net.legacylauncher.user.minecraft.strategy.xb.auth;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.HttpClientRequester;
@@ -7,19 +8,16 @@ import net.legacylauncher.user.minecraft.strategy.rqnpr.InvalidResponseException
 import net.legacylauncher.user.minecraft.strategy.rqnpr.Requester;
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthStrategy;
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.ContentType;
 
 import java.io.IOException;
 
+@Slf4j
 public class XboxLiveAuthenticator extends XboxServiceAuthStrategy {
-    private final static Logger LOGGER = LogManager.getLogger(XboxLiveAuthenticator.class);
-
     public XboxLiveAuthenticator(OAuthApplication application) {
-        super(LOGGER, new HttpClientRequester<>(accessToken ->
-                Request.Post("https://user.auth.xboxlive.com/user/authenticate")
+        super(log, new HttpClientRequester<>(accessToken ->
+                Request.post("https://user.auth.xboxlive.com/user/authenticate")
                         .bodyString(
                                 String.format(java.util.Locale.ROOT, "{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"%s\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}",
                                         (application.usesWeirdXboxTokenPrefix() ? "d=" : "") + accessToken),
@@ -29,7 +27,7 @@ public class XboxLiveAuthenticator extends XboxServiceAuthStrategy {
     }
 
     XboxLiveAuthenticator(Requester<String> requester) {
-        super(LOGGER, requester);
+        super(log, requester);
     }
 
     public XboxServiceAuthenticationResponse xboxLiveAuthenticate(String accessToken)

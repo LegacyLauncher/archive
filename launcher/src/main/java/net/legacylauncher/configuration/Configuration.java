@@ -2,14 +2,13 @@ package net.legacylauncher.configuration;
 
 import com.github.zafarkhaja.semver.Version;
 import joptsimple.OptionSet;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.FlatLaf;
 import net.legacylauncher.util.*;
 import net.legacylauncher.util.shared.FlatLafConfiguration;
 import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.versions.ReleaseType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,9 +19,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Configuration extends SimpleConfiguration {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private ConfigurationDefaults defaults;
     private ArgumentParser.ParsedConfigEntryMap configFromArgs;
     private boolean firstRun;
@@ -53,17 +51,17 @@ public class Configuration extends SimpleConfiguration {
                 file = getDefaultFile();
             }
         } else {
-            LOGGER.debug("--settings argument: {}", path);
+            log.debug("--settings argument: {}", path);
             file = new File(path.toString());
         }
 
         boolean doesntExist = !file.isFile();
         if (doesntExist) {
-            LOGGER.debug("Creating file: {}", file);
+            log.debug("Creating file: {}", file);
             FileUtil.createFile(file);
         }
 
-        LOGGER.info("Reading configuration from: {}", file);
+        log.info("Reading configuration from: {}", file);
 
         Configuration config = new Configuration(file, set);
         if (doesntExist) {
@@ -77,115 +75,8 @@ public class Configuration extends SimpleConfiguration {
         return config;
     }
 
-    private void init(OptionSet set) {
-        comments = " Legacy Launcher " + LegacyLauncher.getBrand() + " properties\n Created in " + LegacyLauncher.getVersion();
-        defaults = ConfigurationDefaults.getInstance();
-        configFromArgs = ArgumentParser.extractConfigEntries(set);
-
-        if (getDouble("settings.version") != ConfigurationDefaults.getVersion()) {
-            LOGGER.warn("Configuration is being wiped due to version incapability");
-            set("settings.version", ConfigurationDefaults.getVersion(), false);
-            clear();
-        }
-
-        LOGGER.debug("Config entries from args: {}", configFromArgs);
-
-        configFromArgs.entries().forEach(c -> setForcefully(c.getPath(), c.getValue(), false));
-
-        if (externalLocation && !Objects.equals(LegacyLauncher.getInstance().getPackageMode().orElse(null), "flatpak")) {
-            LOGGER.debug("Using configuration from an external location");
-
-            File defFile = getDefaultFile();
-            SimpleConfiguration backConfig = new SimpleConfiguration(defFile);
-
-            if (defFile.isFile()) {
-                //log("Default file exists, backing up some values...");
-            } else {
-                LOGGER.debug("Default file doesn't exist, oops...");
-                backConfig.set("settings.version", ConfigurationDefaults.getVersion());
-                backConfig.set("client", UUID.randomUUID());
-                backConfig.store();
-            }
-
-            set("client", backConfig.get("client"), false);
-        }
-
-        try {
-            UUID.fromString(get("client"));
-        } catch (RuntimeException rE) {
-            LOGGER.debug("Recreating UUID...");
-            set("client", UUID.randomUUID(), false);
-        }
-
-        LOGGER.info("UUID: {}", getClient());
-
-        for (Entry<String, Object> defEntry : defaults.getMap().entrySet()) {
-            if (configFromArgs.isConstant(defEntry.getKey())) {
-                continue;
-            }
-            String value = get(defEntry.getKey());
-            try {
-                PlainParser.parse(get(defEntry.getKey()), defEntry.getValue());
-            } catch (RuntimeException rE) {
-                LOGGER.warn("Could not parse {}, got: {}", defEntry.getKey(), value);
-                set(defEntry.getKey(), defEntry.getValue(), false);
-            }
-        }
-
-        // Always update available experiments
-        set("experiments.available",
-                Arrays.stream(Configuration.Experiments.values())
-                        .map(it -> it.name().toLowerCase(Locale.ROOT))
-                        .collect(Collectors.joining(";")),
-                false
-        );
-
-        Locale locale = U.getLocale(get("locale"));
-        if (locale == null) {
-            LOGGER.warn("Locale is not supported by Java: {}", get("locale"));
-            LOGGER.warn("May be system default?");
-            locale = Locale.getDefault();
-        }
-
-
-        if (!LangConfiguration.getAvailableLocales().contains(locale)) {
-            LOGGER.debug("We don't have localization for {}", locale);
-
-            if (isLikelyRussianSpeakingLocale(locale.toString()) && LangConfiguration.getAvailableLocales().contains(LangConfiguration.ru_RU)) {
-                locale = LangConfiguration.ru_RU;
-            } else {
-                locale = Locale.US;
-            }
-
-            LOGGER.debug("Selecting {}", locale);
-        }
-        set("locale", locale);
-
-        int oldFontSize = getInteger("gui.font.old");
-        if (oldFontSize == 0) {
-            set("gui.font.old", getInteger("gui.font"));
-        }
-
-        String separateDirsValue = get("minecraft.gamedir.separate");
-        if ("false".equals(separateDirsValue) || "true".equals(separateDirsValue)) {
-            setSeparateDirs(getBoolean("minecraft.gamedir.separate") ? SeparateDirs.FAMILY : SeparateDirs.NONE);
-        }
-
-        // migrate old settings
-        if (containsKey("minecraft.deleteTlSkinCape")) {
-            set("minecraft.mods.removeUndesirable", get("minecraft.deleteTlSkinCape"), false);
-            remove("minecraft.deleteTlSkinCape");
-        }
-
-        LOGGER.debug("Using configuration: {}", properties);
-
-        if (isSaveable()) {
-            try {
-                save();
-            } catch (IOException ioE) {
-                LOGGER.warn("Couldn't save config", ioE);
-            }
-        }
+    private static File getDefaultFile() {
+        return MinecraftUtil.getSystemRelatedDirectory(Static.getSettings());
     }
 
     public boolean isCertFixed() {
@@ -234,36 +125,27 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public int[] getClientWindowSize() {
-        String plainValue = get("minecraft.size");
-        int[] value = new int[2];
-        if (plainValue == null) {
-            return new int[2];
-        } else {
-            try {
-                IntegerArray arr = IntegerArray.parseIntegerArray(plainValue);
-                value[0] = arr.get(0);
-                value[1] = arr.get(1);
-            } catch (Exception ignored) {
-            }
-
-            return value;
-        }
+        String value = get("minecraft.size");
+        return extractSize(value);
     }
 
     public int[] getLauncherWindowSize() {
-        String plainValue = get("gui.size");
+        String value = get("gui.size");
+        return extractSize(value);
+    }
+
+    private int[] extractSize(String plainValue) {
         int[] value = new int[2];
         if (plainValue == null) {
             return new int[2];
-        } else {
-            try {
-                IntegerArray arr = IntegerArray.parseIntegerArray(plainValue);
-                value[0] = arr.get(0);
-                value[1] = arr.get(1);
-            } catch (Exception ignored) {
-            }
-            return value;
         }
+        try {
+            IntegerArray arr = IntegerArray.parseIntegerArray(plainValue);
+            value[0] = arr.get(0);
+            value[1] = arr.get(1);
+        } catch (Exception ignored) {
+        }
+        return value;
     }
 
     public int[] getDefaultClientWindowSize() {
@@ -421,8 +303,115 @@ public class Configuration extends SimpleConfiguration {
         return "ru_RU".equals(l) || "uk_UA".equals(l) || "be_BY".equals(l);
     }
 
-    private static File getDefaultFile() {
-        return MinecraftUtil.getSystemRelatedDirectory(LegacyLauncher.getSettingsFile());
+    private void init(OptionSet set) {
+        comments = " Legacy Launcher " + BuildConfig.FULL_BRAND + " properties\n Created in " + LegacyLauncher.getVersion();
+        defaults = ConfigurationDefaults.getInstance();
+        configFromArgs = ArgumentParser.extractConfigEntries(set);
+
+        if (getDouble("settings.version") != ConfigurationDefaults.getVersion()) {
+            log.warn("Configuration is being wiped due to version incapability");
+            set("settings.version", ConfigurationDefaults.getVersion(), false);
+            clear();
+        }
+
+        log.debug("Config entries from args: {}", configFromArgs);
+
+        configFromArgs.entries().forEach(c -> setForcefully(c.getPath(), c.getValue(), false));
+
+        if (externalLocation && !Objects.equals(LegacyLauncher.getInstance().getPackageMode().orElse(null), "flatpak")) {
+            log.debug("Using configuration from an external location");
+
+            File defFile = getDefaultFile();
+            SimpleConfiguration backConfig = new SimpleConfiguration(defFile);
+
+            if (defFile.isFile()) {
+                //log("Default file exists, backing up some values...");
+            } else {
+                log.debug("Default file doesn't exist, oops...");
+                backConfig.set("settings.version", ConfigurationDefaults.getVersion());
+                backConfig.set("client", UUID.randomUUID());
+                backConfig.store();
+            }
+
+            set("client", backConfig.get("client"), false);
+        }
+
+        try {
+            UUID.fromString(get("client"));
+        } catch (RuntimeException rE) {
+            log.debug("Recreating UUID...");
+            set("client", UUID.randomUUID(), false);
+        }
+
+        log.info("UUID: {}", getClient());
+
+        for (Entry<String, Object> defEntry : defaults.getMap().entrySet()) {
+            if (configFromArgs.isConstant(defEntry.getKey())) {
+                continue;
+            }
+            String value = get(defEntry.getKey());
+            try {
+                PlainParser.parse(get(defEntry.getKey()), defEntry.getValue());
+            } catch (RuntimeException rE) {
+                log.warn("Could not parse {}, got: {}", defEntry.getKey(), value);
+                set(defEntry.getKey(), defEntry.getValue(), false);
+            }
+        }
+
+        // Always update available experiments
+        set("experiments.available",
+                Arrays.stream(Configuration.Experiments.values())
+                        .map(it -> it.name().toLowerCase(Locale.ROOT))
+                        .collect(Collectors.joining(";")),
+                false
+        );
+
+        Locale locale = U.getLocale(get("locale"));
+        if (locale == null) {
+            log.warn("Locale is not supported by Java: {}", get("locale"));
+            log.warn("May be system default?");
+            locale = Locale.getDefault();
+        }
+
+
+        if (!LangConfiguration.getAvailableLocales().contains(locale)) {
+            log.debug("We don't have localization for {}", locale);
+
+            if (isLikelyRussianSpeakingLocale(locale.toString()) && LangConfiguration.getAvailableLocales().contains(LangConfiguration.ru_RU)) {
+                locale = LangConfiguration.ru_RU;
+            } else {
+                locale = Locale.US;
+            }
+
+            log.debug("Selecting {}", locale);
+        }
+        set("locale", locale);
+
+        int oldFontSize = getInteger("gui.font.old");
+        if (oldFontSize == 0) {
+            set("gui.font.old", getInteger("gui.font"));
+        }
+
+        String separateDirsValue = get("minecraft.gamedir.separate");
+        if ("false".equals(separateDirsValue) || "true".equals(separateDirsValue)) {
+            setSeparateDirs(getBoolean("minecraft.gamedir.separate") ? SeparateDirs.FAMILY : SeparateDirs.NONE);
+        }
+
+        // migrate old settings
+        if (containsKey("minecraft.deleteTlSkinCape")) {
+            set("minecraft.mods.removeUndesirable", get("minecraft.deleteTlSkinCape"), false);
+            remove("minecraft.deleteTlSkinCape");
+        }
+
+        log.debug("Using configuration: {}", properties);
+
+        if (isSaveable()) {
+            try {
+                save();
+            } catch (IOException ioE) {
+                log.warn("Couldn't save config", ioE);
+            }
+        }
     }
 
     public enum ActionOnLaunch {
@@ -544,7 +533,7 @@ public class Configuration extends SimpleConfiguration {
             try {
                 return valueOf(upper);
             } catch (IllegalArgumentException e) {
-                LOGGER.warn("Cannot parse experiment: " + upper);
+                log.warn("Cannot parse experiment: " + upper);
                 return null;
             }
         }

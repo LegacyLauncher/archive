@@ -1,5 +1,6 @@
 package net.legacylauncher.user;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.MinecraftAuthenticationException;
 import net.legacylauncher.user.minecraft.strategy.gos.GameOwnershipValidationException;
@@ -18,13 +19,11 @@ import net.legacylauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthentication
 import net.legacylauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
 import net.legacylauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticationException;
 import net.legacylauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
+@Slf4j
 public class MinecraftAuth implements Auth<MinecraftUser> {
-    private static final Logger LOGGER = LogManager.getLogger(MinecraftAuth.class);
     private final OAuthApplication APP = OAuthApplication.TL;
 
     @Override
@@ -39,7 +38,7 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
         } catch (MinecraftProfileRequestException e) {
             throw wrap(e);
         }
-        LOGGER.info("Profile validated: {}", profile);
+        log.info("Profile validated: {}", profile);
         user.setProfile(profile);
     }
 
@@ -95,7 +94,7 @@ public class MinecraftAuth implements Auth<MinecraftUser> {
     }
 
     private static AuthException wrap(MinecraftAuthenticationException e) {
-        LOGGER.error("Couldn't validate the user", e);
+        log.error("Couldn't validate the user", e);
         return new AuthException(e.toString(), e.getShortKey());
     }
 

@@ -2,6 +2,7 @@ package net.legacylauncher.user.minecraft.strategy.rqnpr;
 
 import org.apache.commons.lang3.StringUtils;
 
+@FunctionalInterface
 public interface Validatable {
     void validate();
 

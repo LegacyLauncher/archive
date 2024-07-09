@@ -1,5 +1,6 @@
 package net.legacylauncher.managers;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.minecraft.launcher.ProcessHook;
 import net.legacylauncher.minecraft.launcher.hooks.EnvHook;
 import net.legacylauncher.util.Lazy;
@@ -10,8 +11,6 @@ import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.freedesktop.dbus.interfaces.Properties;
 import org.freedesktop.dbus.types.Variant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -21,8 +20,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class SwitcherooControlGPUManager implements GPUManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SwitcherooControlGPUManager.class);
     private static final Pattern NAME_PATTERN = Pattern.compile(".*\\[([^]]+)]");
     private final DBusConnection connection;
     private final Properties switcherooControlProperties;
@@ -47,7 +46,7 @@ public class SwitcherooControlGPUManager implements GPUManager {
                         String value = envList.get(i + 1);
                         env.put(key, value);
                     }
-                    LOGGER.info("Found GPU: {}, vendor: {}, isDefault: {}", name, vendor, isDefault);
+                    log.info("Found GPU: {}, vendor: {}, isDefault: {}", name, vendor, isDefault);
                     return new GPUManager.GPU(name, vendor, isDefault) {
                         @Override
                         public String getDisplayName(GPUManager gpuManager) {
@@ -67,7 +66,7 @@ public class SwitcherooControlGPUManager implements GPUManager {
                     };
                 }).collect(Collectors.toList());
             } catch (DBusExecutionException ignored) {
-                LOGGER.warn("Switcheroo-Control is unavailable");
+                log.warn("Switcheroo-Control is unavailable");
                 return Collections.emptyList();
             }
         });
@@ -97,10 +96,10 @@ public class SwitcherooControlGPUManager implements GPUManager {
             try {
                 return Optional.of(new SwitcherooControlGPUManager(systemFactory.call()));
             } catch (Throwable t) {
-                LOGGER.info("SwitcherooControlGPUManager is not available: {}", t.toString());
+                log.info("SwitcherooControlGPUManager is not available: {}", t.toString());
             }
         } catch (NoClassDefFoundError ignored) {
-            LOGGER.info("SwitcherooControlGPUManager is not available because it requires " +
+            log.info("SwitcherooControlGPUManager is not available because it requires " +
                     "org.freedesktop.dbus to be in the classpath");
             // java.lang.NoClassDefFoundError: org/freedesktop/dbus/**
             // => older bootstrap version
@@ -111,7 +110,7 @@ public class SwitcherooControlGPUManager implements GPUManager {
     private static class DBusDisconnectionLogger implements IDisconnectCallback {
         @Override
         public void disconnectOnError(IOException e) {
-            LOGGER.error("DBus session terminated due to an error", e);
+            log.error("DBus session terminated due to an error", e);
         }
     }
 }

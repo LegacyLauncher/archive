@@ -1,21 +1,19 @@
 package net.legacylauncher.user.minecraft.strategy.gos;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.*;
-import org.apache.http.client.fluent.Request;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 public class GameOwnershipValidator extends RequestAndParseStrategy<MinecraftServicesToken, MinecraftUserGameOwnershipResponse> {
-    private static final Logger LOGGER = LogManager.getLogger(GameOwnershipValidator.class);
-
     public GameOwnershipValidator() {
         this(new HttpClientRequester<>(token ->
-                Request.Get("https://api.minecraftservices.com/entitlements/license?requestId=" + UUID.randomUUID())
+                Request.get("https://api.minecraftservices.com/entitlements/license?requestId=" + UUID.randomUUID())
                         .addHeader("Authorization", "Bearer " + token.getAccessToken()))
         );
     }
@@ -26,7 +24,7 @@ public class GameOwnershipValidator extends RequestAndParseStrategy<MinecraftSer
 
     GameOwnershipValidator(Requester<MinecraftServicesToken> requester,
                            Parser<MinecraftUserGameOwnershipResponse> parser) {
-        super(LOGGER, requester, parser);
+        super(log, requester, parser);
     }
 
     public void checkGameOwnership(MinecraftServicesToken token)

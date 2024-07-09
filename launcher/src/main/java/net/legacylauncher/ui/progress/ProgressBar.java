@@ -50,8 +50,6 @@ public class ProgressBar extends JProgressBar {
                 }
             });
         }
-
-        Theme.setup(this);
         setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
     }
@@ -224,5 +222,11 @@ public class ProgressBar extends JProgressBar {
         synchronized (sync) {
             draw(g);
         }
+    }
+
+    @Override
+    public void updateUI() {
+        Theme.setup(this);
+        super.updateUI();
     }
 }

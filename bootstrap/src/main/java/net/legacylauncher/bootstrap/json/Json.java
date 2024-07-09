@@ -2,6 +2,8 @@ package net.legacylauncher.bootstrap.json;
 
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.*;
+import lombok.experimental.UtilityClass;
+import net.legacylauncher.bootstrap.meta.LocalLauncherMeta;
 import org.apache.commons.lang3.Validate;
 
 import java.io.InputStream;
@@ -10,6 +12,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+@UtilityClass
 public final class Json {
     private static final Gson GSON = build().create();
 
@@ -22,7 +25,7 @@ public final class Json {
     }
 
     public static GsonBuilder build() {
-        return ExposeExclusion.setup(new GsonBuilder())
+        return ExposeExclusion.setup(new GsonBuilder()).registerTypeAdapter(LocalLauncherMeta.class, new LocalLauncherMeta.Deserializer())
                 .registerTypeAdapter(Locale.class, new LocaleDeserializer())
                 .registerTypeAdapter(Version.class, new VersionSerializer());
     }
@@ -59,9 +62,5 @@ public final class Json {
 
     public static <T> T parse(JsonDeserializationContext ctx, JsonObject o, String key, Type type) {
         return parse(ctx, o, key, type, true);
-    }
-
-    private Json() {
-        throw new NoSuchMethodError();
     }
 }

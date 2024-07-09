@@ -1,18 +1,17 @@
 package net.legacylauncher.util;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.configuration.Static;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.explorer.FileExplorer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 
+@Slf4j
 public class MinecraftUtil {
-    private static final Logger LOGGER = LogManager.getLogger(MinecraftUtil.class);
-
     private static FileExplorer explorer;
     private static JFrame parent;
 
@@ -28,7 +27,7 @@ public class MinecraftUtil {
             FileUtil.createFolder(directory);
             if (checkDirectory(directory)) return directory;
         } catch (IOException e) {
-            LOGGER.warn("Got error trying to create directory", e);
+            log.warn("Got error trying to create directory", e);
         }
 
         // so we can't create directory
@@ -40,24 +39,24 @@ public class MinecraftUtil {
             FileUtil.createFolder(defaultDirectory);
             preferredDirectory = defaultDirectory;
         } catch (IOException e) {
-            LOGGER.warn("Can't even create default folder", e);
+            log.warn("Can't even create default folder", e);
             preferredDirectory = new File(System.getProperty("user.home", "/"));
         }
 
         do {
-            LOGGER.info("Current directory cannot be written to: {}", directory);
+            log.info("Current directory cannot be written to: {}", directory);
             Alert.showLocError("version.dir.noaccess", directory);
             directory = showExplorer(preferredDirectory);
             if (directory == null) {
-                LOGGER.info("No directory selected, killing launcher. Good bye!");
+                log.info("No directory selected, killing launcher. Good bye!");
                 System.exit(0);
             }
-            LOGGER.info("User selected directory: {}", directory);
+            log.info("User selected directory: {}", directory);
         } while (!checkDirectory(directory));
 
         // User asked for "please remove default directory if it is empty and not used for launcher"
         if (defaultDirectory != directory && defaultDirectory.isDirectory() && defaultDirectory.length() == 0) {
-            LOGGER.info("Default game folder is exists, is empty and is not used. Deleting");
+            log.info("Default game folder is exists, is empty and is not used. Deleting");
             defaultDirectory.delete();
         }
 
@@ -139,7 +138,7 @@ public class MinecraftUtil {
     }
 
     public static File getDefaultWorkingDirectory() {
-        return getSystemRelatedDirectory(LegacyLauncher.getFolder());
+        return getSystemRelatedDirectory(Static.getFolder());
     }
 
     public static File getOptionsFile() {

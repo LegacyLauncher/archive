@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class SystemTheme extends Theme {
-    static final int MAX_ARC = 64, MAX_BORDER = 24, BLACK_MIN = 64, WHITE_MAX = 192;
+    static final int MAX_ARC = 64, MAX_BORDER = 24, BLACK_MIN = 64;
 
     private static final SystemTheme instance = new SystemTheme();
 
@@ -23,8 +23,8 @@ public final class SystemTheme extends Theme {
 
     private final Color
             success = new Color(78, 196, 78),
-            failure = new Color(179, 0, 0),
-            shadow, semiForeground, panelBackground;
+            failure = new Color(179, 0, 0);
+    private Color shadow, semiForeground, panelBackground;
 
     private SystemTheme() {
         super("system");
@@ -33,10 +33,14 @@ public final class SystemTheme extends Theme {
         this.borderColorMap = new HashMap<>();
         borderColorMap.put(Border.MAIN_PANEL, new Color(28, 128, 28, 255));
         borderColorMap.put(Border.ADDITIONAL_PANEL, new Color(255, 177, 177));
-        borderColorMap.put(Border.SETTINGS_PANEL, OS.VERSION.startsWith("10.") ? new Color(217, 217, 217, 255) : new Color(172, 172, 172, 255));
+        borderColorMap.put(Border.SETTINGS_PANEL, new Color(217, 217, 217, 255));
 
         assert borderColorMap.size() == Border.values().length;
 
+        updateDerivingColors();
+    }
+
+    private void updateDerivingColors() {
         this.semiForeground = U.shiftColor(getForeground(), 96, 64, 192);
         this.panelBackground = U.shiftAlpha(getBackground(), -176, 64, 192);
         this.shadow = U.shiftAlpha(useDarkTheme() ? U.shiftColor(getForeground(), -96) : getBackground(), -150);
@@ -108,5 +112,10 @@ public final class SystemTheme extends Theme {
         }
         Color background = getBackground();
         return background.getRed() > BLACK_MIN || background.getGreen() > BLACK_MIN || background.getBlue() > BLACK_MIN;
+    }
+
+    public void updateUI() {
+        component.updateUI();
+        updateDerivingColors();
     }
 }

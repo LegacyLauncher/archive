@@ -8,16 +8,13 @@ import java.awt.*;
 
 public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
     private Image image;
+    private final String name;
     private final int size;
 
-    protected ImageIcon(Image image, int size) {
-        this.image = image;
+    protected ImageIcon(String name, int size) {
+        this.name = name;
         this.size = size;
-    }
-
-    protected void setImage(Image image) {
-        this.image = image;
-        repaint();
+        this.updateIcon();
     }
 
     private final Lazy<DisabledImageIcon> disabledInstance = Lazy.of(() -> new DisabledImageIcon(this));
@@ -30,7 +27,7 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
         if (image != null) {
-            g.drawImage(image, x, y, null);
+            g.drawImage(image, x, y, c);
         }
     }
 
@@ -46,6 +43,18 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
 
     public void setup(JComponent comp) {
         setup(comp, this);
+    }
+
+    @Override
+    public void updateUI() {
+        if (this.name != null) {
+            this.updateIcon();
+        }
+        super.updateUI();
+    }
+
+    private void updateIcon() {
+        image = Images.loadIcon(this.name, this.size);
     }
 
     public static ImageIcon setup(JComponent component, ImageIcon icon) {

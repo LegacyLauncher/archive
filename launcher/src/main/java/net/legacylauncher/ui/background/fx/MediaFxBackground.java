@@ -16,17 +16,15 @@ import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.background.IFXBackground;
 import net.legacylauncher.util.FileUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.net.URL;
 
+@Slf4j
 public class MediaFxBackground extends Pane implements IFXBackground {
-    private static final Logger LOGGER = LogManager.getLogger(MediaFxBackground.class);
-
     private final MediaView view = new MediaView();
 
     {
@@ -62,7 +60,7 @@ public class MediaFxBackground extends Pane implements IFXBackground {
     @Override
     public void startBackground() {
         if (view.getMediaPlayer() != null) {
-            LOGGER.debug("started");
+            log.debug("started");
             view.getMediaPlayer().play();
         }
     }
@@ -70,7 +68,7 @@ public class MediaFxBackground extends Pane implements IFXBackground {
     @Override
     public void pauseBackground() {
         if (view.getMediaPlayer() != null) {
-            LOGGER.debug("paused");
+            log.debug("paused");
             view.getMediaPlayer().pause();
         }
     }
@@ -95,7 +93,7 @@ public class MediaFxBackground extends Pane implements IFXBackground {
             url = new URL(path);
         }
 
-        LOGGER.debug("Loading media {}", url);
+        log.debug("Loading media {}", url);
 
         final Media media = new Media(url.toExternalForm());
         final MediaPlayer player = new MediaPlayer(media);
@@ -108,7 +106,7 @@ public class MediaFxBackground extends Pane implements IFXBackground {
             if (view.getMediaPlayer() != player) {
                 return;
             }
-            LOGGER.error("Error loading media {}", media, player.getError());
+            log.error("Error loading media {}", media, player.getError());
         });
 
         player.setOnReady(() -> {
@@ -138,7 +136,7 @@ public class MediaFxBackground extends Pane implements IFXBackground {
         });
 
         if (player.getStatus() == MediaPlayer.Status.HALTED) {
-            LOGGER.error("Could not load media {}", media.getSource(), player.getError());
+            log.error("Could not load media {}", media.getSource(), player.getError());
         }
     }
 }

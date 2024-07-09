@@ -1,24 +1,22 @@
 package net.legacylauncher.util.http;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.*;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.AbstractResponseHandler;
-import org.apache.http.util.ByteArrayBuffer;
-import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.HttpResponseException;
+import org.apache.hc.client5.http.fluent.*;
+import org.apache.hc.client5.http.impl.classic.AbstractHttpClientResponseHandler;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.util.ByteArrayBuffer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 import java.util.Objects;
 
+@Slf4j
 public class RetryingRangeContentResponseHandler extends ContentResponseHandler {
-    private static final Logger LOGGER = LogManager.getLogger(RetryingRangeContentResponseHandler.class);
     static final int BUFFER_SIZE = 4096;
 
     private final Request request;
@@ -42,12 +40,12 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
         long read = readBuffer(content, buffer);
 
         if (length > 0 && read < length) {
-            LOGGER.warn("Premature EOF while downloading {} ({} / {})",
+            log.warn("Premature EOF while downloading {} ({} / {})",
                     request, read, length);
             EntityUtils.consume(entity);
-            LOGGER.warn("Enabling retrying range download");
+            log.warn("Enabling retrying range download");
             while (read < length) {
-                LOGGER.debug("Downloading range {}: {} / {}",
+                log.debug("Downloading range {}: {} / {}",
                         request, read, length);
                 RangeResponseHandler handler = new RangeResponseHandler(read, buffer);
                 request.setHeader("Range", String.format(Locale.ROOT,
@@ -56,9 +54,13 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
                 response.handleResponse(handler);
                 read = handler.totalRead;
             }
-            LOGGER.debug("Done range downloading {}: {} / {}", request, read, length);
+            log.debug("Done range downloading {}: {} / {}", request, read, length);
         }
-        return new Content(buffer.toByteArray(), ContentType.getOrDefault(entity));
+        ContentType contentType = ContentType.parseLenient(entity.getContentType());
+        if (contentType == null) {
+            contentType = ContentType.TEXT_PLAIN;
+        }
+        return new Content(buffer.toByteArray(), contentType);
     }
 
     long readBuffer(InputStream content, ByteArrayBuffer buffer) throws IOException {
@@ -72,7 +74,7 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
         return l;
     }
 
-    private class RangeResponseHandler extends AbstractResponseHandler<Void> {
+    private class RangeResponseHandler extends AbstractHttpClientResponseHandler<Void> {
         private final long start;
         private final ByteArrayBuffer buffer;
         long totalRead;
@@ -89,13 +91,12 @@ public class RetryingRangeContentResponseHandler extends ContentResponseHandler 
         }
 
         @Override
-        public Void handleResponse(final HttpResponse response) throws IOException {
-            final StatusLine statusLine = response.getStatusLine();
-            int statusCode = statusLine.getStatusCode();
+        public Void handleResponse(final ClassicHttpResponse response) throws IOException {
+            int statusCode = response.getCode();
             if (statusCode == 200) {
                 throw new HttpResponseException(200, "Expected partial download response");
             } else if (statusCode != 206) {
-                throw new HttpResponseException(statusCode, statusLine.getReasonPhrase());
+                throw new HttpResponseException(statusCode, response.getReasonPhrase());
             }
             return handleEntity(response.getEntity());
         }

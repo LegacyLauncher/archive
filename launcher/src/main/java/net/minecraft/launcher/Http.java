@@ -1,10 +1,9 @@
 package net.minecraft.launcher;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.U;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,9 +15,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 public class Http {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public static URL constantURL(String input) {
         try {
             return new URL(input);
@@ -37,7 +35,7 @@ public class Http {
 
     private static HttpURLConnection createUrlConnection(URL url) throws IOException {
         Validate.notNull(url);
-        LOGGER.trace("Opening connection to {}", url);
+        log.trace("Opening connection to {}", url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection(U.getProxy());
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
@@ -54,7 +52,7 @@ public class Http {
         connection.setRequestProperty("Content-Type", contentType + "; charset=utf-8");
         connection.setRequestProperty("Content-Length", "" + postAsBytes.length);
         connection.setDoOutput(true);
-        LOGGER.trace("Writing POST data to {}: {}", url, post);
+        log.trace("Writing POST data to {}: {}", url, post);
         OutputStream outputStream = null;
 
         try {
@@ -64,27 +62,27 @@ public class Http {
             IOUtils.closeQuietly(outputStream);
         }
 
-        LOGGER.trace("Reading data from {}", url);
+        log.trace("Reading data from {}", url);
         InputStream inputStream = null;
 
         try {
             inputStream = connection.getInputStream();
             String e = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            LOGGER.trace("Successful read, server response was {}", connection.getResponseCode());
-            LOGGER.trace("Response: {}", e);
+            log.trace("Successful read, server response was {}", connection.getResponseCode());
+            log.trace("Response: {}", e);
             return e;
         } catch (IOException var18) {
             IOUtils.closeQuietly(inputStream);
             inputStream = connection.getErrorStream();
             if (inputStream == null) {
-                LOGGER.error("Request to {} failed", url, var18);
+                log.error("Request to {} failed", url, var18);
                 throw var18;
             }
 
-            LOGGER.error("Reading error page from {}", url);
+            log.error("Reading error page from {}", url);
             String result = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            LOGGER.error("Successful read, server response was {}", connection.getResponseCode());
-            LOGGER.error("Response: {}", result);
+            log.error("Successful read, server response was {}", connection.getResponseCode());
+            log.error("Response: {}", result);
             return result;
         } finally {
             IOUtils.closeQuietly(inputStream);

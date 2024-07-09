@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.settings;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.managers.MemoryAllocationService;
 import net.legacylauncher.ui.block.Blocker;
@@ -16,8 +17,6 @@ import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.Version;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -34,9 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class MemorySlider extends ExtendedPanel implements EditorField, LocalizableComponent {
-    private static final Logger LOGGER = LogManager.getLogger(MemorySlider.class);
-
     private final Lazy<net.legacylauncher.ui.images.ImageIcon> warningIcon = Images.getIcon16Lazy("warning");
     private final Lazy<net.legacylauncher.ui.images.ImageIcon> infoIcon = Images.getIcon16Lazy("info-circle");
     private final Lazy<net.legacylauncher.ui.images.ImageIcon> waitingIcon = Images.getIcon16Lazy("hourglass-start");
@@ -208,7 +206,7 @@ public class MemorySlider extends ExtendedPanel implements EditorField, Localiza
         try {
             xmx = Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            LOGGER.warn("Setting to auto mode. Bad value passed: {}", value, e);
+            log.warn("Setting to auto mode. Bad value passed: {}", value, e);
             setAuto();
             return;
         }
@@ -332,7 +330,7 @@ public class MemorySlider extends ExtendedPanel implements EditorField, Localiza
             return;
         }
         if (error != null) {
-            LOGGER.error("Couldn't request memory hint", error);
+            log.error("Couldn't request memory hint", error);
             setStatus(warningIcon, "settings.java.memory.status.error");
             return;
         }

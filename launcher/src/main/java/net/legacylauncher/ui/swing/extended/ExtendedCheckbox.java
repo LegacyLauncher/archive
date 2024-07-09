@@ -9,7 +9,8 @@ import java.awt.event.ItemListener;
 public class ExtendedCheckbox extends JCheckBox {
 
     public ExtendedCheckbox() {
-        init();
+        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
+        setOpaque(false);
     }
 
     public ExtendedCheckbox(String text) {
@@ -39,10 +40,10 @@ public class ExtendedCheckbox extends JCheckBox {
         super.getModel().removeItemListener(l);
     }
 
-    private void init() {
+    @Override
+    public void updateUI() {
         setForeground(Theme.getTheme().getForeground());
         setBackground(Theme.getTheme().getBackground());
-        setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
-        setOpaque(false);
+        super.updateUI();
     }
 }

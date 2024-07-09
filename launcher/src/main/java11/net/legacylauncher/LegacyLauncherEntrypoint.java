@@ -1,5 +1,6 @@
 package net.legacylauncher;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ipc.*;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
@@ -8,11 +9,9 @@ import org.freedesktop.dbus.connections.impl.DirectConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.freedesktop.dbus.interfaces.Peer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class LegacyLauncherEntrypoint {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LegacyLauncherEntrypoint.class);
     public static void launchP2P(String busAddress) throws DBusException {
         DirectConnection connection = DirectConnectionBuilder.forAddress(busAddress).build();
         launch(new DBusConnectionForwarder.Direct(connection));
@@ -24,7 +23,7 @@ public class LegacyLauncherEntrypoint {
             connection.requestBusName("net.legacylauncher.LegacyLauncher");
         } catch (DBusException e) {
             // not critical, well-known names are not used in real ipc communications
-            LOGGER.warn("Unable to request well-known name on the bus", e);
+            log.warn("Unable to request well-known name on the bus", e);
         }
         launch(new DBusConnectionForwarder.Bus(connection, busName));
     }

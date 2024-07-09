@@ -2,24 +2,25 @@ package net.legacylauncher.util;
 
 import net.legacylauncher.ipc.ResolverIPC;
 import net.legacylauncher.ipc.SystemDefaultResolverIPC;
-import net.legacylauncher.util.http.HttpRequestRetryHandler;
+import net.legacylauncher.util.http.HttpRequestRetryStrategy;
 import net.legacylauncher.util.http.RetryingRangeContentResponseHandler;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.fluent.Content;
-import org.apache.http.client.fluent.Executor;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultServiceUnavailableRetryStrategy;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.fluent.Content;
+import org.apache.hc.client5.http.fluent.Executor;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
+import org.apache.hc.core5.pool.PoolReusePolicy;
+import org.apache.hc.core5.util.TimeValue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,35 +31,46 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public final class EHttpClient {
+    private static final Lazy<Registry<ConnectionSocketFactory>> defaultRegistry = Lazy.of(() -> RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("http", PlainConnectionSocketFactory.getSocketFactory())
+            .register("https", SSLConnectionSocketFactory.getSocketFactory())
+            .build());
     private static ResolverIPC resolver = SystemDefaultResolverIPC.INSTANCE;
+    private static final Lazy<CloseableHttpClient> globalClient = Lazy.of(() -> builder().build());
+
+    private EHttpClient() {
+    }
+
+    public static ResolverIPC getGlobalResolver() {
+        return resolver;
+    }
 
     public static void setGlobalResolver(ResolverIPC resolver) {
         EHttpClient.resolver = resolver;
     }
 
-    private static final Lazy<Registry<ConnectionSocketFactory>> defaultRegistry = Lazy.of(() -> RegistryBuilder.<ConnectionSocketFactory>create()
-            .register("http", PlainConnectionSocketFactory.getSocketFactory())
-            .register("https", SSLConnectionSocketFactory.getSocketFactory())
-            .build());
-    private static final Lazy<HttpClient> globalClient = Lazy.of(() -> builder().build());
-
-    public static HttpClient getGlobalClient() {
+    public static CloseableHttpClient getGlobalClient() {
         return globalClient.get();
     }
 
     public static HttpClientBuilder builder() {
         return HttpClients.custom()
-                .setDnsResolver(resolver)
-                .setRetryHandler(new HttpRequestRetryHandler())
-                .setConnectionManager(new PoolingHttpClientConnectionManager(defaultRegistry.get(), resolver))
-                .setServiceUnavailableRetryStrategy(new DefaultServiceUnavailableRetryStrategy());
+                .setRetryStrategy(new HttpRequestRetryStrategy())
+                .setConnectionManager(new PoolingHttpClientConnectionManager(
+                        defaultRegistry.get(),
+                        PoolConcurrencyPolicy.STRICT,
+                        PoolReusePolicy.LIFO,
+                        TimeValue.NEG_ONE_MILLISECOND,
+                        null,
+                        resolver,
+                        null));
     }
 
     public static CloseableHttpClient createRepeatable() {
         return builder().build();
     }
 
-    public static Content toContent(HttpClient httpClient, Request request) throws IOException {
+    public static Content toContent(CloseableHttpClient httpClient, Request request) throws IOException {
         Executor executor = Executor.newInstance(httpClient);
         return executor.execute(request).handleResponse(
                 new RetryingRangeContentResponseHandler(request, executor)
@@ -69,7 +81,7 @@ public final class EHttpClient {
         return toContent(getGlobalClient(), request);
     }
 
-    public static String toString(HttpClient httpClient, Request request) throws IOException {
+    public static String toString(CloseableHttpClient httpClient, Request request) throws IOException {
         Content content = toContent(httpClient, request);
         return content == null ? null : content.asString();
     }
@@ -80,7 +92,7 @@ public final class EHttpClient {
 
     public static Reader toReader(HttpEntity entity) throws IOException {
         InputStream input = Objects.requireNonNull(entity.getContent(), "content");
-        ContentType contentType = ContentType.get(entity);
+        ContentType contentType = ContentType.parseLenient(entity.getContentType());
         Charset charset;
         if (contentType == null || contentType.getCharset() == null) {
             charset = StandardCharsets.UTF_8;
@@ -88,8 +100,5 @@ public final class EHttpClient {
             charset = contentType.getCharset();
         }
         return new InputStreamReader(input, charset);
-    }
-
-    private EHttpClient() {
     }
 }

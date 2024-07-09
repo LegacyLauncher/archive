@@ -1,21 +1,19 @@
 package net.legacylauncher.user.minecraft.strategy.mcsauth;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.*;
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.ContentType;
 
 import java.io.IOException;
 
+@Slf4j
 public class MinecraftServicesAuthenticator
         extends RequestAndParseStrategy<XboxServiceAuthenticationResponse, MinecraftServicesToken> {
-    private static final Logger LOGGER = LogManager.getLogger(MinecraftServicesAuthenticator.class);
-
     public MinecraftServicesAuthenticator() {
         this(new HttpClientRequester<>(r ->
-                Request.Post("https://api.minecraftservices.com/authentication/login_with_xbox")
+                Request.post("https://api.minecraftservices.com/authentication/login_with_xbox")
                         .bodyString(
                                 String.format(java.util.Locale.ROOT, "{\"identityToken\":\"XBL3.0 x=%s;%s\"}", r.getUHS(), r.getToken()),
                                 ContentType.APPLICATION_JSON
@@ -28,7 +26,7 @@ public class MinecraftServicesAuthenticator
 
     MinecraftServicesAuthenticator(Requester<XboxServiceAuthenticationResponse> requester,
                                    Parser<MinecraftServicesToken> parser) {
-        super(LOGGER, requester, parser);
+        super(log, requester, parser);
     }
 
     public MinecraftServicesToken minecraftServicesAuthenticate(

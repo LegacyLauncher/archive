@@ -1,19 +1,17 @@
 package net.legacylauncher.minecraft.crash;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.jna.JNA;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.sysinfo.GraphicsCard;
 import net.legacylauncher.util.sysinfo.SystemInfo;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class CrashEntry extends IEntry {
-    private static final Logger LOGGER = LogManager.getLogger(CrashEntry.class);
-
     public CrashEntry(CrashManager manager, String name) {
         super(manager, name);
         setPath(null);
@@ -189,46 +187,46 @@ public class CrashEntry extends IEntry {
 
     protected boolean checkCapability() throws Exception {
         if (getVersionPattern() != null && !getVersionPattern().matcher(getManager().getVersion()).matches()) {
-            LOGGER.debug("{} is not relevant because of Minecraft version", getName());
+            log.debug("{} is not relevant because of Minecraft version", getName());
             return false;
         }
 
         if (getExitCode() != 0 && getExitCode() != getManager().getExitCode()) {
-            LOGGER.debug("{} is not relevant because of exit code", getName());
+            log.debug("{} is not relevant because of exit code", getName());
             return false;
         }
 
         if (!isCompatibleWith(OS.CURRENT)) {
-            LOGGER.debug("{} is not relevant because of OS", getName());
+            log.debug("{} is not relevant because of OS", getName());
             return false;
         }
 
         if (getJrePattern() != null && !getJrePattern().matcher(System.getProperty("java.version")).matches()) {
-            LOGGER.debug("{} is not relevant because of Java version", getName());
+            log.debug("{} is not relevant because of Java version", getName());
             return false;
         }
 
         if (getGraphicsCardPattern() != null) {
-            LOGGER.debug("graphics card pattern of {}: {}", getName(), getGraphicsCardPattern());
+            log.debug("graphics card pattern of {}: {}", getName(), getGraphicsCardPattern());
 
             SystemInfo systemInfo;
             try {
                 systemInfo = getManager().getSystemInfoReporter().getReport().get();
             } catch (Exception e) {
-                LOGGER.debug("{} is not capable because system info report is unavailable", getName());
+                log.debug("{} is not capable because system info report is unavailable", getName());
                 return false;
             }
 
             List<GraphicsCard> graphicsCards = systemInfo.getGraphicsCards();
             if (graphicsCards == null || graphicsCards.isEmpty()) {
-                LOGGER.debug("{} is not capable because graphics devices list is unavailable: {}",
+                log.debug("{} is not capable because graphics devices list is unavailable: {}",
                         getName(), graphicsCards);
                 return false;
             }
 
             for (GraphicsCard card : graphicsCards) {
                 if (getGraphicsCardPattern().matcher(card.getName()).matches()) {
-                    LOGGER.debug("{} is capable, found device: {}", getName(), card);
+                    log.debug("{} is capable, found device: {}", getName(), card);
                     return true;
                 }
             }
@@ -243,13 +241,13 @@ public class CrashEntry extends IEntry {
                 Optional<Boolean> jnaIs64Bit = JNA.is64Bit();
                 if (jnaIs64Bit.isPresent()) {
                     is64Bit = jnaIs64Bit.get();
-                    LOGGER.info("JNA reported system is 64-bit: {}", is64Bit);
+                    log.info("JNA reported system is 64-bit: {}", is64Bit);
                 } else {
                     try {
                         is64Bit = getManager().getSystemInfoReporter().getReport().get().is64Bit();
-                        LOGGER.info("DxDiag reported system is 64-bit: {}", is64Bit);
+                        log.info("DxDiag reported system is 64-bit: {}", is64Bit);
                     } catch (Exception e) {
-                        LOGGER.warn("Could not detect if system is 64-bit");
+                        log.warn("Could not detect if system is 64-bit");
                         is64Bit = false;
                     }
                 }
@@ -258,7 +256,7 @@ public class CrashEntry extends IEntry {
                     return true;
                 }
 
-                LOGGER.debug("{} is not capable because OS and Java arch are the same", getName());
+                log.debug("{} is not capable because OS and Java arch are the same", getName());
             }
             return false;
         }

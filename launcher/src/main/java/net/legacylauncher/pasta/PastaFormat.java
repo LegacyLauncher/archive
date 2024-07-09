@@ -1,9 +1,12 @@
 package net.legacylauncher.pasta;
 
-import org.apache.http.entity.ContentType;
+
+import lombok.Getter;
+import org.apache.hc.core5.http.ContentType;
 
 import java.util.Locale;
 
+@Getter
 public enum PastaFormat {
     LOGS(ContentType.create("text/x-ansi")),
     JSON(ContentType.APPLICATION_JSON),
@@ -14,10 +17,6 @@ public enum PastaFormat {
 
     PastaFormat(ContentType contentType) {
         this.contentType = contentType;
-    }
-
-    public ContentType getContentType() {
-        return contentType;
     }
 
     String value() {

@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.crash;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.logger.Log4j2ContextHelper;
@@ -15,8 +16,6 @@ import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.SwingUtil;
 import net.minecraft.launcher.updater.VersionSyncInfo;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -27,9 +26,8 @@ import java.io.File;
 import java.util.Locale;
 import java.util.Objects;
 
+@Slf4j
 public final class CrashFrame extends VActionFrame {
-    private static final Logger LOGGER = LogManager.getLogger(CrashFrame.class);
-
     private final ImageIcon crashIcon = Images.getIcon32("bug");
 
     private final PreSupportFrame supportFrame = new PreSupportFrame() {
@@ -52,7 +50,7 @@ public final class CrashFrame extends VActionFrame {
                 if (crash.getManager().hasProcessLogger()) {
                     logFile = crash.getManager().getProcessLogger().getLogFile().getFile();
                 } else {
-                    LOGGER.warn("Opening logs, but CrashManager had no process logger");
+                    log.warn("Opening logs, but CrashManager had no process logger");
                     logFile = Log4j2ContextHelper.getCurrentLogFile().getFile();
                 }
                 OS.openFile(logFile);
@@ -107,7 +105,7 @@ public final class CrashFrame extends VActionFrame {
     }
 
     private void initOnUnknown() {
-        LOGGER.debug("Unknown crash proceeded");
+        log.debug("Unknown crash proceeded");
 
         setTitlePath("crash.unknown.title");
         getHead().setText("crash.unknown.title");
@@ -117,7 +115,7 @@ public final class CrashFrame extends VActionFrame {
     }
 
     private void initOnCrash(CrashEntry entry) {
-        LOGGER.debug("Crash entry proceeded: {}", entry);
+        log.debug("Crash entry proceeded: {}", entry);
         setTitlePath(entry.getTitle(), entry.getTitleVars());
 
         if (entry.getImage() != null) {
@@ -125,7 +123,7 @@ public final class CrashFrame extends VActionFrame {
             try {
                 image = SwingUtil.loadImage(entry.getImage());
             } catch (Exception e) {
-                LOGGER.warn("could not load crash image {}", entry.getImage(), e);
+                log.warn("could not load crash image {}", entry.getImage(), e);
             }
             if (image != null) {
                 getHead().setIcon(new javax.swing.ImageIcon(image));
@@ -163,7 +161,7 @@ public final class CrashFrame extends VActionFrame {
 
         if (askHelp) {
             if (isProbablyBadVersionCrashed()) {
-                LOGGER.info("Custom local version is crashed. Disabling help offer.");
+                log.info("Custom local version is crashed. Disabling help offer.");
             } else {
                 ++c.gridx;
                 this.askHelp.setPreferredSize(new Dimension(this.askHelp.getMinimumSize().width, SwingUtil.magnify(60)));
@@ -208,7 +206,7 @@ public final class CrashFrame extends VActionFrame {
                     .getVersionManager()
                     .getVersionSyncInfo(versionId));
         } catch (RuntimeException rE) {
-            LOGGER.warn("Couldn't detect if this crash is occurred in the custom version", rE);
+            log.warn("Couldn't detect if this crash is occurred in the custom version", rE);
             return false; // possible NPEs, fallback to ok
         }
 

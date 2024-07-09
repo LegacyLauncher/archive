@@ -9,7 +9,7 @@ download-plugin = "5.6.0"
 flatlaf = "3.4"
 gson = "2.8.9"
 guava = "33.0.0-jre"
-httpcomponents = "4.5.14"
+httpcomponents = "5.3.1"
 jackson = "2.16.1"
 jarscanner = "1.1"
 java-semver = "0.10.2"
@@ -22,12 +22,13 @@ junit5 = "5.10.2"
 junixsocket = "2.9.0"
 jvd = "1.0"
 log4j = "2.23.0"
+lombok-plugin = "8.6"
 mockito = "5.10.0"
 nanohttpd = "2.3.1"
 nstweaker = "1.0"
 oshi = "6.4.13"
-shadow-plugin = "8.1.1"
 slf4j = "2.0.12"
+spring-boot = "2.7.18" # Spring Boot 3 requires java 17+, so we stuck here with 2.7 branch
 system-theme-detector = "3.8"
 toml4j = "0.7.3"
 xz = "1.9"
@@ -42,8 +43,8 @@ dbus-transport-tcp = { module = "com.github.hypfvieh:dbus-java-transport-tcp", v
 flatlaf = { module = "com.formdev:flatlaf", version.ref = "flatlaf" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
-httpcomponents-fluent-hc = { module = "org.apache.httpcomponents:fluent-hc", version.ref = "httpcomponents" }
-httpcomponents-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "httpcomponents" }
+httpcomponents-httpclient-fluent = { module = "org.apache.httpcomponents.client5:httpclient5-fluent", version.ref = "httpcomponents" }
+httpcomponents-httpclient = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpcomponents" }
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
 jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
@@ -69,13 +70,14 @@ nstweaker = { module = "ru.turikhay.app:nstweaker", version.ref = "nstweaker" }
 oshi = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+spring-boot-loader = { module = "org.springframework.boot:spring-boot-loader", version.ref = "spring-boot" }
 system-theme-detector = { module = "com.github.Dansoftowner:jSystemThemeDetector", version.ref = "system-theme-detector" }
 toml4j = { module = "io.hotmoka:toml4j", version.ref = "toml4j" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 
 [bundles]
 dbus = ["dbus-core", "dbus-transport-tcp"]
-httpcomponents = ["httpcomponents-httpclient", "httpcomponents-fluent-hc"]
+httpcomponents = ["httpcomponents-httpclient", "httpcomponents-httpclient-fluent"]
 jna = ["jna", "jna-platform"]
 log4j = ["log4j-api", "log4j-core", "log4j-1-2-api", "log4j-slf4j-impl"]
 
@@ -83,4 +85,5 @@ log4j = ["log4j-api", "log4j-core", "log4j-1-2-api", "log4j-slf4j-impl"]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig-plugin" }
 download = { id = "de.undercouch.download", version.ref = "download-plugin" }
 javafx = { id = "org.openjfx.javafxplugin", version.ref = "javafx-plugin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-plugin" }
+lombok = { id = "io.freefair.lombok", version.ref = "lombok-plugin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

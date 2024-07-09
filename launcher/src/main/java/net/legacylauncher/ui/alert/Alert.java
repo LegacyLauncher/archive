@@ -1,20 +1,19 @@
 package net.legacylauncher.ui.alert;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.util.SwingUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 
+@Slf4j
 public class Alert {
-    private static final Logger LOGGER = LogManager.getLogger(Alert.class);
     private static String DEFAULT_TITLE = "An error occurred";
     private static String DEFAULT_MESSAGE = "An unexpected error occurred";
 
     public static void showError(String title, String message, Object textarea) {
         if (textarea instanceof Throwable) {
-            LOGGER.error("Showed this error to the user:", (Throwable) textarea);
+            log.error("Showed this error to the user:", (Throwable) textarea);
         }
 
         showMonolog(0, title, message, textarea);

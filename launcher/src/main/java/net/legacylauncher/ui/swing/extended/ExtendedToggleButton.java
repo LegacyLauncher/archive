@@ -17,8 +17,13 @@ public class ExtendedToggleButton extends JToggleButton {
     }
 
     private void init() {
-        Theme.setup(this);
         setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
+    }
+
+    @Override
+    public void updateUI() {
+        Theme.setup(this);
+        super.updateUI();
     }
 }

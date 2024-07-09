@@ -1,5 +1,6 @@
 package net.legacylauncher.user.minecraft.strategy.oatoken;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
@@ -10,8 +11,6 @@ import net.legacylauncher.user.minecraft.strategy.oareq.embed.EmbeddedBrowserUrl
 import net.legacylauncher.user.minecraft.strategy.oareq.embed.JavaFXBrowser;
 import net.legacylauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchangeException;
 import net.legacylauncher.user.minecraft.strategy.oatoken.exchange.MicrosoftOAuthCodeExchanger;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -19,8 +18,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class MicrosoftOAuthCodeExchangerTest {
-    private static final Logger LOGGER = LogManager.getLogger(MicrosoftOAuthCodeExchangerTest.class);
 
     @Test
     @Disabled
@@ -37,7 +36,7 @@ public class MicrosoftOAuthCodeExchangerTest {
                 new MicrosoftOAuthCodeExchanger(OAuthApplication.OFFICIAL_LAUNCHER);
         MicrosoftOAuthToken microsoftOAuthToken =
                 exchangeStrategy.exchangeMicrosoftOAuthCode(microsoftOAuthExchangeCode);
-        LOGGER.info(microsoftOAuthToken);
+        log.info("{}", microsoftOAuthToken);
     }
 
 }

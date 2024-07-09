@@ -1,8 +1,7 @@
 package net.legacylauncher.repository;
 
-import net.legacylauncher.LegacyLauncher;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.configuration.Static;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,16 +12,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 public enum Repository {
     LOCAL_VERSION_REPO,
-    OFFICIAL_VERSION_REPO(LegacyLauncher.getOfficialRepo()),
-    EXTRA_VERSION_REPO(LegacyLauncher.getExtraRepo()),
-    ASSETS_REPO(LegacyLauncher.getAssetsRepo()),
-    LIBRARY_REPO(LegacyLauncher.getLibraryRepo()),
-    SERVERLIST_REPO(LegacyLauncher.getServerList()),
+    OFFICIAL_VERSION_REPO(Static.getOfficialRepo()),
+    EXTRA_VERSION_REPO(Static.getExtraRepo()),
+    ASSETS_REPO(Static.getAssetsRepo()),
+    LIBRARY_REPO(Static.getLibraryRepo()),
+    SERVERLIST_REPO(Static.getServerList()),
     PROXIFIED_REPO(RepositoryProxy.getProxyRepoList());
 
-    private static final Logger LOGGER = LogManager.getLogger(Repository.class);
     public static final Repository[] VERSION_REPOS = new Repository[]{LOCAL_VERSION_REPO, OFFICIAL_VERSION_REPO, EXTRA_VERSION_REPO};
 
     private final RepoList defaultRepoList;
@@ -63,7 +62,7 @@ public enum Repository {
 
     private void update(List<String> repoList) {
         if (repoList == null) {
-            LOGGER.debug("repoList passed to is null; {} update discarded", name());
+            log.debug("repoList passed to is null; {} update discarded", name());
             return;
         }
         this.repoList = new AppenderRepoList(name(), repoList);
@@ -71,7 +70,7 @@ public enum Repository {
 
     public static void updateList(Map<String, List<String>> repoMap) {
         if (repoMap == null) {
-            LOGGER.debug("repoMap is null; update discarded");
+            log.debug("repoMap is null; update discarded");
             return;
         }
 

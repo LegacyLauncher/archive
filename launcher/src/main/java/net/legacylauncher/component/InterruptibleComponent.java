@@ -1,10 +1,12 @@
 package net.legacylauncher.component;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.managers.ComponentManager;
 
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
+@Slf4j
 public abstract class InterruptibleComponent extends RefreshableComponent {
     protected final boolean[] refreshList;
     private int lastRefreshID;
@@ -27,20 +29,20 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
 
     public final boolean refresh() {
         if (semaphore.tryAcquire()) {
-            boolean var2;
+            boolean result;
             try {
-                var2 = lastResult = refresh(nextID());
+                result = lastResult = refresh(nextID());
             } finally {
                 semaphore.release();
             }
 
-            return var2;
+            return result;
         } else {
             try {
                 semaphore.acquire();
                 return lastResult;
-            } catch (InterruptedException var11) {
-                var11.printStackTrace();
+            } catch (InterruptedException e) {
+                log.warn("Thread interrupted", e);
             } finally {
                 semaphore.release();
             }
@@ -72,5 +74,5 @@ public abstract class InterruptibleComponent extends RefreshableComponent {
         return !refreshList[refreshID];
     }
 
-    protected abstract boolean refresh(int var1);
+    protected abstract boolean refresh(int refreshID);
 }

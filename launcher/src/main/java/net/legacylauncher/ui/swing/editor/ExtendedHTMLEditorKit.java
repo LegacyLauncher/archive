@@ -3,6 +3,7 @@ package net.legacylauncher.ui.swing.editor;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableMenuItem;
+import net.legacylauncher.util.SwingUtil;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -56,6 +57,12 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
         pane.addMouseMotionListener(linkController);
     }
 
+    @Override
+    public void deinstall(JEditorPane c) {
+        c.removeMouseListener(linkController);
+        c.removeMouseMotionListener(linkController);
+    }
+
     public final HyperlinkProcessor getHyperlinkProcessor() {
         return hlProc;
     }
@@ -72,6 +79,10 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
         processPopup = process;
     }
 
+    public void updateUI() {
+        SwingUtil.updateUIContainer(popup);
+    }
+
     private static Tag getTag(Element elem) {
         AttributeSet attrs = elem.getAttributes();
         Object elementName = attrs.getAttribute("$ename");
@@ -81,13 +92,9 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
 
     private static String getAnchorHref(MouseEvent e) {
         JEditorPane editor = (JEditorPane) e.getSource();
-        if (!(editor.getDocument() instanceof HTMLDocument)) {
-            return null;
-        } else {
-            HTMLDocument hdoc = (HTMLDocument) editor.getDocument();
-
-            Element elem = hdoc.getCharacterElement(editor.viewToModel(e.getPoint()));
-
+        if (editor.getDocument() instanceof HTMLDocument) {
+            HTMLDocument doc = (HTMLDocument) editor.getDocument();
+            Element elem = doc.getCharacterElement(editor.viewToModel(e.getPoint()));
             Tag tag = getTag(elem);
             if (tag == Tag.CONTENT) {
                 Object anchorAttr = elem.getAttributes().getAttribute(Tag.A);
@@ -99,9 +106,8 @@ public class ExtendedHTMLEditorKit extends HTMLEditorKit {
                     }
                 }
             }
-
-            return null;
         }
+        return null;
     }
 
     public static class ExtendedHTMLFactory extends HTMLFactory {

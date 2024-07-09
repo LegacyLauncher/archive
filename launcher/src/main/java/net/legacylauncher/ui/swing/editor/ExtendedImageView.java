@@ -24,6 +24,7 @@
  */
 package net.legacylauncher.ui.swing.editor;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.SwingUtil;
 
 import javax.swing.*;
@@ -50,6 +51,7 @@ import java.io.IOException;
  * @see javax.swing.text.IconView
  * @since 1.4
  */
+@Slf4j
 public class ExtendedImageView extends View {
     /**
      * If true, when some of the bits are available a repaint is done.
@@ -729,7 +731,7 @@ public class ExtendedImageView extends View {
             try {
                 newImage = SwingUtil.loadImage(src);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Unable to load image", e);
             }
         }
         image = newImage;

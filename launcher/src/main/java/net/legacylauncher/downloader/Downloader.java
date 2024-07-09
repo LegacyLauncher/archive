@@ -1,16 +1,15 @@
 package net.legacylauncher.downloader;
 
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.ExtendedThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class Downloader extends ExtendedThread {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public static final int MAX_THREADS = 6;
     public static final String DOWNLOAD_BLOCK = "download";
     static final double SMOOTHING_FACTOR = 0.005D;
@@ -19,9 +18,7 @@ public class Downloader extends ExtendedThread {
     private final List<Downloadable> list;
     private final List<DownloaderListener> listeners;
     private final AtomicInteger remainingObjects;
-    private int runningThreads;
     private int workingThreads;
-    private int busyThreads;
     private final double[] progressContainer;
     private double lastAverageProgress;
     private double averageProgress;
@@ -128,7 +125,6 @@ public class Downloader extends ExtendedThread {
         if (startDownload()) {
             waitWork();
         }
-
     }
 
     private void waitWork() {
@@ -138,8 +134,8 @@ public class Downloader extends ExtendedThread {
             synchronized (workLock) {
                 try {
                     workLock.wait();
-                } catch (InterruptedException var3) {
-                    var3.printStackTrace();
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted during waiting", e);
                 }
             }
         }
@@ -157,15 +153,18 @@ public class Downloader extends ExtendedThread {
         if (!isThreadLocked()) {
             throw new IllegalArgumentException();
         } else {
-            for (int i = 0; i < runningThreads; ++i) {
-                threads[i].stopDownload();
+            for (int i = 0; i < threads.length; i++) {
+                DownloaderThread thread = threads[i];
+                if (thread != null) {
+                    thread.stopDownload();
+                    threads[i] = null;
+                }
             }
 
             aborted = true;
             if (isThreadLocked()) {
                 tryUnlock(DOWNLOAD_BLOCK);
             }
-
         }
     }
 
@@ -179,13 +178,15 @@ public class Downloader extends ExtendedThread {
 
         while (true) {
             lockThread(ITERATION_BLOCK);
-            LOGGER.debug("Files in the queue: {}", list.size());
+            log.debug("Files in the queue: {}", list.size());
             synchronized (list) {
                 sortOut();
             }
 
-            for (int var3 = 0; var3 < runningThreads; ++var3) {
-                threads[var3].startDownload();
+            for (DownloaderThread thread : threads) {
+                if (thread != null) {
+                    thread.startDownload();
+                }
             }
 
             lockThread(DOWNLOAD_BLOCK);
@@ -206,52 +207,26 @@ public class Downloader extends ExtendedThread {
     }
 
     private void sortOut() {
-        int size = list.size();
-        if (size != 0) {
-            int downloadablesAtThread = U.getMaxMultiply(size, MAX_THREADS);
-            int x = 0;
-            boolean y = true;
-            LOGGER.info("Starting to download {} files...", size);
-            onStart(size);
-            int max = 6;
+        if (list.isEmpty()) return;
 
-            boolean[] workers;
-            for (workers = new boolean[max]; size > 0; downloadablesAtThread = U.getMaxMultiply(size, MAX_THREADS)) {
-                for (int worker = 0; worker < max; ++worker) {
-                    workers[worker] = true;
-                    size -= downloadablesAtThread;
-                    if (threads[worker] == null) {
-                        threads[worker] = new DownloaderThread(this, ++runningThreads);
-                    }
+        log.info("Starting to download {} files...", list.size());
+        onStart(list.size());
 
-                    int var11;
-                    for (var11 = x; var11 < x + downloadablesAtThread; ++var11) {
-                        threads[worker].add(list.get(var11));
-                    }
-
-                    x = var11;
-                    if (size == 0) {
-                        break;
-                    }
+        boolean[] workers = new boolean[MAX_THREADS];
+        Lists.partition(list, MAX_THREADS).forEach(chunk -> {
+            for (int i = 0; i < chunk.size(); i++) {
+                if (!workers[i]) {
+                    workers[i] = true;
+                    threads[i] = new DownloaderThread(this, ++workingThreads);
                 }
+                threads[i].add(chunk.get(i));
             }
+        });
 
-            boolean[] var10 = workers;
-            int var9 = workers.length;
-
-            for (int var8 = 0; var8 < var9; ++var8) {
-                boolean var12 = var10[var8];
-                if (var12) {
-                    ++workingThreads;
-                }
-            }
-
-            list.clear();
-        }
+        list.clear();
     }
 
     private void onStart(int size) {
-
         for (DownloaderListener listener : listeners) {
             listener.onDownloaderStart(this, size);
         }
@@ -260,11 +235,9 @@ public class Downloader extends ExtendedThread {
     }
 
     void onAbort() {
-
         for (DownloaderListener listener : listeners) {
             listener.onDownloaderAbort(this);
         }
-
     }
 
     void onProgress(DownloaderThread thread, double curprogress, double curdone, double curspeed) {
@@ -284,7 +257,7 @@ public class Downloader extends ExtendedThread {
 
     void onFileComplete(DownloaderThread thread, Downloadable file) {
         int remaining = remainingObjects.decrementAndGet();
-        LOGGER.debug("Remaining: {}", remaining);
+        log.debug("Remaining: {}", remaining);
 
         for (DownloaderListener listener : listeners) {
             listener.onDownloaderFileComplete(this, file);
@@ -305,19 +278,19 @@ public class Downloader extends ExtendedThread {
     }
 
     private void waitForThreads() {
-        LOGGER.debug("Waiting for {} threads...", workingThreads);
+        log.debug("Waiting for download threads...");
 
-        boolean blocked;
+        outer:
         do {
-            blocked = true;
-
-            for (int i = 0; i < workingThreads; ++i) {
-                if (!threads[i].isThreadLocked()) {
-                    blocked = false;
+            for (DownloaderThread thread : threads) {
+                if (thread != null && !thread.isThreadLocked()) {
+                    continue outer;
                 }
             }
-        } while (!blocked);
 
-        LOGGER.debug("All threads are blocked by now");
+            break;
+        } while (true);
+
+        log.debug("All threads are blocked by now");
     }
 }

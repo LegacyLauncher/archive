@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.MalformedJsonException;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.MinecraftUtil;
@@ -15,8 +16,6 @@ import net.minecraft.launcher.versions.Rule;
 import net.minecraft.launcher.versions.Version;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -25,9 +24,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Set;
 
+@Slf4j
 public class LocalVersionList extends StreamVersionList {
-    private static final Logger LOGGER = LogManager.getLogger(LocalVersionList.class);
-
     private File baseDirectory;
     private File baseVersionsDir;
 
@@ -73,33 +71,33 @@ public class LocalVersionList extends StreamVersionList {
                             input = IOUtils.toString(reader);
                         }
                         if (input.isEmpty()) {
-                            LOGGER.warn("Json of {} is empty and is going to be deleted", id);
+                            log.warn("Json of {} is empty and is going to be deleted", id);
                             deleteJsonFile(id, jsonFile);
                             continue;
                         }
                         if (StringUtils.containsOnly(input, '\0')) {
-                            LOGGER.warn("Json of {} is corrupted and contain only zero bytes. Will try to delete it", id);
+                            log.warn("Json of {} is corrupted and contain only zero bytes. Will try to delete it", id);
                             deleteJsonFile(id, jsonFile);
                             continue;
                         }
                         JsonElement jsonElement = JsonParser.parseString(input);
                         if (!jsonElement.isJsonObject()) {
-                            LOGGER.warn("Version doesn't contain object: {}", id);
+                            log.warn("Version doesn't contain object: {}", id);
                             continue;
                         }
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
                         if (jsonObject.has("modpack") && !jsonObject.get("modpack").isJsonPrimitive()) {
-                            LOGGER.debug("Ignoring modpack version: {}", id);
+                            log.debug("Ignoring modpack version: {}", id);
                             continue;
                         }
                         if (!jsonObject.has("id")) {
-                            LOGGER.warn("Ignored version without id: {} (probably not a " +
+                            log.warn("Ignored version without id: {} (probably not a " +
                                     "Minecraft version at all)", id);
                             continue;
                         }
                         CompleteVersion ex = gson.fromJson(jsonObject, CompleteVersion.class);
                         if (ex == null) {
-                            LOGGER.warn("Version is empty: {}", id);
+                            log.warn("Version is empty: {}", id);
                             continue;
                         }
                         ex.setID(id);
@@ -109,9 +107,9 @@ public class LocalVersionList extends StreamVersionList {
                     } catch (Exception e) {
                         if (e.getCause() instanceof MalformedJsonException
                                 || e.getCause() instanceof EOFException) {
-                            LOGGER.warn("Invalid json file {}", id, e);
+                            log.warn("Invalid json file {}", id, e);
                         } else {
-                            LOGGER.warn("Could not parse local version \"{}\"", id, e);
+                            log.warn("Could not parse local version \"{}\"", id, e);
                         }
                         if (e instanceof JsonSyntaxException) {
                             renameJsonFile(jsonFile);
@@ -125,22 +123,22 @@ public class LocalVersionList extends StreamVersionList {
 
     private void deleteJsonFile(String id, File jsonFile) {
         if (jsonFile.delete()) {
-            LOGGER.warn("Json of {} deleted successfully", id);
+            log.warn("Json of {} deleted successfully", id);
         } else {
-            LOGGER.error("Couldn't remove json of {}: {}", id, jsonFile.getAbsolutePath());
+            log.error("Couldn't remove json of {}: {}", id, jsonFile.getAbsolutePath());
         }
     }
 
     private void renameJsonFile(File jsonFile) {
         String newName = jsonFile.getName() + ".invalid";
-        LOGGER.info("Renaming json file: {} -> {}", jsonFile.getAbsolutePath(), newName);
+        log.info("Renaming json file: {} -> {}", jsonFile.getAbsolutePath(), newName);
 
         Path jsonFilePath = jsonFile.toPath();
         try {
             Files.move(jsonFilePath, jsonFilePath.resolveSibling(newName),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            LOGGER.error("Couldn't rename {}", jsonFile.getAbsolutePath(), e);
+            log.error("Couldn't rename {}", jsonFile.getAbsolutePath(), e);
         }
     }
 

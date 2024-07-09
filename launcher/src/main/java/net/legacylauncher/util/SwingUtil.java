@@ -1,9 +1,8 @@
 package net.legacylauncher.util;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.Images;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -24,9 +23,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public class SwingUtil {
-    private static final Logger LOGGER = LogManager.getLogger(SwingUtil.class);
-
     private static final Lazy<List<Image>> favicons = Lazy.of(() -> createFaviconList("logo-tl"));
 
     public static List<Image> createFaviconList(String iconName) {
@@ -75,7 +73,7 @@ public class SwingUtil {
                 }
             }
         } catch (Exception var9) {
-            LOGGER.warn("Cannot change font size", var9);
+            log.warn("Cannot change font size", var9);
         }
 
     }
@@ -83,8 +81,8 @@ public class SwingUtil {
     public static Cursor getCursor(int type) {
         try {
             return Cursor.getPredefinedCursor(type);
-        } catch (IllegalArgumentException var2) {
-            var2.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            log.warn("Unable to fetch cursor with type {}", type, e);
             return null;
         }
     }
@@ -221,12 +219,9 @@ public class SwingUtil {
             Thread.currentThread().interrupt();
             throw new SwingException(interruptedException);
         } catch (InvocationTargetException invocationTargetException) {
-            Throwable t;
-            if (invocationTargetException.getCause() != null) {
-                t = invocationTargetException.getCause();
-                if (t instanceof SwingRunnableException) {
-                    t = t.getCause();
-                }
+            Throwable t = invocationTargetException.getCause();
+            if (t instanceof SwingRunnableException) {
+                t = t.getCause();
             } else {
                 t = invocationTargetException;
             }
@@ -262,4 +257,26 @@ public class SwingUtil {
         }
     }
 
+    public static void updateUIContainer(Container container) {
+        updateUIComponent(container);
+        for (Component component : container.getComponents()) {
+            updateUIComponent(component);
+        }
+    }
+
+    private static void updateUIComponent(Component component) {
+        if (component instanceof JComponent) {
+            ((JComponent) component).updateUI();
+        }
+    }
+
+    public static void updateUINullable(JComponent... components) {
+        for (JComponent component : components) {
+            if (component instanceof JPopupMenu) {
+                updateUIContainer(component);
+            } else if (component != null) {
+                component.updateUI();
+            }
+        }
+    }
 }

@@ -6,40 +6,33 @@ import java.awt.event.ComponentListener;
 
 public abstract class ExtendedComponentListener implements ComponentListener {
     private final Component comp;
-    private final QuickParameterListenerThread resizeListener;
-    private final QuickParameterListenerThread moveListener;
-    private ComponentEvent lastResizeEvent;
-    private ComponentEvent lastMoveEvent;
+    private final QuickParameterListener resizeListener;
+    private final QuickParameterListener moveListener;
 
-    public ExtendedComponentListener(Component component, int tick) {
+    public ExtendedComponentListener(Component component) {
         if (component == null) {
             throw new NullPointerException();
         } else {
             comp = component;
-            resizeListener = new QuickParameterListenerThread(() -> new int[]{comp.getWidth(), comp.getHeight()}, () -> onComponentResized(lastResizeEvent), tick);
-            moveListener = new QuickParameterListenerThread(() -> {
+            resizeListener = new QuickParameterListener(() ->
+                    new int[]{comp.getWidth(), comp.getHeight()},
+                    this::onComponentResized
+            );
+            moveListener = new QuickParameterListener(() -> {
                 Point location = comp.getLocation();
                 return new int[]{location.x, location.y};
-            }, () -> onComponentMoved(lastMoveEvent), tick);
+            }, this::onComponentMoved);
         }
     }
 
-    public ExtendedComponentListener(Component component) {
-        this(component, 500);
-    }
-
     public final void componentResized(ComponentEvent e) {
-        onComponentResizing(e);
+        onComponentResizing();
         resizeListener.startListening();
     }
 
     public final void componentMoved(ComponentEvent e) {
-        onComponentMoving(e);
+        onComponentMoving();
         moveListener.startListening();
-    }
-
-    public boolean isListening() {
-        return resizeListener.isIterating() || moveListener.isIterating();
     }
 
     @Override
@@ -50,16 +43,16 @@ public abstract class ExtendedComponentListener implements ComponentListener {
     public void componentHidden(ComponentEvent e) {
     }
 
-    public void onComponentResizing(ComponentEvent e) {
+    public void onComponentResizing() {
     }
 
-    public void onComponentResized(ComponentEvent e) {
+    public void onComponentResized() {
     }
 
-    public void onComponentMoving(ComponentEvent e) {
+    public void onComponentMoving() {
     }
 
-    public void onComponentMoved(ComponentEvent e) {
+    public void onComponentMoved() {
     }
 
     public void dispose() {

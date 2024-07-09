@@ -4,6 +4,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
+import lombok.Getter;
 import net.legacylauncher.minecraft.auth.UUIDTypeAdapter;
 import net.legacylauncher.util.StringUtil;
 
@@ -14,10 +15,13 @@ public class PlainUser extends User {
     public static final String TYPE = "plain";
     private final String username;
     private final UUID uuid;
+    @Getter
+    private final boolean elySkins;
 
-    public PlainUser(String username, UUID uuid) {
+    public PlainUser(String username, UUID uuid, boolean elySkins) {
         this.username = StringUtil.requireNotBlank(username, "username");
         this.uuid = Objects.requireNonNull(uuid, "uuid");
+        this.elySkins = elySkins;
     }
 
     @Override
@@ -64,7 +68,7 @@ public class PlainUser extends User {
         );
     }
 
-    public static UserJsonizer<PlainUser> getJsonizer() {
+    static UserJsonizer<PlainUser> getJsonizer() {
         return new Jsonizer();
     }
 
@@ -77,7 +81,13 @@ public class PlainUser extends User {
             } else {
                 uuid = UUID.randomUUID();
             }
-            return new PlainUser(json.get("username").getAsString(), uuid);
+            boolean elySkins;
+            if (json.has("elySkins")) {
+                elySkins = json.getAsJsonPrimitive("elySkins").getAsBoolean();
+            } else {
+                elySkins = true;
+            }
+            return new PlainUser(json.get("username").getAsString(), uuid, elySkins);
         }
 
         @Override
@@ -85,6 +95,7 @@ public class PlainUser extends User {
             JsonObject object = new JsonObject();
             object.addProperty("username", src.getUsername());
             object.addProperty("uuid", UUIDTypeAdapter.fromUUID(src.getUUID()));
+            object.addProperty("elySkins", src.elySkins);
             return object;
         }
     }

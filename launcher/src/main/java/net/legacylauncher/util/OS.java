@@ -1,14 +1,13 @@
 package net.legacylauncher.util;
 
 import com.sun.management.OperatingSystemMXBean;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.jna.JNA;
 import net.legacylauncher.jna.JNAMacOs;
 import net.legacylauncher.portals.Portals;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.util.shared.JavaVersion;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.event.Level;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -17,13 +16,12 @@ import java.net.URL;
 import java.util.Locale;
 import java.util.OptionalLong;
 
+@Slf4j
 public enum OS {
     LINUX("linux", "unix"),
     WINDOWS("win"),
     OSX("mac"),
     UNKNOWN("unknown");
-
-    private static final Logger LOGGER = LogManager.getLogger(OS.class);
 
     public static final String NAME = System.getProperty("os.name");
     public static final String VERSION = System.getProperty("os.version");
@@ -39,8 +37,8 @@ public enum OS {
         } catch (Exception e) {
             version = JavaVersion.create(1, 8, 0, 45);
 
-            LOGGER.warn("Could not parse Java version: {}", System.getProperty("java.version"));
-            LOGGER.warn("Assuming it is 1.8.0_45");
+            log.warn("Could not parse Java version: {}", System.getProperty("java.version"));
+            log.warn("Assuming it is 1.8.0_45");
         }
         JAVA_VERSION = version;
     }
@@ -123,7 +121,7 @@ public enum OS {
         try {
             url = new URL(_url);
         } catch (Exception e) {
-            LOGGER.warn("Failed to parse link: \"{}\"", _url, e);
+            log.warn("Failed to parse link: \"{}\"", _url, e);
 
             if (alertError) {
                 Alert.showLocError("ui.error.openlink", _url);
@@ -142,7 +140,8 @@ public enum OS {
     public static boolean openLink(URI uri, boolean alertError) {
         if (Portals.getPortal().openURI(uri)) return true;
 
-        LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Opening the link failed: \"{}\"", uri);
+        log.makeLoggingEventBuilder(alertError ? Level.ERROR : Level.WARN)
+                .log("Opening the link failed: \"{}\"", uri);
         if (alertError) {
             Alert.showLocError("ui.error.openlink", uri);
         }
@@ -160,7 +159,7 @@ public enum OS {
         try {
             uri = url.toURI();
         } catch (Exception var4) {
-            LOGGER.warn("Couldn't convert URL to URI: {}", url, var4);
+            log.warn("Couldn't convert URL to URI: {}", url, var4);
         }
 
         return openLink(uri, alertError);
@@ -171,15 +170,16 @@ public enum OS {
     }
 
     public static boolean openFolder(File folder, boolean alertError) {
-        LOGGER.info("Trying to open folder: {}", folder);
+        log.info("Trying to open folder: {}", folder);
         if (!folder.isDirectory()) {
-            LOGGER.warn("This path is not a directory, sorry.");
+            log.warn("This path is not a directory, sorry.");
             return false;
         } else {
             try {
                 return Portals.getPortal().openFile(folder.toPath());
-            } catch (Throwable var3) {
-                LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Failed to open folder: {}", folder, var3);
+            } catch (Throwable e) {
+                log.makeLoggingEventBuilder(alertError ? Level.ERROR : Level.WARN)
+                        .setCause(e).log("Failed to open folder: {}", folder);
                 if (alertError) {
                     Alert.showLocError("ui.error.openfolder", folder);
                 }
@@ -194,15 +194,16 @@ public enum OS {
     }
 
     public static boolean openFile(File file, boolean alertError) {
-        LOGGER.info("Trying to open file: {}", file);
+        log.info("Trying to open file: {}", file);
         if (!file.isFile()) {
-            LOGGER.warn("This path is not a file, sorry.");
+            log.warn("This path is not a file, sorry.");
             return false;
         } else {
             try {
                 return Portals.getPortal().openFile(file.toPath());
-            } catch (Throwable var3) {
-                LOGGER.log(alertError ? Level.ERROR : Level.WARN, "Failed to open file: {}", file, var3);
+            } catch (Throwable e) {
+                log.makeLoggingEventBuilder(alertError ? Level.ERROR : Level.WARN)
+                        .setCause(e).log("Failed to open file: {}", file);
                 if (alertError) {
                     Alert.showLocError("ui.error.openfolder", file);
                 }
@@ -272,7 +273,7 @@ public enum OS {
             try {
                 return ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getTotalPhysicalMemorySize();
             } catch (Throwable var1) {
-                LOGGER.warn("Cannot query total physical memory size!", var1);
+                log.warn("Cannot query total physical memory size!", var1);
                 return 0L;
             }
         }
@@ -289,7 +290,7 @@ public enum OS {
             try {
                 return ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
             } catch (Throwable var1) {
-                LOGGER.warn("Cannot query the number of available processors", var1);
+                log.warn("Cannot query the number of available processors", var1);
                 return 1;
             }
         }

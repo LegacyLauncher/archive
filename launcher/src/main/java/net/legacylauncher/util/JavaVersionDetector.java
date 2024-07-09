@@ -1,9 +1,8 @@
 package net.legacylauncher.util;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.async.AsyncThread;
 import net.legacylauncher.util.shared.JavaVersion;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ru.turikhay.util.jvd.JavaVersionDetectorMain;
 
 import java.io.BufferedReader;
@@ -22,11 +21,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class JavaVersionDetector {
     private static final Pattern PATTERN = Pattern.compile("^\\$#! java: (.+)$");
-
-    private static final Logger LOGGER = LogManager.getLogger(JavaVersionDetector.class);
-
 
     private final String javaExec;
 
@@ -74,7 +71,7 @@ public class JavaVersionDetector {
         } catch (IOException e) {
             throw new JavaVersionNotDetectedException(e);
         }
-        LOGGER.debug("Started process: {}", command);
+        log.debug("Started process: {}", command);
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(
                 process.getInputStream(),
@@ -85,14 +82,14 @@ public class JavaVersionDetector {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                LOGGER.debug("[{}] Line: {}", javaExec, line);
+                log.debug("[{}] Line: {}", javaExec, line);
                 Matcher matcher = PATTERN.matcher(line);
                 if (matcher.matches()) {
-                    LOGGER.debug("[{}] Found matching line: {}", javaExec, line);
+                    log.debug("[{}] Found matching line: {}", javaExec, line);
                     try {
                         return JavaVersion.parse(matcher.group(1));
                     } catch (RuntimeException e) {
-                        LOGGER.warn("[{}] Couldn't parse version line: {}", javaExec, line);
+                        log.warn("[{}] Couldn't parse version line: {}", javaExec, line);
                         throw new JavaVersionNotDetectedException(line);
                     }
                 }

@@ -1,17 +1,15 @@
 package net.legacylauncher.user.minecraft.strategy.oareq.lcserv.nanohttpd;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
 import net.legacylauncher.user.minecraft.strategy.oareq.OAuthUrlParser;
-import net.legacylauncher.user.minecraft.strategy.oareq.RedirectUrl;
 import net.legacylauncher.user.minecraft.strategy.oareq.lcserv.*;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +18,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public class NanoHttpdLocalServer implements ILocalServer {
-    private static final Logger LOGGER = LogManager.getLogger(NanoHttpdLocalServer.class);
-
     private final AtomicBoolean invoked = new AtomicBoolean(false);
 
     private final OAuthUrlParser urlParser;
@@ -50,7 +47,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
         List<IOException> serverStartExceptions = new ArrayList<>();
 
         for (int port : configuration.getAllowedPorts()) {
-            LOGGER.debug("Starting server on {}:{}", configuration.getHost(), port);
+            log.debug("Starting server on {}:{}", configuration.getHost(), port);
 
             selectedConfiguration = new LocalServerSelectedConfiguration(
                     configuration.getHost(),
@@ -59,10 +56,10 @@ public class NanoHttpdLocalServer implements ILocalServer {
                     generateState()
             );
 
-            RedirectUrl redirectUrl;
+            URI redirectUrl;
             try {
-                redirectUrl = new RedirectUrl(urlProducer.buildRedirectUrl(selectedConfiguration));
-            } catch (URISyntaxException | MalformedURLException e) {
+                redirectUrl = new URI(urlProducer.buildRedirectUrl(selectedConfiguration));
+            } catch (URISyntaxException e) {
                 throw new LocalServerException("cannot build redirect uri", e);
             }
 
@@ -78,7 +75,7 @@ public class NanoHttpdLocalServer implements ILocalServer {
             try {
                 adapter.start();
             } catch (IOException e) {
-                LOGGER.warn("Couldn't start local server on {}:{}",
+                log.warn("Couldn't start local server on {}:{}",
                         configuration.getHost(), port, e);
                 serverStartExceptions.add(e);
                 adapter = null;

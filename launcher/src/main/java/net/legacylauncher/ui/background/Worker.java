@@ -1,18 +1,16 @@
 package net.legacylauncher.ui.background;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.handlers.ExceptionHandler;
 import net.legacylauncher.util.U;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Slf4j
 class Worker {
-    private static final Logger LOGGER = LogManager.getLogger(Worker.class);
-
     private static final float STEP = 0.025f;
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
@@ -58,14 +56,14 @@ class Worker {
             }
 
             float opacity = wrapper.cover.getOpacity(), step = opacity > targetOpacity ? -STEP : STEP, eps = Math.abs(step / 2.f);
-            LOGGER.debug("setting opacity: {}, targetOpacity: {}, step: {}", opacity, targetOpacity, step);
+            log.debug("setting opacity: {}, targetOpacity: {}, step: {}", opacity, targetOpacity, step);
 
             while (Math.abs(opacity - targetOpacity) > eps) {
                 wrapper.cover.setOpacity(opacity += step);
                 U.sleepFor(16);
             }
 
-            LOGGER.debug("opacity set to {}", targetOpacity);
+            log.debug("opacity set to {}", targetOpacity);
         }
     }
 
@@ -89,7 +87,7 @@ class Worker {
             } catch (OutOfMemoryError outOfMemoryError) {
                 ExceptionHandler.reduceMemory(outOfMemoryError);
             } catch (Exception e) {
-                LOGGER.error("Could not load background for {}; path: {}", background, path, e);
+                log.error("Could not load background for {}; path: {}", background, path, e);
             }
 
             showBackgroundTask.run();

@@ -12,6 +12,7 @@ plugins {
     `jvm-test-suite`
     alias(libs.plugins.javafx)
     alias(libs.plugins.buildconfig)
+    alias(libs.plugins.lombok)
     net.legacylauncher.brand
 }
 
@@ -164,8 +165,22 @@ val processResources by tasks.getting(ProcessResources::class) {
         writeMeta(
             destinationDir.resolve("META-INF/launcher-meta.json"),
             meta + mapOf(
-                "bridgedEntryPoint" to "net.legacylauncher.LegacyLauncherBridged",
-                "entryPoint" to "net.legacylauncher.LegacyLauncherEntrypoint",
+                "bridgedEntryPoint" to "net.legacylauncher.LegacyLauncherBridged", // deprecated
+                "entryPoint" to "net.legacylauncher.LegacyLauncherEntrypoint", // deprecated
+                "entrypoints" to mapOf(
+                    "bridge" to mapOf(
+                        "type" to "net.legacylauncher.LegacyLauncherBridged",
+                        "method" to "launch"
+                    ),
+                    "dbusP2P" to mapOf(
+                        "type" to "net.legacylauncher.LegacyLauncherEntrypoint",
+                        "method" to "launchP2P"
+                    ),
+                    "dbusSession" to mapOf(
+                        "type" to "net.legacylauncher.LegacyLauncherEntrypoint",
+                        "method" to "launchSession"
+                    ),
+                ),
                 "repositories" to (brand.repoHosts.get()
                     .map { "https://$it" } + brand.repoCdnPathPrefixes.get()).map { "$it/repo/libraries" },
                 "javaVersion" to "[11,)", // recommended java version as per https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
@@ -249,6 +264,7 @@ buildConfig {
     buildConfigField("String", "SHORT_BRAND", "\"${brand.brand.get()}\"")
     buildConfigField("String", "FULL_BRAND", "\"${brand.displayName.get()}\"")
     buildConfigField("String", "VERSION", "\"${brand.version.get()}\"")
+    buildConfigField("String", "SUPPORT_EMAIL", "\"${brand.supportEmail.get()}\"")
 }
 
 val assemble: Task by tasks.getting {

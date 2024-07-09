@@ -1,4 +1,4 @@
-import org.openjfx.gradle.JavaFXOptions
+import org.openjfx.gradle.*
 
 buildscript {
     repositories {
@@ -19,8 +19,8 @@ subprojects {
         repositories {
             mavenCentral()
             maven("https://jitpack.io")
-            maven("https://cdn.turikhay.ru/tlauncher/repo/libraries") {
-                name = "turikhay cdn"
+            maven("https://llaun.ch/repo/libraries") {
+                name = "legacy launcher cdn"
                 metadataSources {
                     mavenPom()
                     artifact()

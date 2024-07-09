@@ -7,14 +7,10 @@ import net.legacylauncher.minecraft.PromotedServerDeserializer;
 import net.legacylauncher.ui.notice.Notice;
 import net.legacylauncher.ui.notice.NoticeDeserializer;
 import net.legacylauncher.ui.notification.UrlNotificationObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public final class BootConfiguration {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private boolean stats, ely;
     private final Map<String, List<String>> repositories = new HashMap<>();
     private final Map<String, List<Notice>> notices = new HashMap<>();

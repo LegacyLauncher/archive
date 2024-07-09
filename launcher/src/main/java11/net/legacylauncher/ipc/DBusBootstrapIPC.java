@@ -1,27 +1,32 @@
 package net.legacylauncher.ipc;
 
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.Properties;
 import org.freedesktop.dbus.types.Variant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DBusBootstrapIPC implements BootstrapIPC {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBusBootstrapIPC.class);
     private final DBusConnectionForwarder connection;
     private final Bootstrap1 ipc;
     private final Properties ipcProperties;
+    private final CompletableFuture<Bootstrap1.AboutToClose> aboutToClose = new CompletableFuture<>();
 
     public DBusBootstrapIPC(DBusConnectionForwarder connection) throws DBusException {
         this.connection = connection;
         this.ipc = connection.getRemoteObject(Bootstrap1.OBJECT_PATH, Bootstrap1.class);
         this.ipcProperties = connection.getRemoteObject(Bootstrap1.OBJECT_PATH, Properties.class);
+        connection.addSigHandler(Bootstrap1.AboutToClose.class, aboutToClose::complete);
     }
 
     @Override
@@ -52,7 +57,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
             connection.sendMessage(new Launcher1.OnBootStarted(Launcher1.OBJECT_PATH));
         } catch (DBusException e) {
             // ¯\_(ツ)_/¯
-            LOGGER.error("Failed to emit OnBootStarted event", e);
+            log.error("Failed to emit OnBootStarted event", e);
         }
     }
 
@@ -62,7 +67,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
             connection.sendMessage(new Launcher1.OnBootProgress(Launcher1.OBJECT_PATH, stepName, percentage));
         } catch (DBusException e) {
             // ¯\_(ツ)_/¯
-            LOGGER.error("Failed to emit OnBootProgress event", e);
+            log.error("Failed to emit OnBootProgress event", e);
         }
     }
 
@@ -72,7 +77,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
             connection.sendMessage(new Launcher1.OnBootSucceeded(Launcher1.OBJECT_PATH));
         } catch (DBusException e) {
             // ¯\_(ツ)_/¯
-            LOGGER.error("Failed to emit OnBootSucceeded event", e);
+            log.error("Failed to emit OnBootSucceeded event", e);
         }
     }
 
@@ -82,7 +87,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
             connection.sendMessage(new Launcher1.OnBootError(Launcher1.OBJECT_PATH, message));
         } catch (DBusException e) {
             // ¯\_(ツ)_/¯
-            LOGGER.error("Failed to emit OnBootError event", e);
+            log.error("Failed to emit OnBootError event", e);
         }
     }
 
@@ -92,7 +97,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
             connection.sendMessage(new Launcher1.OnCloseRequest(Launcher1.OBJECT_PATH));
         } catch (DBusException e) {
             // ¯\_(ツ)_/¯
-            LOGGER.error("Failed to emit OnCloseRequest event", e);
+            log.error("Failed to emit OnCloseRequest event", e);
         }
     }
 
@@ -108,8 +113,23 @@ public class DBusBootstrapIPC implements BootstrapIPC {
     }
 
     @Override
-    public void close() throws IOException {
-        connection.close();
+    public synchronized void close() throws IOException {
+        if (!connection.getConnection().isConnected()) {
+            return;
+        }
+        try {
+            requestClose();
+            aboutToClose.get(3, TimeUnit.SECONDS);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            log.warn("Cannot wait for close ack signal, whatever", e);
+            try {
+                connection.close();
+            } catch (IOException ignored) {
+            }
+            System.exit(0);
+        } finally {
+            connection.close();
+        }
     }
 
     public void register(DBusConnectionForwarder forwarder) throws DBusException {

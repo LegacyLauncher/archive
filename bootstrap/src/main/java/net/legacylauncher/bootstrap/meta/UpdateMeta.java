@@ -2,6 +2,7 @@ package net.legacylauncher.bootstrap.meta;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.json.Json;
 import net.legacylauncher.bootstrap.json.RemoteBootstrapDeserializer;
 import net.legacylauncher.bootstrap.json.RemoteLauncherDeserializer;
@@ -13,8 +14,6 @@ import net.legacylauncher.bootstrap.util.ThreadFactoryUtils;
 import net.legacylauncher.repository.RepoPrefixV1;
 import net.legacylauncher.util.shared.FutureUtils;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,9 +24,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.*;
 
+@Slf4j
 public class UpdateMeta {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateMeta.class);
-
     static {
         Compressor.init(); // init compressor
     }
@@ -38,7 +36,7 @@ public class UpdateMeta {
         return new Task<UpdateMeta>("fetchUpdate") {
             @Override
             protected UpdateMeta execute() throws Exception {
-                LOGGER.info("Requesting update for: " + shortBrand);
+                log.info("Requesting update for: " + shortBrand);
 
                 Gson gson = createGson(shortBrand);
                 List<String> prefixes = RepoPrefixV1.prefixesCdnFirst();
@@ -53,17 +51,17 @@ public class UpdateMeta {
                                         prefix, shortBrand)
                         )
                         .map(url -> FutureUtils.supplyInterruptible(() -> {
-                            LOGGER.debug("Fetching from: {}", url);
+                            log.debug("Fetching from: {}", url);
                             try (InputStream _in = new URL(url).openStream()) {
                                 InputStream in = _in;
                                 if (url.endsWith(".mgz.signed")) {
                                     in = new SignedStream(in);
                                 }
                                 UpdateMeta updateMeta = fetchFrom(gson, Compressor.uncompressMarked(in));
-                                LOGGER.info("Successfully fetched from {}", url);
+                                log.info("Successfully fetched from {}", url);
                                 return updateMeta;
                             } catch (Exception e) {
-                                LOGGER.warn("Couldn't fetch from {}", url, e);
+                                log.warn("Couldn't fetch from {}", url, e);
                                 throw e;
                             }
                         }, executor))
@@ -84,11 +82,11 @@ public class UpdateMeta {
                 try {
                     return result.get();
                 } catch (CancellationException e) {
-                    LOGGER.info("Update meta request was cancelled");
+                    log.info("Update meta request was cancelled");
                     throw new UpdateMetaFetchFailed();
                 } catch (ExecutionException e) {
                     Throwable cause = e.getCause();
-                    LOGGER.error("Update meta request failed", cause);
+                    log.error("Update meta request failed", cause);
                     if (cause instanceof Exception) {
                         throw (Exception) cause;
                     }

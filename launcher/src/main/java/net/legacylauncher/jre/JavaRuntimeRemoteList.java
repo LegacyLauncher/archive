@@ -1,8 +1,5 @@
 package net.legacylauncher.jre;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,14 +9,12 @@ import java.util.stream.Collectors;
 import static net.legacylauncher.jre.JavaPlatform.CURRENT_PLATFORM_CANDIDATES;
 
 public class JavaRuntimeRemoteList {
-    private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeRemoteList.class);
-
     public static final String URL = "https://launchermeta.mojang.com/v1/products/java-runtime/" +
             "2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
 
     private final Map<String, Platform> perPlatform;
 
-    public JavaRuntimeRemoteList(Map<String, Platform> perPlatform) {
+    JavaRuntimeRemoteList(Map<String, Platform> perPlatform) {
         this.perPlatform = perPlatform;
     }
 

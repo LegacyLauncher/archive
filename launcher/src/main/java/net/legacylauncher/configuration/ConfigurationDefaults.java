@@ -7,6 +7,7 @@ import net.legacylauncher.util.Direction;
 import net.legacylauncher.util.IntegerArray;
 import net.legacylauncher.util.MinecraftUtil;
 import net.legacylauncher.util.OS;
+import net.legacylauncher.util.shared.JavaVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 
 import java.lang.ref.WeakReference;
@@ -65,8 +66,9 @@ public final class ConfigurationDefaults {
         d.put("minecraft.crash", true);
         d.put("minecraft.mods.removeUndesirable", true);
 
-        d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
-        d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent() ? 1000 : 1200, 600));
+        boolean supportsHiDpi = JavaVersion.getCurrent().getMajor() >= 11;
+        d.put("gui.font", supportsHiDpi || OS.WINDOWS.isCurrent() ? 12 : 14);
+        d.put("gui.size", new IntegerArray(1000, 600));
 //        d.put("gui.systemlookandfeel", false);
 
         d.putAll(FlatLaf.getDefaults());
@@ -88,8 +90,6 @@ public final class ConfigurationDefaults {
         d.put("client", UUID.randomUUID());
 
         d.put("connection.ssl", true);
-
-        d.put("ely.globally", true);
 
         if (OS.WINDOWS.isCurrent()) {
             d.put("windows.dxdiag", true);

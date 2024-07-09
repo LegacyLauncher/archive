@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.moandjiezana.toml.Toml;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.ConfigurationDefaults;
 import net.legacylauncher.minecraft.launcher.ChildProcessLogger;
@@ -22,10 +23,8 @@ import net.minecraft.options.OptionsFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,9 +40,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+@Slf4j
 public final class CrashManager {
-    private static final Logger LOGGER = LogManager.getLogger(CrashManager.class);
-    private static final Marker LOG_FLUSHER = MarkerManager.getMarker("log_flusher");
+    private static final Marker LOG_FLUSHER = MarkerFactory.getMarker("log_flusher");
 
     private final ArrayList<CrashManagerListener> listeners = new ArrayList<>();
     private final Watchdog watchdog = new Watchdog();
@@ -105,7 +104,7 @@ public final class CrashManager {
             addAllEntries(external, "external");
             skipFolders = external.getSkipFolders();
 
-            LOGGER.info("Using external entries, because their revision ({}) is newer than the revision " +
+            log.info("Using external entries, because their revision ({}) is newer than the revision " +
                     "of the internal ones ({})", external.getRevision(), internal.getRevision());
         }
 
@@ -138,12 +137,12 @@ public final class CrashManager {
         try {
             external = loadEntries(Compressor.uncompressMarked(Repository.EXTRA_VERSION_REPO.get("libraries/signature.json")), "external");
         } catch (Exception e) {
-            LOGGER.warn("Could not load external entries", e);
+            log.warn("Could not load external entries", e);
             return null;
         }
 
         if (external.getRevision() <= internal.getRevision()) {
-            LOGGER.info("External signatures are older or the same: {}", external.getRevision());
+            log.info("External signatures are older or the same: {}", external.getRevision());
             return null;
         }
 
@@ -184,7 +183,7 @@ public final class CrashManager {
             try {
                 watchdog.join();
             } catch (InterruptedException e) {
-                LOGGER.debug("Thread was interrupted", e);
+                log.debug("Thread was interrupted", e);
             }
         }
     }
@@ -204,7 +203,7 @@ public final class CrashManager {
 
     private <T extends IEntry> T addEntry(T entry) {
         if (crashEntries.containsKey(entry.getName())) {
-            LOGGER.trace("Removing {}", crashEntries.get(entry.getName()));
+            log.trace("Removing {}", crashEntries.get(entry.getName()));
         }
         crashEntries.put(entry.getName(), entry);
         return entry;
@@ -232,7 +231,7 @@ public final class CrashManager {
     }
 
     private CrashEntryList loadEntries(InputStream input, String type) throws Exception {
-        LOGGER.trace("Loading {} entries...", type);
+        log.trace("Loading {} entries...", type);
 
         try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, CrashEntryList.class);
@@ -305,10 +304,10 @@ public final class CrashManager {
     private Scanner getCrashFileScanner() throws IOException {
         File crashFile = crash.getCrashFile();
         if (crashFile == null || !crashFile.isFile()) {
-            LOGGER.info("Crash report file doesn't exist. May be looking into logs?");
+            log.info("Crash report file doesn't exist. May be looking into logs?");
             return PatternEntry.getScanner(getProcessLogger());
         } else {
-            LOGGER.info("Crash report file exist. We'll scan it.");
+            log.info("Crash report file exist. We'll scan it.");
             return new Scanner(new InputStreamReader(Files.newInputStream(crashFile.toPath()), StandardCharsets.UTF_8));
         }
     }
@@ -374,7 +373,7 @@ public final class CrashManager {
 
         private void scan() throws CrashManagerInterrupted, CrashEntryException {
             if (processLogger == null) {
-                LOGGER.warn("Process logger not found. Assuming it is unknown crash");
+                log.warn("Process logger not found. Assuming it is unknown crash");
                 return;
             }
 
@@ -409,21 +408,21 @@ public final class CrashManager {
                     if (capable) {
                         capableEntry = (CrashEntry) entry;
 
-                        LOGGER.info("Found relevant: {}", capableEntry.getName());
+                        log.info("Found relevant: {}", capableEntry.getName());
                         crash.setEntry(capableEntry);
 
                         if (capableEntry.isFake()) {
-                            LOGGER.info("It is a \"fake\" crash, skipping remaining...");
+                            log.info("It is a \"fake\" crash, skipping remaining...");
                         }
                     }
                 } else if (entry instanceof Entry) {
                     if (capableEntry != null) {
                         if (!((Entry) entry).isCapable(capableEntry)) {
-                            LOGGER.trace("Skipping: {}", entry.getName());
+                            log.trace("Skipping: {}", entry.getName());
                             continue;
                         }
                     }
-                    LOGGER.trace("Executing: {}", entry.getName());
+                    log.trace("Executing: {}", entry.getName());
                     try {
                         ((Entry) entry).execute();
                     } catch (Exception e) {
@@ -432,7 +431,7 @@ public final class CrashManager {
                 }
             }
 
-            LOGGER.info("Done in {} ms", Time.stop(timer));
+            log.info("Done in {} ms", Time.stop(timer));
         }
 
         @Override
@@ -441,7 +440,7 @@ public final class CrashManager {
             try {
                 scan();
             } catch (Exception e) {
-                LOGGER.error("Error", e);
+                log.error("Error", e);
                 error = e;
             }
         }
@@ -503,10 +502,10 @@ public final class CrashManager {
 
             try (Scanner scanner = getCrashFileScanner()) {
                 if (PatternEntry.matchPatterns(scanner, patterns, null)) {
-                    LOGGER.debug("Not all patterns met. Skipping");
+                    log.debug("Not all patterns met. Skipping");
                     return false;
                 }
-                LOGGER.debug("All patterns are met. Working on a mod list");
+                log.debug("All patterns are met. Working on a mod list");
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     Matcher matcher = modPattern.matcher(line);
@@ -517,16 +516,16 @@ public final class CrashManager {
                         // add its name to the list
                         ErroredMod mod = new ErroredMod(matcher);
                         errorModList.add(mod);
-                        LOGGER.debug("Added: {}", mod);
+                        log.debug("Added: {}", mod);
                     }
                 }
             }
 
             if (errorModList.isEmpty()) {
-                LOGGER.info("Could not find mods that caused the crash.");
+                log.info("Could not find mods that caused the crash.");
                 return false;
             } else {
-                LOGGER.info("Crash probably caused by the following mods: {}", errorModList);
+                log.info("Crash probably caused by the following mods: {}", errorModList);
             }
 
             boolean multiple = errorModList.size() > 1;
@@ -588,19 +587,19 @@ public final class CrashManager {
 
         @Override
         protected void execute() throws Exception {
-            LOGGER.debug("Looking for crash description...");
+            log.debug("Looking for crash description...");
             try (Scanner scanner = getCrashFileScanner()) {
                 ArrayList<String> matches = new ArrayList<>();
                 String description = null;
                 if (PatternEntry.matchPatterns(scanner, patternList, matches)) {
                     if (matches.isEmpty()) {
-                        LOGGER.debug("No description?");
+                        log.debug("No description?");
                     } else {
                         description = matches.get(0);
                     }
                 }
                 if (description == null) {
-                    LOGGER.info("Could not find crash description");
+                    log.info("Could not find crash description");
                     return;
                 }
                 String line = null;
@@ -611,7 +610,7 @@ public final class CrashManager {
                     }
                 }
                 if (StringUtils.isBlank(line) || line.endsWith("[STDOUT] ")) {
-                    LOGGER.debug("Stack trace line is empty?");
+                    log.debug("Stack trace line is empty?");
 
                     StringBuilder moreLines = new StringBuilder();
                     int additionalLines = 0;
@@ -694,7 +693,7 @@ public final class CrashManager {
                     && modVersionsFilter.stream().anyMatch(getVersion().toLowerCase(java.util.Locale.ROOT)::contains)) {
                 File modsDir = new File(getLauncher().getGameDir(), "mods");
                 if (!modsDir.isDirectory()) {
-                    LOGGER.info("No \"mods\" folder found");
+                    log.info("No \"mods\" folder found");
                 } else {
                     treeDir(modsDir, 2);
                 }
@@ -706,20 +705,20 @@ public final class CrashManager {
                 try {
                     systemInfo = systemInfoReporter.getReport().get();
                 } catch (InterruptedException | ExecutionException e) {
-                    LOGGER.warn("Could not retrieve system info", e);
+                    log.warn("Could not retrieve system info", e);
                     systemInfo = null;
                 }
                 if (systemInfo == null) {
-                    LOGGER.warn("No system info is available");
+                    log.warn("No system info is available");
                 } else {
-                    LOGGER.info("System info:");
-                    systemInfo.getLines().forEach(LOGGER::info);
+                    log.info("System info:");
+                    systemInfo.getLines().forEach(log::info);
                 }
             }
         }
 
         private void writeDelimiter() {
-            LOGGER.info("++++++++++++++++++++++++++++++++++");
+            log.info("++++++++++++++++++++++++++++++++++");
         }
 
         private void readFile(File file) {
@@ -729,20 +728,20 @@ public final class CrashManager {
 
             try {
                 if (!file.isFile()) {
-                    LOGGER.warn("File doesn't exist: {}", file);
+                    log.warn("File doesn't exist: {}", file);
                     return;
                 }
 
-                LOGGER.info("Reading file: {}", file);
+                log.info("Reading file: {}", file);
 
                 try (Scanner scanner = new Scanner(
                         new InputStreamReader(Files.newInputStream(file.toPath()), charset)
                 )) {
                     while (scanner.hasNextLine()) {
-                        LOGGER.info(LOG_FLUSHER, scanner.nextLine());
+                        log.info(LOG_FLUSHER, scanner.nextLine());
                     }
                 } catch (Exception e) {
-                    LOGGER.warn("Could not read file: {}", file, e);
+                    log.warn("Could not read file: {}", file, e);
                 }
             } finally {
                 writeDelimiter();
@@ -755,21 +754,21 @@ public final class CrashManager {
 
         private void treeDir(File dir, int currentLevel, int levelLimit, StringBuilder buffer) {
             if (dir == null) {
-                LOGGER.info("skipping null directory");
+                log.info("skipping null directory");
                 return;
             }
 
             if (!dir.isDirectory()) {
-                LOGGER.info(LOG_FLUSHER, "{} (not a dir)", dir);
+                log.info(LOG_FLUSHER, "{} (not a dir)", dir);
                 return;
             }
 
             File[] list = Objects.requireNonNull(dir.listFiles(), "dir listing: " + dir.getAbsolutePath());
 
             if (currentLevel == 0) {
-                LOGGER.info(LOG_FLUSHER, "{}", dir);
+                log.info(LOG_FLUSHER, "{}", dir);
             } else if (list.length == 0) {
-                LOGGER.info(LOG_FLUSHER, "{}└ [empty]", buffer);
+                log.info(LOG_FLUSHER, "{}└ [empty]", buffer);
             }
 
             File file;
@@ -813,9 +812,9 @@ public final class CrashManager {
 
                 boolean currentlyLatestLevel = i == list.length - 1;
                 if (currentlyLatestLevel)
-                    LOGGER.info(LOG_FLUSHER, "{}└ {}", buffer, name);
+                    log.info(LOG_FLUSHER, "{}└ {}", buffer, name);
                 else
-                    LOGGER.info(LOG_FLUSHER, "{}├ {}", buffer, name);
+                    log.info(LOG_FLUSHER, "{}├ {}", buffer, name);
 
                 StringBuilder subLevelBuffer = new StringBuilder()
                         .append(buffer)
@@ -826,7 +825,7 @@ public final class CrashManager {
                     try {
                         zipFile = new ZipFile(file, ZipFile.OPEN_READ);
                     } catch (IOException ioE) {
-                        LOGGER.info(LOG_FLUSHER, "{}└ [!!!] Corrupted zip: {}", subLevelBuffer, ioE.toString());
+                        log.info(LOG_FLUSHER, "{}└ [!!!] Corrupted zip: {}", subLevelBuffer, ioE.toString());
                         continue;
                     }
                     try {
@@ -839,13 +838,13 @@ public final class CrashManager {
                             } catch (IOException e) {
                                 md5Message = e.toString();
                             }
-                            LOGGER.debug(LOG_FLUSHER, "{}├ md5 = {}", subLevelBuffer, md5Message);
+                            log.debug(LOG_FLUSHER, "{}├ md5 = {}", subLevelBuffer, md5Message);
                         }
                         boolean mcmod = tryMcModInfo(zipFile, subLevelBuffer);
                         mcmod |= tryModsToml(zipFile, subLevelBuffer);
                         mcmod |= tryFabricMod(zipFile, subLevelBuffer);
                         if (!mcmod) {
-                            LOGGER.debug(LOG_FLUSHER, "{}└ [unknown mod format]", subLevelBuffer);
+                            log.debug(LOG_FLUSHER, "{}└ [unknown mod format]", subLevelBuffer);
                         }
                     } finally {
                         IOUtils.closeQuietly(zipFile);
@@ -899,7 +898,7 @@ public final class CrashManager {
                         } else {
                             str = "[empty dir]";
                         }
-                        LOGGER.info(LOG_FLUSHER, "{}└ {}", subLevelBuffer, str);
+                        log.info(LOG_FLUSHER, "{}└ {}", subLevelBuffer, str);
                         continue;
                     }
                     treeDir(file, currentLevel + 1, levelLimit, subLevelBuffer);
@@ -919,12 +918,12 @@ public final class CrashManager {
                 fabricModRoot = Objects.requireNonNull(
                         JsonParser.parseReader(reader), "fabricModRoot");
             } catch (IOException | RuntimeException e) {
-                LOGGER.info(LOG_FLUSHER, "{}└ [!!!] Couldn't read fabric.mod.json: {}",
+                log.info(LOG_FLUSHER, "{}└ [!!!] Couldn't read fabric.mod.json: {}",
                         buffer, e.toString());
                 return false;
             }
             if (!fabricModRoot.isJsonObject()) {
-                LOGGER.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}", buffer,
+                log.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}", buffer,
                         fabricModRoot);
                 return false;
             }
@@ -955,7 +954,7 @@ public final class CrashManager {
             )) {
                 toml.read(reader);
             } catch (IOException | RuntimeException e) {
-                LOGGER.info(LOG_FLUSHER, "{}└ [!!!] Couldn't read mods.toml: {}",
+                log.info(LOG_FLUSHER, "{}└ [!!!] Couldn't read mods.toml: {}",
                         buffer, e.toString());
                 return false;
             }
@@ -998,7 +997,7 @@ public final class CrashManager {
                     return (List<Map<String, Object>>) modDependencies;
                 }
             } else {
-                LOGGER.warn("dependenciesObj is not a Map: {}", dependenciesObj);
+                log.warn("dependenciesObj is not a Map: {}", dependenciesObj);
             }
             return null;
         }
@@ -1026,7 +1025,7 @@ public final class CrashManager {
                     })
                     .collect(Collectors.toList());
             if (keyPairs.isEmpty()) {
-                LOGGER.info(LOG_FLUSHER, "{}└ [no known toml keys]: {}", buffer, mod);
+                log.info(LOG_FLUSHER, "{}└ [no known toml keys]: {}", buffer, mod);
             } else {
                 displayKeyPairs(keyPairs, buffer);
                 if (dependencies != null && !dependencies.isEmpty()) {
@@ -1043,7 +1042,7 @@ public final class CrashManager {
                             ))
                             .collect(Collectors.toList());
                     StringBuilder depBuffer = new StringBuilder(buffer).append("    ");
-                    LOGGER.info(LOG_FLUSHER, "{}└ [dependencies]", buffer);
+                    log.info(LOG_FLUSHER, "{}└ [dependencies]", buffer);
                     displayKeyPairs(depKeyPairs, depBuffer);
                 }
             }
@@ -1061,7 +1060,7 @@ public final class CrashManager {
                 mcmodRoot = Objects.requireNonNull(
                         JsonParser.parseReader(reader), "mcmodRoot");
             } catch (IOException | RuntimeException e) {
-                LOGGER.info(LOG_FLUSHER, "{}├ [!!!] Couldn't read mcmod.info: {}",
+                log.info(LOG_FLUSHER, "{}├ [!!!] Couldn't read mcmod.info: {}",
                         buffer, e.toString());
                 return false;
             }
@@ -1071,7 +1070,7 @@ public final class CrashManager {
                     if (mcmodEntry.isJsonObject()) {
                         displayMcModInfo(mcmodEntry.getAsJsonObject(), buffer);
                     } else {
-                        LOGGER.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}", buffer, mcmodRoot);
+                        log.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}", buffer, mcmodRoot);
                     }
                 }
                 return true;
@@ -1083,14 +1082,14 @@ public final class CrashManager {
                         if (modListEntry.isJsonObject()) {
                             displayMcModInfo(modListEntry.getAsJsonObject(), buffer);
                         } else {
-                            LOGGER.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}",
+                            log.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}",
                                     buffer, modListEntry);
                         }
                     }
                     return true;
                 }
             }
-            LOGGER.info(LOG_FLUSHER, "{}├ [!!!] Unknown or invalid mcmod.info: {}", buffer, mcmodRoot);
+            log.info(LOG_FLUSHER, "{}├ [!!!] Unknown or invalid mcmod.info: {}", buffer, mcmodRoot);
             return false;
         }
 
@@ -1121,7 +1120,7 @@ public final class CrashManager {
                     })
                     .collect(Collectors.toList());
             if (keyPairs.isEmpty()) {
-                LOGGER.info(LOG_FLUSHER, "{}└ [no known mcmod keys]: {}", buffer, mcmod);
+                log.info(LOG_FLUSHER, "{}└ [no known mcmod keys]: {}", buffer, mcmod);
             } else {
                 displayKeyPairs(keyPairs, buffer);
             }
@@ -1132,15 +1131,15 @@ public final class CrashManager {
                 return;
             }
             if (keyPairs.size() > 1) {
-                LOGGER.info(LOG_FLUSHER, "{}├ {} = {}", buffer,
+                log.info(LOG_FLUSHER, "{}├ {} = {}", buffer,
                         keyPairs.get(0).getKey(), keyPairs.get(0).getValue());
                 for (int i = 1; i < keyPairs.size() - 1; i++) {
                     Pair<String, ?> pair = keyPairs.get(i);
-                    LOGGER.info(LOG_FLUSHER, "{}├ {} = {}", buffer, pair.getKey(), pair.getValue());
+                    log.info(LOG_FLUSHER, "{}├ {} = {}", buffer, pair.getKey(), pair.getValue());
                 }
             }
             int lastIndex = keyPairs.size() - 1;
-            LOGGER.info(LOG_FLUSHER, "{}└ {} = {}", buffer,
+            log.info(LOG_FLUSHER, "{}└ {} = {}", buffer,
                     keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
         }
     }
@@ -1195,8 +1194,8 @@ public final class CrashManager {
         }
     }
 
+    @Slf4j
     private static class SetAction extends ArgsAction {
-        private static final Logger LOGGER = LogManager.getLogger(SetAction.class);
         private final Map<OptionSpec<String>, String> optionMap = new HashMap<>();
 
         SetAction() {
@@ -1213,7 +1212,7 @@ public final class CrashManager {
                 String key = optionMap.get(spec);
 
                 if (key == null) {
-                    LOGGER.warn("Could not find key for spec {}", spec);
+                    log.warn("Could not find key for spec {}", spec);
                     continue;
                 }
 
@@ -1221,11 +1220,11 @@ public final class CrashManager {
                 String value = (String) spec.value(args);
 
                 if ("minecraft.memory".equals(key) && "fix".equals(value)) {
-                    LOGGER.info("Migrating minecraft.memory = fix => minecraft.xmx = \"auto\"");
+                    log.info("Migrating minecraft.memory = fix => minecraft.xmx = \"auto\"");
                     key = "minecraft.xmx";
                     value = "auto";
                 }
-                LOGGER.info("Set configuration key {} = {}", key, value);
+                log.info("Set configuration key {} = {}", key, value);
                 LegacyLauncher.getInstance().getSettings().set(key, value);
                 if (LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
                     LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
@@ -1267,7 +1266,7 @@ public final class CrashManager {
 
         @Override
         public void execute(String arg) {
-            LegacyLauncher.getInstance().getUIListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
+            LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
         }
     }
 
@@ -1278,7 +1277,7 @@ public final class CrashManager {
 
         @Override
         public void execute(String arg) {
-            LegacyLauncher.getInstance().getUIListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
+            LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
             LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.checkbox.forceupdate.setSelected(true);
             LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.startLauncher();
         }

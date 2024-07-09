@@ -5,19 +5,17 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.properties.PropertyMap;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.managers.AccountManager;
 import net.legacylauncher.user.ElyLegacyUser;
 import net.legacylauncher.user.MojangUser;
 import net.legacylauncher.user.User;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
+@Slf4j
 public class AccountMigrator {
-    private static final Logger LOGGER = LogManager.getLogger(AccountMigrator.class);
-
     private final String clientToken;
     private final Gson gson;
 
@@ -48,7 +46,7 @@ public class AccountMigrator {
             try {
                 switch (account.type) {
                     case "free":
-                        user = AccountManager.getPlainAuth().authorize(account.username);
+                        user = AccountManager.getPlainAuth().authorize(account.username, true);
                         break;
                     case "mojang":
                         account.clientToken = clientToken;
@@ -62,7 +60,7 @@ public class AccountMigrator {
                         continue;
                 }
             } catch (Exception e) {
-                LOGGER.error("Could not migrate {}", account, e);
+                log.error("Could not migrate {}", account, e);
                 continue;
             }
             migrated.add(user);

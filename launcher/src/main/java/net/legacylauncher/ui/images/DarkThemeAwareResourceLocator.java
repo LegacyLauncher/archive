@@ -7,8 +7,8 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
-public class DarkThemeAwareResourceLocator extends PrefixResourceLocator {
-    public DarkThemeAwareResourceLocator(ImageResourceLocator parentLoader, String nightThemeImagesPrefix) {
+class DarkThemeAwareResourceLocator extends PrefixResourceLocator {
+    DarkThemeAwareResourceLocator(ImageResourceLocator parentLoader, String nightThemeImagesPrefix) {
         super(parentLoader, Collections.singletonList(Objects.requireNonNull(nightThemeImagesPrefix)));
     }
 

@@ -51,6 +51,15 @@ public class LocalizableMenuItem extends JMenuItem implements LocalizableCompone
         setText(path, (Object[]) variables);
     }
 
+    @Override
+    public void updateUI() {
+        Icon icon = getIcon();
+        if (icon instanceof JComponent) {
+            ((JComponent) icon).updateUI();
+        }
+        super.updateUI();
+    }
+
     public static void updateLocales() {
         for (LocalizableMenuItem item : items) {
             if (item != null) {

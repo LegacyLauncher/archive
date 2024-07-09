@@ -1,9 +1,8 @@
 package net.legacylauncher.logger;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.CharsetData;
 import net.legacylauncher.util.FileUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -11,9 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 
+@Slf4j
 public class LogFile implements CharsetData {
-    private static final Logger LOGGER = LogManager.getLogger(LogFile.class);
-
     private final File file;
     private final Charset charset;
     private long length = Long.MIN_VALUE;
@@ -70,7 +68,7 @@ public class LogFile implements CharsetData {
         try {
             attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
         } catch (IOException e) {
-            LOGGER.warn("Couldn't read attributes of {}", file.getAbsolutePath(), e);
+            log.warn("Couldn't read attributes of {}", file.getAbsolutePath(), e);
             return UNKNOWN_LENGTH;
         }
         return attributes.size();

@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.account;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.managers.AccountManager;
 import net.legacylauncher.minecraft.auth.Account;
@@ -16,8 +17,6 @@ import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.user.*;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,8 +24,10 @@ import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.Future;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
+@Slf4j
 public class AccountElyProcess extends BorderPanel implements AccountMultipaneCompCloseable {
-    private static final Logger LOGGER = LogManager.getLogger(AccountElyProcess.class);
     private final String LOC_PREFIX = AccountMultipaneComp.LOC_PREFIX_PATH + multipaneName() + ".";
 
     private final AccountManagerScene scene;
@@ -34,6 +35,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
     private final ProgressBar progressBar;
     private final LocalizableLabel label;
     private final LocalizableButton button;
+    private final JPopupMenu menu;
 
     private final LocalizableMenuItem fallbackMenuItem;
 
@@ -63,7 +65,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
 
         setCenter(panel);
 
-        final JPopupMenu menu = new JPopupMenu();
+        menu = new JPopupMenu();
         menu.add(fallbackMenuItem = LocalizableMenuItem.newItem(LOC_PREFIX + "failed.fallback", e -> activateFallbackFlow()));
         menu.add(LocalizableMenuItem.newItem(LOC_PREFIX + "failed.classic", e -> {
             cancelCurrentFlow();
@@ -251,7 +253,7 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
         try {
             user = code.getUser();
         } catch (Exception e) {
-            LOGGER.error("Could not get user", e);
+            log.error("Could not get user", e);
             setState(FlowState.ERROR);
             return;
         }
@@ -295,6 +297,12 @@ public class AccountElyProcess extends BorderPanel implements AccountMultipaneCo
     @Override
     public void multipaneShown(boolean gotBack) {
         activatePrimaryFlow();
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(menu);
+        super.updateUI();
     }
 
     public enum FlowState {

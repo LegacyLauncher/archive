@@ -1,19 +1,17 @@
 package net.legacylauncher.user.minecraft.strategy.oareq.lcserv;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestException;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthCodeRequestStrategy;
 import net.legacylauncher.user.minecraft.strategy.oareq.MicrosoftOAuthExchangeCode;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class LocalServerStrategy implements MicrosoftOAuthCodeRequestStrategy {
-    private static final Logger LOGGER = LogManager.getLogger(LocalServerStrategy.class);
-
     private final ExternalBrowser externalBrowser;
     private final LocalServerUrlProducer localServerUrlProducer;
     private final ILocalServer localServer;
@@ -32,7 +30,7 @@ public class LocalServerStrategy implements MicrosoftOAuthCodeRequestStrategy {
     @Override
     public MicrosoftOAuthExchangeCode requestMicrosoftOAuthCode(long time, TimeUnit timeUnit)
             throws MicrosoftOAuthCodeRequestException, InterruptedException, TimeoutException {
-        LOGGER.trace("Starting local server");
+        log.trace("Starting local server");
         LocalServerSelectedConfiguration selectedConfiguration = startServer();
         this.serverConfiguration.setSelectedConfiguration(selectedConfiguration);
         try {
@@ -59,7 +57,7 @@ public class LocalServerStrategy implements MicrosoftOAuthCodeRequestStrategy {
         } catch (URISyntaxException | MalformedURLException e) {
             throw new MicrosoftOAuthCodeRequestException("invalid login page url", e);
         }
-        LOGGER.debug("Opening login page: {}", loginPageUrl);
+        log.debug("Opening login page: {}", loginPageUrl);
         externalBrowser.openUrl(loginPageUrl);
     }
 

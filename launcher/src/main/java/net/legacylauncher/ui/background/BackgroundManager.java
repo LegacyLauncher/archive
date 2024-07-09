@@ -1,20 +1,18 @@
 package net.legacylauncher.ui.background;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.MainPane;
 import net.legacylauncher.ui.background.fx.FxAudioPlayer;
 import net.legacylauncher.ui.background.fx.MediaFxBackground;
 import net.legacylauncher.ui.swing.extended.ExtendedLayeredPane;
-import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.Lazy;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.legacylauncher.util.shared.JavaVersion;
 
 import javax.swing.*;
 
+@Slf4j
 public final class BackgroundManager extends ExtendedLayeredPane {
-    private static final Logger LOGGER = LogManager.getLogger(BackgroundManager.class);
-
     private final static int BACKGROUND_INDEX = 1, COVER_INDEX = Integer.MAX_VALUE;
     final Worker worker;
     final Cover cover;
@@ -40,11 +38,11 @@ public final class BackgroundManager extends ExtendedLayeredPane {
             if (JavaVersion.getCurrent().getMajor() >= 11) {
                 _mediaFxBackground = new FXWrapper<>(MediaFxBackground.class);
             } else {
-                LOGGER.info("MediaFxBackground is not be available because it requires Java 11+");
+                log.info("MediaFxBackground is not be available because it requires Java 11+");
             }
         } catch (Throwable t) {
-            LOGGER.info("MediaFxBackground will not be available: {}", t.toString());
-            LOGGER.debug("Detailed exception", t);
+            log.info("MediaFxBackground will not be available: {}", t.toString());
+            log.debug("Detailed exception", t);
         }
         mediaFxBackground = _mediaFxBackground;
     }

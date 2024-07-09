@@ -9,7 +9,6 @@ import ru.turikhay.tlauncher.bootstrap.bridge.BootEventDispatcher;
 import ru.turikhay.tlauncher.bootstrap.bridge.BootMessage;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +24,7 @@ public class LegacyLauncherBridged {
         LegacyLauncher.launch(new Shim(bridge), SystemDefaultResolverIPC.INSTANCE);
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         launch(BootBridge.create(args));
     }
 
@@ -157,8 +156,12 @@ public class LegacyLauncherBridged {
         }
 
         @Override
-        public void close() throws IOException {
-            bridge.setInterrupted();
+        public void close() {
+            try {
+                requestClose();
+            } finally {
+                bridge.setInterrupted();
+            }
         }
     }
 }

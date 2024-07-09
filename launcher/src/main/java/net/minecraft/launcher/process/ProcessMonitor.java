@@ -1,7 +1,6 @@
 package net.minecraft.launcher.process;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,9 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
+@Slf4j
 public class ProcessMonitor {
-    private final Logger LOGGER = LogManager.getLogger(ProcessMonitor.class);
-
     private final JavaProcess process;
     private final Charset charset;
 
@@ -50,7 +48,7 @@ public class ProcessMonitor {
                 sysOut.join();
                 sysErr.join();
             } catch (InterruptedException e) {
-                LOGGER.warn("{} was interrupted. Will not send JavaProcessEnd event",
+                log.warn("{} was interrupted. Will not send JavaProcessEnd event",
                         StreamMonitorWait.class.getSimpleName());
                 return;
             }
@@ -95,7 +93,7 @@ public class ProcessMonitor {
                         if (suppressed != null) {
                             ioE.addSuppressed(suppressed);
                         }
-                        LOGGER.warn("Error handling streams of {}", process, ioE);
+                        log.warn("Error handling streams of {}", process, ioE);
                     }
                 }
                 try {
@@ -108,7 +106,7 @@ public class ProcessMonitor {
                     //noinspection BusyWait
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
-                    LOGGER.warn("Interrupted");
+                    log.warn("Interrupted");
                     return;
                 }
             }

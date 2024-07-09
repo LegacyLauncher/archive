@@ -48,7 +48,7 @@ val preparePortableBaseBuild by tasks.registering(Sync::class) {
     from(file("baseResources"))
 
     into("launcher") {
-        from(projects.bootstrap.dependencyProject.tasks.named("shadowJar", AbstractArchiveTask::class)) {
+        from(projects.bootstrap.dependencyProject.tasks.named("bootJar", AbstractArchiveTask::class)) {
             rename { "bootstrap.jar" }
         }
         from(projects.launcher.dependencyProject.tasks.named("jar", AbstractArchiveTask::class)) {

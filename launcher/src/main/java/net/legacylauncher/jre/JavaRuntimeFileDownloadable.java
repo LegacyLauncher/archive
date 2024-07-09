@@ -1,5 +1,6 @@
 package net.legacylauncher.jre;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.downloader.RetryDownloadException;
 import net.legacylauncher.downloader.Sha1Downloadable;
 import net.legacylauncher.repository.Repository;
@@ -8,16 +9,13 @@ import net.legacylauncher.util.OS;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.updater.DownloadInfo;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.tukaani.xz.LZMAInputStream;
 
 import java.io.*;
 import java.nio.file.Files;
 
+@Slf4j
 public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
-    private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeFileDownloadable.class);
-
     private final File lzmaDestination, destination;
     private final boolean executable;
 
@@ -43,7 +41,7 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
             syncExtract();
         }
         if (executable) {
-            LOGGER.debug("Setting as executable: {}", destination.getAbsolutePath());
+            log.debug("Setting as executable: {}", destination.getAbsolutePath());
             destination.setExecutable(true); // probably safe to ignore
         }
     }
@@ -55,7 +53,7 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     }
 
     private void doExtract() throws RetryDownloadException {
-        LOGGER.debug("Extracting {}", lzmaDestination.getAbsolutePath());
+        log.debug("Extracting {}", lzmaDestination.getAbsolutePath());
         try (LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
                 Files.newInputStream(lzmaDestination.toPath())));
              OutputStream output = new BufferedOutputStream(Files.newOutputStream(destination.toPath()))

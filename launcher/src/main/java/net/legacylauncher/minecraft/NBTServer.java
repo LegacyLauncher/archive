@@ -1,18 +1,18 @@
 package net.legacylauncher.minecraft;
 
+import lombok.extern.slf4j.Slf4j;
 import net.minecraft.common.CompressedStreamTools;
 import net.minecraft.common.NBTTagCompound;
 import net.minecraft.common.NBTTagList;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+@Slf4j
 public class NBTServer extends Server {
-    private static final Logger LOGGER = LogManager.getLogger(NBTServer.class);
+    private static final org.slf4j.Logger LOGGER = log;
 
     private boolean hideAddress;
     private int acceptTextures;

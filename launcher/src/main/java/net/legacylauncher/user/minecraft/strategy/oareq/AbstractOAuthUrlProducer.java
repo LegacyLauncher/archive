@@ -1,7 +1,7 @@
 package net.legacylauncher.user.minecraft.strategy.oareq;
 
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.net.URIBuilder;
 
 import java.net.URISyntaxException;
 import java.util.Objects;

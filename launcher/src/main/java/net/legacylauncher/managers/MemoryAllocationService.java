@@ -1,11 +1,10 @@
 package net.legacylauncher.managers;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.versions.Version;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -14,9 +13,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Future;
 
+@Slf4j
 public class MemoryAllocationService {
-    private static final Logger LOGGER = LogManager.getLogger(MemoryAllocationService.class);
-
     static final int DEFAULT_BASE_REQUIREMENT = 2048;
 
     private final OsInfo os;
@@ -80,14 +78,14 @@ public class MemoryAllocationService {
         BaseVersionTable.BaseVersion base = table.findBaseVersion(versionCtx);
         if (base == null) {
             base = table.getDefaultBaseVersion();
-            LOGGER.warn("No base version found for {}, will use fallback: {}",
+            log.warn("No base version found for {}, will use fallback: {}",
                     versionCtx.id, base.family);
         }
         int baseRequirement = base.requirement.apply(new QueryContext(os, mem, versionCtx));
         int xmx = baseRequirement;
         if (mem.total >= 6000 && versionCtx.isForge()) {
             xmx = Math.min(mem.safeMax, xmx * 2);
-            LOGGER.debug("Detected Forge version: bumping x 2: {} -> {} MiB",
+            log.debug("Detected Forge version: bumping x 2: {} -> {} MiB",
                     baseRequirement, xmx);
         }
         int actual = Math.min(mem.safeMax, xmx);

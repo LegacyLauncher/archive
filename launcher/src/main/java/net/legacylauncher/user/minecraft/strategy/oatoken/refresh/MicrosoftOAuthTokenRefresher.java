@@ -1,23 +1,20 @@
 package net.legacylauncher.user.minecraft.strategy.oatoken.refresh;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.oatoken.MicrosoftOAuthToken;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.*;
-import org.apache.http.client.fluent.Form;
-import org.apache.http.client.fluent.Request;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Form;
+import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
 
+@Slf4j
 public class MicrosoftOAuthTokenRefresher
         extends RequestAndParseStrategy<MicrosoftOAuthToken, MicrosoftOAuthToken> {
-
-    private static final Logger LOGGER = LogManager.getLogger(MicrosoftOAuthTokenRefresher.class);
-
     public MicrosoftOAuthTokenRefresher(String clientId) {
         this(new HttpClientRequester<>(token ->
-                Request.Post("https://login.live.com/oauth20_token.srf").bodyForm(
+                Request.post("https://login.live.com/oauth20_token.srf").bodyForm(
                         Form.form()
                                 .add("client_id", clientId)
                                 .add("refresh_token", token.getRefreshToken())
@@ -33,7 +30,7 @@ public class MicrosoftOAuthTokenRefresher
 
     protected MicrosoftOAuthTokenRefresher(Requester<MicrosoftOAuthToken> requester,
                                            Parser<MicrosoftOAuthToken> parser) {
-        super(LOGGER, requester, parser);
+        super(log, requester, parser);
     }
 
     public MicrosoftOAuthToken refreshToken(MicrosoftOAuthToken token)

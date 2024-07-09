@@ -1,8 +1,8 @@
 package net.legacylauncher.user.minecraft.strategy.oareq;
 
 import net.legacylauncher.exceptions.ParseException;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URLEncodedUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;

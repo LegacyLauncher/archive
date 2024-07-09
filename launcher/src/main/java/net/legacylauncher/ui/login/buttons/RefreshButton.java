@@ -12,6 +12,8 @@ import net.legacylauncher.util.SwingUtil;
 
 import java.awt.*;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class RefreshButton extends LocalizableButton implements Blockable, ComponentManagerListener, LibraryReplaceProcessorListener {
     private static final int TYPE_REFRESH = 0;
     private static final int TYPE_CANCEL = 1;
@@ -107,6 +109,12 @@ public class RefreshButton extends LocalizableButton implements Blockable, Compo
     @Override
     public void onLibraryReplaceRefreshed(LibraryReplaceProcessor manager) {
         Blocker.unblock(this, "library");
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(refresh, cancel);
+        super.updateUI();
     }
 
     private enum Status {

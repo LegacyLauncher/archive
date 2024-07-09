@@ -36,5 +36,7 @@ class LegacyLauncherBrandPlugin : Plugin<Project> {
             }
         })
         extension.repoCdnPathPrefixes.convention(listOf("https://cdn.turikhay.ru/lln4"))
+
+        extension.supportEmail.convention("support@tln4.ru")
     }
 }

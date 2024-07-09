@@ -1,6 +1,7 @@
 package net.legacylauncher.minecraft.crash;
 
 import com.google.gson.*;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.swing.extended.ExtendedButton;
@@ -9,8 +10,6 @@ import net.legacylauncher.util.git.ITokenResolver;
 import net.legacylauncher.util.git.TokenReplacingReader;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.lang.reflect.Type;
@@ -19,9 +18,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Button {
-    private static final Logger LOGGER = LogManager.getLogger(Button.class);
-
     private final List<Action> actions = new ArrayList<>();
 
     private final String name;
@@ -93,7 +91,7 @@ public class Button {
                     action.execute();
                 }
             } catch (Exception ex) {
-                LOGGER.warn("Could not perform action", ex);
+                log.warn("Could not perform action", ex);
             }
             if (blockAfter) {
                 button.setEnabled(false);

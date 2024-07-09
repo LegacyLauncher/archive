@@ -1,12 +1,13 @@
 package net.legacylauncher.user.minecraft.strategy.oareq;
 
+import java.net.URI;
 import java.util.Objects;
 
 public class MicrosoftOAuthExchangeCode {
     private final String code;
-    private final RedirectUrl redirectUrl;
+    private final URI redirectUrl;
 
-    public MicrosoftOAuthExchangeCode(String code, RedirectUrl redirectUrl) {
+    public MicrosoftOAuthExchangeCode(String code, URI redirectUrl) {
         this.code = Objects.requireNonNull(code, "code");
         this.redirectUrl = Objects.requireNonNull(redirectUrl, "redirectUrl");
     }
@@ -33,7 +34,7 @@ public class MicrosoftOAuthExchangeCode {
         return code;
     }
 
-    public RedirectUrl getRedirectUrl() {
+    public URI getRedirectUrl() {
         return redirectUrl;
     }
 

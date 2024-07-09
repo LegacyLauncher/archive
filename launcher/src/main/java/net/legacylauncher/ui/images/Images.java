@@ -1,8 +1,7 @@
 package net.legacylauncher.ui.images;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.Lazy;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -16,9 +15,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class Images {
-    private static final Logger LOGGER = LogManager.getLogger(Images.class);
-
     private static final Pattern ICON_FILENAME_PATTERN = Pattern.compile("([A-Za-z-._]+)@([\\d]+)\\.png");
 
     private static final ImageResourceLocator RESOURCE_LOCATOR = new DuplicateAwareResourceLocator(
@@ -39,7 +37,7 @@ public class Images {
     }
 
     public static ImageIcon getIcon(String name, int size) {
-        return new ImageIcon(loadIcon(name, size), size);
+        return new ImageIcon(name, size);
     }
 
     public static Image loadIcon(String name, int size) {
@@ -112,12 +110,12 @@ public class Images {
     );
 
     private static BufferedImage reportMissingAndReturnEmptyImage(ResourceNotFoundException e) {
-        LOGGER.error("Missing resource", e);
+        log.error("Missing resource", e);
         return ONE_PIX.get();
     }
 
     private static BufferedImage reportLoadErrorAndReturnEmptyImage(ResourceLoadException e) {
-        LOGGER.error("Resource cannot be loaded", e);
+        log.error("Resource cannot be loaded", e);
         return ONE_PIX.get();
     }
 

@@ -2,6 +2,7 @@ package net.legacylauncher.managers;
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.ui.ConnectivityWarning;
@@ -11,10 +12,8 @@ import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.client5.http.fluent.Response;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -25,16 +24,38 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class ConnectivityManager {
-    private static final Logger LOGGER = LogManager.getLogger(ConnectivityManager.class);
     private static final String NOTIFICATION_ID = "connectivity";
 
     private final LegacyLauncher launcher;
     private final List<Entry> entries;
+    private final AtomicBoolean showFailedNotification = new AtomicBoolean();
+    private ConnectivityWarning warningWindow;
 
     public ConnectivityManager(LegacyLauncher launcher, List<Entry> entries) {
         this.launcher = launcher;
         this.entries = entries;
+    }
+
+    public static Entry checkByContent(String name, String url, String expectedContent) {
+        return new Entry(name, U.parseHost(url), new HttpContentChecker(url, expectedContent));
+    }
+
+    public static Entry checkByValidJson(String name, String url) {
+        return new Entry(name, U.parseHost(url), new JsonContentChecker(url));
+    }
+
+    public static Entry checkRepoByValidJson(String name, Repository repository, String path) {
+        return new Entry(
+                name,
+                repository.getList().getRelevant().getList().stream().flatMap(l -> l.getHosts().stream()),
+                new RepoEntryJsonChecker(repository, path)
+        );
+    }
+
+    public static Entry forceFailed(String name) {
+        return new Entry(name, Collections.emptyList(), () -> Boolean.FALSE);
     }
 
     public void queueChecks() {
@@ -59,8 +80,6 @@ public class ConnectivityManager {
                 .filter(Entry::isLowPriority)
                 .forEach(this::queueCheck);
     }
-
-    private final AtomicBoolean showFailedNotification = new AtomicBoolean();
 
     public void showNotificationOnceIfNeeded() {
         if (entries.stream().filter(Entry::isDone).allMatch(e -> e.isReachable() || e.isLowPriority())) {
@@ -88,8 +107,6 @@ public class ConnectivityManager {
     private void scheduleUpdateWarningWindow() {
         SwingUtil.later(this::updateWarningWindow);
     }
-
-    private ConnectivityWarning warningWindow;
 
     private void showWarningWindow() {
         if (warningWindow == null) {
@@ -138,7 +155,7 @@ public class ConnectivityManager {
                     throw new InvalidJsonException(content, e);
                 }
             } catch (IOException e) {
-                LOGGER.warn("Connectivity check to {} (using {}) failed", path, repo.name(), e);
+                log.warn("Connectivity check to {} (using {}) failed", path, repo.name(), e);
                 throw e;
             }
             return Boolean.TRUE;
@@ -155,9 +172,9 @@ public class ConnectivityManager {
         @Override
         public final Boolean checkConnection() {
             try {
-                checkResponse(Request.Get(url).execute());
+                checkResponse(Request.get(url).execute());
             } catch (IOException e) {
-                LOGGER.warn("Connectivity check to {} failed", url, e);
+                log.warn("Connectivity check to {} failed", url, e);
                 throw new RuntimeException(e);
             }
             return Boolean.TRUE;
@@ -220,6 +237,7 @@ public class ConnectivityManager {
         private final EntryChecker checker;
         private final Lazy<CompletableFuture<Boolean>> future;
         private final Lazy<CompletableFuture<Boolean>> completion;
+        private int priority;
 
         private Entry(String name, Collection<String> hosts, EntryChecker checker) {
             this.name = name;
@@ -286,8 +304,6 @@ public class ConnectivityManager {
                     .orElse(Boolean.FALSE);
         }
 
-        private int priority;
-
         public int getPriority() {
             return priority;
         }
@@ -312,26 +328,6 @@ public class ConnectivityManager {
         protected CompletableFuture<Boolean> checkConnection() {
             return future.get();
         }
-    }
-
-    public static Entry checkByContent(String name, String url, String expectedContent) {
-        return new Entry(name, U.parseHost(url), new HttpContentChecker(url, expectedContent));
-    }
-
-    public static Entry checkByValidJson(String name, String url) {
-        return new Entry(name, U.parseHost(url), new JsonContentChecker(url));
-    }
-
-    public static Entry checkRepoByValidJson(String name, Repository repository, String path) {
-        return new Entry(
-                name,
-                repository.getList().getRelevant().getList().stream().flatMap(l -> l.getHosts().stream()),
-                new RepoEntryJsonChecker(repository, path)
-        );
-    }
-
-    public static Entry forceFailed(String name) {
-        return new Entry(name, Collections.emptyList(), () -> Boolean.FALSE);
     }
 
 }

@@ -1,9 +1,8 @@
 package net.legacylauncher.bootstrap.transport;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.util.Sha256Sign;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,14 +15,14 @@ import java.security.SignatureException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
 
+@Slf4j
 public class SignedStream extends ChecksumStream {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SignedStream.class);
     static final PublicKey PUBLIC_KEY;
 
     static {
         PublicKey publicKey;
         try {
-            URL url = SignedStream.class.getResource("/public.der");
+            URL url = SignedStream.class.getResource("public.der");
             Objects.requireNonNull(url, "could not find public.der");
             X509EncodedKeySpec e = new X509EncodedKeySpec(IOUtils.toByteArray(url));
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -104,7 +103,7 @@ public class SignedStream extends ChecksumStream {
             signatureRef.update(data);
             return signatureRef.verify(signature);
         } catch (SignatureException sign) {
-            LOGGER.error("could not verify signature", sign);
+            log.error("could not verify signature", sign);
             return false;
         } catch (Exception e) {
             throw new Error("verification error", e);

@@ -1,12 +1,9 @@
-@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.*
 
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
-    embeddedKotlin("jvm")
+    `embedded-kotlin`
 }
 
 java {
@@ -19,11 +16,9 @@ tasks.withType<JavaCompile>().configureEach {
     options.release = 21
 }
 
-kotlin.target {
-    compilations.configureEach {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-        }
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 
@@ -34,7 +29,6 @@ repositories {
 
 dependencies {
     implementation(gradleKotlinDsl())
-    implementation(embeddedKotlin("stdlib"))
 }
 
 gradlePlugin {

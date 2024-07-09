@@ -1,6 +1,7 @@
 package net.legacylauncher.ui.listener;
 
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.configuration.BuildConfig;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.minecraft.crash.Crash;
@@ -92,7 +93,7 @@ public class MinecraftUIListener implements MinecraftListener, CrashManagerListe
 
     @Override
     public void onCrashManagerFailed(CrashManager manager, Exception e) {
-        Alert.showLocError("crash.error", LegacyLauncher.getSupportEmail());
+        Alert.showLocError("crash.error", BuildConfig.SUPPORT_EMAIL);
     }
 
     @Override

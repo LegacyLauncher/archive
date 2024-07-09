@@ -17,7 +17,7 @@ public abstract class BindableAction {
 
     public abstract void execute(String arg) throws Exception;
 
-    public Binding bind(String arg) {
+    Binding bind(String arg) {
         return new Binding(this, arg);
     }
 

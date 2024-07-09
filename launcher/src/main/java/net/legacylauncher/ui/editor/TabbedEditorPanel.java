@@ -9,8 +9,6 @@ import net.legacylauncher.ui.swing.ScrollPane;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.ui.swing.extended.TabbedPane;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TabbedEditorPanel extends AbstractEditorPanel {
-    private static final Logger LOGGER = LogManager.getLogger(TabbedEditorPanel.class);
-
     private static final Point zeroPoint = new Point(0, 0);
 
     protected final BorderPanel container;

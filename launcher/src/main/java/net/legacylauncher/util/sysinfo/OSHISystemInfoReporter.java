@@ -1,9 +1,8 @@
 package net.legacylauncher.util.sysinfo;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import oshi.hardware.HardwareAbstractionLayer;
 
 import java.util.ArrayList;
@@ -14,9 +13,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class OSHISystemInfoReporter implements SystemInfoReporter {
-    private static final Logger LOGGER = LogManager.getLogger(OSHISystemInfoReporter.class);
-
     private final CompletableFuture<oshi.SystemInfo> oshiSystemInfoFuture = new CompletableFuture<>();
 
     @Override
@@ -76,7 +74,7 @@ public class OSHISystemInfoReporter implements SystemInfoReporter {
         try {
             Class.forName("oshi.SystemInfo");
         } catch (ClassNotFoundException | Error err) {
-            LOGGER.warn("OSHI system info reporter is not available: {}", err.toString());
+            log.warn("OSHI system info reporter is not available: {}", err.toString());
             return false;
         }
         return true;

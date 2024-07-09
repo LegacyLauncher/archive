@@ -11,7 +11,16 @@ class ColorfulIcons {
     }
 
     private static final Color
-            DEFAULT_COLOR = new Color(0x111111), GREEN = new Color(0x00ce00), EMERALD = new Color(0x00cd5e), DARKER_GREEN = new Color(0x009a00), RED = new Color(0xb40000), YELLOW = new Color(0xffcd00), ORANGE = new Color(0xff9a00), DARKER_ORANGE = new Color(0xff6600), BLUE = new Color(0x439aff);
+            DEFAULT_COLOR = new Color(0x111111),
+            GREEN = new Color(0x00ce00),
+            EMERALD = new Color(0x00cd5e),
+            DARKER_GREEN = new Color(0x009a00),
+            RED = new Color(0xb40000),
+//            YELLOW = new Color(0xffcd00),
+            ORANGE = new Color(0xff9a00),
+            DARKER_ORANGE = new Color(0xff6600),
+            BLUE = new Color(0x439aff);
+
     private final static Map<String, Color> COLORS = new HashMap<>();
 
     static {

@@ -1,17 +1,15 @@
 package net.legacylauncher.ui.explorer;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.OS;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
+@Slf4j
 public class FileExplorer extends JFileChooser {
-    private static final Logger LOGGER = LogManager.getLogger(FileExplorer.class);
-
     public void setCurrentDirectory(File dir) {
         if (dir == null) {
             dir = getFileSystemView().getDefaultDirectory();
@@ -54,7 +52,7 @@ public class FileExplorer extends JFileChooser {
         ) {
             return path;
         }
-        LOGGER.debug("Stripping whitespace chars: \"{}\"", path);
+        log.debug("Stripping whitespace chars: \"{}\"", path);
         return StringUtils.stripEnd(path, null);
     }
 }

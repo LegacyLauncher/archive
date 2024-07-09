@@ -1,8 +1,8 @@
 package net.legacylauncher.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,8 +14,8 @@ public class CharsetDataHttpEntity extends AbstractHttpEntity {
     private final int attempt = 0;
 
     public CharsetDataHttpEntity(CharsetData data) {
+        super(ContentType.TEXT_PLAIN.withCharset(data.charset()), null);
         this.data = Objects.requireNonNull(data, "data");
-        setContentType(ContentType.TEXT_PLAIN.withCharset(data.charset()).toString());
     }
 
     @Override
@@ -44,5 +44,9 @@ public class CharsetDataHttpEntity extends AbstractHttpEntity {
     @Override
     public boolean isStreaming() {
         return false;
+    }
+
+    @Override
+    public void close() throws IOException {
     }
 }

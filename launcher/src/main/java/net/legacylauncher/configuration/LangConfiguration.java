@@ -1,11 +1,10 @@
 package net.legacylauncher.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.U;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -18,8 +17,8 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public final class LangConfiguration {
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final Locale ru_RU = U.getLocale("ru_RU");
 
     private final Map<Locale, Properties> translationsMap = new HashMap<>();
@@ -137,7 +136,7 @@ public final class LangConfiguration {
         this.plurals = null;
 
         if (locale == null) {
-            LOGGER.warn("Tried to set locale to null");
+            log.warn("Tried to set locale to null");
             return;
         }
 
@@ -180,7 +179,7 @@ public final class LangConfiguration {
                 }
                 translations = SimpleConfiguration.loadFromStream(in);
             } catch (Exception e) {
-                LOGGER.warn("Could not load translations for {}", localeStr, e);
+                log.warn("Could not load translations for {}", localeStr, e);
                 return null;
             }
         }
@@ -196,7 +195,7 @@ public final class LangConfiguration {
 
         String pluralFormsRaw = translations.getProperty("plural");
         if (pluralFormsRaw == null) {
-            LOGGER.warn("Plural forms not found: {}", locale);
+            log.warn("Plural forms not found: {}", locale);
             return null;
         }
 
@@ -229,12 +228,12 @@ public final class LangConfiguration {
         if (ruTranslations != null) {
             for (Object key : ruTranslations.keySet()) {
                 if (!translations.containsKey(key)) {
-                    LOGGER.warn("{} is missing key: {}", locale, key);
+                    log.warn("{} is missing key: {}", locale, key);
                 }
             }
             for (Object key : translations.keySet()) {
                 if (!ruTranslations.containsKey(key)) {
-                    LOGGER.warn("{} has redundant key: {}", locale, key);
+                    log.warn("{} has redundant key: {}", locale, key);
                 }
             }
         }
@@ -243,7 +242,7 @@ public final class LangConfiguration {
     private static final Lazy<List<Locale>> localeList = Lazy.of(() -> {
         URL url = LangConfiguration.class.getResource("/lang");
         if (url == null) {
-            LOGGER.fatal("No available locales");
+            log.error("No available locales");
             return Collections.emptyList();
         }
 

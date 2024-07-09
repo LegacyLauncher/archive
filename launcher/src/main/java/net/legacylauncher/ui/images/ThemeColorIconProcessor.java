@@ -1,8 +1,7 @@
 package net.legacylauncher.ui.images;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.theme.Theme;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.awt.color.ColorSpace;
@@ -11,9 +10,8 @@ import java.awt.image.ColorModel;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class ThemeColorIconProcessor implements IconProcessor {
-    private static final Logger LOGGER = LogManager.getLogger(ThemeColorIconProcessor.class);
-
+@Slf4j
+class ThemeColorIconProcessor implements IconProcessor {
     private final IconProcessor parentProcessor;
     private final Supplier<Theme> themeSupplier;
     private final Color defaultColor;
@@ -75,7 +73,7 @@ public class ThemeColorIconProcessor implements IconProcessor {
     private static boolean canPaintColor(BufferedImage icon, String iconName) {
         ColorModel colorModel = icon.getColorModel();
         if (colorModel == null) {
-            LOGGER.warn("Unknown color model of icon {}", iconName);
+            log.warn("Unknown color model of icon {}", iconName);
             return false;
         }
         int type = colorModel.getColorSpace().getType();

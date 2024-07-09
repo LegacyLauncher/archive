@@ -26,6 +26,8 @@ import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 
 public class NoticeSidePanel extends CenterPanel implements LocalizableComponent {
     private static final int BUTTON_IMAGE_SIZE = 24, BUTTON_PANEL_HEIGHT = 36, NOTICE_IMAGE_SIZE = 48;
@@ -278,6 +280,12 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
             }
             promotedItem.setText(path);
             promotedItem.setIcon(Images.getIcon16(image));
+        }
+
+        @Override
+        public void updateUI() {
+            updateUINullable(popup);
+            super.updateUI();
         }
     }
 }

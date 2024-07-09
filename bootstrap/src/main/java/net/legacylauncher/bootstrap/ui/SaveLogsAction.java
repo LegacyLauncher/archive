@@ -1,13 +1,12 @@
 package net.legacylauncher.bootstrap.ui;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.ui.message.Button;
 import net.legacylauncher.bootstrap.ui.message.MessageHost;
 import net.legacylauncher.bootstrap.ui.message.SingleButtonMessage;
 import net.legacylauncher.bootstrap.ui.message.TextAreaMessage;
 import net.legacylauncher.bootstrap.util.stream.OutputRedirectBuffer;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
 
+@Slf4j
 public class SaveLogsAction implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SaveLogsAction.class);
     private final ResourceBundle b = UserInterface.getResourceBundle();
 
     private final MessageHost host;
@@ -46,7 +45,7 @@ public class SaveLogsAction implements Runnable {
             IOUtils.copy(new StringReader(content), writer);
             writer.flush();
         } catch (IOException e) {
-            LOGGER.error("Saving logs failed", e);
+            log.error("Saving logs failed", e);
             saveLogsFailed();
             return;
         } finally {
@@ -55,7 +54,7 @@ public class SaveLogsAction implements Runnable {
                     writer.close();
                 }
             } catch (IOException e) {
-                LOGGER.warn("Jezz, we don't event able to close writer, something gone hardly wrong", e);
+                log.warn("Jezz, we don't event able to close writer, something gone hardly wrong", e);
             }
         }
 

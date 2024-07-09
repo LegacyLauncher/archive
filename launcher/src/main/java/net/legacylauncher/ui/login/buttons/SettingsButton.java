@@ -14,6 +14,8 @@ import net.legacylauncher.util.SwingUtil;
 import javax.swing.*;
 import java.awt.*;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class SettingsButton extends LocalizableButton implements Blockable, NoticeManagerListener {
     private final LoginForm lf;
     private final JPopupMenu popup;
@@ -84,6 +86,12 @@ public class SettingsButton extends LocalizableButton implements Blockable, Noti
     public void updateLocale() {
         super.updateLocale();
         updateNoticeEntry();
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(popup);
+        super.updateUI();
     }
 
     private void updateNoticeEntry() {

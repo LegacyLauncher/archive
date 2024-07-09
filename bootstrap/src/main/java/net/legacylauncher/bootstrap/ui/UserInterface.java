@@ -1,5 +1,6 @@
 package net.legacylauncher.bootstrap.ui;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.exception.FatalExceptionType;
 import net.legacylauncher.bootstrap.meta.UpdateMeta;
 import net.legacylauncher.bootstrap.task.Task;
@@ -8,8 +9,6 @@ import net.legacylauncher.bootstrap.ui.swing.SwingImageIcon;
 import net.legacylauncher.bootstrap.util.UTF8Control;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,8 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public final class UserInterface implements IInterface {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserInterface.class);
     public static final String DEFAULT_LOCALE = "en_US";
     static final int BORDER_SIZE = 20, TASK_DEPTH = 2;
 
@@ -35,7 +34,7 @@ public final class UserInterface implements IInterface {
         try {
             b = ResourceBundle.getBundle("bootstrap", new UTF8Control());
         } catch (Exception e) {
-            LOGGER.warn("No localization bundle loaded, have a nice day", e);
+            log.warn("No localization bundle loaded, have a nice day", e);
         }
         resourceBundle = b;
     }
@@ -96,7 +95,7 @@ public final class UserInterface implements IInterface {
         this.taskListener = new TaskListener<Object>() {
             @Override
             public void onTaskStarted(Task<?> task) {
-                LOGGER.info("Task started");
+                log.info("Task started");
 
                 if (frame.isDisplayable()) {
                     frame.setLocationRelativeTo(null);
@@ -113,7 +112,7 @@ public final class UserInterface implements IInterface {
                 if (frame.isDisplayable()) {
                     int newValue = percentage < 0. ? -1 : (int) (percentage * 100.);
                     if (progressBar.getValue() - newValue != 0) {
-                        LOGGER.info("Task updated: {}", percentage);
+                        log.info("Task updated: {}", percentage);
 
                         Task<?> childTask = getChildTask(task, TASK_DEPTH);
                         if (childTask.getProgress() < 0) {
@@ -137,7 +136,7 @@ public final class UserInterface implements IInterface {
 
             @Override
             public void onTaskInterrupted(Task<?> task) {
-                LOGGER.warn("Task interrupted");
+                log.warn("Task interrupted");
                 if (frame.isDisplayable()) {
                     frame.dispose();
                 }
@@ -145,7 +144,7 @@ public final class UserInterface implements IInterface {
 
             @Override
             public void onTaskSucceeded(Task<?> task) {
-                LOGGER.info("Task succeed");
+                log.info("Task succeed");
                 if (frame.isDisplayable()) {
                     progressBar.setValue(100);
                     frame.dispose();
@@ -280,7 +279,7 @@ public final class UserInterface implements IInterface {
         try {
             UIManager.setLookAndFeel(systemLaf);
         } catch (Exception e) {
-            LOGGER.error("Couldn't set system L&F: {}", systemLaf, e);
+            log.error("Couldn't set system L&F: {}", systemLaf, e);
         }
     }
 }

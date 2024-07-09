@@ -1,2 +1,3 @@
 *.bat eol=crlf
-.gitlab-ci.ya?ml export-ignore
+.gitlab-ci.yml export-ignore
+.gitmodules export-ignore

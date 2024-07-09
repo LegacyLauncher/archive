@@ -2,6 +2,7 @@ package net.legacylauncher.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.git.MapTokenResolver;
@@ -9,8 +10,6 @@ import net.legacylauncher.util.git.TokenReplacingReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -22,9 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 
+@Slf4j
 public final class ElyAuthCode {
-    private static final Logger LOGGER = LogManager.getLogger(ElyAuthCode.class);
-
     static final String API_BASE = ElyAuth.ACCOUNT_BASE + "/api";
     static final String ACCOUNT_INFO = API_BASE + "/account/v1/info";
     static final String TOKEN_EXCHANGE = API_BASE + "/oauth2/v1/token";
@@ -44,7 +42,7 @@ public final class ElyAuthCode {
 
         this.gson = new GsonBuilder()/*.registerTypeAdapter(ElyUser.class, new ElyUserJsonizer())*/.create();
 
-        LOGGER.info("Created with: code {}, redirect_uri {}, state {}", code, redirect_uri, state);
+        log.info("Created with: code {}, redirect_uri {}, state {}", code, redirect_uri, state);
     }
 
     public ElyUser getUser() throws IOException, AuthException {
@@ -61,19 +59,19 @@ public final class ElyAuthCode {
     }
 
     CodeExchangePayload exchangeCode() throws IOException, AuthException {
-        LOGGER.debug("Exchanging code...");
+        log.debug("Exchanging code...");
 
         CodeExchangePayload payload = readResponse(setupExchangeConnection(), CodeExchangePayload.class);
 
-        LOGGER.debug("Checking payload consistency...");
+        log.debug("Checking payload consistency...");
         payload.checkConsistency();
 
-        LOGGER.debug("Done");
+        log.debug("Done");
         return payload;
     }
 
     ElyUserJsonizer.ElySerialize getRawUser(CodeExchangePayload payload) throws IOException, AuthException {
-        LOGGER.debug("Getting user using payload...");
+        log.debug("Getting user using payload...");
         ElyUserJsonizer.ElySerialize serialize = readResponse(setupInfoConnection(payload), ElyUserJsonizer.ElySerialize.class);
 
         serialize.accessToken = payload.access_token;
@@ -93,7 +91,7 @@ public final class ElyAuthCode {
             }
         }
 
-        LOGGER.debug("User: {}", gson.toJson(serialize));
+        log.debug("User: {}", gson.toJson(serialize));
         return serialize;
     }
 
@@ -135,7 +133,7 @@ public final class ElyAuthCode {
     }
 
     HttpURLConnection setupExchangeConnection() throws IOException {
-        LOGGER.debug("Setting up exchange connection...");
+        log.debug("Setting up exchange connection...");
 
         String request = TokenReplacingReader.resolveVars(TOKEN_EXCHANGE_REQUEST, new MapTokenResolver(new HashMap<String, String>() {
             {
@@ -146,14 +144,14 @@ public final class ElyAuthCode {
                 put("redirect_uri", redirect_uri);
             }
         }));
-        LOGGER.debug("Request: {}", request);
+        log.debug("Request: {}", request);
 
         HttpURLConnection connection = setupConnection("POST", TOKEN_EXCHANGE);
 
         connection.setDoOutput(true);
-        LOGGER.debug("Writing request...");
+        log.debug("Writing request...");
         IOUtils.write(request, connection.getOutputStream(), StandardCharsets.UTF_8);
-        LOGGER.debug("Done, reading response");
+        log.debug("Done, reading response");
 
         return connection;
     }

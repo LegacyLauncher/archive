@@ -1,7 +1,6 @@
 package net.legacylauncher.user.minecraft.strategy.oareq.embed;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -11,14 +10,13 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 public class JavaFXBrowserTest {
-    private static final Logger LOGGER = LogManager.getLogger(JavaFXBrowserTest.class);
-
     @Test
     @Disabled
     void test() throws InterruptedException, MalformedURLException, TimeoutException {
         JavaFXBrowser browser = new JavaFXBrowser(true);
-        browser.initAndShow(new BrowserConfiguration("Пожалуйста, аутентифицируйтесь", Collections.emptyList()), new URL("https://google.com"), url -> LOGGER.debug("New URL: {}", url));
+        browser.initAndShow(new BrowserConfiguration("Пожалуйста, аутентифицируйтесь", Collections.emptyList()), new URL("https://google.com"), url -> log.debug("New URL: {}", url));
         browser.waitForClose(60, TimeUnit.MINUTES);
     }
 

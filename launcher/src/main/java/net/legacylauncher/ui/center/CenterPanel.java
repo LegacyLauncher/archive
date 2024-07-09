@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.center;
 
+import lombok.Getter;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.configuration.LangConfiguration;
@@ -32,7 +33,9 @@ public class CenterPanel extends VPanel implements Blockable {
     public static final Insets smallSquareNoTopInsets = new MagnifiedInsets(5, 15, 5, 15);
     public static final Insets noInsets = new MagnifiedInsets(0, 0, 0, 0);
     protected static final int ARC_SIZE = 24;
+    @Getter
     private final Insets insets;
+    @Getter
     private final CenterPanelTheme theme;
     protected final ExtendedPanel messagePanel;
     protected final LocalizableLabel messageLabel;
@@ -56,14 +59,10 @@ public class CenterPanel extends VPanel implements Blockable {
         tlauncher = LegacyLauncher.getInstance();
         global = tlauncher.getSettings();
         lang = tlauncher.getLang();
-        this.theme = theme = theme == null ? defaultTheme : theme;
-        Insets var10001 = insets == null ? defaultInsets : MagnifiedInsets.get(insets);
-        Insets var10002 = insets == null ? defaultInsets : MagnifiedInsets.get(insets);
-        this.insets = var10001;
+        this.theme = theme == null ? defaultTheme : theme;
+        this.insets = insets == null ? defaultInsets : MagnifiedInsets.get(insets);
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        setBackground(theme.getPanelBackground());
         messageLabel = new LocalizableLabel("  ");
-        messageLabel.setFont(getFont().deriveFont(Font.BOLD));
         messageLabel.setVerticalAlignment(0);
         messageLabel.setHorizontalTextPosition(0);
         messageLabel.setAlignmentX(0.5F);
@@ -72,6 +71,21 @@ public class CenterPanel extends VPanel implements Blockable {
         messagePanel.setAlignmentX(0.5F);
         messagePanel.setInsets(new Insets(3, 0, 3, 0));
         messagePanel.add(messageLabel);
+        themeChanged();
+    }
+
+    @Override
+    public void updateUI() {
+        themeChanged();
+        super.updateUI();
+    }
+
+    private void themeChanged() {
+        if (theme == null) {
+            return;
+        }
+        setBackground(theme.getPanelBackground());
+        messageLabel.setFont(getFont().deriveFont(Font.BOLD));
     }
 
     public void paintComponent(Graphics g0) {
@@ -121,14 +135,6 @@ public class CenterPanel extends VPanel implements Blockable {
             shape = new Rectangle2D.Double(xy, xy, w, h);
         }
         g.draw(shape);
-    }
-
-    public CenterPanelTheme getTheme() {
-        return theme;
-    }
-
-    public Insets getInsets() {
-        return insets;
     }
 
     protected Del del(int aligment) {

@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class FolderButton extends LocalizableButton implements Unblockable {
     private final LoginForm lf;
 
@@ -133,5 +135,11 @@ public class FolderButton extends LocalizableButton implements Unblockable {
             rootFolder = MinecraftUtil.getWorkingDirectory(false);
         }
         openFolder(new File(rootFolder, "mods"));
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(menu);
+        super.updateUI();
     }
 }

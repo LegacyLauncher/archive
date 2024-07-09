@@ -1,6 +1,8 @@
 package net.legacylauncher.stats;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.configuration.BuildConfig;
 import net.legacylauncher.minecraft.PromotedServerAddStatus;
 import net.legacylauncher.minecraft.Server;
 import net.legacylauncher.minecraft.auth.Account;
@@ -11,8 +13,6 @@ import net.minecraft.launcher.Http;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,9 +24,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 
+@Slf4j
 public final class Stats {
-    private static final Logger LOGGER = LogManager.getLogger(Stats.class);
-
     private static final URL STATS_BASE = Http.constantURL("https://stats.llaun.ch/v2");
     private static final ExecutorService service = Executors.newCachedThreadPool();
     private static boolean allow = false;
@@ -112,7 +111,7 @@ public final class Stats {
                 .add("client", LegacyLauncher.getInstance().getSettings().getClient().toString())
                 .add("version", String.valueOf(LegacyLauncher.getVersion()))
                 .add("bootstrap", LegacyLauncher.getInstance().getBootstrapVersion())
-                .add("brand", LegacyLauncher.getShortBrand())
+                .add("brand", BuildConfig.SHORT_BRAND)
                 .add("os", OS.CURRENT.getName())
                 .add("locale", LegacyLauncher.getInstance().getLang().getLocale().toString())
                 .add("action", name);
@@ -148,7 +147,7 @@ public final class Stats {
 
     private static HttpURLConnection createUrlConnection(URL url) throws IOException {
         Objects.requireNonNull(url);
-        LOGGER.trace("Opening connection to {}", url);
+        log.trace("Opening connection to {}", url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection(U.getProxy());
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
@@ -163,17 +162,17 @@ public final class Stats {
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         connection.setDoOutput(true);
-        LOGGER.trace("Writing data to {}", url);
+        log.trace("Writing data to {}", url);
         try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8)) {
             writer.write(request);
         }
-        LOGGER.trace("Reading data from {}", url);
+        log.trace("Reading data from {}", url);
         try (InputStream inputStream = connection.getInputStream()) {
             String e = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            LOGGER.debug("{} responded with {}: {}", url, connection.getResponseCode(), e);
+            log.debug("{} responded with {}: {}", url, connection.getResponseCode(), e);
             return e;
         } catch (IOException e) {
-            LOGGER.warn("Stats request failed: {}", e.toString());
+            log.warn("Stats request failed: {}", e.toString());
             throw e;
         }
     }

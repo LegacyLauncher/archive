@@ -15,6 +15,8 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class VersionRemoveButton extends ExtendedButton implements VersionHandlerListener, Blockable {
     private static final long serialVersionUID = 427368162418879141L;
     private static final String ILLEGAL_SELECTION_BLOCK = "illegal-selection";
@@ -106,5 +108,11 @@ public class VersionRemoveButton extends ExtendedButton implements VersionHandle
 
     public void unblock(Object reason) {
         setEnabled(true);
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(menu);
+        super.updateUI();
     }
 }

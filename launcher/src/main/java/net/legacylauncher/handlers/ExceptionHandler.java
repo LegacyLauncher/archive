@@ -1,15 +1,14 @@
 package net.legacylauncher.handlers;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.background.ImageBackground;
 import net.legacylauncher.util.U;
-import org.apache.logging.log4j.LogManager;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
+@Slf4j
 public class ExceptionHandler implements UncaughtExceptionHandler {
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
-
     private static ExceptionHandler instance;
     private static long gcLastCall;
 
@@ -30,14 +29,14 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
                     try {
                         Alert.showError("Exception in thread " + t.getName(), e);
                     } catch (Exception e1) {
-                        LOGGER.warn("Cannot show alert window", e1);
+                        log.warn("Cannot show alert window", e1);
                     }
                 } else {
-                    LOGGER.debug("Hidden exception in thread {}", t.getName(), e);
+                    log.debug("Hidden exception in thread {}", t.getName(), e);
                 }
             }
         } catch (Throwable e1) {
-            LOGGER.error("Something gone totally wrong, I'll die soon ;(", e1);
+            log.error("Something gone totally wrong, I'll die soon ;(", e1);
         }
     }
 
@@ -46,7 +45,7 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
             return false;
         }
 
-        LOGGER.fatal("OutOfMemory error has occurred");
+        log.error("OutOfMemory error has occurred");
 
         if (ImageBackground.getLastInstance() != null) {
             ImageBackground.getLastInstance().wipe();
@@ -57,12 +56,12 @@ public class ExceptionHandler implements UncaughtExceptionHandler {
 
         if (diff > 5000L) {
             gcLastCall = currentTime;
-            LOGGER.info("Starting garbage collector: " + U.memoryStatus());
+            log.info("Starting garbage collector: " + U.memoryStatus());
             System.gc();
-            LOGGER.info("Garbage collector completed: " + U.memoryStatus());
+            log.info("Garbage collector completed: " + U.memoryStatus());
             return true;
         } else {
-            LOGGER.fatal("GC is unable to reduce memory usage");
+            log.error("GC is unable to reduce memory usage");
             return false;
         }
     }

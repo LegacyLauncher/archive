@@ -1,3 +1,0 @@
-[submodule "launcher/src/main/resources/lang"]
-	path = launcher/src/main/resources/lang
-	url = ../tl-translations.git

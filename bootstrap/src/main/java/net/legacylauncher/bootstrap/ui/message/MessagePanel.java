@@ -3,7 +3,7 @@ package net.legacylauncher.bootstrap.ui.message;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-class MessagePanel extends JPanel {
+public class MessagePanel extends JPanel {
     private final Message message;
     private MessageWindow window;
 

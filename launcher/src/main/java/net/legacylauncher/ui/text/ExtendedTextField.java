@@ -10,7 +10,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
 public class ExtendedTextField extends JTextField {
-    private static final long serialVersionUID = -1963422246993419362L;
     private CenterPanelTheme theme;
     private String placeholder;
     private String oldPlaceholder;
@@ -86,6 +85,9 @@ public class ExtendedTextField extends JTextField {
     }
 
     protected void updateStyle() {
+        if (theme == null) {
+            return;
+        }
         setForeground(getValue() == null ? theme.getFocusLost() : theme.getFocus());
         setBackground(theme.getBackground());
     }
@@ -143,5 +145,11 @@ public class ExtendedTextField extends JTextField {
     }
 
     protected void onChange() {
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        updateStyle();
     }
 }

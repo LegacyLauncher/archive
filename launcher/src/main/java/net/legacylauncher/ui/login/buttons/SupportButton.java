@@ -22,6 +22,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class SupportButton extends LocalizableButton implements Blockable {
 
     //private ProcessFrame<Void> dxdiagFlusher;
@@ -121,6 +123,14 @@ public class SupportButton extends LocalizableButton implements Blockable {
         }
     }
 
+    @Override
+    public void updateUI() {
+        if (localeMap != null) {
+            localeMap.values().forEach(SupportMenu::updateUI);
+        }
+        super.updateUI();
+    }
+
     public void block(Object reason) {
     }
 
@@ -186,9 +196,8 @@ public class SupportButton extends LocalizableButton implements Blockable {
             popup.show(SupportButton.this, 0, getHeight());
         }
 
-        SupportMenu add(JMenuItem item) {
+        void add(JMenuItem item) {
             popup.add(item);
-            return this;
         }
 
         public SupportMenu add(String key, ImageIcon icon, ActionListener listener) {
@@ -199,20 +208,13 @@ public class SupportButton extends LocalizableButton implements Blockable {
             return this;
         }
 
-        public SupportMenu add(String key, ActionListener listener) {
-            return add(key, null, listener);
-        }
-
-        public SupportMenu add(String key) {
-            LocalizableMenuItem item = new LocalizableMenuItem(key);
-            item.setEnabled(false);
-            add(item);
-            return this;
-        }
-
         public SupportMenu addSeparator() {
             popup.addSeparator();
             return this;
+        }
+
+        void updateUI() {
+            updateUINullable(popup, icon);
         }
     }
 

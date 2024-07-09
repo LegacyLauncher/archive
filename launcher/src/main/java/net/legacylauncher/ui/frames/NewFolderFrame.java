@@ -1,6 +1,8 @@
 package net.legacylauncher.ui.frames;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.configuration.BuildConfig;
 import net.legacylauncher.managers.ProfileManager;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.editor.EditorFileField;
@@ -12,8 +14,6 @@ import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.MinecraftUtil;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.SwingUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -23,9 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+@Slf4j
 public class NewFolderFrame extends VActionFrame {
-    private static final Logger LOGGER = LogManager.getLogger(NewFolderFrame.class);
-
     private final LegacyLauncher t;
 
     public NewFolderFrame(final LegacyLauncher t, File file) {
@@ -110,7 +109,7 @@ public class NewFolderFrame extends VActionFrame {
         }
 
         t.getSettings().set("minecraft.gamedir", folder.getAbsolutePath());
-        LOGGER.info("User selected new game folder using NewFolderFrame: {}", folder);
+        log.info("User selected new game folder using NewFolderFrame: {}", folder);
         dispose();
     }
 
@@ -123,7 +122,7 @@ public class NewFolderFrame extends VActionFrame {
             try {
                 FileUtil.createFolder(currentDir);
             } catch (Exception e) {
-                LOGGER.warn("Not accessible: {}", currentDir);
+                log.warn("Not accessible: {}", currentDir);
                 currentDir.delete();
                 return true;
             }
@@ -131,14 +130,14 @@ public class NewFolderFrame extends VActionFrame {
         }
 
         if (!(currentDir.canRead() && currentDir.canWrite() && currentDir.canExecute())) {
-            LOGGER.warn("Is either not readable/writable/executable: {}", currentDir);
+            log.warn("Is either not readable/writable/executable: {}", currentDir);
             return true;
         }
 
         File[] list = currentDir.listFiles();
 
         if (list == null) {
-            LOGGER.warn("Couldn't list files (returned null) in {}", currentDir);
+            log.warn("Couldn't list files (returned null) in {}", currentDir);
             return true;
         }
 
@@ -148,7 +147,7 @@ public class NewFolderFrame extends VActionFrame {
 
         File profileFile = new File(currentDir, ProfileManager.DEFAULT_PROFILE_FILENAME);
         if (profileFile.isFile()) {
-            LOGGER.warn("Contains profile file: {}", profileFile);
+            log.warn("Contains profile file: {}", profileFile);
             return false;
         }
         return true;
@@ -170,7 +169,7 @@ public class NewFolderFrame extends VActionFrame {
 
         suggestions.addAll(Arrays.asList(
                 MinecraftUtil.getSystemRelatedDirectory("Minecraft", false),
-                MinecraftUtil.getSystemRelatedDirectory("tlauncher/" + LegacyLauncher.getShortBrand())
+                MinecraftUtil.getSystemRelatedDirectory("tlauncher/" + BuildConfig.SHORT_BRAND)
         ));
 
         for (File suggestion : suggestions) {

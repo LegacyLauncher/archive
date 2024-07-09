@@ -1,9 +1,8 @@
 package net.legacylauncher.bootstrap.task;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,8 +11,8 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public abstract class Task<T> implements Callable<T> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Task.class);
     Task<?> bindingTask, boundTask;
     private double boundTaskProgressStart;
     private double boundTaskProgressDelta;
@@ -43,7 +42,7 @@ public abstract class Task<T> implements Callable<T> {
     }
 
     public final void interrupt() {
-        LOGGER.warn("interrupted");
+        log.warn("interrupted");
 
         this.interrupted = true;
         interrupted();
@@ -79,7 +78,7 @@ public abstract class Task<T> implements Callable<T> {
             throw e = ex;
         } finally {
             if (interrupted) {
-                LOGGER.warn("interruption confirmed");
+                log.warn("interruption confirmed");
                 updateProgress(-1.);
                 for (TaskListener<? super T> listener : listeners) {
                     listener.onTaskInterrupted(this);
@@ -87,12 +86,12 @@ public abstract class Task<T> implements Callable<T> {
             } else {
                 if (e == null) {
                     updateProgress(1.);
-                    LOGGER.info("Done!");
+                    log.info("Done!");
                     for (TaskListener<? super T> listener : listeners) {
                         listener.onTaskSucceeded(this);
                     }
                 } else {
-                    LOGGER.error("Failed", e);
+                    log.error("Failed", e);
                     for (TaskListener<? super T> listener : listeners) {
                         listener.onTaskErrored(this, e);
                     }

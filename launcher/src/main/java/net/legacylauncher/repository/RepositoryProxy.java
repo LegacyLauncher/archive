@@ -1,11 +1,10 @@
 package net.legacylauncher.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.EHttpClient;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
-import org.apache.http.client.fluent.Request;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -14,9 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RepositoryProxy {
-    private static final Logger PROXY_LOGGER = LogManager.getLogger(ProxyRepo.class);
 
+public class RepositoryProxy {
     public static final List<String> PROXIFIED_HOSTS = Collections.unmodifiableList(Arrays.asList(
             "launchermeta.mojang.com",
             "piston-meta.mojang.com",
@@ -52,11 +50,11 @@ public class RepositoryProxy {
         }
         IOException ex = null;
         for (String currentUrl : urls) {
-            PROXY_LOGGER.debug("Requesting: {}", currentUrl);
+            ProxyRepo.log.debug("Requesting: {}", currentUrl);
             try {
-                return EHttpClient.toString(Request.Get(currentUrl));
+                return EHttpClient.toString(Request.get(currentUrl));
             } catch (IOException ioE) {
-                PROXY_LOGGER.warn("Couldn't fetch url {}", url, ioE);
+                ProxyRepo.log.warn("Couldn't fetch url {}", url, ioE);
                 if (ex == null) {
                     ex = ioE;
                 } else {
@@ -81,9 +79,8 @@ public class RepositoryProxy {
         return proxyRepoList;
     }
 
+    @Slf4j
     public static class ProxyRepo implements IRepo {
-        private static final Logger PROXY_REPO_LOGGER = LogManager.getLogger(ProxyRepo.class);
-
         private final String proxyPrefix;
 
         public ProxyRepo(String proxy) {
@@ -109,16 +106,16 @@ public class RepositoryProxy {
 
             IOException ioE = new IOException("not a first attempt; failed");
             if (attempt == 1) {
-                PROXY_REPO_LOGGER.debug("First attempt, no proxy: {}", originalUrl);
+                log.debug("First attempt, no proxy: {}", originalUrl);
                 try {
                     return openHttpConnection(originalUrl, proxy, timeout);
                 } catch (IOException ioE1) {
                     ioE = ioE1;
-                    PROXY_REPO_LOGGER.warn("Failed to open connection to {}; error: {}", originalUrl, ioE.toString());
-                    PROXY_REPO_LOGGER.debug(ioE);
+                    log.warn("Failed to open connection to {}; error: {}", originalUrl, ioE.toString());
+                    log.debug("Full error:", ioE);
                 }
             } else {
-                PROXY_REPO_LOGGER.debug("Using proxy: {}", path);
+                log.debug("Using proxy: {}", path);
             }
 
             boolean accepted = false;
@@ -135,25 +132,25 @@ public class RepositoryProxy {
             } catch (Exception e) {
                 hostIp = e.toString();
             }
-            PROXY_REPO_LOGGER.info("Resolved host {}: {}", originalUrl.getHost(), hostIp);
+            log.info("Resolved host {}: {}", originalUrl.getHost(), hostIp);
 
             if (!accepted) {
-                PROXY_REPO_LOGGER.warn("Host is not whitelisted to use proxy: {}", originalUrl.getHost());
+                log.warn("Host is not whitelisted to use proxy: {}", originalUrl.getHost());
                 throw ioE;
             }
 
             String proxyRequestUrl = prefixUrl(originalUrl);
-            PROXY_REPO_LOGGER.debug("Proxying request to {}: {}", originalUrl, proxyRequestUrl);
+            log.debug("Proxying request to {}: {}", originalUrl, proxyRequestUrl);
 
             HttpURLConnection connection;
             try {
                 connection = openHttpConnection(proxyRequestUrl, proxy, timeout);
             } catch (IOException oneMoreIOE) {
-                PROXY_REPO_LOGGER.error("Proxying request failed! URL: {}", proxyRequestUrl);
+                log.error("Proxying request failed! URL: {}", proxyRequestUrl);
                 throw oneMoreIOE;
             }
 
-            PROXY_REPO_LOGGER.warn("Using proxy ({}) to: {}", connection.getURL().getHost(), originalUrl);
+            log.warn("Using proxy ({}) to: {}", connection.getURL().getHost(), originalUrl);
 
             if (!PROXY_WORKED) {
                 PROXY_WORKED = true;

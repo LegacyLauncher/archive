@@ -9,7 +9,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
-public class LoggerPopup extends TextPopup {
+class LoggerPopup extends TextPopup {
     private final LoggerFrame frame;
     private final EmptyAction clearAllAction;
 

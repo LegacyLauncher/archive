@@ -3,6 +3,7 @@ package net.legacylauncher.minecraft.crash;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.util.OS;
@@ -12,16 +13,13 @@ import net.legacylauncher.util.git.MapTokenResolver;
 import net.legacylauncher.util.git.TokenReplacingReader;
 import net.legacylauncher.util.json.LegacyVersionSerializer;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class CrashEntryList {
-    private static final Logger LOGGER = LogManager.getLogger(CrashEntryList.class);
-
     private final List<CrashEntry> signatures = new ArrayList<>(), _signatures = Collections.unmodifiableList(signatures);
     private int revision;
     private Version required;
@@ -101,7 +99,7 @@ public final class CrashEntryList {
             for (Map.Entry<String, JsonElement> entry : root.get("variables").getAsJsonObject().entrySet()) {
                 String value;
                 loadedVars.put(entry.getKey(), value = getLoc(entry.getValue(), context, varsResolver));
-                LOGGER.trace("Processing var {} = {}", entry.getKey(), value);
+                log.trace("Processing var {} = {}", entry.getKey(), value);
             }
             vars.putAll(loadedVars);
 
@@ -135,7 +133,7 @@ public final class CrashEntryList {
                 entryList.signatures.add(entry);
             }
 
-            LOGGER.trace("{} crash entries were parsed", entryList.signatures.size());
+            log.trace("{} crash entries were parsed", entryList.signatures.size());
 
             entryList.signatures.sort((entry1, entry2) -> {
                 boolean r1 = entry1.requiresSysInfo(), r2 = entry2.requiresSysInfo();

@@ -5,7 +5,7 @@ import net.legacylauncher.component.ComponentDependence;
 import net.legacylauncher.component.InterruptibleComponent;
 import net.legacylauncher.component.LauncherComponent;
 import net.legacylauncher.component.RefreshableComponent;
-import net.legacylauncher.util.async.LoopedThread;
+import net.legacylauncher.util.async.AsyncThread;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
@@ -15,7 +15,6 @@ public class ComponentManager {
     private final LegacyLauncher tlauncher;
     private final Set<Class<? extends LauncherComponent>> loaded = new HashSet<>();
     private final List<LauncherComponent> components;
-    private final ComponentManager.ComponentManagerRefresher refresher;
 
     public ComponentManager(LegacyLauncher tlauncher) {
         if (tlauncher == null) {
@@ -24,8 +23,6 @@ public class ComponentManager {
 
         this.tlauncher = tlauncher;
         components = Collections.synchronizedList(new ArrayList<>());
-        refresher = new ComponentManager.ComponentManagerRefresher(this);
-        refresher.start();
     }
 
     public LegacyLauncher getLauncher() {
@@ -131,7 +128,7 @@ public class ComponentManager {
     }
 
     public void startAsyncRefresh() {
-        refresher.iterate();
+        AsyncThread.execute(this::startRefresh);
     }
 
     void startRefresh() {
@@ -154,18 +151,5 @@ public class ComponentManager {
             }
         }
 
-    }
-
-    static class ComponentManagerRefresher extends LoopedThread {
-        private final ComponentManager parent;
-
-        ComponentManagerRefresher(ComponentManager manager) {
-            super("ComponentManagerRefresher");
-            parent = manager;
-        }
-
-        protected void iterateOnce() {
-            parent.startRefresh();
-        }
     }
 }

@@ -1,13 +1,13 @@
 package net.minecraft.launcher.versions;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.repository.Repository;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
+@Slf4j
 public enum ReleaseType {
     RELEASE("release", false, true),
     SNAPSHOT("snapshot", true, true),
@@ -17,8 +17,6 @@ public enum ReleaseType {
     LAUNCHER("launcher", true, false),
     PENDING("pending", true, true),
     UNKNOWN("unknown", false, false);
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<String, ReleaseType> lookup;
     private static final List<ReleaseType> defaultTypes;
@@ -113,7 +111,7 @@ public enum ReleaseType {
 
                 Date date = version.getReleaseTime();
                 if (date == null) {
-                    LOGGER.warn("release time null: {}", version.getID());
+                    log.warn("release time null: {}", version.getID());
                     return false;
                 }
 

@@ -2,10 +2,9 @@ package net.legacylauncher.jre;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.downloader.Downloadable;
 import net.minecraft.launcher.updater.DownloadInfo;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.Collections;
@@ -14,9 +13,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class JavaRuntimeManifest {
-    private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeManifest.class);
-
     private final List<RuntimeFile> files;
 
     JavaRuntimeManifest(List<RuntimeFile> files) {
@@ -103,7 +101,7 @@ public class JavaRuntimeManifest {
         FileIntegrityEntry toIntegrityEntry() {
             DownloadInfo download = getDownload();
             if (download == null) {
-                LOGGER.warn("file doesn't contain raw download: {}", this);
+                log.warn("file doesn't contain raw download: {}", this);
                 return null;
             }
             return new FileIntegrityEntry(

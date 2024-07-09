@@ -1,15 +1,15 @@
 package net.legacylauncher.ui.background;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.handlers.ExceptionHandler;
+import net.legacylauncher.logger.LoggerBuffer;
 import net.legacylauncher.ui.FlatLaf;
 import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.swing.extended.ExtendedComponentAdapter;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.shared.FlatLafConfiguration;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -22,21 +22,24 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Optional;
 
+@Slf4j
 public final class ImageBackground extends JComponent implements ISwingBackground {
-    private static final Logger LOGGER = LogManager.getLogger(ImageBackground.class);
+    private static final long FILE_MAX_LENGTH = 1024*1024*4;
 
     private static ImageBackground lastInstance;
 
     private Image defaultImage, currentImage, renderImage;
-    private boolean paused;
+    private final boolean ready;
 
     ImageBackground() {
         lastInstance = this;
         addComponentListener(new ExtendedComponentAdapter(this) {
-            public void onComponentResized(ComponentEvent e) {
+            @Override
+            public void onComponentResized() {
                 updateRender();
             }
         });
+        ready = true;
     }
 
     public static ImageBackground getLastInstance() {
@@ -57,38 +60,17 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
 
     @Override
     public void startBackground() {
-        paused = false;
         updateRender();
     }
 
     @Override
     public void pauseBackground() {
-        paused = true;
     }
 
     @Override
     public void loadBackground(String path) throws Exception {
         if (defaultImage == null) {
-            String defaultImageName = "plains.jpg";
-            if (LegacyLauncher.getInstance() != null) {
-                Optional<FlatLafConfiguration> flatLafConfiguration = LegacyLauncher.getInstance().getSettings()
-                        .getFlatLafConfiguration();
-                Optional<FlatLafConfiguration.Theme> selectedTheme = FlatLaf.getSelectedNowTheme(flatLafConfiguration);
-                if(flatLafConfiguration.isPresent() && selectedTheme.isPresent()) {
-                    defaultImageName = "plains4K.jpg";
-                    String selectedThemeFile = flatLafConfiguration.get().getThemeFiles().get(selectedTheme.get());
-                    if (selectedThemeFile != null) {
-                        BufferedImage externalBackgroundImage = FlatLaf
-                                .loadDefaultBackgroundFromThemeFile(selectedThemeFile);
-                        if (externalBackgroundImage != null) {
-                            defaultImage = externalBackgroundImage;
-                        }
-                    }
-                }
-            }
-            if (defaultImage == null) {
-                defaultImage = Images.loadImageByName(defaultImageName);
-            }
+            updateDefaultImage();
         }
 
         renderImage = null;
@@ -107,6 +89,10 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
                 } else {
                     throw new FileNotFoundException(path);
                 }
+                if (file.length() > FILE_MAX_LENGTH) {
+                    log.warn("Background image is too big to load: {}", file.getAbsolutePath());
+                    return;
+                }
             } else {
                 input = U.makeURL(path).openStream();
             }
@@ -116,12 +102,12 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             }
 
             Image image;
-            LOGGER.trace("Loading background: {} -> {}", path, input);
+            log.trace("Loading background: {} -> {}", path, input);
 
             try {
                 image = ImageIO.read(input);
             } catch (Exception e) {
-                LOGGER.error("Could not load image: {}", path, e);
+                log.error("Could not load image: {}", path, e);
                 return;
             }
 
@@ -187,6 +173,43 @@ public final class ImageBackground extends JComponent implements ISwingBackgroun
             g.drawImage(render, (int) x, (int) y, (int) width, (int) height, null);
         } catch (OutOfMemoryError oom) {
             ExceptionHandler.reduceMemory(oom);
+        }
+    }
+
+    @Override
+    public void updateUI() {
+        if (ready) {
+            boolean usesDefaultImage = currentImage == defaultImage;
+            defaultImage = null;
+            updateDefaultImage();
+            if (usesDefaultImage) {
+                currentImage = defaultImage;
+                updateRender();
+            }
+        }
+        super.updateUI();
+    }
+
+    private void updateDefaultImage() {
+        String defaultImageName = "plains.jpg";
+        if (LegacyLauncher.getInstance() != null) {
+            Optional<FlatLafConfiguration> flatLafConfiguration = LegacyLauncher.getInstance().getSettings()
+                    .getFlatLafConfiguration();
+            Optional<FlatLafConfiguration.Theme> selectedTheme = FlatLaf.getSelectedNowTheme(flatLafConfiguration);
+            if(flatLafConfiguration.isPresent() && selectedTheme.isPresent()) {
+                defaultImageName = "plains4K.jpg";
+                String selectedThemeFile = flatLafConfiguration.get().getThemeFiles().get(selectedTheme.get());
+                if (selectedThemeFile != null) {
+                    BufferedImage externalBackgroundImage = FlatLaf
+                            .loadDefaultBackgroundFromThemeFile(selectedThemeFile);
+                    if (externalBackgroundImage != null) {
+                        defaultImage = externalBackgroundImage;
+                    }
+                }
+            }
+        }
+        if (defaultImage == null) {
+            defaultImage = Images.loadImageByName(defaultImageName);
         }
     }
 }

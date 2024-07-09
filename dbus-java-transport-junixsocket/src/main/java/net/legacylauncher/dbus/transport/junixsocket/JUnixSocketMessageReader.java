@@ -6,8 +6,6 @@ import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.spi.message.AbstractInputStreamMessageReader;
 import org.newsclub.net.unix.AFUNIXSocketChannel;
 import org.newsclub.net.unix.FileDescriptorCast;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -15,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JUnixSocketMessageReader extends AbstractInputStreamMessageReader {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private final AFUNIXSocketChannel socket;
     private final boolean hasFileDescriptorSupport;
 
@@ -42,9 +38,6 @@ public class JUnixSocketMessageReader extends AbstractInputStreamMessageReader {
                 }
             } else {
                 fds = null;
-            }
-            if (fds != null) {
-                logger.debug("=> {}", fds);
             }
             return fds;
         } catch (IOException e) {

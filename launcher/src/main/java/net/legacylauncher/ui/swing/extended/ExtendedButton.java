@@ -45,8 +45,6 @@ public class ExtendedButton extends JButton {
     }
 
     private void init() {
-        setForeground(Theme.getTheme().getForeground());
-        setBackground(Theme.getTheme().getBackground());
         setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
         setOpaque(false);
         addActionListener(new ActionListener() {
@@ -61,5 +59,16 @@ public class ExtendedButton extends JButton {
                 return comp == null ? null : (comp.getParent() == null ? comp : findRootParent(comp.getParent()));
             }
         });
+    }
+
+    @Override
+    public void updateUI() {
+        setForeground(Theme.getTheme().getForeground());
+        setBackground(Theme.getTheme().getBackground());
+        Icon icon = getIcon();
+        if (icon instanceof JComponent) {
+            ((JComponent) icon).updateUI();
+        }
+        super.updateUI();
     }
 }

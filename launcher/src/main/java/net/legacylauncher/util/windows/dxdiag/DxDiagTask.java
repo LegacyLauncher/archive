@@ -1,8 +1,7 @@
 package net.legacylauncher.util.windows.dxdiag;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.OS;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -19,9 +18,8 @@ import java.util.concurrent.Callable;
 /**
  * Основной таск, отвечающий за вызов процесса DxDiag и парсинга его результатов
  */
+@Slf4j
 class DxDiagTask implements Callable<DxDiagReport> {
-    private static final Logger LOGGER = LogManager.getLogger(DxDiagTask.class);
-
     private File reportFile; // if null, will be created later
 
     public DxDiagTask(String osName, String osVersion,
@@ -43,11 +41,11 @@ class DxDiagTask implements Callable<DxDiagReport> {
         } catch (InterruptedException interruptedException) {
             throw interruptedException;
         } catch (Exception e) {
-            LOGGER.error("DxDiag report failed", e);
+            log.error("DxDiag report failed", e);
             printReportFileContent();
             throw e;
         }
-        LOGGER.debug("DxDiag report is complete");
+        log.debug("DxDiag report is complete");
         return report;
     }
 
@@ -70,24 +68,24 @@ class DxDiagTask implements Callable<DxDiagReport> {
     }
 
     void printReportFileContent() {
-        if (!LOGGER.isDebugEnabled()) {
+        if (!log.isDebugEnabled()) {
             return;
         }
         File outputFile = getNullableReportFile();
         if (outputFile == null) {
-            LOGGER.debug("Report file was not yet created");
+            log.debug("Report file was not yet created");
             return;
         }
-        LOGGER.debug("DxDiag report file content: {}", outputFile);
-        LOGGER.debug("++++++++++++++++++++");
+        log.debug("DxDiag report file content: {}", outputFile);
+        log.debug("++++++++++++++++++++");
         try (Scanner scanner = new Scanner(outputFile)) {
             while (scanner.hasNextLine()) {
-                LOGGER.debug(scanner.nextLine());
+                log.debug(scanner.nextLine());
             }
         } catch (FileNotFoundException e) {
-            LOGGER.debug("Oops!", e);
+            log.debug("Oops!", e);
         } finally {
-            LOGGER.debug("++++++++++++++++++++");
+            log.debug("++++++++++++++++++++");
         }
     }
 
@@ -103,7 +101,7 @@ class DxDiagTask implements Callable<DxDiagReport> {
         try {
             dontSkip = Double.parseDouble(OS.VERSION) >= 7.0;
         } catch (RuntimeException rE) {
-            LOGGER.warn("Could not determine Windows version: {}", OS.VERSION);
+            log.warn("Could not determine Windows version: {}", OS.VERSION);
             dontSkip = !OS.NAME.toLowerCase(java.util.Locale.ROOT).contains("xp");
         }
 
@@ -118,7 +116,7 @@ class DxDiagTask implements Callable<DxDiagReport> {
     }
 
     void startAndWait(List<String> command) throws InterruptedException, DxDiagFailedException {
-        LOGGER.debug("Executing DxDiag command: {}", command);
+        log.debug("Executing DxDiag command: {}", command);
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         final Process process;
@@ -133,14 +131,14 @@ class DxDiagTask implements Callable<DxDiagReport> {
         do {
             millis = System.currentTimeMillis() - start;
             if ((millis / 1000L) % 5L == 0) {
-                LOGGER.debug("Waiting DxDiag to gather info about the system... ({} s)", millis / 1000L);
+                log.debug("Waiting DxDiag to gather info about the system... ({} s)", millis / 1000L);
             }
             //noinspection BusyWait
             Thread.sleep(1000);
         } while (process.isAlive());
 
         int exitCode = process.exitValue();
-        LOGGER.debug("Done in {} ms with exit code {} (0x{})", millis, exitCode, Integer.toHexString(exitCode));
+        log.debug("Done in {} ms with exit code {} (0x{})", millis, exitCode, Integer.toHexString(exitCode));
 
         if (exitCode != 0) {
             throw new DxDiagFailedException("exit code: " + exitCode + " (0x" + Integer.toHexString(exitCode) + ")");
@@ -160,7 +158,7 @@ class DxDiagTask implements Callable<DxDiagReport> {
         List<DisplayDevice> displayDevices = new ArrayList<>();
         Element displayDevicesElem = root.getChild("DisplayDevices");
         if (displayDevicesElem == null || root.getChild("DisplayDevices") == null) {
-            LOGGER.debug("No display devices list");
+            log.debug("No display devices list");
         } else {
             List<Element> dd = root.getChild("DisplayDevices").getChildren("DisplayDevice");
             for (Element elem : dd) {
@@ -185,7 +183,7 @@ class DxDiagTask implements Callable<DxDiagReport> {
         return new File(System.getenv("WINDIR") + "\\system32\\dxdiag.exe");
     }
 
-    public static class Factory implements TaskFactory {
+    static class Factory implements TaskFactory {
         @Override
         public DxDiagTask createTask() {
             return new DxDiagTask();

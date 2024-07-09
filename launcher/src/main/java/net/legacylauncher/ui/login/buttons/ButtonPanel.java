@@ -7,6 +7,8 @@ import net.legacylauncher.util.SwingUtil;
 import javax.swing.*;
 import java.awt.*;
 
+import static net.legacylauncher.util.SwingUtil.updateUINullable;
+
 public class ButtonPanel extends BlockablePanel {
     private static final long serialVersionUID = -2155145867054136409L;
     public final PlayButton play;
@@ -69,6 +71,12 @@ public class ButtonPanel extends BlockablePanel {
 
             validate();
         }
+    }
+
+    @Override
+    public void updateUI() {
+        updateUINullable(manageButtonsPanel, cancel);
+        super.updateUI();
     }
 
     public enum ButtonPanelState {

@@ -4,15 +4,15 @@ import com.formdev.flatlaf.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.portals.Portals;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.shared.FlatLafConfiguration;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,14 +21,15 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.legacylauncher.util.shared.FlatLafConfiguration.getVersion;
 
+@Slf4j
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class FlatLaf {
-    private static final Logger LOGGER = LogManager.getLogger(FlatLaf.class);
     private static final String SUPPORTED_CONFIG_VERSION = "v1";
 
     private static final Lazy<Boolean> IS_SUPPORTED = Lazy.of(() -> {
@@ -41,7 +42,7 @@ public class FlatLaf {
                 throw new RuntimeException("version not supported: " + configVersion);
             }
         } catch(Throwable t) {
-            LOGGER.warn("FlatLafConfiguration not available", t);
+            log.warn("FlatLafConfiguration not available", t);
             return false;
         }
         return true;
@@ -86,7 +87,7 @@ public class FlatLaf {
                     }
                 }
             } catch (IOException | RuntimeException e) {
-                LOGGER.warn("Couldn't read default background from theme file: {}", themeFile, e);
+                log.warn("Couldn't read default background from theme file: {}", themeFile, e);
             }
         }
         return null;
@@ -111,25 +112,32 @@ public class FlatLaf {
         return STATES.get();
     }
 
-    public static void initialize(FlatLafConfiguration config) {
-        if (config.isEnabled()) {
-            FlatLafConfiguration.Theme theme = config.getSelected().orElse(detectTheme());
-            setUIProperties(config.getUiPropertiesFiles().get(theme));
-            setLaf(theme, config.getThemeFiles().get(theme));
-        } else {
-            LOGGER.info("FlatLaf is not enabled. Skipping initialization");
+    public static void initialize(FlatLafConfiguration config, boolean ignoreState) {
+        if (!config.isEnabled() && !ignoreState) {
+            log.info("FlatLaf is not enabled. Skipping initialization");
+            return;
         }
+        FlatLafConfiguration.Theme theme = config.getSelected().orElse(detectTheme());
+        setUIProperties(config.getUiPropertiesFiles().get(theme));
+        setLaf(theme, config.getThemeFiles().get(theme));
+    }
+
+    public static void initialize(FlatLafConfiguration config) {
+        initialize(config, false);
     }
 
     private static FlatLafConfiguration.Theme detectTheme() {
-        LOGGER.info("Detecting system theme");
-        switch (Portals.getPortal().getColorScheme()) {
-            case PREFER_LIGHT:
-            case NO_PREFERENCE:
-            default:
-                return FlatLafConfiguration.Theme.LIGHT;
-            case PREFER_DARK:
-                return FlatLafConfiguration.Theme.DARK;
+        try {
+            switch (Portals.getPortal().getColorScheme()) {
+                case PREFER_LIGHT:
+                case NO_PREFERENCE:
+                default:
+                    return FlatLafConfiguration.Theme.LIGHT;
+                case PREFER_DARK:
+                    return FlatLafConfiguration.Theme.DARK;
+            }
+        } catch (Exception e) {
+            return FlatLafConfiguration.Theme.LIGHT;
         }
     }
 
@@ -155,7 +163,7 @@ public class FlatLaf {
                         useSystemTheme = true;
                         break;
                     default:
-                        LOGGER.warn("unknown theme id {}", themeFile);
+                        log.warn("unknown theme id {}", themeFile);
                         laf = new FlatLightLaf();
                         break;
                 }
@@ -164,7 +172,7 @@ public class FlatLaf {
             }
         }
         if (useSystemTheme) {
-            LOGGER.info("System L&F is selected for theme {}", theme);
+            log.info("System L&F is selected for theme {}", theme);
             if (theme == FlatLafConfiguration.Theme.DARK) {
                 UIManager.put("laf.dark", true);
             }
@@ -187,22 +195,23 @@ public class FlatLaf {
     }
 
     private static com.formdev.flatlaf.FlatLaf loadLafFromThemeFile(String themeFile) {
-        LOGGER.info("Loading L&F theme from {}", themeFile);
+        log.info("Loading L&F theme from {}", themeFile);
         try (FileInputStream in = new FileInputStream(themeFile)) {
             return IntelliJTheme.createLaf(in);
         } catch (IOException e) {
-            LOGGER.error("Couldn't load IntelliJ theme from file {}", themeFile, e);
+            log.error("Couldn't load IntelliJ theme from file {}", themeFile, e);
             return null;
         }
     }
 
     private static void setLaf(com.formdev.flatlaf.FlatLaf lookAndFeel) {
-        LOGGER.info("Setting L&F {}", lookAndFeel);
+        log.info("Setting L&F {}", lookAndFeel);
         try {
             UIManager.setLookAndFeel(lookAndFeel);
         } catch (Exception e) {
-            LOGGER.error("Couldn't set L&F", e);
+            log.error("Couldn't set L&F", e);
         }
+        updateLafInWindows();
     }
 
     public static void setSystemLookAndFeel() {
@@ -210,16 +219,23 @@ public class FlatLaf {
         try {
             UIManager.setLookAndFeel(systemLaf);
         } catch (Exception e) {
-            LOGGER.warn("Couldn't set system L&F {}", systemLaf, e);
+            log.warn("Couldn't set system L&F {}", systemLaf, e);
         }
+        updateLafInWindows();
     }
 
     private static void setUIProperties(String uiPropertiesFile) {
         if (uiPropertiesFile == null) {
-            LOGGER.debug("No UI properties file, skipping");
+            log.debug("No UI properties file, skipping");
             return;
         }
-        LOGGER.info("Setting addon properties file: {}", uiPropertiesFile);
+        log.info("Setting addon properties file: {}", uiPropertiesFile);
         FlatLafAddon.PROPERTIES_FILE = uiPropertiesFile;
+    }
+
+    public static void updateLafInWindows() {
+        for (Window w : Window.getWindows()) {
+            SwingUtilities.updateComponentTreeUI(w);
+        }
     }
 }

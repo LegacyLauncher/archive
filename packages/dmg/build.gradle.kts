@@ -59,7 +59,7 @@ val prepareDmgBuild by tasks.registering(Sync::class) {
         }
 
         into("app") {
-            val jar by projects.bootstrap.dependencyProject.tasks.named("shadowJar", AbstractArchiveTask::class)
+            val jar by projects.bootstrap.dependencyProject.tasks.named("bootJar", AbstractArchiveTask::class)
             from(jar) {
                 rename { "bootstrap.jar" }
             }

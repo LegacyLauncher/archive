@@ -5,6 +5,7 @@ import org.freedesktop.dbus.interfaces.CallbackHandler;
 import org.freedesktop.dbus.types.UInt64;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,8 +23,7 @@ public class DBusResolverIPC implements ResolverIPC {
         return "bootstrap-backed dbus ipc";
     }
 
-    @Override
-    public CompletableFuture<List<InetAddress>> resolveAddress(String hostname) {
+    private CompletableFuture<Resolver1.ResolveHostnameResult> doResolve(String hostname) {
         CompletableFuture<Resolver1.ResolveHostnameResult> future = new CompletableFuture<>();
         try {
             connection.getConnection().callWithCallback(resolver, "ResolveHostname", new CallbackHandler<Resolver1.ResolveHostnameResult>() {
@@ -40,6 +40,22 @@ public class DBusResolverIPC implements ResolverIPC {
         } catch (DBusExecutionException e) {
             future.completeExceptionally(e);
         }
-        return future.thenApply(Resolver1.ResolveHostnameResult::toInetAddresses);
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<List<InetAddress>> resolveAddress(String hostname) {
+        return doResolve(hostname).thenApply(Resolver1.ResolveHostnameResult::toInetAddresses);
+    }
+
+    @Override
+    public String resolveCanonicalHostname(String host) throws UnknownHostException {
+        try {
+            return doResolve(host).thenApply(result -> result.canonicalName).get();
+        } catch (Exception e) {
+            UnknownHostException exception = new UnknownHostException("Cannot resolve canonical hostname for " + host);
+            exception.initCause(e);
+            throw exception;
+        }
     }
 }

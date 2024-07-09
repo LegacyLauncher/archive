@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.background;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.background.fx.FxAudioPlayer;
 import net.legacylauncher.ui.images.Images;
@@ -10,8 +11,6 @@ import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,9 +24,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public class OldAnimatedBackground extends JComponent implements ISwingBackground {
-    private static final Logger LOGGER = LogManager.getLogger(OldAnimatedBackground.class);
-
     private static final long ONE_TICK_IN_MS = 714;
     private static final short DAY_CYCLE_IN_TICKS = 1200;
 
@@ -62,7 +60,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
             try {
                 return FxAudioPlayer.create(U.makeURL("https://llaun.ch/repo/downloads/mice.mp3"));
             } catch (Throwable t) {
-                LOGGER.warn("LoopAudioPlayer is not available", t);
+                log.warn("LoopAudioPlayer is not available", t);
                 return null;
             }
         });
@@ -97,12 +95,12 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
 
     private void startTickWorker() {
         tickTimer.start();
-        LOGGER.debug("Tick worker started");
+        log.debug("Tick worker started");
     }
 
     private void stopTickWorker() {
         tickTimer.stop();
-        LOGGER.debug("Tick worker stopped");
+        log.debug("Tick worker stopped");
     }
 
     @Override
@@ -110,7 +108,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
         try {
             paint0(g0);
         } catch (RuntimeException rE) {
-            LOGGER.warn("", rE);
+            log.warn("", rE);
         }
     }
 

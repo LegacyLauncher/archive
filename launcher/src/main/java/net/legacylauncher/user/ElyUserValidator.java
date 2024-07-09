@@ -2,6 +2,7 @@ package net.legacylauncher.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.git.MapTokenResolver;
@@ -9,8 +10,6 @@ import net.legacylauncher.util.git.TokenReplacingReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,9 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Objects;
 
+@Slf4j
 class ElyUserValidator {
-    private static final Logger LOGGER = LogManager.getLogger(ElyUserValidator.class);
-
     static final String ACCOUNT_INFO = ElyAuth.API_BASE + "/account/v1/info";
     static final String TOKEN_REFRESH_REQUEST = "grant_type=refresh_token&client_id=" + ElyAuth.CLIENT_ID + "&" +
             "client_secret=" + ElyAuth.CLIENT_SECRET + "&refresh_token=${refresh_token}";
@@ -39,11 +37,11 @@ class ElyUserValidator {
         Objects.requireNonNull(user, "user");
         updateUser(user);
 
-        LOGGER.debug("user validator created for user: {}", user);
+        log.debug("user validator created for user: {}", user);
     }
 
     public void validateUser() throws IOException, InvalidCredentialsException {
-        LOGGER.debug("validating user...");
+        log.debug("validating user...");
 
         Response<ElyUserJsonizer.ElySerialize> rawUserResponse = getUserInfo();
         renewToken:
@@ -55,7 +53,7 @@ class ElyUserValidator {
             renewTokenBreak:
             {
                 if (rawUserResponse.error.isTokenExpired()) {
-                    LOGGER.debug("token has expired. renewing");
+                    log.debug("token has expired. renewing");
                     break renewTokenBreak;
                 }
 
@@ -64,14 +62,14 @@ class ElyUserValidator {
                         break renewToken; // we cannot refresh token, so run the game with token we has
                     }
 
-                    LOGGER.debug("token will expire in less than two hours. renewing");
+                    log.debug("token will expire in less than two hours. renewing");
                     break renewTokenBreak;
                 }
 
                 rawUserResponse = getUserInfo();
                 if (rawUserResponse.error != null) {
                     if (rawUserResponse.error.isTokenExpired() && refreshToken != null) {
-                        LOGGER.debug("token has expired. renewing");
+                        log.debug("token has expired. renewing");
                         break renewTokenBreak;
                     } else {
                         throw new InvalidCredentialsException(rawUserResponse.error.toString());
@@ -98,7 +96,7 @@ class ElyUserValidator {
     }
 
     private TokenRefreshResponse refreshAccessToken() throws IOException, InvalidCredentialsException {
-        LOGGER.debug("refreshing access token");
+        log.debug("refreshing access token");
 
         String request = TokenReplacingReader.resolveVars(TOKEN_REFRESH_REQUEST, new MapTokenResolver(new HashMap<String, String>() {
             {
@@ -167,7 +165,7 @@ class ElyUserValidator {
 
     private <T> T parse(InputStream input, Class<T> clazz) throws IOException {
         String response = IOUtils.toString(input, StandardCharsets.UTF_8);
-        LOGGER.debug("response: {}", response);
+        log.debug("response: {}", response);
         try {
             return gson.fromJson(response, clazz);
         } catch (RuntimeException rE) {

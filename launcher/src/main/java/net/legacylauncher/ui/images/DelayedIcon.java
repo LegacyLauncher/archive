@@ -1,20 +1,18 @@
 package net.legacylauncher.ui.images;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.notice.NoticeImage;
 import net.legacylauncher.ui.swing.extended.ExtendedLabel;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+@Slf4j
 public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
-    private static final Logger LOGGER = LogManager.getLogger(DelayedIcon.class);
-
     private Image icon;
     private Dimension size;
 
@@ -95,10 +93,10 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
             try {
                 icon = task.get();
             } catch (InterruptedException interruptedException) {
-                LOGGER.warn("Interrupted while waiting for icon");
+                log.warn("Interrupted while waiting for icon");
                 return;
             } catch (ExecutionException e) {
-                LOGGER.warn("Icon loading failed", e);
+                log.warn("Icon loading failed", e);
                 return;
             }
 
@@ -113,7 +111,7 @@ public class DelayedIcon extends ExtendedLabel implements ExtendedIcon {
             if (DelayedIcon.this.loader == this) {
                 SwingUtil.later(() -> iconLoaded(result));
             } else {
-                LOGGER.debug("Icon loader result discarded");
+                log.debug("Icon loader result discarded");
             }
         }
     }

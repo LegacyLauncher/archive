@@ -1,9 +1,8 @@
 package net.legacylauncher.managers;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.OS;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -11,10 +10,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
+@Slf4j
 class BaseVersionTable {
     private static final int ONE_GIG = 1024, TWO_GIGS = 2048, THREE_GIGS = 3072, FOUR_GIGS = 4096;
-
-    private static final Logger LOGGER = LogManager.getLogger(BaseVersionTable.class);
 
     private static final Lazy<BaseVersionTable> TABLE = Lazy.of(BaseVersionTable::new);
 
@@ -41,11 +39,11 @@ class BaseVersionTable {
                 }
             }
             if (match != null) {
-                LOGGER.debug("Found match for {} ({}): {}", version.getId(), releaseTime, match.family);
+                log.debug("Found match for {} ({}): {}", version.getId(), releaseTime, match.family);
                 return match;
             }
         }
-        LOGGER.warn("No match found for {} ({})", version.getId(), releaseTime);
+        log.warn("No match found for {} ({})", version.getId(), releaseTime);
         return null;
     }
 

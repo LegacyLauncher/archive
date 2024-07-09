@@ -1,16 +1,14 @@
 package net.legacylauncher.util.sysinfo;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+@Slf4j
 public class SequentialSystemInfoReporter implements SystemInfoReporter {
-    private static final Logger LOGGER = LogManager.getLogger(SequentialSystemInfoReporter.class);
-
     private final List<SystemInfoReporter> list;
 
     public SequentialSystemInfoReporter(SystemInfoReporter... list) {
@@ -32,7 +30,7 @@ public class SequentialSystemInfoReporter implements SystemInfoReporter {
         for (SystemInfoReporter printer : list) {
             r = r.handle((result, ex) -> {
                 if (ex != null) {
-                    LOGGER.error("Couldn't query system info", ex);
+                    log.error("Couldn't query system info", ex);
                     return printer.getReport();
                 } else if (result == null) {
                     // empty result

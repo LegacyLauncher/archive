@@ -9,7 +9,7 @@ class NotificationIcon extends ImageIcon {
     final String id;
 
     NotificationIcon(String id, Notification notification, int iconSize, ExtendedButton parent) {
-        super(Images.loadIcon(notification.image, iconSize), iconSize);
+        super(notification.image, iconSize);
         this.id = id;
         this.parent = parent;
     }

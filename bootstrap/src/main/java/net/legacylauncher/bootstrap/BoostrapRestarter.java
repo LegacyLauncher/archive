@@ -3,6 +3,7 @@ package net.legacylauncher.bootstrap;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.StringArray;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.util.OS;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -68,9 +69,8 @@ public interface BoostrapRestarter {
         return set;
     }
 
+    @Slf4j
     abstract class CmdlineProcessRestarter implements BoostrapRestarter {
-        private static final Logger LOGGER = LoggerFactory.getLogger(CmdlineProcessRestarter.class);
-
         private static Path getJavaExec() {
             Path binPath = Paths.get(System.getProperty("java.home")).resolve("bin");
             Path executable;
@@ -105,20 +105,19 @@ public interface BoostrapRestarter {
             }
             cmdline.addAll(appArgs);
 
-            LOGGER.info("Starting process: {}", cmdline);
+            log.info("Starting process: {}", cmdline);
             return start(workingDir, cmdline, debug);
         }
 
         protected abstract int start(Path workingDir, List<String> cmdline, boolean debug) throws IOException;
     }
 
+    @Slf4j
     class ChildProcessRestarter extends CmdlineProcessRestarter {
-        private static final Logger LOGGER = LoggerFactory.getLogger(ChildProcessRestarter.class);
-
         @Override
         protected int start(Path workingDir, List<String> cmdline, boolean debug) throws IOException {
             Process process = new ProcessBuilder().directory(workingDir.toFile()).command(cmdline).start();
-            LOGGER.info("Child process started");
+            log.info("Child process started");
 
             if (debug) {
                 try {

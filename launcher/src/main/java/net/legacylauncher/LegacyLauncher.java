@@ -2,6 +2,9 @@ package net.legacylauncher;
 
 import com.github.zafarkhaja.semver.Version;
 import joptsimple.OptionSet;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.configuration.*;
 import net.legacylauncher.downloader.Downloader;
 import net.legacylauncher.handlers.ExceptionHandler;
@@ -35,12 +38,10 @@ import net.legacylauncher.user.ElyUser;
 import net.legacylauncher.user.PlainUser;
 import net.legacylauncher.user.User;
 import net.legacylauncher.util.*;
-import net.legacylauncher.util.async.ExtendedThread;
+import net.legacylauncher.util.async.AsyncThread;
 import net.legacylauncher.util.logging.DelegateServiceProvider;
 import net.legacylauncher.util.shared.FlatLafConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.slf4j.SLF4JServiceProvider;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -55,52 +56,67 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static net.legacylauncher.managers.ConnectivityManager.*;
 
+@Slf4j
 public final class LegacyLauncher {
-    private static final Logger LOGGER = LogManager.getLogger(LegacyLauncher.class);
+    private static final String LAUNCHER_META = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+    private static final Version SEMVER = Version.parse(BuildConfig.VERSION);
+    @Getter
+    private static LegacyLauncher instance;
 
-    private final boolean debug, ready;
+    static {
+        System.setProperty("java.net.useSystemProxies", "true");
+    }
 
+    @Getter
+    private final boolean debug;
+    @Getter
+    private final boolean ready;
     private final BootstrapIPC bootstrapIPC;
-    private final ResolverIPC resolverIPC;
+    @Getter
     private final BootConfiguration bootConfig;
     private final boolean bootConfigEmpty;
-
-    private final Configuration config;
+    @Getter
+    private final Configuration settings;
+    @Getter
     private final LangConfiguration lang;
-
-    private SwingLogger loggerUI;
-
-    private final ComponentManager componentManager;
-    private final LibraryReplaceProcessor libraryReplaceManager;
+    @Getter
+    private final ComponentManager manager;
+    @Getter
+    private final LibraryReplaceProcessor libraryManager;
+    @Getter
     private final VersionManager versionManager;
+    @Getter
     private final ProfileManager profileManager;
+    @Getter
     private final JavaManager javaManager;
-    private final ConnectivityManager connectivityManager;
+    @Getter
     private final MemoryAllocationService memoryAllocationService;
+    @Getter
     private final GPUManager gpuManager;
+    @Getter
     private final PromotedStoreManager promotedStoreManager;
     private final PersonalNoticeManager personalNoticeManager;
-
+    @Getter
     private final Downloader downloader;
-
+    @Getter
     private final UIListeners uiListeners;
-
-    private LegacyLauncherFrame frame;
-
     private final long sessionStartTime;
-
     private final Object onReadySync = new Object();
+    private SwingLogger loggerUI;
+    @Getter
+    private LegacyLauncherFrame frame;
     private Queue<Runnable> onReadyJobs = new ConcurrentLinkedQueue<>();
+    private Entry elyByCheckEntry;
+    @Getter
+    private MinecraftLauncher minecraftLauncher;
 
-    private LegacyLauncher(BootstrapIPC bootstrapIPC, ResolverIPC resolver) throws Exception {
+    private LegacyLauncher(BootstrapIPC bootstrapIPC) throws Exception {
         Objects.requireNonNull(bootstrapIPC, "ipc");
         checkNotRunning();
         instance = this;
@@ -109,24 +125,23 @@ public final class LegacyLauncher {
         Time.start(timer);
 
         this.bootstrapIPC = bootstrapIPC;
-        this.resolverIPC = resolver;
 
         getMetadata("slf4jDelegateServiceProvider", DelegateServiceProvider.class).ifPresent(delegateServiceProvider ->
                 delegateServiceProvider.setProvider(new SLF4JServiceProvider())
         );
         String launcherConfiguration = bootstrapIPC.getLauncherConfiguration();
-        LOGGER.debug("Launcher configuration: {}", launcherConfiguration == null ? null : launcherConfiguration.length() + " code units");
+        log.debug("Launcher configuration: {}", launcherConfiguration == null ? null : launcherConfiguration.length() + " code units");
 
         OptionSet optionSet = ArgumentParser.parseArgs(bootstrapIPC.getLauncherArguments());
         if (optionSet.has("help")) {
-            LOGGER.info("\n{}", ArgumentParser.printHelp());
+            log.info("\n{}", ArgumentParser.printHelp());
             System.exit(0);
         }
         debug = optionSet.has("debug");
 
         bootstrapIPC.onBootProgress("Loading configuration", 0.1);
-        this.config = Configuration.createConfiguration(optionSet);
-        bootstrapIPC.setMetadata("client", config.getClient().toString());
+        this.settings = Configuration.createConfiguration(optionSet);
+        bootstrapIPC.setMetadata("client", settings.getClient().toString());
         migrateLafConfigOrSetLaf();
         this.lang = new LangConfiguration();
         initConfig();
@@ -141,7 +156,7 @@ public final class LegacyLauncher {
         try {
             bootConfig = BootConfiguration.parse(launcherConfiguration);
         } catch (RuntimeException rE) {
-            LOGGER.warn("Couldn't parse boot config: {}", launcherConfiguration, rE);
+            log.warn("Couldn't parse boot config: {}", launcherConfiguration, rE);
             bootConfig = new BootConfiguration();
             bootConfigEmpty = true;
         }
@@ -153,36 +168,36 @@ public final class LegacyLauncher {
 
         bootstrapIPC.onBootProgress("Handling run conditions", 0.17);
         handleWorkdir();
-        if (!config.isFirstRun())
+        if (!settings.isFirstRun())
             handleUpdate();
         handleNoticeHiding();
 
         bootstrapIPC.onBootProgress("Preparing managers", 0.2);
-        this.componentManager = new ComponentManager(this);
+        this.manager = new ComponentManager(this);
 
         bootstrapIPC.onBootProgress("Loading Library Replace manager", 0.22);
-        libraryReplaceManager = componentManager.loadComponent(LibraryReplaceProcessor.class);
-        libraryReplaceManager.setAllowElyEverywhere(bootConfig.isElyAllowed());
+        libraryManager = manager.loadComponent(LibraryReplaceProcessor.class);
+        libraryManager.setAllowElyEverywhere(bootConfig.isElyAllowed());
 
         bootstrapIPC.onBootProgress("Loading Version manager", 0.27);
-        versionManager = componentManager.loadComponent(VersionManager.class);
+        versionManager = manager.loadComponent(VersionManager.class);
 
         bootstrapIPC.onBootProgress("Loading Profile manager", 0.35);
-        profileManager = componentManager.loadComponent(ProfileManager.class);
+        profileManager = manager.loadComponent(ProfileManager.class);
 
         migrateFromOldJreConfig();
-        File jreRootDir = new File(config.get(JavaManagerConfig.class).getRootDirOrDefault());
+        File jreRootDir = new File(settings.get(JavaManagerConfig.class).getRootDirOrDefault());
         FileUtil.createFolder(jreRootDir);
         javaManager = new JavaManager(jreRootDir);
 
-        connectivityManager = initConnectivityManager();
+        ConnectivityManager connectivityManager = initConnectivityManager();
         connectivityManager.queueChecks();
 
         memoryAllocationService = new MemoryAllocationService();
         migrateMemoryValue();
 
         bootstrapIPC.onBootProgress("Loading manager listener", 0.36);
-        componentManager.loadComponent(ComponentManagerListenerHelper.class);
+        manager.loadComponent(ComponentManagerListenerHelper.class);
 
         bootstrapIPC.onBootProgress("Loading Downloader", 0.4);
         downloader = new Downloader();
@@ -203,8 +218,8 @@ public final class LegacyLauncher {
 
         bootstrapIPC.onBootSucceeded();
 
-        if (config.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
-            config.set("client", UUID.randomUUID());
+        if (settings.getClient().toString().equals("23a9e755-046a-4250-9e03-1920baa98aeb")) {
+            settings.set("client", UUID.randomUUID());
         }
 
         if (OS.LINUX.isCurrent()) {
@@ -215,7 +230,7 @@ public final class LegacyLauncher {
             gpuManager = GPUManager.Empty.INSTANCE;
         }
 
-        LOGGER.info("Loaded GPU manager: {}", gpuManager);
+        log.info("Loaded GPU manager: {}", gpuManager);
 
         promotedStoreManager = new PromotedStoreManager();
         personalNoticeManager = new PersonalNoticeManager();
@@ -233,11 +248,11 @@ public final class LegacyLauncher {
         if (packageModeOpt.filter(m -> m.equals("dmg")).isPresent()) {
             Optional<String> dmgAppPathOpt = getMetadata("dmg-app-path", String.class);
             if (!dmgAppPathOpt.isPresent()) {
-                LOGGER.warn("Package mode is dmg, but bootstrap hasn't announced dmg-app-path");
+                log.warn("Package mode is dmg, but bootstrap hasn't announced dmg-app-path");
             } else {
                 String dmgAppPath = dmgAppPathOpt.get();
                 if (dmgAppPath.startsWith("/Volumes/")) {
-                    LOGGER.info("Application seems to be running from a .dmg image");
+                    log.info("Application seems to be running from a .dmg image");
                     SwingUtilities.invokeLater(() -> frame.mp.defaultScene.notificationPanel.addNotification(
                             "macos-copy-icon",
                             new Notification(
@@ -258,12 +273,12 @@ public final class LegacyLauncher {
                 try {
                     version = Version.parse(getBootstrapVersion());
                 } catch (RuntimeException e) {
-                    LOGGER.warn("Couldn't parse bootstrap version: {}", getBootstrapVersion(), e);
+                    log.warn("Couldn't parse bootstrap version: {}", getBootstrapVersion(), e);
                     return;
                 }
                 if (version.compareTo(Version.of(1, 5, 13)) == 0) {
-                    LOGGER.info("Detected deprecated bootstrap version: {}", version);
-                    LOGGER.info("Collecting environment information for an upcoming upgrade");
+                    log.info("Detected deprecated bootstrap version: {}", version);
+                    log.info("Collecting environment information for an upcoming upgrade");
                 }
             }
         });
@@ -278,18 +293,18 @@ public final class LegacyLauncher {
                 switch (selectedUsers.size()) {
                     case 0:
                         if (!forceSelectedUserType.isPresent() || forceSelectedUserType.get().equals("plain")) {
-                            LOGGER.info("Force selected user {} doesn't exist, but we'll create one for you",
+                            log.info("Force selected user {} doesn't exist, but we'll create one for you",
                                     forceSelectedUser);
-                            selectedUser = new PlainUser(forceSelectedUser, UUID.randomUUID());
+                            selectedUser = new PlainUser(forceSelectedUser, UUID.randomUUID(), true);
                             profileManager.getAccountManager().getUserSet().add(selectedUser);
                         } else {
-                            LOGGER.warn("Force selected user {} (of type {}) doesn't exist",
+                            log.warn("Force selected user {} (of type {}) doesn't exist",
                                     forceSelectedUser, forceSelectedUserType.get());
                             return;
                         }
                         break;
                     case 1:
-                        LOGGER.info("Force selecting user {} for you", forceSelectedUser);
+                        log.info("Force selecting user {} for you", forceSelectedUser);
                         selectedUser = selectedUsers.get(0);
                         break;
                     default:
@@ -299,27 +314,27 @@ public final class LegacyLauncher {
                                     .collect(Collectors.toList());
                             switch (filteredUsers.size()) {
                                 case 0:
-                                    LOGGER.warn("Found users with name {}, but none was of the type {}. A typo?",
+                                    log.warn("Found users with name {}, but none was of the type {}. A typo?",
                                             forceSelectedUser, forceSelectedUserType.get());
                                     return;
                                 case 1:
-                                    LOGGER.info("Selecting user {} of type {} for you",
+                                    log.info("Selecting user {} of type {} for you",
                                             forceSelectedUser, forceSelectedUserType.get());
                                     selectedUser = filteredUsers.get(0);
                                     break;
                                 default:
-                                    LOGGER.warn("Something is very wrong with your account list. Take a look: {}",
+                                    log.warn("Something is very wrong with your account list. Take a look: {}",
                                             filteredUsers);
                                     return;
                             }
                         } else {
-                            LOGGER.warn("More than one user with name {} was found. Consider specifying a type with --usertype",
+                            log.warn("More than one user with name {} was found. Consider specifying a type with --usertype",
                                     forceSelectedUser);
                             selectedUser = selectedUsers.get(0);
                         }
                         break;
                 }
-                LOGGER.debug("Selecting user: {}", selectedUser);
+                log.debug("Selecting user: {}", selectedUser);
                 profileManager.getAccountManager().getUserSet().select(selectedUser);
             }
         });
@@ -333,7 +348,7 @@ public final class LegacyLauncher {
                         .resolve("lib.jar");
                 found = Files.isRegularFile(linuxFractureiser);
                 if (found) {
-                    LOGGER.info("fractureiser detected in {}", linuxFractureiser);
+                    log.info("fractureiser detected in {}", linuxFractureiser);
                 }
             } else if (OS.WINDOWS.isCurrent()) {
                 String appData = System.getenv("APPDATA");
@@ -355,11 +370,11 @@ public final class LegacyLauncher {
                         Files.isRegularFile(edgePath.resolve(p))
                 );
                 if (edge) {
-                    LOGGER.warn("fractureiser trace detected in the \"Microsoft Edge\" dir");
+                    log.warn("fractureiser trace detected in the \"Microsoft Edge\" dir");
                 }
                 startup = new File(appData + "\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\run.bat").isFile();
                 if (startup) {
-                    LOGGER.warn("Possible fractureiser trace detected in the Startup directory");
+                    log.warn("Possible fractureiser trace detected in the Startup directory");
                 }
                 found = edge || startup;
             } else {
@@ -372,11 +387,11 @@ public final class LegacyLauncher {
         });
 
         personalNoticeManager.queueRequest(
-                config.getClient(),
+                settings.getClient(),
                 getVersion().toString(),
                 bootstrapIPC.getBootstrapRelease().name,
                 bootstrapIPC.getBootstrapRelease().version,
-                config.getLocale()
+                settings.getLocale()
         );
         executeWhenReady(() -> personalNoticeManager.getRequestOnce().thenAcceptAsync(payload -> {
             if (payload.getNotices().isEmpty()) {
@@ -391,9 +406,97 @@ public final class LegacyLauncher {
         executeOnReadyJobs();
     }
 
-    private static final String PONG_RESPONSE = "Pong!\n";
-    private static final String LAUNCHERMETA = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
-    private Entry elyByCheckEntry;
+    public static void kill() {
+        LegacyLauncher legacyLauncher = LegacyLauncher.getInstance();
+        if (legacyLauncher == null) {
+            System.exit(0);
+        }
+        try {
+            legacyLauncher.getSettings().save();
+        } catch (Exception e) {
+            Alert.showError("Configuration error", "Could not save settings – this is not good. Please contact support if you want to solve this.", e);
+        }
+        log.info("Goodbye!");
+        // "close" main window
+        legacyLauncher.frame.setVisible(false);
+
+        Collection<AutoCloseable> closeables = new ArrayList<>();
+        closeables.add(() -> {
+            // report and wait 5 seconds
+            Stats.reportSessionDuration(legacyLauncher.sessionStartTime).get(5, TimeUnit.SECONDS);
+        });
+        closeables.add(legacyLauncher.gpuManager);
+        closeables.add(Portals.getPortal());
+        closeables.add(legacyLauncher.bootstrapIPC);
+
+        Exception cause = null;
+
+        for (AutoCloseable closeable : closeables) {
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            } catch (Exception e) {
+                if (cause == null) {
+                    cause = e;
+                } else {
+                    cause.addSuppressed(e);
+                }
+            }
+        }
+
+        if (cause != null) {
+            sneakyThrows(cause);
+        }
+    }
+
+    @SneakyThrows
+    private static void sneakyThrows(Exception cause) {
+        throw cause;
+    }
+
+    public static void launch(BootstrapIPC ipc, ResolverIPC resolver) {
+        checkNotRunning();
+
+        setupErrorHandler();
+
+        log.info("Starting Legacy Launcher {} {}", BuildConfig.FULL_BRAND, getVersion().toString());
+        BootstrapIPC.BootstrapRelease bootstrapRelease = ipc.getBootstrapRelease();
+        log.info("... using {} {}", bootstrapRelease.name, bootstrapRelease.version);
+        log.info("... with dns resolver {}", resolver.describe());
+        EHttpClient.setGlobalResolver(resolver);
+
+        log.info("Machine info: {}", OS.getSummary());
+        log.info("Java version: {}", OS.JAVA_VERSION);
+        log.info("Startup time: {}", Instant.now());
+        log.info("Directory: {}", new File(""));
+        log.info("Executable location: {}", FileUtil.getRunningJar());
+        log.info("---");
+
+        ipc.onBootStarted();
+
+        try {
+            new LegacyLauncher(ipc);
+        } catch (Throwable t) {
+            log.error("Error launching Legacy Launcher", t);
+            ipc.onBootError(t);
+        }
+    }
+
+    public static Version getVersion() {
+        return SEMVER;
+    }
+
+    private static void checkNotRunning() {
+        if (instance != null) {
+            throw new IllegalStateException("already running");
+        }
+    }
+
+    private static void setupErrorHandler() {
+        ExceptionHandler handler = ExceptionHandler.getInstance();
+        Thread.setDefaultUncaughtExceptionHandler(handler);
+        Thread.currentThread().setUncaughtExceptionHandler(handler);
+    }
 
     private ConnectivityManager initConnectivityManager() {
         List<ConnectivityManager.Entry> entries = new ArrayList<>();
@@ -404,7 +507,7 @@ public final class LegacyLauncher {
         }
         entries.add(checkByValidJson(
                 "official_repo",
-                LAUNCHERMETA
+                LAUNCHER_META
         ).withPriority(1000));
         elyByCheckEntry = checkByValidJson(
                 "account.ely.by",
@@ -419,45 +522,45 @@ public final class LegacyLauncher {
         // entries with negative priority are pretty much ignored, and only shown when there are other
         // entries that are not available
         entries.add(
-                checkRepoByValidJson("official_repo_proxy", Repository.PROXIFIED_REPO, LAUNCHERMETA)
+                checkRepoByValidJson("official_repo_proxy", Repository.PROXIFIED_REPO, LAUNCHER_META)
                         .withPriority(-1000)
         );
         return new ConnectivityManager(this, entries);
     }
 
     private void migrateFromOldJreConfig() {
-        String cmd = config.get("minecraft.cmd");
+        String cmd = settings.get("minecraft.cmd");
         if (cmd == null) {
             return;
         }
 
-        LOGGER.info("Migrating from old JRE configuration");
-        LOGGER.info("minecraft.cmd -> {} = {}", JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
-        LOGGER.info("{} = {}", JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
+        log.info("Migrating from old JRE configuration");
+        log.info("minecraft.cmd -> {} = {}", JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
+        log.info("{} = {}", JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
 
-        config.set("minecraft.cmd", null);
-        config.set(JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
-        config.set(JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
+        settings.set("minecraft.cmd", null);
+        settings.set(JavaManagerConfig.PATH_JRE_TYPE, JavaManagerConfig.Custom.TYPE);
+        settings.set(JavaManagerConfig.Custom.PATH_CUSTOM_PATH, cmd);
     }
 
     private void migrateLafConfigOrSetLaf() {
         boolean setSystemLaf;
-        if (config.containsKey("gui.systemlookandfeel")) {
+        if (settings.containsKey("gui.systemlookandfeel")) {
             // pre-FlatLaf configuration
-            setSystemLaf = config.getBoolean("gui.systemlookandfeel");
-            LOGGER.info("FlatLaf is not enabled because \"gui.systemlookandfeel\" is set to \"" + setSystemLaf + "\"");
+            setSystemLaf = settings.getBoolean("gui.systemlookandfeel");
+            log.info("FlatLaf is not enabled because \"gui.systemlookandfeel\" is set to \"" + setSystemLaf + "\"");
             if (FlatLaf.isSupported()) {
                 // already using system L&F
-                config.set(FlatLafConfiguration.KEY_STATE, setSystemLaf ?
+                settings.set(FlatLafConfiguration.KEY_STATE, setSystemLaf ?
                         FlatLafConfiguration.State.SYSTEM.toString() : FlatLafConfiguration.State.OFF.toString(), false);
-                config.set("gui.systemlookandfeel", null);
+                settings.set("gui.systemlookandfeel", null);
                 setSystemLaf = false;
             }
         } else {
             // bootstrap didn't set L&F
             setSystemLaf = !isMetadataEnabled("set_laf");
             if (isMetadataEnabled("laf_launcher_aware") && FlatLaf.isSupported()) {
-                Optional<FlatLafConfiguration> flatLafConfiguration = config.getFlatLafConfiguration();
+                Optional<FlatLafConfiguration> flatLafConfiguration = settings.getFlatLafConfiguration();
                 if (flatLafConfiguration.isPresent()) {
                     FlatLaf.initialize(flatLafConfiguration.get());
                     setSystemLaf = false;
@@ -470,18 +573,18 @@ public final class LegacyLauncher {
     }
 
     private void migrateMemoryValue() {
-        if (config.get("minecraft.memory") == null) {
+        if (settings.get("minecraft.memory") == null) {
             return;
         }
-        int oldValue = config.getInteger("minecraft.memory");
+        int oldValue = settings.getInteger("minecraft.memory");
         if (oldValue == memoryAllocationService.getFallbackHint().getActual()) {
-            LOGGER.info("Migrating to minecraft.xmx = \"auto\" because minecraft.memory = PREFERRED_MEMORY ({})",
+            log.info("Migrating to minecraft.xmx = \"auto\" because minecraft.memory = PREFERRED_MEMORY ({})",
                     oldValue);
-            config.set("minecraft.xmx", "auto", false);
+            settings.set("minecraft.xmx", "auto", false);
         } else {
-            LOGGER.info("Migrating to minecraft.xmx = minecraft.memory = {}", oldValue);
+            log.info("Migrating to minecraft.xmx = minecraft.memory = {}", oldValue);
         }
-        config.set("minecraft.memory", null, false);
+        settings.set("minecraft.memory", null, false);
     }
 
     private void executeOnReadyJobs() {
@@ -492,73 +595,15 @@ public final class LegacyLauncher {
                 try {
                     job.run();
                 } catch (Exception e) {
-                    LOGGER.error("OnReadyJob failed: {}", job, e);
+                    log.error("OnReadyJob failed: {}", job, e);
                 }
             }
             onReadyJobs = null;
         }
     }
 
-    public BootConfiguration getBootConfig() {
-        return bootConfig;
-    }
-
-    public boolean isDebug() {
-        return debug;
-    }
-
-    public boolean isReady() {
-        return ready;
-    }
-
-    public Configuration getSettings() {
-        return config;
-    }
-
-    public LangConfiguration getLang() {
-        return lang;
-    }
-
-    public ComponentManager getManager() {
-        return componentManager;
-    }
-
-    public LibraryReplaceProcessor getLibraryManager() {
-        return libraryReplaceManager;
-    }
-
-    public VersionManager getVersionManager() {
-        return versionManager;
-    }
-
-    public ProfileManager getProfileManager() {
-        return profileManager;
-    }
-
-    public JavaManager getJavaManager() {
-        return javaManager;
-    }
-
-    public Downloader getDownloader() {
-        return downloader;
-    }
-
-    public UIListeners getUIListeners() {
-        return uiListeners;
-    }
-
-    public LegacyLauncherFrame getFrame() {
-        return frame;
-    }
-
-    private MinecraftLauncher launcher;
-
-    public MinecraftLauncher getMinecraftLauncher() {
-        return launcher;
-    }
-
     public boolean isMinecraftLauncherWorking() {
-        return launcher != null && launcher.isWorking();
+        return minecraftLauncher != null && minecraftLauncher.isWorking();
     }
 
     public MinecraftLauncher newMinecraftLauncher(String versionName, Server server, int serverId, boolean forceUpdate) {
@@ -566,14 +611,14 @@ public final class LegacyLauncher {
             throw new IllegalStateException("launcher is working");
         }
 
-        launcher = new MinecraftLauncher(this, forceUpdate);
+        minecraftLauncher = new MinecraftLauncher(this, forceUpdate);
 
         for (MinecraftListener l : uiListeners.getMinecraftListeners()) {
-            launcher.addListener(l);
+            minecraftLauncher.addListener(l);
         }
 
-        launcher.setVersion(versionName);
-        launcher.setServer(server, serverId);
+        minecraftLauncher.setVersion(versionName);
+        minecraftLauncher.setServer(server, serverId);
 
         List<PromotedServer> promotedServerList = new ArrayList<>();
         if (bootConfig.getPromotedServers().containsKey(getSettings().getLocale().toString())) {
@@ -582,55 +627,15 @@ public final class LegacyLauncher {
             promotedServerList.addAll(bootConfig.getPromotedServers().get("global"));
         }
 
-        launcher.setPromotedServers(promotedServerList);
+        minecraftLauncher.setPromotedServers(promotedServerList);
 
-        return launcher;
-    }
-
-    public static void kill() {
-        LegacyLauncher legacyLauncher = LegacyLauncher.getInstance();
-        if (legacyLauncher != null) {
-            try {
-                legacyLauncher.getSettings().save();
-            } catch (Exception e) {
-                Alert.showError("Configuration error", "Could not save settings – this is not good. Please contact support if you want to solve this.", e);
-            }
-            LOGGER.info("Goodbye!");
-            // "close" main window
-            legacyLauncher.frame.setVisible(false);
-
-            // yes, that abomination of try-finally is required to properly handle everything
-            try {
-                // report and wait 5 seconds
-                Stats.reportSessionDuration(legacyLauncher.sessionStartTime).get(5, TimeUnit.SECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException ignored) {
-            } finally {
-                try {
-                    legacyLauncher.gpuManager.close();
-                } catch (IOException ignored) {
-                }
-                try {
-                    Portals.getPortal().close();
-                } catch (IOException ignored) {
-                }
-                try {
-                    legacyLauncher.bootstrapIPC.requestClose();
-                } finally {
-                    try {
-                        legacyLauncher.bootstrapIPC.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-        } else {
-            System.exit(0);
-        }
+        return minecraftLauncher;
     }
 
     private void initConfig() {
-        LegacyLauncherFrame.setFontSize(config.getFontSize());
-        if (!config.getBoolean("connection.ssl")) {
-            LOGGER.warn("Disabling SSL certificate/hostname validation. IT IS NOT SECURE.");
+        LegacyLauncherFrame.setFontSize(settings.getFontSize());
+        if (!settings.getBoolean("connection.ssl")) {
+            log.warn("Disabling SSL certificate/hostname validation. IT IS NOT SECURE.");
             try {
                 SSLContext context = SSLContext.getInstance("SSL");
                 context.init(null, new X509TrustManager[]{
@@ -651,7 +656,7 @@ public final class LegacyLauncher {
                 }, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
             } catch (Exception e) {
-                LOGGER.error("Could not init SSLContext", e);
+                log.error("Could not init SSLContext", e);
             }
             HttpsURLConnection.setDefaultHostnameVerifier((s, sslSession) -> true);
         }
@@ -661,18 +666,18 @@ public final class LegacyLauncher {
     public void reloadLoggerUI() {
         SwingLoggerAppender swingLoggerAppender = Log4j2ContextHelper.getSwingLoggerAppender();
         LoggerInterface li = swingLoggerAppender.getLoggerInterface();
-        boolean enableLogger = config.getLoggerType() == Configuration.LoggerType.GLOBAL;
+        boolean enableLogger = settings.getLoggerType() == Configuration.LoggerType.GLOBAL;
         if (loggerUI == null) {
             if (!enableLogger) {
                 return;
             }
-            loggerUI = new SwingLogger(config);
+            loggerUI = new SwingLogger(settings);
             if (li instanceof LoggerBuffer) {
                 loggerUI.drainFrom((LoggerBuffer) li);
             }
             swingLoggerAppender.setLoggerInterface(loggerUI);
             initLoggerUI();
-            LOGGER.debug("Logger initialized");
+            log.debug("Logger initialized");
         } else {
             if (enableLogger) {
                 return;
@@ -680,7 +685,7 @@ public final class LegacyLauncher {
             swingLoggerAppender.setLoggerInterface(new LoggerBuffer());
             loggerUI.dispose();
             loggerUI = null;
-            LOGGER.debug("Logger disposed");
+            log.debug("Logger disposed");
         }
     }
 
@@ -710,53 +715,23 @@ public final class LegacyLauncher {
 
     private void handleNoticeHiding() {
         if (!isNoticeDisablingAllowed()) {
-            config.set("notice.enabled", true);
+            settings.set("notice.enabled", true);
         }
     }
 
     private void handleWorkdir() {
-        if (config.isFirstRun()) {
+        if (settings.isFirstRun()) {
             handleFirstRun();
         } else {
-            config.set("minecraft.gamedir", MinecraftUtil.getWorkingDirectory(), false);
+            settings.set("minecraft.gamedir", MinecraftUtil.getWorkingDirectory(), false);
         }
-    }
-
-    public static void launch(BootstrapIPC ipc, ResolverIPC resolver) {
-        checkNotRunning();
-
-        setupErrorHandler();
-
-        LOGGER.info("Starting Legacy Launcher {} {}", getBrand(), getVersion().toString());
-        BootstrapIPC.BootstrapRelease bootstrapRelease = ipc.getBootstrapRelease();
-        LOGGER.info("... using {} {}", bootstrapRelease.name, bootstrapRelease.version);
-        LOGGER.info("... with dns resolver {}", resolver.describe());
-        EHttpClient.setGlobalResolver(resolver);
-
-        LOGGER.info("Machine info: {}", OS.getSummary());
-        LOGGER.info("Java version: {}", OS.JAVA_VERSION);
-        LOGGER.info("Startup time: {}", Instant.now());
-        LOGGER.info("Directory: {}", new File(""));
-        LOGGER.info("Executable location: {}", FileUtil.getRunningJar());
-        LOGGER.info("---");
-
-        ipc.onBootStarted();
-
-//        while (true) {
-        try {
-            new LegacyLauncher(ipc, resolver);
-        } catch (Throwable t) {
-            LOGGER.fatal("Error launching Legacy Launcher", t);
-            ipc.onBootError(t);
-        }
-//        }
     }
 
     private void handleFirstRun() {
         new FirstRunNotice().showAndWait();
 
         File currentDir = MinecraftUtil.getWorkingDirectory(false);
-        LOGGER.info("Current dir: {}", currentDir);
+        log.info("Current dir: {}", currentDir);
         if (NewFolderFrame.shouldWeMoveFrom(currentDir)) {
             currentDir = NewFolderFrame.selectDestination();
             if (currentDir != null) {
@@ -766,11 +741,11 @@ public final class LegacyLauncher {
     }
 
     public boolean isNoticeDisablingAllowed() {
-        return bootConfig.isAllowNoticeDisable(config.getClient());
+        return bootConfig.isAllowNoticeDisable(settings.getClient());
     }
 
     public boolean isNoticeDisabled() {
-        return isNoticeDisablingAllowed() && !config.getBoolean("notice.enabled");
+        return isNoticeDisablingAllowed() && !settings.getBoolean("notice.enabled");
     }
 
     private void initAndRefreshUI() {
@@ -785,17 +760,10 @@ public final class LegacyLauncher {
 
         profileManager.refresh();
 
-        new ExtendedThread(() -> {
-            Stats.submitNoticeStatus(config.getBoolean("notice.enabled"));
-            while (!Thread.interrupted()) {
-                try {
-                    TimeUnit.MINUTES.sleep(30);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                Stats.beacon();
-            }
-        }, "Beacon").start();
+        AsyncThread.DELAYER.scheduleWithFixedDelay(
+                () -> AsyncThread.execute(Stats::beacon),
+                30, 30, TimeUnit.MINUTES
+        );
     }
 
     private void preloadUI() {
@@ -803,9 +771,9 @@ public final class LegacyLauncher {
     }
 
     public void reloadLocale() {
-        Locale locale = config.getLocale();
+        Locale locale = settings.getLocale();
 
-        LOGGER.info("Selected locale: {}", locale);
+        log.info("Selected locale: {}", locale);
         lang.setLocale(locale);
 
         SwingUtil.wait(() -> {
@@ -832,13 +800,13 @@ public final class LegacyLauncher {
         }
     }
 
-    public <V> Optional<V> getMetadata(String key, Class<V> metadataClass) {
+    public <V> Optional<V> getMetadata(String key, Class<? extends V> metadataClass) {
         Object o = bootstrapIPC.getMetadata(key);
         if (o == null) {
             return Optional.empty();
         }
         if (!metadataClass.isInstance(o)) {
-            LOGGER.warn("Metadata type mismatch! Key: {}, expected: {}, got: {}", key, metadataClass, o.getClass());
+            log.warn("Metadata type mismatch! Key: {}, expected: {}, got: {}", key, metadataClass, o.getClass());
             return Optional.empty();
         }
         return Optional.of(metadataClass.cast(o));
@@ -848,75 +816,8 @@ public final class LegacyLauncher {
         return Objects.equals(Boolean.TRUE, bootstrapIPC.getMetadata(key));
     }
 
-    private static LegacyLauncher instance;
-    private static final Version SEMVER;
-
-    public static LegacyLauncher getInstance() {
-        return instance;
-    }
-
-    public static Version getVersion() {
-        return SEMVER;
-    }
-
     public String getBootstrapVersion() {
         return bootstrapIPC.getBootstrapRelease().version;
-    }
-
-    public MemoryAllocationService getMemoryAllocationService() {
-        return memoryAllocationService;
-    }
-
-    static {
-        SEMVER = Objects.requireNonNull(Version.parse(BuildConfig.VERSION), "semver");
-    }
-
-    public static String getBrand() {
-        return Static.getBrand();
-    }
-
-    public static String getShortBrand() {
-        return Static.getShortBrand();
-    }
-
-    public static String getFolder() {
-        return Static.getFolder();
-    }
-
-    public static String getSettingsFile() {
-        return Static.getSettings();
-    }
-
-    public static List<String> getOfficialRepo() {
-        return Static.getOfficialRepo();
-    }
-
-    public static List<String> getExtraRepo() {
-        return Static.getExtraRepo();
-    }
-
-    public static List<String> getLibraryRepo() {
-        return Static.getLibraryRepo();
-    }
-
-    public static List<String> getAssetsRepo() {
-        return Static.getAssetsRepo();
-    }
-
-    public static List<String> getServerList() {
-        return Static.getServerList();
-    }
-
-    public static String getSupportEmail() {
-        return "support@tln4.ru";
-    }
-
-    public GPUManager getGpuManager() {
-        return gpuManager;
-    }
-
-    public PromotedStoreManager getPromotedStoreManager() {
-        return promotedStoreManager;
     }
 
     public Optional<String> getPackageMode() {
@@ -933,21 +834,5 @@ public final class LegacyLauncher {
         if (actualNotes != null) {
             new UpdateFrame(U.getMinorVersion(getVersion()), actualNotes.body).showAndWait();
         }
-    }
-
-    private static void checkNotRunning() {
-        if (instance != null) {
-            throw new IllegalStateException("already running");
-        }
-    }
-
-    private static void setupErrorHandler() {
-        ExceptionHandler handler = ExceptionHandler.getInstance();
-        Thread.setDefaultUncaughtExceptionHandler(handler);
-        Thread.currentThread().setUncaughtExceptionHandler(handler);
-    }
-
-    static {
-        System.setProperty("java.net.useSystemProxies", "true");
     }
 }

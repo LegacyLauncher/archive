@@ -1,6 +1,7 @@
 package net.legacylauncher.ui.support;
 
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.configuration.BuildConfig;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.ui.frames.VActionFrame;
 import net.legacylauncher.ui.images.Images;
@@ -21,7 +22,7 @@ public class ContactUsFrame extends VActionFrame {
             cisOnly("vk", "https://llaun.ch/support/vk"),
             cisOnly("discord", "https://llaun.ch/support/discord/ru"),
             notCis("discord", "https://llaun.ch/support/discord/intl"),
-            any("mail", "envelope-open", "mailto:" + LegacyLauncher.getSupportEmail())
+            any("mail", "envelope-open", "mailto:" + BuildConfig.SUPPORT_EMAIL)
     );
 
     public ContactUsFrame() {

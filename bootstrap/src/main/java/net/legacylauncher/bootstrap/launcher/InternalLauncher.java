@@ -1,6 +1,7 @@
 package net.legacylauncher.bootstrap.launcher;
 
 import com.google.gson.JsonSyntaxException;
+import net.legacylauncher.bootstrap.meta.LocalLauncherMeta;
 import net.legacylauncher.bootstrap.meta.OldLauncherMeta;
 import net.legacylauncher.bootstrap.task.Task;
 import org.apache.commons.io.IOUtils;
@@ -46,12 +47,12 @@ public class InternalLauncher extends LocalCastingLauncher {
     }
 
     @Override
-    public InternalLauncherMeta getMeta() throws IOException, JsonSyntaxException {
+    public LocalLauncherMeta getMeta() throws IOException, JsonSyntaxException {
         try {
-            return LocalLauncher.findMetaEntry(getTempFile(), LocalLauncher.ENTRY_NAME, InternalLauncherMeta.class);
+            return LocalLauncher.findMetaEntry(getTempFile(), LocalLauncher.ENTRY_NAME, LocalLauncherMeta.class);
         } catch (IOException e) {
             try {
-                return LocalLauncher.findMetaEntry(getTempFile(), LocalLauncher.OLD_ENTRY_NAME, OldLauncherMeta.class).toInternalMeta();
+                return LocalLauncher.findMetaEntry(getTempFile(), LocalLauncher.OLD_ENTRY_NAME, OldLauncherMeta.class).toModernMeta();
             } catch (IOException e1) {
                 e1.addSuppressed(e);
                 throw e1;

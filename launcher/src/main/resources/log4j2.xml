@@ -43,8 +43,9 @@
     </Appenders>
     <Loggers>
         <Logger name="net.legacylauncher" level="debug"/>
-        <Logger name="net.legacylauncher.ipc" level="info"/>
         <Logger name="net.legacylauncher.dbus.transport.junixsocket" level="info"/>
+        <Logger name="net.legacylauncher.ipc" level="info"/>
+        <Logger name="net.legacylauncher.portals.dbus" level="info"/>
         <Logger name="net.legacylauncher.user.minecraft" level="trace"/>
         <Logger name="net.minecraft" level="debug"/>
         <Root level="info">

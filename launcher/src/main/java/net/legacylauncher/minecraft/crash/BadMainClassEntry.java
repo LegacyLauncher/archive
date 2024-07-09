@@ -1,13 +1,11 @@
 package net.legacylauncher.minecraft.crash;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.regex.Pattern;
 
+@Slf4j
 public class BadMainClassEntry extends PatternEntry {
-    private static final Logger LOGGER = LogManager.getLogger(BadMainClassEntry.class);
-
     public BadMainClassEntry(CrashManager manager) {
         super(manager, "bad-mainclass", Pattern.compile("^Error: Could not find or load main class (.+)$"));
         setExitCode(1);
@@ -20,7 +18,7 @@ public class BadMainClassEntry extends PatternEntry {
         }
 
         String requestedMainClass = getMatch().group(1);
-        LOGGER.info("Found bad main class: {}", requestedMainClass);
+        log.info("Found bad main class: {}", requestedMainClass);
 
         if (getManager().getLauncher() != null) {
             String jvmArgs = getManager().getLauncher().getConfiguration().get("minecraft.javaargs");

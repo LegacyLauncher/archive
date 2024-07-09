@@ -2,7 +2,7 @@ package net.legacylauncher.user.minecraft.strategy.oareq.lcserv;
 
 import net.legacylauncher.user.minecraft.oauth.OAuthApplication;
 import net.legacylauncher.user.minecraft.strategy.oareq.AbstractOAuthUrlProducer;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.net.URIBuilder;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;

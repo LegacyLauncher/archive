@@ -1,12 +1,11 @@
 package net.legacylauncher.ui.editor;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.explorer.FileExplorer;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.swing.DocumentChangeListener;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
@@ -16,9 +15,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.function.Consumer;
 
+@Slf4j
 public class EditorFileField extends BorderPanel implements EditorField {
-    private static final Logger LOGGER = LogManager.getLogger(EditorFileField.class);
-
     private static final String DEFAULT_BUTTON_PATH = "explorer.browse";
 
     protected final EditorTextField textField;
@@ -53,7 +51,7 @@ public class EditorFileField extends BorderPanel implements EditorField {
                             path = selected.getCanonicalPath();
                         } catch (Exception ex) {
                             path = selected.getAbsolutePath();
-                            LOGGER.warn("Couldn't get canonical path. Will use absolute path: {} -> {}",
+                            log.warn("Couldn't get canonical path. Will use absolute path: {} -> {}",
                                     selected, path, ex);
                         }
                     }

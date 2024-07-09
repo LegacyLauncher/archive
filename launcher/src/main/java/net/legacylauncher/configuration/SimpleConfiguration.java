@@ -1,9 +1,8 @@
 package net.legacylauncher.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.StringUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.URL;
@@ -13,9 +12,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class SimpleConfiguration implements AbstractConfiguration {
-    private final static Logger LOGGER = LogManager.getLogger();
-
     protected final Properties properties;
     protected Object input;
     protected String comments;
@@ -36,7 +34,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
         try {
             loadFromFile(properties, file);
         } catch (Exception var3) {
-            LOGGER.warn("Error loading config from file: {}", file, var3);
+            log.warn("Error loading config from file: {}", file, var3);
         }
 
         input = file;
@@ -228,7 +226,7 @@ public class SimpleConfiguration implements AbstractConfiguration {
         try {
             save();
         } catch (IOException e) {
-            LOGGER.warn("Couldn't save configuration to {}", input, e);
+            log.warn("Couldn't save configuration to {}", input, e);
         }
     }
 

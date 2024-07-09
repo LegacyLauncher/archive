@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.login;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.managers.ProfileManager;
 import net.legacylauncher.managers.ProfileManagerListener;
@@ -18,15 +19,12 @@ import net.legacylauncher.ui.swing.extended.ExtendedComboBox;
 import net.legacylauncher.user.InvalidCredentialsException;
 import net.legacylauncher.user.User;
 import net.minecraft.launcher.versions.ReleaseType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Collection;
 
+@Slf4j
 public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> implements Blockable, LoginForm.LoginProcessListener, ProfileManagerListener, LocalizableComponent {
-    private static final Logger LOGGER = LogManager.getLogger(AccountComboBox.class);
-
     private static final long serialVersionUID = 6618039863712810645L;
     private static final Account<? extends User> EMPTY = AccountCellRenderer.EMPTY;
     private static final Account<? extends User> MANAGE = AccountCellRenderer.MANAGE;
@@ -72,7 +70,7 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
                     try {
                         LegacyLauncher.getInstance().getProfileManager().saveProfiles();
                     } catch (IOException e1) {
-                        LOGGER.warn("Could not save profiles", e1);
+                        log.warn("Could not save profiles", e1);
                     }
                 }
             }
@@ -85,8 +83,7 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
         if (!refreshing) {
             if (selectedAccount != null) {
                 if (selectedAccount.getType() == Account.AccountType.ELY ||
-                        selectedAccount.getType() == Account.AccountType.ELY_LEGACY ||
-                        selectedAccount.getType() == Account.AccountType.MCLEAKS) {
+                        selectedAccount.getType() == Account.AccountType.ELY_LEGACY) {
                     if (!loginForm.tlauncher.getLibraryManager().isRefreshing()) {
                         loginForm.tlauncher.getLibraryManager().asyncRefresh();
                     }

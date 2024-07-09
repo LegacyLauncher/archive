@@ -1,5 +1,6 @@
 package net.legacylauncher.ui.settings;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.managers.JavaManagerConfig;
 import net.legacylauncher.ui.alert.Alert;
@@ -11,12 +12,10 @@ import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
-import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.OS;
+import net.legacylauncher.util.shared.JavaVersion;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
@@ -25,9 +24,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+@Slf4j
 public class JREComboBox extends BorderPanel implements EditorField, LocalizableComponent {
-    private static final Logger LOGGER = LogManager.getLogger(JREComboBox.class);
-
     final SettingsPanel sp;
     final JavaVersionDetectorCache javaVersionCache;
 
@@ -114,7 +112,7 @@ public class JREComboBox extends BorderPanel implements EditorField, Localizable
             JavaManagerConfig.Custom custom = (JavaManagerConfig.Custom) jreType;
             custom.load(sp.global);
             if (!custom.getPath().isPresent()) {
-                LOGGER.warn("Custom JRE is not configured");
+                log.warn("Custom JRE is not configured");
                 if (LegacyLauncher.getInstance() != null) {
                     Alert.showError(
                             "",

@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class Static {
-    private static final String BRAND = BuildConfig.FULL_BRAND;
-    private static final String SHORT_BRAND = BuildConfig.SHORT_BRAND;
-    private static final String SETTINGS = "tlauncher/" + (isLegacy() ? "legacy" : SHORT_BRAND) + ".properties";
+    private static final String SETTINGS = "tlauncher/" + (isLegacy() ? "legacy" : BuildConfig.SHORT_BRAND) + ".properties";
     private static final String FOLDER = "minecraft";
     private static final List<String> OFFICIAL_REPO = Collections.singletonList("https://s3.amazonaws.com/Minecraft.Download/");
     private static final List<String> EXTRA_REPO;
@@ -46,20 +44,13 @@ public final class Static {
 
     private static final List<String> SERVER_LIST = Collections.emptyList();
 
+    @SuppressWarnings("ConstantValue")
     private static boolean isLegacy() {
-        return getShortBrand().startsWith("legacy");
+        return BuildConfig.SHORT_BRAND.startsWith("legacy");
     }
 
     public static String getSettings() {
         return SETTINGS;
-    }
-
-    public static String getBrand() {
-        return BRAND;
-    }
-
-    public static String getShortBrand() {
-        return SHORT_BRAND;
     }
 
     public static String getFolder() {

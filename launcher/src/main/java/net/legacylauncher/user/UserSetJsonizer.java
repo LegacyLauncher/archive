@@ -20,7 +20,6 @@ public class UserSetJsonizer implements JsonDeserializer<UserSet>, JsonSerialize
         this.jsonizerMap.put(PlainUser.TYPE, PlainUser.getJsonizer());
         this.jsonizerMap.put(ElyUser.TYPE, ElyUser.getJsonizer());
         this.jsonizerMap.put(ElyLegacyUser.TYPE, ElyLegacyUser.getJsonizer());
-        this.jsonizerMap.put(McleaksUser.TYPE, McleaksUser.getJsonizer());
     }
 
     @Override

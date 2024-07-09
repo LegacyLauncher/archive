@@ -1,42 +1,45 @@
 package net.legacylauncher.ui;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.configuration.BuildConfig;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.configuration.SimpleConfiguration;
+import net.legacylauncher.portals.Portals;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.block.Blocker;
 import net.legacylauncher.ui.frames.FeedbackFrame;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableMenuItem;
 import net.legacylauncher.ui.notice.NoticeManager;
-import net.legacylauncher.ui.swing.Dragger;
 import net.legacylauncher.ui.swing.extended.ExtendedComponentAdapter;
+import net.legacylauncher.ui.theme.SystemTheme;
 import net.legacylauncher.ui.theme.Theme;
 import net.legacylauncher.util.IntegerArray;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
-import net.legacylauncher.util.async.ExtendedThread;
-import org.apache.logging.log4j.LogManager;
+import net.legacylauncher.util.async.AsyncThread;
+import net.legacylauncher.util.shared.FlatLafConfiguration;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class LegacyLauncherFrame extends JFrame {
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(LegacyLauncherFrame.class);
-
     public static final Dimension minSize = new Dimension(700, 600);
     public static final Dimension maxSize = new Dimension(1920, 1080);
     public static final float minFontSize = 12, maxFontSize = 18;
+    @Getter
     private static float fontSize = 12f;
     public static double magnifyDimensions = 1.;
     private final LegacyLauncherFrame instance = this;
@@ -44,15 +47,10 @@ public class LegacyLauncherFrame extends JFrame {
     private final Configuration settings;
     private final LangConfiguration lang;
     private final int[] windowSize;
-    private final Point maxPoint;
     public final MainPane mp;
     private String brand;
-    private SimpleConfiguration proofr, uiConfig;
+    @Getter
     private final NoticeManager notices;
-
-    public static float getFontSize() {
-        return fontSize;
-    }
 
     public static void setFontSize(float size) {
         fontSize = size;
@@ -64,19 +62,12 @@ public class LegacyLauncherFrame extends JFrame {
         settings = t.getSettings();
         lang = t.getLang();
         windowSize = settings.getLauncherWindowSize();
-        maxPoint = new Point();
         SwingUtil.initFontSize((int) getFontSize());
         SwingUtil.setFavicons(this);
         setupUI();
         updateUILocale();
         setWindowSize();
         setWindowTitle();
-        /*addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                instance.setVisible(false);
-                TLauncher.kill();
-            }
-        });*/
         setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -120,9 +111,8 @@ public class LegacyLauncherFrame extends JFrame {
             }
         });
         addComponentListener(new ExtendedComponentAdapter(this) {
-            public void onComponentResized(ComponentEvent e) {
-                updateMaxPoint();
-                Dragger.update();
+            @Override
+            public void onComponentResized() {
                 if (mp != null && mp.defaultScene != null) {
                     boolean lock = getExtendedState() != 0;
                     IntegerArray arr = new IntegerArray(getWidth(), getHeight());
@@ -160,15 +150,16 @@ public class LegacyLauncherFrame extends JFrame {
         notices = new NoticeManager(this, t.getBootConfig());
         mp = new MainPane(this);
         add(mp);
-        LOGGER.trace("Packing main frame...");
+        log.trace("Packing main frame...");
         pack();
-        LOGGER.trace("Resizing main pane...");
+        log.trace("Resizing main pane...");
         mp.onResize();
         mp.background.loadBackground();
-        updateMaxPoint();
-        Dragger.ready(settings, maxPoint);
         if (LegacyLauncher.getInstance().isDebug()) {
-            new LegacyLauncherFrame.TitleUpdaterThread();
+            TitleUpdater titleUpdater = new TitleUpdater();
+            titleUpdater.self = AsyncThread.DELAYER.scheduleWithFixedDelay(
+                    titleUpdater, 1, 1, TimeUnit.SECONDS
+            );
         } else {
             setWindowTitle();
         }
@@ -177,7 +168,7 @@ public class LegacyLauncherFrame extends JFrame {
             try {
                 setVisible(true);
             } catch (RuntimeException rE) {
-                LOGGER.warn("Hidden exception on setVisible(true)", rE);
+                log.warn("Hidden exception on setVisible(true)", rE);
             }
             int windowState = getExtendedStateFor(settings.getInteger("gui.window"));
             if (windowState == 0) {
@@ -187,32 +178,20 @@ public class LegacyLauncherFrame extends JFrame {
             }
         });
 
-
-        /*if(settings.getInteger("gui.features") < NewFeaturesFrame.INCREMENTAL) {
-            final NewFeaturesFrame newFeaturesFrame = new NewFeaturesFrame(this);
-            newFeaturesFrame.showAtCenter();
-            newFeaturesFrame.setAlwaysOnTop(true);
-
-            AsyncThread.execute(new Runnable() {
-                @Override
-                public void run() {
-                    U.sleepFor(3000);
-                    newFeaturesFrame.setAlwaysOnTop(false);
+        AutoCloseable lafListener = Portals.getPortal().subscribeForColorSchemeChanges((colorScheme) -> updateLaf());
+        addContainerListener(new ContainerAdapter() {
+            @Override
+            public void componentRemoved(ContainerEvent e) {
+                try {
+                    lafListener.close();
+                } catch (Exception ignored) {
                 }
-            });
-        }*/
+            }
+        });
     }
 
     public LegacyLauncher getLauncher() {
         return legacyLauncher;
-    }
-
-    public NoticeManager getNotices() {
-        return notices;
-    }
-
-    public Point getMaxPoint() {
-        return maxPoint;
     }
 
     public Configuration getConfiguration() {
@@ -223,7 +202,7 @@ public class LegacyLauncherFrame extends JFrame {
         try {
             legacyLauncher.reloadLocale();
         } catch (Exception var2) {
-            LOGGER.warn("Cannot reload settings", var2);
+            log.warn("Cannot reload settings", var2);
             return;
         }
 
@@ -241,7 +220,7 @@ public class LegacyLauncherFrame extends JFrame {
             brandBuilder.append(U.getMinorVersion(LegacyLauncher.getVersion())).append(" ");
         }
 
-        brandBuilder.append("[").append(LegacyLauncher.getBrand()).append("]");
+        brandBuilder.append("[").append(BuildConfig.FULL_BRAND).append("]");
 
         if (LegacyLauncher.getInstance().isDebug()) {
             brandBuilder.append(" [DEBUG]");
@@ -300,6 +279,9 @@ public class LegacyLauncherFrame extends JFrame {
         }
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private SimpleConfiguration uiConfig;
+
     private void updateUILocale() {
         if (uiConfig == null) {
             try {
@@ -316,11 +298,6 @@ public class LegacyLauncherFrame extends JFrame {
             }
         }
 
-    }
-
-    private void updateMaxPoint() {
-        maxPoint.x = getWidth();
-        maxPoint.y = getHeight();
     }
 
     public void setSize(int width, int height) {
@@ -345,6 +322,13 @@ public class LegacyLauncherFrame extends JFrame {
         setSize(d.width, d.height);
     }
 
+    public void updateLaf() {
+        FlatLafConfiguration config = FlatLafConfiguration.parseFromMap(LegacyLauncher.getInstance().getSettings());
+        FlatLaf.initialize(config, true);
+        SystemTheme.getSystemTheme().updateUI();
+        FlatLaf.updateLafInWindows();
+    }
+
     private static int getExtendedStateFor(int state) {
         switch (state) {
             case 0:
@@ -360,23 +344,18 @@ public class LegacyLauncherFrame extends JFrame {
         }
     }
 
-    public static URL getRes(String uri) {
-        return LegacyLauncherFrame.class.getResource(uri);
-    }
-
-    private class TitleUpdaterThread extends ExtendedThread {
-        TitleUpdaterThread() {
-            super("TitleUpdater");
-            updateTitle();
-            start();
-        }
+    private class TitleUpdater implements Runnable {
+        private ScheduledFuture<?> self;
 
         public void run() {
-            while (isDisplayable()) {
-                U.sleepFor(100L);
-                setWindowTitle();
-            }
-            interrupt();
+            SwingUtil.later(() -> {
+                if (isDisplayable()) {
+                    setWindowTitle();
+                } else if (self != null) {
+                    self.cancel(true);
+                    self = null;
+                }
+            });
         }
     }
 }

@@ -2,22 +2,20 @@ package net.legacylauncher.user.minecraft.strategy.preq.create;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.user.minecraft.strategy.mcsauth.MinecraftServicesToken;
 import net.legacylauncher.user.minecraft.strategy.preq.MinecraftOAuthProfile;
 import net.legacylauncher.user.minecraft.strategy.rqnpr.*;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.ContentType;
 
 import java.io.IOException;
 
+@Slf4j
 public class ProfileCreateRequest extends RequestAndParseStrategy<MinecraftServicesToken, MinecraftOAuthProfile> {
-    private static final Logger LOGGER = LogManager.getLogger(ProfileCreateRequest.class);
-
     public ProfileCreateRequest(String name) {
         this(new HttpClientRequester<>(token ->
-                Request.Post("https://api.minecraftservices.com/minecraft/profile")
+                Request.post("https://api.minecraftservices.com/minecraft/profile")
                         .bodyString(profileName(name), ContentType.APPLICATION_JSON)
                         .addHeader("Authorization", "Bearer " + token.getAccessToken()))
         );
@@ -28,7 +26,13 @@ public class ProfileCreateRequest extends RequestAndParseStrategy<MinecraftServi
     }
 
     ProfileCreateRequest(Requester<MinecraftServicesToken> requester, Parser<MinecraftOAuthProfile> parser) {
-        super(LOGGER, requester, parser);
+        super(log, requester, parser);
+    }
+
+    private static String profileName(String name) {
+        JsonObject object = new JsonObject();
+        object.addProperty("profileName", name);
+        return new Gson().toJson(object);
     }
 
     public MinecraftOAuthProfile createProfile(MinecraftServicesToken token) throws MinecraftProfileCreateException, IOException {
@@ -37,11 +41,5 @@ public class ProfileCreateRequest extends RequestAndParseStrategy<MinecraftServi
         } catch (InvalidResponseException e) {
             throw new MinecraftProfileCreateException(e);
         }
-    }
-
-    private static String profileName(String name) {
-        JsonObject object = new JsonObject();
-        object.addProperty("profileName", name);
-        return new Gson().toJson(object);
     }
 }

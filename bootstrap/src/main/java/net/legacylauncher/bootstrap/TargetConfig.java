@@ -1,8 +1,7 @@
 package net.legacylauncher.bootstrap;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.util.OS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -12,9 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
+@Slf4j
 public class TargetConfig {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TargetConfig.class);
-
     private final Properties properties;
 
     public TargetConfig(Properties properties) {
@@ -62,7 +60,7 @@ public class TargetConfig {
         try (Reader reader = Files.newBufferedReader(file)) {
             properties.load(reader);
         } catch (IOException e) {
-            LOGGER.warn("Couldn't read {}", file, e);
+            log.warn("Couldn't read {}", file, e);
         }
         return new TargetConfig(properties);
     }

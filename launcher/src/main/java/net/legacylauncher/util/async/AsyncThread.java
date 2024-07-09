@@ -1,12 +1,22 @@
 package net.legacylauncher.util.async;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.legacylauncher.util.shared.FutureUtils;
 
 import java.util.concurrent.*;
 
 public class AsyncThread {
-    public static final ExecutorService SHARED_SERVICE = Executors.newCachedThreadPool(
-            ExtendedThread::new
+    public static final ExecutorService SHARED_SERVICE = new ThreadPoolExecutor(
+            2,
+            Math.max(2, Runtime.getRuntime().availableProcessors()),
+            60,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            new ThreadFactoryBuilder()
+                    .setThreadFactory(ExtendedThread::new)
+                    .setNameFormat("AsyncThread-%d")
+                    .setDaemon(true)
+                    .build()
     );
     public static final ScheduledExecutorService DELAYER = Executors.newSingleThreadScheduledExecutor();
 
@@ -24,6 +34,12 @@ public class AsyncThread {
 
     public static <V> Future<V> future(Callable<V> c) {
         return SHARED_SERVICE.submit(wrap(c));
+    }
+
+    public static Runnable wrapping(Runnable r) {
+        return () -> {
+            execute(r);
+        };
     }
 
     public static <V> CompletableFuture<V> completableFuture(Callable<V> c) {

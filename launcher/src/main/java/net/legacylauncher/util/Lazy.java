@@ -1,15 +1,13 @@
 package net.legacylauncher.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
+@Slf4j
 public final class Lazy<T> implements Callable<T> {
-    private static final Logger LOGGER = LogManager.getLogger(Lazy.class);
-
     private Callable<T> initializer; // gc collectable
 
     private boolean calledOnce;
@@ -37,11 +35,11 @@ public final class Lazy<T> implements Callable<T> {
         try {
             value = initializer.call();
         } catch (Exception e) {
-            LOGGER.debug("Initialization exception on {}", initializer, e);
+            log.debug("Initialization exception on {}", initializer, e);
             exception = e;
             throw new LazyInitException(e);
         } catch (Throwable e) {
-            LOGGER.warn("Severe initialization error on {}", initializer, e);
+            log.warn("Severe initialization error on {}", initializer, e);
             exception = e;
             throw new LazyInitException(e);
         } finally {

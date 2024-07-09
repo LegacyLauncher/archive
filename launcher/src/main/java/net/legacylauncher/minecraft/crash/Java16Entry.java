@@ -1,19 +1,17 @@
 package net.legacylauncher.minecraft.crash;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.managers.JavaManager;
 import net.legacylauncher.managers.JavaManagerConfig;
 import net.legacylauncher.ui.loc.Localizable;
 import net.minecraft.launcher.versions.CompleteVersion;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class Java16Entry extends PatternEntry {
-    private static final Logger LOGGER = LogManager.getLogger(Java16Entry.class);
-
     public Java16Entry(CrashManager manager) {
         super(manager, "java16",
                 Pattern.compile("^Exception in thread \"main\" java.lang.UnsupportedClassVersionError" +
@@ -70,7 +68,7 @@ public class Java16Entry extends PatternEntry {
                         .jre.setValue(JavaManagerConfig.Recommended.TYPE);
                 LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get()
                         .saveValues();
-                LegacyLauncher.getInstance().getUIListeners().getMinecraftUIListener()
+                LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener()
                         .getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
                 LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.startLauncher();
             });
@@ -87,7 +85,7 @@ public class Java16Entry extends PatternEntry {
                 throw new RuntimeException("class file version is too old: " + classFileVersion);
             }
         } catch (Exception e) {
-            LOGGER.warn("Can't parse class file version: {}", input, e);
+            log.warn("Can't parse class file version: {}", input, e);
             return Localizable.get(getLocPath("version.unknown"));
         }
         /*

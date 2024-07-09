@@ -3,13 +3,13 @@ package net.legacylauncher.managers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.component.RefreshableComponent;
 import net.legacylauncher.minecraft.auth.AccountMigrator;
 import net.legacylauncher.minecraft.auth.AuthenticatorDatabase;
 import net.legacylauncher.minecraft.auth.LegacyAccount;
 import net.legacylauncher.minecraft.auth.UUIDTypeAdapter;
 import net.legacylauncher.ui.alert.Alert;
-import net.legacylauncher.user.McleaksUser;
 import net.legacylauncher.user.User;
 import net.legacylauncher.user.UserSet;
 import net.legacylauncher.util.FileUtil;
@@ -20,8 +20,6 @@ import net.minecraft.launcher.versions.json.FileTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +29,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Slf4j
 public class ProfileManager extends RefreshableComponent {
-    private static final Logger LOGGER = LogManager.getLogger(ProfileManager.class);
     public static final String DEFAULT_PROFILE_FILENAME = "tlauncher_profiles.json";
 
     private final AccountManager accountManager;
@@ -57,14 +55,14 @@ public class ProfileManager extends RefreshableComponent {
                 try {
                     l.onProfilesRefreshed(ProfileManager.this);
                 } catch (Exception e) {
-                    LOGGER.warn("Caught exception on one of profile manager listeners", e);
+                    log.warn("Caught exception on one of profile manager listeners", e);
                 }
             }
 
             try {
                 saveProfiles();
             } catch (IOException var3) {
-                LOGGER.warn("Could not save profiles", var3);
+                log.warn("Could not save profiles", var3);
             }
         });
 
@@ -105,13 +103,13 @@ public class ProfileManager extends RefreshableComponent {
     }
 
     private void loadProfiles() {
-        LOGGER.debug("Refreshing profiles from: {}", file);
+        log.debug("Refreshing profiles from: {}", file);
         File oldFile = new File(file.getParentFile(), "launcher_profiles.json");
         if (!oldFile.isFile()) {
             try (OutputStreamWriter writer = new OutputStreamWriter(Files.newOutputStream(oldFile.toPath()), StandardCharsets.UTF_8)) {
                 gson.toJson(new OldProfileList(), writer);
             } catch (Exception var17) {
-                LOGGER.warn("Cannot write into {}", oldFile, var17);
+                log.warn("Cannot write into {}", oldFile, var17);
             }
         }
 
@@ -123,7 +121,7 @@ public class ProfileManager extends RefreshableComponent {
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(readFile.toPath()), StandardCharsets.UTF_8)) {
             object = gson.fromJson(reader, JsonObject.class);
         } catch (Exception var15) {
-            LOGGER.warn("Cannot read from {}", readFile, var15);
+            log.warn("Cannot read from {}", readFile, var15);
         }
 
         String outputJson = gson.toJson(object);
@@ -144,7 +142,7 @@ public class ProfileManager extends RefreshableComponent {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Error parsing profile list: {}", readFile, e);
+            log.error("Error parsing profile list: {}", readFile, e);
             saveBackup = "errored";
         }
 
@@ -156,18 +154,11 @@ public class ProfileManager extends RefreshableComponent {
                     IOUtils.write(outputJson, backupOut, StandardCharsets.UTF_8);
                 }
             } catch (Exception e) {
-                LOGGER.error("Could not save backup into {}", backupFile, e);
+                log.error("Could not save backup into {}", backupFile, e);
                 Alert.showError("Could not save profile backup. Accounts will be lost :(", e);
             }
         }
 
-        if (raw.userSet != null) {
-            for (User user : raw.userSet.getSet()) {
-                if (user.getType().equals(McleaksUser.TYPE)) {
-                    McleaksManager.triggerConnection();
-                }
-            }
-        }
         accountManager.setUserSet(raw.userSet);
     }
 

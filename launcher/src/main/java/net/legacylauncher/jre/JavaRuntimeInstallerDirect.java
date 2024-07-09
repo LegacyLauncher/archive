@@ -1,15 +1,14 @@
 package net.legacylauncher.jre;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.EHttpClient;
 import net.legacylauncher.util.FileUtil;
 import net.minecraft.launcher.updater.DownloadInfo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.tukaani.xz.LZMAInputStream;
 
 import java.io.*;
@@ -19,13 +18,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+@Slf4j
 public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
-    private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeInstallerDirect.class);
-
     private final JavaRuntimeRemote runtimeInfo;
 
     private final File runtimeDir;
     private final File workingDir;
+    private ProgressReporter reporter;
+    private List<JavaRuntimeManifest.RuntimeFile> runtimeFiles;
+    private List<MissingFile> missingFiles;
+    private HttpClient client;
 
     public JavaRuntimeInstallerDirect(File rootDir, JavaRuntimeRemote runtimeInfo) {
         this.runtimeInfo = runtimeInfo;
@@ -33,22 +35,24 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
         this.workingDir = runtimeInfo.getWorkingDir(rootDir);
     }
 
-    private ProgressReporter reporter;
-    private List<JavaRuntimeManifest.RuntimeFile> runtimeFiles;
-    private List<MissingFile> missingFiles;
+    private static void checkInterrupted() throws InterruptedException {
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+    }
 
     @Override
     public void install(ProgressReporter reporter) throws IOException, InterruptedException {
         this.reporter = reporter;
 
         if (!workingDir.isDirectory()) {
-            LOGGER.debug("Creating working directory: {}", workingDir.getAbsolutePath());
+            log.debug("Creating working directory: {}", workingDir.getAbsolutePath());
             FileUtil.createFolder(workingDir);
         } else {
-            LOGGER.debug("Working directory: {}", workingDir.getAbsolutePath());
+            log.debug("Working directory: {}", workingDir.getAbsolutePath());
         }
 
-        LOGGER.debug("Getting manifest");
+        log.debug("Getting manifest");
         JavaRuntimeManifest manifest;
         try {
             manifest = runtimeInfo.getManifest();
@@ -59,28 +63,28 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
 
         checkInterrupted();
 
-        LOGGER.debug("Reporting initial progress");
+        log.debug("Reporting initial progress");
         reporter.reportProgress(0, runtimeFiles.size());
 
-        LOGGER.debug("Ensuring all files are intact");
+        log.debug("Ensuring all files are intact");
         missingFiles = listMissingFiles();
 
         if (missingFiles.isEmpty()) {
-            LOGGER.info("Nothing to download. All files are intact.");
+            log.info("Nothing to download. All files are intact.");
         } else {
-            LOGGER.info("Will download {} files", missingFiles.size());
+            log.info("Will download {} files", missingFiles.size());
             downloadFiles();
-            LOGGER.info("Downloaded {} files", missingFiles.size());
+            log.info("Downloaded {} files", missingFiles.size());
         }
 
-        LOGGER.debug("Writing version");
+        log.debug("Writing version");
         FileUtils.writeStringToFile(
                 new File(runtimeDir, ".version"),
                 runtimeInfo.getVersion().getName(),
                 StandardCharsets.UTF_8
         );
 
-        LOGGER.info("Installation finished");
+        log.info("Installation finished");
         reporter.reportProgress(runtimeFiles.size(), runtimeFiles.size());
     }
 
@@ -93,11 +97,9 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
             }
             checkInterrupted();
         }
-        LOGGER.debug("Missing files count: {}", missingFiles.size());
+        log.debug("Missing files count: {}", missingFiles.size());
         return missingFiles;
     }
-
-    private HttpClient client;
 
     private void downloadFiles() throws IOException, InterruptedException {
         try (CloseableHttpClient httpClient = EHttpClient.createRepeatable()) {
@@ -124,16 +126,16 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
         }
 
         boolean shouldDownload() throws IOException {
-            LOGGER.trace("Inspecting runtime entity {}", path);
+            log.trace("Inspecting runtime entity {}", path);
 
             if (!runtimeFile.isFile()) {
-                LOGGER.debug("Not a file: {}", path);
+                log.debug("Not a file: {}", path);
                 return false;
             }
 
             File realFile = new File(workingDir, path);
             if (!realFile.isFile()) {
-                LOGGER.trace("File is missing: {}", path);
+                log.trace("File is missing: {}", path);
                 return true;
             }
 
@@ -141,9 +143,9 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
             long size = FileUtil.getSize(realFile);
 
             if (size < 0) {
-                LOGGER.warn("Reported negative size ({}): {}", size, realFile.getAbsolutePath());
+                log.warn("Reported negative size ({}): {}", size, realFile.getAbsolutePath());
             } else if (size != expectedSize) {
-                LOGGER.info("File {} is corrupted. Expected size {}, but got {}",
+                log.info("File {} is corrupted. Expected size {}, but got {}",
                         path, expectedSize, size);
                 return true;
             }
@@ -151,21 +153,21 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
             String expectedSha1 = runtimeFile.getDownload().getSha1();
             String sha1 = FileUtil.getSha1(realFile);
             if (!sha1.equalsIgnoreCase(expectedSha1)) {
-                LOGGER.info("File {} is corrupted. Expected SHA-1 {}, but got {}",
+                log.info("File {} is corrupted. Expected SHA-1 {}, but got {}",
                         path, expectedSha1, sha1);
                 return true;
             }
 
-            LOGGER.trace("File {} is ok", path);
+            log.trace("File {} is ok", path);
             return false;
         }
 
         void download() throws IOException, InterruptedException {
             if (runtimeFile.hasLzmaDownload()) {
-                LOGGER.debug("Downloading compressed (LZMA) file: {}", runtimeFile.getPath());
+                log.debug("Downloading compressed (LZMA) file: {}", runtimeFile.getPath());
                 downloadLzma();
             } else {
-                LOGGER.debug("Downloading uncompressed file: {}", runtimeFile.getPath());
+                log.debug("Downloading uncompressed file: {}", runtimeFile.getPath());
                 downloadRaw();
             }
         }
@@ -173,7 +175,7 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
         private void downloadLzma() throws IOException, InterruptedException {
             File lzmaFile = new File(workingDir, path + ".lzma");
             downloadAndCheck(runtimeFile.getLzmaDownload(), lzmaFile);
-            LOGGER.debug("Decompressing: {}", lzmaFile.getAbsolutePath());
+            log.debug("Decompressing: {}", lzmaFile.getAbsolutePath());
             try (LZMAInputStream input =
                          new LZMAInputStream(new BufferedInputStream(Files.newInputStream(lzmaFile.toPath())));
                  OutputStream output =
@@ -195,25 +197,27 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
 
         private void downloadAndCheck(DownloadInfo downloadInfo, File file)
                 throws IOException, InterruptedException {
-            LOGGER.trace("Downloading {} into {}", downloadInfo, file.getAbsolutePath());
+            log.trace("Downloading {} into {}", downloadInfo, file.getAbsolutePath());
             HttpGet get = new HttpGet(downloadInfo.getUrl());
             try (
-                    InputStream in = client.execute(get).getEntity().getContent();
                     OutputStream out = new BufferedOutputStream(Files.newOutputStream(file.toPath()))
             ) {
-                IOUtils.copy(in, out);
+                client.execute(get, response -> {
+                    response.getEntity().writeTo(out);
+                    return null;
+                });
             } catch (InterruptedIOException interrupted) {
                 throw new InterruptedException();
             }
             checkFile(downloadInfo, file);
-            LOGGER.debug("Downloaded successfully: {}", file.getAbsolutePath());
+            log.debug("Downloaded successfully: {}", file.getAbsolutePath());
         }
 
         private void checkFile(DownloadInfo downloadInfo, File file) throws IOException {
-            LOGGER.trace("Checking file: {} ({})", file.getAbsolutePath(), downloadInfo.getSha1());
+            log.trace("Checking file: {} ({})", file.getAbsolutePath(), downloadInfo.getSha1());
             long size = FileUtil.getSize(file);
             if (size < 0) {
-                LOGGER.warn("System reported this file has negative file size" +
+                log.warn("System reported this file has negative file size" +
                         "({}): {}", size, file.getAbsolutePath());
             } else if (size != downloadInfo.getSize()) {
                 throw new IOException(path + ": unexpected file size: " + size + "; expected: " +
@@ -224,12 +228,6 @@ public class JavaRuntimeInstallerDirect implements JavaRuntimeInstallerProcess {
                 throw new IOException(path + ": bad checksum: " + sha1 + "; expected: " +
                         downloadInfo.getSha1());
             }
-        }
-    }
-
-    private static void checkInterrupted() throws InterruptedException {
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
         }
     }
 }

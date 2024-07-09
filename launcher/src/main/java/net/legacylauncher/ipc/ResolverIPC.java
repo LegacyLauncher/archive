@@ -1,6 +1,7 @@
 package net.legacylauncher.ipc;
 
-import org.apache.http.conn.DnsResolver;
+
+import org.apache.hc.client5.http.DnsResolver;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

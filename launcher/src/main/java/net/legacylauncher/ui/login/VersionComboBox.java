@@ -46,8 +46,9 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
     private final LoginForm loginForm;
     private final SimpleComboBoxModel<VersionSyncInfo> model;
     private String selectedVersion;
-    final ComboBoxFilter<VersionSyncInfo> comboBoxFilter;
+    ComboBoxFilter<VersionSyncInfo> comboBoxFilter;
     private final VersionSeeker seeker = new VersionSeeker();
+    private boolean ready;
 
     static {
         LOADING = VersionCellRenderer.LOADING;
@@ -87,6 +88,14 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             }
         });
         selectedVersion = lf.global.get("login.version");
+        initComboBoxFilter();
+        ready = true;
+    }
+
+    private void initComboBoxFilter() {
+        if (comboBoxFilter != null) {
+            comboBoxFilter.cleanUp();
+        }
         comboBoxFilter = ComboBoxFilter.decorate(this,
                 () -> versionList == null ? Collections.emptyList() : versionList,
                 (vs) -> {
@@ -221,6 +230,14 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
                                 .collect(Collectors.toList())
                         : null
         );
+    }
+
+    @Override
+    public void updateUI() {
+        if (ready) {
+            initComboBoxFilter();
+        }
+        super.updateUI();
     }
 
     private static class Filter extends VersionFilter {
