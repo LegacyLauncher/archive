@@ -1356,7 +1356,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private void unpackNatives(boolean force) throws IOException {
         log.info("Unpacking natives...");
-        Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
+        Collection<Library> libraries = version.getRelevantLibrariesDeduplicated(featureMatcher, true);
 
         if (force) {
             nativeDir.delete();

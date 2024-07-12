@@ -2,6 +2,7 @@ package net.minecraft.launcher.versions;
 
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.managers.VersionManager;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.util.OS;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class CompleteVersion implements Version, Cloneable {
     String id;
     String jar;
@@ -287,16 +289,27 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher) {
+        return libraries.stream()
+                .filter(it -> it.appliesToCurrentEnvironment(matcher))
+                .collect(Collectors.toList());
+    }
+
+
+    public Collection<Library> getRelevantLibrariesDeduplicated(Rule.FeatureMatcher matcher, boolean requireNatives) {
         ArrayList<Library> result = new ArrayList<>();
 
         Set<String> resolvedLibs = new HashSet<>();
 
         for (Library library : libraries) {
-            if (!resolvedLibs.add(library.getPlainName())) {
+            if (!library.appliesToCurrentEnvironment(matcher)) {
                 continue;
             }
 
-            if (library.appliesToCurrentEnvironment(matcher)) {
+            if ((library.getNatives() == null) == requireNatives) {
+                continue;
+            }
+
+            if (resolvedLibs.add(library.getPlainName())) {
                 result.add(library);
             }
         }
@@ -305,7 +318,7 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     private Stream<Library> streamLibraries(LibraryType type, Rule.FeatureMatcher matcher) {
-        return getRelevantLibraries(matcher)
+        return getRelevantLibrariesDeduplicated(matcher, false)
                 .stream()
                 .filter(lib -> lib.getLibraryType() == type);
     }
