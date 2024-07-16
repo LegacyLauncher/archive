@@ -27,7 +27,7 @@ public class ImageIcon extends ExtendedLabel implements ExtendedIcon {
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
         if (image != null) {
-            g.drawImage(image, x, y, c);
+            g.drawImage(image, x, y, size, size, c);
         }
     }
 

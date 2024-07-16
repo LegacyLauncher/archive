@@ -1,5 +1,6 @@
 ru_RU: >
   Привет, давно не виделись.<br/><br/>
+  – Починили невидимые иконки на Java 8<br/>
   – Хотфикс проблемы запуска игры<br/>
   – Улучшена работа загрузчика файлов<br/>
   – Динамическая смена темы лаунчера<br/>
@@ -9,6 +10,7 @@ ru_RU: >
   – Другие многочисленные исправления и улучшения<br/>
 en_US: >
   Hi, it's been a while!<br/><br/>
+  – Fixed icons not visible when using Java 8<br/>
   – Game launch issue hotfix<br/>
   – File downloader improvements<br/>
   – Dynamic Look&Feel<br/>
