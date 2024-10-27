@@ -259,30 +259,26 @@ public class VersionManager extends InterruptibleComponent {
                 }
             }
 
-            Version var10 = localList.getVersion(name);
-            if (var10 instanceof CompleteVersion && ((CompleteVersion) var10).getInheritsFrom() != null) {
+            Version localVersion = localList.getVersion(name);
+            if (localVersion instanceof CompleteVersion && ((CompleteVersion) localVersion).getInheritsFrom() != null) {
                 if (inheritance == null) {
                     inheritance = new ArrayList<>();
                 }
                 try {
-                    var10 = ((CompleteVersion) var10).resolve(this, false, inheritance);
-                } catch (Exception var9) {
-                    LOGGER.warn("Can't resolve version {}", var10.getID(), var9);
-                    var10 = null;
+                    localVersion = ((CompleteVersion) localVersion).resolve(this, false, inheritance);
+                } catch (Exception e) {
+                    LOGGER.warn("Can't resolve version {}", localVersion.getID(), e);
+                    localVersion = null;
                 }
             }
 
-            Version var11 = null;
+            String finalName = name;
+            Optional<Version> remoteVersion = Arrays.stream(remoteLists)
+                    .map(list -> list.getVersion(finalName))
+                    .filter(Objects::nonNull)
+                    .findFirst();
 
-            for (RemoteVersionList var12 : remoteLists) {
-                Version currentVersion = var12.getVersion(name);
-                if (currentVersion != null) {
-                    var11 = currentVersion;
-                    break;
-                }
-            }
-
-            return var10 == null && var11 == null ? null : new VersionSyncInfo(var10, var11);
+            return localVersion == null && !remoteVersion.isPresent() ? null : new VersionSyncInfo(localVersion, remoteVersion.orElse(null));
         }
     }
 

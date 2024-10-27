@@ -291,10 +291,27 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher) {
+        return libraries.stream()
+                .filter(it -> it.appliesToCurrentEnvironment(matcher))
+                .collect(Collectors.toList());
+    }
+
+
+    public Collection<Library> getRelevantLibrariesDeduplicated(Rule.FeatureMatcher matcher, boolean requireNatives) {
         ArrayList<Library> result = new ArrayList<>();
 
+        Set<String> resolvedLibs = new HashSet<>();
+
         for (Library library : libraries) {
-            if (library.appliesToCurrentEnvironment(matcher)) {
+            if (!library.appliesToCurrentEnvironment(matcher)) {
+                continue;
+            }
+
+            if ((library.getNatives() == null) == requireNatives) {
+                continue;
+            }
+
+            if (resolvedLibs.add(library.getPlainName())) {
                 result.add(library);
             }
         }
@@ -303,7 +320,7 @@ public class CompleteVersion implements Version, Cloneable {
     }
 
     private Stream<Library> streamLibraries(LibraryType type, Rule.FeatureMatcher matcher) {
-        return getRelevantLibraries(matcher)
+        return getRelevantLibrariesDeduplicated(matcher, false)
                 .stream()
                 .filter(lib -> lib.getLibraryType() == type);
     }
@@ -412,7 +429,8 @@ public class CompleteVersion implements Version, Cloneable {
     public CompleteVersion resolve(VersionManager vm, boolean useLatest, List<String> inheritance) throws IOException {
         if (vm == null) {
             throw new NullPointerException("version manager");
-        } else if (inheritsFrom == null) {
+        }
+        if (inheritsFrom == null) {
             if (family == null || family.equals(FORGE_PREFIX) || family.equals(FABRIC_PREFIX)) {
                 String family_;
 
@@ -438,22 +456,22 @@ public class CompleteVersion implements Version, Cloneable {
             return this.clone();
         } else if (inheritance.contains(id)) {
             throw new CompleteVersion.DuplicateInheritanceException();
-        } else {
-            if (jar == null) {
-                jar = inheritsFrom;
-            }
-            inheritance.add(id);
-            VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom, inheritance);
-            if (parentSyncInfo == null) {
-                throw new CompleteVersion.ParentNotFoundException();
-            } else {
-                CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheritance);
-
-                resolveFamily(result.family);
-
-                return copyInto(result);
-            }
         }
+
+        if (jar == null) {
+            jar = inheritsFrom;
+        }
+        inheritance.add(id);
+        VersionSyncInfo parentSyncInfo = vm.getVersionSyncInfo(inheritsFrom, inheritance);
+        if (parentSyncInfo == null) {
+            throw new CompleteVersion.ParentNotFoundException();
+        }
+
+        CompleteVersion result = parentSyncInfo.getCompleteVersion(useLatest).resolve(vm, useLatest, inheritance);
+
+        resolveFamily(result.family);
+
+        return copyInto(result);
     }
 
     public CompleteVersion copyInto(CompleteVersion result) {

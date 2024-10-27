@@ -58,7 +58,7 @@ public class LibraryReplace extends Library {
 
     public ToStringBuilder toStringBuilder() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("name", name)
+                .append("name", getName())
                 .append("replaces", replaces)
                 .append("args", args)
                 .append("requires", requires)

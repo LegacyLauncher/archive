@@ -1,5 +1,13 @@
 ru_RU: >
-  Исправление небольших ошибок и изменения в рекламе
+  Бэкпорты из беты:
+  - Поддержка NeoForge
+  - Фикс запуска последних версий Fabric
+  - Поддержка Babric
+  - Прочие мелкие исправления
 
 en_US: >
-  Small bug fixes
+  Beta backports:
+  - NeoForge support
+  - Latest Fabric fix
+  - Babric support
+  - Some small fixes
