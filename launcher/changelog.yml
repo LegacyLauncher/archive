@@ -1,20 +1,14 @@
 ru_RU: >
   Привет, давно не виделись.<br/><br/>
-  – Починили невидимые иконки на Java 8<br/>
-  – Хотфикс проблемы запуска игры<br/>
-  – Улучшена работа загрузчика файлов<br/>
-  – Динамическая смена темы лаунчера<br/>
-  – Галочка скинов Ely.by теперь устанавливается для конкретных аккаунтов<br/>
-  – Улучшена поддержка NeoForge и Babric<br/>
-  – Восстановлена работа скинов на аккаунтах "без пароля" с отключенными скинами Ely.by<br/>
-  – Другие многочисленные исправления и улучшения<br/>
+  - Галочка "Оптимизированных аргументов" заменена на выбор сборщика мусора<br/>
+  - Исправление потенциальной проблемы со входом в аккаунты Ely.by<br/>
+  - Добавлена функция обновления устаревших SSL-сертификатов для старых версий Java<br/>
+  - Исправлена проблема отображения длинных названий видеокарт в настройках лаунчера<br/>
+  – Внутренние исправления и улучшения<br/>
 en_US: >
   Hi, it's been a while!<br/><br/>
-  – Fixed icons not visible when using Java 8<br/>
-  – Game launch issue hotfix<br/>
-  – File downloader improvements<br/>
-  – Dynamic Look&Feel<br/>
-  – Ely.by skins checkbox is per-account now<br/>
-  – Improved NeoForge and Babric support<br/>
-  – Restored skins when using "Free" account with disabled Ely.by skins<br/>
+  - "Optimized arguments" checkbox was replaced with Garbage Collector selector<br/>
+  - Fixed possible issue with logging into Ely.by accounts<br/>
+  - Added "Update outdated SSL certificate storage" feature for old Java versions<br/>
+  - Fixed issue with very long GPU labels<br/>
   – Other fixes and improvements<br/>

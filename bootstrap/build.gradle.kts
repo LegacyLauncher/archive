@@ -1,8 +1,9 @@
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-import java.nio.charset.Charset
-import java.security.MessageDigest
+import com.fasterxml.jackson.databind.*
+import net.legacylauncher.gradle.*
+import org.gradle.nativeplatform.platform.internal.*
+import org.springframework.boot.gradle.tasks.bundling.*
+import java.nio.charset.*
+import java.security.*
 
 plugins {
     java
@@ -54,8 +55,6 @@ val compileBootJava by tasks.getting(JavaCompile::class) {
     sourceCompatibility = "8"
 }
 
-evaluationDependsOn(projects.common.identityPath.path)
-
 dependencies {
     implementation(projects.utils)
     implementation(projects.bridge)
@@ -71,7 +70,11 @@ dependencies {
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
 
-    "java11CompileOnly"(projects.common.dependencyProject.sourceSets["java11"].output)
+    "java11CompileOnly"(projects.common) {
+        capabilities {
+            requireFeature("java11")
+        }
+    }
     "java11Implementation"(libs.bundles.dbus)
     "java11Implementation"(libs.junixsocket.core)
     "java11Implementation"(projects.dbusJavaTransportJunixsocket)
@@ -117,7 +120,47 @@ val devJar by tasks.registering(Jar::class) {
     )
 }
 
-evaluationDependsOn(projects.launcher.identityPath.path)
+val launcherLibraries: Configuration by configurations.creating {
+    isCanBeDeclared = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_LIBRARY))
+    }
+}
+
+val launcherJar: Configuration by configurations.creating {
+    isCanBeDeclared = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    attributes {
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_JAR))
+    }
+}
+
+dependencies {
+    launcherLibraries(projects.launcher)
+    launcherJar(projects.launcher)
+}
+
+val collectLauncherLibsRepo by tasks.registering(Sync::class) {
+    dependsOn(launcherLibraries)
+    into(layout.buildDirectory.dir("launcherLibs"))
+    launcherLibraries.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+        val path = with(artifact.moduleVersion.id) {
+            "${group.replace('.', '/')}/$name/$version"
+        }
+        into(path) {
+            from(artifact.file)
+        }
+    }
+}
 
 fun JavaExec.commonRun() {
     group = "Execution"
@@ -151,11 +194,10 @@ val runDebug by tasks.registering(JavaExec::class) {
 
     args("--debug")
 
-    val librariesDir by projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo")
-    val launcherJar by projects.launcher.dependencyProject.tasks.named<Jar>("jar")
-    dependsOn(librariesDir, launcherJar, devJar)
-    environment("LL_LAUNCHER_JAR", launcherJar.archiveFile.get().asFile)
-    environment("LL_LIBRARIES_DIR", librariesDir.destinationDir)
+    dependsOn(collectLauncherLibsRepo, launcherJar, devJar)
+
+    environment("LL_LAUNCHER_JAR", launcherJar.resolve().single())
+    environment("LL_LIBRARIES_DIR", collectLauncherLibsRepo.get().destinationDir)
 
     if (System.getenv("JRE_LEGACY") == "true") {
         javaLauncher = javaToolchains.launcherFor {
@@ -173,14 +215,12 @@ val runRelease by tasks.registering(JavaExec::class) {
     description = "Run Bootstrap"
     mainClass = "org.springframework.boot.loader.JarLauncher"
 
-    val librariesDir by projects.launcher.dependencyProject.tasks.named<Sync>("buildLauncherRepo")
-    val launcherJar by projects.launcher.dependencyProject.tasks.named<Jar>("jar")
-    dependsOn(librariesDir, launcherJar)
+    dependsOn(collectLauncherLibsRepo, launcherJar)
 
     args(
         "--ignoreUpdate", "--ignoreSelfUpdate",
-        "--targetJar", launcherJar.archiveFile.get().asFile,
-        "--targetLibFolder", librariesDir.destinationDir,
+        "--targetJar", launcherJar.resolve().single(),
+        "--targetLibFolder", collectLauncherLibsRepo.get().destinationDir,
         "--",
         "--debug"
     )
@@ -305,4 +345,18 @@ testing {
             useJUnitJupiter()
         }
     }
+}
+
+val bootstrapJar by configurations.consumable("bootstrapJar") {
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.BOOTSTRAP_JAR))
+    }
+}
+
+artifacts {
+    add(bootstrapJar.name, bootJar)
 }

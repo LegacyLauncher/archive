@@ -27,5 +27,5 @@ public abstract class LocalizableStringConverter<T> implements StringConverter<T
         return prefix;
     }
 
-    protected abstract String toPath(T var1);
+    protected abstract String toPath(T from);
 }

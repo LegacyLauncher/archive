@@ -1,6 +1,6 @@
-import de.undercouch.gradle.tasks.download.Download
-import de.undercouch.gradle.tasks.download.Verify
-import org.apache.tools.ant.filters.ReplaceTokens
+import de.undercouch.gradle.tasks.download.*
+import net.legacylauncher.gradle.*
+import org.apache.tools.ant.filters.*
 
 plugins {
     base
@@ -16,6 +16,21 @@ val jreZipFile = layout.buildDirectory.file("jreZip/macOsJre.zip")
 val bundleName = "Legacy Launcher ${brand.displayName.get()}"
 
 evaluationDependsOn(projects.launcher.identityPath.path)
+
+val bootstrapJar: Configuration by configurations.creating {
+    isCanBeDeclared = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    attributes {
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.BOOTSTRAP_JAR))
+    }
+}
+
+dependencies {
+    bootstrapJar(projects.bootstrap)
+}
 
 val tokens = mapOf(
     "bundle_name" to bundleName,
@@ -59,8 +74,7 @@ val prepareDmgBuild by tasks.registering(Sync::class) {
         }
 
         into("app") {
-            val jar by projects.bootstrap.dependencyProject.tasks.named("bootJar", AbstractArchiveTask::class)
-            from(jar) {
+            from(bootstrapJar) {
                 rename { "bootstrap.jar" }
             }
         }

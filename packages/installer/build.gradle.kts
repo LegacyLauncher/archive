@@ -1,5 +1,5 @@
-import de.undercouch.gradle.tasks.download.Download
-import org.apache.tools.ant.filters.ReplaceTokens
+import de.undercouch.gradle.tasks.download.*
+import org.apache.tools.ant.filters.*
 import java.util.*
 
 plugins {
@@ -20,7 +20,7 @@ val mainIss = mapOf(
 val prepareInstaller by tasks.registering(Sync::class) {
     into(layout.buildDirectory.file("innosetup/${brand.brand.get()}"))
 
-    val portable = projects.packages.portable.dependencyProject
+    val portable = project(projects.packages.portable.path)
 
     into("files") {
         into("common") {

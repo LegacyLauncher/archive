@@ -86,17 +86,24 @@ public final class Bootstrap {
             throw new RuntimeException("couldn't split args: " + Arrays.toString(rawArgs), rE);
         }
 
-        Path bootstrapJar;
+        Path bootstrapJar = null;
         try {
             URI uri = Bootstrap.class.getProtectionDomain().getCodeSource().getLocation().toURI();
             if ("jar".equals(uri.getScheme())) {
                 String part = uri.getSchemeSpecificPart();
                 int i = part.indexOf("!/");
                 if (i > 0) {
-                    uri = URI.create(part.substring(0, i));
+                    String filePath = part.substring(0, i);
+                    if (filePath.startsWith("file:")) {
+                        bootstrapJar = Paths.get(filePath.substring("file:".length()));
+                    } else {
+                        bootstrapJar = Paths.get(URI.create(part.substring(0, i)));
+                    }
                 }
             }
-            bootstrapJar = Paths.get(uri);
+            if (bootstrapJar == null) {
+                bootstrapJar = Paths.get(uri);
+            }
         } catch (Exception e) {
             throw new IllegalStateException("Unable to determine bootstrap jar location", e);
         }

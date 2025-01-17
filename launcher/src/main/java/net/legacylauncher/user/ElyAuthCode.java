@@ -86,8 +86,8 @@ public final class ElyAuthCode {
 
             byte[] decoded = Base64.getUrlDecoder().decode(jwtTokenParts[1].getBytes(StandardCharsets.UTF_8));
             JWTPayload jwtPayload = parse(new ByteArrayInputStream(decoded), JWTPayload.class);
-            if (jwtPayload.exp != 0) {
-                serialize.expiryTime = jwtPayload.exp * 1000L;
+            if (jwtPayload.exp != 0.f) {
+                serialize.expiryTime = (long) (jwtPayload.exp * 1000.f);
             }
         }
 
@@ -192,6 +192,6 @@ public final class ElyAuthCode {
     }
 
     private static class JWTPayload {
-        int iat, exp;
+        float iat, exp;
     }
 }

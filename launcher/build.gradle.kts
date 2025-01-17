@@ -1,11 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.dataformat.yaml.*
+import com.fasterxml.jackson.module.kotlin.*
+import net.legacylauncher.gradle.*
 import org.gradle.jvm.tasks.Jar
-import java.security.MessageDigest
-
+import java.security.*
 
 plugins {
     java
@@ -34,12 +34,24 @@ val compileTestJava by tasks.getting(JavaCompile::class) {
     options.release = 11
 }
 
-val exportedClasspath by configurations.resolvable("exportedClasspath") {
+val launcherLibraries by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = true
+    isCanBeDeclared = false
+
     extendsFrom(configurations.runtimeClasspath.get(), configurations["java11RuntimeClasspath"])
     // TODO this line removes JavaFX from debug runs
     exclude(group = "org.openjfx")
     // we don't need an empty jar
     exclude(group = "com.google.guava", module = "listenablefuture")
+
+    attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_LIBRARY))
+    }
 }
 
 evaluationDependsOn(projects.common.identityPath.path)
@@ -51,7 +63,9 @@ dependencies {
 
     implementation(projects.utils)
     implementation(projects.common)
-    implementation(libs.authlib)
+    implementation(libs.authlib) {
+        exclude(group = "com.google.guava", module = "guava")
+    }
     implementation(libs.bundles.httpcomponents)
     implementation(libs.bundles.log4j)
     implementation(libs.commons.compress)
@@ -72,7 +86,11 @@ dependencies {
     implementation(libs.toml4j)
     implementation(libs.xz)
 
-    "java11CompileOnly"(projects.common.dependencyProject.sourceSets["java11"].output)
+    "java11CompileOnly"(projects.common) {
+        capabilities {
+            requireFeature("java11")
+        }
+    }
     "java11Implementation"(libs.bundles.dbus)
     "java11RuntimeOnly"(projects.dbusJavaTransportJunixsocket)
 
@@ -80,27 +98,6 @@ dependencies {
     testImplementation(libs.mockito.core)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.mockito.junit.jupiter)
-}
-
-fun resolveLauncherClasspath(): Collection<ResolvedArtifact> {
-    return exportedClasspath.resolvedConfiguration.resolvedArtifacts.filter { artifact ->
-        artifact.extension == "jar"
-    }
-}
-
-val launcherClasspath: Provider<Collection<ResolvedArtifact>> by ext.invoke { providers.provider(::resolveLauncherClasspath) }
-
-val buildLauncherRepo by tasks.registering(Sync::class) {
-    into(layout.buildDirectory.dir("launcherLibs"))
-    inputs.files(exportedClasspath)
-    resolveLauncherClasspath().forEach { artifact ->
-        val path = with(artifact.moduleVersion.id) {
-            "${group.replace('.', '/')}/$name/$version"
-        }
-        into(path) {
-            from(artifact.file)
-        }
-    }
 }
 
 fun ByteArray.encodeHex(): String = buildString(size * 2) {
@@ -135,7 +132,7 @@ fun writeMeta(file: File, content: Map<String, Any>) {
 }
 
 val processResources by tasks.getting(ProcessResources::class) {
-    inputs.files(exportedClasspath)
+    dependsOn(launcherLibraries)
     inputs.property("productVersion", brand.version.get())
     inputs.property("shortBrand", brand.brand.get())
     inputs.property("fullBrand", brand.displayName.get())
@@ -145,7 +142,7 @@ val processResources by tasks.getting(ProcessResources::class) {
             "version" to brand.version.get(),
             "shortBrand" to brand.brand.get(),
             "brand" to brand.displayName.get(),
-            "libraries" to resolveLauncherClasspath().map { artifact ->
+            "libraries" to launcherLibraries.resolvedConfiguration.resolvedArtifacts.map { artifact ->
                 mapOf(
                     "name" to formatShortArtifactNotation(artifact),
                     "checksum" to generateChecksum(artifact.file),
@@ -287,4 +284,18 @@ testing {
             useJUnitJupiter()
         }
     }
+}
+
+val launcherJar by configurations.consumable("launcherJar") {
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_JAR))
+    }
+}
+
+artifacts {
+    add(launcherJar.name, jar)
 }

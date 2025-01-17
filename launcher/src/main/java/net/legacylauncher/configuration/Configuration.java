@@ -515,9 +515,7 @@ public class Configuration extends SimpleConfiguration {
     }
 
     public enum Experiments {
-        ZGC, // ZGC usage
         ZGC_GENERATIONAL, // Generational ZGC (JEP 439)
-        SHENANDOAH, // Shenandoah usage
         TENURING, // MaxTenuringThreshold for all GCs
         MAX_XMS, // -Xms = -Xmx
         UPDATED_LWJGL, // Replace LWJGL3 with more recent version

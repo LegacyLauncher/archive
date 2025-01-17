@@ -15,35 +15,35 @@ plugins {
 }
 
 subprojects {
-    plugins.withId("java-base") {
-        repositories {
-            mavenCentral()
-            maven("https://jitpack.io")
-            maven("https://llaun.ch/repo/libraries") {
-                name = "legacy launcher cdn"
-                metadataSources {
-                    mavenPom()
-                    artifact()
-                }
-                mavenContent {
-                    includeGroup("me.cortex")
-                    includeGroup("ru.turikhay")
-                    includeGroup("ru.turikhay.app")
-                }
+    repositories {
+        mavenCentral()
+        maven("https://jitpack.io")
+        maven("https://llaun.ch/repo/libraries") {
+            name = "legacy launcher cdn"
+            metadataSources {
+                mavenPom()
+                artifact()
             }
-            maven("https://libraries.minecraft.net") {
-                name = "Minecraft"
-                mavenContent {
-                    includeGroup("com.mojang")
-                }
-            }
-            maven("https://oss.sonatype.org/content/repositories/snapshots") {
-                mavenContent {
-                    snapshotsOnly()
-                }
+            mavenContent {
+                includeGroup("me.cortex")
+                includeGroup("ru.turikhay")
+                includeGroup("ru.turikhay.app")
             }
         }
+        maven("https://libraries.minecraft.net") {
+            name = "Minecraft"
+            mavenContent {
+                includeGroup("com.mojang")
+            }
+        }
+        maven("https://oss.sonatype.org/content/repositories/snapshots") {
+            mavenContent {
+                snapshotsOnly()
+            }
+        }
+    }
 
+    plugins.withId("java-base") {
         val targetJavaCompatibility: String by ext
         val sourceJavaCompatibility: String by ext
 

@@ -1,15 +1,12 @@
-import de.undercouch.gradle.tasks.download.Download
-import de.undercouch.gradle.tasks.download.Verify
-import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.configurationcache.extensions.capitalized
-import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import de.undercouch.gradle.tasks.download.*
+import net.legacylauncher.gradle.*
+import org.apache.tools.ant.filters.*
+import java.time.*
+import java.time.format.*
 import java.util.*
 
 plugins {
-    base
+    `java-base` // required for corrent variant aware dependency resolution
     alias(libs.plugins.download)
     net.legacylauncher.brand
 }
@@ -27,14 +24,57 @@ val jreVersions = mapOf(
     ),
 )
 
+fun String.firstCharUpper() = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+val bootstrapJar: Configuration by configurations.creating {
+    isCanBeDeclared = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    attributes {
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.BOOTSTRAP_JAR))
+    }
+}
+
+val launcherJar: Configuration by configurations.creating {
+    isCanBeDeclared = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    attributes {
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_JAR))
+    }
+}
+
+val launcherLibraries: Configuration by configurations.creating {
+    isCanBeDeclared = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_LIBRARY))
+    }
+}
+
+dependencies {
+    bootstrapJar(projects.bootstrap)
+    launcherJar(projects.launcher)
+    launcherLibraries(projects.launcher)
+}
+
 jreVersions.forEach { (arch, jre) ->
-    val jreZip = layout.buildDirectory.file("jreDownloads/jre${arch.capitalized()}.zip")
-    val verifyTask by tasks.register("verifyJre${arch.capitalized()}", Verify::class) {
+    val jreZip = layout.buildDirectory.file("jreDownloads/jre${arch.firstCharUpper()}.zip")
+    val verifyTask by tasks.register("verifyJre${arch.firstCharUpper()}", Verify::class) {
         src(jreZip)
         algorithm("SHA-256")
         checksum(jre["sha256"])
     }
-    val downloadTask by tasks.register("downloadJre${arch.capitalized()}", Download::class) {
+    val downloadTask by tasks.register("downloadJre${arch.firstCharUpper()}", Download::class) {
         src(jre["url"])
         dest(jreZip)
         overwrite(false)
@@ -48,14 +88,21 @@ val preparePortableBaseBuild by tasks.registering(Sync::class) {
     from(file("baseResources"))
 
     into("launcher") {
-        from(projects.bootstrap.dependencyProject.tasks.named("bootJar", AbstractArchiveTask::class)) {
+        from(bootstrapJar) {
             rename { "bootstrap.jar" }
         }
-        from(projects.launcher.dependencyProject.tasks.named("jar", AbstractArchiveTask::class)) {
+        from(launcherJar) {
             rename { "launcher.jar" }
         }
         into("libraries") {
-            from(projects.launcher.dependencyProject.tasks.named("buildLauncherRepo", AbstractCopyTask::class))
+            launcherLibraries.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+                val path = with(artifact.moduleVersion.id) {
+                    "${group.replace('.', '/')}/$name/$version"
+                }
+                into(path) {
+                    from(artifact.file)
+                }
+            }
         }
     }
 }

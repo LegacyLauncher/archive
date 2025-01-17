@@ -45,10 +45,7 @@ import org.slf4j.MarkerFactory;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.Map.Entry;
@@ -209,7 +206,7 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         log.info("Alternative Minecraft Launcher ({}) has initialized", ALTERNATIVE_VERSION);
         log.info("Compatible with official version: {}", OFFICIAL_VERSION);
-        log.info("Enabled experiments: " + experiments.stream().map(it -> it.name().toLowerCase(Locale.ROOT)).collect(Collectors.joining(", ")));
+        log.info("Enabled experiments: {}", experiments.stream().map(it -> it.name().toLowerCase(Locale.ROOT)).collect(Collectors.joining(", ")));
     }
 
     public MinecraftLauncher(LegacyLauncher t, boolean forceUpdate) {
@@ -413,7 +410,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 log.info("No library will be replaced");
                 version = deJureVersion;
             } else {
-                log.info("Some libraries will be replaced: " + String.join(", ", types));
+                log.info("Some libraries will be replaced: {}", String.join(", ", types));
                 version = LegacyLauncher.getInstance().getLibraryManager().process(deJureVersion, types.toArray(new String[0]));
             }
         } else {
@@ -1196,7 +1193,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             List<String> l = new ArrayList<>(launcher.getCommands());
             l.addAll(programArgs);
             log.info("Half command (not escaped):");
-            log.info(launcher.getJvmPath() + " " + joinList(l, ARGS_CENSORED, BLACKLIST_MODE_CENSOR));
+            log.info("{} {}", launcher.getJvmPath(), joinList(l, ARGS_CENSORED, BLACKLIST_MODE_CENSOR));
         }
 
         for (String arg : programArgs) {
@@ -1681,7 +1678,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 log.warn("Experimental: Use Generational ZGC");
                 args.add("-XX:+ZGenerational");
             } else {
-                log.warn("Experimental: Generational ZGC: requirement did not met: jreMajorVersion: required 21, got " + jreMajorVersion);
+                log.warn("Experimental: Generational ZGC: requirement did not met: jreMajorVersion: required 21, got {}", jreMajorVersion);
             }
         }
     }
@@ -1695,7 +1692,10 @@ public class MinecraftLauncher implements JavaProcessListener {
 
     private static final int ZGC_WINDOWS_BUILD = 17134;
 
-    private void addOptimizedArguments(List<String> args) {
+    private void addOptimizedArguments(List<String> args, JavaManagerConfig.OptimizedArgsType argsType) {
+        if (argsType == JavaManagerConfig.OptimizedArgsType.NONE)
+            return;
+
         addCommonOptimizedArguments(args);
 
         int jreMajorVersion = getJreMajorVersion();
@@ -1706,51 +1706,82 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         // if Shenandoah is allowed
-        if (isExperimentEnabled(Configuration.Experiments.SHENANDOAH)) {
+        if (argsType == JavaManagerConfig.OptimizedArgsType.SHENANDOAH) {
             // if you enabled this you must know what you're doing!
             // TODO check jre by launching with Shenandoah?
             if (jreMajorVersion >= 11) {
-                log.warn("Experimental: Use Shenandoah GC");
+                log.info("Will use Shenandoah GC");
                 addShenandoahOptimizedArguments(args);
                 return;
             }
 
-            log.warn("Experimental: Shenandoah: requirement did not met: jreMajorVersion: required 11, got " + jreMajorVersion);
+            log.warn("Shenandoah: requirement did not met: jreMajorVersion: required 11, got {}", jreMajorVersion);
         }
 
         // if ZGC is allowed
-        if (isExperimentEnabled(Configuration.Experiments.ZGC) || isExperimentEnabled(Configuration.Experiments.ZGC_GENERATIONAL)) {
+        if (argsType == JavaManagerConfig.OptimizedArgsType.ZGC) {
             // if you enabled this you must know what you're doing!
             boolean supportsZgc;
             if (OS.WINDOWS.isCurrent()) {
                 Optional<Integer> windowsBuildNumber = JNAWindows.getBuildNumber();
                 supportsZgc = windowsBuildNumber.filter(build -> build >= ZGC_WINDOWS_BUILD).isPresent();
                 if (!supportsZgc)
-                    log.warn("Experimental: ZGC: Unsupported Windows build: " + windowsBuildNumber.map(Object::toString).orElse("unknown"));
+                    log.info("ZGC: Unsupported Windows build: {}", windowsBuildNumber.map(Object::toString).orElse("unknown"));
             } else {
                 supportsZgc = true;
             }
             supportsZgc = supportsZgc && jreMajorVersion >= 15;
             if (jreMajorVersion < 15)
-                log.warn("Experimental: ZGC: requirement did not met: jreMajorVersion: required 15, got " + jreMajorVersion);
+                log.warn("ZGC: requirement did not met: jreMajorVersion: required 15, got {}", jreMajorVersion);
             if (supportsZgc) {
-                log.warn("Experimental: Use ZGC");
+                log.info("Will use ZGC");
                 addZGCOptimizedArguments(args, jreMajorVersion);
                 return;
             }
         }
 
-        // Is enough power and Java 8+ => G1
-        // Java 11+ => G1 for all PCs
-        if (jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
-            log.info("Will use G1 GC");
-            addG1OptimizedArguments(args);
-            return;
+        if (argsType == JavaManagerConfig.OptimizedArgsType.G1GC // if user forces G1
+                || jreMajorVersion >= 11 // or modern Java
+                || (jreMajorVersion >= 8 && (OS.Arch.AVAILABLE_PROCESSORS >= 4)) // or kinda powerful PC
+        ) {
+            if (jreMajorVersion >= 8) {
+                log.info("Will use G1 GC");
+                addG1OptimizedArguments(args);
+                return;
+            } else {
+                log.warn("G1: requirement did not met: jreMajorVersion: required 8, got {}", jreMajorVersion);
+            }
         }
 
         // Junk PCs or old Java => CMS
         log.info("Will use CMS GC");
         addCMSOptimizedArguments(args);
+    }
+
+    private void addReplaceTrustStoreArgs(List<String> args) {
+        if (!javaManagerConfig.getUseCurrentTrustStore()) {
+            return;
+        }
+
+        if (javaVersion == null)
+            getJreMajorVersion();
+
+        if (OS.JAVA_VERSION.compareTo(javaVersion) <= 0) {
+            log.info("Minecraft JRE ({}) is same or newer than Launcher JRE ({})", javaVersion.getVersion(), OS.JAVA_VERSION.getVersion());
+            return;
+        }
+
+        Path currentJrePath = Paths.get(OS.getJavaPath(false));
+        Path cacertsPath = currentJrePath.resolve("lib").resolve("security").resolve("cacerts");
+        log.debug("Current JVM cacerts path: {}", cacertsPath);
+
+        if (!Files.isRegularFile(cacertsPath)) {
+            log.warn("cacerts file \"{}\" does not exist!", cacertsPath);
+            return;
+        }
+
+        log.info("Replacing trust store with current JVM one");
+        args.add("-Djavax.net.ssl.trustStore=" + cacertsPath);
     }
 
     private void createJvmArgs(List<String> args) {
@@ -1759,9 +1790,9 @@ public class MinecraftLauncher implements JavaProcessListener {
             log.info("Appending user JVM arguments: {}", userArgs);
             args.addAll(userArgs);
         });
-        if (javaManagerConfig.useOptimizedArguments()) {
-            addOptimizedArguments(args);
-        }
+
+        addReplaceTrustStoreArgs(args);
+        addOptimizedArguments(args, javaManagerConfig.getOptimizedArgumentsType());
 
         args.add("-Xmx" + ramSize + "M");
 
@@ -1872,10 +1903,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             ProcessBuilder b = launcher.createProcess();
             Map<String, String> env = b.environment();
-            log.debug("Found global _JAVA_OPTIONS=\"" + System.getenv("_JAVA_OPTIONS") + "\"");
+            log.debug("Found global _JAVA_OPTIONS=\"{}\"", System.getenv("_JAVA_OPTIONS"));
             if (env != null) {
                 Optional<String> old = Optional.ofNullable(env.put("_JAVA_OPTIONS", ""));
-                log.debug("Replaced process _JAVA_OPTIONS=\"" + old.orElse("null") + "\" with nothing");
+                log.debug("Replaced process _JAVA_OPTIONS=\"{}\" with nothing", old.orElse("null"));
             }
             process = new JavaProcess(b.start(), charset, launcher.getHook());
             process.safeSetExitRunnable(this);

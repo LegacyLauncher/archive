@@ -22,6 +22,12 @@ val compileJava11Java by tasks.getting(JavaCompile::class) {
     options.release = 11
 }
 
+java {
+    registerFeature("java11") {
+        usingSourceSet(java11)
+    }
+}
+
 dependencies {
     implementation(projects.utils)
 
@@ -29,7 +35,7 @@ dependencies {
     api(libs.bundles.jna)
     api(libs.commons.lang3)
 
-    implementation(libs.system.theme.detector)
+    "java11Implementation"(libs.system.theme.detector)
     "java11Implementation"(libs.bundles.dbus)
     "java11Implementation"(libs.junixsocket.core)
     "java11Implementation"(projects.dbusJavaTransportJunixsocket)

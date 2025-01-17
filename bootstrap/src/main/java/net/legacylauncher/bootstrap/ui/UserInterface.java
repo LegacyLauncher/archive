@@ -1,5 +1,6 @@
 package net.legacylauncher.bootstrap.ui;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.exception.FatalExceptionType;
 import net.legacylauncher.bootstrap.meta.UpdateMeta;
@@ -20,32 +21,35 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 @Slf4j
 public final class UserInterface implements IInterface {
     public static final String DEFAULT_LOCALE = "en_US";
     static final int BORDER_SIZE = 20, TASK_DEPTH = 2;
 
+    @Getter
     private static final ResourceBundle resourceBundle;
+    private static final NumberFormat PERCENT_FORMAT = NumberFormat.getPercentInstance();
+    @Getter
+    private static boolean headed = !GraphicsEnvironment.isHeadless();
 
     static {
         ResourceBundle b = null;
         try {
-            b = ResourceBundle.getBundle("bootstrap", new UTF8Control());
+            b = ResourceBundle.getBundle("net/legacylauncher/bootstrap/bootstrap", new UTF8Control());
         } catch (Exception e) {
             log.warn("No localization bundle loaded, have a nice day", e);
         }
         resourceBundle = b;
     }
 
-    private static final NumberFormat PERCENT_FORMAT = NumberFormat.getPercentInstance();
-
+    @Getter
     private final JFrame frame;
     private final JPanel panel;
     private final JProgressBar progressBar;
-
     private final TaskListener<Object> taskListener;
+    private Task<?> bindingTask;
 
     private UserInterface() throws HeadlessException {
         if (!isHeaded()) {
@@ -54,8 +58,9 @@ public final class UserInterface implements IInterface {
 
         this.frame = new JFrame();
         frame.setIconImages(
-                Stream.of("16", "64", "128", "256")
-                        .map(r -> getClass().getResource("icon-" + r + ".png"))
+                IntStream.of(16, 64, 128, 256)
+                        .mapToObj(r -> "icon-" + r + ".png")
+                        .map(getClass()::getResource)
                         .map(SwingImageIcon::loadImage)
                         .collect(Collectors.toList())
         );
@@ -156,11 +161,77 @@ public final class UserInterface implements IInterface {
         frame.pack();
     }
 
-    public JFrame getFrame() {
-        return frame;
+    public static UserInterface createInterface() throws InterruptedException {
+        AtomicReference<UserInterface> ref = new AtomicReference<>();
+        try {
+            SwingUtilities.invokeAndWait(() -> ref.set(new UserInterface()));
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException("couldn't init UserInterface", e);
+        }
+        return ref.get();
     }
 
-    private Task<?> bindingTask;
+    public static String getLocale() {
+        return getLString("locale", DEFAULT_LOCALE);
+    }
+
+    public static String getLString(String key, String defaultValue) {
+        final ResourceBundle b = resourceBundle;
+        return b == null ? defaultValue : b.containsKey(key) ? b.getString(key) : defaultValue;
+    }
+
+    public static void showError(String message, Object textarea) {
+        if (isHeaded()) {
+            Alert.showError(message, textarea);
+        } else {
+            HeadlessInterface.printError(message, textarea);
+        }
+    }
+
+    public static void showWarning(String message, Object textarea) {
+        if (isHeaded()) {
+            Alert.showWarning(message, textarea);
+        } else {
+            HeadlessInterface.printWarning(message, textarea);
+        }
+    }
+
+    public static void showFatalError(FatalExceptionType type) {
+        if (isHeaded()) {
+            FatalExceptionHandler.handle(type);
+        } else {
+            HeadlessInterface.printFatalException(type);
+        }
+    }
+
+    public static void setHeaded(boolean head) {
+        if (GraphicsEnvironment.isHeadless() && head) {
+            throw new HeadlessException("current instance is headless");
+        }
+        UserInterface.headed = head;
+    }
+
+    static String getLocalizedTaskName(Task<?> task) {
+        Objects.requireNonNull(task, "task");
+        return getLString("loading.task." + task.getName(), task.getName());
+    }
+
+    static Task<?> getChildTask(Task<?> task, int depth) {
+        Task<?> child = task.getBindingTask();
+        if (child == null || depth == 0) {
+            return task;
+        }
+        return getChildTask(child, depth - 1);
+    }
+
+    public static void setSystemLookAndFeel() {
+        String systemLaf = UIManager.getSystemLookAndFeelClassName();
+        try {
+            UIManager.setLookAndFeel(systemLaf);
+        } catch (Exception e) {
+            log.error("Couldn't set system L&F: {}", systemLaf, e);
+        }
+    }
 
     @Override
     public void bindToTask(Task<?> task) {
@@ -199,87 +270,5 @@ public final class UserInterface implements IInterface {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
                 .append("task", bindingTask)
                 .build();
-    }
-
-    public static UserInterface createInterface() throws InterruptedException {
-        AtomicReference<UserInterface> ref = new AtomicReference<>();
-        try {
-            SwingUtilities.invokeAndWait(() -> ref.set(new UserInterface()));
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException("couldn't init UserInterface", e);
-        }
-        return ref.get();
-    }
-
-    public static ResourceBundle getResourceBundle() {
-        return resourceBundle;
-    }
-
-    public static String getLocale() {
-        return getLString("locale", DEFAULT_LOCALE);
-    }
-
-    public static String getLString(String key, String defaultValue) {
-        final ResourceBundle b = resourceBundle;
-        return b == null ? defaultValue : b.containsKey(key) ? b.getString(key) : defaultValue;
-    }
-
-    public static void showError(String message, Object textarea) {
-        if (isHeaded()) {
-            Alert.showError(message, textarea);
-        } else {
-            HeadlessInterface.printError(message, textarea);
-        }
-    }
-
-    public static void showWarning(String message, Object textarea) {
-        if (isHeaded()) {
-            Alert.showWarning(message, textarea);
-        } else {
-            HeadlessInterface.printWarning(message, textarea);
-        }
-    }
-
-    public static void showFatalError(FatalExceptionType type) {
-        if (isHeaded()) {
-            FatalExceptionHandler.handle(type);
-        } else {
-            HeadlessInterface.printFatalException(type);
-        }
-    }
-
-    private static boolean headed = !GraphicsEnvironment.isHeadless();
-
-    public static boolean isHeaded() {
-        return headed;
-    }
-
-    public static void setHeaded(boolean head) {
-        if (GraphicsEnvironment.isHeadless() && head) {
-            throw new HeadlessException("current instance is headless");
-        }
-        UserInterface.headed = head;
-    }
-
-    static String getLocalizedTaskName(Task<?> task) {
-        Objects.requireNonNull(task, "task");
-        return getLString("loading.task." + task.getName(), task.getName());
-    }
-
-    static Task<?> getChildTask(Task<?> task, int depth) {
-        Task<?> child = task.getBindingTask();
-        if (child == null || depth == 0) {
-            return task;
-        }
-        return getChildTask(child, depth - 1);
-    }
-
-    public static void setSystemLookAndFeel() {
-        String systemLaf = UIManager.getSystemLookAndFeelClassName();
-        try {
-            UIManager.setLookAndFeel(systemLaf);
-        } catch (Exception e) {
-            log.error("Couldn't set system L&F: {}", systemLaf, e);
-        }
     }
 }

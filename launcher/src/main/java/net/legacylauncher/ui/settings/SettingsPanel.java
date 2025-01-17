@@ -221,18 +221,18 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         laf = new EditorFieldHandler(FlatLafConfiguration.KEY_STATE, new EditorComboBox<>(
                 new LocalizableStringConverter<String>("settings.laf.state") {
                     @Override
-                    protected String toPath(String var1) {
-                        return var1;
+                    protected String toPath(String from) {
+                        return from;
                     }
 
                     @Override
-                    public String fromString(String var1) {
-                        return var1;
+                    public String fromString(String from) {
+                        return from;
                     }
 
                     @Override
-                    public String toValue(String var1) {
-                        return var1;
+                    public String toValue(String from) {
+                        return from;
                     }
 
                     @Override

@@ -1,5 +1,6 @@
 package net.legacylauncher.configuration;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.util.Lazy;
@@ -20,16 +21,56 @@ import java.util.stream.Stream;
 @Slf4j
 public final class LangConfiguration {
     public static final Locale ru_RU = U.getLocale("ru_RU");
+    private static final String LOCALE_PATH = "/net/legacylauncher/lang";
+    private static final Lazy<List<Locale>> localeList = Lazy.of(() -> {
+        URL url = LangConfiguration.class.getResource(LOCALE_PATH);
+        if (url == null) {
+            log.error("No available locales");
+            return Collections.emptyList();
+        }
 
+        final List<Locale> locales;
+        final Function<Stream<Path>, List<Locale>> locator = stream -> stream.map(it -> it.getFileName().toString()).filter(it -> it.startsWith("lang_") && it.endsWith(".properties")).map(it -> it.substring("lang_".length(), it.length() - ".properties".length()).replace('_', '-')).map(Locale::forLanguageTag).sorted(Comparator.comparing(Locale::toString)).collect(Collectors.toList());
+
+        URI uri = url.toURI();
+        if (uri.getScheme().equals("jar")) {
+            try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap(), LangConfiguration.class.getClassLoader())) {
+                try (Stream<Path> stream = Files.walk(fs.getPath(LOCALE_PATH), 1).skip(1)) {
+                    locales = locator.apply(stream);
+                }
+            }
+        } else {
+            try (Stream<Path> stream = Files.walk(Paths.get(uri), 1).skip(1)) {
+                locales = locator.apply(stream);
+            }
+        }
+        return Collections.unmodifiableList(locales);
+    });
     private final Map<Locale, Properties> translationsMap = new HashMap<>();
     private final Map<Locale, Pattern[]> pluralMap = new HashMap<>();
-
-    private Pattern[] plurals;
-
+    @Getter
     private Locale locale;
 
     public LangConfiguration() {
         setLocale(Locale.US);
+    }
+
+    private static String[] checkVariables(Object[] check) {
+        if (check == null || check.length == 1 && check[0] == null) {
+            return new String[0];
+        } else {
+            String[] string = new String[check.length];
+
+            for (int i = 0; i < check.length; ++i) {
+                string[i] = String.valueOf(check[i]);
+            }
+
+            return string;
+        }
+    }
+
+    public static List<Locale> getAvailableLocales() {
+        return localeList.get();
     }
 
     public String lget(Locale locale, String key) {
@@ -55,24 +96,26 @@ public final class LangConfiguration {
 
         String[] variables = checkVariables(vars);
 
-        if (pluralMap.containsKey(locale)) {
-            Pattern[] plurals = pluralMap.get(locale);
+        Pattern[] plurals = pluralMap.computeIfAbsent(locale, this::getPluralPatterns);
 
-            for (int var = 0; var < variables.length; var++) {
-                String pluralReplacementValue = nget(key + '.' + var + ".plural");
-                if (pluralReplacementValue == null) {
-                    // plural is not found
-                    value = StringUtils.replace(value, "%" + var, variables[var]);
-                    continue;
-                }
+        if (plurals == null || plurals.length == 0) {
+            return value;
+        }
 
-                String[] pluralReplacements = StringUtils.split(pluralReplacementValue, ';');
+        for (int var = 0; var < variables.length; var++) {
+            String pluralReplacementValue = nget(key + '.' + var + ".plural");
+            if (pluralReplacementValue == null) {
+                // plural is not found
+                value = StringUtils.replace(value, "%" + var, variables[var]);
+                continue;
+            }
 
-                for (int patternKey = 0; patternKey < plurals.length; patternKey++) {
-                    if (plurals[patternKey].matcher(variables[var]).matches()) {
-                        value = StringUtils.replace(value, "%" + var, StringUtils.replace(pluralReplacements[patternKey], "%n", variables[var]));
-                        break;
-                    }
+            String[] pluralReplacements = StringUtils.split(pluralReplacementValue, ';');
+
+            for (int patternKey = 0; patternKey < plurals.length; patternKey++) {
+                if (plurals[patternKey].matcher(variables[var]).matches()) {
+                    value = StringUtils.replace(value, "%" + var, StringUtils.replace(pluralReplacements[patternKey], "%n", variables[var]));
+                    break;
                 }
             }
         }
@@ -113,27 +156,8 @@ public final class LangConfiguration {
         }
     }
 
-    private static String[] checkVariables(Object[] check) {
-        if (check == null || check.length == 1 && check[0] == null) {
-            return new String[0];
-        } else {
-            String[] string = new String[check.length];
-
-            for (int i = 0; i < check.length; ++i) {
-                string[i] = String.valueOf(check[i]);
-            }
-
-            return string;
-        }
-    }
-
-    public Locale getLocale() {
-        return locale;
-    }
-
     public synchronized void setLocale(Locale locale) {
         this.locale = locale;
-        this.plurals = null;
 
         if (locale == null) {
             log.warn("Tried to set locale to null");
@@ -147,15 +171,7 @@ public final class LangConfiguration {
         Properties translations = getTranslations(locale);
         if (translations != null) {
             translationsMap.put(locale, translations);
-
-            Pattern[] pluralPatterns = pluralMap.get(locale);
-            if (pluralPatterns == null) {
-                pluralMap.put(locale, pluralPatterns = getPluralPatterns(locale));
-            }
-
-            checkConsistancy(locale);
-
-            this.plurals = pluralPatterns;
+            checkConsistency(locale);
         }
     }
 
@@ -173,7 +189,7 @@ public final class LangConfiguration {
 
         if (translations == null) {
 
-            try (InputStream in = LangConfiguration.class.getResourceAsStream("/lang/lang_" + localeStr + ".properties")) {
+            try (InputStream in = LangConfiguration.class.getResourceAsStream(LOCALE_PATH + "/lang_" + localeStr + ".properties")) {
                 if (in == null) {
                     throw new NullPointerException("could not find translations for " + localeStr);
                 }
@@ -214,7 +230,7 @@ public final class LangConfiguration {
 
     }
 
-    private void checkConsistancy(Locale locale) {
+    private void checkConsistency(Locale locale) {
         if (LegacyLauncher.getInstance() == null || !LegacyLauncher.getInstance().isDebug() || locale == ru_RU) {
             return;
         }
@@ -236,49 +252,6 @@ public final class LangConfiguration {
                     log.warn("{} has redundant key: {}", locale, key);
                 }
             }
-        }
-    }
-
-    private static final Lazy<List<Locale>> localeList = Lazy.of(() -> {
-        URL url = LangConfiguration.class.getResource("/lang");
-        if (url == null) {
-            log.error("No available locales");
-            return Collections.emptyList();
-        }
-
-        final List<Locale> locales;
-        final Function<Stream<Path>, List<Locale>> locator = stream -> stream.map(it -> it.getFileName().toString())
-                .filter(it -> it.startsWith("lang_") && it.endsWith(".properties"))
-                .map(it -> it.substring("lang_".length(), it.length() - ".properties".length()).replace('_', '-'))
-                .map(Locale::forLanguageTag)
-                .sorted(LocaleComparator.INSTANCE)
-                .collect(Collectors.toList());
-
-        URI uri = url.toURI();
-        if (uri.getScheme().equals("jar")) {
-            try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap(), LangConfiguration.class.getClassLoader())) {
-                try (Stream<Path> stream = Files.walk(fs.getPath("/lang"), 1).skip(1)) {
-                    locales = locator.apply(stream);
-                }
-            }
-        } else {
-            try (Stream<Path> stream = Files.walk(Paths.get(uri), 1).skip(1)) {
-                locales = locator.apply(stream);
-            }
-        }
-        return Collections.unmodifiableList(locales);
-    });
-
-    public static List<Locale> getAvailableLocales() {
-        return localeList.get();
-    }
-
-    private static class LocaleComparator implements Comparator<Locale> {
-        public static final Comparator<Locale> INSTANCE = new LocaleComparator();
-
-        @Override
-        public int compare(Locale o1, Locale o2) {
-            return o1.toString().compareTo(o2.toString());
         }
     }
 }

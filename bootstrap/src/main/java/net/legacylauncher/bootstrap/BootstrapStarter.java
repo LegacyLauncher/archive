@@ -141,6 +141,10 @@ public final class BootstrapStarter {
             String part = uri.getSchemeSpecificPart();
             int i = part.indexOf("!/");
             if (i > 0) {
+                String filePath = part.substring(0, i);
+                if (filePath.startsWith("file:")) {
+                    return new JarInJar(uri, Paths.get(filePath.substring("file:".length())));
+                }
                 return new JarInJar(uri, Paths.get(URI.create(part.substring(0, i))));
             }
         }
