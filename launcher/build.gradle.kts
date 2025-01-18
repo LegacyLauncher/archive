@@ -37,7 +37,7 @@ val compileTestJava by tasks.getting(JavaCompile::class) {
 val launcherLibraries by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = true
-    isCanBeDeclared = false
+    isCanBeDeclared = true
 
     extendsFrom(configurations.runtimeClasspath.get(), configurations["java11RuntimeClasspath"])
     // TODO this line removes JavaFX from debug runs
@@ -92,7 +92,6 @@ dependencies {
         }
     }
     "java11Implementation"(libs.bundles.dbus)
-    "java11RuntimeOnly"(projects.dbusJavaTransportJunixsocket)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
@@ -278,6 +277,11 @@ val jar by tasks.getting(Jar::class) {
     )
 }
 
+val test by tasks.getting(Test::class) {
+    dependsOn(processResources)
+    systemProperty("net.legacylauncher.test.launcher-resources", processResources.destinationDir)
+}
+
 testing {
     suites {
         val test by getting(JvmTestSuite::class) {
@@ -288,9 +292,9 @@ testing {
 
 val launcherJar by configurations.consumable("launcherJar") {
     attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
-        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
         attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_JAR))
     }

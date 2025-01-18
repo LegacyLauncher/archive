@@ -124,6 +124,7 @@ val launcherLibraries: Configuration by configurations.creating {
     isCanBeDeclared = true
     isCanBeResolved = true
     isCanBeConsumed = false
+
     attributes {
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
@@ -138,6 +139,8 @@ val launcherJar: Configuration by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false
     attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
         attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_JAR))
@@ -349,9 +352,9 @@ testing {
 
 val bootstrapJar by configurations.consumable("bootstrapJar") {
     attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
-        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
         attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.BOOTSTRAP_JAR))
     }

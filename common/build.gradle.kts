@@ -1,3 +1,4 @@
+import net.legacylauncher.gradle.*
 import org.gradle.jvm.tasks.Jar
 
 plugins {
@@ -81,4 +82,27 @@ val processResources by tasks.getting(ProcessResources::class) {
             }
         }
     }
+}
+
+val launcherLibraries by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = true
+    isCanBeDeclared = false
+
+    extendsFrom(configurations.runtimeClasspath.get(), configurations["java11RuntimeClasspath"])
+
+    attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.EXTERNAL))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(LegacyLauncherPackaging.ATTRIBUTE, objects.named(LegacyLauncherPackaging.LAUNCHER_LIBRARY))
+    }
+
+    // dirty hack to get around gradle shittines in dependency resolution
+    exclude("net.java.dev.jna", "jna")
+}
+
+artifacts {
+    add(launcherLibraries.name, jar)
 }
