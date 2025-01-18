@@ -14,7 +14,10 @@ public class VersionFamily {
 
     public static Guess guessFamilyOf(VersionSyncInfo versionSyncInfo) {
         if (versionSyncInfo.getLocalCompleteVersion() != null) {
-            return new Guess(versionSyncInfo.getLocalCompleteVersion().getFamily(), true);
+            String family = versionSyncInfo.getLocalCompleteVersion().getFamily();
+            if (family != null) {
+                return new Guess(family, true);
+            }
         }
         String id = versionSyncInfo.getAvailableVersion().getID();
         Guess maybeCached = ID_CACHE.get(id);

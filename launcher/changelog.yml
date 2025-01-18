@@ -1,14 +1,6 @@
 ru_RU: >
-  Привет, давно не виделись.<br/><br/>
-  - Галочка "Оптимизированных аргументов" заменена на выбор сборщика мусора<br/>
-  - Исправление потенциальной проблемы со входом в аккаунты Ely.by<br/>
-  - Добавлена функция обновления устаревших SSL-сертификатов для старых версий Java<br/>
-  - Исправлена проблема отображения длинных названий видеокарт в настройках лаунчера<br/>
-  – Внутренние исправления и улучшения<br/>
+  – Починили поиск по версиям<br/>
+  – Другие небольшие исправления и улучшения
 en_US: >
-  Hi, it's been a while!<br/><br/>
-  - "Optimized arguments" checkbox was replaced with Garbage Collector selector<br/>
-  - Fixed possible issue with logging into Ely.by accounts<br/>
-  - Added "Update outdated SSL certificate storage" feature for old Java versions<br/>
-  - Fixed issue with very long GPU labels<br/>
-  – Other fixes and improvements<br/>
+  – Fixed version search<br/>
+  – Other small fixes and improvements

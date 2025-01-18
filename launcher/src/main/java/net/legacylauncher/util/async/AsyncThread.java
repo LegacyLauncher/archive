@@ -1,6 +1,7 @@
 package net.legacylauncher.util.async;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import net.legacylauncher.handlers.ExceptionHandler;
 import net.legacylauncher.util.shared.FutureUtils;
 
 import java.util.concurrent.*;
@@ -14,6 +15,7 @@ public class AsyncThread {
             new LinkedBlockingQueue<>(),
             new ThreadFactoryBuilder()
                     .setThreadFactory(ExtendedThread::new)
+                    .setUncaughtExceptionHandler(ExceptionHandler.getInstance())
                     .setNameFormat("AsyncThread-%d")
                     .setDaemon(true)
                     .build()
