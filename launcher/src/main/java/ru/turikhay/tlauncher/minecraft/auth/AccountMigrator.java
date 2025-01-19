@@ -48,7 +48,7 @@ public class AccountMigrator {
             try {
                 switch (account.type) {
                     case "free":
-                        user = AccountManager.getPlainAuth().authorize(account.username);
+                        user = AccountManager.getPlainAuth().authorize(account.username, true);
                         break;
                     case "mojang":
                         account.clientToken = clientToken;

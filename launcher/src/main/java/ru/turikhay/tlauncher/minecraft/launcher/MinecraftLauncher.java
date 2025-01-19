@@ -24,7 +24,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import ru.turikhay.app.nstweaker.NSTweaker;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.configuration.Configuration;
 import ru.turikhay.tlauncher.downloader.AbortedDownloadException;
@@ -51,10 +50,7 @@ import ru.turikhay.util.async.AsyncThread;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.Map.Entry;
@@ -379,7 +375,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             if (isLauncher) {
                 LOGGER.debug("Account is not required, setting user \"launcher\"");
                 accountName = "launcher";
-                account = new Account<>(new PlainUser(accountName, new UUID(0L, 0L)));
+                account = new Account<>(new PlainUser(accountName, new UUID(0L, 0L), false));
             } else {
                 throw new NullPointerException("account");
             }
@@ -391,20 +387,14 @@ public class MinecraftLauncher implements JavaProcessListener {
         if (!isLauncher) {
             Account.AccountType lookupLibrariesForType;
             switch (account.getType()) {
-                case MCLEAKS:
-                    if (McleaksManager.isUnsupported()) {
-                        throw new MinecraftException(false, "MCLeaks is not supported", "mcleaks-unsupported");
-                    } else {
-                        lookupLibrariesForType = Account.AccountType.MCLEAKS;
-                        oldMainclass = deJureVersion.getMainClass();
-                    }
-                    break;
                 case ELY:
                 case ELY_LEGACY:
                     lookupLibrariesForType = Account.AccountType.ELY;
                     break;
                 case PLAIN:
-                    if (TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere() && settings.getBoolean("ely.globally")) {
+                    if (TLauncher.getInstance().getLibraryManager().isAllowElyEverywhere()
+                            && account.getType() == Account.AccountType.PLAIN
+                            && ((PlainUser) account.getUser()).isElySkins()) {
                         lookupLibrariesForType = Account.AccountType.ELY;
                     } else {
                         lookupLibrariesForType = Account.AccountType.PLAIN;
@@ -903,6 +893,15 @@ public class MinecraftLauncher implements JavaProcessListener {
         launcher = new JavaProcessLauncher(charset, Objects.requireNonNull(jreExec, "jreExec"), new String[0]);
         launcher.directory(isLauncher ? rootDir : gameDir);
 
+        javaManagerConfig.getWrapperCommand().ifPresent(s -> {
+            List<String> wrapperCommand = Arrays.asList(s.trim().split("\\s+"));
+            if (wrapperCommand.stream().noneMatch(JavaProcessLauncher.COMMAND_TOKEN::equals)) {
+                wrapperCommand.add(JavaProcessLauncher.COMMAND_TOKEN);
+            }
+            LOGGER.info("Appending wrapped command: {}", s);
+            launcher.wrapperCommand(wrapperCommand);
+        });
+
         try {
             fixResourceFolder();
         } catch (Exception ioE) {
@@ -1188,16 +1187,6 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
 
-        if (librariesForType == Account.AccountType.PLAIN) {
-            // no ely authlib
-            jvmArgs.addAll(Arrays.asList(
-                    "-Dminecraft.api.auth.host=https://0.0.0.0",
-                    "-Dminecraft.api.account.host=https://0.0.0.0",
-                    "-Dminecraft.api.session.host=https://0.0.0.0",
-                    "-Dminecraft.api.services.host=https://0.0.0.0"
-            ));
-        }
-
         StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
         programArgs.addAll(version.addArguments(ArgumentType.GAME, featureMatcher, argumentsSubstitutor));
@@ -1225,16 +1214,16 @@ public class MinecraftLauncher implements JavaProcessListener {
             List<String> l = new ArrayList<>(launcher.getCommands());
             l.addAll(programArgs);
             LOGGER.info("Half command (not escaped):");
-            LOGGER.info(launcher.getJvmPath() + " " + joinList(l, ARGS_CENSORED, BLACKLIST_MODE_CENSOR));
+            LOGGER.info("{} {}", launcher.getJvmPath(), joinList(l, ARGS_CENSORED, BLACKLIST_MODE_CENSOR));
         }
 
         for (String arg : programArgs) {
             launcher.addCommand(arg);
         }
 
-        if (settings.getBoolean("minecraft.deleteTlSkinCape")) {
-            LOGGER.info("Deleting TLSkinCape mod. Disable this feature in config file if you want");
-            deleteMod("tl.?skin.?cape.*\\.jar");
+        if (settings.getBoolean("minecraft.mods.removeUndesirable")) {
+            LOGGER.info("Removing undesirable mods. Disable this feature in config file if needed.");
+            deleteMod("tl.?skin.?cape.*\\.jar", "kl.?master.*\\.jar");
         }
 
         String gpuName = settings.get("minecraft.gpu");
@@ -1626,87 +1615,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }*/
 
-    private void addCMSOptimizedArguments(List<String> args) {
-        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-        args.add("-XX:+UseConcMarkSweepGC"); // enable CMS
-        args.add("-XX:-UseAdaptiveSizePolicy");
-        args.add("-XX:+CMSParallelRemarkEnabled");
-        args.add("-XX:+CMSClassUnloadingEnabled");
-        args.add("-XX:+UseCMSInitiatingOccupancyOnly");
-        args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2)); // we don't have Parallel anymore
-    }
-
-    private void addG1OptimizedArguments(List<String> args) {
-        args.add("-XX:+UnlockExperimentalVMOptions"); // to unlock G1NewSizePercent
-        args.add("-XX:+UseG1GC"); // enable G1
-        args.add("-XX:G1NewSizePercent=20"); // from Mojang launcher
-        args.add("-XX:G1ReservePercent=20"); // from Mojang launcher
-        args.add("-XX:MaxGCPauseMillis=50"); // from Mojang launcher
-        args.add("-XX:G1HeapRegionSize=32M"); // from Mojang launcher
-        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-        args.add("-XX:+AlwaysPreTouch");
-        args.add("-XX:+ParallelRefProcEnabled");
-    }
-
-    private void addZGCOptimizedArguments(List<String> args) {
-        // https://github.com/Obydux/MC-ZGC-Flags
-        args.add("-XX:+UnlockExperimentalVMOptions");
-        args.add("-XX:+UseZGC"); // enable ZGC
-        args.add("-XX:-ZUncommit"); // Unstable feature, disable
-        args.add("-XX:ZCollectionInterval=5");
-        args.add("-XX:ZAllocationSpikeTolerance=2.0");
-        args.add("-XX:+AlwaysPreTouch"); // AlwaysPreTouch gets the memory setup and reserved at process start ensuring
-        // it is contiguous, improving the efficiency of it more. This improves
-        // the operating systems memory access speed. Mandatory to use Transparent Huge Pages
-        args.add("-XX:+ParallelRefProcEnabled"); // Optimizes the GC process to use multiple threads for weak reference checking
-        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-    }
-
-    private static final int ZGC_WINDOWS_BUILD = 17134;
-
-    private void addOptimizedArguments(List<String> args) {
-        int jreMajorVersion = getJreMajorVersion();
-
-        // Consider any unknown Java as Java 8
-        if (jreMajorVersion == 0) {
-            jreMajorVersion = 8;
-        }
-
-        // I want Kotlin's when {}
-        // Is enough power and Java 15+ => ZGC
-        // ZGC requires A LOT of heap on start
-        boolean supportsZgc;
-        if (OS.WINDOWS.isCurrent()) {
-            supportsZgc = JNAWindows.getBuildNumber().filter(build -> build >= ZGC_WINDOWS_BUILD).isPresent();
-        } else {
-            supportsZgc = true;
-        }
-        if (supportsZgc && jreMajorVersion >= 15 && OS.Arch.AVAILABLE_PROCESSORS >= 8 && ramSize >= 8192) {
-            addZGCOptimizedArguments(args);
-            return;
-        }
-
-        // Is enough power and Java 8+ => G1
-        // Java 11+ => G1 for all PCs
-        if (jreMajorVersion >= 11 || (jreMajorVersion >= 8 && OS.Arch.AVAILABLE_PROCESSORS >= 4)) {
-            addG1OptimizedArguments(args);
-            return;
-        }
-
-        // Junk PCs or old Java => CMS
-        addCMSOptimizedArguments(args);
-    }
-
-    private void createJvmArgs(List<String> args) {
-        javaManagerConfig.getArgs().ifPresent(s -> {
-            List<String> userArgs = Arrays.asList(StringUtils.split(s, ' '));
-            LOGGER.info("Appending user JVM arguments: {}", userArgs);
-            args.addAll(userArgs);
-        });
-        if (javaManagerConfig.useOptimizedArguments()) {
-            addOptimizedArguments(args);
-        }
-
+    private void addCommonOptimizedArguments(List<String> args) {
         long xms = Math.min(ramSize, 2048);
         OptionalLong freeRamOpt = OS.Arch.getFreeRam();
         if (freeRamOpt.isPresent()) {
@@ -1722,16 +1631,169 @@ public class MinecraftLauncher implements JavaProcessListener {
         } else {
             LOGGER.warn("Couldn't query free RAM in the system");
         }
-
         args.add("-Xms" + xms + "M"); // Pre-allocate some heap
-        args.add("-Xmx" + ramSize + "M");
+        args.add("-XX:+UnlockExperimentalVMOptions");
+        args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
+        args.add("-XX:MaxGCPauseMillis=200");
+        args.add("-XX:+AlwaysPreTouch");
+        args.add("-XX:+ParallelRefProcEnabled");
+    }
 
-        if (librariesForType == Account.AccountType.MCLEAKS) {
-            args.add("-Dru.turikhay.mcleaks.nstweaker.hostname=true");
-            args.add("-Dru.turikhay.mcleaks.nstweaker.hostname.list=" + NSTweaker.toTweakHostnameList(McleaksManager.getConnector().getList()));
-            args.add("-Dru.turikhay.mcleaks.nstweaker.ssl=true");
-            args.add("-Dru.turikhay.mcleaks.nstweaker.mainclass=" + oldMainclass);
+    private void addCMSOptimizedArguments(List<String> args) {
+        args.add("-XX:+UseConcMarkSweepGC"); // enable CMS
+        args.add("-XX:-UseAdaptiveSizePolicy");
+        args.add("-XX:+CMSParallelRemarkEnabled");
+        args.add("-XX:+CMSClassUnloadingEnabled");
+        args.add("-XX:+UseCMSInitiatingOccupancyOnly");
+        args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2)); // we don't have Parallel anymore
+    }
+
+    private void addG1OptimizedArguments(List<String> args) {
+        // https://aikar.co/2018/07/02/tuning-the-jvm-g1gc-garbage-collector-flags-for-minecraft/
+        args.add("-XX:+UseG1GC"); // enable G1
+        if (ramSize < 12288) {
+            args.add("-XX:G1NewSizePercent=30");
+            args.add("-XX:G1MaxNewSizePercent=40");
+            args.add("-XX:G1HeapRegionSize=8M");
+            args.add("-XX:G1ReservePercent=20");
+            args.add("-XX:InitiatingHeapOccupancyPercent=15");
+        } else {
+            args.add("-XX:G1NewSizePercent=40");
+            args.add("-XX:G1MaxNewSizePercent=50");
+            args.add("-XX:G1HeapRegionSize=16M");
+            args.add("-XX:G1ReservePercent=15");
+            args.add("-XX:InitiatingHeapOccupancyPercent=20");
         }
+        args.add("-XX:G1HeapWastePercent=5");
+        args.add("-XX:G1MixedGCCountTarget=4");
+        args.add("-XX:G1MixedGCLiveThresholdPercent=90");
+        args.add("-XX:G1RSetUpdatingPauseTimePercent=5");
+        args.add("-XX:+UseStringDeduplication");
+    }
+
+    private void addZGCOptimizedArguments(List<String> args) {
+        // https://github.com/Obydux/MC-ZGC-Flags
+        args.add("-XX:+UseZGC"); // enable ZGC
+        args.add("-XX:ZCollectionInterval=5");
+        args.add("-XX:ZAllocationSpikeTolerance=2.0");
+        args.add("-XX:+UseStringDeduplication");
+        args.add("-XX:+OptimizeStringConcat");
+    }
+
+    private void addShenandoahOptimizedArguments(List<String> args) {
+        args.add("-XX:+UseShenandoahGC");
+        args.add("-XX:ShenandoahGCMode=iu");
+        args.add("-XX:+UseStringDeduplication");
+        args.add("-XX:+OptimizeStringConcat");
+    }
+
+
+
+    private static final int ZGC_WINDOWS_BUILD = 17134;
+
+    private void addOptimizedArguments(List<String> args, JavaManagerConfig.OptimizedArgsType argsType) {
+        if (argsType == JavaManagerConfig.OptimizedArgsType.NONE)
+            return;
+
+        addCommonOptimizedArguments(args);
+
+        int jreMajorVersion = getJreMajorVersion();
+
+        // Consider any unknown Java as recommended Java
+        if (jreMajorVersion == 0) {
+            jreMajorVersion = version.getJavaVersion().getMajorVersion();
+        }
+
+        // if Shenandoah is allowed
+        if (argsType == JavaManagerConfig.OptimizedArgsType.SHENANDOAH) {
+            // if you enabled this you must know what you're doing!
+            // TODO check jre by launching with Shenandoah?
+            if (jreMajorVersion >= 11) {
+                LOGGER.info("Will use Shenandoah GC");
+                addShenandoahOptimizedArguments(args);
+                return;
+            }
+
+            LOGGER.warn("Shenandoah: requirement did not met: jreMajorVersion: required 11, got {}", jreMajorVersion);
+        }
+
+        // if ZGC is allowed
+        if (argsType == JavaManagerConfig.OptimizedArgsType.ZGC) {
+            // if you enabled this you must know what you're doing!
+            boolean supportsZgc;
+            if (OS.WINDOWS.isCurrent()) {
+                Optional<Integer> windowsBuildNumber = JNAWindows.getBuildNumber();
+                supportsZgc = windowsBuildNumber.filter(build -> build >= ZGC_WINDOWS_BUILD).isPresent();
+                if (!supportsZgc)
+                    LOGGER.info("ZGC: Unsupported Windows build: {}", windowsBuildNumber.map(Object::toString).orElse("unknown"));
+            } else {
+                supportsZgc = true;
+            }
+            supportsZgc = supportsZgc && jreMajorVersion >= 15;
+            if (jreMajorVersion < 15)
+                LOGGER.warn("ZGC: requirement did not met: jreMajorVersion: required 15, got {}", jreMajorVersion);
+            if (supportsZgc) {
+                LOGGER.info("Will use ZGC");
+                addZGCOptimizedArguments(args);
+                return;
+            }
+        }
+
+        if (argsType == JavaManagerConfig.OptimizedArgsType.G1GC // if user forces G1
+                || jreMajorVersion >= 11 // or modern Java
+                || (jreMajorVersion >= 8 && (OS.Arch.AVAILABLE_PROCESSORS >= 4)) // or kinda powerful PC
+        ) {
+            if (jreMajorVersion >= 8) {
+                LOGGER.info("Will use G1 GC");
+                addG1OptimizedArguments(args);
+                return;
+            } else {
+                LOGGER.warn("G1: requirement did not met: jreMajorVersion: required 8, got {}", jreMajorVersion);
+            }
+        }
+
+        // Junk PCs or old Java => CMS
+        LOGGER.info("Will use CMS GC");
+        addCMSOptimizedArguments(args);
+    }
+
+    private void addReplaceTrustStoreArgs(List<String> args) {
+        if (!javaManagerConfig.getUseCurrentTrustStore()) {
+            return;
+        }
+
+        if (javaVersion == null)
+            getJreMajorVersion();
+
+        if (OS.JAVA_VERSION.compareTo(javaVersion) <= 0) {
+            LOGGER.info("Minecraft JRE ({}) is same or newer than Launcher JRE ({})", javaVersion.getVersion(), OS.JAVA_VERSION.getVersion());
+            return;
+        }
+
+        Path currentJrePath = Paths.get(OS.getJavaPath(false));
+        Path cacertsPath = currentJrePath.resolve("lib").resolve("security").resolve("cacerts");
+        LOGGER.debug("Current JVM cacerts path: {}", cacertsPath);
+
+        if (!Files.isRegularFile(cacertsPath)) {
+            LOGGER.warn("cacerts file \"{}\" does not exist!", cacertsPath);
+            return;
+        }
+
+        LOGGER.info("Replacing trust store with current JVM one");
+        args.add("-Djavax.net.ssl.trustStore=" + cacertsPath);
+    }
+
+    private void createJvmArgs(List<String> args) {
+        javaManagerConfig.getArgs().ifPresent(s -> {
+            List<String> userArgs = Arrays.asList(StringUtils.split(s, ' '));
+            LOGGER.info("Appending user JVM arguments: {}", userArgs);
+            args.addAll(userArgs);
+        });
+
+        addReplaceTrustStoreArgs(args);
+        addOptimizedArguments(args, javaManagerConfig.getOptimizedArgumentsType());
+
+        args.add("-Xmx" + ramSize + "M");
 
         if (!OS.WINDOWS.isCurrent() || StringUtils.isAsciiPrintable(nativeDir.getAbsolutePath())) {
             args.add("-Dfile.encoding=" + charset.name());
@@ -1840,10 +1902,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             ProcessBuilder b = launcher.createProcess();
             Map<String, String> env = b.environment();
-            LOGGER.debug("Found global _JAVA_OPTIONS=\"" + Optional.ofNullable(System.getenv("_JAVA_OPTIONS")).orElse("null") + "\"");
+            LOGGER.debug("Found global _JAVA_OPTIONS=\"{}\"", System.getenv("_JAVA_OPTIONS"));
             if (env != null) {
                 Optional<String> old = Optional.ofNullable(env.put("_JAVA_OPTIONS", ""));
-                LOGGER.debug("Replaced process _JAVA_OPTIONS=\"" + old.orElse("null") + "\" with nothing");
+                LOGGER.debug("Replaced process _JAVA_OPTIONS=\"{}\" with nothing", old.orElse("null"));
             }
             process = new JavaProcess(b.start(), charset, launcher.getHook());
             process.safeSetExitRunnable(this);

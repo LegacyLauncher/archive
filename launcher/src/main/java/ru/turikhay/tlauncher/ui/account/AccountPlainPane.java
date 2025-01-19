@@ -6,25 +6,27 @@ import ru.turikhay.tlauncher.managers.AccountManager;
 import ru.turikhay.tlauncher.minecraft.auth.Account;
 import ru.turikhay.tlauncher.ui.alert.Alert;
 import ru.turikhay.tlauncher.ui.images.Images;
-import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
-import ru.turikhay.tlauncher.ui.loc.LocalizableLabel;
-import ru.turikhay.tlauncher.ui.loc.LocalizableTextField;
+import ru.turikhay.tlauncher.ui.loc.*;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
 import ru.turikhay.tlauncher.ui.swing.DocumentChangeListener;
+import ru.turikhay.tlauncher.ui.swing.extended.ExtendedCheckbox;
 import ru.turikhay.tlauncher.ui.swing.extended.ExtendedPanel;
-import ru.turikhay.tlauncher.ui.theme.Theme;
+import ru.turikhay.tlauncher.user.PlainUser;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.util.SwingUtil;
 
-import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneCompCloseable {
     private static final String[] DISALLOWED = {"turikhay", "nik_mmzd", "mcmodder", "DarikXPlay", "ErickSkrauch"};
 
     private final AccountManagerScene scene;
     private final LocalizableTextField field;
+    private final ExtendedCheckbox invalidNameAwareCheckbox;
+    private final ExtendedCheckbox elySkins;
 
     private final PaneMode mode;
 
@@ -49,25 +51,36 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         c.gridy++;
         add(label, c);
 
+        ExtendedPanel invalidNameAwarePane = new ExtendedPanel();
+        GridBagConstraints ac = new GridBagConstraints();
+        ac.gridy = 0;
+        ac.gridx = 0;
+        ac.anchor = GridBagConstraints.WEST;
+        invalidNameAwareCheckbox = new ExtendedCheckbox();
+        invalidNameAwarePane.add(invalidNameAwareCheckbox, ac);
+        ac.gridx++;
+        LocalizableHTMLLabel invalidNameAwareLabel = new LocalizableHTMLLabel(LOC_PREFIX + "invalid-name-aware-checkbox");
+        invalidNameAwareLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                invalidNameAwareCheckbox.doClick();
+            }
+        });
+        invalidNameAwareLabel.setLabelWidth(SwingUtil.magnify(260));
+        invalidNameAwarePane.add(invalidNameAwareLabel, ac);
+
         field = new LocalizableTextField();
         field.getDocument().addDocumentListener(new DocumentChangeListener() {
-            private boolean wasValid = true;
             @Override
             public void documentChanged(DocumentEvent e) {
-                String v = field.getValue();
-                setValid(StringUtils.isEmpty(v) || isNameValid(v));
-            }
-
-            private void setValid(boolean valid) {
-                if (wasValid == valid) {
-                    return;
-                }
-                if (valid) {
-                    field.setBackground(UIManager.getColor("TextField.background"));
+                String value = field.getValue();
+                boolean invalid;
+                if (value == null) {
+                    invalid = false;
                 } else {
-                    field.setBackground(Theme.getTheme().getFailure());
+                    invalid = !isNameValid(value);
                 }
-                this.wasValid = valid;
+                invalidNameAwarePane.setVisible(invalid);
             }
         });
         field.setFont(field.getFont().deriveFont(field.getFont().getSize2D() + 4.f));
@@ -75,6 +88,13 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
         c.insets = new Insets(SwingUtil.magnify(5), 0, 0, 0);
         c.gridy++;
         add(field, c);
+
+        c.gridy++;
+        add(invalidNameAwarePane, c);
+
+        elySkins = new LocalizableCheckbox("account.button.ely.toggle", true);
+        c.gridy++;
+        add(elySkins, c);
 
         final LocalizableButton button = new LocalizableButton(LOC_PREFIX + (mode == PaneMode.EDIT ? "edit" : "save"));
         button.addActionListener(e -> {
@@ -86,13 +106,13 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                 return;
             }
 
-            if (StringUtils.isBlank(username)) {
-                Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
+            if (!isNameValid(username) && !invalidNameAwareCheckbox.getState()) {
+                Alert.showLocError("account.manager.multipane.account-plain.invalid");
                 return;
             }
 
-            if (!isNameValid(username)) {
-                Alert.showLocError("account.manager.multipane.account-plain.invalid");
+            if (StringUtils.isBlank(username)) {
+                Alert.showLocError("account.manager.multipane.add-account.error.no-credentials");
                 return;
             }
 
@@ -123,7 +143,7 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
                         return;
             }
 
-            User user = AccountManager.getPlainAuth().authorize(username);
+            User user = AccountManager.getPlainAuth().authorize(username, elySkins.getState());
             TLauncher.getInstance().getProfileManager().getAccountManager().getUserSet().add(user);
             AccountPlainPane.this.scene.list.select(new Account<>(user));
             AccountPlainPane.this.scene.multipane.showTip("success-" + mode.toString().toLowerCase(java.util.Locale.ROOT));
@@ -186,6 +206,8 @@ public class AccountPlainPane extends ExtendedPanel implements AccountMultipaneC
             Account<? extends User> selected = scene.list.getSelected();
             if (selected != null && selected.getType() == Account.AccountType.PLAIN) {
                 field.setValue(selected.getUsername());
+                invalidNameAwareCheckbox.setSelected(!isNameValid(field.getValue()));
+                elySkins.setState(((PlainUser) selected.getUser()).isElySkins());
             }
         }
     }

@@ -10,9 +10,8 @@ public abstract class ConverterCellRenderer<T> implements ListCellRenderer<T> {
     protected ConverterCellRenderer(StringConverter<T> converter) {
         if (converter == null) {
             throw new NullPointerException();
-        } else {
-            this.converter = converter;
         }
+        this.converter = converter;
     }
 
     public StringConverter<T> getConverter() {

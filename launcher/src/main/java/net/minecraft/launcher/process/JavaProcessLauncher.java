@@ -9,14 +9,18 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class JavaProcessLauncher {
+    public static final String COMMAND_TOKEN = "%command%";
     private final Charset charset;
     private final String jvmPath;
     private final List<String> commands;
     private File directory;
     private ProcessBuilder process;
     private ProcessHook hook = ProcessHook.None.INSTANCE;
+    private List<String> wrapperCommand;
 
     public JavaProcessLauncher(Charset charset, String jvmPath, String[] commands) {
         if (jvmPath == null) {
@@ -47,10 +51,19 @@ public class JavaProcessLauncher {
     }
 
     List<String> getFullCommands() {
-        List<String> result = new ArrayList<>(commands.size() + 1);
-        result.add(getJavaPath());
-        result.addAll(commands);
-        return result;
+        Stream<String> cmdLine;
+        if (wrapperCommand == null || wrapperCommand.isEmpty()) {
+            cmdLine = Stream.of(COMMAND_TOKEN);
+        } else {
+            cmdLine = wrapperCommand.stream();
+        }
+        return cmdLine.flatMap(s -> {
+            if (COMMAND_TOKEN.equals(s)) {
+                return Stream.concat(Stream.of(getJavaPath()), commands.stream());
+            } else {
+                return Stream.of(s);
+            }
+        }).collect(Collectors.toList());
     }
 
     public String getCommandsAsString() {
@@ -118,5 +131,12 @@ public class JavaProcessLauncher {
 
     public String toString() {
         return "JavaProcessLauncher[commands=" + commands + ", java=" + jvmPath + "]";
+    }
+
+    public void wrapperCommand(List<String> wrapperCommand) {
+        if (wrapperCommand.stream().filter(COMMAND_TOKEN::equals).count() != 1) {
+            throw new IllegalStateException("%command% token should be presented exactly once");
+        }
+        this.wrapperCommand = wrapperCommand;
     }
 }

@@ -71,7 +71,6 @@ public class Account<T extends User> {
         ELY_LEGACY("logo-ely"),
         MOJANG("logo-mojang"),
         MINECRAFT("logo-microsoft"),
-        MCLEAKS("logo-mcleaks"),
         PLAIN(null);
 
         private final String icon;

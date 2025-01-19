@@ -293,7 +293,7 @@ public final class TLauncher {
                         if (!forceSelectedUserType.isPresent() || forceSelectedUserType.get().equals("plain")) {
                             LOGGER.info("Force selected user {} doesn't exist, but we'll create one for you",
                                     forceSelectedUser);
-                            selectedUser = new PlainUser(forceSelectedUser, UUID.randomUUID());
+                            selectedUser = new PlainUser(forceSelectedUser, UUID.randomUUID(), true);
                             profileManager.getAccountManager().getUserSet().add(selectedUser);
                         } else {
                             LOGGER.warn("Force selected user {} (of type {}) doesn't exist",

@@ -189,8 +189,6 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         minecraftTab.nextPane();
 
         List<EditorHandler> extraHandlerList = new ArrayList<>();
-        extraHandlerList.add(new EditorFieldHandler("ely.globally", new EditorCheckBox("settings.ely", true)));
-        extraHandlerList.add(EditorPair.NEXT_COLUMN);
         extraHandlerList.add(new EditorFieldHandler("minecraft.servers.promoted.ingame", new EditorCheckBox("settings.promotion.ingame", true)));
         if (OS.LINUX.isCurrent()) {
             extraHandlerList.add(EditorPair.NEXT_COLUMN);
@@ -226,18 +224,18 @@ public class SettingsPanel extends TabbedEditorPanel implements LoginForm.LoginP
         laf = new EditorFieldHandler(FlatLafConfiguration.KEY_STATE, new EditorComboBox<>(
                 new LocalizableStringConverter<String>("settings.laf.state") {
                     @Override
-                    protected String toPath(String var1) {
-                        return var1;
+                    protected String toPath(String from) {
+                        return from;
                     }
 
                     @Override
-                    public String fromString(String var1) {
-                        return var1;
+                    public String fromString(String from) {
+                        return from;
                     }
 
                     @Override
-                    public String toValue(String var1) {
-                        return var1;
+                    public String toValue(String from) {
+                        return from;
                     }
 
                     @Override

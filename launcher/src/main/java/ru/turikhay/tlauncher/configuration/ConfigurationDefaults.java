@@ -63,7 +63,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.onlaunch", Configuration.ActionOnLaunch.HIDE);
 
         d.put("minecraft.crash", true);
-        d.put("minecraft.deleteTlSkinCape", true);
+        d.put("minecraft.mods.removeUndesirable", true);
 
         d.put("gui.font", OS.CURRENT == OS.WINDOWS ? 12 : 14);
         d.put("gui.size", new IntegerArray(OS.WINDOWS.isCurrent() ? 1000 : 1200, 600));
@@ -88,8 +88,6 @@ public final class ConfigurationDefaults {
         d.put("client", UUID.randomUUID());
 
         d.put("connection.ssl", true);
-
-        d.put("ely.globally", true);
 
         if (OS.WINDOWS.isCurrent()) {
             d.put("windows.dxdiag", true);

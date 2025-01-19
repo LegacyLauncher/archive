@@ -1,6 +1,8 @@
 package ru.turikhay.tlauncher.ui.swing.combobox;
 
 import ru.turikhay.util.async.AsyncThread;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
@@ -17,6 +19,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ComboBoxFilter<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComboBoxFilter.class);
+
     private final JComboBox<T> comboBox;
     private final Supplier<List<T>> valueProvider;
     private final BiPredicate<T, String> filter;
@@ -154,10 +158,15 @@ public class ComboBoxFilter<T> {
         final String term = filterEditor.getTextField().getText();
         AsyncThread.execute(() -> {
             List<T> matchingItems = new ArrayList<>();
-            for (T item : this.valueProvider.get()) {
-                if (filter.test(item, term)) {
-                    matchingItems.add(item);
+            try {
+                for (T item : this.valueProvider.get()) {
+                    if (filter.test(item, term)) {
+                        matchingItems.add(item);
+                    }
                 }
+            } catch (Exception e) {
+                LOGGER.error("Failed to filter items in the ComboBox", e);
+                return;
             }
             SwingUtilities.invokeLater(() -> {
                 if (modelCounter.get() != currentUse) {
@@ -168,6 +177,7 @@ public class ComboBoxFilter<T> {
                 matchingItems.forEach(model::addElement);
             });
         });
+        LOGGER.debug("passed");
     }
 
     public static <T> ComboBoxFilter<T> decorate(JComboBox<T> comboBox,

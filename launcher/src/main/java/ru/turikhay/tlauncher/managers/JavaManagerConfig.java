@@ -12,20 +12,16 @@ public class JavaManagerConfig implements Configurable {
             PATH_ARGS = "minecraft.javaargs",
             PATH_MC_ARGS = "minecraft.args",
             PATH_JRE_TYPE = "minecraft.jre.type",
-            PATH_USE_OPTIMIZED_ARGS = "minecraft.improvedargs";
+            PATH_USE_OPTIMIZED_ARGS = "minecraft.improvedargs.type",
+            PATH_USE_OPTIMIZED_ARGS_LEGACY = "minecraft.improvedargs",
+            PATH_WRAPPER_COMMAND = "minecraft.wrapper-command",
+            PATH_USE_CURRENT_TRUST_STORE = "minecraft.jre.change-trust-store";
 
     private String rootDir;
-    private String args, mcArgs;
+    private String args, mcArgs, wrapperCommand;
     private JreType jreType;
-    private boolean useOptimizedArguments;
-
-    public JavaManagerConfig(String rootDir, String args, String mcArgs, JreType jreType, boolean useOptimizedArguments) {
-        this.rootDir = rootDir;
-        this.args = args;
-        this.mcArgs = mcArgs;
-        this.jreType = jreType;
-        this.useOptimizedArguments = useOptimizedArguments;
-    }
+    private OptimizedArgsType optimizedArgumentsType;
+    private boolean useCurrentTrustStore;
 
     public JavaManagerConfig() {
     }
@@ -54,6 +50,18 @@ public class JavaManagerConfig implements Configurable {
         return getJreType().orElse(new Recommended());
     }
 
+    public Optional<String> getWrapperCommand() {
+        return Optional.ofNullable(wrapperCommand);
+    }
+
+    public boolean getUseCurrentTrustStore() {
+        return useCurrentTrustStore;
+    }
+
+    public void setUseCurrentTrustStore(boolean useCurrentTrustStore) {
+        this.useCurrentTrustStore = useCurrentTrustStore;
+    }
+
     public void setRootDir(String rootDir) {
         this.rootDir = rootDir;
     }
@@ -70,12 +78,8 @@ public class JavaManagerConfig implements Configurable {
         this.jreType = jreType;
     }
 
-    public boolean useOptimizedArguments() {
-        return useOptimizedArguments;
-    }
-
-    public void setUseOptimizedArguments(boolean useOptimizedArguments) {
-        this.useOptimizedArguments = useOptimizedArguments;
+    public void setWrapperCommand(String wrapperCommand) {
+        this.wrapperCommand = wrapperCommand;
     }
 
     @Override
@@ -106,7 +110,23 @@ public class JavaManagerConfig implements Configurable {
         }
         this.jreType = jreType;
 
-        this.useOptimizedArguments = configuration.getBoolean(PATH_USE_OPTIMIZED_ARGS);
+        this.wrapperCommand = configuration.get(PATH_WRAPPER_COMMAND);
+
+        String optimArgsType = configuration.get(PATH_USE_OPTIMIZED_ARGS);
+        if (optimArgsType == null) {
+            // migrating old settings
+            this.optimizedArgumentsType = (configuration.getBoolean(PATH_USE_OPTIMIZED_ARGS_LEGACY)) ? OptimizedArgsType.DEFAULT : OptimizedArgsType.NONE;
+            save(configuration);
+        } else {
+            this.optimizedArgumentsType = OptimizedArgsType.parse(optimArgsType);
+        }
+
+        if (configuration.containsKey(PATH_USE_CURRENT_TRUST_STORE)) {
+            this.useCurrentTrustStore = configuration.getBoolean(PATH_USE_CURRENT_TRUST_STORE);
+        } else {
+            this.useCurrentTrustStore = true;
+        }
+
     }
 
     @Override
@@ -119,7 +139,9 @@ public class JavaManagerConfig implements Configurable {
         } else {
             configuration.set(PATH_JRE_TYPE, this.jreType.getType());
         }
-        configuration.set(PATH_USE_OPTIMIZED_ARGS, this.useOptimizedArguments);
+        configuration.set(PATH_WRAPPER_COMMAND, this.wrapperCommand);
+        configuration.set(PATH_USE_OPTIMIZED_ARGS, this.optimizedArgumentsType.toString());;
+        configuration.set(PATH_USE_CURRENT_TRUST_STORE, Boolean.toString(this.useCurrentTrustStore));
     }
 
     @Override
@@ -129,11 +151,12 @@ public class JavaManagerConfig implements Configurable {
 
         JavaManagerConfig that = (JavaManagerConfig) o;
 
-        if (useOptimizedArguments != that.useOptimizedArguments) return false;
         if (!Objects.equals(rootDir, that.rootDir)) return false;
         if (!Objects.equals(args, that.args)) return false;
         if (!Objects.equals(mcArgs, that.mcArgs)) return false;
-        return Objects.equals(jreType, that.jreType);
+        if (!Objects.equals(jreType, that.jreType)) return false;
+        if (!Objects.equals(wrapperCommand, that.wrapperCommand)) return false;
+        return optimizedArgumentsType == that.optimizedArgumentsType;
     }
 
     @Override
@@ -142,12 +165,21 @@ public class JavaManagerConfig implements Configurable {
         result = 31 * result + (args != null ? args.hashCode() : 0);
         result = 31 * result + (mcArgs != null ? mcArgs.hashCode() : 0);
         result = 31 * result + (jreType != null ? jreType.hashCode() : 0);
-        result = 31 * result + (useOptimizedArguments ? 1 : 0);
+        result = 31 * result + (wrapperCommand != null ? wrapperCommand.hashCode() : 0);
+        result = 31 * result + optimizedArgumentsType.hashCode();
         return result;
     }
 
     public static String getDefaultRootDir() {
         return MinecraftUtil.getSystemRelatedDirectory("tlauncher/mojang_jre").getAbsolutePath();
+    }
+
+    public OptimizedArgsType getOptimizedArgumentsType() {
+        return optimizedArgumentsType;
+    }
+
+    public void setOptimizedArgumentsType(OptimizedArgsType optimizedArgumentsType) {
+        this.optimizedArgumentsType = optimizedArgumentsType;
     }
 
     public interface JreType {
@@ -262,6 +294,23 @@ public class JavaManagerConfig implements Configurable {
             return jreTypeClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException("couldn't create jreType: " + jreTypeClass, e);
+        }
+    }
+
+    public enum OptimizedArgsType {
+        NONE,
+        DEFAULT, // CMS for old versions, G1 for new
+        G1GC, // G1 for all versions
+        SHENANDOAH, // Replace G1 with Shenandoah when possible
+        ZGC, // Replace G1 with ZGC when possible
+        ;
+
+        public static OptimizedArgsType parse(String arg) {
+            try {
+                return OptimizedArgsType.valueOf(arg.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                return DEFAULT;
+            }
         }
     }
 }

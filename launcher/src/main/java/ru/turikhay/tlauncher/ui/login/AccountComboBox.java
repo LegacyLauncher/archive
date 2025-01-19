@@ -85,8 +85,7 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
         if (!refreshing) {
             if (selectedAccount != null) {
                 if (selectedAccount.getType() == Account.AccountType.ELY ||
-                        selectedAccount.getType() == Account.AccountType.ELY_LEGACY ||
-                        selectedAccount.getType() == Account.AccountType.MCLEAKS) {
+                        selectedAccount.getType() == Account.AccountType.ELY_LEGACY) {
                     if (!loginForm.tlauncher.getLibraryManager().isRefreshing()) {
                         loginForm.tlauncher.getLibraryManager().asyncRefresh();
                     }

@@ -10,7 +10,6 @@ public final class AccountManager {
     private static final ElyAuth ELY_AUTH = new ElyAuth();
     private static final ElyLegacyAuth ELY_LEGACY_AUTH = new ElyLegacyAuth();
     private static final PlainAuth PLAIN_AUTH = new PlainAuth();
-    private static final McleaksAuth MCLEAKS_AUTH = new McleaksAuth();
     private static final MinecraftAuth MINECRAFT_AUTH = new MinecraftAuth();
 
     private final ManagedListenerHelper<User> helper = new ManagedListenerHelper<>();
@@ -54,10 +53,6 @@ public final class AccountManager {
         return PLAIN_AUTH;
     }
 
-    public static McleaksAuth getMcleaksAuth() {
-        return MCLEAKS_AUTH;
-    }
-
     public static MinecraftAuth getMinecraftAuth() {
         return MINECRAFT_AUTH;
     }
@@ -73,8 +68,6 @@ public final class AccountManager {
                 return ELY_LEGACY_AUTH;
             case PlainUser.TYPE:
                 return PLAIN_AUTH;
-            case McleaksUser.TYPE:
-                return MCLEAKS_AUTH;
             case MinecraftUser.TYPE:
                 return MINECRAFT_AUTH;
         }

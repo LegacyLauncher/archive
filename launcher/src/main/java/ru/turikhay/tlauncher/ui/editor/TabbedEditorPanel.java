@@ -51,13 +51,6 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
         super.add(container, "Center");
     }
 
-    private void onTabChange(int index) {
-        if (index < tabs.size()) {
-            EditorPanelTab tab = tabs.get(index);
-            tab.onSelected();
-        }
-    }
-
     public TabbedEditorPanel(CenterPanelTheme theme) {
         this(theme, null);
     }
@@ -68,6 +61,13 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
 
     public TabbedEditorPanel() {
         this(smallSquareNoTopInsets);
+    }
+
+    private void onTabChange(int index) {
+        if (index < tabs.size()) {
+            EditorPanelTab tab = tabs.get(index);
+            tab.onSelected();
+        }
     }
 
     public TabbedPane getTabPane() {
@@ -111,15 +111,26 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
         return new Del(1, aligment, border);
     }
 
+    public static class EditorScrollPane extends ScrollPane {
+        private final TabbedEditorPanel.EditorPanelTab tab;
+
+        EditorScrollPane(TabbedEditorPanel.EditorPanelTab tab) {
+            super(tab);
+            this.tab = tab;
+        }
+
+        public TabbedEditorPanel.EditorPanelTab getTab() {
+            return tab;
+        }
+    }
+
     public class EditorPanelTab extends ExtendedPanel implements LocalizableComponent {
         private final String name;
         private final String tip;
         private final Icon icon;
-        private final List<ExtendedPanel> panels;
-        private final List<GridBagConstraints> constraints;
-        private byte paneNum;
-        private byte rowNum;
         private final TabbedEditorPanel.EditorScrollPane scroll;
+        private final ExtendedPanel panel = new ExtendedPanel(new GridBagLayout());
+        private final GridBagConstraints constraints = new GridBagConstraints();
         private boolean savingEnabled;
 
         public EditorPanelTab(String name, String tip, Icon icon) {
@@ -128,16 +139,19 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
                 throw new NullPointerException();
             } else if (name.isEmpty()) {
                 throw new IllegalArgumentException("name is empty");
-            } else {
-                this.name = name;
-                this.tip = tip;
-                this.icon = icon;
-                panels = new ArrayList<>();
-                constraints = new ArrayList<>();
-                setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-                setInsets(0, 10, 0, 10);
-                scroll = new EditorScrollPane(this);
             }
+
+            this.name = name;
+            this.tip = tip;
+            this.icon = icon;
+            setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+            setInsets(0, 10, 0, 10);
+            scroll = new EditorScrollPane(this);
+
+            constraints.insets = new Insets(2, 2, 2, 2);
+            constraints.ipadx = 8;
+            constraints.ipady = 2;
+            add(panel, del(Del.CENTER));
         }
 
         public EditorPanelTab(String name) {
@@ -168,44 +182,30 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
             savingEnabled = b;
         }
 
-        public void add(EditorPair pair, int rows) {
+        public void add(EditorPair pair) {
             LocalizableLabel label = pair.getLabel();
             ExtendedPanel field = pair.getPanel();
-            ExtendedPanel panel;
-            GridBagConstraints c;
-            if (paneNum == panels.size()) {
-                panel = new ExtendedPanel(new GridBagLayout());
-                c = new GridBagConstraints();
-                c.insets = new Insets(2, 0, 2, 0);
-                c.fill = 2;
-                add(panel, del(0));
-                panels.add(panel);
-                constraints.add(c);
-            } else {
-                panel = panels.get(paneNum);
-                c = constraints.get(paneNum);
-            }
 
-            c.anchor = 17;
-            c.gridy = rowNum;
-            c.gridx = 0;
-            c.weightx = 0.1D;
-            panel.add(label, c);
-            c.anchor = 13;
-            c.gridy = rowNum++;
-            c.gridx = 1;
-            c.weightx = 1.0D;
-            panel.add(field, c);
+            GridBagConstraints labelConstraints = (GridBagConstraints) constraints.clone();
+            labelConstraints.anchor = GridBagConstraints.WEST;
+            labelConstraints.gridx = 0;
+            panel.add(label, labelConstraints);
+
+            GridBagConstraints fieldConstraints = (GridBagConstraints) constraints.clone();
+            fieldConstraints.anchor = GridBagConstraints.EAST;
+            fieldConstraints.fill = GridBagConstraints.HORIZONTAL;
+            fieldConstraints.gridx = 1;
+            fieldConstraints.weightx = 1D;
+            panel.add(field, fieldConstraints);
             handlers.addAll(pair.getHandlers());
         }
 
-        public void add(EditorPair pair) {
-            add(pair, 1);
-        }
-
         public void nextPane() {
-            rowNum = 0;
-            ++paneNum;
+            GridBagConstraints c = (GridBagConstraints) constraints.clone();
+            c.gridwidth = 2;
+            c.gridx = 0;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            panel.add(Box.createVerticalStrut(4), c);
         }
 
         public void updateLocale() {
@@ -220,19 +220,6 @@ public class TabbedEditorPanel extends AbstractEditorPanel {
 
         protected void onSelected() {
             scroll.getViewport().setViewPosition(zeroPoint);
-        }
-    }
-
-    public static class EditorScrollPane extends ScrollPane {
-        private final TabbedEditorPanel.EditorPanelTab tab;
-
-        EditorScrollPane(TabbedEditorPanel.EditorPanelTab tab) {
-            super(tab);
-            this.tab = tab;
-        }
-
-        public TabbedEditorPanel.EditorPanelTab getTab() {
-            return tab;
         }
     }
 }

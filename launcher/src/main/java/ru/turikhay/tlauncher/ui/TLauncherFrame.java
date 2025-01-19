@@ -98,20 +98,24 @@ public class TLauncherFrame extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                if (!settings.getBoolean("feedback") && tlauncher.getBootConfig().getFeedback() != null) {
-                    String url;
-                    if (tlauncher.getBootConfig().getFeedback().containsKey(tlauncher.getSettings().getLocale().toString())) {
-                        url = tlauncher.getBootConfig().getFeedback().get(tlauncher.getSettings().getLocale().toString());
-                    } else if (tlauncher.getBootConfig().getFeedback().containsKey("global")) {
-                        url = tlauncher.getBootConfig().getFeedback().get("global");
-                    } else {
-                        instance.setVisible(false);
-                        TLauncher.kill();
-                        return;
-                    }
-                    settings.set("feedback", true);
-                    new FeedbackFrame(TLauncherFrame.this, url);
+                if (settings.getBoolean("feedback") || tlauncher.getBootConfig().getFeedback() == null) {
+                    instance.setVisible(false);
+                    TLauncher.kill();
+                    return;
                 }
+
+                String url;
+                if (tlauncher.getBootConfig().getFeedback().containsKey(tlauncher.getSettings().getLocale().toString())) {
+                    url = tlauncher.getBootConfig().getFeedback().get(tlauncher.getSettings().getLocale().toString());
+                } else if (tlauncher.getBootConfig().getFeedback().containsKey("global")) {
+                    url = tlauncher.getBootConfig().getFeedback().get("global");
+                } else {
+                    instance.setVisible(false);
+                    TLauncher.kill();
+                    return;
+                }
+                settings.set("feedback", true);
+                new FeedbackFrame(TLauncherFrame.this, url);
             }
         });
         addComponentListener(new ExtendedComponentAdapter(this) {

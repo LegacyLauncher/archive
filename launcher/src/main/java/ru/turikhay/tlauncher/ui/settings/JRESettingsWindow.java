@@ -5,6 +5,7 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.jre.JavaRuntimeLocal;
 import ru.turikhay.tlauncher.managers.JavaManagerConfig;
+import ru.turikhay.tlauncher.ui.editor.EditorComboBox;
 import ru.turikhay.tlauncher.ui.editor.EditorFileField;
 import ru.turikhay.tlauncher.ui.explorer.FileExplorer;
 import ru.turikhay.tlauncher.ui.images.Images;
@@ -28,6 +29,7 @@ import java.awt.font.TextAttribute;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -52,8 +54,10 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     private final LocalizableHTMLLabel pathMessage;
     private final LocalizableTextField jvmArgsField;
     private final LocalizableTextField mcArgsField;
-    private final LocalizableCheckbox useOptimizedArgsCheckbox;
+    private final EditorComboBox<JavaManagerConfig.OptimizedArgsType> optimizedArgsComboBox;
     private final LocalizableLabel settingsSavedLabel;
+    private final LocalizableTextField wrapperCommandField;
+    private final LocalizableCheckbox useCurrentTrustStoreCheckbox;
 
     private boolean saveValues;
 
@@ -117,10 +121,11 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         addConfig(cfgs, c, "path", pathPanel, GridBagConstraints.FIRST_LINE_START);
 
         jvmArgsField = createJvmArgsField();
-        useOptimizedArgsCheckbox = createUseOptimizedArgsCheckbox();
-
+        optimizedArgsComboBox = createOptimizedArgsCombobox();
+        useCurrentTrustStoreCheckbox = createUseCurrentTrustStoreCheckBox();
         initJvmArgs(cfgs, c);
         mcArgsField = addConfig(cfgs, c, "mc-args");
+        wrapperCommandField = addConfig(cfgs, c, "wrapper-command");
 
         add(cfgs);
 
@@ -195,9 +200,11 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
             throw new RuntimeException("unknown jreType");
         }
         JavaManagerConfig javaManagerConfig = comboBox.sp.global.get(JavaManagerConfig.class);
-        useOptimizedArgsCheckbox.setSelected(javaManagerConfig.useOptimizedArguments());
+        optimizedArgsComboBox.setSelectedValue(javaManagerConfig.getOptimizedArgumentsType());
         jvmArgsField.setValue(javaManagerConfig.getArgs().orElse(null));
         mcArgsField.setValue(javaManagerConfig.getMinecraftArgs().orElse(null));
+        wrapperCommandField.setValue(javaManagerConfig.getWrapperCommand().orElse(null));
+        useCurrentTrustStoreCheckbox.setState(javaManagerConfig.getUseCurrentTrustStore());
 
         saveValues = true;
     }
@@ -210,7 +217,9 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         JavaManagerConfig javaManagerConfig = comboBox.sp.global.get(JavaManagerConfig.class);
         javaManagerConfig.setArgs(jvmArgsField.getValue());
         javaManagerConfig.setMcArgs(mcArgsField.getValue());
-        javaManagerConfig.setUseOptimizedArguments(useOptimizedArgsCheckbox.isSelected());
+        javaManagerConfig.setWrapperCommand(wrapperCommandField.getValue());
+        javaManagerConfig.setOptimizedArgumentsType(optimizedArgsComboBox.getSelectedValue());
+        javaManagerConfig.setUseCurrentTrustStore(useCurrentTrustStoreCheckbox.getState());
         if (!javaManagerConfigOld.equals(javaManagerConfig)) {
             comboBox.sp.global.set(javaManagerConfig);
             onValuesSaved();
@@ -442,34 +451,42 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         return l;
     }
 
-    private LocalizableCheckbox createUseOptimizedArgsCheckbox() {
+    private LocalizableCheckbox createUseCurrentTrustStoreCheckBox() {
         LocalizableCheckbox c = new LocalizableCheckbox(
-                "settings.jre.window.configure.jvm-args.use-optimized");
+                "settings.jre.window.configure.jvm-args.use-current-trust-store");
+        c.addActionListener(e -> saveSelfValues());
+        return c;
+    }
+
+
+    private EditorComboBox<JavaManagerConfig.OptimizedArgsType> createOptimizedArgsCombobox() {
+        EditorComboBox<JavaManagerConfig.OptimizedArgsType> c = new EditorComboBox<>(
+                new OptimizedArgsConverter(),
+                JavaManagerConfig.OptimizedArgsType.values()
+        );
         c.addActionListener(e -> saveSelfValues());
         return c;
     }
 
     private void initJvmArgs(ExtendedPanel cfgs, GridBagConstraints c) {
-        ExtendedPanel jvmArgsPanel = new ExtendedPanel();
-        jvmArgsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jvmArgsPanel.setLayout(new BoxLayout(jvmArgsPanel, BoxLayout.Y_AXIS));
-        jvmArgsPanel.add(jvmArgsField);
-        jvmArgsPanel.add(Box.createRigidArea(new Dimension(1, SwingUtil.magnify(10))));
-        jvmArgsPanel.add(useOptimizedArgsCheckbox);
-        addConfig(cfgs, c, "jvm-args", jvmArgsPanel, GridBagConstraints.FIRST_LINE_START);
+        addConfig(cfgs, c, "jvm-args", jvmArgsField, GridBagConstraints.LINE_START);
+        addConfig(cfgs, c, null, useCurrentTrustStoreCheckbox, GridBagConstraints.LINE_START);
+        addConfig(cfgs, c, "jvm-args.improved", optimizedArgsComboBox, GridBagConstraints.LINE_START);
     }
 
     private void addConfig(ExtendedPanel p, GridBagConstraints c, String path, JComponent component, int anchor) {
-        LocalizableLabel label = new LocalizableLabel("settings.jre.window.configure." + path);
-
         c.gridy++;
 
-        c.gridx = 0;
-        c.anchor = anchor;
-        c.insets = SwingUtil.magnify(new Insets(10, 0, 0, 10));
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        p.add(label, c);
+        if (path != null) {
+            LocalizableLabel label = new LocalizableLabel("settings.jre.window.configure." + path);
+
+            c.gridx = 0;
+            c.anchor = anchor;
+            c.insets = SwingUtil.magnify(new Insets(10, 0, 0, 10));
+            c.fill = GridBagConstraints.NONE;
+            c.weightx = 0.0;
+            p.add(label, c);
+        }
 
         c.gridx = 1;
         c.anchor = GridBagConstraints.FIRST_LINE_START;
@@ -521,5 +538,31 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     @Override
     public void updateLocale() {
         setTitle(Localizable.get("settings.jre.window.label"));
+    }
+
+    private static class OptimizedArgsConverter extends LocalizableStringConverter<JavaManagerConfig.OptimizedArgsType> {
+        public OptimizedArgsConverter() {
+            super("settings.jre.window.configure.jvm-args.type");
+        }
+
+        @Override
+        protected String toPath(JavaManagerConfig.OptimizedArgsType var1) {
+            return var1.name().toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public JavaManagerConfig.OptimizedArgsType fromString(String var1) {
+            return JavaManagerConfig.OptimizedArgsType.parse(var1.toUpperCase(Locale.ROOT));
+        }
+
+        @Override
+        public String toValue(JavaManagerConfig.OptimizedArgsType var1) {
+            return var1.name().toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public Class<JavaManagerConfig.OptimizedArgsType> getObjectClass() {
+            return JavaManagerConfig.OptimizedArgsType.class;
+        }
     }
 }

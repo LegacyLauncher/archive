@@ -14,10 +14,12 @@ public class PlainUser extends User {
     public static final String TYPE = "plain";
     private final String username;
     private final UUID uuid;
+    private final boolean elySkins;
 
-    public PlainUser(String username, UUID uuid) {
+    public PlainUser(String username, UUID uuid, boolean elySkins) {
         this.username = StringUtil.requireNotBlank(username, "username");
         this.uuid = Objects.requireNonNull(uuid, "uuid");
+        this.elySkins = elySkins;
     }
 
     @Override
@@ -64,6 +66,10 @@ public class PlainUser extends User {
         );
     }
 
+    public boolean isElySkins() {
+        return elySkins;
+    }
+
     public static UserJsonizer<PlainUser> getJsonizer() {
         return new Jsonizer();
     }
@@ -77,7 +83,13 @@ public class PlainUser extends User {
             } else {
                 uuid = UUID.randomUUID();
             }
-            return new PlainUser(json.get("username").getAsString(), uuid);
+            boolean elySkins;
+            if (json.has("elySkins")) {
+                elySkins = json.getAsJsonPrimitive("elySkins").getAsBoolean();
+            } else {
+                elySkins = true;
+            }
+            return new PlainUser(json.get("username").getAsString(), uuid, elySkins);
         }
 
         @Override
@@ -85,6 +97,7 @@ public class PlainUser extends User {
             JsonObject object = new JsonObject();
             object.addProperty("username", src.getUsername());
             object.addProperty("uuid", UUIDTypeAdapter.fromUUID(src.getUUID()));
+            object.addProperty("elySkins", src.isElySkins());
             return object;
         }
     }

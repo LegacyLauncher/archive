@@ -165,6 +165,12 @@ public class Configuration extends SimpleConfiguration {
             setSeparateDirs(getBoolean("minecraft.gamedir.separate") ? SeparateDirs.FAMILY : SeparateDirs.NONE);
         }
 
+        // migrate old settings
+        if (containsKey("minecraft.deleteTlSkinCape")) {
+            set("minecraft.mods.removeUndesirable", get("minecraft.deleteTlSkinCape"), false);
+            remove("minecraft.deleteTlSkinCape");
+        }
+
         LOGGER.debug("Using configuration: {}", properties);
 
         if (isSaveable()) {

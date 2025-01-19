@@ -18,12 +18,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GPUComboBox extends BorderPanel implements EditorField {
-    private final SettingsPanel sp;
     private final EditorComboBox<GPUManager.GPU> comboBox;
 
     public GPUComboBox(SettingsPanel sp) {
-        this.sp = sp;
-
         GPUManager gpuManager = sp.tlauncher.getGpuManager();
         List<GPUManager.GPU> gpus = gpuManager.discoveryGPUs();
         comboBox = new EditorComboBox<>(new GPUCellRenderer(gpus, gpuManager), false);
@@ -72,19 +69,19 @@ public class GPUComboBox extends BorderPanel implements EditorField {
         }
 
         @Override
-        public GPUManager.GPU fromString(String name) {
-            return GPUManager.GPU.GLOBAL_DEFINED.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(name)).findAny()
-                    .orElseGet(() -> gpus.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(name)).findAny().orElse(null));
+        public GPUManager.GPU fromString(String from) {
+            return GPUManager.GPU.GLOBAL_DEFINED.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(from)).findAny()
+                    .orElseGet(() -> gpus.stream().filter(gpu -> gpu.getName().equalsIgnoreCase(from)).findAny().orElse(null));
         }
 
         @Override
-        public String toString(GPUManager.GPU gpu) {
-            return gpu.getDisplayName(gpuManager);
+        public String toString(GPUManager.GPU from) {
+            return from.getDisplayName(gpuManager);
         }
 
         @Override
-        public String toValue(GPUManager.GPU gpu) {
-            return gpu.getName();
+        public String toValue(GPUManager.GPU from) {
+            return from.getName();
         }
 
         @Override
@@ -95,6 +92,9 @@ public class GPUComboBox extends BorderPanel implements EditorField {
 
     private static class GPUCellRenderer extends ConverterCellRenderer<GPUManager.GPU> {
         private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+        // этот ваш блядский swing дерётся сам с собой и долбится в дырочки,
+        // когда комбобокс лежит в gridbag, я того рот наоборот и тупо отхреначу стринги, а потом ещё и строку подрежу
+        private static final int MAX_LENGTH = 70;
 
         GPUCellRenderer(List<GPUManager.GPU> gpus, GPUManager gpuManager) {
             super(new GPUConverter(gpus, gpuManager));
@@ -102,8 +102,15 @@ public class GPUComboBox extends BorderPanel implements EditorField {
 
         @Override
         public Component getListCellRendererComponent(JList<? extends GPUManager.GPU> list, GPUManager.GPU value, int index, boolean isSelected, boolean cellHasFocus) {
-            final JLabel label = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            label.setText(converter.toString(value));
+            String text = converter.toString(value), shortText;
+            if (text.length() > MAX_LENGTH) {
+                shortText = text.substring(0, MAX_LENGTH - 3) + "…";
+            } else {
+                shortText = text;
+            }
+            final JLabel label = (JLabel) defaultRenderer.getListCellRendererComponent(list, shortText, index, isSelected, cellHasFocus);
+            label.setToolTipText(text);
+            label.setIconTextGap(2);
             final ImageIcon icon;
             switch (value.getVendor()) {
                 case AMD:

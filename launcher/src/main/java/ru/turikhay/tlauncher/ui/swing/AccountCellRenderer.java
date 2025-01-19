@@ -23,9 +23,6 @@ public class AccountCellRenderer implements ListCellRenderer<Account<? extends U
     private static final ImageIcon ELY_USER_ICON = Images.getIcon16("logo-ely");
     private static final ImageIcon ELY_USER_ICON_BIG = Images.getIcon24("logo-ely");
 
-    private static final ImageIcon MCLEAKS_USER_ICON = Images.getIcon16("logo-mcleaks");
-    private static final ImageIcon MCLEAKS_USER_ICON_BIG = Images.getIcon24("logo-mcleaks");
-
     private static final ImageIcon USER_ICON = Images.getIcon16("user-circle-o");
     private static final ImageIcon USER_ICON_BIG = Images.getIcon24("user-circle-o");
 
@@ -67,9 +64,6 @@ public class AccountCellRenderer implements ListCellRenderer<Account<? extends U
             } else {
                 ImageIcon icon = null;
                 switch (value.getType()) {
-                    case MCLEAKS:
-                        icon = type == AccountCellType.EDITOR ? MCLEAKS_USER_ICON_BIG : MCLEAKS_USER_ICON;
-                        break;
                     case ELY:
                     case ELY_LEGACY:
                         icon = type == AccountCellType.EDITOR ? ELY_USER_ICON_BIG : ELY_USER_ICON;

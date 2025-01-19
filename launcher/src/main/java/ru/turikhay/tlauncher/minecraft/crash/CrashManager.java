@@ -73,7 +73,8 @@ public final class CrashManager {
             crashDescriptionSeeker = new CrashDescriptionSeeker(),
             logFlusherEntry = new LogFlusherEntry();
 
-    private final List<String> modVersionsFilter = Arrays.asList("forge", "fabric", "rift", "liteloader");
+    private final List<String> modVersionsFilter = Arrays.asList("forge", "fabric", "rift", "liteloader", "quilt", "betterfoamfix");
+    private final static String[] TOML_PATHS = new String[]{ "META-INF/mods.toml", "META-INF/neoforge.mods.toml" };
 
     private void setupActions() {
         actionsMap.clear();
@@ -694,6 +695,7 @@ public final class CrashManager {
     }
 
     private class LogFlusherEntry extends Entry {
+
         public LogFlusherEntry() {
             super(CrashManager.this, "log flusher");
         }
@@ -951,13 +953,21 @@ public final class CrashManager {
                     .map(key -> Pair.of(key, fabricModObj.get(key)))
                     .filter(p -> p.getValue() != null)
                     .collect(Collectors.toList());
-            displayKeyPairs(keyPairs, buffer);
+            displayKeyPairs(keyPairs, buffer, true);
             return true;
         }
 
-        @SuppressWarnings("unchecked")
         private boolean tryModsToml(ZipFile zipFile, StringBuilder buffer) {
-            ZipEntry modsTomlZipEntry = zipFile.getEntry("META-INF/mods.toml");
+            boolean return_value = false;
+            for (String entry: TOML_PATHS) {
+                return_value |=tryModsToml(entry, zipFile, buffer);
+            }
+            return return_value;
+        }
+
+        @SuppressWarnings("unchecked")
+        private boolean tryModsToml(String entry, ZipFile zipFile, StringBuilder buffer) {
+            ZipEntry modsTomlZipEntry = zipFile.getEntry(entry);
             if (modsTomlZipEntry == null) {
                 return false;
             }
@@ -1041,8 +1051,9 @@ public final class CrashManager {
             if (keyPairs.isEmpty()) {
                 LOGGER.info(LOG_FLUSHER, "{}└ [no known toml keys]: {}", buffer, mod);
             } else {
-                displayKeyPairs(keyPairs, buffer);
-                if (dependencies != null && !dependencies.isEmpty()) {
+                boolean hasDependencies = dependencies != null && !dependencies.isEmpty();
+                displayKeyPairs(keyPairs, buffer, !hasDependencies);
+                if (hasDependencies) {
                     List<Pair<String, Object>> depKeyPairs = dependencies.stream()
                             .filter(d -> {
                                 Object side = d.get("side");
@@ -1057,7 +1068,7 @@ public final class CrashManager {
                             .collect(Collectors.toList());
                     StringBuilder depBuffer = new StringBuilder(buffer).append("    ");
                     LOGGER.info(LOG_FLUSHER, "{}└ [dependencies]", buffer);
-                    displayKeyPairs(depKeyPairs, depBuffer);
+                    displayKeyPairs(depKeyPairs, depBuffer, true);
                 }
             }
         }
@@ -1136,11 +1147,11 @@ public final class CrashManager {
             if (keyPairs.isEmpty()) {
                 LOGGER.info(LOG_FLUSHER, "{}└ [no known mcmod keys]: {}", buffer, mcmod);
             } else {
-                displayKeyPairs(keyPairs, buffer);
+                displayKeyPairs(keyPairs, buffer, true);
             }
         }
 
-        private void displayKeyPairs(List<? extends Pair<String, ?>> keyPairs, StringBuilder buffer) {
+        private void displayKeyPairs(List<? extends Pair<String, ?>> keyPairs, StringBuilder buffer, boolean endTree) {
             if (keyPairs.isEmpty()) {
                 return;
             }
@@ -1153,8 +1164,13 @@ public final class CrashManager {
                 }
             }
             int lastIndex = keyPairs.size() - 1;
-            LOGGER.info(LOG_FLUSHER, "{}└ {} = {}", buffer,
-                    keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
+            if (endTree) {
+                LOGGER.info(LOG_FLUSHER, "{}└ {} = {}", buffer,
+                        keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
+            } else {
+                LOGGER.info(LOG_FLUSHER, "{}├ {} = {}", buffer,
+                        keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
+            }
         }
     }
 

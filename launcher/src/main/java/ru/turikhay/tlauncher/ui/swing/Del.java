@@ -8,9 +8,9 @@ import java.awt.*;
 public class Del extends ExtendedPanel {
     public static final int SIZE = 15;
 
-    private static final int TOP = -1;
+    public static final int TOP = -1;
     public static final int CENTER = 0;
-    private static final int BOTTOM = 1;
+    public static final int BOTTOM = 1;
     private static final long serialVersionUID = -2252007533187803762L;
     private final int size;
     private final int aligment;

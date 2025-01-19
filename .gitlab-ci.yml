@@ -6,7 +6,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
   # - dev     – build & deploy to $CI_COMMIT_BRANCH
-  # – beta    - manual build & deploy to 'legacy_beta' & 'aur'
+  # – beta    - manual build & deploy to 'legacy_beta'
   # - release – manual build & deploy to 'legacy', 'mcl'
   RELEASE_GROUP: 'dev'
 
@@ -83,11 +83,6 @@ workflow:
   SHORT_BRAND: 'legacy_beta'
   DMG_ENABLED: 'true'
 
-.aur: &aur
-  SHORT_BRAND: 'aur'
-  PKGBUILD_ENABLED: 'true'
-  PKGBUILD_PUSH: 'true'
-
 .appt: &appt
   SHORT_BRAND: 'appt'
   DMG_ENABLED: 'true'
@@ -133,7 +128,6 @@ workflow:
     paths:
       - launcher/build/update/$SHORT_BRAND
       - bootstrap/build/update/$SHORT_BRAND
-      - packages/aur/build/aur/$SHORT_BRAND
       - packages/portable/build/update/$SHORT_BRAND
       - packages/installer/build/innosetup/$SHORT_BRAND
       - packages/dmg/build/dmg/$SHORT_BRAND
@@ -173,47 +167,6 @@ workflow:
     paths:
       - bootstrap/build/update/$SHORT_BRAND/bootstrap.jar
     <<: *expires
-
-.gen_srcinfo: &gen_srcinfo
-  image:
-    name: whynothugo/makepkg:latest
-    entrypoint: [""]
-  stage: Build
-  script:
-    - cd packages/aur/build/aur/$SHORT_BRAND
-    - sudo chown $(whoami):$(whoami) -R .
-    - makepkg --printsrcinfo > .SRCINFO
-  artifacts:
-    paths:
-      - packages/aur/build/aur/$SHORT_BRAND
-    <<: *expires
-
-.push_pkgbuild: &push_pkgbuild
-  <<: *ssh
-  resource_group: deploy-aur
-  before_script:
-    - *ssh_before
-    - git config --global user.name "$GIT_USERNAME"
-    - git config --global user.email "$GIT_EMAIL"
-    - ssh-keyscan -H $PKGBUILD_GIT_HOST >> ~/.ssh/known_hosts
-  script:
-    - git clone $PKGBUILD_GIT_ORIGIN -b $PKGBUILD_GIT_BRANCH ~/aur
-    - PKGVER=$(cat ~/aur/.pkgver || printf "")
-    - PKGREL=$(cat ~/aur/.pkgrel || printf "1")
-    - rm -rf ~/aur/*
-    - cp -r packages/aur/build/aur/$SHORT_BRAND/. ~/aur/
-    - cd ~/aur
-    - >
-      if [[ "$PKGVER" == "$(cat .pkgver)" ]]; then \
-        PKGREL_INCR=$(expr "$PKGREL" + 1); \
-        echo "Incrementing pkgrel ($PKGREL -> $PKGREL_INCR): last commit released the same version ($PKGVER)"; \
-        sed -i "s/pkgrel=1/pkgrel=$PKGREL_INCR/g" PKGBUILD; \
-        sed -i "s/pkgrel = 1/pkgrel = $PKGREL_INCR/g" .SRCINFO; \
-        printf $PKGREL_INCR > .pkgrel; \
-      fi
-    - git add .
-    - git commit -m "$(cat .pkgver)-$(cat .pkgrel)"
-    - git push origin
 
 'Build':
   <<: *build
@@ -464,63 +417,6 @@ workflow:
     - *beta_only_rules
   dependencies: ['Beta']
   needs: ['Beta', 'Beta: libs']
-
-'AUR':
-  <<: *build
-  variables:
-    <<: *aur
-  rules:
-    - *beta_manual_only
-
-'AUR: libs':
-  <<: *upload_libraries
-  variables:
-    <<: *aur
-  rules:
-    - *beta_only_rules
-  needs: ['AUR']
-
-'AUR: launcher':
-  <<: *deploy
-  variables:
-    <<: *aur
-    ENTITY: launcher
-  rules:
-    - *beta_only_rules
-  dependencies: ['AUR']
-  needs: ['AUR', 'AUR: libs']
-
-'AUR: bootstrap':
-  <<: *deploy_bootstrap
-  variables:
-    <<: *aur
-    ENTITY: bootstrap
-  rules:
-    - *beta_only_rules
-  dependencies: ['AUR']
-  needs: ['AUR', 'AUR: libs']
-
-'AUR: .SRCINFO':
-  <<: *gen_srcinfo
-  variables:
-    <<: *aur
-  rules:
-    - *beta_only_rules
-  needs: ['AUR']
-
-'AUR: Push':
-  <<: *push_pkgbuild
-  variables:
-    <<: *aur
-    ENTITY: bootstrap
-  rules:
-    - *beta_only_rules
-  dependencies:
-    - 'AUR: .SRCINFO'
-  needs:
-    - 'AUR: .SRCINFO'
-    - 'AUR: launcher'
-    - 'AUR: bootstrap'
 
 'APPT':
   <<: *build

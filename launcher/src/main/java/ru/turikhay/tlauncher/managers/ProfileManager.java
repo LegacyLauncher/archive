@@ -22,7 +22,6 @@ import ru.turikhay.tlauncher.minecraft.auth.UUIDTypeAdapter;
 import ru.turikhay.tlauncher.pasta.Pasta;
 import ru.turikhay.tlauncher.pasta.PastaFormat;
 import ru.turikhay.tlauncher.ui.alert.Alert;
-import ru.turikhay.tlauncher.user.McleaksUser;
 import ru.turikhay.tlauncher.user.User;
 import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.util.FileUtil;
@@ -32,7 +31,6 @@ import ru.turikhay.util.json.InstantAdapter;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.*;
@@ -174,13 +172,6 @@ public class ProfileManager extends RefreshableComponent {
             }
         }
 
-        if (raw.userSet != null) {
-            for (User user : raw.userSet.getSet()) {
-                if (user.getType().equals(McleaksUser.TYPE)) {
-                    McleaksManager.triggerConnection();
-                }
-            }
-        }
         accountManager.setUserSet(raw.userSet);
     }
 

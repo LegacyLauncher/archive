@@ -7,10 +7,10 @@ import java.util.UUID;
 
 public final class PlainAuth implements Auth<PlainUser> {
 
-    public PlainUser authorize(String username) {
+    public PlainUser authorize(String username, boolean elySkins) {
         StringUtil.requireNotBlank(username, "username");
         UUID bukkitLikeUUID = UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
-        return new PlainUser(username, bukkitLikeUUID);
+        return new PlainUser(username, bukkitLikeUUID, elySkins);
     }
 
     @Override
