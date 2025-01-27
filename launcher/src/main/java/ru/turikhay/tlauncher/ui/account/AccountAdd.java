@@ -8,6 +8,7 @@ import ru.turikhay.tlauncher.ui.block.Blockable;
 import ru.turikhay.tlauncher.ui.block.Blocker;
 import ru.turikhay.tlauncher.ui.frames.RequireMinecraftAccountFrame;
 import ru.turikhay.tlauncher.ui.images.Images;
+import ru.turikhay.tlauncher.ui.loc.Localizable;
 import ru.turikhay.tlauncher.ui.loc.LocalizableButton;
 import ru.turikhay.tlauncher.ui.loc.LocalizableComponent;
 import ru.turikhay.tlauncher.ui.scenes.AccountManagerScene;
@@ -19,12 +20,16 @@ import ru.turikhay.tlauncher.user.UserSet;
 import ru.turikhay.util.OS;
 import ru.turikhay.util.SwingUtil;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Optional;
 
 public class AccountAdd extends BorderPanel implements AccountMultipaneCompCloseable, Blockable, LocalizableComponent {
+    private final Logger LOGGER = LogManager.getLogger(AccountAdd.class);
 
     private final AccountManagerScene scene;
 
@@ -176,7 +181,20 @@ public class AccountAdd extends BorderPanel implements AccountMultipaneCompClose
         promotedStore.setEnabled(false);
         psm().requestOrGetInfo().whenComplete((info, t) -> {
             if (info != null) {
-                SwingUtil.later(() -> promotedStore.setText(LOC_PREFIX + "buy-minecraft-price", info.getPrice()));
+                SwingUtil.later(() -> {
+                    String text = info.getText().get(Localizable.get().getLocale().toString());
+                    if (text == null) {
+                        text = info.getText().get("en_US");
+                    }
+                    if (text == null) {
+                        text = Localizable.get(LOC_PREFIX + "buy-minecraft");
+                    }
+                    if (text == null) {
+                        LOGGER.warn("promoted store text is null");
+                    } else {
+                        promotedStore.setText(text);
+                    }
+                });
             }
             SwingUtil.later(() -> promotedStore.setEnabled(true));
         });

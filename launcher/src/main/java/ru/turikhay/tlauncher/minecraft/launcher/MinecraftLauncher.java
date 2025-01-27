@@ -894,7 +894,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         launcher.directory(isLauncher ? rootDir : gameDir);
 
         javaManagerConfig.getWrapperCommand().ifPresent(s -> {
-            List<String> wrapperCommand = Arrays.asList(s.trim().split("\\s+"));
+            List<String> wrapperCommand = new ArrayList<>(Arrays.asList(s.trim().split("\\s+")));
             if (wrapperCommand.stream().noneMatch(JavaProcessLauncher.COMMAND_TOKEN::equals)) {
                 wrapperCommand.add(JavaProcessLauncher.COMMAND_TOKEN);
             }

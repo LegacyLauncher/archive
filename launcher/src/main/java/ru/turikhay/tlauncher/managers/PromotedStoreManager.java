@@ -9,6 +9,7 @@ import ru.turikhay.util.Lazy;
 import ru.turikhay.util.U;
 import ru.turikhay.util.async.AsyncThread;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -52,30 +53,37 @@ public class PromotedStoreManager {
     }
 
     public static class Info {
+        private String id;
         private String url;
-        private String price;
+        private Map<String, String> text;
 
         public Info() {
         }
 
-        public Info(String url, String price) {
+        public Info(String id, String url, Map<String, String> text) {
+            this.id = id;
             this.url = url;
-            this.price = price;
+            this.text = text;
+        }
+
+        public String getId() {
+            return id;
         }
 
         public String getUrl() {
             return url;
         }
 
-        public String getPrice() {
-            return price;
+        public Map<String, String> getText() {
+            return text;
         }
 
         @Override
         public String toString() {
-            return "Info{" +
-                    "url='" + url + '\'' +
-                    ", price='" + price + '\'' +
+            return "ClassName{" +
+                    "id='" + id + '\'' +
+                    ", url='" + url + '\'' +
+                    ", text=" + (text != null ? text.toString() : "null") +
                     '}';
         }
     }
