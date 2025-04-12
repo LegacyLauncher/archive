@@ -186,17 +186,13 @@ task generateUpdateJson {
     doLast {
         def jarFileChecksum = generateChecksum(shadowJar.outputs.files.singleFile)
 
-        def downloadPath = "repo/update/${short_brand}/bootstrap/${jarFileChecksum}.jar"
+        def downloadPath = "update/${short_brand}/bootstrap/${jarFileChecksum}.jar"
 
         def meta = [
                 version : product_version,
                 checksum: jarFileChecksum,
-                url     : [ "https://llaun.ch/${downloadPath}" ] + repo_hosts.collect { host ->
-                    ["http", "https"].collect {scheme ->
-                        "${scheme}://${host}/${downloadPath}"
-                    }
-                }.flatten().sort { a, b ->
-                    a.startsWith("https") ? (b.startsWith("https") ? 0 : -1) : (b.startsWith("https") ? 1 : 0)
+                url     : update_repo_prefixes.collect { prefix ->
+                    "$prefix/$downloadPath"
                 }
         ]
 

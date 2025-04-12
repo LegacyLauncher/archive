@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.tukaani.xz.LZMAInputStream;
 import ru.turikhay.tlauncher.downloader.RetryDownloadException;
 import ru.turikhay.tlauncher.downloader.Sha1Downloadable;
+import ru.turikhay.tlauncher.exceptions.LocalIOException;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.OS;
@@ -65,6 +66,8 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
                 )
         ) {
             IOUtils.copy(input, output);
+        } catch (IOException ioE) {
+            throw new LocalIOException(ioE);
         } finally {
             if (OS.WINDOWS.isCurrent()) {
                 // Windows Defender or sth like that doesn't let us remove these files right away

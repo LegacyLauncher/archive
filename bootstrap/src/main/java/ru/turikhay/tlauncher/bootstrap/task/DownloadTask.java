@@ -88,8 +88,8 @@ public class DownloadTask extends Task<Void> {
 
         URLConnection connection = url.openConnection(U.getProxy());
         // set connection and read timeouts
-        connection.setConnectTimeout(3 * 1000);
-        connection.setReadTimeout(30 * 1000);
+        connection.setConnectTimeout(10 * 1000);
+        connection.setReadTimeout(5 * 1000);
         double contentLength;
         Path temp = Files.createTempFile("tlauncher", null);
 

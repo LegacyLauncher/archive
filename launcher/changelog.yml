@@ -1,25 +1,5 @@
 ru_RU: >
-  Бэкпорты из беты:<br/>
-  - Улучшена работа скинов для аккаунтов "без пароля"<br/>
-  - Галочка "Скинов Ely.by" задается индивидуально для каждого поддерживаемого аккаунта<br/>
-  - Исправление потенциальной проблемы со входом в аккаунты Ely.by<br/>
-  - Исправлена проблема отображения длинных названий видеокарт в настройках лаунчера<br/>
-  - Поддержка команды-обертки для запуска Java (например, для использования с MangoHUD)<br/>
-  - Галочка "Оптимизированных аргументов" заменена на выбор сборщика мусора<br/>
-  - Добавлена функция обновления устаревших SSL-сертификатов для старых версий Java<br/>
-  - Возвращена поддержка кириллических ников<br/>
-  - Починен поиск в списке версий<br/>
-  - Прочие мелкие исправления
+  Небольшие улучшения и исправления
 
 en_US: >
-  Beta backports:<br/>
-  - Improved skins support for "w/o password" accounts<br/>
-  - "Ely.by skins" checkbox can now be set individually for any supported account<br/>
-  - Fixed possible issue with logging into Ely.by accounts<br/>
-  - Fixed issue with very long GPU labels<br/>
-  - Command wrapper feature (can be used e.g. for MangoHUD)<br/>
-  - "Optimized arguments" checkbox was replaced with Garbage Collector selector<br/>
-  - Added "Update outdated SSL certificate storage" feature for old Java versions<br/>
-  - Non-latin usernames support<br/>
-  - Fixed search feature in versions list<br/>
-  - Some small fixes
+  Minor improvements and bug fixes

@@ -6,4 +6,9 @@ ext {
         [ rd ] + [ repo_domain_zones_eu, repo_domain_zones_ru ].flatten().collect { "$it.$rd" }
     }.flatten()
     repo_cdn_path_prefixes = [ 'https://cdn.turikhay.ru/lln4' ]
+    update_repo_prefixes = [
+            "https://cdn.turikhay.ru/lln4/repo",
+            "https://repo.legacylauncher.ru",
+            "https://llaun.ch/repo",
+    ]
 }

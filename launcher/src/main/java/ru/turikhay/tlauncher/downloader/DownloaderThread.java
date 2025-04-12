@@ -6,6 +6,7 @@ import io.sentry.event.EventBuilder;
 import io.sentry.event.interfaces.ExceptionInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.turikhay.tlauncher.exceptions.LocalIOException;
 import ru.turikhay.tlauncher.repository.IRepo;
 import ru.turikhay.tlauncher.repository.RepositoryProxy;
 import ru.turikhay.util.FileUtil;
@@ -106,6 +107,10 @@ public class DownloaderThread extends ExtendedThread {
                     try {
                         download(timeout, skip, length);
                         break;
+                    } catch (LocalIOException local) {
+                        LOGGER.error("Local i/o error: {}", current, local);
+                        onError(local);
+                        break;
                     } catch (PartialDownloadException partial) {
                         LOGGER.debug("Partially downloaded file: {}", partial.getMessage());
                         attempt = -1;
@@ -149,7 +154,7 @@ public class DownloaderThread extends ExtendedThread {
         }
     }
 
-    private void download(int timeout, long skip, long length) throws PartialDownloadException, GaveUpDownloadException, AbortedDownloadException {
+    private void download(int timeout, long skip, long length) throws PartialDownloadException, GaveUpDownloadException, AbortedDownloadException, LocalIOException {
         Throwable cause = null;
 
         if (current.hasRepository()) {
@@ -168,7 +173,7 @@ public class DownloaderThread extends ExtendedThread {
                         }
                         downloadURL(connection, timeout, skip, length);
                         return;
-                    } catch (PartialDownloadException | AbortedDownloadException e) {
+                    } catch (PartialDownloadException | AbortedDownloadException | LocalIOException e) {
                         throw e;
                     } catch (IOException e) {
                         LOGGER.debug("Failed to download: {}",

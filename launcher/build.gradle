@@ -144,14 +144,10 @@ task generateUpdateJson {
     doLast {
         def jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
 
-        def downloadPath = "repo/update/${short_brand}/launcher/${jarFileChecksum}.jar"
+        def downloadPath = "update/${short_brand}/launcher/${jarFileChecksum}.jar"
 
-        def downloadUrlList = repo_hosts.collect { host ->
-            ["http", "https"].collect {scheme ->
-                "${scheme}://${host}/${downloadPath}"
-            }
-        }.flatten().toSet().sort { a, b ->
-            a.startsWith("https") ? (b.startsWith("https") ? 0 : -1) : (b.startsWith("https") ? 1 : 0)
+        def downloadUrlList = update_repo_prefixes.collect { prefix ->
+            "$prefix/$downloadPath"
         }
 
         def changelog = null
