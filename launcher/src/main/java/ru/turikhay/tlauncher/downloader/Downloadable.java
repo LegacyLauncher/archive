@@ -5,6 +5,7 @@ import ru.turikhay.util.FileUtil;
 import ru.turikhay.util.U;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -227,7 +228,7 @@ public class Downloadable {
 
     }
 
-    protected void onComplete() throws RetryDownloadException {
+    protected void onComplete() throws IOException {
         setLocked(false);
 
         for (DownloadableHandler handler : handlers) {

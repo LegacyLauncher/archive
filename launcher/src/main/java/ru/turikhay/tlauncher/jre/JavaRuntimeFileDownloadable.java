@@ -13,6 +13,7 @@ import ru.turikhay.util.OS;
 import ru.turikhay.util.async.AsyncThread;
 
 import java.io.*;
+import java.nio.file.Files;
 
 public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     private static final Logger LOGGER = LogManager.getLogger(JavaRuntimeFileDownloadable.class);
@@ -36,7 +37,7 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     }
 
     @Override
-    protected void onComplete() throws RetryDownloadException {
+    protected void onComplete() throws IOException {
         super.onComplete();
         if (lzmaDestination != null) {
             syncExtract();
@@ -47,21 +48,23 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
         }
     }
 
-    private void syncExtract() throws RetryDownloadException {
+    private void syncExtract() throws IOException {
         synchronized (JavaRuntimeFileDownloadable.class) {
             doExtract();
         }
     }
 
-    private void doExtract() throws RetryDownloadException {
+    private void doExtract() throws IOException {
         LOGGER.debug("Extracting {}", lzmaDestination.getAbsolutePath());
-        try (LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
-                new FileInputStream(lzmaDestination)));
-             OutputStream output = new BufferedOutputStream(new FileOutputStream(destination))
+        try (
+                LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
+                        Files.newInputStream(lzmaDestination.toPath())
+                ));
+                OutputStream output = new BufferedOutputStream(
+                        Files.newOutputStream(destination.toPath())
+                )
         ) {
             IOUtils.copy(input, output);
-        } catch (IOException e) {
-            throw new RetryDownloadException("couldn't unpack file", e);
         } finally {
             if (OS.WINDOWS.isCurrent()) {
                 // Windows Defender or sth like that doesn't let us remove these files right away

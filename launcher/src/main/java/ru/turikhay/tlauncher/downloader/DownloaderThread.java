@@ -415,7 +415,7 @@ public class DownloaderThread extends ExtendedThread {
         downloader.onProgress(this, currentProgress, curdone, speed);
     }
 
-    private void onComplete() throws RetryDownloadException {
+    private void onComplete() throws IOException {
         doneProgress += eachProgress;
         current.onComplete();
         downloader.onProgress(this, doneProgress, 1., speed);

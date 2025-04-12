@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class UpdateMeta {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateMeta.class);
@@ -34,7 +35,7 @@ public class UpdateMeta {
         Compressor.init(); // init compressor
     }
 
-    private static final int INITIAL_TIMEOUT = 10000, MAX_ATTEMPTS = 3;
+    private static final int INITIAL_TIMEOUT = 1000, MAX_ATTEMPTS = 3, UPDATE_META_THREADS = 2;
 
     public static Task<UpdateMeta> fetchFor(final String shortBrand, ConnectionInterrupter interrupter) {
         Objects.requireNonNull(shortBrand, "brand");
@@ -42,65 +43,22 @@ public class UpdateMeta {
         return new Task<UpdateMeta>("fetchUpdate") {
             @Override
             protected UpdateMeta execute() throws Exception {
-                log("Requesting update for: " + shortBrand);
-
-                Gson gson = createGson(shortBrand);
-                List<String> urlPrefixes = RepoPrefixV1.prefixesCdnFirst();
-                String updatePath = "/brands/" + shortBrand + "/bootstrap.json.mgz.signed";
-                ExecutorService executor = Executors.newFixedThreadPool(4, new ThreadFactory() {
+//                ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+                ExecutorService executor = Executors.newFixedThreadPool(UPDATE_META_THREADS, new ThreadFactory() {
                     private final AtomicInteger i = new AtomicInteger();
                     @Override
+
                     public Thread newThread(Runnable r) {
                         Thread t = new Thread(null, r, "UpdateMeta-" + i.getAndIncrement());
                         t.setDaemon(true);
                         return t;
                     }
                 });
-                ScheduledThreadPoolExecutor delayer = new ScheduledThreadPoolExecutor(
-                        1, r -> {
-                            Thread t = new Thread(null, r, "UpdateMetaDelayScheduler");
-                            t.setDaemon(true);
-                            return t;
-                        });
-                delayer.setRemoveOnCancelPolicy(true);
-                CompletableFuture<UpdateMeta> completed = new CompletableFuture<>();
+
                 try {
-                    List<CompletableFuture<UpdateMeta>> tasks = new ArrayList<>();
-                    for (int i = 1; i <= MAX_ATTEMPTS; i++) {
-                        final int attempt = i;
-                        for (int k = 0; k < urlPrefixes.size(); k++) {
-                            CompletableFuture<Void> delay;
-                            if (i == 1 && k < 2) {
-                                delay = CompletableFuture.completedFuture(null);
-                            } else {
-                                delay = new CompletableFuture<>();
-                                delayer.schedule(() -> delay.complete(null), 5, TimeUnit.SECONDS);
-                            }
-                            final String url = urlPrefixes.get(k) + updatePath;
-                            tasks.add(delay.thenApplyAsync((__) -> fetchAttempts(url, gson, attempt), executor));
-                        }
-                    }
-                    tasks.forEach(f -> f.thenAccept(completed::complete));
-                    completed.whenComplete((__, t) -> {
-                        tasks.forEach(c -> c.cancel(true));
-                    });
-                    CompletableFuture<?> all = CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]));
-                    all.whenComplete((__, t) -> {
-                        if (t != null) {
-                            completed.completeExceptionally(new UpdateMetaFetchFailed());
-                        }
-                    });
-                    try {
-                        return completed.get(5, TimeUnit.SECONDS);
-                    } catch (TimeoutException e) {
-                        LOGGER.warn("Fetching update meta is taking too long");
-                        if (interrupter != null) {
-                            interrupter.mayInterruptConnection(() -> completed.cancel(true));
-                        }
-                    }
-                    return completed.get();
+                    return fetchUpdateMeta(executor);
                 } catch (CancellationException e) {
-                    LOGGER.info("Update meta request was cancelled");
+                    LOGGER.warn("Update meta request was cancelled");
                     throw new UpdateMetaFetchFailed();
                 } catch (ExecutionException e) {
                     Throwable cause = e.getCause();
@@ -110,9 +68,42 @@ public class UpdateMeta {
                     }
                     throw e;
                 } finally {
-                    completed.cancel(true);
-                    executor.shutdown();
+                    executor.shutdownNow();
+//                    scheduler.shutdownNow();
                 }
+            }
+
+            private UpdateMeta fetchUpdateMeta(ExecutorService executor) throws Exception {
+                LOGGER.info("Requesting update for: {}", shortBrand);
+
+                Gson gson = createGson(shortBrand);
+                List<String> urlPrefixes = RepoPrefixV1.prefixesCdnFirst();
+                String updatePath = "/brands/" + shortBrand + "/bootstrap.json.mgz.signed";
+
+                for(int i = 1; i <= MAX_ATTEMPTS; i++) {
+                    final int attempt = i;
+
+                    List<CompletableFuture<UpdateMeta>> futures = new ArrayList<>();
+
+                    urlPrefixes.stream().map(urlPrefix -> {
+                        final String url = urlPrefix + updatePath;
+                        return CompletableFuture.supplyAsync(() -> fetchAttempts(url, gson, attempt), executor);
+                    }).collect(Collectors.toCollection(() -> futures));
+
+                    CompletableFuture<UpdateMeta> completed = new CompletableFuture<>();
+                    futures.forEach(future -> { future.thenAccept(completed::complete); });
+                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).whenComplete((v, t) -> {
+                        completed.completeExceptionally(new UpdateMetaFetchFailed());
+                    });
+
+                    try {
+                        return completed.join();
+                    } catch (CompletionException e) {
+                        LOGGER.warn("Attempt {}: All update meta request were failed", attempt);
+                    }
+                }
+
+                throw new UpdateMetaFetchFailed();
             }
         };
     }
@@ -204,7 +195,7 @@ public class UpdateMeta {
 
         URLConnection connection = url.openConnection();
         connection.setConnectTimeout(timeout);
-        connection.setReadTimeout(timeout);
+        connection.setReadTimeout(5 * timeout);
 
         return connection.getInputStream();
     }

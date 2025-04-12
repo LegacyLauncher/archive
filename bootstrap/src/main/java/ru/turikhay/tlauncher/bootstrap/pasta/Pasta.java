@@ -57,6 +57,8 @@ public class Pasta {
         HttpURLConnection c = null;
         try {
             c = (HttpURLConnection) url.openConnection(U.getProxy());
+            c.setConnectTimeout(3 * 1000);
+            c.setReadTimeout(30 * 1000);
             c.setRequestProperty("Content-Type", "text/plain; charset=\"UTF-8\"");
             c.setRequestMethod("POST");
             c.setDoOutput(true);

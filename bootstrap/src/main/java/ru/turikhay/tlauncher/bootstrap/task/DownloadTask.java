@@ -34,6 +34,8 @@ public class DownloadTask extends Task<Void> {
         this.urlList = new ArrayList<>(urlList);
         this.file = file;
         this.sha256 = sha256;
+
+        Collections.shuffle(this.urlList);
     }
 
     public DownloadTask(String name, URL url, Path file, String sha256) {
@@ -85,6 +87,9 @@ public class DownloadTask extends Task<Void> {
         log("Downloading:", url);
 
         URLConnection connection = url.openConnection(U.getProxy());
+        // set connection and read timeouts
+        connection.setConnectTimeout(3 * 1000);
+        connection.setReadTimeout(30 * 1000);
         double contentLength;
         Path temp = Files.createTempFile("tlauncher", null);
 

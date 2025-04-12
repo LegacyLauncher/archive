@@ -34,6 +34,7 @@ public abstract class AbstractOAuthUrlProducer {
         if (state != null) {
             b.addParameter("state", state);
         }
+        b.addParameter("prompt", "select_account");
         return b;
     }
 }
