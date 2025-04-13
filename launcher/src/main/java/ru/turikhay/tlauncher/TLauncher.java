@@ -53,6 +53,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -171,8 +172,11 @@ public final class TLauncher {
         profileManager = componentManager.loadComponent(ProfileManager.class);
 
         migrateFromOldJreConfig();
-        File jreRootDir = new File(config.get(JavaManagerConfig.class).getRootDirOrDefault());
-        FileUtil.createFolder(jreRootDir);
+        File jreRootDir = createJreRootDirOrFallback(config.get(JavaManagerConfig.class).getRootDir()
+                .map(File::new)
+                .orElse(null)
+        );
+        config.set(JavaManagerConfig.PATH_ROOT_DIR, jreRootDir.getAbsolutePath(), false);
         javaManager = new JavaManager(jreRootDir);
 
         connectivityManager = initConnectivityManager();
@@ -403,6 +407,30 @@ public final class TLauncher {
         });
 
         executeOnReadyJobs();
+    }
+
+    private static File createJreRootDirOrFallback(File jreRootDir) throws IOException {
+        if (jreRootDir != null) {
+            try {
+                FileUtil.createFolder(jreRootDir);
+                return jreRootDir;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to create JRE root directory: {}", jreRootDir, e);
+                LOGGER.warn("Falling back to default");
+            }
+        }
+        return createDefaultJreRootDir();
+    }
+
+    private static File createDefaultJreRootDir() throws IOException {
+        File defaultRootDir = new File(JavaManagerConfig.getDefaultRootDir());
+        try {
+            FileUtil.createFolder(defaultRootDir);
+        } catch (IOException ioE) {
+            LOGGER.error("Failed to create JRE root directory in the default location: {}", defaultRootDir, ioE);
+            throw ioE;
+        }
+        return defaultRootDir;
     }
 
     private static final String PONG_RESPONSE = "Pong!\n";

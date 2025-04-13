@@ -1,7 +1,10 @@
 package ru.turikhay.tlauncher.downloader;
 
+import net.legacylauncher.LegacyLauncher;
+import ru.turikhay.tlauncher.TLauncher;
 import ru.turikhay.tlauncher.repository.Repository;
 import ru.turikhay.util.FileUtil;
+import ru.turikhay.util.OS;
 import ru.turikhay.util.U;
 
 import java.io.File;
@@ -275,7 +278,9 @@ public class Downloadable {
             connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
             connection.setRequestProperty("Pragma", "no-cache"); // HTTP 1.0.
             connection.setRequestProperty("Expires", "0"); // Proxies.
-//            connection.setRequestProperty("User-Agent", "");
+            connection.setRequestProperty("User-Agent", "LL-Downloader/" + TLauncher.getVersion().toString() +
+                    " ("+ System.getProperty("os.name") +"; Java/"+ System.getProperty("java.version") +")"
+            );
 
             return connection;
             /*if (!fake) {

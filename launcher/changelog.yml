@@ -1,5 +1,5 @@
 ru_RU: >
-  Небольшие улучшения и исправления
+  Исправлена ошибка, возникающая при переносе лаунчера между дисками (Windows)
 
 en_US: >
-  Minor improvements and bug fixes
+  Fixed an error occurring when moving the launcher between disk drives (Windows)

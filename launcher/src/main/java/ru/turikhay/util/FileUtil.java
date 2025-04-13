@@ -260,7 +260,7 @@ public class FileUtil {
     public static boolean createFolder(File dir) throws IOException {
         if (dir == null) {
             throw new NullPointerException();
-        } else if (dir.isDirectory() && dir.exists()) {
+        } else if (dir.isDirectory()) {
             return false;
         } else if (!dir.mkdirs()) {
             throw new IOException("Cannot create folders: " + dir.getAbsolutePath());
