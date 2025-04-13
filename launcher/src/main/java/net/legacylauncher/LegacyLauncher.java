@@ -5,6 +5,7 @@ import joptsimple.OptionSet;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.configuration.*;
 import net.legacylauncher.downloader.Downloader;
 import net.legacylauncher.handlers.ExceptionHandler;
@@ -186,9 +187,7 @@ public final class LegacyLauncher {
         profileManager = manager.loadComponent(ProfileManager.class);
 
         migrateFromOldJreConfig();
-        File jreRootDir = new File(settings.get(JavaManagerConfig.class).getRootDirOrDefault());
-        FileUtil.createFolder(jreRootDir);
-        javaManager = new JavaManager(jreRootDir);
+        javaManager = new JavaManager(createJreRootDir());
 
         ConnectivityManager connectivityManager = initConnectivityManager();
         connectivityManager.queueChecks();
@@ -404,6 +403,28 @@ public final class LegacyLauncher {
         }, SwingUtil.executor()));
 
         executeOnReadyJobs();
+    }
+
+    private File createJreRootDir() throws LocalIOException {
+        File jreRootDir = settings.get(JavaManagerConfig.class).getRootDir().map(File::new).orElse(null);
+        if (jreRootDir != null) {
+            try {
+                FileUtil.createFolder(jreRootDir);
+                return jreRootDir;
+            } catch (LocalIOException e) {
+                log.warn("Failed to create JRE root directory: {}", jreRootDir, e);
+                log.warn("Falling back to default");
+            }
+        }
+        jreRootDir = new File(JavaManagerConfig.getDefaultRootDir());
+        log.info("Creating default JRE root directory: {}", jreRootDir);
+        try {
+            FileUtil.createFolder(jreRootDir);
+        } catch (LocalIOException e) {
+            log.error("Failed to create JRE root directory in the default location", e);
+            throw e;
+        }
+        return jreRootDir;
     }
 
     public static void kill() {

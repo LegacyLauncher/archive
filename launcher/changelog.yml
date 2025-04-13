@@ -1,6 +1,5 @@
 ru_RU: >
-  – Починили поиск по версиям<br/>
-  – Другие небольшие исправления и улучшения
+  Исправлена ошибка, возникающая при переносе лаунчера между дисками (Windows)
+
 en_US: >
-  – Fixed version search<br/>
-  – Other small fixes and improvements
+  Fixed an error occurring when moving the launcher between disk drives (Windows)
