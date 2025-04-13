@@ -1,5 +1,6 @@
 package net.legacylauncher.util;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.images.Images;
@@ -13,19 +14,20 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class SwingUtil {
     private static final Lazy<List<Image>> favicons = Lazy.of(() -> createFaviconList("logo-tl"));
+    private static final String base64s = "data:image/", base64e = ";base64,";
+    private static final Lazy<Double> SCALING_FACTOR = Lazy.of(SwingUtil::queryScalingFactor);
 
     public static List<Image> createFaviconList(String iconName) {
         ArrayList<Image> favicons = new ArrayList<>();
@@ -142,8 +144,6 @@ public class SwingUtil {
         return getPrefSize(component, width, 0).height;
     }
 
-    private static final String base64s = "data:image/", base64e = ";base64,";
-
     public static BufferedImage base64ToImage(String source) throws IOException {
         if (!source.startsWith(base64s)) {
             throw new IllegalArgumentException("not a bse64 format");
@@ -182,15 +182,30 @@ public class SwingUtil {
         return Images.loadIconById(source);
     }
 
-    public static void later(SwingRunnable r) {
+    private static Runnable asRunnable(Callable<?> callable) {
+        //noinspection Convert2Lambda,Anonymous2MethodRef
+        return new Runnable() {
+            @Override
+            @SneakyThrows
+            public void run() {
+                callable.call();
+            }
+        };
+    }
+
+    public static void later(Callable<?> r) {
+        later(asRunnable(r));
+    }
+
+    public static void later(Runnable r) {
         EventQueue.invokeLater(r);
     }
 
-    public static void laterRunnable(Runnable r) {
-        later(r::run);
+    public static void wait(Callable<?> r) {
+        wait(asRunnable(r));
     }
 
-    public static void wait(SwingRunnable r) {
+    public static void wait(Runnable r) {
         if (EventQueue.isDispatchThread()) {
             invokeNow(r);
         } else {
@@ -198,42 +213,37 @@ public class SwingUtil {
         }
     }
 
+    @SneakyThrows
     public static <V> V waitAndReturn(Callable<V> callable) {
-        AtomicReference<V> ref = new AtomicReference<>();
-        wait(() -> ref.set(callable.call()));
-        return ref.get();
+        CompletableFuture<V> future = new CompletableFuture<>();
+        wait(() -> {
+            try {
+                future.complete(callable.call());
+            } catch (Throwable e) {
+                future.completeExceptionally(e);
+            }
+        });
+        return future.get();
     }
 
-    private static void invokeNow(SwingRunnable r) {
-        try {
-            r.run();
-        } catch (SwingRunnableException e) {
-            throw new SwingException(e.getCause());
-        }
+    @SneakyThrows
+    private static void invokeNow(Runnable r) {
+        r.run();
     }
 
-    private static void invokeAndWait(SwingRunnable r) {
+    @SneakyThrows
+    private static void invokeAndWait(Runnable r) {
         try {
             EventQueue.invokeAndWait(r);
         } catch (InterruptedException interruptedException) {
             Thread.currentThread().interrupt();
-            throw new SwingException(interruptedException);
-        } catch (InvocationTargetException invocationTargetException) {
-            Throwable t = invocationTargetException.getCause();
-            if (t instanceof SwingRunnableException) {
-                t = t.getCause();
-            } else {
-                t = invocationTargetException;
-            }
-            throw new SwingException(t);
+            throw interruptedException;
         }
     }
 
     public static Executor executor() {
-        return SwingUtil::laterRunnable;
+        return SwingUtil::later;
     }
-
-    private static final Lazy<Double> SCALING_FACTOR = Lazy.of(SwingUtil::queryScalingFactor);
 
     public static double getScalingFactor() {
         return SCALING_FACTOR.value().orElse(1.0);

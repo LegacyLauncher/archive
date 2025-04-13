@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.util.EHttpClient;
 import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
@@ -161,20 +162,21 @@ public class RepositoryProxy {
 
         private static HttpURLConnection openHttpConnection(String path, Proxy proxy, int timeout) throws IOException {
             HttpURLConnection httpURLConnection = (HttpURLConnection) makeHttpUrl(path).openConnection(proxy);
-            setupTimeout(httpURLConnection, timeout);
+            setup(httpURLConnection, timeout);
             return httpURLConnection;
         }
 
         private static HttpURLConnection openHttpConnection(URL url, Proxy proxy, int timeout) throws IOException {
             checkHttpUrl(url);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection(proxy);
-            setupTimeout(httpURLConnection, timeout);
+            setup(httpURLConnection, timeout);
             return httpURLConnection;
         }
 
-        private static void setupTimeout(HttpURLConnection connection, int timeout) {
+        private static void setup(HttpURLConnection connection, int timeout) {
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
+            LauncherUserAgent.set(connection);
         }
 
         private static URL makeHttpUrl(String path) throws IOException {

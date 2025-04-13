@@ -6,12 +6,10 @@ import net.legacylauncher.minecraft.auth.Authenticator;
 import net.legacylauncher.minecraft.auth.AuthenticatorListener;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.loc.Localizable;
-import net.legacylauncher.ui.login.LoginException;
 import net.legacylauncher.user.AuthDetailedException;
 import net.legacylauncher.user.AuthException;
 import net.legacylauncher.user.AuthUnknownException;
 import net.legacylauncher.user.User;
-import net.legacylauncher.util.SwingException;
 import net.legacylauncher.util.SwingUtil;
 
 import java.io.IOException;
@@ -35,17 +33,8 @@ public class AuthUIListener<U extends User> implements AuthenticatorListener<U> 
     public void onAuthPassingError(Authenticator<? extends U> auth, Throwable e) {
         showError(auth, e);
         if (listener != null) {
-            try {
-                SwingUtil.wait(() -> listener.onAuthPassingError(auth, e));
-            } catch (SwingException swingException) {
-                Throwable t = swingException.unpackException();
-                if (t instanceof LoginException) {
-                    throw (LoginException) t;
-                }
-                throw swingException;
-            }
+            SwingUtil.wait(() -> listener.onAuthPassingError(auth, e));
         }
-
     }
 
     private void showError(Authenticator<? extends U> auth, Throwable e) {

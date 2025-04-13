@@ -27,7 +27,6 @@ import net.legacylauncher.ui.swing.DelayedComponent;
 import net.legacylauncher.ui.swing.extended.ExtendedPanel;
 import net.legacylauncher.user.AuthException;
 import net.legacylauncher.user.User;
-import net.legacylauncher.util.SwingException;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.AsyncThread;
@@ -425,15 +424,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         }
 
         public void loggingIn() throws LoginException {
-            try {
-                SwingUtil.wait(delegate::loggingIn);
-            } catch (SwingException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof LoginException) {
-                    throw (LoginException) cause;
-                }
-                throw e;
-            }
+            SwingUtil.wait(delegate::loggingIn);
         }
 
         public void loginFailed() {

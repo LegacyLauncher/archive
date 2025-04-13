@@ -1,9 +1,9 @@
 package net.legacylauncher.ui.settings;
 
-import net.legacylauncher.util.shared.JavaVersion;
 import net.legacylauncher.util.JavaVersionDetector;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
+import net.legacylauncher.util.shared.JavaVersion;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class JavaVersionDetectorCache {
                 JavaVersionDetector detector = new JavaVersionDetector(javaExec);
                 return detector.detect();
             } finally {
-                SwingUtil.laterRunnable(callback);
+                SwingUtil.later(callback);
             }
         }
     }

@@ -182,7 +182,7 @@ public class ComboBoxFilter<T> {
                 matchingItems.forEach(model::addElement);
             });
         });
-        System.out.println("passed");
+        LOGGER.debug("passed");
     }
 
     public void cleanUp() {

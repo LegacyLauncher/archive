@@ -2,8 +2,10 @@ package net.legacylauncher.bootstrap.task;
 
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.exception.FileLockedException;
+import net.legacylauncher.bootstrap.util.BootstrapUserAgent;
 import net.legacylauncher.bootstrap.util.Sha256Sign;
 import net.legacylauncher.bootstrap.util.U;
+import net.legacylauncher.common.exceptions.LocalIOException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +62,9 @@ public class DownloadTask extends Task<Void> {
         for (URL url : urlList) {
             try {
                 downloadUrl(url);
+            } catch (LocalIOException e) {
+                log.error("Local i/o error", e);
+                throw e;
             } catch (FileLockedException e) {
                 log.error("File is locked", e);
                 throw e;
@@ -85,6 +90,10 @@ public class DownloadTask extends Task<Void> {
         log.info("Downloading: {}", url);
 
         URLConnection connection = url.openConnection(U.getProxy());
+        connection.setConnectTimeout(10_000);
+        connection.setReadTimeout(5_000);
+        BootstrapUserAgent.set(connection);
+
         double contentLength;
         Path temp = Files.createTempFile("tlauncher", null);
 
@@ -98,7 +107,12 @@ public class DownloadTask extends Task<Void> {
             contentLength = (double) connection.getContentLengthLong();
 
             while ((i = in.read(buffer)) >= 0) {
-                out.write(buffer, 0, i);
+
+                try {
+                    out.write(buffer, 0, i);
+                } catch (IOException e) {
+                    throw new LocalIOException(temp.toString(), e);
+                }
 
                 read += i;
 
@@ -113,7 +127,12 @@ public class DownloadTask extends Task<Void> {
 
             if (sha256 != null) {
                 log.info("Checking SHA256... Expected: {}", sha256);
-                out.close();
+
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    throw new LocalIOException(temp.toString(), e);
+                }
 
                 String gotSha256 = Sha256Sign.calc(temp);
                 log.info("Got: {}", gotSha256);
@@ -126,7 +145,11 @@ public class DownloadTask extends Task<Void> {
 
             log.info("Downloaded successfully, copying back...");
 
-            out.close();
+            try {
+                out.close();
+            } catch (IOException e) {
+                throw new LocalIOException(temp.toString(), e);
+            }
 
             boolean tryCopy = false;
             ArrayList<IOException> copyAttemptFailures = new ArrayList<>();

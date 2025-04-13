@@ -1,7 +1,6 @@
 package net.legacylauncher.ui.swing.extended;
 
 import net.legacylauncher.ui.swing.util.IntegerArrayGetter;
-import net.legacylauncher.util.SwingRunnable;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
 
@@ -11,11 +10,11 @@ import java.util.concurrent.TimeUnit;
 
 public class QuickParameterListener {
     private final IntegerArrayGetter paramGetter;
-    private final SwingRunnable callback;
+    private final Runnable callback;
     private int[] lastValue;
     private ScheduledFuture<?> future;
 
-    QuickParameterListener(IntegerArrayGetter getter, SwingRunnable callback) {
+    QuickParameterListener(IntegerArrayGetter getter, Runnable callback) {
         if (getter == null) {
             throw new NullPointerException("Getter is NULL!");
         } else if (callback == null) {

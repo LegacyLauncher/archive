@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 public class Updater extends Task<Void> {
 
@@ -42,10 +41,9 @@ public class Updater extends Task<Void> {
 
     @Override
     protected Void execute() throws Exception {
-        String randomUrl = getAnyDownloadUrl();
         final boolean restartOnFinish = finishAction == FinishAction.RESTART;
 
-        showUIMessage(randomUrl, restartOnFinish);
+        showUIMessage(restartOnFinish);
 
         ProcessBuilder processBuilder = null;
 
@@ -53,7 +51,7 @@ public class Updater extends Task<Void> {
             processBuilder = new ProcessBuilder(this.restartCmd);
         }
 
-        doWork(randomUrl);
+        doUpdate();
 
         if (restartOnFinish) {
             processBuilder.start();
@@ -64,7 +62,7 @@ public class Updater extends Task<Void> {
         return null;
     }
 
-    private void doWork(String randomUrl) throws Exception {
+    private void doUpdate() throws Exception {
         Path tempFile = Files.createTempFile("updater", null);
 
         try {
@@ -73,7 +71,7 @@ public class Updater extends Task<Void> {
             UserInterface.showError(
                     UserInterface.getLString("update.locked",
                             "Update file is locked by another process."),
-                    randomUrl
+                    null
             );
             Files.delete(tempFile);
             return;
@@ -87,11 +85,7 @@ public class Updater extends Task<Void> {
         }
     }
 
-    private String getAnyDownloadUrl() {
-        return entry.getUrl().get(new Random().nextInt(entry.getUrl().size())).toString();
-    }
-
-    private void showUIMessage(String randomUrl, boolean restartOnFinish) {
+    private void showUIMessage(boolean restartOnFinish) {
         StringBuilder message = new StringBuilder();
         if (restartOnFinish) {
             message.append(UserInterface.getLString("update.restart.auto",
@@ -101,9 +95,9 @@ public class Updater extends Task<Void> {
                     "Application is going to self-update. Please restart it manually."));
         }
         message.append("\n\n");
-        message.append(UserInterface.getLString("update.link",
-                "Please download and install the update manually if something goes wrong:"));
-        UserInterface.showWarning(message.toString(), randomUrl);
+        message.append(UserInterface.getLString("update.support",
+                "Should the update fail, please contact our support at https://legacylauncher.net"));
+        UserInterface.showWarning(message.toString(), null);
     }
 
     private enum FinishAction {

@@ -3,8 +3,10 @@ package net.legacylauncher.downloader;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -227,7 +229,7 @@ public class Downloadable {
 
     }
 
-    protected void onComplete() throws RetryDownloadException {
+    protected void onComplete() throws IOException {
         setLocked(false);
 
         for (DownloadableHandler handler : handlers) {
@@ -274,7 +276,7 @@ public class Downloadable {
             connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
             connection.setRequestProperty("Pragma", "no-cache"); // HTTP 1.0.
             connection.setRequestProperty("Expires", "0"); // Proxies.
-//            connection.setRequestProperty("User-Agent", "");
+            LauncherUserAgent.set(connection);
 
             return connection;
             /*if (!fake) {

@@ -1,6 +1,7 @@
 package net.legacylauncher.repository;
 
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 
 import java.io.IOException;
 import java.net.Proxy;
@@ -43,6 +44,7 @@ public abstract class Repo implements IRepo {
         connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
         connection.setRequestProperty("Pragma", "no-cache"); // HTTP 1.0.
         connection.setRequestProperty("Expires", "0"); // Proxies.
+        LauncherUserAgent.set(connection);
 
         return connection;
     }

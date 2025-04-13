@@ -32,7 +32,6 @@ import net.legacylauncher.util.shared.JavaVersion;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -86,27 +85,7 @@ public final class Bootstrap {
             throw new RuntimeException("couldn't split args: " + Arrays.toString(rawArgs), rE);
         }
 
-        Path bootstrapJar = null;
-        try {
-            URI uri = Bootstrap.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-            if ("jar".equals(uri.getScheme())) {
-                String part = uri.getSchemeSpecificPart();
-                int i = part.indexOf("!/");
-                if (i > 0) {
-                    String filePath = part.substring(0, i);
-                    if (filePath.startsWith("file:")) {
-                        bootstrapJar = Paths.get(filePath.substring("file:".length()));
-                    } else {
-                        bootstrapJar = Paths.get(URI.create(part.substring(0, i)));
-                    }
-                }
-            }
-            if (bootstrapJar == null) {
-                bootstrapJar = Paths.get(uri);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to determine bootstrap jar location", e);
-        }
+        Path bootstrapJar = BootstrapStarter.getCurrentJarLocation().getPath();
 
         RunningConditionsResult runningConditions = checkRunningConditions(bootstrapJar);
         runningConditions.showErrorIfNeeded();

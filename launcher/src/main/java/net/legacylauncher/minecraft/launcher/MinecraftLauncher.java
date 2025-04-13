@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import me.cortex.jarscanner.Detector;
 import net.legacylauncher.LegacyLauncher;
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.configuration.Configuration;
 import net.legacylauncher.downloader.AbortedDownloadException;
 import net.legacylauncher.downloader.DownloadableContainer;
@@ -805,7 +806,12 @@ public class MinecraftLauncher implements JavaProcessListener {
         checkAborted();
 
         if (assets1 != null) {
-            DownloadableContainer assetsContainer = am.downloadResources(version, assets1);
+            DownloadableContainer assetsContainer = null;
+            try {
+                assetsContainer = am.collectAssets(version, assets1);
+            } catch (LocalIOException e) {
+                log.error("Failed to check existing assets. This could mean there's a problem with the hard drive.", e);
+            }
             downloader.add(assetsContainer);
         }
 
@@ -884,7 +890,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         launcher.directory(isLauncher ? rootDir : gameDir);
 
         javaManagerConfig.getWrapperCommand().ifPresent(s -> {
-            List<String> wrapperCommand = Arrays.asList(s.trim().split("\\s+"));
+            List<String> wrapperCommand = new ArrayList<>(Arrays.asList(s.trim().split("\\s+")));
             if (wrapperCommand.stream().noneMatch(JavaProcessLauncher.COMMAND_TOKEN::equals)) {
                 wrapperCommand.add(JavaProcessLauncher.COMMAND_TOKEN);
             }

@@ -2,6 +2,7 @@ package net.legacylauncher.bootstrap.launcher;
 
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.ipc.DBusBootstrapIPC;
+import net.legacylauncher.bootstrap.ipc.DBusResolverIPC;
 import net.legacylauncher.bootstrap.meta.LocalLauncherMeta;
 import net.legacylauncher.bootstrap.task.Task;
 
@@ -19,16 +20,16 @@ import java.util.stream.Stream;
 public class ForkStarter extends AbstractDBusStarter {
     private Process process;
 
-    private ForkStarter(LocalLauncher launcher, DBusBootstrapIPC ipc) {
-        super(launcher, ipc);
+    private ForkStarter(LocalLauncher launcher, DBusBootstrapIPC ipc, DBusResolverIPC resolverIpc) {
+        super(launcher, ipc, resolverIpc);
         ipc.setMetadata("laf_launcher_aware", Boolean.TRUE); // launcher itself should initialize L&F
     }
 
-    public static Task<Void> start(final LocalLauncher launcher, final DBusBootstrapIPC ipc) {
+    public static Task<Void> start(final LocalLauncher launcher, final DBusBootstrapIPC ipc, final DBusResolverIPC resolverIpc) {
         Objects.requireNonNull(launcher, "LocalLauncher");
         Objects.requireNonNull(ipc, "DBusBootstrapIPC");
 
-        return new ForkStarter(launcher, ipc);
+        return new ForkStarter(launcher, ipc, resolverIpc);
     }
 
     private static Path lookupJavaBin() {

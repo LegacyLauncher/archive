@@ -36,6 +36,11 @@ class LegacyLauncherBrandPlugin : Plugin<Project> {
             }
         })
         extension.repoCdnPathPrefixes.convention(listOf("https://cdn.turikhay.ru/lln4"))
+        extension.updateRepoPrefixes.convention(listOf(
+            "https://cdn.turikhay.ru/lln4/repo",
+            "https://repo.legacylauncher.ru",
+            "https://llaun.ch/repo"
+        ))
 
         extension.supportEmail.convention("support@tln4.ru")
     }

@@ -7,6 +7,7 @@ import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.git.MapTokenResolver;
 import net.legacylauncher.util.git.TokenReplacingReader;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -159,6 +160,7 @@ class ElyUserValidator {
         connection.setInstanceFollowRedirects(true);
         connection.setReadTimeout(U.getReadTimeout());
         connection.setConnectTimeout(U.getConnectionTimeout());
+        LauncherUserAgent.set(connection);
 
         return connection;
     }

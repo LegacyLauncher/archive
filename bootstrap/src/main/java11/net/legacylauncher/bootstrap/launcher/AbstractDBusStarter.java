@@ -3,7 +3,9 @@ package net.legacylauncher.bootstrap.launcher;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.ipc.BootstrapIPC;
 import net.legacylauncher.bootstrap.ipc.DBusBootstrapIPC;
+import net.legacylauncher.bootstrap.ipc.DBusResolverIPC;
 import net.legacylauncher.ipc.DBusConnectionForwarder;
+import net.legacylauncher.ipc.Resolver1;
 import org.freedesktop.dbus.connections.BusAddress;
 import org.freedesktop.dbus.connections.impl.DirectConnection;
 import org.freedesktop.dbus.connections.impl.DirectConnectionBuilder;
@@ -19,12 +21,14 @@ import java.util.concurrent.*;
 public abstract class AbstractDBusStarter extends AbstractStarter implements Closeable {
     protected final LocalLauncher launcher;
     protected final DBusBootstrapIPC ipc;
+    private final DBusResolverIPC resolverIpc;
     private BusAddress busAddress;
     private ExecutorService executorService;
 
-    protected AbstractDBusStarter(LocalLauncher launcher, DBusBootstrapIPC ipc) {
+    protected AbstractDBusStarter(LocalLauncher launcher, DBusBootstrapIPC ipc, DBusResolverIPC resolverIpc) {
         this.launcher = launcher;
         this.ipc = ipc;
+        this.resolverIpc = resolverIpc;
 
         ipc.addListener(new BootstrapIPC.Listener() {
             @Override
@@ -70,6 +74,9 @@ public abstract class AbstractDBusStarter extends AbstractStarter implements Clo
                 DirectConnection connection = builder.build();
                 DBusConnectionForwarder forwarder = new DBusConnectionForwarder.Direct(connection);
                 ipc.register(forwarder);
+                if (resolverIpc != null) {
+                    forwarder.exportObject(Resolver1.OBJECT_PATH, resolverIpc);
+                }
                 connection.listen();
             } catch (Exception e) {
                 serverAccepting.completeExceptionally(e);

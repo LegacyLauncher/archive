@@ -1,6 +1,8 @@
 package net.legacylauncher.util;
 
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.common.exceptions.LocalIOException;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -14,19 +16,24 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 @Slf4j
 public class FileUtil {
-    public static void writeFile(File file, String text) throws IOException {
-        createFile(file);
-        BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
-        OutputStreamWriter ow = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-        ow.write(text);
-        ow.close();
-        os.close();
+    public static void writeFile(File file, String text) throws LocalIOException {
+        try {
+            createFile(file);
+            BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
+            OutputStreamWriter ow = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+            ow.write(text);
+            ow.close();
+            os.close();
+        } catch (IOException e) {
+            throw new LocalIOException(file.getAbsolutePath(), e);
+        }
     }
 
     public static String getFilename(String path) {
@@ -35,32 +42,27 @@ public class FileUtil {
         return size == 0 ? "" : folders[size - 1];
     }
 
-    public static String getDigest(File file, String algorithm, int hashLength) {
-        DigestInputStream stream = null;
-
-        try {
-            stream = new DigestInputStream(Files.newInputStream(file.toPath()), MessageDigest.getInstance(algorithm));
-            byte[] ignored = new byte[65536];
-
-            int read;
-            do {
-                read = stream.read(ignored);
-            } while (read > 0);
-
-            return String.format(java.util.Locale.ROOT, "%1$0" + hashLength + "x", new BigInteger(1, stream.getMessageDigest().digest()));
-        } catch (Exception ignored) {
-        } finally {
-            close(stream);
+    public static String getDigest(File file, String algorithm, int hashLength) throws LocalIOException {
+        try(InputStream fileStream = Files.newInputStream(file.toPath())) {
+            DigestInputStream stream = new DigestInputStream(fileStream, MessageDigest.getInstance(algorithm));
+            IOUtils.consume(stream);
+            return String.format(
+                    Locale.ROOT,
+                    "%1$0" + hashLength + "x",
+                    new BigInteger(1, stream.getMessageDigest().digest())
+            );
+        } catch (IOException e) {
+            throw new LocalIOException(file.getAbsolutePath(), e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new Error("unknown algorithm: " + algorithm, e);
         }
-
-        return null;
     }
 
-    public static String getSHA(File file) {
+    public static String getSHA(File file) throws LocalIOException {
         return getDigest(file, "SHA", 40);
     }
 
-    public static String copyAndDigest(InputStream inputStream, OutputStream outputStream, String algorithm, int hashLength) throws IOException {
+    public static String copyAndDigest(InputStream inputStream, OutputStream outputStream, String algorithm, int hashLength, boolean outputIsLocal) throws IOException {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance(algorithm);
@@ -73,7 +75,13 @@ public class FileUtil {
         try {
             for (int read = inputStream.read(buffer); read >= 1; read = inputStream.read(buffer)) {
                 digest.update(buffer, 0, read);
-                outputStream.write(buffer, 0, read);
+                try {
+                    outputStream.write(buffer, 0, read);
+                } catch (IOException e) {
+                    if (outputIsLocal) {
+                        throw new LocalIOException(e);
+                    }
+                }
             }
         } finally {
             close(inputStream);
@@ -145,7 +153,7 @@ public class FileUtil {
         }
     }
 
-    public static void copyFile(File source, File dest, boolean replace) throws IOException {
+    public static void copyFile(File source, File dest, boolean replace) throws LocalIOException {
         if (dest.isFile()) {
             if (!replace) {
                 return;
@@ -162,6 +170,11 @@ public class FileUtil {
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
             }
+        } catch (IOException ioE) {
+            throw new LocalIOException(
+                    String.format(Locale.ROOT, "%s -> %s", source.getAbsolutePath(), dest.getAbsolutePath()),
+                    ioE
+            );
         }
 
     }
@@ -243,15 +256,15 @@ public class FileUtil {
         }
     }
 
-    public static boolean createFolder(File dir) throws IOException {
+    public static boolean createFolder(File dir) throws LocalIOException {
         if (dir == null) {
             throw new NullPointerException();
         } else if (dir.isDirectory() && dir.exists()) {
             return false;
         } else if (!dir.mkdirs()) {
-            throw new IOException("Cannot create folders: " + dir.getAbsolutePath());
+            throw new LocalIOException("Cannot create folders: " + dir.getAbsolutePath());
         } else if (!dir.canWrite()) {
-            throw new IOException("Created directory is not accessible: " + dir.getAbsolutePath());
+            throw new LocalIOException("Created directory is not accessible: " + dir.getAbsolutePath());
         } else {
             return true;
         }
@@ -269,24 +282,27 @@ public class FileUtil {
         return path != null && fileExists(new File(path));
     }
 
-    public static void createFile(File file) throws IOException {
+    public static void createFile(File file) throws LocalIOException {
         if (fileExists(file)) {
             return;
         }
 
         if (file.getParentFile() != null && !folderExists(file.getParentFile())) {
             if (!file.getParentFile().mkdirs()) {
-                throw new IOException("Could not create parent:" + file.getAbsolutePath());
+                throw new LocalIOException("Could not create parent:" + file.getAbsolutePath());
             }
         }
 
-        if (!file.createNewFile() && !fileExists(file)) {
-            throw new IOException("Could not create file, or it was created/deleted simultaneously: " + file.getAbsolutePath());
+        boolean created;
+        try {
+            created = file.createNewFile();
+        } catch (IOException e) {
+            throw new LocalIOException(file.getAbsolutePath(), e);
         }
-    }
 
-    public static void createFile(String file) throws IOException {
-        createFile(new File(file));
+        if (!created && !fileExists(file)) {
+            throw new LocalIOException("Could not create file, or it was created/deleted simultaneously: " + file.getAbsolutePath());
+        }
     }
 
     public static String getResource(URL resource, String charset) throws IOException {
@@ -334,14 +350,14 @@ public class FileUtil {
         }
     }
 
-    public static long getSize(File file) throws IOException {
+    public static long getSize(File file) throws LocalIOException {
         Path path = file.toPath();
         BasicFileAttributeView view = Files.getFileAttributeView(path, BasicFileAttributeView.class);
         BasicFileAttributes attributes;
         try {
             attributes = view.readAttributes();
         } catch (IOException ioE) {
-            throw new IOException("Couldn't real attributes of " + file.getAbsolutePath(), ioE);
+            throw new LocalIOException("Couldn't real attributes of " + file.getAbsolutePath(), ioE);
         }
         return attributes.size();
     }

@@ -44,4 +44,13 @@ public class DownloadEntry {
     public DownloadTask toDownloadTask(String name, Path destFile) {
         return new DownloadTask(name, url, destFile, checksum);
     }
+
+    @Override
+    public String toString() {
+        return "DownloadEntry{" +
+                "name='" + name + '\'' +
+                ", url=" + url +
+                ", checksum='" + checksum + '\'' +
+                '}';
+    }
 }

@@ -5,7 +5,6 @@
 
 package net.legacylauncher.ipc;
 
-import org.freedesktop.dbus.Marshalling;
 import org.freedesktop.dbus.Struct;
 import org.freedesktop.dbus.Tuple;
 import org.freedesktop.dbus.annotations.DBusInterfaceName;
@@ -13,12 +12,10 @@ import org.freedesktop.dbus.annotations.Position;
 import org.freedesktop.dbus.interfaces.DBusInterface;
 import org.freedesktop.dbus.types.UInt64;
 
-import java.lang.reflect.Type;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -29,6 +26,9 @@ import java.util.stream.Collectors;
 @DBusInterfaceName("net.legacylauncher.Resolver1")
 public interface Resolver1 extends DBusInterface {
     String OBJECT_PATH = "/net/legacylauncher/Resolver";
+    int AF_UNSPEC = 0;
+    int AF_INET = 1;
+    int AF_INET6 = 2;
 
     @Override
     default String getObjectPath() {
@@ -37,40 +37,40 @@ public interface Resolver1 extends DBusInterface {
 
     void Ping();
 
-    ResolveHostnameResult ResolveHostname(Integer interfaceIndex, String name, Integer family, UInt64 flags);
+    Triple<List<ResolvedHostname>, String, UInt64> ResolveHostname(int interfaceIndex, String name, int family, UInt64 flags);
 
-    int AF_UNSPEC = 0;
-    int AF_INET = 1;
-    int AF_INET6 = 2;
-
-    final class ResolveHostnameResult extends Tuple {
+    final class Triple<A, B, C> extends Tuple {
         @Position(0)
-        public final List<ResolvedHostname> hostnames;
+        public final A first;
         @Position(1)
-        public final String canonicalName;
+        public final B second;
         @Position(2)
-        public final UInt64 flags;
+        public final C third;
+
+        public Triple(A first, B second, C third) {
+            this.first = first;
+            this.second = second;
+            this.third = third;
+        }
+    }
+
+    final class ResolveHostnameResult {
+        private final List<ResolvedHostname> hostnames;
+        private final String canonicalName;
+        private final UInt64 flags;
 
         public ResolveHostnameResult(List<ResolvedHostname> hostnames, String canonicalName, UInt64 flags) {
-            // work around shitty dbus-java marshalling
-            if (!((List<?>) hostnames).stream().allMatch(it -> it instanceof ResolvedHostname)) {
-                Type[] types = new Type[hostnames.size()];
-                Arrays.fill(types, ResolvedHostname.class);
-                try {
-                    hostnames = Arrays.stream(Marshalling.deSerializeParameters(hostnames.toArray(), types, null))
-                            .map(ResolvedHostname.class::cast)
-                            .collect(Collectors.toList());
-                } catch (Exception e) {
-                    throw new RuntimeException("unable to deserialize resolved hostnames properly", e);
-                }
-            }
             this.hostnames = hostnames;
             this.canonicalName = canonicalName;
             this.flags = flags;
         }
 
+        public ResolveHostnameResult(Triple<List<ResolvedHostname>, String, UInt64> triple) {
+            this(triple.first, triple.second, triple.third);
+        }
+
         public List<InetAddress> toInetAddresses() {
-            return hostnames.stream().map(this::toInetAddress).filter(Objects::nonNull).collect(Collectors.toList());
+            return getHostnames().stream().map(this::toInetAddress).filter(Objects::nonNull).collect(Collectors.toList());
         }
 
         private InetAddress toInetAddress(ResolvedHostname hostname) {
@@ -83,7 +83,7 @@ public interface Resolver1 extends DBusInterface {
 
         private InetAddress toInet4Address(ResolvedHostname hostname) {
             try {
-                return Inet4Address.getByAddress(canonicalName, hostname.address);
+                return Inet4Address.getByAddress(getCanonicalName(), hostname.address);
             } catch (UnknownHostException e) {
                 return null;
             }
@@ -91,10 +91,22 @@ public interface Resolver1 extends DBusInterface {
 
         private InetAddress toInet6Address(ResolvedHostname hostname) {
             try {
-                return Inet6Address.getByAddress(canonicalName, hostname.address, hostname.interfaceIndex > 0 ? hostname.interfaceIndex : -1);
+                return Inet6Address.getByAddress(getCanonicalName(), hostname.address, hostname.interfaceIndex > 0 ? hostname.interfaceIndex : -1);
             } catch (UnknownHostException e) {
                 return null;
             }
+        }
+
+        public List<ResolvedHostname> getHostnames() {
+            return this.hostnames;
+        }
+
+        public String getCanonicalName() {
+            return this.canonicalName;
+        }
+
+        public UInt64 getFlags() {
+            return this.flags;
         }
     }
 

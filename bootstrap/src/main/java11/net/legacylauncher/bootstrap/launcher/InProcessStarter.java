@@ -2,6 +2,7 @@ package net.legacylauncher.bootstrap.launcher;
 
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.ipc.DBusBootstrapIPC;
+import net.legacylauncher.bootstrap.ipc.DBusResolverIPC;
 import net.legacylauncher.bootstrap.meta.LocalLauncherMeta;
 import net.legacylauncher.bootstrap.task.Task;
 
@@ -15,15 +16,15 @@ import java.util.concurrent.Future;
 
 @Slf4j
 public class InProcessStarter extends AbstractDBusStarter {
-    private InProcessStarter(LocalLauncher launcher, DBusBootstrapIPC ipc) {
-        super(launcher, ipc);
+    private InProcessStarter(LocalLauncher launcher, DBusBootstrapIPC ipc, DBusResolverIPC resolverIpc) {
+        super(launcher, ipc, resolverIpc);
     }
 
-    public static Task<Void> start(final LocalLauncher launcher, final DBusBootstrapIPC ipc) {
+    public static Task<Void> start(final LocalLauncher launcher, final DBusBootstrapIPC ipc, final DBusResolverIPC resolverIpc) {
         Objects.requireNonNull(launcher, "LocalLauncher");
         Objects.requireNonNull(ipc, "DBusBootstrapIPC");
 
-        return new InProcessStarter(launcher, ipc);
+        return new InProcessStarter(launcher, ipc, resolverIpc);
     }
 
     @Override
@@ -32,7 +33,7 @@ public class InProcessStarter extends AbstractDBusStarter {
         List<Path> classpath = buildClassPath(launcher);
 
         for (Path path : classpath) {
-            log.info("Classpath entry: {}", path);
+            log.trace("Classpath entry: {}", path);
         }
 
         URLClassLoader classLoader = new NamedChildFirstClassloader("launcher", toURLs(classpath), ClassLoader.getPlatformClassLoader());

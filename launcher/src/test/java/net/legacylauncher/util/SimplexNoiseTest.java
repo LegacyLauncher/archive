@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -76,7 +75,7 @@ class SimplexNoiseTest {
         void scheduleRepaint() {
             if (this.isDisplayable()) {
                 t++;
-                SwingUtil.later(this::repaint);
+                SwingUtil.later(() -> repaint());
                 AsyncThread.DELAYER.schedule(this::scheduleRepaint, 250, TimeUnit.MILLISECONDS);
             }
         }

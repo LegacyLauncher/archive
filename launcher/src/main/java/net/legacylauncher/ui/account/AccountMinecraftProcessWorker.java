@@ -32,7 +32,6 @@ import net.legacylauncher.user.minecraft.strategy.preq.create.ProfileCreatorUser
 import net.legacylauncher.user.minecraft.strategy.xb.XboxServiceAuthenticationResponse;
 import net.legacylauncher.user.minecraft.strategy.xb.auth.XboxLiveAuthenticator;
 import net.legacylauncher.user.minecraft.strategy.xb.xsts.XSTSAuthenticator;
-import net.legacylauncher.util.SwingException;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
 
@@ -56,16 +55,6 @@ class AccountMinecraftProcessWorker {
     private void run() {
         try {
             doRun();
-        } catch (SwingException e) {
-            try {
-                throw e.unpackException();
-            } catch (InterruptedException | TimeoutException e1) {
-                setState("cancelled");
-                stopProgress();
-            } catch (Throwable e1) {
-                log.error("Something went wrong while authenticating", e1);
-                showError(e1);
-            }
         } catch (InterruptedException | TimeoutException e) {
             setState("cancelled");
             stopProgress();

@@ -1,6 +1,7 @@
 package net.legacylauncher.downloader;
 
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.repository.IRepo;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.FileUtil;
@@ -170,6 +171,8 @@ public class DownloaderThread extends ExtendedThread {
                         return;
                     } catch (PartialDownloadException | GaveUpDownloadException | AbortedDownloadException e) {
                         throw e;
+                    } catch (LocalIOException e) {
+                        throw new GaveUpDownloadException(current, e);
                     } catch (IOException e) {
                         log.debug("Failed to download: {}",
                                 connection == null ? current.getURL() : connection.getURL(), e);
@@ -199,6 +202,8 @@ public class DownloaderThread extends ExtendedThread {
                 connection = openConnection(current.getURL());
                 downloadURL(connection, timeout, skip, length);
                 return;
+            } catch (LocalIOException e) {
+                throw new GaveUpDownloadException(current, e);
             } catch (PartialDownloadException | GaveUpDownloadException | AbortedDownloadException e) {
                 throw e;
             } catch (IOException e) {
@@ -270,8 +275,7 @@ public class DownloaderThread extends ExtendedThread {
             try {
                 out = new FileOutputStream(temp, skip > 0);
             } catch (IOException ioE) {
-                // fs error, should give up to prevent self-DDoS
-                throw new GaveUpDownloadException(current, ioE);
+                throw new LocalIOException(temp.getAbsolutePath(), ioE);
             }
             while (curread > -1) {
                 if (!launched) {
@@ -281,7 +285,11 @@ public class DownloaderThread extends ExtendedThread {
 
                 totalRead += curread;
                 read += curread;
-                out.write(buffer, 0, curread);
+                try {
+                    out.write(buffer, 0, curread);
+                } catch (IOException ioE) {
+                    throw new LocalIOException(temp.getAbsolutePath(), ioE);
+                }
                 curread = in.read(buffer);
                 if (curread == -1) {
                     break;
@@ -413,7 +421,7 @@ public class DownloaderThread extends ExtendedThread {
         downloader.onProgress(this, currentProgress, curdone, speed);
     }
 
-    private void onComplete() throws RetryDownloadException {
+    private void onComplete() throws IOException {
         doneProgress += eachProgress;
         current.onComplete();
         downloader.onProgress(this, doneProgress, 1., speed);

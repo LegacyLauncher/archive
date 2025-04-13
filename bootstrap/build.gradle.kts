@@ -33,6 +33,12 @@ val dev: SourceSet by sourceSets.creating {
 
 val boot: SourceSet by sourceSets.creating {}
 
+sourceSets.test {
+    compileClasspath += java11.compileClasspath
+    runtimeClasspath += java11.runtimeClasspath
+    compileClasspath += java11.output
+}
+
 val compileJava11Java by tasks.getting(JavaCompile::class) {
     options.release = 11
 }
@@ -303,17 +309,13 @@ val generateUpdateJson by tasks.registering {
 
     doLast {
         val jarFileChecksum = generateChecksum(bootJar.outputs.files.singleFile)
-        val downloadPath = "repo/update/${brand.brand.get()}/bootstrap/${jarFileChecksum}.jar"
+        val downloadPath = "update/${brand.brand.get()}/bootstrap/${jarFileChecksum}.jar"
         val meta = mapOf(
             "version" to brand.version.get(),
             "checksum" to jarFileChecksum,
-            "url" to brand.repoDomains.get().map { domain ->
-                "https://$domain/$downloadPath"
-            } + brand.repoHosts.get().flatMap { host ->
-                listOf("https", "http").map { scheme ->
-                    "$scheme://$host/$downloadPath"
-                }
-            }.sortedWith(UrlComparator)
+            "url" to brand.updateRepoPrefixes.get().map { prefix ->
+                "${prefix}/$downloadPath"
+            }
         )
 
         updateJsonFile.get().asFile.writer().use { writer ->

@@ -1,5 +1,6 @@
 package net.legacylauncher.bootstrap.pasta;
 
+import net.legacylauncher.bootstrap.util.BootstrapUserAgent;
 import net.legacylauncher.bootstrap.util.U;
 import org.apache.commons.io.IOUtils;
 
@@ -57,6 +58,7 @@ public class Pasta {
         try {
             c = (HttpURLConnection) url.openConnection(U.getProxy());
             c.setRequestProperty("Content-Type", "text/plain; charset=\"UTF-8\"");
+            BootstrapUserAgent.set(c);
             c.setRequestMethod("POST");
             c.setDoOutput(true);
 

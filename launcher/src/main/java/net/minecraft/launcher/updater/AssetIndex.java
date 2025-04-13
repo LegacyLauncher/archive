@@ -1,5 +1,6 @@
 package net.minecraft.launcher.updater;
 
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.util.FileUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -128,7 +129,7 @@ public class AssetIndex {
         return hash.substring(0, 2) + "/" + hash;
     }
 
-    public static String getHash(File file) {
+    public static String getHash(File file) throws LocalIOException {
         return FileUtil.getDigest(file, "SHA", 40);
     }
 }

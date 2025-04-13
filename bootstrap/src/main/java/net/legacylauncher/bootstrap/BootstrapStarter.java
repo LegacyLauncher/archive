@@ -1,5 +1,7 @@
 package net.legacylauncher.bootstrap;
 
+import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.bootstrap.util.OS;
 import net.legacylauncher.util.shared.JavaVersion;
@@ -7,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,17 +32,9 @@ public final class BootstrapStarter {
 
         BootstrapJarLocation currentJarLocation = getCurrentJarLocation();
         Set<Path> classPath = new LinkedHashSet<>(BoostrapRestarter.getDefinedClasspath());
-        String mainClass;
-        if (currentJarLocation instanceof PlainJar) {
-            classPath.add(((PlainJar) currentJarLocation).getPath());
-            mainClass = Bootstrap.class.getName();
-        } else if (currentJarLocation instanceof JarInJar) {
-            classPath.add(((JarInJar) currentJarLocation).getOuterJar());
-            jvmArgs.add("-Dloader.main=" + Bootstrap.class.getName());
-            mainClass = "org.springframework.boot.loader.PropertiesLauncher";
-        } else {
-            throw new IllegalStateException("Unknown jar location implementation: " + currentJarLocation);
-        }
+        classPath.add(currentJarLocation.getPath());
+        String mainClass = currentJarLocation.getMainClass();
+        currentJarLocation.addJvmArgs(jvmArgs);
 
         appArgs.add(mainClass);
         Collections.addAll(appArgs, args);
@@ -135,52 +128,50 @@ public final class BootstrapStarter {
         }
     }
 
-    private static BootstrapJarLocation getCurrentJarLocation() throws URISyntaxException {
+    @SneakyThrows
+    public static BootstrapJarLocation getCurrentJarLocation() {
         URI uri = BootstrapStarter.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-        if ("jar".equals(uri.getScheme())) {
-            String part = uri.getSchemeSpecificPart();
-            int i = part.indexOf("!/");
-            if (i > 0) {
-                String filePath = part.substring(0, i);
-                if (filePath.startsWith("file:")) {
-                    return new JarInJar(uri, Paths.get(filePath.substring("file:".length())));
-                }
-                return new JarInJar(uri, Paths.get(URI.create(part.substring(0, i))));
-            }
+        String uriString = uri.toString();
+        int i = uriString.indexOf("!/");
+        if ("jar".equals(uri.getScheme()) && i > 0) {
+            uri = URI.create(uriString.substring("jar:".length(), i));
+            return new JarInJar(Paths.get(uri), uri);
         }
         return new PlainJar(Paths.get(uri));
     }
 
-    private interface BootstrapJarLocation {
+    public interface BootstrapJarLocation {
+        Path getPath();
+
+        String getMainClass();
+
+        default void addJvmArgs(List<String> jvmArgs) {
+        }
     }
 
+    @Data
     private static class PlainJar implements BootstrapJarLocation {
         private final Path path;
 
-        PlainJar(Path path) {
-            this.path = path;
-        }
-
-        Path getPath() {
-            return path;
+        @Override
+        public String getMainClass() {
+            return Bootstrap.class.getName();
         }
     }
 
+    @Data
     private static class JarInJar implements BootstrapJarLocation {
+        private final Path path;
         private final URI fullUri;
-        private final Path outerJar;
 
-        JarInJar(URI fullUri, Path outerJar) {
-            this.fullUri = fullUri;
-            this.outerJar = outerJar;
+        @Override
+        public String getMainClass() {
+            return "org.springframework.boot.loader.PropertiesLauncher";
         }
 
-        public URI getFullUri() {
-            return fullUri;
-        }
-
-        public Path getOuterJar() {
-            return outerJar;
+        @Override
+        public void addJvmArgs(List<String> jvmArgs) {
+            jvmArgs.add("-Dloader.main=" + Bootstrap.class.getName());
         }
     }
 }

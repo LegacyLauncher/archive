@@ -27,6 +27,7 @@ public class DBusBootstrapIPC implements BootstrapIPC {
         this.ipc = connection.getRemoteObject(Bootstrap1.OBJECT_PATH, Bootstrap1.class);
         this.ipcProperties = connection.getRemoteObject(Bootstrap1.OBJECT_PATH, Properties.class);
         connection.addSigHandler(Bootstrap1.AboutToClose.class, aboutToClose::complete);
+        connection.exportObject(Launcher1.OBJECT_PATH, new LauncherImpl());
     }
 
     @Override
@@ -130,10 +131,6 @@ public class DBusBootstrapIPC implements BootstrapIPC {
         } finally {
             connection.close();
         }
-    }
-
-    public void register(DBusConnectionForwarder forwarder) throws DBusException {
-        forwarder.exportObject(Launcher1.OBJECT_PATH, new LauncherImpl());
     }
 
     private static class LauncherImpl implements Launcher1 {

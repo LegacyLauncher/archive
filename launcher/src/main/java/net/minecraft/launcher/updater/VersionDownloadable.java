@@ -1,5 +1,6 @@
 package net.minecraft.launcher.updater;
 
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.downloader.Downloadable;
 import net.legacylauncher.downloader.RetryDownloadException;
 import net.legacylauncher.repository.Repository;
@@ -38,7 +39,7 @@ public class VersionDownloadable extends Downloadable {
         }
     }
 
-    public void onComplete() throws RetryDownloadException {
+    public void onComplete() throws RetryDownloadException, LocalIOException {
         DownloadInfo downloadInfo = version.getDownloadURL(DownloadType.CLIENT);
 
         if (downloadInfo == null) {

@@ -36,13 +36,11 @@ public class LegacyLauncherEntrypoint {
         try {
             Resolver1 resolver1 = connection.getRemoteObject(Resolver1.OBJECT_PATH, Resolver1.class);
             resolver1.Ping();
-            resolver = new DBusResolverIPC(connection, resolver1);
+            resolver = new DBusResolverIPC(resolver1);
         } catch (DBusExecutionException e) {
             resolver = SystemDefaultResolverIPC.INSTANCE;
         }
-        DBusBootstrapIPC ipc = new DBusBootstrapIPC(connection);
-        ipc.register(connection);
-        LegacyLauncher.launch(ipc, resolver);
+        LegacyLauncher.launch(new DBusBootstrapIPC(connection), resolver);
     }
 
 

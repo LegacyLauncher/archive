@@ -156,7 +156,8 @@ public class JavaManagerConfig implements Configurable {
         if (!Objects.equals(mcArgs, that.mcArgs)) return false;
         if (!Objects.equals(jreType, that.jreType)) return false;
         if (!Objects.equals(wrapperCommand, that.wrapperCommand)) return false;
-        return optimizedArgumentsType == that.optimizedArgumentsType;
+        if (!Objects.equals(optimizedArgumentsType, that.optimizedArgumentsType)) return false;
+        return useCurrentTrustStore == that.useCurrentTrustStore;
     }
 
     @Override
@@ -167,6 +168,7 @@ public class JavaManagerConfig implements Configurable {
         result = 31 * result + (jreType != null ? jreType.hashCode() : 0);
         result = 31 * result + (wrapperCommand != null ? wrapperCommand.hashCode() : 0);
         result = 31 * result + optimizedArgumentsType.hashCode();
+        result = 31 * result + Boolean.hashCode(useCurrentTrustStore);
         return result;
     }
 

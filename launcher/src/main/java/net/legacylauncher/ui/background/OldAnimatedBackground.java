@@ -724,7 +724,7 @@ public class OldAnimatedBackground extends JComponent implements ISwingBackgroun
                 return;
             }
             updateDayCycle();
-            SwingUtil.later(OldAnimatedBackground.this::repaint);
+            SwingUtil.later(() -> OldAnimatedBackground.this.repaint());
             scheduler.schedule(
                     this,
                     LegacyLauncher.getInstance().isDebug() ? 250 : ONE_TICK_IN_MS,

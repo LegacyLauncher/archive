@@ -131,10 +131,10 @@ fun writeMeta(file: File, content: Map<String, Any>) {
 }
 
 val processResources by tasks.getting(ProcessResources::class) {
-    dependsOn(launcherLibraries)
     inputs.property("productVersion", brand.version.get())
     inputs.property("shortBrand", brand.brand.get())
     inputs.property("fullBrand", brand.displayName.get())
+    inputs.files(launcherLibraries)
 
     doLast {
         val meta = mapOf(
@@ -208,12 +208,10 @@ val generateUpdateJson by tasks.registering {
 
     doLast {
         val jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
-        val downloadPath = "repo/update/${brand.brand.get()}/launcher/${jarFileChecksum}.jar"
-        val downloadUrlList = brand.repoHosts.get().flatMap { host ->
-            listOf("https", "http").map { scheme ->
-                "$scheme://$host/$downloadPath"
-            }
-        }.sortedWith(UrlComparator)
+        val downloadPath = "update/${brand.brand.get()}/launcher/${jarFileChecksum}.jar"
+        val downloadUrlList = brand.updateRepoPrefixes.get().map { prefix ->
+            "${prefix}/${downloadPath}"
+        }
 
         val changelog = when (System.getenv("INCLUDE_CHANGELOG")) {
             "true" -> file("changelog.yml").reader().use { reader ->

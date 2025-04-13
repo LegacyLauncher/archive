@@ -67,7 +67,7 @@ public class FixedSizeImage extends JComponent {
             return;
         }
         imageRef = new SoftReference<>(newImage);
-        SwingUtil.later(this::repaint);
+        SwingUtil.later(() -> repaint());
     }
 
     @Override

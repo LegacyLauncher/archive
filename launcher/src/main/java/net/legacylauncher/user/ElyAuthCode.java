@@ -7,6 +7,7 @@ import net.legacylauncher.util.StringUtil;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.git.MapTokenResolver;
 import net.legacylauncher.util.git.TokenReplacingReader;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -170,6 +171,7 @@ public final class ElyAuthCode {
         urlConnection.setUseCaches(false);
         urlConnection.setReadTimeout(U.getReadTimeout());
         urlConnection.setConnectTimeout(U.getConnectionTimeout());
+        LauncherUserAgent.set(urlConnection);
 
         return urlConnection;
     }

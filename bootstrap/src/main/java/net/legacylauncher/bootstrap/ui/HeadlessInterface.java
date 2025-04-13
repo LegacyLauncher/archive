@@ -58,7 +58,7 @@ public final class HeadlessInterface implements IInterface {
     }
 
     private static void printEvent(Event event) {
-        log.info("Got event: {}", gson().toJson(Objects.requireNonNull(event, "event")));
+        log.trace("Got event: {}", gson().toJson(Objects.requireNonNull(event, "event")));
     }
 
     private static Gson gson() {

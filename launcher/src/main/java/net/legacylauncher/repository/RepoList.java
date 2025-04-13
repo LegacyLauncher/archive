@@ -7,13 +7,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.Proxy;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -21,6 +17,11 @@ public class RepoList {
     private static final int FILE_BUFFER = 1024 * 8; // 8 kb
     private static final long GLOBAL_BUFFER_MAX = 1024 * 1024 * 10; // 10 mb
     private static final AtomicLong GLOBAL_BUFFER = new AtomicLong();
+
+    private static final List<Class<? extends IOException>> INVALID_REPO_EXCEPTIONS = Arrays.asList(
+            UnknownHostException.class,
+            SocketTimeoutException.class
+    );
 
     private final String name;
     private final Object sync = new Object();
@@ -88,6 +89,9 @@ public class RepoList {
                     ex = ioE;
                 } else {
                     ex.addSuppressed(ioE);
+                }
+                if (INVALID_REPO_EXCEPTIONS.contains(ioE.getClass())) {
+                    markInvalid(repo);
                 }
             }
         }
@@ -187,6 +191,7 @@ public class RepoList {
 
     public void markInvalid(IRepo repo) {
         synchronized (sync) {
+            log.info("Marking {} as invalid", repo);
             int index = list.indexOf(repo);
             if (index == -1 || index == list.size() - 1) {
                 return;

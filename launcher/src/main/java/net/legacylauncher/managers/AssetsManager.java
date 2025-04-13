@@ -2,6 +2,7 @@ package net.legacylauncher.managers;
 
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.component.ComponentDependence;
 import net.legacylauncher.component.LauncherComponent;
 import net.legacylauncher.downloader.Downloadable;
@@ -34,14 +35,14 @@ public class AssetsManager extends LauncherComponent {
         super(manager);
     }
 
-    public DownloadableContainer downloadResources(CompleteVersion version, List<AssetIndex.AssetObject> list) {
+    public DownloadableContainer collectAssets(CompleteVersion version, List<AssetIndex.AssetObject> list) throws LocalIOException {
         File baseDirectory = manager.getLauncher().getVersionManager().getLocalList().getBaseDirectory();
         DownloadableContainer container = new DownloadableContainer();
         container.addAll(getResourceFiles(version, baseDirectory, list));
         return container;
     }
 
-    private Set<Downloadable> getResourceFiles(CompleteVersion version, File baseDirectory, List<AssetIndex.AssetObject> list) {
+    private Set<Downloadable> getResourceFiles(CompleteVersion version, File baseDirectory, List<AssetIndex.AssetObject> list) throws LocalIOException {
         File objectsFolder = new File(baseDirectory, "assets/objects");
         Set<Downloadable> result = new HashSet<>();
 
@@ -179,7 +180,7 @@ public class AssetsManager extends LauncherComponent {
         return checkResources(version, manager.getComponent(VersionLists.class).getLocal().getBaseDirectory(), false, fast);
     }
 
-    private static boolean checkResource(File baseDirectory, AssetIndex.AssetObject local, boolean fast) {
+    private static boolean checkResource(File baseDirectory, AssetIndex.AssetObject local, boolean fast) throws IOException {
         File assetFile = new File(baseDirectory, "assets/objects/" + AssetIndex.getPath(local.getHash()));
 
         if (fast) {
@@ -197,12 +198,7 @@ public class AssetsManager extends LauncherComponent {
 
         File compressedAssetFile = new File(baseDirectory, "assets/objects/" + AssetIndex.getPath(local.getCompressedHash()));
         if (checkFile(assetFile, local.getCompressedSize(), local.getCompressedHash())) {
-            try {
-                decompress(compressedAssetFile, assetFile, local.getHash());
-            } catch (IOException ioE) {
-                log.error("Could not decompress assets", ioE);
-                return false;
-            }
+            decompress(compressedAssetFile, assetFile, local.getHash());
             return true;
         }
 
@@ -213,7 +209,7 @@ public class AssetsManager extends LauncherComponent {
         return assetFile.isFile() && assetFile.length() == size;
     }
 
-    private static boolean checkFile(File assetFile, long size, String hash) {
+    private static boolean checkFile(File assetFile, long size, String hash) throws LocalIOException {
         return checkFile(assetFile, size) && hash.equals(AssetIndex.getHash(assetFile));
     }
 
@@ -222,7 +218,7 @@ public class AssetsManager extends LauncherComponent {
 
         try (InputStream in = new GZIPInputStream(Files.newInputStream(compressedInput.toPath()));
              OutputStream out = Files.newOutputStream(uncompressedOutput.toPath())) {
-            hash = FileUtil.copyAndDigest(in, out, "SHA", 40);
+            hash = FileUtil.copyAndDigest(in, out, "SHA", 40, true);
         }
 
         if (!expectHash.equals(hash)) {
@@ -285,7 +281,7 @@ public class AssetsManager extends LauncherComponent {
             }
         }
 
-        private void check() {
+        private void check() throws IOException {
             log.info("Executing {} assets comparison", fast ? "fast" : "deep");
 
             List<AssetIndex.AssetObject> result = new ArrayList<>();

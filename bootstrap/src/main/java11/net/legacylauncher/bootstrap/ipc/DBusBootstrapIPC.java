@@ -103,9 +103,9 @@ public class DBusBootstrapIPC implements BootstrapIPC {
     @Override
     public Task<Void> start(LocalLauncher localLauncher) {
         if (fork) {
-            return ForkStarter.start(localLauncher, this);
+            return ForkStarter.start(localLauncher, this, null);
         } else {
-            return InProcessStarter.start(localLauncher, this);
+            return InProcessStarter.start(localLauncher, this, null);
         }
     }
 

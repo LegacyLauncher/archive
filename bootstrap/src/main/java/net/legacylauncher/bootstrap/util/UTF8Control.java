@@ -23,6 +23,7 @@ public class UTF8Control extends ResourceBundle.Control {
                 URLConnection connection = url.openConnection();
                 if (connection != null) {
                     connection.setUseCaches(false);
+                    BootstrapUserAgent.set(connection);
                     stream = connection.getInputStream();
                 }
             }

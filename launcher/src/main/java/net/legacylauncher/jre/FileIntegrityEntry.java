@@ -1,6 +1,7 @@
 package net.legacylauncher.jre;
 
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.util.FileUtil;
 
 import java.io.File;
@@ -28,7 +29,12 @@ public class FileIntegrityEntry {
             log.debug("File doesn't exist: {}", file.getAbsolutePath());
             return true;
         }
-        String sha1 = FileUtil.getSHA(file);
+        String sha1;
+        try {
+            sha1 = FileUtil.getSHA(file);
+        } catch (LocalIOException e) {
+            throw new RuntimeException("Failed to check " + file.getAbsolutePath(), e);
+        }
         if (this.sha1.equals(sha1)) {
             return false;
         }

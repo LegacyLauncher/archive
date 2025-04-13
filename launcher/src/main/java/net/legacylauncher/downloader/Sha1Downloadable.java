@@ -1,5 +1,6 @@
 package net.legacylauncher.downloader;
 
+import net.legacylauncher.common.exceptions.LocalIOException;
 import net.legacylauncher.repository.Repository;
 import net.legacylauncher.util.FileUtil;
 
@@ -41,7 +42,7 @@ public class Sha1Downloadable extends Downloadable {
     }
 
     @Override
-    protected void onComplete() throws RetryDownloadException {
+    protected void onComplete() throws IOException {
         if (length > 0L) {
             BasicFileAttributeView attrs = Files.getFileAttributeView(getDestination().toPath(),
                     BasicFileAttributeView.class);
@@ -49,10 +50,10 @@ public class Sha1Downloadable extends Downloadable {
             try {
                 length = attrs.readAttributes().size();
             } catch (IOException e) {
-                throw new RetryDownloadException("couldn't read file length", e);
+                throw new LocalIOException("couldn't read file length", e);
             }
             if (this.length != length) {
-                throw new RetryDownloadException("file length doesn't match. got: " + length + ", expected: " + this.length);
+                throw new IOException("file length doesn't match. got: " + length + ", expected: " + this.length);
             }
         }
         if (sha1 != null) {
@@ -60,10 +61,10 @@ public class Sha1Downloadable extends Downloadable {
             try {
                 sha1 = FileUtil.getSha1(getDestination());
             } catch (IOException e) {
-                throw new RetryDownloadException("couldn't read sha-1 for downloaded file", e);
+                throw new LocalIOException("couldn't read sha-1 for downloaded file", e);
             }
             if (!this.sha1.equals(sha1)) {
-                throw new RetryDownloadException("illegal library hash. got: " + sha1 + "; expected: " + this.sha1);
+                throw new IOException("illegal library hash. got: " + sha1 + "; expected: " + this.sha1);
             }
         }
         super.onComplete();

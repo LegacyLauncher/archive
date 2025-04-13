@@ -4,6 +4,7 @@ import net.legacylauncher.ipc.ResolverIPC;
 import net.legacylauncher.ipc.SystemDefaultResolverIPC;
 import net.legacylauncher.util.http.HttpRequestRetryStrategy;
 import net.legacylauncher.util.http.RetryingRangeContentResponseHandler;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 import org.apache.hc.client5.http.fluent.Content;
 import org.apache.hc.client5.http.fluent.Executor;
 import org.apache.hc.client5.http.fluent.Request;
@@ -55,6 +56,7 @@ public final class EHttpClient {
 
     public static HttpClientBuilder builder() {
         return HttpClients.custom()
+                .setUserAgent(LauncherUserAgent.USER_AGENT)
                 .setRetryStrategy(new HttpRequestRetryStrategy())
                 .setConnectionManager(new PoolingHttpClientConnectionManager(
                         defaultRegistry.get(),

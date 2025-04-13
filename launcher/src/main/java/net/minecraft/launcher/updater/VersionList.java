@@ -8,6 +8,7 @@ import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.Time;
 import net.legacylauncher.util.json.ExposeExclusion;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.PartialVersion;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
@@ -77,7 +79,9 @@ public abstract class VersionList {
                     if (RepositoryProxy.canBeProxied(url)) {
                         input = RepositoryProxy.getProxyRepoList().read(url.toString());
                     } else {
-                        input = url.openConnection().getInputStream();
+                        URLConnection connection = url.openConnection();
+                        LauncherUserAgent.set(connection);
+                        input = connection.getInputStream();
                     }
                     reader = new InputStreamReader(input, StandardCharsets.UTF_8);
                 }

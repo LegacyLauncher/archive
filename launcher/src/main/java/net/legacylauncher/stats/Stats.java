@@ -9,6 +9,7 @@ import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.ui.notice.Notice;
 import net.legacylauncher.util.OS;
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.ua.LauncherUserAgent;
 import net.minecraft.launcher.Http;
 import net.minecraft.launcher.versions.CompleteVersion;
 import org.apache.commons.io.IOUtils;
@@ -152,6 +153,7 @@ public final class Stats {
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
         connection.setUseCaches(false);
+        LauncherUserAgent.set(connection);
         return connection;
     }
 

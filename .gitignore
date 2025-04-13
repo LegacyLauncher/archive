@@ -25,3 +25,6 @@ build
 # Дарова, Eclipse (и VSCode)
 .settings/
 */bin/
+
+/logs/*
+/lib/*
