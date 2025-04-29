@@ -1,5 +1,6 @@
 package net.legacylauncher.jre;
 
+import lombok.ToString;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -8,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
+@ToString
 public class JavaRuntimeLocal implements JavaRuntime {
     private final String name;
     private final String platform;

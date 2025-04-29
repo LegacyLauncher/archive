@@ -1,21 +1,38 @@
 package net.legacylauncher.ui.swing.extended;
 
-import net.legacylauncher.util.U;
+import net.legacylauncher.LegacyLauncher;
 
 import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.concurrent.CountDownLatch;
 
 public class ExtendedFrame extends JFrame {
 
     public void showAndWait() {
+        CountDownLatch latch = new CountDownLatch(1);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                removeWindowListener(this);
+                latch.countDown();
+            }
+        });
         showAtCenter();
-        while (isDisplayable()) {
-            U.sleepFor(100);
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public void showAtCenter() {
+        JFrame frame = null;
+        if (LegacyLauncher.getInstance() != null) {
+            frame = LegacyLauncher.getInstance().getFrame();
+        }
+        setLocationRelativeTo(frame);
         setVisible(true);
-        setLocationRelativeTo(null);
         requestFocus();
     }
 }

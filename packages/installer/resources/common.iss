@@ -14,7 +14,8 @@ AppSupportURL={#URL}
 AppUpdatesURL={#URL}
 ;AlwaysShowDirOnReadyPage=no
 AlwaysUsePersonalGroup=yes
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64compatible arm64
+ArchitecturesAllowed=x64compatible arm64
 DefaultDirName={userappdata}\.tlauncher\{#Branch}\Minecraft
 UsePreviousAppDir=no
 DisableProgramGroupPage=yes
@@ -40,8 +41,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "files\common\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "files\x64\*"; Check: Is64BitInstallMode; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "files\x86\*"; Check: not Is64BitInstallMode; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "files\x64\*"; Check: IsX64Compatible and not IsArm64; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "files\arm64\*"; Check: IsArm64; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "files\common\tl.properties"; DestDir: "{app}"; AfterInstall: ExpandLauncherProperties(); Flags: ignoreversion;
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -50,11 +51,11 @@ Type: filesandordirs; Name: "{app}\jre"
 Type: filesandordirs; Name: "{app}\launcher"
 
 [Icons]
-Name: "{userprograms}\{#Name}"; Filename: "{app}\TL.exe"
-Name: "{autodesktop}\{#Name}"; Filename: "{app}\TL.exe"; Tasks: desktopicon
+Name: "{userprograms}\{#Name}"; Filename: "{app}\LL.exe"
+Name: "{autodesktop}\{#Name}"; Filename: "{app}\LL.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\TL.exe"; Description: "{cm:LaunchProgram,{#StringChange(Name, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\LL.exe"; Description: "{cm:LaunchProgram,{#StringChange(Name, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [CustomMessages]
 english.UnicodeModeNonASCIIPathError=Please change installation path to the one that only contains English (ASCII) characters.%n%nYour system uses Unicode mode, which is not well-supported by Java at the moment.

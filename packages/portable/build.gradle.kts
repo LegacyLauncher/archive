@@ -1,5 +1,6 @@
 import de.undercouch.gradle.tasks.download.*
 import net.legacylauncher.gradle.*
+import net.legacylauncher.gradle.LegacyLauncherS3UploadTask.Companion.bucketProperty
 import org.apache.tools.ant.filters.*
 import java.time.*
 import java.time.format.*
@@ -10,21 +11,6 @@ plugins {
     alias(libs.plugins.download)
     net.legacylauncher.brand
 }
-
-val portableBaseBuildDir = layout.buildDirectory.dir("portableBase/${brand.brand.get()}")
-
-val jreVersions = mapOf(
-    "x64" to mapOf(
-        "url" to "https://cdn.azul.com/zulu/bin/zulu21.32.17-ca-fx-jre21.0.2-win_x64.zip",
-        "sha256" to "a4a803b5091d9200e508019d3a0090bf0e2a2f74ea752cf0622db93583d390d0",
-    ),
-    "x86" to mapOf(
-        "url" to "https://cdn.azul.com/zulu/bin/zulu17.48.15-ca-fx-jre17.0.10-win_i686.zip",
-        "sha256" to "7208a3fadae4897ccc33e7bafad8c5c1f4699376fb2910d82cc3d42498bb9f4d",
-    ),
-)
-
-fun String.firstCharUpper() = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
 val bootstrapJar: Configuration by configurations.creating {
     isCanBeDeclared = true
@@ -67,15 +53,15 @@ dependencies {
     launcherLibraries(projects.launcher)
 }
 
-jreVersions.forEach { (arch, jre) ->
-    val jreZip = layout.buildDirectory.file("jreDownloads/jre${arch.firstCharUpper()}.zip")
-    val verifyTask by tasks.register("verifyJre${arch.firstCharUpper()}", Verify::class) {
+PORTABLE_WIN_ARCHITECTURES.forEach { pkg ->
+    val jreZip = layout.buildDirectory.file("jreDownloads/jre${pkg.archCapitalized}.zip")
+    val verifyTask by tasks.register(pkg.verifyTaskName, Verify::class) {
         src(jreZip)
         algorithm("SHA-256")
-        checksum(jre["sha256"])
+        checksum(pkg.jre.sha256)
     }
-    val downloadTask by tasks.register("downloadJre${arch.firstCharUpper()}", Download::class) {
-        src(jre["url"])
+    tasks.register(pkg.downloadTaskName, Download::class) {
+        src(pkg.jre.url)
         dest(jreZip)
         overwrite(false)
         finalizedBy(verifyTask)
@@ -113,22 +99,17 @@ val preparePortableBuild by tasks.registering(Sync::class) {
     from(preparePortableBaseBuild)
 
     into("jre") {
-        val x64 = tasks.named("downloadJreX64", Download::class)
-        val x86 = tasks.named("downloadJreX86", Download::class)
-        dependsOn(x64, x86)
-
         includeEmptyDirs = false
 
-        from(zipTree(x64.get().dest)) {
-            eachFile {
-                relativePath = relativePath.dropSegments(1..1)
-            }
-        }
+        PORTABLE_WIN_ARCHITECTURES.forEach { pkg ->
+            val task = tasks.named(pkg.downloadTaskName, Download::class)
+            dependsOn(task)
 
-        into("x86") {
-            from(zipTree(x86.get().dest)) {
-                eachFile {
-                    relativePath = relativePath.dropSegments(2..2)
+            into(pkg.arch) {
+                from(task.map { zipTree(it.dest) }) {
+                    eachFile {
+                        relativePath = relativePath.dropSegments(2..2)
+                    }
                 }
             }
         }
@@ -161,12 +142,23 @@ val zipPortableBuild by tasks.registering(Zip::class) {
     isPreserveFileTimestamps = true
 }
 
+val portableEnabled = System.getenv("PORTABLE_ENABLED") == "true"
+
 val createPortableBuild by tasks.registering {
+    enabled = portableEnabled
     dependsOn(zipPortableBuild)
+    outputs.files(zipPortableBuild)
+}
+
+val deploy by tasks.registering(LegacyLauncherS3UploadTask::class) {
+    enabled = portableEnabled
+    bucket = project.bucketProperty(LegacyLauncherS3UploadTask.Companion.Buckets.BRANDS)
+    entityPrefix = "portable"
+    inputs.files(createPortableBuild)
 }
 
 val assemble: Task by tasks.getting {
-    if (System.getenv("PORTABLE_ENABLED") == "true") {
+    if (portableEnabled) {
         dependsOn(createPortableBuild)
     }
     doLast {

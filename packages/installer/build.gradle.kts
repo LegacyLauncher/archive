@@ -1,4 +1,5 @@
 import de.undercouch.gradle.tasks.download.*
+import net.legacylauncher.gradle.PORTABLE_WIN_ARCHITECTURES
 import org.apache.tools.ant.filters.*
 import java.util.*
 
@@ -8,7 +9,7 @@ plugins {
     net.legacylauncher.brand
 }
 
-evaluationDependsOn(projects.launcher.identityPath.path)
+evaluationDependsOn(projects.launcher.path)
 
 val mainIss = mapOf(
     "name" to "Legacy Launcher ${brand.displayName.get()}",
@@ -41,24 +42,17 @@ val prepareInstaller by tasks.registering(Sync::class) {
             }
         }
 
-        val x64 = portable.tasks.named("downloadJreX64", Download::class)
-        val x86 = portable.tasks.named("downloadJreX86", Download::class)
-        dependsOn(x64, x86)
-
         includeEmptyDirs = false
 
-        into("x64/jre") {
-            from(zipTree(x64.get().dest)) {
-                eachFile {
-                    relativePath = relativePath.dropSegments(3..3)
-                }
-            }
-        }
+        PORTABLE_WIN_ARCHITECTURES.forEach { pkg ->
+            val download = portable.tasks.named(pkg.downloadTaskName, Download::class)
+            dependsOn(download)
 
-        into("x86/jre/x86") {
-            from(zipTree(x86.get().dest)) {
-                eachFile {
-                    relativePath = relativePath.dropSegments(4..4)
+            into("${pkg.arch}/jre/${pkg.arch}") {
+                from(download.map { zipTree(it.dest) }) {
+                    eachFile {
+                        relativePath = relativePath.dropSegments(4..4)
+                    }
                 }
             }
         }

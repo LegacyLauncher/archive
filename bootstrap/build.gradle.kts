@@ -1,5 +1,6 @@
 import com.fasterxml.jackson.databind.*
 import net.legacylauncher.gradle.*
+import net.legacylauncher.gradle.LegacyLauncherS3UploadTask.Companion.bucketProperty
 import org.gradle.nativeplatform.platform.internal.*
 import org.springframework.boot.gradle.tasks.bundling.*
 import java.nio.charset.*
@@ -288,18 +289,6 @@ val processBootResources by tasks.getting(ProcessResources::class) {
     }
 }
 
-object UrlComparator : Comparator<String> {
-    override fun compare(o1: String, o2: String): Int = when {
-        o1.startsWith("https") -> when {
-            o2.startsWith("https") -> 0
-            else -> -1
-        }
-
-        o2.startsWith("https") -> 1
-        else -> 0
-    }
-}
-
 val generateUpdateJson by tasks.registering {
     dependsOn(bootJar)
     inputs.property("productVersion", brand.version.get())
@@ -309,13 +298,9 @@ val generateUpdateJson by tasks.registering {
 
     doLast {
         val jarFileChecksum = generateChecksum(bootJar.outputs.files.singleFile)
-        val downloadPath = "update/${brand.brand.get()}/bootstrap/${jarFileChecksum}.jar"
         val meta = mapOf(
             "version" to brand.version.get(),
             "checksum" to jarFileChecksum,
-            "url" to brand.updateRepoPrefixes.get().map { prefix ->
-                "${prefix}/$downloadPath"
-            }
         )
 
         updateJsonFile.get().asFile.writer().use { writer ->
@@ -324,10 +309,13 @@ val generateUpdateJson by tasks.registering {
     }
 }
 
-val copyJarAndRename by tasks.registering(Copy::class) {
-    from(bootJar)
-    into(layout.buildDirectory.dir("update/${brand.brand.get()}"))
-    rename { "bootstrap.jar" }
+val copyJarAndRename by tasks.registering {
+    dependsOn(bootJar)
+    val targetFile = layout.buildDirectory.file("update/${brand.brand.get()}/bootstrap.jar")
+    outputs.file(targetFile)
+    doLast {
+        bootJar.outputs.files.singleFile.copyTo(targetFile.get().asFile, overwrite = true)
+    }
 }
 
 val generateSha256File by tasks.registering {
@@ -339,8 +327,40 @@ val generateSha256File by tasks.registering {
     }
 }
 
+val prepareBootstrapDeploy by tasks.registering {
+    dependsOn(generateSha256File, copyJarAndRename, generateUpdateJson)
+    outputs.files(dependsOn)
+}
+
+val deployLauncherLibs by tasks.registering(LegacyLauncherS3UploadTask::class) {
+    bucket = project.bucketProperty(LegacyLauncherS3UploadTask.Companion.Buckets.LIBS)
+    brandPrefix = ""
+    entityPrefix = ""
+    inputs.files(collectLauncherLibsRepo)
+}
+
+val deployBootstrapBrand by tasks.registering(LegacyLauncherS3UploadTask::class) {
+    mustRunAfter(deployLauncherLibs)
+    bucket = project.bucketProperty(LegacyLauncherS3UploadTask.Companion.Buckets.BRANDS)
+    entityPrefix = "bootstrap"
+    inputs.files(prepareBootstrapDeploy)
+}
+
+val deployBootstrapUpdate by tasks.registering(LegacyLauncherS3UploadTask::class) {
+    dependsOn(prepareBootstrapDeploy)
+    bucket = project.bucketProperty(LegacyLauncherS3UploadTask.Companion.Buckets.UPDATES)
+    entityPrefix = "bootstrap"
+    fileName = generateSha256File.map { it.outputs.files.singleFile.readText() + ".jar" }
+    inputs.files(copyJarAndRename)
+}
+
+val deploy by tasks.registering {
+    group = "deploy"
+    dependsOn(deployBootstrapBrand, deployBootstrapUpdate, deployLauncherLibs)
+}
+
 val assemble: Task by tasks.getting {
-    dependsOn(generateUpdateJson, copyJarAndRename, generateSha256File)
+    dependsOn(prepareBootstrapDeploy)
 }
 
 @Suppress("UnstableApiUsage")

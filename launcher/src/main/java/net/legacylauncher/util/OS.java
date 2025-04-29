@@ -220,31 +220,24 @@ public enum OS {
     public enum Arch {
         x86,
         x64,
-        ARM,
         ARM64;
 
-        public static final Arch CURRENT;
         public static final boolean IS_64_BIT = JNA.is64Bit().orElseGet(Arch::is64BitFallback);
+        public static final Arch CURRENT = detectCurrentArch();
 
-        static {
-            Arch current;
-            boolean isMacOsARM;
-            if (OS.OSX.isCurrent() && IS_64_BIT) {
-                isMacOsARM = JNA.isARM().orElse(false) || JNAMacOs.isUnderRosetta().orElse(false);
-            } else {
-                isMacOsARM = false;
-            }
-            if (isMacOsARM) {
-                current = Arch.ARM64;
-            } else {
-                if (IS_64_BIT) {
-                    current = Arch.x64;
-                } else {
-                    // We'll hope that the current platform can emulate x86
-                    current = Arch.x86;
+        private static Arch detectCurrentArch() {
+            boolean isArm = JNA.isARM().orElse(false);
+            if (IS_64_BIT) {
+                if (isArm) {
+                    return ARM64;
                 }
+                if (OS.OSX.isCurrent() && JNAMacOs.isUnderRosetta().orElse(false)) {
+                    return ARM64;
+                }
+                return x64;
             }
-            CURRENT = current;
+            // let's hope we can at least emulate x86
+            return x86;
         }
 
         public static final long TOTAL_RAM;
@@ -262,7 +255,7 @@ public enum OS {
         }
 
         public boolean isARM() {
-            return this == ARM || this == ARM64;
+            return this == ARM64;
         }
 
         public boolean is64Bit() {

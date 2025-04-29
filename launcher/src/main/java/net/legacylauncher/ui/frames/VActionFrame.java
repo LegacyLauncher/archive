@@ -33,7 +33,7 @@ public class VActionFrame extends ActionFrame {
 
         holder = new BorderPanel();
         holder.setVgap(5);
-        holder.setInsets(new MagnifiedInsets(10, 20, 20, 20));
+        holder.setInsets(new MagnifiedInsets(25, 25, 25, 25));
         add(holder);
 
         addComponentListener(new ComponentAdapter() {
@@ -45,13 +45,13 @@ public class VActionFrame extends ActionFrame {
         });
 
         head = new LocalizableLabel();
-        head.setFont(head.getFont().deriveFont(head.getFont().getSize2D() + 18f).deriveFont(Font.BOLD));
+        head.setFont(head.getFont().deriveFont(head.getFont().getSize2D() + 3.f).deriveFont(Font.BOLD));
         //head.setForeground(new Color(head.getForeground().getRed(), head.getForeground().getGreen(), head.getForeground().getBlue(), 128));
-        head.setIconTextGap(SwingUtil.magnify(10));
+        head.setIconTextGap(SwingUtil.magnify(20));
         holder.setNorth(head);
 
         body = new VPanel();
-        body.add(Box.createRigidArea(SwingUtil.magnify(new Dimension(1, 4))));
+        body.setInsets(20, 0, 20, 0);
         holder.setCenter(body);
 
         bodyText = new VActionBody();

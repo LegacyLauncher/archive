@@ -8,29 +8,44 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static net.legacylauncher.util.OS.Arch.IS_64_BIT;
-
 @Slf4j
 public class JavaPlatform {
     public static final List<String> CURRENT_PLATFORM_CANDIDATES = getCurrentPlatformCandidates();
 
     private static List<String> getCurrentPlatformCandidates() {
+        List<String> candidates = new ArrayList<>();
         switch (OS.CURRENT) {
             case LINUX:
-                return Collections.singletonList(IS_64_BIT ? "linux" : "linux-i386");
-            case WINDOWS:
-                return Collections.singletonList(IS_64_BIT ? "windows-x64" : "windows-x86");
-            case OSX:
-                List<String> macOsPlatforms = new ArrayList<>();
                 if (OS.Arch.ARM64.isCurrent()) {
-                    macOsPlatforms.add("mac-os-arm64");
+                    candidates.add("linux-arm64");
                 }
-                macOsPlatforms.add("mac-os");
-                return Collections.unmodifiableList(macOsPlatforms);
+                if (OS.Arch.IS_64_BIT) {
+                    candidates.add("linux");
+                } else {
+                    candidates.add("linux-i386");
+                }
+                break;
+            case WINDOWS:
+                if (OS.Arch.ARM64.isCurrent()) {
+                    candidates.add("windows-arm64");
+                }
+                if (OS.Arch.IS_64_BIT) {
+                    candidates.add("windows-x64");
+                } else {
+                    candidates.add("windows-x86");
+                }
+                break;
+            case OSX:
+                if (OS.Arch.ARM64.isCurrent()) {
+                    candidates.add("mac-os-arm64");
+                }
+                candidates.add("mac-os");
+                break;
             default:
                 log.warn("Current platform is unknown: {} {}", OS.CURRENT, OS.Arch.CURRENT);
                 return Collections.emptyList();
         }
+        return candidates;
     }
 
     public static OS getOSByPlatform(String platform) {

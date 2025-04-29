@@ -1,5 +1,9 @@
 ru_RU: >
-  Исправлена ошибка, возникающая при переносе лаунчера между дисками (Windows)
+  – Поддержка ARM-процессоров под Windows<br/>
+  – Новый дизайн диалоговых окошек<br/>
+  – Другие исправления и улучшения
 
 en_US: >
-  Fixed an error occurring when moving the launcher between disk drives (Windows)
+  – Implemented support for Windows-on-ARM<br/>
+  – Better design of dialog windows<br/>
+  – Other fixes and improvements

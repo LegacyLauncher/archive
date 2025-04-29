@@ -15,7 +15,7 @@ val jreZipFile = layout.buildDirectory.file("jreZip/macOsJre.zip")
 
 val bundleName = "Legacy Launcher ${brand.displayName.get()}"
 
-evaluationDependsOn(projects.launcher.identityPath.path)
+evaluationDependsOn(projects.launcher.path)
 
 val bootstrapJar: Configuration by configurations.creating {
     isCanBeDeclared = true

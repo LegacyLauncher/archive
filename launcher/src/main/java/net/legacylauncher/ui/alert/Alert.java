@@ -1,10 +1,12 @@
 package net.legacylauncher.ui.alert;
 
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.util.SwingUtil;
 
 import javax.swing.*;
+import java.awt.*;
 
 @Slf4j
 public class Alert {
@@ -16,7 +18,7 @@ public class Alert {
             log.error("Showed this error to the user:", (Throwable) textarea);
         }
 
-        showMonolog(0, title, message, textarea);
+        showAlertFrameAndWait(0, title, message, textarea);
     }
 
     public static void showError(String title, String message) {
@@ -52,7 +54,7 @@ public class Alert {
     }
 
     public static void showMessage(String title, String message, Object textarea) {
-        showMonolog(1, title, message, textarea);
+        showAlertFrameAndWait(1, title, message, textarea);
     }
 
     public static void showMessage(String title, String message) {
@@ -72,7 +74,7 @@ public class Alert {
     }
 
     public static void showWarning(String title, String message, Object textarea) {
-        showMonolog(2, title, message, textarea);
+        showAlertFrameAndWait(2, title, message, textarea);
     }
 
     public static void showWarning(String title, String message) {
@@ -92,7 +94,8 @@ public class Alert {
     }
 
     public static boolean showQuestion(String title, String question, Object textarea) {
-        return showConfirmDialog(0, 3, title, question, textarea) == 0;
+        AlertFrame frame = showAlertFrameAndWait(JOptionPane.QUESTION_MESSAGE, title, question, textarea);
+        return frame.isYes();
     }
 
     public static boolean showQuestion(String title, String question) {
@@ -127,8 +130,21 @@ public class Alert {
         return showLocInputQuestion(path + ".title", path);
     }
 
-    private static void showMonolog(int messageType, String title, String message, Object textarea) {
-        SwingUtil.wait(() -> JOptionPane.showMessageDialog(null, new AlertPanel(message, textarea), getTitle(title), messageType));
+    private static AlertFrame showAlertFrameAndWait(int messageType, String title, String message, Object textarea) {
+        return SwingUtil.waitAndReturn(() -> showAlertFrame(messageType, title, message, textarea));
+    }
+
+    private static AlertFrame showAlertFrame(int messageType, String title, String message, Object textarea) {
+        AlertFrame frame = new AlertFrame(title, message, textarea == null ? null : String.valueOf(textarea), messageType);
+        frame.pack();
+        Component relative = null;
+        if (LegacyLauncher.getInstance() != null) {
+            relative = LegacyLauncher.getInstance().getFrame();
+        }
+        frame.setLocationRelativeTo(relative);
+        frame.show();
+        frame.dispose();
+        return frame;
     }
 
     private static int showConfirmDialog(int optionType, int messageType, String title, String message, Object textarea) {

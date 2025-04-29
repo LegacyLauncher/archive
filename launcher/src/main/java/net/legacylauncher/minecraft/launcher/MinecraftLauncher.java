@@ -164,6 +164,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         return experiments.contains(experiment);
     }
 
+    private final Set<String> libraryReplacementKeys = new LinkedHashSet<>();
+
     public MinecraftLauncher.MinecraftLauncherStep getStep() {
         return step;
     }
@@ -393,26 +395,55 @@ public class MinecraftLauncher implements JavaProcessListener {
             log.debug("Looking up replacement libraries for {}", librariesForType = lookupLibrariesForType);
 
             LegacyLauncher.getInstance().getLibraryManager().refreshComponent();
-            ArrayList<String> types = new ArrayList<>();
             if (LegacyLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, librariesForType.toString())) {
-                types.add(librariesForType.toString());
+                libraryReplacementKeys.add(librariesForType.toString());
             }
 
             if (isExperimentEnabled(Configuration.Experiments.UPDATED_LWJGL)) {
                 log.warn("Experimental: Force LWJGL3 update");
-                types.add("experiment-lwjgl-update");
+                libraryReplacementKeys.add("experiment-lwjgl-update");
             }
             if (isExperimentEnabled(Configuration.Experiments.UPDATED_JNA)) {
                 log.warn("Experimental: Force JNA update");
-                types.add("experiment-jna-update");
+                libraryReplacementKeys.add("experiment-jna-update");
             }
-
-            if (types.isEmpty()) {
+            fixArm64: if (OS.Arch.ARM64.isCurrent()) {
+                String armSuffix;
+                if (OS.OSX.isCurrent()) {
+                    armSuffix = "macos-arm64";
+                } else {
+                    armSuffix = OS.CURRENT.getName() + "-arm64";
+                }
+                if (deJureVersion.getLibraries().stream()
+                        .filter(library -> library.appliesToCurrentEnvironment(featureMatcher))
+                        .anyMatch(library -> library.getName().endsWith("natives-" + armSuffix))) {
+                    log.info("This version seems to support ARM64 on {}", OS.NAME);
+                } else {
+//                    LibraryReplaceProcessor libraryManager = LegacyLauncher.getInstance().getLibraryManager();
+                    log.warn("This version doesn't support ARM64 (at least not on {})", OS.NAME);
+//                    try {
+//                        libraryManager.fetchSeparate(armSuffix);
+//                    } catch (IOException e) {
+//                        log.warn("Failed to access replacement libraries for {}", armSuffix, e);
+//                        log.warn("We'll continue, but the game will probably fail to start.");
+//                        showNoArm64NativeSupportMessage("launcher.warning.arm64-no-native-support.manifest-unavailable");
+//                        break fixArm64;
+//                    }
+//                    if (libraryManager.hasLibrariesExplicitly(deJureVersion, armSuffix)) {
+//                        log.info("We'll use replacement libraries ({}) for this version", armSuffix);
+//                        downloadTypes.add(armSuffix);
+//                    } else {
+//                        log.warn("We can't seem to find replacement libraries compatible with this Minecraft release");
+                        showNoArm64NativeSupportMessage("launcher.warning.arm64-no-native-support.no-matches");
+//                    }
+                }
+            }
+            if (libraryReplacementKeys.isEmpty()) {
                 log.info("No library will be replaced");
                 version = deJureVersion;
             } else {
-                log.info("Some libraries will be replaced: {}", String.join(", ", types));
-                version = LegacyLauncher.getInstance().getLibraryManager().process(deJureVersion, types.toArray(new String[0]));
+                log.info("Some libraries will be replaced: {}", String.join(", ", libraryReplacementKeys));
+                version = LegacyLauncher.getInstance().getLibraryManager().process(deJureVersion, libraryReplacementKeys.toArray(new String[0]));
             }
         } else {
             version = deJureVersion;
@@ -695,6 +726,7 @@ public class MinecraftLauncher implements JavaProcessListener {
                 } catch (InterruptedException interruptedException) {
                     throw new MinecraftLauncherAborted(interruptedException);
                 }
+                latestLocalOpt.ifPresent(jre -> log.info("Discovered local JRE: {}", jre));
                 // reinstall JRE if forceUpdate is checked, but ignore it if version has override
                 if (latestLocalOpt.isPresent() && (latestLocalOpt.get().hasOverride() || !forceUpdate)) {
                     log.debug("Latest version of required JRE is installed");
@@ -787,18 +819,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
 
         DownloadableContainer versionContainer;
-        ArrayList<String> types = new ArrayList<>();
-        types.add(librariesForType == null ? Account.AccountType.PLAIN.toString() : librariesForType.toString());
-        if (isExperimentEnabled(Configuration.Experiments.UPDATED_JNA)) {
-            log.warn("Experimental: Adding updated JNA to download queue");
-            types.add("experiment-jna-update");
-        }
-        if (isExperimentEnabled(Configuration.Experiments.UPDATED_LWJGL)) {
-            log.warn("Experimental: Adding updated LWJGL to download queue");
-            types.add("experiment-lwjgl-update");
-        }
         try {
-            versionContainer = vm.downloadVersion(versionSync, types.toArray(new String[0]), forceUpdate);
+            versionContainer = vm.downloadVersion(versionSync, libraryReplacementKeys.toArray(new String[0]), forceUpdate);
         } catch (IOException var8) {
             throw new MinecraftException(false, "Cannot download version!", "download-jar", var8);
         }
@@ -1370,6 +1392,8 @@ public class MinecraftLauncher implements JavaProcessListener {
             if (nativesPerOs == null) continue;
             String natives = nativesPerOs.get(OS.CURRENT);
             if (natives == null) continue;
+
+            log.info("Unpacking native library: {}", library.getName());
 
             File file = new File(MinecraftUtil.getWorkingDirectory(), "libraries/" + library.getArtifactPath(natives));
             if (!file.isFile()) {
@@ -2444,6 +2468,21 @@ public class MinecraftLauncher implements JavaProcessListener {
         } finally {
             jarFile.close();
         }
+    }
+
+    private void showNoArm64NativeSupportMessage(String path) {
+        final String hasShownPath = "gui.has-shown-alert-for." + path;
+        if (versionName.equals(settings.get(hasShownPath))) {
+            return;
+        }
+        StringBuilder message = new StringBuilder();
+        message.append(Localizable.get("launcher.warning.arm64-no-native-support"));
+        message.append("\n\n");
+        message.append(Localizable.get(path));
+        message.append("\n\n");
+        message.append(Localizable.get("launcher.warning.arm64-no-native-support.will-continue"));
+        Alert.showWarning("", message.toString());
+        settings.set(hasShownPath, versionName);
     }
 
     public enum LoggerVisibility {

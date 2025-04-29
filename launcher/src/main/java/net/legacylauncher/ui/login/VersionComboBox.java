@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implements Blockable, VersionManagerListener, LocalizableComponent, LoginForm.LoginProcessListener {
     private static final long serialVersionUID = -9122074452728842733L;
-    static Account.AccountType showVersionForType;
+    static Account.AccountType showVersionForType = Account.AccountType.PLAIN;
     private static final VersionSyncInfo LOADING;
     private static final VersionSyncInfo EMPTY;
     private final VersionManager manager;
@@ -71,6 +71,9 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
         manager = LegacyLauncher.getInstance().getVersionManager();
         manager.addListener(new SwingVersionManagerListener(this));
         addItemListener(e -> {
+            if (!ready) {
+                return;
+            }
             loginForm.buttons.play.updateState();
             VersionSyncInfo selected = getVersion();
             if (selected != null) {
@@ -89,6 +92,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
         });
         selectedVersion = lf.global.get("login.version");
         initComboBoxFilter();
+        addItem(LOADING);
         ready = true;
     }
 
@@ -137,7 +141,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
 
                 throw new LoginException("Giving user a second chance to choose correct version...");
             });
-        } else if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate()) {
+        } else if (selected.hasRemote() && selected.isInstalled() && !selected.isUpToDate() && !loginForm.checkbox.forceupdate.isSelected()) {
             if (!Alert.showLocQuestion("versions.found-update")) {
                 try {
                     CompleteVersion e = manager.getLocalList().getCompleteVersion(selected.getLocal());

@@ -27,6 +27,7 @@ import net.legacylauncher.ui.FlatLaf;
 import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.frames.FirstRunNotice;
+import net.legacylauncher.ui.frames.InstallOpenGLCompatPackNotice;
 import net.legacylauncher.ui.frames.NewFolderFrame;
 import net.legacylauncher.ui.frames.UpdateFrame;
 import net.legacylauncher.ui.listener.UIListeners;
@@ -401,6 +402,15 @@ public final class LegacyLauncher {
             notices.addNoticeForCurrentLocale(payload.getNotices());
             notices.selectRandom();
         }, SwingUtil.executor()));
+        executeWhenReady(() -> {
+            if (settings.isFirstRun() && OS.WINDOWS.isCurrent() && OS.Arch.CURRENT.isARM()) {
+                SwingUtil.later(() -> {
+                    InstallOpenGLCompatPackNotice f = new InstallOpenGLCompatPackNotice();
+                    f.setLocationRelativeTo(frame);
+                    f.setVisible(true);
+                });
+            }
+        });
 
         executeOnReadyJobs();
     }

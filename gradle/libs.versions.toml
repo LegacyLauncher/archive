@@ -1,5 +1,6 @@
 [versions]
 authlib = "1.5.24"
+aws-sdk-kotlin = "1.4.62"
 buildconfig-plugin = "5.3.5"
 commons-compress = "1.26.0"
 commons-io = "2.15.1"
@@ -14,7 +15,7 @@ jackson = "2.16.1"
 jarscanner = "1.1"
 java-semver = "0.10.2"
 java-statsd-client = "3.1.0"
-javafx-plugin = "0.1.0"
+javafx-plugin = "0.0.9"
 jdom = "2.0.2"
 jna = "5.16.0"
 jopt-simple = "5.0.4" # Locked, see 92d9c564
@@ -23,6 +24,7 @@ junixsocket = "2.9.0"
 jvd = "1.0"
 log4j = "2.23.0"
 lombok-plugin = "8.6"
+miglayout = "11.4.2"
 mockito = "5.10.0"
 nanohttpd = "2.3.1"
 nstweaker = "1.0"
@@ -35,6 +37,7 @@ xz = "1.9"
 
 [libraries]
 authlib = { module = "com.mojang:authlib", version.ref = "authlib" }
+aws-sdk-kotlin-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-sdk-kotlin" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
@@ -63,6 +66,7 @@ log4j-1-2-api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 log4j-slf4j-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
+miglayout = { module = "com.miglayout:miglayout-swing", version.ref = "miglayout" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }

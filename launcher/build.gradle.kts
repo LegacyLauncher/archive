@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.dataformat.yaml.*
 import com.fasterxml.jackson.module.kotlin.*
 import net.legacylauncher.gradle.*
+import net.legacylauncher.gradle.LegacyLauncherS3UploadTask.Companion.bucketProperty
 import org.gradle.jvm.tasks.Jar
 import java.security.*
 
@@ -54,7 +55,7 @@ val launcherLibraries by configurations.creating {
     }
 }
 
-evaluationDependsOn(projects.common.identityPath.path)
+evaluationDependsOn(projects.common.path)
 
 dependencies {
     compileOnly(projects.bridge) // bootstrap-java will inject it, all others don't need and don't use it
@@ -80,6 +81,7 @@ dependencies {
     implementation(libs.jdom)
     implementation(libs.jopt.simple)
     implementation(libs.jvd)
+    implementation(libs.miglayout)
     implementation(libs.nanohttpd)
     implementation(libs.nstweaker)
     implementation(libs.oshi)
@@ -185,18 +187,6 @@ val processResources by tasks.getting(ProcessResources::class) {
     }
 }
 
-object UrlComparator : Comparator<String> {
-    override fun compare(o1: String, o2: String): Int = when {
-        o1.startsWith("https") -> when {
-            o2.startsWith("https") -> 0
-            else -> -1
-        }
-
-        o2.startsWith("https") -> 1
-        else -> 0
-    }
-}
-
 val generateUpdateJson by tasks.registering {
     dependsOn(jar)
 
@@ -208,10 +198,6 @@ val generateUpdateJson by tasks.registering {
 
     doLast {
         val jarFileChecksum = generateChecksum(jar.outputs.files.singleFile)
-        val downloadPath = "update/${brand.brand.get()}/launcher/${jarFileChecksum}.jar"
-        val downloadUrlList = brand.updateRepoPrefixes.get().map { prefix ->
-            "${prefix}/${downloadPath}"
-        }
 
         val changelog = when (System.getenv("INCLUDE_CHANGELOG")) {
             "true" -> file("changelog.yml").reader().use { reader ->
@@ -224,7 +210,6 @@ val generateUpdateJson by tasks.registering {
         val meta = mapOf(
             "version" to brand.version.get(),
             "checksum" to jarFileChecksum,
-            "url" to downloadUrlList,
             "description" to changelog,
         )
 
@@ -234,10 +219,13 @@ val generateUpdateJson by tasks.registering {
     }
 }
 
-val copyJarAndRename by tasks.registering(Copy::class) {
-    from(jar)
-    into(layout.buildDirectory.dir("update/${brand.brand.get()}"))
-    rename { "launcher.jar" }
+val copyJarAndRename by tasks.registering {
+    dependsOn(jar)
+    val targetFile = layout.buildDirectory.file("update/${brand.brand.get()}/launcher.jar")
+    outputs.file(targetFile)
+    doLast {
+        jar.outputs.files.singleFile.copyTo(targetFile.get().asFile, overwrite = true)
+    }
 }
 
 val generateSha256File by tasks.registering {
@@ -261,8 +249,32 @@ buildConfig {
     buildConfigField("String", "SUPPORT_EMAIL", "\"${brand.supportEmail.get()}\"")
 }
 
-val assemble: Task by tasks.getting {
+val prepareDeploy by tasks.registering {
     dependsOn(generateUpdateJson, copyJarAndRename, generateSha256File)
+    outputs.files(dependsOn)
+}
+
+val deployLauncherBrand by tasks.registering(LegacyLauncherS3UploadTask::class) {
+    bucket = project.bucketProperty(LegacyLauncherS3UploadTask.Companion.Buckets.BRANDS)
+    entityPrefix = "launcher"
+    inputs.files(prepareDeploy)
+}
+
+val deployLauncherUpdate by tasks.registering(LegacyLauncherS3UploadTask::class) {
+    dependsOn(prepareDeploy)
+    bucket = project.bucketProperty(LegacyLauncherS3UploadTask.Companion.Buckets.UPDATES)
+    entityPrefix = "launcher"
+    fileName = generateSha256File.map { it.outputs.files.singleFile.readText() + ".jar" }
+    inputs.files(copyJarAndRename)
+}
+
+val deploy by tasks.registering {
+    group = "deploy"
+    dependsOn(deployLauncherBrand, deployLauncherUpdate)
+}
+
+val assemble: Task by tasks.getting {
+    dependsOn(prepareDeploy)
 }
 
 val jar by tasks.getting(Jar::class) {

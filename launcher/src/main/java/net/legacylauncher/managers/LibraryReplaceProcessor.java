@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.component.InterruptibleComponent;
 import net.legacylauncher.minecraft.auth.Account;
 import net.legacylauncher.repository.Repository;
+import net.legacylauncher.util.EHttpClient;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.Library;
@@ -14,8 +15,10 @@ import net.minecraft.launcher.versions.Version;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import net.minecraft.launcher.versions.json.PatternTypeAdapter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.client5.http.fluent.Request;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -240,6 +243,28 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         refreshed = true;
     }
 
+    public void fetchSeparate(String type) throws IOException {
+        synchronized (libraries) {
+            if (libraries.containsKey(type)) {
+                return;
+            }
+        }
+        log.info("Requesting manifest exclusively (type: {})", type);
+        String content = EHttpClient.toString(
+                Request.get("https://libservice.llaun.ch/manifest/" + type)
+                        .addHeader("Accept", "application/json")
+        );
+        SeparatePayload payload = gson.fromJson(content, SeparatePayload.class);
+        synchronized (libraries) {
+            if (libraries.containsKey(type)) {
+                log.info("Ignoring manifest for {}", type);
+                return;
+            }
+            libraries.put(type, payload.replacements);
+            log.info("Received {} libraries from the manifest (type: {})", payload.replacements.size(), type);
+        }
+    }
+
     public void addListener(LibraryReplaceProcessorListener listener) {
         listeners.add(listener);
     }
@@ -248,5 +273,9 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         private double version;
         private boolean allowElyEveywhere;
         private Map<String, List<LibraryReplace>> libraries;
+    }
+
+    private static class SeparatePayload {
+        private List<LibraryReplace> replacements;
     }
 }

@@ -52,7 +52,7 @@ public class ConnectivityWarning extends ExtendedFrame implements LocalizableCom
 
         LocalizableLabel title = new LocalizableLabel("connectivity.warning.title");
         title.setFont(title.getFont().deriveFont(Font.BOLD, title.getFont().getSize2D() + 3.f));
-        title.setIconTextGap(HALF_BORDER);
+        title.setIconTextGap(BORDER);
         title.setIcon(Images.getIcon24("plug-1"));
         add(title);
         add(Box.createRigidArea(new Dimension(1, BORDER)));

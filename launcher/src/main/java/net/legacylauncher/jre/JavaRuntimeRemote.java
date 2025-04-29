@@ -1,5 +1,6 @@
 package net.legacylauncher.jre;
 
+import lombok.ToString;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.updater.DownloadInfo;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+@ToString(doNotUseGetters = true)
 public class JavaRuntimeRemote implements JavaRuntime {
     private String name;
     private String platform;

@@ -34,7 +34,7 @@ public class JavaVersionDetector {
     public JavaVersion detect() throws JavaVersionNotDetectedException, InterruptedException {
         Future<JavaVersion> task = AsyncThread.future(this::doDetect);
         try {
-            return task.get(30, TimeUnit.SECONDS);
+            return task.get(60, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof JavaVersionNotDetectedException) {
                 throw (JavaVersionNotDetectedException) e.getCause();

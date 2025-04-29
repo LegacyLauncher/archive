@@ -98,6 +98,7 @@ public class PreSupportFrame extends VActionFrame {
         c.anchor = GridBagConstraints.LINE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
 
+        checkboxPanel.setInsets(0, 0, 10, 0);
         getFooter().add(checkboxPanel, c);
 
         c = new GridBagConstraints();

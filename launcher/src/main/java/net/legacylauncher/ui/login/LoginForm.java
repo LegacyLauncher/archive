@@ -154,7 +154,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
     }
 
     private void runProcess() {
-        LoginException error = null;
+        Exception error = null;
         boolean success = true;
         synchronized (processListeners) {
             for (LoginProcessListener listener : processListeners) {
@@ -167,7 +167,7 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                     block("wait-task");
                     try {
                         loginError.getWaitTask().runTask();
-                    } catch (LoginException e) {
+                    } catch (Exception e) {
                         log.error("Caught an error on a wait task of {}", listener, e);
                         error = e;
                     } finally {
