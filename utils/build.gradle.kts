@@ -4,6 +4,7 @@ plugins {
     `java-library`
     `jvm-test-suite`
     `auto-version`
+    alias(libs.plugins.lombok)
 }
 
 dependencies {

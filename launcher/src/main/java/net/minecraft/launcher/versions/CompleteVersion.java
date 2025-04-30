@@ -647,6 +647,10 @@ public class CompleteVersion implements Version, Cloneable {
         return logging;
     }
 
+    public List<Argument> getArgumentOfType(ArgumentType type) {
+        return arguments.getOrDefault(type, Collections.emptyList());
+    }
+
     public void validate() {
         Validate.notNull(id, "id");
         Validate.notNull(type, "type");

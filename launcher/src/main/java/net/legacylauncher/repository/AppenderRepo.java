@@ -3,7 +3,7 @@ package net.legacylauncher.repository;
 import net.legacylauncher.util.U;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +30,7 @@ public class AppenderRepo extends Repo {
     }
 
     @Override
-    protected URL makeUrl(String path) throws IOException {
+    protected URL makeUrl(String path) {
         String url;
 
         if (suffix == null) {
@@ -39,7 +39,11 @@ public class AppenderRepo extends Repo {
             url = prefix + path + suffix;
         }
 
-        return new URL(url);
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(url, e);
+        }
     }
 
     @Override

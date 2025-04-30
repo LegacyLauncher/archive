@@ -1,11 +1,12 @@
 package net.minecraft.launcher.versions;
 
+import lombok.Setter;
 import net.legacylauncher.LegacyLauncher;
 
 public class CurrentLaunchFeatureMatcher implements Rule.FeatureMatcher {
 
-    public CurrentLaunchFeatureMatcher() {
-    }
+    @Setter
+    private String targetServer;
 
     @Override
     public boolean hasFeature(String key, Object value) {
@@ -19,6 +20,8 @@ public class CurrentLaunchFeatureMatcher implements Rule.FeatureMatcher {
                     break;
                 case "is_demo_user":
                     return false;
+                case "is_quick_play_multiplayer":
+                    return targetServer != null;
             }
         }
         return false;

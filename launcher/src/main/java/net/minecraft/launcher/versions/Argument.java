@@ -7,15 +7,21 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Argument {
     private final String[] value;
+
     private final List<Rule> compatibilityRules;
 
     public Argument(String[] values, List<Rule> Rules) {
         this.value = values;
         this.compatibilityRules = Rules;
+    }
+
+    public List<Rule> getCompatibilityRules() {
+        return compatibilityRules == null ? Collections.emptyList() : compatibilityRules;
     }
 
     @Override

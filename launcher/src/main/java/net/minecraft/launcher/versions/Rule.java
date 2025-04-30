@@ -25,6 +25,10 @@ public class Rule {
         }
     }
 
+    public boolean dependsOn(String feature) {
+        return features.containsKey(feature);
+    }
+
     public Rule.Action getAppliedAction(Rule.FeatureMatcher featureMatcher) {
         if ((this.os != null) && (!this.os.isCurrentOperatingSystem())) return null;
         if (this.features != null) {

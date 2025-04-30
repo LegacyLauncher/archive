@@ -34,7 +34,7 @@ public abstract class Repo implements IRepo {
         return get(path, U.getReadTimeout());
     }
 
-    protected URLConnection makeConnection(URL url, int timeout, Proxy proxy) throws IOException {
+    protected static URLConnection makeConnection(URL url, int timeout, Proxy proxy) throws IOException {
         URLConnection connection = url.openConnection(proxy);
 
         connection.setConnectTimeout(timeout);
@@ -49,5 +49,5 @@ public abstract class Repo implements IRepo {
         return connection;
     }
 
-    protected abstract URL makeUrl(String path) throws IOException;
+    protected abstract URL makeUrl(String path);
 }

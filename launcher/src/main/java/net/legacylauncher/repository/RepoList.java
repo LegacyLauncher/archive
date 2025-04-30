@@ -1,8 +1,15 @@
 package net.legacylauncher.repository;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.handlers.ExceptionHandler;
+import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.Time;
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.async.AsyncThread;
+import net.legacylauncher.connection.ConnectionQueue;
+import net.legacylauncher.connection.ConnectionSelector;
+import net.legacylauncher.connection.HttpConnection;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -10,7 +17,9 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class RepoList {
@@ -50,32 +59,36 @@ public class RepoList {
     }
 
     public InputStream read(String path, Proxy proxy) throws IOException {
+        List<IRepo> currentRepoList = getRelevant().getList();
+        boolean useOldImpl = !currentRepoList.stream().allMatch(repo -> repo instanceof AppenderRepo);
+        if (useOldImpl) {
+            return read$old(path, proxy);
+        }
+        try {
+            return read$selector(currentRepoList, path);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted", e);
+        }
+    }
+
+    private InputStream read$old(String path, Proxy proxy) throws IOException {
         IOException ex = null;
         List<IRepo> l = getRelevant().getList();
         int timeout = U.getConnectionTimeout();
-
         Object total = new Object();
         Time.start(total);
-
         log.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path, timeout / 1000, proxy);
         int attempt = 0;
-
         for (IRepo repo : l) {
             ++attempt;
             Object current = new Object();
             Time.start(current);
-
             String _path; // path to show in the logs
             if (repo instanceof AppenderRepo) {
-                try {
-                    _path = String.valueOf(((AppenderRepo) repo).makeUrl(path));
-                } catch (IOException ioE) {
-                    _path = "(failed to make url: \"" + path + "\")";
-                }
+                _path = String.valueOf(((AppenderRepo) repo).makeUrl(path));
             } else {
                 _path = path;
             }
-
             try {
                 InputStream result = read(connect(repo, path, timeout, proxy, attempt));
                 long[] deltas = Time.stop(total, current);
@@ -95,11 +108,70 @@ public class RepoList {
                 }
             }
         }
-
         if (ex != null) {
             throw ex;
         } else {
             throw new IOException("Unable to fetch repo due to unknown reason");
+        }
+    }
+
+    private static final Lazy<ExecutorService> HTTP_EXECUTOR = Lazy.of(() -> new ThreadPoolExecutor(
+            8,
+            16,
+            15L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            new ThreadFactoryBuilder()
+                    .setUncaughtExceptionHandler(ExceptionHandler.getInstance())
+                    .setNameFormat("Repo-Http-%d")
+                    .setDaemon(true)
+                    .build()
+    ));
+
+    private InputStream read$selector(List<IRepo> currentRepoList, String path) throws IOException, InterruptedException {
+        List<URL> list = currentRepoList.stream()
+                .map(repo -> (AppenderRepo) repo)
+                .map(repo -> repo.makeUrl(path))
+                .collect(Collectors.toList());
+        ConnectionSelector<HttpConnection> selector = ConnectionSelector.create(
+                info -> {
+                    if (info.getUrl().getHost().contains("llaun.ch")) {
+                        U.sleepFor(15_000);
+                    }
+                    URLConnection c = Repo.makeConnection(
+                            info.getUrl(),
+                            U.getConnectionTimeout(),
+                            U.getProxy()
+                    );
+                    c.connect();
+                    return HttpConnection.of(c);
+                },
+                5_000,
+                TimeUnit.MILLISECONDS,
+                AsyncThread.DELAYER,
+                HTTP_EXECUTOR.get()
+        );
+        ConnectionQueue<HttpConnection> queue;
+        try {
+            queue = selector.select(list).get();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            }
+            throw new RuntimeException("Unhandled exception", e);
+        }
+        try {
+            while (true) {
+                HttpConnection c = queue.takeOrThrow(() -> new IOException("Failed to fetch " + path));
+                log.info("Fetching: {}", c.getUrl());
+                try {
+                    return read(c.getConnection());
+                } catch (IOException ioE) {
+                    log.info("Failed to fetch: {}", c.getUrl(), ioE);
+                }
+            }
+        } finally {
+            queue.close();
         }
     }
 

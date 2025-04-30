@@ -202,6 +202,7 @@ val runDebug by tasks.registering(JavaExec::class) {
     description = "Run BootstrapDebug"
     mainClass = "net.legacylauncher.bootstrap.BootstrapDebug"
 
+//    jvmArgs("-DsocksProxyHost=127.0.0.1", "-DsocksProxyPort=2081")
     args("--debug")
 
     dependsOn(collectLauncherLibsRepo, launcherJar, devJar)

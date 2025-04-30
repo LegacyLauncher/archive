@@ -12,22 +12,21 @@ import net.legacylauncher.bootstrap.task.Task;
 import net.legacylauncher.bootstrap.transport.SignedStream;
 import net.legacylauncher.bootstrap.util.BootstrapUserAgent;
 import net.legacylauncher.bootstrap.util.Compressor;
+import net.legacylauncher.bootstrap.util.U;
 import net.legacylauncher.repository.RepoPrefixV1;
+import net.legacylauncher.connection.ConnectionQueue;
+import net.legacylauncher.connection.ConnectionSelector;
+import net.legacylauncher.connection.bad.BadHostsFilter;
+import net.legacylauncher.connection.HttpConnection;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BooleanSupplier;
 
 @Slf4j
 public class UpdateMeta {
@@ -35,7 +34,12 @@ public class UpdateMeta {
         Compressor.init(); // init compressor
     }
 
-    private static final int INITIAL_TIMEOUT = 1000, MAX_ATTEMPTS = 3, UPDATE_META_THREADS = 2;
+    private static final int
+            CONNECT_TIMEOUT = 15_000,
+            READ_TIMEOUT = 10_000,
+            NEW_REQUEST_TIMEOUT = 2_000,
+            MAX_ATTEMPTS = 3,
+            UPDATE_META_THREADS = 4;
 
     public static Task<UpdateMeta> fetchFor(final String shortBrand, ConnectionInterrupter interrupter) {
         Objects.requireNonNull(shortBrand, "brand");
@@ -43,75 +47,61 @@ public class UpdateMeta {
         return new Task<UpdateMeta>("fetchUpdate") {
             @Override
             protected UpdateMeta execute() throws Exception {
-                ExecutorService executor = Executors.newFixedThreadPool(UPDATE_META_THREADS, new ThreadFactory() {
-                    private final AtomicInteger i = new AtomicInteger();
-                    @Override
-
-                    public Thread newThread(Runnable r) {
-                        Thread t = new Thread(null, r, "UpdateMeta-" + i.getAndIncrement());
-                        t.setDaemon(true);
-                        return t;
-                    }
-                });
-
                 final AtomicBoolean canCancel = new AtomicBoolean(true);
                 setupInterruption(canCancel, interrupter);
-
+                ScheduledExecutorService scheduler = ConnectionSelector.createScheduler(UPDATE_META_THREADS);
                 try {
-                    return fetchUpdateMeta(executor);
+                    return fetchUpdateMeta(scheduler);
                 } catch (InterruptedException e) {
                     log.warn("Update meta request was cancelled");
                     throw new UpdateMetaFetchFailed();
-                } catch (ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    log.error("Update meta request failed", cause);
-                    if (cause instanceof Exception) {
-                        throw (Exception) cause;
-                    }
-                    throw e;
                 } finally {
                     canCancel.set(false);
-                    executor.shutdownNow();
+                    scheduler.shutdown();
                 }
             }
 
-            private UpdateMeta fetchUpdateMeta(ExecutorService executor) throws Exception {
+            private UpdateMeta fetchUpdateMeta(ScheduledExecutorService scheduler) throws InterruptedException, UpdateMetaFetchFailed {
                 log.info("Requesting update for: {}", shortBrand);
 
                 Gson gson = createGson(shortBrand);
                 List<String> urlPrefixes = RepoPrefixV1.prefixesCdnFirst();
                 String updatePath = "/brands/" + shortBrand + "/bootstrap.json.mgz.signed";
 
-                for(int i = 1; i <= MAX_ATTEMPTS; i++) {
-                    final int attempt = i;
-
-                    CompletableFuture<UpdateMeta> completed = new CompletableFuture<>();
-                    CompletableFuture.allOf(urlPrefixes.stream().map(urlPrefix -> {
-                        final URL url = toUrl(urlPrefix + updatePath);
-                        return CompletableFuture.runAsync(
-                                () -> {
-                                    UpdateMeta updateMeta = fetchAttempts(url, gson, attempt, completed::isDone);
-                                    if (updateMeta == null) {
-                                        return;
-                                    }
-                                    if (completed.complete(updateMeta)) {
-                                        log.info("{} ({} / {}): Using response from this repo", url.getHost(), attempt, MAX_ATTEMPTS);
-                                    } else {
-                                        log.debug("{} ({} / {}): Successful, but ignored", url.getHost(), attempt, MAX_ATTEMPTS);
-                                    }
-                                },
-                                executor
-                        );
-                    }).toArray(CompletableFuture[]::new)).whenComplete((v, t) ->
-                            completed.completeExceptionally(new UpdateMetaFetchFailed())
+                for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                    long start = System.currentTimeMillis();
+                    CompletableFuture<ConnectionQueue<HttpConnection>> future = ConnectionSelector.create(
+                            new BadHostsFilter<>(U.BAD_HOSTS, new HttpConnection.Connector(
+                                    CONNECT_TIMEOUT * attempt,
+                                    READ_TIMEOUT * attempt,
+                                    BootstrapUserAgent.USER_AGENT,
+                                    U.getProxy()
+                            )),
+                            NEW_REQUEST_TIMEOUT * attempt,
+                            TimeUnit.MILLISECONDS,
+                            scheduler
+                    ).select(urlPrefixes.stream()
+                            .map(urlPrefix -> toUrl(urlPrefix + updatePath))
                     );
+                    ConnectionQueue<HttpConnection> queue;
                     try {
-                        return completed.get(); // throws InterruptedException
-                    } catch (CompletionException e) {
-                        log.warn("Attempt {}: All update meta request were failed", attempt);
+                        queue = future.get();
+                    } catch (ExecutionException e) {
+                        log.warn("({} / {}): Couldn't connect to any UpdateMeta repo", attempt, MAX_ATTEMPTS, e.getCause());
+                        continue;
+                    } catch (InterruptedException e) {
+                        log.info("({} / {}): Interrupted", attempt, MAX_ATTEMPTS);
+                        future.completeExceptionally(e); // cancel subsequent request, if any
+                        throw e;
+                    }
+                    try {
+                        return readQueue(queue, attempt, gson, start);
+                    } catch (IOException e) {
+                        // continue
+                    } finally {
+                        queue.close();
                     }
                 }
-
                 throw new UpdateMetaFetchFailed();
             }
 
@@ -130,52 +120,60 @@ public class UpdateMeta {
         };
     }
 
+    private static UpdateMeta readQueue(
+            ConnectionQueue<HttpConnection> queue,
+            int attempt,
+            Gson gson,
+            long start
+    ) throws InterruptedException, IOException {
+        while (true) {
+            HttpConnection c = queue.takeOrThrow(() -> new IOException("No available connection"));
+            HttpURLConnection connection = c.getConnection();
+            URL url = connection.getURL();
+            log.info("({} / {}): Reading {}", attempt, MAX_ATTEMPTS, url);
+            InputStream stream = null;
+            try {
+                if (connection.getResponseCode() != 200) {
+                    log.warn("{} ({} / {}): Bad response code: {}", url.getHost(), attempt, MAX_ATTEMPTS, connection.getResponseMessage());
+                    U.BAD_HOSTS.add(url);
+                    throw new IOException("Bad response code: " + connection.getResponseCode());
+                }
+                stream = connection.getInputStream();
+                if (url.getPath().endsWith(".signed")) {
+                    log.debug("{} ({} / {}): Requiring valid signature", url.getHost(), attempt, MAX_ATTEMPTS);
+                    stream = new SignedStream(stream);
+                }
+                UpdateMeta meta = fetchFrom(gson, Compressor.uncompressMarked(stream));
+                if (stream instanceof SignedStream) {
+                    try {
+                        ((SignedStream) stream).validateSignature();
+                    } catch (IOException e) {
+                        log.error("{} ({} / {}): Bad signature", url.getHost(), attempt, MAX_ATTEMPTS, e);
+                        U.BAD_HOSTS.add(url); // very bad, do not like
+                        throw e;
+                    }
+                }
+                if (Thread.interrupted()) {
+                    log.info("{} ({} / {}): Interrupted", url.getHost(), attempt, MAX_ATTEMPTS);
+                    throw new InterruptedException();
+                }
+                log.info("{} ({} / {}): OK ({} ms)", url.getHost(), attempt, MAX_ATTEMPTS,
+                        (System.currentTimeMillis() - start));
+                return meta;
+            } catch (IOException e) {
+                log.warn("{} ({} / {}): Couldn't fetch", url.getHost(), attempt, MAX_ATTEMPTS, e);
+            } finally {
+                IOUtils.closeQuietly(stream);
+            }
+        }
+    }
+
     private static Gson createGson(String shortBrand) {
         return Json.build()
                 .registerTypeAdapter(UpdateMeta.class, new UpdateDeserializer())
                 .registerTypeAdapter(RemoteLauncherMeta.class, new RemoteLauncherDeserializer(shortBrand))
                 .registerTypeAdapter(RemoteBootstrapMeta.class, new RemoteBootstrapDeserializer(shortBrand))
                 .create();
-    }
-
-    private static UpdateMeta fetchAttempts(URL url, Gson gson, int attempt, BooleanSupplier finished) throws CompletionException {
-        if (finished.getAsBoolean()) {
-            log.debug("{} ({} / {}): Skipping", url.getHost(), attempt, MAX_ATTEMPTS);
-            return null;
-        }
-        log.info("{} ({} / {}): Requesting {}", url.getHost(), attempt, MAX_ATTEMPTS, url);
-        InputStream stream = null;
-        try {
-            long start = System.currentTimeMillis();
-            stream = setupConnection(url, attempt);
-            if (url.getPath().endsWith(".signed")) {
-                log.debug("{} ({} / {}): Requiring valid signature", url.getHost(), attempt, MAX_ATTEMPTS);
-                stream = new SignedStream(stream);
-            }
-            UpdateMeta meta = fetchFrom(gson, Compressor.uncompressMarked(stream));
-            if (stream instanceof SignedStream) {
-                try {
-                    ((SignedStream) stream).validateSignature();
-                } catch (IOException e) {
-                    log.error("{} ({} / {}): Bad signature", url.getHost(), attempt, MAX_ATTEMPTS, e);
-                    throw e;
-                }
-            }
-            if (Thread.interrupted()) {
-                log.info("{} ({} / {}): Interrupted", url.getHost(), attempt, MAX_ATTEMPTS);
-                throw new CompletionException(new InterruptedException());
-            }
-            log.info("{} ({} / {}): OK ({} ms)", url.getHost(), attempt, MAX_ATTEMPTS,
-                    (System.currentTimeMillis() - start));
-            return meta;
-        } catch (UnknownHostException e) {
-            log.warn("{} ({} / {}): Unknown host", url.getHost(), attempt, MAX_ATTEMPTS);
-        } catch (IOException e) {
-            log.warn("{} ({} / {}): Couldn't fetch", url.getHost(), attempt, MAX_ATTEMPTS, e);
-        } finally {
-            IOUtils.closeQuietly(stream);
-        }
-        throw new CompletionException(new IOException("update meta is not available at " + url));
     }
 
     private static URL toUrl(String url) {
@@ -217,21 +215,11 @@ public class UpdateMeta {
         return fetchFrom(createGson(shortBrand), in);
     }
 
-    private static InputStream setupConnection(URL url, int attempt) throws IOException {
-        int timeout = attempt * INITIAL_TIMEOUT;
-
-        URLConnection connection = url.openConnection();
-        connection.setConnectTimeout(timeout);
-        connection.setReadTimeout(5 * timeout);
-        BootstrapUserAgent.set(connection);
-
-        return connection.getInputStream();
-    }
-
     @Getter
     protected RemoteBootstrapMeta bootstrap;
     protected RemoteLauncherMeta launcher, launcherBeta;
-    @Getter @Expose
+    @Getter
+    @Expose
     protected String options; // this field is handled by UpdateDeserializer
 
     public UpdateMeta(RemoteBootstrapMeta bootstrap,

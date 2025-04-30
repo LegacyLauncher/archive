@@ -113,7 +113,7 @@ public class MinecraftLauncher implements JavaProcessListener {
     private int serverId;
     private JavaProcess process;
 
-    private final Rule.FeatureMatcher featureMatcher = createFeatureMatcher();
+    private final CurrentLaunchFeatureMatcher featureMatcher = createFeatureMatcher();
 
     private ChildProcessLogger processLogger;
 
@@ -1194,6 +1194,17 @@ public class MinecraftLauncher implements JavaProcessListener {
             }
         }
 
+        boolean supportsQuickPlay = version.getArgumentOfType(ArgumentType.GAME)
+                .stream()
+                .anyMatch(argument -> argument.getCompatibilityRules()
+                        .stream()
+                        .anyMatch(rule -> rule.dependsOn("is_quick_play_multiplayer"))
+                );
+        if (server != null && supportsQuickPlay) {
+            log.info("Using quick play feature to join {}", server);
+            featureMatcher.setTargetServer(server.getFullAddress());
+        }
+
         StrSubstitutor argumentsSubstitutor = createArgumentsSubstitutor();
         jvmArgs.addAll(version.addArguments(ArgumentType.JVM, featureMatcher, argumentsSubstitutor));
         programArgs.addAll(version.addArguments(ArgumentType.GAME, featureMatcher, argumentsSubstitutor));
@@ -1201,7 +1212,9 @@ public class MinecraftLauncher implements JavaProcessListener {
         fixArguments(jvmArgs, ArgumentType.JVM);
         fixArguments(programArgs, ArgumentType.GAME);
 
-        if (!isLauncher && server != null) {
+        if (!isLauncher && server != null && !supportsQuickPlay) {
+            log.info("This version doesn't support quick play");
+            log.info("Using old --server argument to join {}", server);
             programArgs.addAll(Arrays.asList("--server", server.getAddress()));
             if (server.getPort() != Server.DEFAULT_PORT) {
                 programArgs.addAll(Arrays.asList("--port", String.valueOf(server.getPort())));
@@ -2157,7 +2170,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
     }
 
-    private Rule.FeatureMatcher createFeatureMatcher() {
+    private CurrentLaunchFeatureMatcher createFeatureMatcher() {
         return new CurrentLaunchFeatureMatcher();
     }
 
@@ -2242,6 +2255,10 @@ public class MinecraftLauncher implements JavaProcessListener {
         map.put("classpath", constructClassPath(version));
         map.put("classpath_separator", System.getProperty("path.separator"));
         map.put("primary_jar", new File(rootDir, "versions/" + version.getID() + "/" + version.getID() + ".jar").getAbsolutePath());
+
+        if (server != null) {
+            map.put("quickPlayMultiplayer", server.getFullAddress());
+        }
 
         return new StrSubstitutor(map);
     }

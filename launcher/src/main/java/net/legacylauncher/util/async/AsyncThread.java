@@ -7,18 +7,11 @@ import net.legacylauncher.util.shared.FutureUtils;
 import java.util.concurrent.*;
 
 public class AsyncThread {
-    public static final ExecutorService SHARED_SERVICE = new ThreadPoolExecutor(
-            2,
-            Math.max(2, Runtime.getRuntime().availableProcessors()),
-            60,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder()
-                    .setThreadFactory(ExtendedThread::new)
-                    .setUncaughtExceptionHandler(ExceptionHandler.getInstance())
-                    .setNameFormat("AsyncThread-%d")
-                    .setDaemon(true)
-                    .build()
+    public static final ExecutorService SHARED_SERVICE = new ForkJoinPool(
+            Math.max(4, Runtime.getRuntime().availableProcessors()),
+            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+            ExceptionHandler.getInstance(),
+            false
     );
     public static final ScheduledExecutorService DELAYER = Executors.newSingleThreadScheduledExecutor();
 
