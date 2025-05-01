@@ -135,9 +135,6 @@ public class RepoList {
                 .collect(Collectors.toList());
         ConnectionSelector<HttpConnection> selector = ConnectionSelector.create(
                 info -> {
-                    if (info.getUrl().getHost().contains("llaun.ch")) {
-                        U.sleepFor(15_000);
-                    }
                     URLConnection c = Repo.makeConnection(
                             info.getUrl(),
                             U.getConnectionTimeout(),
