@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -18,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -360,5 +362,37 @@ public class FileUtil {
             throw new LocalIOException("Couldn't real attributes of " + file.getAbsolutePath(), ioE);
         }
         return attributes.size();
+    }
+
+    public static <S> S tryOpenWithBackoff(StreamOpener<S> opener, Path path, int maxAttempts, long waitTimeBase, TimeUnit waitTimeUnit) throws InterruptedException, IOException {
+        S stream;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                stream = opener.openStream(path);
+            } catch (AccessDeniedException e) {
+                if (!OS.WINDOWS.isCurrent()) {
+                    throw e;
+                }
+                log.warn("[{}/{}] Attempted to open stream for {}; error: {}", attempt, maxAttempts, path.toAbsolutePath(), e.toString());
+                if (attempt < maxAttempts) {
+                    Thread.sleep(waitTimeUnit.toMillis(waitTimeBase * attempt));
+                }
+                continue;
+            }
+            log.info("[{}/{}] Error opening stream for the file has resolved: {}", attempt, maxAttempts, path.toAbsolutePath());
+            return stream;
+        }
+        throw new AccessDeniedException(path.toAbsolutePath().toString(), null, "Max attempts reached");
+    }
+
+    public static <S> S tryOpenWithBackoff(StreamOpener<S> opener, Path path) throws InterruptedException, IOException {
+        return tryOpenWithBackoff(opener, path, 10, 200, TimeUnit.MILLISECONDS);
+    }
+
+    public interface StreamOpener<S> {
+        StreamOpener<InputStream> INPUT = Files::newInputStream;
+        StreamOpener<OutputStream> OUTPUT = Files::newOutputStream;
+
+        S openStream(Path path) throws IOException;
     }
 }

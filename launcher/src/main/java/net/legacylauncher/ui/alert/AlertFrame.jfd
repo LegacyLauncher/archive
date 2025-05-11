@@ -8,52 +8,75 @@ new FormModel {
 			"minimumSize": new java.awt.Dimension( 600, 28 )
 			"maximumSize": new java.awt.Dimension( 600, 600 )
 			"alwaysOnTop": true
+			"$sizePolicy": 2
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 				name: "dialogPane"
-				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class net.miginfocom.swing.MigLayout ) {
-					"$layoutConstraints": "fillx,insets 25,hidemode 2,aligny top,gap 0 0"
-					"$columnConstraints": "[] [fill,grow]"
-					"$rowConstraints": "[][]"
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+					"$columnSpecs": "left:0, 0:1.0"
+					"$rowSpecs": "baseline:0, baseline:0"
+					"$alignTop": true
+					"$alignLeft": true
 				} ) {
 					name: "contentPanel"
+					"border": new javax.swing.border.EmptyBorder( 25, 25, 25, 25 )
 					add( new FormComponent( "javax.swing.JLabel" ) {
 						name: "iconLabel"
 						"icon": new com.jformdesigner.model.SwingIcon( 2, "OptionPane.warningIcon" )
-					}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-						"value": "aligny top,growy 0,gapx null 25"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"vAlign": 1
+						"insets": new java.awt.Insets( 0, 0, 0, 25 )
 					} )
 					add( new FormComponent( "net.legacylauncher.ui.swing.editor.EditorPane" ) {
 						name: "message"
 						"text": "<html>\nLorem ipsum dolor sit amet,<br/>consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n</html>"
 						"focusCycleRoot": false
-					}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-						"value": "aligny top,grow 100 0"
+						"focusable": false
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridx": 1
+						"hAlign": 5
+						"vAlign": 1
 					} )
 					add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
 						name: "scroll"
+						"horizontalScrollBarPolicy": 31
+						"verticalScrollBarPolicy": 22
+						"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"preferredSize": new java.awt.Dimension( 384, 128 )
+						"requestFocusEnabled": false
 						add( new FormComponent( "javax.swing.JTextArea" ) {
 							name: "textArea"
 							"text": "* Try:\n> Run with --stacktrace option to get the stack trace.\n> Run with --info or --debug option to get more log output.\n> Run with --scan to get full insights."
 							"editable": false
+							"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"requestFocusEnabled": false
 						} )
-					}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-						"value": "pad 25 0 0 0,cell 0 1 2 1,grow"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 1
+						"gridwidth": 2
+						"vAlign": 5
+						"weighty": 1.0
+						"hAlign": 5
+						"insets": new java.awt.Insets( 25, 0, 0, 0 )
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Center"
 				} )
-				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class net.miginfocom.swing.MigLayout ) {
-					"$layoutConstraints": "fillx,insets dialog"
-					"$columnConstraints": "[button,fill][fill,grow][button,fill]"
-					"$rowSpecs": "[fill]"
-					"$rowConstraints": "[]"
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+					"$columnSpecs": "70, 0:1.0, 70"
+					"$rowSpecs": "baseline:0"
 				} ) {
 					name: "buttonBar"
+					"border": new javax.swing.border.EmptyBorder( 0, 25, 25, 25 )
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.CardLayout ) ) {
 						name: "maybeEmptyPanel"
+						"minimumSize": new java.awt.Dimension( 104, 32 )
 						add( new FormComponent( "net.legacylauncher.ui.loc.LocalizableButton" ) {
 							name: "helpButton"
 							"text": "Need help"
+							"minimumSize": new java.awt.Dimension( 150, 32 )
+							"preferredSize": new java.awt.Dimension( 150, 32 )
+							"maximumSize": new java.awt.Dimension( 150, 32 )
 						}, new FormLayoutConstraints( class java.lang.String ) {
 							"value": "help"
 						} )
@@ -64,41 +87,44 @@ new FormModel {
 						}, new FormLayoutConstraints( class java.lang.String ) {
 							"value": "label"
 						} )
-					}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-						"value": "cell 0 0"
-					} )
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.CardLayout ) ) {
 						name: "buttonPanel"
+						"preferredSize": new java.awt.Dimension( 150, 32 )
+						"minimumSize": new java.awt.Dimension( 150, 32 )
 						add( new FormComponent( "net.legacylauncher.ui.loc.LocalizableButton" ) {
 							name: "okButton"
 							"text": "OK"
-							"nextFocusableComponent": &FormReference0 new FormReference( "helpButton" )
+							"preferredSize": new java.awt.Dimension( 150, 32 )
 						}, new FormLayoutConstraints( class java.lang.String ) {
 							"value": "ok"
 						} )
-						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class net.miginfocom.swing.MigLayout ) {
-							"$layoutConstraints": "insets 0,hidemode 3"
-							"$columnConstraints": "[fill][fill]"
-							"$rowConstraints": "[]"
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridLayout ) {
+							"columns": 2
+							"hgap": 10
 						} ) {
 							name: "yesNoPanel"
 							add( new FormComponent( "net.legacylauncher.ui.loc.LocalizableButton" ) {
 								name: "noButton"
-								"nextFocusableComponent": #FormReference0
-							}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-								"value": "cell 0 0"
+								"text": "No"
+								"maximumSize": new java.awt.Dimension( 150, 32 )
+								"minimumSize": new java.awt.Dimension( 75, 32 )
+								"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
 							} )
 							add( new FormComponent( "net.legacylauncher.ui.loc.LocalizableButton" ) {
 								name: "yesButton"
-								"nextFocusableComponent": #FormReference0
-							}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-								"value": "cell 1 0"
+								"text": "Yes"
+								"maximumSize": new java.awt.Dimension( 150, 32 )
+								"minimumSize": new java.awt.Dimension( 75, 32 )
+								"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
 							} )
 						}, new FormLayoutConstraints( class java.lang.String ) {
 							"value": "yesNo"
 						} )
-					}, new FormLayoutConstraints( class net.miginfocom.layout.CC ) {
-						"value": "cell 2 0,grow"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridx": 2
+						"hAlign": 5
+						"vAlign": 5
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Last"

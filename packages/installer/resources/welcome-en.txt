@@ -1,0 +1,5 @@
+Legacy Launcher is free alternative Minecraft launcher
+
+Project website: https://llaun.ch/
+
+This software is provided "as is", without any warranties of any kind, either express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, and non-infringement. The author(s) shall not be held liable for any damages arising in any way from the use of this software, including but not limited to direct, indirect, incidental, consequential, or special damages, even if advised of the possibility of such damages. By using this software, you acknowledge that you do so at your own risk.

@@ -4,9 +4,9 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={#Id}
+AppId={{{#Id}}
 AppName={#Name}
-AppVersion=rolling
+AppVersion={#Version}
 VersionInfoVersion={#Version}
 AppPublisher={#Publisher}
 AppPublisherURL={#URL}
@@ -33,8 +33,8 @@ WizardSmallImageFile=icons\100.bmp,icons\125.bmp,icons\150.bmp,icons\175.bmp,ico
 WizardImageFile=images\100.bmp,images\125.bmp,images\150.bmp,images\175.bmp,images\200.bmp,images\225.bmp,images\250.bmp
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl,lang-en.isl"; InfoBeforeFile: "welcome-en.rtf"
-Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl,lang-ru.isl"; InfoBeforeFile: "welcome-ru.rtf"
+Name: "english"; MessagesFile: "compiler:Default.isl,lang-en.isl"; InfoBeforeFile: "welcome-en.txt"
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl,lang-ru.isl"; InfoBeforeFile: "welcome-ru.txt"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}";

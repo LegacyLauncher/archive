@@ -24,7 +24,6 @@ junixsocket = "2.9.0"
 jvd = "1.0"
 log4j = "2.23.0"
 lombok-plugin = "8.6"
-miglayout = "11.4.2"
 mockito = "5.10.0"
 nanohttpd = "2.3.1"
 nstweaker = "1.0"
@@ -66,7 +65,6 @@ log4j-1-2-api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 log4j-slf4j-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
-miglayout = { module = "com.miglayout:miglayout-swing", version.ref = "miglayout" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }

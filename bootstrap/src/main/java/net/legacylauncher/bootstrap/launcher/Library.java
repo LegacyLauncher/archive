@@ -1,6 +1,7 @@
 package net.legacylauncher.bootstrap.launcher;
 
 import com.google.gson.annotations.Expose;
+import lombok.Getter;
 import net.legacylauncher.repository.RepoPrefixV1;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -25,11 +26,11 @@ public final class Library extends ToStringBuildable {
         );
     }
 
+    @Getter
     private String name, checksum;
 
-    public String getName() {
-        return name;
-    }
+    @Getter
+    private int javaVersion;
 
     public Path getFile(Path folder) {
         return Objects.requireNonNull(folder, "folder").resolve(getPath());

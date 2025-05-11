@@ -1,22 +1,7 @@
 ru_RU: >
-  165.1:<br/>
-  – Исправлена ошибка при запуске старых версий<br/>
-  165.0:<br/>
-  – Ускорение запуска лаунчера за счёт более агрессивного использования зеркал<br/>
-  – Восстановлена функция автоматического входа на сервера при клике на рекламное объявление<br/>
-  <br/><br/>
-  164.0:<br/>
-  – Поддержка ARM-процессоров под Windows<br/>
-  – Новый дизайн диалоговых окошек<br/>
-  – Другие исправления и улучшения
+  Улучшена совместная работа с антивирусами<br/>
+  Исправлен запуск на Java 8
 
 en_US: >
-  165.1:<br/>
-  – Fixed an error when launching older Minecraft releases<br/>
-  165.0:<br/>
-  – Faster launcher startup by more aggressive use of mirrors<br/>
-  <br/><br/>
-  164.0:<br/>
-  – Implemented support for Windows-on-ARM<br/>
-  – Better design of dialog windows<br/>
-  – Other fixes and improvements
+  Improved antivirus software support<br/>
+  Fixed launching with Java 8

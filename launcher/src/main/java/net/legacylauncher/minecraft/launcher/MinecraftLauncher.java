@@ -1,5 +1,6 @@
 package net.legacylauncher.minecraft.launcher;
 
+import com.google.common.collect.Streams;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import me.cortex.jarscanner.Detector;
@@ -58,6 +59,7 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -847,6 +849,15 @@ public class MinecraftLauncher implements JavaProcessListener {
         if (versionContainer.isAborted() || (jreContainer != null && jreContainer.isAborted())) {
             throw new MinecraftLauncherAborted(new AbortedDownloadException());
         } else if (!versionContainer.getErrors().isEmpty() || (jreContainer != null && !jreContainer.getErrors().isEmpty())) {
+            log.info("Listing files that were failed to download:");
+            Streams.concat(
+                    versionContainer.getList().stream(),
+                    jreContainer == null ? Stream.empty() : jreContainer.getList().stream()
+            ).filter(d ->
+                    d.getError() != null
+            ).forEach(d ->
+                    log.info("{} :: {}", d.getURL(), String.valueOf(d.getError()))
+            );
             throw new MinecraftException(false, "Cannot download all required files", "download");
         } else {
             deJureVersion.setUpdatedTime(U.getUTC().getTime());

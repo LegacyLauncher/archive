@@ -1,12 +1,10 @@
 package net.legacylauncher.ui.alert;
 
 import lombok.extern.slf4j.Slf4j;
-import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.util.SwingUtil;
 
 import javax.swing.*;
-import java.awt.*;
 
 @Slf4j
 public class Alert {
@@ -135,15 +133,9 @@ public class Alert {
     }
 
     private static AlertFrame showAlertFrame(int messageType, String title, String message, Object textarea) {
-        AlertFrame frame = new AlertFrame(title, message, textarea == null ? null : String.valueOf(textarea), messageType);
-        frame.pack();
-        Component relative = null;
-        if (LegacyLauncher.getInstance() != null) {
-            relative = LegacyLauncher.getInstance().getFrame();
-        }
-        frame.setLocationRelativeTo(relative);
-        frame.show();
-        frame.dispose();
+        AlertFrame frame = new AlertFrame();
+        frame.init(title, message, textarea == null ? null : String.valueOf(textarea), messageType);
+        frame.showAlert();
         return frame;
     }
 

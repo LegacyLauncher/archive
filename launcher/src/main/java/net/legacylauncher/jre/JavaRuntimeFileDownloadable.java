@@ -12,7 +12,6 @@ import org.apache.commons.io.IOUtils;
 import org.tukaani.xz.LZMAInputStream;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.Locale;
 
 @Slf4j
@@ -56,8 +55,11 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
     private void doExtract() throws IOException {
         log.debug("Extracting {}", lzmaDestination.getAbsolutePath());
         try (LZMAInputStream input = new LZMAInputStream(new BufferedInputStream(
-                Files.newInputStream(lzmaDestination.toPath())));
-             OutputStream output = new BufferedOutputStream(Files.newOutputStream(destination.toPath()))
+                FileUtil.tryOpenWithBackoff(FileUtil.StreamOpener.INPUT, lzmaDestination.toPath())
+        ));
+             OutputStream output = new BufferedOutputStream(
+                     FileUtil.tryOpenWithBackoff(FileUtil.StreamOpener.OUTPUT, destination.toPath())
+             )
         ) {
             IOUtils.copy(input, output);
         } catch (IOException e) {
@@ -67,6 +69,8 @@ public class JavaRuntimeFileDownloadable extends Sha1Downloadable {
                     ),
                     e
             );
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted", e);
         } finally {
             if (OS.WINDOWS.isCurrent()) {
                 // Windows Defender or sth like that doesn't let us remove these files right away

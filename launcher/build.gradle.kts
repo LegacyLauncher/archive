@@ -81,7 +81,6 @@ dependencies {
     implementation(libs.jdom)
     implementation(libs.jopt.simple)
     implementation(libs.jvd)
-    implementation(libs.miglayout)
     implementation(libs.nanohttpd)
     implementation(libs.nstweaker)
     implementation(libs.oshi)

@@ -84,7 +84,7 @@ fun generateUUIDFromString(seed: String): String {
     val random = java.util.Random(seed.hashCode().toLong())
     val uuidBytes = ByteArray(16)
     random.nextBytes(uuidBytes)
-    return UUID.nameUUIDFromBytes(uuidBytes).toString()
+    return UUID.nameUUIDFromBytes(uuidBytes).toString().uppercase()
 }
 
 fun RelativePath.dropSegments(range: IntRange): RelativePath {

@@ -16,7 +16,7 @@ public final class JavaVersion implements Comparable<JavaVersion> {
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaVersion.class);
 
     public static final JavaVersion UNKNOWN =
-            new JavaVersion("unknown", "unknown", 1, 0, 0, 0);
+            new JavaVersion("unknown", "unknown", 1, 8, 0, 0);
 
     private static JavaVersion CURRENT;
 

@@ -233,7 +233,14 @@ public class UpdateMeta {
     }
 
     public RemoteLauncherMeta getLauncher(boolean beta) {
-        return beta && launcherBeta != null ? launcherBeta : launcher;
+        if (beta) {
+            if (launcherBeta == null) {
+                log.warn("Not launcherBeta entry inside UpdateMeta");
+            } else {
+                return launcherBeta;
+            }
+        }
+        return launcher;
     }
 
     public interface ConnectionInterrupter {
