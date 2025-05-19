@@ -292,8 +292,7 @@ val processBootResources by tasks.getting(ProcessResources::class) {
 
 val generateUpdateJson by tasks.registering {
     dependsOn(bootJar)
-    inputs.property("productVersion", brand.version.get())
-    inputs.property("repoHosts", brand.repoHosts.get())
+    inputs.property("productVersion", brand.version)
     val updateJsonFile = layout.buildDirectory.file("update/${brand.brand.get()}/bootstrap.json")
     outputs.file(updateJsonFile)
 

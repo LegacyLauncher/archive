@@ -12,7 +12,7 @@ Legacy Launcher – свободный и бесплатный лаунчер д
 Данная сборка содержит минимальный набор файлов для создания портативной сборки.
 
 Как запустить? LL.exe
-Как использовать? https://docs.llaun.ch/launcher/portable
+Как использовать? https://docs.legacylauncher.ru/launcher/portable
 
 --
 

@@ -13,7 +13,7 @@ import net.legacylauncher.bootstrap.transport.SignedStream;
 import net.legacylauncher.bootstrap.util.BootstrapUserAgent;
 import net.legacylauncher.bootstrap.util.Compressor;
 import net.legacylauncher.bootstrap.util.U;
-import net.legacylauncher.repository.RepoPrefixV1;
+import net.legacylauncher.repository.HostsV1;
 import net.legacylauncher.connection.ConnectionQueue;
 import net.legacylauncher.connection.ConnectionSelector;
 import net.legacylauncher.connection.bad.BadHostsFilter;
@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class UpdateMeta {
@@ -65,8 +66,12 @@ public class UpdateMeta {
                 log.info("Requesting update for: {}", shortBrand);
 
                 Gson gson = createGson(shortBrand);
-                List<String> urlPrefixes = RepoPrefixV1.prefixesCdnFirst();
-                String updatePath = "/brands/" + shortBrand + "/bootstrap.json.mgz.signed";
+                List<URL> urlList = HostsV1.BOOTSTRAP.stream().map(host -> String.format(Locale.ROOT,
+                        "https://%s/%s/bootstrap.json.mgz.signed",
+                        host, shortBrand
+                ))
+                        .map(U::toUrl)
+                        .collect(Collectors.toList());
 
                 for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
                     long start = System.currentTimeMillis();
@@ -80,9 +85,7 @@ public class UpdateMeta {
                             NEW_REQUEST_TIMEOUT * attempt,
                             TimeUnit.MILLISECONDS,
                             scheduler
-                    ).select(urlPrefixes.stream()
-                            .map(urlPrefix -> toUrl(urlPrefix + updatePath))
-                    );
+                    ).select(urlList);
                     ConnectionQueue<HttpConnection> queue;
                     try {
                         queue = future.get();
@@ -133,11 +136,6 @@ public class UpdateMeta {
             log.info("({} / {}): Reading {}", attempt, MAX_ATTEMPTS, url);
             InputStream stream = null;
             try {
-                if (connection.getResponseCode() != 200) {
-                    log.warn("{} ({} / {}): Bad response code: {}", url.getHost(), attempt, MAX_ATTEMPTS, connection.getResponseMessage());
-                    U.BAD_HOSTS.add(url);
-                    throw new IOException("Bad response code: " + connection.getResponseCode());
-                }
                 stream = connection.getInputStream();
                 if (url.getPath().endsWith(".signed")) {
                     log.debug("{} ({} / {}): Requiring valid signature", url.getHost(), attempt, MAX_ATTEMPTS);
@@ -174,14 +172,6 @@ public class UpdateMeta {
                 .registerTypeAdapter(RemoteLauncherMeta.class, new RemoteLauncherDeserializer(shortBrand))
                 .registerTypeAdapter(RemoteBootstrapMeta.class, new RemoteBootstrapDeserializer(shortBrand))
                 .create();
-    }
-
-    private static URL toUrl(String url) {
-        try {
-            return new URL(url);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Very bad url: " + url, e);
-        }
     }
 
     private static UpdateMeta fetchFrom(Gson gson, InputStream in) throws IOException {

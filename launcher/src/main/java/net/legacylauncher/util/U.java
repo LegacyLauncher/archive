@@ -487,6 +487,15 @@ public class U {
         }
     }
 
+    @SafeVarargs
+    public static List<String> combine(List<String>... lists) {
+        ArrayList<String> combined = new ArrayList<>();
+        for (List<String> list : lists) {
+            combined.addAll(list);
+        }
+        return combined;
+    }
+
     private static final Lazy<Gson> gson = Lazy.of(() -> new GsonBuilder().create());
 
     public static Gson getGson() {

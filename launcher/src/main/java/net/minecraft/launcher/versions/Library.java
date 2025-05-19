@@ -261,7 +261,7 @@ public class Library {
         }
 
         public LibraryDownloadable(DownloadInfo info, File file) {
-            super(info.getUrl().startsWith("/") ? Repository.EXTRA_VERSION_REPO : Repository.PROXIFIED_REPO, info.getUrl(), file);
+            super(info.getUrl().startsWith("/") ? Repository.EXTRA_VERSION_REPO : Repository.PROXIFIED_REPO, info.getUrl().startsWith("/") ? info.getUrl().substring(1) : info.getUrl(), file);
             this.sha1 = info.getSha1();
             this.length = info.getSize();
         }

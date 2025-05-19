@@ -2,7 +2,9 @@ package net.legacylauncher.bootstrap.util;
 
 import net.legacylauncher.connection.bad.BadHostsList;
 
+import java.net.MalformedURLException;
 import java.net.Proxy;
+import java.net.URL;
 import java.util.Locale;
 
 public final class U {
@@ -23,6 +25,14 @@ public final class U {
     }
 
     public static final BadHostsList BAD_HOSTS = new BadHostsList();
+
+    public static URL toUrl(String url) {
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(url, e);
+        }
+    }
 
     private U() {
     }

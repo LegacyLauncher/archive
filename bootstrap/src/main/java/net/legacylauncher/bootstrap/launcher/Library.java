@@ -2,7 +2,8 @@ package net.legacylauncher.bootstrap.launcher;
 
 import com.google.gson.annotations.Expose;
 import lombok.Getter;
-import net.legacylauncher.repository.RepoPrefixV1;
+import net.legacylauncher.bootstrap.util.U;
+import net.legacylauncher.repository.HostsV1;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import net.legacylauncher.bootstrap.json.ToStringBuildable;
@@ -15,17 +16,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public final class Library extends ToStringBuildable {
-    private static final List<String> LIBRARY_REPO_LIST;
-
-    static {
-        LIBRARY_REPO_LIST = Collections.unmodifiableList(
-                RepoPrefixV1.prefixesCdnLast()
-                        .stream()
-                        .map(prefix -> prefix + "/repo/libraries/")
-                        .collect(Collectors.toList())
-        );
-    }
-
     @Getter
     private String name, checksum;
 
@@ -45,16 +35,11 @@ public final class Library extends ToStringBuildable {
     }
 
     private List<URL> getUrlList() {
-        ArrayList<URL> urlList = new ArrayList<>();
         String path = getPath();
-        for (String prefix : LIBRARY_REPO_LIST) {
-            try {
-                urlList.add(new URL(prefix + path));
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return urlList;
+        return HostsV1.REPO.stream().map(host -> String.format(Locale.ROOT,
+                "https://%s/libraries/%s",
+                host, path
+        )).map(U::toUrl).collect(Collectors.toList());
     }
 
     private String getFilename() {

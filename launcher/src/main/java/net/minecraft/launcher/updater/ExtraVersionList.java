@@ -1,5 +1,6 @@
 package net.minecraft.launcher.updater;
 
+import com.google.common.net.UrlEscapers;
 import com.google.gson.JsonSyntaxException;
 import net.legacylauncher.repository.Repository;
 import net.minecraft.launcher.versions.CompleteVersion;
@@ -21,7 +22,7 @@ public class ExtraVersionList extends RepositoryBasedVersionList {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
             CompleteVersion complete;
-            try (InputStreamReader reader = getUrl("versions/" + version.getID() + ".json")) {
+            try (InputStreamReader reader = getUrl("versions/" + UrlEscapers.urlPathSegmentEscaper().escape(version.getID()) + ".json")) {
                 complete = gson.fromJson(reader, CompleteVersion.class);
             }
             complete.setID(version.getID());

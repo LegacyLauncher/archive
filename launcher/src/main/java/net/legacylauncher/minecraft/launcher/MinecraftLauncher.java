@@ -343,7 +343,7 @@ public class MinecraftLauncher implements JavaProcessListener {
         try {
             deJureVersion = versionSync.resolveCompleteVersion(vm, forceUpdate);
         } catch (IOException e) {
-            throw new MinecraftException(false, "Can't resolve version", "could-not-fetch-complete-version");
+            throw new MinecraftException(false, "Can't resolve version", "could-not-fetch-complete-version", e);
         }
 
         try {

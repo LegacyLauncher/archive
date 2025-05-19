@@ -1,7 +1,5 @@
 ru_RU: >
-  Улучшена совместная работа с антивирусами<br/>
-  Исправлен запуск на Java 8
+  Блокировки CloudFlare в России больше не приводят к долгому запуску лаунчера
 
 en_US: >
-  Improved antivirus software support<br/>
-  Fixed launching with Java 8
+  Improved launch speeds for Russian-based users

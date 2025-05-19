@@ -141,7 +141,11 @@ public class ConnectionSelector<C extends Connection> {
                     return;
                 }
                 errors.offer(new UrlConnectionException(url, ioE));
-                log.warn("[{}:{}] Request failed", key, url.getHost(), ioE);
+                if (ioE instanceof BadHostException) {
+                    log.debug("[{}:{}] Skipping bad host", key, url.getHost());
+                } else {
+                    log.warn("[{}:{}] Request failed", key, url.getHost(), ioE);
+                }
                 if (errors.size() == list.size()) {
                     log.error("[{}] All requests have failed", key);
                     completeWithError();
@@ -165,16 +169,7 @@ public class ConnectionSelector<C extends Connection> {
             URL url = info.getUrl();
             log.debug("[{}:{}] Making request to {}", key, url.getHost(), url);
             Instant start = Instant.now();
-            C connection;
-            try {
-                connection = connector.connect(info);
-            } catch (BadHostException badHost) {
-                log.debug("[{}:{}] Skipping bad host", key, url.getHost());
-                return;
-            } catch (IOException ioE) {
-                log.debug("[{}:{}:{}] Failed to connect: {}", key, url.getHost(), ms(start), ioE.toString());
-                return;
-            }
+            C connection = connector.connect(info);
             // connected successfully
             if (!connections.offer(connection)) {
                 // connections queue was closed
@@ -209,7 +204,7 @@ public class ConnectionSelector<C extends Connection> {
         }
 
         void clearQueue() {
-            log.debug("[{}] Clearing the queue", key);
+//            log.debug("[{}] Clearing the queue", key);
             urlQueue.clear();
         }
     }

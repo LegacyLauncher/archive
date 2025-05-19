@@ -178,8 +178,6 @@ val processResources by tasks.getting(ProcessResources::class) {
                         "method" to "launchSession"
                     ),
                 ),
-                "repositories" to (brand.repoHosts.get()
-                    .map { "https://$it" } + brand.repoCdnPathPrefixes.get()).map { "$it/repo/libraries" },
                 "javaVersion" to "[11,)", // recommended java version as per https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
             )
         )
@@ -189,8 +187,7 @@ val processResources by tasks.getting(ProcessResources::class) {
 val generateUpdateJson by tasks.registering {
     dependsOn(jar)
 
-    inputs.property("productVersion", brand.version.get())
-    inputs.property("repoHosts", brand.repoHosts.get())
+    inputs.property("productVersion", brand.version)
     inputs.file("changelog.yml")
     val updateJsonFile = layout.buildDirectory.file("update/${brand.brand.get()}/launcher.json")
     outputs.file(updateJsonFile)

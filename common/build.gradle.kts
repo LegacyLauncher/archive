@@ -64,26 +64,6 @@ testing {
     }
 }
 
-val processResources by tasks.getting(ProcessResources::class) {
-    val repoProperties = mapOf(
-        "domains" to brand.repoDomains.get().joinToString(","),
-        "eu_prefixes" to brand.repoDomainsZonesEu.get().joinToString(","),
-        "ru_prefixes" to brand.repoDomainsZonesRu.get().joinToString(","),
-        "cdn_prefixes" to brand.repoCdnPathPrefixes.get().joinToString(","),
-    )
-
-    inputs.property("repoProperties", repoProperties)
-
-    doLast {
-        val file = destinationDir.resolve("net/legacylauncher/repository/repositories_v1.properties")
-        file.writer().use { writer ->
-            repoProperties.forEach { (key, value) ->
-                writer.append("$key=$value\n")
-            }
-        }
-    }
-}
-
 val launcherLibraries by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = true

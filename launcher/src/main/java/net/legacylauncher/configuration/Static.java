@@ -1,11 +1,14 @@
 package net.legacylauncher.configuration;
 
 
-import net.legacylauncher.repository.RepoPrefixV1;
+import net.legacylauncher.repository.HostsV1;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
+
+import static net.legacylauncher.util.U.combine;
 
 public final class Static {
     private static final String SETTINGS = "tlauncher/" + (isLegacy() ? "legacy" : BuildConfig.SHORT_BRAND) + ".properties";
@@ -17,27 +20,25 @@ public final class Static {
 
     static {
         EXTRA_REPO = Collections.unmodifiableList(
-                RepoPrefixV1.prefixesCdnLast()
-                        .stream()
-                        .map(prefix -> prefix + "/repo/")
+                HostsV1.REPO.stream()
+                        .map(host -> "https://" + host + "/")
                         .collect(Collectors.toList())
         );
         LIBRARY_REPO = Collections.unmodifiableList(
-                RepoPrefixV1.combine(
+                combine(
                         Collections.singletonList("https://libraries.minecraft.net/"),
-                        RepoPrefixV1.prefixesCdnLast()
-                                .stream()
-                                .map(prefix -> prefix + "/repo/libraries/")
+                        EXTRA_REPO.stream()
+                                .map(prefix -> prefix + "repo/libraries/")
                                 .collect(Collectors.toList())
                 )
         );
         ASSETS_REPO = Collections.unmodifiableList(
-                RepoPrefixV1.combine(
+                combine(
                     Collections.singletonList("https://resources.download.minecraft.net/"),
-                    RepoPrefixV1.prefixesCdnLast()
-                            .stream()
-                            .map(prefix -> prefix + "/proxy/assets/")
-                            .collect(Collectors.toList())
+                    HostsV1.PROXY.stream().map(host ->
+                            String.format(Locale.ROOT, "https://%s/%s/",
+                                    host, "resources.download.minecraft.net")
+                    ).collect(Collectors.toList())
                 )
         );
     }

@@ -24,24 +24,6 @@ class LegacyLauncherBrandPlugin : Plugin<Project> {
             "${project.version}+${brand.replace(Regex("[^\\dA-Za-z\\-]"), "-")}${System.getenv("VERSION_SUFFIX") ?: ""}"
         })
 
-        extension.repoDomains.convention(listOf("llaun.ch", "lln4.ru"))
-        extension.repoDomainsZonesEu.convention(listOf("eu1", "eu2"))
-        extension.repoDomainsZonesRu.convention(listOf("ru1", "ru2", "ru3"))
-
-        extension.repoHosts.convention(extension.repoDomains.map { repoDomains ->
-            repoDomains.flatMap { domain ->
-                (extension.repoDomainsZonesEu.get() + extension.repoDomainsZonesRu.get()).map { zone ->
-                    "$zone.$domain"
-                }
-            }
-        })
-        extension.repoCdnPathPrefixes.convention(listOf("https://cdn.turikhay.ru/lln4"))
-        extension.updateRepoPrefixes.convention(listOf(
-            "https://cdn.turikhay.ru/lln4/repo",
-            "https://repo.legacylauncher.ru",
-            "https://llaun.ch/repo"
-        ))
-
-        extension.supportEmail.convention("support@tln4.ru")
+        extension.supportEmail.convention("support@llaun.ch")
     }
 }

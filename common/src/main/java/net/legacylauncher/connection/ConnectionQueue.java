@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -32,6 +33,10 @@ public class ConnectionQueue<C extends Connection> implements AutoCloseable, Clo
             throw error.get();
         }
         return queue.take();
+    }
+
+    public C takeOrThrow() throws InterruptedException, IOException {
+        return takeOrThrow(() -> new IOException("No connections available"));
     }
 
     @Override

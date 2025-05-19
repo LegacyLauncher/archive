@@ -1,20 +1,21 @@
 package net.legacylauncher.repository;
 
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import net.legacylauncher.util.EHttpClient;
-import net.legacylauncher.util.StringUtil;
+import net.legacylauncher.connection.ConnectionQueue;
+import net.legacylauncher.connection.ConnectionSelector;
+import net.legacylauncher.util.EConnection;
+import net.legacylauncher.util.EConnector;
 import net.legacylauncher.util.U;
 import net.legacylauncher.util.ua.LauncherUserAgent;
-import org.apache.hc.client5.http.fluent.Request;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-
+@Slf4j
 public class RepositoryProxy {
     public static final List<String> PROXIFIED_HOSTS = Collections.unmodifiableList(Arrays.asList(
             "launchermeta.mojang.com",
@@ -24,50 +25,53 @@ public class RepositoryProxy {
             "resources.download.minecraft.net",
             "files.minecraftforge.net",
             "maven.fabricmc.net",
-            "piston-data.mojang.com"
+            "piston-data.mojang.com",
+            "maven.quiltmc.org"
     ));
-    private static final List<String> PROXIES = Collections.unmodifiableList(
-            RepoPrefixV1.prefixesCdnLast().stream().map(prefix -> String.format(Locale.ROOT,
-                    "%s/proxy.php?url=", prefix
-            )).collect(Collectors.toList())
-    );
     private static boolean PROXY_WORKED = false;
 
     public static boolean canBeProxied(URL url) {
         return PROXIFIED_HOSTS.stream().anyMatch(host -> url.getHost().equals(host));
     }
 
-    public static String requestMaybeProxy(String url) throws IOException {
-        List<String> urls = new ArrayList<>();
+    public static String requestMaybeProxy(String _url) throws IOException {
+        List<URL> urls = new ArrayList<>();
+        URL url = U.makeURL(_url, true);
         urls.add(url);
-        {
-            URL strictUrl = U.makeURL(url);
-            if (RepositoryProxy.canBeProxied(strictUrl)) {
-                RepositoryProxy.getProxyRepoList().getRelevant().getList().stream()
-                        .filter(r -> r instanceof ProxyRepo)
-                        .map(r -> ((ProxyRepo) r).prefixUrl(strictUrl))
-                        .forEach(urls::add);
-            }
+        if (RepositoryProxy.canBeProxied(url)) {
+            RepositoryProxy.getProxyRepoList().getRelevant().getList().stream()
+                    .filter(r -> r instanceof ProxyRepo)
+                    .map(r -> ((ProxyRepo) r).toProxyUrl(url))
+                    .forEach(urls::add);
         }
-        IOException ex = null;
-        for (String currentUrl : urls) {
-            ProxyRepo.log.debug("Requesting: {}", currentUrl);
+        ConnectionQueue<EConnection> queue;
+        try {
+            queue = ConnectionSelector.create(
+                    new EConnector(),
+                    5,
+                    TimeUnit.SECONDS
+            ).select(urls).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted", e);
+        } catch (ExecutionException e) {
+            throw new IOException(e.getCause());
+        }
+        while (true) {
+            EConnection connection;
             try {
-                return EHttpClient.toString(Request.get(currentUrl));
-            } catch (IOException ioE) {
-                ProxyRepo.log.warn("Couldn't fetch url {}", url, ioE);
-                if (ex == null) {
-                    ex = ioE;
-                } else {
-                    ex.addSuppressed(ioE);
-                }
+                connection = queue.takeOrThrow();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interrupted", e);
             }
-        }
-
-        if (ex != null) {
-            throw ex;
-        } else {
-            throw new IOException("Unable to fetch data over network due to unknown reason");
+            String content;
+            try {
+                content = connection.getResponse().returnContent().asString();
+            } catch (IOException e) {
+                log.warn("Failed to read response from {}", connection.getUrl(), e);
+                continue;
+            }
+            queue.close();
+            return content;
         }
     }
 
@@ -81,11 +85,12 @@ public class RepositoryProxy {
     }
 
     @Slf4j
+    @ToString(of = "proxyHost")
     public static class ProxyRepo implements IRepo {
-        private final String proxyPrefix;
+        private final String proxyHost;
 
-        public ProxyRepo(String proxy) {
-            this.proxyPrefix = StringUtil.requireNotBlank(proxy);
+        public ProxyRepo(String host) {
+            this.proxyHost = host;
         }
 
         @Override
@@ -93,17 +98,13 @@ public class RepositoryProxy {
             return get(path, timeout, proxy, 1);
         }
 
-        public String prefixUrl(URL url) {
-            return proxyPrefix + encodeUrl(url);
-        }
-
         @Override
         public List<String> getHosts() {
-            return Collections.singletonList(U.parseHost(proxyPrefix));
+            return Collections.singletonList(proxyHost);
         }
 
         public URLConnection get(String path, int timeout, Proxy proxy, int attempt) throws IOException {
-            URL originalUrl = makeHttpUrl(path);
+            URL originalUrl = new URL(path);
 
             IOException ioE = new IOException("not a first attempt; failed");
             if (attempt == 1) {
@@ -140,8 +141,8 @@ public class RepositoryProxy {
                 throw ioE;
             }
 
-            String proxyRequestUrl = prefixUrl(originalUrl);
-            log.debug("Proxying request to {}: {}", originalUrl, proxyRequestUrl);
+            URL proxyRequestUrl = toProxyUrl(originalUrl);
+            log.debug("Proxying {} to {}", originalUrl, proxyRequestUrl);
 
             HttpURLConnection connection;
             try {
@@ -160,14 +161,17 @@ public class RepositoryProxy {
             return connection;
         }
 
-        private static HttpURLConnection openHttpConnection(String path, Proxy proxy, int timeout) throws IOException {
-            HttpURLConnection httpURLConnection = (HttpURLConnection) makeHttpUrl(path).openConnection(proxy);
-            setup(httpURLConnection, timeout);
-            return httpURLConnection;
+        public URL toProxyUrl(URL originalUrl) {
+            String url = String.format(Locale.ROOT, "https://%s/%s%s",
+                    proxyHost, originalUrl.getHost(), originalUrl.getPath());
+            try {
+                return new URL(url);
+            } catch (MalformedURLException e) {
+                throw new Error(e);
+            }
         }
 
         private static HttpURLConnection openHttpConnection(URL url, Proxy proxy, int timeout) throws IOException {
-            checkHttpUrl(url);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection(proxy);
             setup(httpURLConnection, timeout);
             return httpURLConnection;
@@ -178,38 +182,13 @@ public class RepositoryProxy {
             connection.setReadTimeout(timeout);
             LauncherUserAgent.set(connection);
         }
-
-        private static URL makeHttpUrl(String path) throws IOException {
-            StringUtil.requireNotBlank(path, "path");
-            URL url = new URL(path);
-            checkHttpUrl(url);
-            return url;
-        }
-
-        private static void checkHttpUrl(URL url) {
-            Objects.requireNonNull(url, "url");
-            if (!url.getProtocol().equals("http") && !url.getProtocol().equals("https")) {
-                throw new IllegalArgumentException("not an http protocol: " + url);
-            }
-        }
-
-        private static String encodeUrl(URL url) {
-            try {
-                return URLEncoder.encode(url.toExternalForm(), StandardCharsets.UTF_8.name());
-            } catch (UnsupportedEncodingException e) {
-                throw new Error("UTF-8 not supported?");
-            }
-        }
     }
 
     public static class ProxyRepoList extends RepoList {
         private ProxyRepoList() {
             super("ProxyRepo");
 
-            List<String> proxies = new ArrayList<>(PROXIES);
-            Collections.shuffle(proxies);
-
-            for (String proxy : proxies) {
+            for (String proxy : HostsV1.PROXY) {
                 add(new ProxyRepo(proxy));
             }
         }

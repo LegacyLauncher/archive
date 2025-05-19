@@ -62,7 +62,7 @@ public final class EHttpClient {
                         defaultRegistry.get(),
                         PoolConcurrencyPolicy.STRICT,
                         PoolReusePolicy.LIFO,
-                        TimeValue.NEG_ONE_MILLISECOND,
+                        TimeValue.ofMinutes(1),
                         null,
                         resolver,
                         null));
