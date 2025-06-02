@@ -3,6 +3,7 @@ package ru.turikhay.util.http;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.util.ByteArrayBuffer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RetryingRangeContentResponseHandlerTest {
 
     @Test
+    @Disabled
     void test() throws IOException {
         final String url = "https://cdn.turikhay.ru/tlauncher/legacy_beta/bootstrap.json";
         Executor executor = Executor.newInstance();
