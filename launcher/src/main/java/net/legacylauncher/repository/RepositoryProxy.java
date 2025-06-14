@@ -26,7 +26,8 @@ public class RepositoryProxy {
             "files.minecraftforge.net",
             "maven.fabricmc.net",
             "piston-data.mojang.com",
-            "maven.quiltmc.org"
+            "maven.quiltmc.org",
+            "maven.neoforged.net"
     ));
     private static boolean PROXY_WORKED = false;
 
