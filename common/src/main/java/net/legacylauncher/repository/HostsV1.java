@@ -7,7 +7,6 @@ import java.util.List;
 public class HostsV1 {
     public static final List<String> BOOTSTRAP = listOf(
             "bootstrap.llaun.ch",
-            "cdn.bootstrap.legacylauncher.ru",
             "bootstrap.legacylauncher.ru"
     );
 

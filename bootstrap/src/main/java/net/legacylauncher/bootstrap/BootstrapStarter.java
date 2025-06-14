@@ -52,11 +52,15 @@ public final class BootstrapStarter {
         jvmArgs.add("-Dtlauncher.systemCharset=" + Charset.defaultCharset().name());
         jvmArgs.add("-Dtlauncher.logFolder=" + OS.getSystemRelatedDirectory("tlauncher/logs", true));
 
-        if (JavaVersion.getCurrent().getMajor() >= 9) {
+        int java = JavaVersion.getCurrent().getMajor();
+        if (java >= 9) {
             jvmArgs.add("--add-exports");
             jvmArgs.add("java.desktop/sun.awt=javafx.swing");
             jvmArgs.add("--add-exports");
             jvmArgs.add("javafx.graphics/com.sun.javafx.application=ALL-UNNAMED");
+        }
+        if (java >= 24) {
+            jvmArgs.add("--enable-native-access=ALL-UNNAMED");
         }
 
         for (String propKey : System.getProperties().stringPropertyNames()) {

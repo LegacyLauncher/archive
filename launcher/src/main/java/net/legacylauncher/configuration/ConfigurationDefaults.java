@@ -66,8 +66,7 @@ public final class ConfigurationDefaults {
         d.put("minecraft.crash", true);
         d.put("minecraft.mods.removeUndesirable", true);
 
-        boolean supportsHiDpi = JavaVersion.getCurrent().getMajor() >= 11;
-        d.put("gui.font", supportsHiDpi || OS.WINDOWS.isCurrent() ? 12 : 14);
+        d.put("gui.font", 12);
         d.put("gui.size", new IntegerArray(1000, 600));
 //        d.put("gui.systemlookandfeel", false);
 

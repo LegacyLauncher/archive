@@ -379,7 +379,9 @@ public class FileUtil {
                 }
                 continue;
             }
-            log.info("[{}/{}] Error opening stream for the file has resolved: {}", attempt, maxAttempts, path.toAbsolutePath());
+            if (attempt > 1) {
+                log.info("[{}/{}] Error opening stream for the file has resolved: {}", attempt, maxAttempts, path.toAbsolutePath());
+            }
             return stream;
         }
         throw new AccessDeniedException(path.toAbsolutePath().toString(), null, "Max attempts reached");

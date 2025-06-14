@@ -55,7 +55,7 @@ public interface BoostrapRestarter {
         } else {
             String classPath = System.getProperty("tlauncher.bootstrap.classpath");
             if (classPath == null) {
-                LOGGER.warn("tlauncher.bootstrap.classpath is not defined");
+                LOGGER.info("Using system classpath");
                 return set;
             }
             for (String path : StringUtils.split(classPath, File.pathSeparatorChar)) {
