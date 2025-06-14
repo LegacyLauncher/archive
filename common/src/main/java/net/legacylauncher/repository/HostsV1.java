@@ -17,7 +17,8 @@ public class HostsV1 {
 
     public static final List<String> REPO = listOf(
             "repo.llaun.ch",
-            "repo.legacylauncher.ru"
+            "repo.legacylauncher.ru",
+            "repo.legacylauncherservices.com"
     );
 
     private static List<String> listOf(String... values) {

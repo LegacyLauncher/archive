@@ -746,7 +746,10 @@ public final class Bootstrap {
 
                         if (!localLauncherMeta.getVersion().equals(remote.getMeta().getVersion())) {
                             log.info("Local version doesn't match remote");
-                            if (getIgnoreUpdate()) {
+                            if (localLauncherMeta.getVersion().isHigherThan(remote.getMeta().getVersion())) {
+                                log.warn("Local launcher is newer than the remote one. We'll use local version this time.");
+                                log.warn("This might be reverted in the future updates");
+                            } else if (getIgnoreUpdate()) {
                                 log.info("... nevermind");
                             } else {
                                 doUpdate = true;
