@@ -24,6 +24,7 @@ public class RepositoryProxy {
             "launcher.mojang.com",
             "resources.download.minecraft.net",
             "files.minecraftforge.net",
+            "maven.minecraftforge.net",
             "maven.fabricmc.net",
             "piston-data.mojang.com",
             "maven.quiltmc.org",
