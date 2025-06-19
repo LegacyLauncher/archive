@@ -37,7 +37,7 @@ public class UpdateMeta {
 
     private static final int
             CONNECT_TIMEOUT = 15_000,
-            READ_TIMEOUT = 10_000,
+            READ_TIMEOUT = 3_000,
             NEW_REQUEST_TIMEOUT = 2_000,
             MAX_ATTEMPTS = 3,
             UPDATE_META_THREADS = 4;

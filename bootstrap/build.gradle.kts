@@ -85,6 +85,7 @@ dependencies {
     "java11Implementation"(libs.bundles.dbus)
     "java11Implementation"(libs.junixsocket.core)
     "java11Implementation"(projects.dbusJavaTransportJunixsocket)
+    "java11Implementation"(libs.system.theme.detector)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.mockito.core)
