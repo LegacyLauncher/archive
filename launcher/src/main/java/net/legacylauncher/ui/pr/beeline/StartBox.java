@@ -22,7 +22,7 @@ import javax.swing.border.*;
 
 @Slf4j
 class StartBox extends JPanel {
-    static final String LINK = "https://lln4.site/7490lv4i4vtryij5";
+    static final String LINK = "https://lln4.site/7490lv4i4vtryij5?erid=2Vtzqutuqw5";
 
     private FraudHuntersTask task = new FraudHuntersTask();
     private boolean startRequested, compatible, linkClicked, initialized;
