@@ -1,5 +1,7 @@
 package net.legacylauncher.ui.notice;
 
+import net.legacylauncher.util.OS;
+
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,16 @@ public class NoticePopup extends JPopupMenu {
                 add(item);
             }
         }
+
+        if (notice.getErid() != null) {
+            JMenuItem eridItem = new JMenuItem("Реклама. Erid: " + notice.getErid());
+            eridItem.addActionListener(e1 ->
+                    OS.openLink(notice.getEridUrl())
+            );
+            addSeparator();
+            add(eridItem);
+        }
+
         if (!registeredItems.isEmpty()) {
             if (items != null) {
                 addSeparator();

@@ -13,6 +13,8 @@ public abstract class NoticeAction {
         L10N_PREFIX = "notice.action." + type + ".";
     }
 
+    abstract Runnable getRunnable();
+
     abstract List<? extends JMenuItem> getMenuItemList();
 
     protected ToStringBuilder toStringBuilder() {

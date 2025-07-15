@@ -5,11 +5,14 @@ import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.ui.MainPane;
 import net.legacylauncher.ui.background.fx.FxAudioPlayer;
 import net.legacylauncher.ui.background.fx.MediaFxBackground;
+import net.legacylauncher.ui.images.Images;
+import net.legacylauncher.ui.images.ResourceNotFoundException;
 import net.legacylauncher.ui.swing.extended.ExtendedLayeredPane;
 import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.shared.JavaVersion;
 
 import javax.swing.*;
+import java.net.URL;
 
 @Slf4j
 public final class BackgroundManager extends ExtendedLayeredPane {
@@ -87,7 +90,18 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         if (path != null && mediaFxBackground != null && (path.endsWith(".mp4") || path.endsWith(".flv"))) {
             worker.setBackground(mediaFxBackground, path);
         } else {
-            if (nostalgic) {
+            if (beeline) {
+//                if (mediaFxBackground != null) {
+//                    worker.setBackground(mediaFxBackground, ScamCityLanding.class.getResource("video1.mp4").toString());
+//                } else {
+                    try {
+                        URL location = Images.findLocation("beeline-bg.jpg");
+                        worker.setBackground(imageBackground.get(), location.toString());
+                    } catch (ResourceNotFoundException e) {
+                        log.error("Failed to find promotion image", e);
+                    }
+//                }
+            } else if (nostalgic) {
                 OldAnimatedBackground nostalgicBackground = oldBackground.get();
                 nostalgicBackground.getAudioPlayer().value().ifPresent(FxAudioPlayer::play);
                 worker.setBackground(nostalgicBackground, path);
@@ -101,6 +115,13 @@ public final class BackgroundManager extends ExtendedLayeredPane {
 
     public void setNostalgic(boolean state) {
         this.nostalgic = state;
+        this.loadBackground();
+    }
+
+    private boolean beeline;
+
+    public void setBeeline(boolean beeline) {
+        this.beeline = beeline;
         this.loadBackground();
     }
 }

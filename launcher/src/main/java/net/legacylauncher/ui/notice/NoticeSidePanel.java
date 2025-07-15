@@ -97,7 +97,7 @@ public class NoticeSidePanel extends CenterPanel implements LocalizableComponent
         }
         Page page = new Page();
         for (final Notice notice : noticeList) {
-            NoticeWrapper wrapper = new NoticeWrapper(noticeManager, LegacyLauncherFrame.getFontSize(), getWidth() - SwingUtil.magnify(NoticeWrapper.GAP) * 2 - getInsets().left - getInsets().right - SwingUtil.magnify(NOTICE_IMAGE_SIZE) - SwingUtil.magnify(32), SwingUtil.magnify(NOTICE_IMAGE_SIZE));
+            NoticeCard wrapper = new NoticeCard(noticeManager, LegacyLauncherFrame.getFontSize(), getWidth() - SwingUtil.magnify(NoticeCard.GAP) * 2 - getInsets().left - getInsets().right - SwingUtil.magnify(NOTICE_IMAGE_SIZE) - SwingUtil.magnify(32), SwingUtil.magnify(NOTICE_IMAGE_SIZE));
             /*final LocalizableMenuItem showAtMenuItem = LocalizableMenuItem.newItem("notice.sidepanel.popup.show-at-menu", new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {

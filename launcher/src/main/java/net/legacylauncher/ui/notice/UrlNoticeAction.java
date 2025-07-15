@@ -23,14 +23,23 @@ public class UrlNoticeAction extends NoticeAction {
     }
 
     @Override
+    Runnable getRunnable() {
+        return this::openLink;
+    }
+
+    @Override
     List<? extends JMenuItem> getMenuItemList() {
         List<LocalizableMenuItem> list = new ArrayList<>();
 
         LocalizableMenuItem item = new LocalizableMenuItem(L10N_PREFIX + "open", name);
-        item.addActionListener(e -> OS.openLink(url));
+        item.addActionListener(e -> openLink());
         list.add(item);
 
         return list;
+    }
+
+    private void openLink() {
+        OS.openLink(url);
     }
 
     protected ToStringBuilder toStringBuilder() {

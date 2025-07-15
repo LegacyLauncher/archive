@@ -6,12 +6,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.net.URL;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 public class UrlNoticeImage extends NoticeImage {
     private final URL url;
     private int width, height;
-    private Future<Image> future;
+    private CompletableFuture<Image> future;
 
     UrlNoticeImage(URL url, int width, int height) {
         this.url = url;
@@ -42,9 +43,9 @@ public class UrlNoticeImage extends NoticeImage {
     }
 
     @Override
-    public Future<Image> getTask() {
+    public CompletableFuture<Image> getTask() {
         if (future == null) {
-            return future = AsyncThread.future(() -> ImageIO.read(url));
+            return future = AsyncThread.completableFuture(() -> ImageIO.read(url));
         } else {
             return future;
         }

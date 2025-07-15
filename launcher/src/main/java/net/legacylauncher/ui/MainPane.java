@@ -11,6 +11,7 @@ import net.legacylauncher.ui.background.BackgroundManager;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.loc.LocalizableComponent;
+import net.legacylauncher.ui.pr.beeline.FraudHuntersScene;
 import net.legacylauncher.ui.progress.LaunchProgress;
 import net.legacylauncher.ui.progress.ProgressBar;
 import net.legacylauncher.ui.scenes.*;
@@ -26,6 +27,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 public class MainPane extends ExtendedLayeredPane {
@@ -39,6 +42,8 @@ public class MainPane extends ExtendedLayeredPane {
     public final DelayedComponent<VersionManagerScene> versionManager;
     public final DelayedComponent<NoticeScene> noticeScene;
     public final DelayedComponent<RevertFontSize> revertFont;
+    public final DelayedComponent<FraudHuntersScene> fraudHunters;
+    public final Map<String, DelayedComponent<? extends PseudoScene>> scenes = new HashMap<>();
 
     MainPane(final LegacyLauncherFrame frame) {
         super(null);
@@ -69,6 +74,7 @@ public class MainPane extends ExtendedLayeredPane {
                 }
             }
         });
+        scenes.put("accounts", accountManager);
         //(accountManager);
         log.trace("Init Version manager scene...");
         versionManager = new DelayedComponent<>(new DelayedComponentLoader<VersionManagerScene>() {
@@ -84,6 +90,7 @@ public class MainPane extends ExtendedLayeredPane {
                 loaded.onResize();
             }
         });
+        scenes.put("versions", versionManager);
         //add(versionManager);
         noticeScene = new DelayedComponent<>(new DelayedComponentLoader<NoticeScene>() {
             @Override
@@ -97,6 +104,7 @@ public class MainPane extends ExtendedLayeredPane {
                 loaded.onResize();
             }
         });
+        scenes.put("notices", noticeScene);
         //add(noticeScene);
         progress = new DelayedComponent<>(new DelayedComponentLoader<LaunchProgress>() {
             @Override
@@ -213,6 +221,20 @@ public class MainPane extends ExtendedLayeredPane {
         if (shouldShowRevertFont())
             revertFont.load();
 
+        fraudHunters = new DelayedComponent<>(new DelayedComponentLoader<FraudHuntersScene>() {
+            @Override
+            public FraudHuntersScene loadComponent() {
+                return new FraudHuntersScene(MainPane.this);
+            }
+
+            @Override
+            public void onComponentLoaded(FraudHuntersScene scene) {
+                MainPane.this.add(scene);
+                scene.onResize();
+            }
+        });
+        scenes.put("fraudHunters", fraudHunters);
+
         setScene(defaultScene, false);
         addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -227,6 +249,10 @@ public class MainPane extends ExtendedLayeredPane {
 
     public void setScene(PseudoScene scene) {
         setScene(scene, true);
+    }
+
+    public void setScene(DelayedComponent<? extends PseudoScene> scene) {
+        setScene(scene.get());
     }
 
     public void setScene(PseudoScene newscene, boolean animate) {

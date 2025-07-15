@@ -10,7 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class NoticePanel extends CenterPanel implements Blockable, NoticeManagerListener {
-    private final NoticeWrapper noticeWrapper;
+    private final NoticeCard noticeCard;
 
     protected final NoticeManager manager;
     private Notice notice;
@@ -21,8 +21,8 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
 
         this.manager = manager;
 
-        noticeWrapper = new NoticeWrapper(manager, new ParamPair(fontSize, -1));
-        add(noticeWrapper);
+        noticeCard = new NoticeCard(manager, new ParamPair(fontSize, -1));
+        add(noticeCard);
     }
 
     public NoticePanel(NoticeManager manager) {
@@ -44,11 +44,11 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
             return;
         }
 
-        noticeWrapper.setNotice(notice);
+        noticeCard.setNotice(notice);
 
         Dimension
                 insets = new Dimension(getInsets().left + getInsets().right, getInsets().top + getInsets().bottom),
-                noticeSize = noticeWrapper.updateSize();
+                noticeSize = noticeCard.updateSize();
 
         if (noticeSize == null) {
             setSize(0, 0);
@@ -58,7 +58,6 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
         int width = 0;
         width += insets.width;
         width += noticeSize.width;
-        width += 5; // to be sure
 
         int height = 0;
         height += insets.height;
@@ -74,20 +73,20 @@ public class NoticePanel extends CenterPanel implements Blockable, NoticeManager
     }
 
     protected void registerExtraItems(JMenuItem... items) {
-        noticeWrapper.buttonPane.extra.popup.clearMenu();
+        noticeCard.buttonPane.extra.popup.clearMenu();
         for (JMenuItem item : items) {
-            noticeWrapper.buttonPane.extra.popup.registerItem(item);
+            noticeCard.buttonPane.extra.popup.registerItem(item);
         }
     }
 
     @Override
     public void block(Object var1) {
-        Blocker.blockComponents(var1, noticeWrapper);
+        Blocker.blockComponents(var1, noticeCard);
     }
 
     @Override
     public void unblock(Object var1) {
-        Blocker.unblockComponents(var1, noticeWrapper);
+        Blocker.unblockComponents(var1, noticeCard);
     }
 
     @Override

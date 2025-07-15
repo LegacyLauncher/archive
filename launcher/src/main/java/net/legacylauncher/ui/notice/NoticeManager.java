@@ -6,12 +6,15 @@ import net.legacylauncher.configuration.LangConfiguration;
 import net.legacylauncher.stats.Stats;
 import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.block.Blockable;
+import net.legacylauncher.ui.images.Images;
 import net.legacylauncher.ui.loc.LocalizableComponent;
+import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.U;
 
 import java.awt.*;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public final class NoticeManager implements LocalizableComponent, Blockable {
@@ -28,7 +31,6 @@ public final class NoticeManager implements LocalizableComponent, Blockable {
 
     NoticeManager(LegacyLauncherFrame frame, Map<String, List<Notice>> config) {
         this.frame = frame;
-
         if (!config.isEmpty()) {
             for (Map.Entry<String, List<Notice>> entry : config.entrySet()) {
                 String key = entry.getKey();

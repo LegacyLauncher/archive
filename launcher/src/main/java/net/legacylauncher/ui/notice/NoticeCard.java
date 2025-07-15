@@ -14,9 +14,11 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-class NoticeWrapper extends BorderPanel {
+class NoticeCard extends ExtendedPanel {
     static final int GAP = 5;
     private static final int BUTTON_ICON_WIDTH = 24, BUTTON_INSETS = 5;
     private final NoticeManager manager;
@@ -29,8 +31,11 @@ class NoticeWrapper extends BorderPanel {
     final NoticeEditorPane editorPane;
     final ButtonPane buttonPane;
 
-    public NoticeWrapper(NoticeManager manager, float fontSize, int fixedWidth, int iconWidth) {
-        setHgap(SwingUtil.magnify(GAP));
+    private final BorderPanel standardNotice = new BorderPanel();
+    private final JLabel banner = new JLabel();
+
+    public NoticeCard(NoticeManager manager, float fontSize, int fixedWidth, int iconWidth) {
+        setLayout(new CardLayout());
 
         this.manager = manager;
 
@@ -42,30 +47,87 @@ class NoticeWrapper extends BorderPanel {
             this.fixedIconWidth = 0;
         }
 
+        standardNotice.setHgap(SwingUtil.magnify(GAP));
+        add(standardNotice, "standard");
+
+        banner.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        banner.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (notice == null) {
+                    return;
+                }
+                int button = e.getButton();
+                if (button == MouseEvent.BUTTON1) {
+                    if (notice.getAction() != null) {
+                        Runnable runnable = notice.getAction().getRunnable();
+                        if (runnable != null) {
+                            runnable.run();
+                        } else {
+                            showPopup(e);
+                        }
+                    }
+                } else if (button == MouseEvent.BUTTON3) {
+                    showPopup(e);
+                }
+            }
+
+            private void showPopup(MouseEvent e) {
+                Popup popup = new Popup();
+                setupActionPopup(popup);
+                popup.registerItem(null);
+                buttonPane.extra.popup.items.forEach(popup::registerItem);
+                popup.updateMenu();
+                popup.show(banner, e.getX(), e.getY());
+            }
+        });
+        add(banner, "banner");
+
         iconLabel = new DelayedIcon();
         //iconLabel.setBorder(BorderFactory.createLineBorder(Color.blue));
-        setWest(iconLabel);
+        standardNotice.setWest(iconLabel);
 
         editorPane = new NoticeEditorPane();
         //editorPane.setBorder(BorderFactory.createLineBorder(Color.magenta));
-        setCenter(editorPane);
+        standardNotice.setCenter(editorPane);
 
         buttonPane = new ButtonPane();
         //buttonPane.setBorder(BorderFactory.createLineBorder(Color.red));
-        setEast(buttonPane);
+        standardNotice.setEast(buttonPane);
     }
 
-    NoticeWrapper(NoticeManager manager, ParamPair param) {
+    NoticeCard(NoticeManager manager, ParamPair param) {
         this(manager, param.fontSize, param.width, -1);
     }
 
     void setNotice(Notice notice) {
         this.notice = notice;
+        if (notice.getBanner() != null) {
+            ((CardLayout) getLayout()).show(this, "banner");
+            notice.getBanner().handle((image, err) -> {
+                if (err != null) {
+                    setupStandardNotice();
+                } else {
+                    SwingUtil.later(() -> banner.setIcon(new ImageIcon(image)));
+                }
+                return null;
+            });
+        } else {
+            setupStandardNotice();
+        }
+    }
+
+    private void setupStandardNotice() {
+        ((CardLayout) getLayout()).show(this, "standard");
         editorPane.setNotice(notice, paramPair);
         buttonPane.updateButton();
     }
 
     Dimension updateSize() {
+        if (notice.getBanner() != null) {
+            return Notice.BANNER_DIMENSIONS;
+        }
+
         Dimension size = calcNoticeSize(notice);
 
         if (size.width == 0 && size.height == 0) {
@@ -97,15 +159,15 @@ class NoticeWrapper extends BorderPanel {
         //log("width", width);
         width += iconLabel.getInsets().left + iconLabel.getInsets().right + iconWidth;
         //log("width", width);
-        width += getHgap();
+        width += standardNotice.getHgap();
         //log("width", width);
         width += size.width + additionalWidth + editorPane.getInsets().left + editorPane.getInsets().right;
         //log("width", width);
-        width += getHgap();
+        width += standardNotice.getHgap();
         //log("width", width);
         width += buttonSize.width;
         //log("width", width);
-        width += getHgap();
+        width += standardNotice.getHgap();
         //log("width", width);
 
         int height = 0;
@@ -125,6 +187,25 @@ class NoticeWrapper extends BorderPanel {
         }
     }
 
+    private void setupActionPopup(Popup popup) {
+        popup.clearMenu();
+        if (notice == null) {
+            return;
+        }
+        NoticeAction noticeAction = notice.getAction();
+        for (JMenuItem item : noticeAction.getMenuItemList()) {
+            popup.registerItem(item);
+        }
+        if (notice.getErid() != null) {
+            JMenuItem eridItem = new JMenuItem("Реклама. Erid: " + notice.getErid());
+            eridItem.addActionListener(e1 ->
+                    OS.openLink(notice.getEridUrl())
+            );
+            popup.registerItem(null);
+            popup.registerItem(eridItem);
+        }
+    }
+
     class ButtonPane extends ExtendedPanel {
         private final GridBagConstraints c = new GridBagConstraints();
         final Button action, extra;
@@ -136,21 +217,7 @@ class NoticeWrapper extends BorderPanel {
                 if (notice == null) {
                     return;
                 }
-                if (notice.getAction() != null) {
-                    action.popup.clearMenu();
-                    if (notice.getErid() != null) {
-                        JMenuItem eridItem = new JMenuItem("Реклама. Erid: " + notice.getErid());
-                        eridItem.addActionListener(e1 ->
-                                OS.openLink(notice.getEridUrl())
-                        );
-                        action.popup.registerItem(eridItem);
-                        action.popup.registerItem(null);
-                    }
-                    NoticeAction noticeAction = notice.getAction();
-                    for (JMenuItem item : noticeAction.getMenuItemList()) {
-                        action.popup.registerItem(item);
-                    }
-                }
+                setupActionPopup(action.popup);
                 action.popup.show(action);
             });
 

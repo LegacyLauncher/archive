@@ -38,6 +38,11 @@ public class ServerNoticeAction extends NoticeAction {
     }
 
     @Override
+    Runnable getRunnable() {
+        return null;
+    }
+
+    @Override
     List<? extends JMenuItem> getMenuItemList() {
         List<JMenuItem> list = new ArrayList<>();
 

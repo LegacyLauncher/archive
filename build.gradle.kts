@@ -70,7 +70,7 @@ subprojects {
 
     plugins.withId("org.openjfx.javafxplugin") {
         extensions.configure<JavaFXOptions>("javafx") {
-            version = "17.0.9"
+            version = "21.0.7"
             configuration = when (project.name) {
                 "launcher" -> "implementation"
                 else -> "runtimeOnly"

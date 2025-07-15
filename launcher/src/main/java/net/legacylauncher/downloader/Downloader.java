@@ -28,15 +28,19 @@ public class Downloader extends ExtendedThread {
     private final Object workLock;
     private boolean haveWork;
 
-    public Downloader() {
+    public Downloader(int numOfThreads) {
         super("MD");
         remainingObjects = new AtomicInteger();
-        threads = new DownloaderThread[MAX_THREADS];
+        threads = new DownloaderThread[numOfThreads];
         list = Collections.synchronizedList(new ArrayList<>());
         listeners = Collections.synchronizedList(new ArrayList<>());
-        progressContainer = new double[MAX_THREADS];
+        progressContainer = new double[numOfThreads];
         workLock = new Object();
         startAndWait();
+    }
+
+    public Downloader() {
+        this(MAX_THREADS);
     }
 
     public int getRemaining() {
@@ -212,8 +216,8 @@ public class Downloader extends ExtendedThread {
         log.info("Starting to download {} files...", list.size());
         onStart(list.size());
 
-        boolean[] workers = new boolean[MAX_THREADS];
-        Lists.partition(list, MAX_THREADS).forEach(chunk -> {
+        boolean[] workers = new boolean[threads.length];
+        Lists.partition(list, threads.length).forEach(chunk -> {
             for (int i = 0; i < chunk.size(); i++) {
                 if (!workers[i]) {
                     workers[i] = true;

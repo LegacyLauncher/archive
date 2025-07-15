@@ -9,7 +9,7 @@ public abstract class PseudoScene extends ExtendedLayeredPane implements Animate
     private final MainPane main;
     private boolean shown = true;
 
-    PseudoScene(MainPane main) {
+    protected PseudoScene(MainPane main) {
         super(main);
         this.main = main;
         setSize(main.getWidth(), main.getHeight());

@@ -25,7 +25,7 @@ public class DirectNoticeImage extends NoticeImage {
     }
 
     @Override
-    public Future<Image> getTask() {
+    public CompletableFuture<Image> getTask() {
         return CompletableFuture.completedFuture(image);
     }
 

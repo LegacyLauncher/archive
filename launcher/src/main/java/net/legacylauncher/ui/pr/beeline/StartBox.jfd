@@ -1,0 +1,160 @@
+JFDML JFormDesigner: "8.2.4.0.393" Java: "21.0.6" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+			"$columnSpecs": "0, 0, 0"
+			"$rowSpecs": "0, 0"
+			"$hGap": 32
+			"$vGap": 12
+		} ) {
+			name: "this"
+			"background": new java.awt.Color( 255, 255, 255, 255 )
+			"foreground": new java.awt.Color( 1, 1, 1, 255 )
+			"border": new javax.swing.border.EmptyBorder( 16, 16, 16, 16 )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "logo"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/net/legacylauncher/ui/images/beeline-logo.png" )
+				"toolTipText": "Билайн"
+			}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+				"$columnSpecs": "0"
+				"$rowSpecs": "0"
+				"$hGap": 5
+				"$vGap": 5
+			} ) {
+				name: "panel1"
+				add( new FormComponent( "net.legacylauncher.ui.swing.editor.EditorPane" ) {
+					name: "textPane1"
+					"text": "<html><head><style>html, body { background: #fff; } a { color: inherit; }</style></head><body>Тебя ждёт самая масштабная игра билайна с интеграцией искусственного интеллекта. Лови мошенников и получай эксклюзивные призы!<br/>Подробнее на <b><a href=\"https://xn--80aeikackepfddaeahf2dzczd.xn--p1ai/\">охотникинамошенников.рф »</a></b></body></html>"
+					"editable": false
+					"border": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					"margin": &Insets0 new java.awt.Insets( 0, 0, 0, 0 )
+					"background": sfield java.awt.Color white
+					"focusable": false
+					"foreground": new java.awt.Color( 1, 1, 1, 255 )
+				}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+					"weightx": 1.0
+					"weighty": 1.0
+					"hAlign": 5
+				} )
+			}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+				"gridx": 1
+				"weightx": 1.0
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+				name: "panel2"
+				"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+				"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+				"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.CardLayout ) ) {
+					name: "button"
+					"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "start"
+						"text": "Играть"
+						"preferredSize": &Dimension0 new java.awt.Dimension( 130, 34 )
+						"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "play"
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) {
+						"hgap": 3
+						"vgap": 3
+					} ) {
+						name: "progress"
+						"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "progressLabel"
+							"text": "Устанавливаем..."
+							"horizontalAlignment": 0
+							"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						}, new FormLayoutConstraints( class java.lang.String ) {
+							"value": "Center"
+						} )
+						add( new FormComponent( "javax.swing.JProgressBar" ) {
+							name: "progressBar"
+							"indeterminate": true
+							"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						}, new FormLayoutConstraints( class java.lang.String ) {
+							"value": "South"
+						} )
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "progress"
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) {
+						"hgap": 3
+						"vgap": 3
+					} ) {
+						name: "ok"
+						"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "progressLabel2"
+							"text": "Запустили!"
+							"horizontalAlignment": 0
+							"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+							"preferredSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						}, new FormLayoutConstraints( class java.lang.String ) {
+							"value": "Center"
+						} )
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "ok"
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "manual"
+						"text": "Открыть сайт"
+						"foreground": new java.awt.Color( 1, 1, 1, 255 )
+						"preferredSize": #Dimension0
+						"maximumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+						"minimumSize": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "manual"
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "Center"
+				} )
+			}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+				"gridx": 2
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+				"$columnSpecs": "0"
+				"$rowSpecs": "0"
+			} ) {
+				name: "panel3"
+				add( new FormComponent( "net.legacylauncher.ui.swing.editor.EditorPane" ) {
+					name: "textPane2"
+					"text": "<html><head><style>html, body { background: #fff;  font-size: 9pt; } a { color: inherit; }</style></head><body>Реклама. Рекламодатель ПАО «ВымпелКом», ОГРН 1027700166636, Москва, ул. 8 Марта, 10, стр.14,127083, beeline.ru. Скамсити – игра билайна для зарегистрированных пользователей, 18+. Срок проведения акции 13.05.25 - 20.09.25. Кол-во призов ограничено. Территория действия, организатор, срок и порядок получения призов и подробнее: <a href=\"https://xn--80aeikackepfddaeahf2dzczd.xn--p1ai/\">охотникинамошенников.рф</a>. Erid: <a href=\"https://erid.ads.llaun.ch/#erid=2Vtzqutuqw5\">2Vtzqutuqw5</a></body></html>"
+					"editable": false
+					"border": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					"margin": #Insets0
+					"background": sfield java.awt.Color white
+					"focusable": false
+					"foreground": new java.awt.Color( 1, 1, 1, 255 )
+				}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+					"weightx": 1.0
+					"weighty": 1.0
+					"hAlign": 5
+				} )
+			}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+				"weightx": 1.0
+				"gridy": 1
+				"gridwidth": 3
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 0 )
+			"size": new java.awt.Dimension( 1045, 120 )
+		} )
+	}
+}

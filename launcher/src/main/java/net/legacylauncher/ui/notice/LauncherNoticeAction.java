@@ -21,6 +21,11 @@ public class LauncherNoticeAction extends NoticeAction {
     }
 
     @Override
+    Runnable getRunnable() {
+        return this::startLauncher;
+    }
+
+    @Override
     List<? extends JMenuItem> getMenuItemList() {
         List<LocalizableMenuItem> list = new ArrayList<>();
         LocalizableMenuItem launchItem = new LocalizableMenuItem(L10N_PREFIX + "start", launcherName);

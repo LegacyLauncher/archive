@@ -7,6 +7,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 public abstract class NoticeImage {
@@ -28,7 +29,7 @@ public abstract class NoticeImage {
 
     public abstract int getHeight();
 
-    public abstract Future<Image> getTask();
+    public abstract CompletableFuture<Image> getTask();
 
     protected ToStringBuilder toStringBuilder() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);

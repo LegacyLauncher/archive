@@ -83,7 +83,7 @@ public class Images {
         return loadIcon(name, size);
     }
 
-    private static URL findLocation(String resourceName) throws ResourceNotFoundException {
+    public static URL findLocation(String resourceName) throws ResourceNotFoundException {
         Optional<URL> url = RESOURCE_LOCATOR.loadResource(resourceName);
         if (!url.isPresent()) {
             throw new ResourceNotFoundException(resourceName);

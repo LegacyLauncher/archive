@@ -1,14 +1,21 @@
 package net.legacylauncher.ui.notice;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
 import net.legacylauncher.minecraft.PromotedServer;
+import net.legacylauncher.ui.images.Images;
+import net.legacylauncher.util.Lazy;
 import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.U;
+import net.legacylauncher.util.async.AsyncThread;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.imageio.ImageIO;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public class NoticeDeserializer implements JsonDeserializer<Notice> {
 
@@ -46,6 +53,15 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
         Notice notice = new Notice(id, pos, text, erid, eridUrl, image, action);
         if (root.has("promoted") && root.get("promoted").getAsBoolean()) {
             notice.setPromoted(true);
+        }
+
+        if (root.has("banner")) {
+            String bannerKey = root.get("banner").getAsString();
+            if (bannerKey.startsWith("http")) {
+                notice.setBanner(Lazy.of(() -> AsyncThread.completableFuture(() -> ImageIO.read(new URL(bannerKey)))));
+            } else {
+                notice.setBanner(Lazy.of(() -> CompletableFuture.completedFuture(Images.loadImageByName(bannerKey))));
+            }
         }
 
         return notice;
@@ -86,6 +102,10 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
             return null;
         }
 
+        if (actionObject.has("v2")) {
+            actionObject = actionObject.getAsJsonObject("v2");
+        }
+
         String type = actionObject.get("type").getAsString();
 
         if ("url".equals(type)) {
@@ -98,6 +118,10 @@ public class NoticeDeserializer implements JsonDeserializer<Notice> {
 
         if ("launcher".equals(type)) {
             return new LauncherNoticeAction(actionObject.get("launcher").getAsString(), actionObject.has("url") ? actionObject.get("url").getAsString() : null);
+        }
+
+        if ("scene".equals(type)) {
+            return new OpenSceneAction(actionObject.get("scene").getAsString(), U.getGson().fromJson(actionObject.get("translations"), new TypeToken<Map<String, String>>(){}.getType()));
         }
 
         throw new IllegalArgumentException("unknown action type: " + type);

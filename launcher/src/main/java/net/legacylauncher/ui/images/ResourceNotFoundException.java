@@ -1,6 +1,6 @@
 package net.legacylauncher.ui.images;
 
-class ResourceNotFoundException extends Exception {
+public class ResourceNotFoundException extends Exception {
     public ResourceNotFoundException(String name) {
         super(name);
     }
