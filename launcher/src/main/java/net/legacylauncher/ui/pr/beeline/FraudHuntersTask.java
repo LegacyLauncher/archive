@@ -72,7 +72,7 @@ public class FraudHuntersTask {
             @Override
             public void onJavaProcessEnded(JavaProcess p) {
                 log.info("FraudHunters launcher has closed: {}", p.getExitCode());
-                if (Duration.between(startedAt, Instant.now()).toMillis() < 5000) {
+                if (p.getExitCode() != 0 || Duration.between(startedAt, Instant.now()).toMillis() < 1000) {
                     submitPrivateReport(Log4j2ContextHelper.getCurrentLogFile());
                     ok.set(false);
                 }
