@@ -13,7 +13,6 @@ import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
 
 import java.awt.*;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -238,7 +237,7 @@ class StartBox extends JPanel {
             AsyncThread.execute(() -> {
                 try {
                     task.startLauncher();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log.error("Failed to start launcher", e);
                     SwingUtil.later(this::handleAndShowError);
                     return;

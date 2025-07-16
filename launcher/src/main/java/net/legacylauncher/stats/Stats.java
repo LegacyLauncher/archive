@@ -129,6 +129,10 @@ public final class Stats {
         fraudHuntersLauncherFailed(timeFromNow(userWaitingSince));
     }
 
+    public static void fraudHuntersReport(String data) {
+        submitDenunciation(newAction("fraudhunters_report").add("data", data));
+    }
+
     private static Duration timeFromNow(Instant time) {
         return time == null ? Duration.ZERO : Duration.between(time, Instant.now());
     }

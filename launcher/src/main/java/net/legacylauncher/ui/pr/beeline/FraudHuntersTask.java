@@ -4,11 +4,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.legacylauncher.util.EHttpClient;
-import net.legacylauncher.util.FileUtil;
-import net.legacylauncher.util.OS;
+import net.legacylauncher.logger.Log4j2ContextHelper;
+import net.legacylauncher.pasta.Pasta;
+import net.legacylauncher.pasta.PastaFormat;
+import net.legacylauncher.stats.Stats;
+import net.legacylauncher.util.*;
 import net.legacylauncher.util.async.AsyncThread;
 import net.legacylauncher.util.shared.JavaVersion;
+import net.minecraft.launcher.process.JavaProcess;
+import net.minecraft.launcher.process.JavaProcessLauncher;
+import net.minecraft.launcher.process.JavaProcessListener;
+import net.minecraft.launcher.process.PrintStreamType;
 import org.apache.commons.lang3.function.BooleanConsumer;
 import org.apache.hc.client5.http.fluent.Executor;
 import org.apache.hc.client5.http.fluent.Request;
@@ -18,10 +24,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -47,20 +53,66 @@ public class FraudHuntersTask {
     }
 
     public void startLauncher() throws IOException {
-        new ProcessBuilder(getLauncherFile().toAbsolutePath().toString())
+        JavaProcess process = new JavaProcessLauncher(StandardCharsets.UTF_8, OS.getJavaPath(), new String[]{"-jar", EXE})
                 .directory(getLauncherDir().toFile())
-                .inheritIO()
                 .start();
+        Instant startedAt = Instant.now();
+        AtomicBoolean ok = new AtomicBoolean(true);
+        CountDownLatch latch = new CountDownLatch(1);
+        process.safeSetExitRunnable(new JavaProcessListener() {
+            @Override
+            public void onJavaProcessPrint(JavaProcess process, PrintStreamType streamType, String line) {
+                log.info("FraudHunters >> {}", line);
+                if (line.contains("DPI Scale")) {
+                    log.info("Found successful init flag");
+                    latch.countDown();
+                }
+            }
+
+            @Override
+            public void onJavaProcessEnded(JavaProcess p) {
+                log.info("FraudHunters launcher has closed: {}", p.getExitCode());
+                if (Duration.between(startedAt, Instant.now()).toMillis() < 5000) {
+                    submitPrivateReport(Log4j2ContextHelper.getCurrentLogFile());
+                    ok.set(false);
+                }
+                latch.countDown();
+            }
+
+            @Override
+            public void onJavaProcessError(JavaProcess p, Throwable e) {
+                log.error("FraudHunters launcher error", e);
+                submitPrivateReport(e);
+                ok.set(false);
+                latch.countDown();
+            }
+        });
+        boolean countedDown;
+        try {
+            countedDown = latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.warn("Interrupted", e);
+            return;
+        }
+        if (!countedDown) {
+            log.warn("FraudHunters launcher is starting for too long. Gave up waiting, assuming it's ok");
+            return;
+        }
+        if (!ok.get()) {
+            log.warn("FraudHunters launcher has failed to start");
+            throw new RuntimeException("Something went wrong");
+        }
+        log.info("FraudHunters launcher has started normally");
     }
 
     private Void doPrepareLauncher() throws Exception {
         boolean ok = false;
         try {
             downloadLauncherIfNecessary();
-            copyJava();
             ok = true;
         } catch (Exception e) {
             log.error("Error preparing launcher", e);
+            submitPrivateReport(e);
             throw e;
         } finally {
             if (callback != null) {
@@ -68,6 +120,17 @@ public class FraudHuntersTask {
             }
         }
         return null;
+    }
+
+    private static void submitPrivateReport(CharsetData data) {
+        AsyncThread.execute(() -> {
+            String pastaUrl = Pasta.paste(data, PastaFormat.PLAIN);
+            Stats.fraudHuntersReport(pastaUrl);
+        });
+    }
+
+    private static void submitPrivateReport(Throwable t) {
+        submitPrivateReport(new StringCharsetData(U.printStackTrace(t)));
     }
 
     private void downloadLauncherIfNecessary() throws Exception {
@@ -102,46 +165,6 @@ public class FraudHuntersTask {
         }
         log.info("Writing launcher version file");
         Files.write(getLauncherVersionFile(), remoteVersion.get().getBytes(StandardCharsets.UTF_8));
-    }
-
-    private void copyJava() throws Exception {
-        Path source = Paths.get(System.getProperty("java.home"));
-        Path target = getJavaDir();
-        Path flag = target.resolve(".by-legacylauncher");
-        if (Files.notExists(target)) {
-            Files.createDirectories(target);
-            if (Files.notExists(flag)) {
-                Files.createFile(flag);
-            }
-        } else {
-            if (Files.notExists(flag)) {
-                log.info("Not copying JRE files: flag file is missing");
-                return;
-            }
-        }
-        log.info("Copying JRE files");
-        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                Path targetDir = target.resolve(source.relativize(dir));
-                if (!Files.exists(targetDir)) {
-                    Files.createDirectories(targetDir);
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Path targetFile = target.resolve(source.relativize(file));
-                if (Files.exists(targetFile)) {
-                    return FileVisitResult.CONTINUE;
-                }
-                log.info("Copying {}", file);
-                Files.copy(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        log.info("JRE files copied");
     }
 
     private boolean checkIfLauncherIntact() throws Exception {
@@ -194,10 +217,6 @@ public class FraudHuntersTask {
             throw new RuntimeException("os not supported");
         }
         return Paths.get(Objects.requireNonNull(System.getenv("LOCALAPPDATA"), "missing LOCALAPPDATA")).resolve("FraudHunters");
-    }
-
-    private static Path getJavaDir() {
-        return getLauncherDir().resolve("java");
     }
 
     private static Path getLauncherFile() {

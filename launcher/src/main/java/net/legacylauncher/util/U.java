@@ -8,7 +8,9 @@ import net.legacylauncher.util.async.ExtendedThread;
 import org.apache.commons.lang3.LocaleUtils;
 
 import java.awt.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -313,6 +315,17 @@ public class U {
 
             return builder;
         }
+    }
+
+    public static String printStackTrace(Throwable e) {
+        if (e == null) {
+            return "null";
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (PrintStream ps = new PrintStream(out)) {
+            e.printStackTrace(ps);
+        }
+        return out.toString();
     }
 
     public static long getUsingSpace() {
