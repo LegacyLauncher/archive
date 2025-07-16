@@ -10,19 +10,19 @@ class FraudHuntersTaskTest {
     @Test
     @Disabled
     void install() throws ExecutionException, InterruptedException {
-        FraudHuntersTask task = new FraudHuntersTask();
+        FraudHuntersTask task = new FraudHuntersTask(null);
         task.prepareLauncher(null).get();
     }
 
     @Test
     void queryVersion() throws ExecutionException, InterruptedException {
-        FraudHuntersTask task = new FraudHuntersTask();
+        FraudHuntersTask task = new FraudHuntersTask(null);
         System.out.println(task.queryLauncherVersion().get());
     }
 
     @Test
     void queryHash() throws ExecutionException, InterruptedException {
-        FraudHuntersTask task = new FraudHuntersTask();
+        FraudHuntersTask task = new FraudHuntersTask(null);
         System.out.println(task.queryLauncherHash().get());
     }
 

@@ -5,6 +5,7 @@
 package net.legacylauncher.ui.pr.beeline;
 
 import lombok.extern.slf4j.Slf4j;
+import net.legacylauncher.jre.JavaRuntimeLocalDiscoverer;
 import net.legacylauncher.stats.Stats;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.swing.editor.*;
@@ -23,11 +24,12 @@ import javax.swing.border.*;
 class StartBox extends JPanel {
     static final String LINK = "https://lln4.site/7490lv4i4vtryij5?erid=2Vtzqutuqw5";
 
-    private FraudHuntersTask task = new FraudHuntersTask();
+    private final FraudHuntersTask task;
     private boolean startRequested, compatible, linkClicked, initialized;
     private Instant userWaitingSince;
 
-    public StartBox() {
+    public StartBox(JavaRuntimeLocalDiscoverer discoverer) {
+        this.task = new FraudHuntersTask(discoverer);
         initComponents();
     }
 
@@ -39,6 +41,7 @@ class StartBox extends JPanel {
         boolean compatible = task.isLauncherCompatible();
         Stats.fraudHuntersLandingOpened(compatible);
         if (!compatible) {
+            log.info("Current platform is not compatible with FraudHunters launcher");
             setCard("manual");
             return;
         }

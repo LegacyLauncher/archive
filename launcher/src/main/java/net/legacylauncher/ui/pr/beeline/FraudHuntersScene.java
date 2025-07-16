@@ -20,7 +20,7 @@ public class FraudHuntersScene extends PseudoScene {
         ImageIcon.setup(goBack, Images.getIcon32("arrow-left"));
         add(goBack);
 
-        startBox = new StartBox();
+        startBox = new StartBox(main.getRootFrame().getLauncher().getJavaManager().getDiscoverer());
         add(startBox);
 
         updateStartBoxPos();
