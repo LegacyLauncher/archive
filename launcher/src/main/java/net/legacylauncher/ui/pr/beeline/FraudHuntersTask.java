@@ -41,7 +41,7 @@ public class FraudHuntersTask {
     private Future<Void> future;
 
     public boolean isLauncherCompatible() {
-        return OS.WINDOWS.isCurrent() && JavaVersion.getCurrent().getMajor() >= 17;
+        return OS.WINDOWS.isCurrent() && JavaVersion.getCurrent().getMajor() >= 21;
     }
 
     public Future<Void> prepareLauncher(BooleanConsumer callback) {
