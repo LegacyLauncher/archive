@@ -135,7 +135,7 @@ new FormModel {
 				name: "panel3"
 				add( new FormComponent( "net.legacylauncher.ui.swing.editor.EditorPane" ) {
 					name: "textPane2"
-					"text": "<html><head><style>html, body { background: #fff;  font-size: 9pt; } a { color: inherit; }</style></head><body>Реклама. Рекламодатель ПАО «ВымпелКом», ОГРН 1027700166636, Москва, ул. 8 Марта, 10, стр.14,127083, beeline.ru. Скамсити – игра билайна для зарегистрированных пользователей, 18+. Срок проведения акции 13.05.25 - 20.09.25. Кол-во призов ограничено. Территория действия, организатор, срок и порядок получения призов и подробнее: <a href=\"https://xn--80aeikackepfddaeahf2dzczd.xn--p1ai/\">охотникинамошенников.рф</a>. Erid: <a href=\"https://erid.ads.llaun.ch/#erid=2Vtzqutuqw5\">2Vtzqutuqw5</a></body></html>"
+					"text": "<html><head><style>html, body { background: #fff;  font-size: 9pt; } a { color: inherit; }</style></head><body>Реклама. Рекламодатель ПАО «ВымпелКом», ОГРН 1027700166636, Москва, ул. 8 Марта, 10, стр.14,127083, beeline.ru. Скамсити – игра билайна для зарегистрированных пользователей, 18+. Срок проведения акции 13.05.25 - 20.09.25. Кол-во призов ограничено. Территория действия, организатор, срок и порядок получения призов и подробнее: <a href=\"https://xn--80aeikackepfddaeahf2dzczd.xn--p1ai/\">охотникинамошенников.рф</a>. Erid: <a href=\"https://erid.ads.llaun.ch/#erid=2Vtzqwu412a\">2Vtzqwu412a</a></body></html>"
 					"editable": false
 					"border": sfield com.jformdesigner.model.FormObject NULL_VALUE
 					"margin": #Insets0
