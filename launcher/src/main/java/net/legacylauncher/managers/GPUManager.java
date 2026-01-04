@@ -22,11 +22,11 @@ public interface GPUManager extends Closeable {
     }
 
     default Optional<GPU> findIntegratedGPU() {
-        return discoveryGPUs().stream().filter(it -> it.isDefault).findAny();
+        return discoveryGPUs().stream().filter(it -> !it.isDiscrete).findAny();
     }
 
     default Optional<GPU> findDiscreteGPU() {
-        return discoveryGPUs().stream().filter(it -> !it.isDefault).findAny();
+        return discoveryGPUs().stream().filter(it -> it.isDiscrete).findAny();
     }
 
     final class Empty implements GPUManager {
@@ -74,21 +74,6 @@ public interface GPUManager extends Closeable {
     abstract class GPU {
         private final String name;
         private final Vendor vendor;
-        private final boolean isDefault;
-
-        public static final GPU DEFAULT = new GPU("SYSTEM", Vendor.Unknown, false) {
-            @Override
-            public String getDisplayName(GPUManager gpuManager) {
-                return Localizable.get("settings.gpu.default.label");
-            }
-
-            @Override
-            public ProcessHook getHook(GPUManager gpuManager) {
-                return ProcessHook.None.INSTANCE;
-            }
-        };
-        public static final GPU INTEGRATED, DISCRETE;
-
         static {
             if (OS.WINDOWS.isCurrent()) {
                 INTEGRATED = new GPU("INTEGRATED", Vendor.Unknown, false) {
@@ -106,7 +91,7 @@ public interface GPUManager extends Closeable {
                         }
                     }
                 };
-                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, false) {
+                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, true) {
                     @Override
                     public String getDisplayName(GPUManager gpuManager) {
                         return Localizable.get("settings.gpu.discrete.label");
@@ -130,15 +115,27 @@ public interface GPUManager extends Closeable {
                     }
 
                     @Override
+                    public Vendor getVendor(GPUManager gpuManager) {
+                        return gpuManager.findIntegratedGPU().map(it -> it.getVendor(gpuManager))
+                                .orElseGet(() -> super.getVendor(gpuManager));
+                    }
+
+                    @Override
                     public ProcessHook getHook(GPUManager gpuManager) {
                         return gpuManager.findIntegratedGPU().map(gpu -> gpu.getHook(gpuManager)).orElse(ProcessHook.None.INSTANCE);
                     }
                 };
-                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, false) {
+                DISCRETE = new GPU("DISCRETE", Vendor.Unknown, true) {
                     @Override
                     public String getDisplayName(GPUManager gpuManager) {
                         return gpuManager.findDiscreteGPU().map(it -> Localizable.get("settings.gpu.discrete.specific.label", it.getDisplayName(gpuManager)))
                                 .orElse(Localizable.get("settings.gpu.discrete.label"));
+                    }
+
+                    @Override
+                    public Vendor getVendor(GPUManager gpuManager) {
+                        return gpuManager.findDiscreteGPU().map(it -> it.getVendor(gpuManager))
+                                .orElseGet(() -> super.getVendor(gpuManager));
                     }
 
                     @Override
@@ -149,12 +146,27 @@ public interface GPUManager extends Closeable {
             }
         }
 
+        public static final GPU DEFAULT = new GPU("SYSTEM", Vendor.Unknown, false) {
+            @Override
+            public String getDisplayName(GPUManager gpuManager) {
+                return Localizable.get("settings.gpu.default.label");
+            }
+
+            @Override
+            public ProcessHook getHook(GPUManager gpuManager) {
+                return ProcessHook.None.INSTANCE;
+            }
+        };
+        public static final GPU INTEGRATED, DISCRETE;
+
+        private final boolean isDiscrete;
+
         public static final List<GPU> GLOBAL_DEFINED = Collections.unmodifiableList(Arrays.asList(DEFAULT, INTEGRATED, DISCRETE));
 
-        public GPU(String name, Vendor vendor, boolean isDefault) {
+        public GPU(String name, Vendor vendor, boolean isDiscrete) {
             this.name = name;
             this.vendor = vendor;
-            this.isDefault = isDefault;
+            this.isDiscrete = isDiscrete;
         }
 
         public String getName() {
@@ -165,12 +177,12 @@ public interface GPUManager extends Closeable {
             return getName();
         }
 
-        public Vendor getVendor() {
+        public Vendor getVendor(GPUManager gpuManager) {
             return vendor;
         }
 
-        public boolean isDefault() {
-            return isDefault;
+        public boolean isDiscrete() {
+            return isDiscrete;
         }
 
         public abstract ProcessHook getHook(GPUManager gpuManager);

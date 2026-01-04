@@ -1,7 +1,6 @@
 package net.legacylauncher.ui.versions;
 
 import net.legacylauncher.ui.block.Blocker;
-import net.legacylauncher.util.U;
 import net.legacylauncher.util.async.LoopedThread;
 
 public class VersionHandlerThread {
@@ -53,11 +52,7 @@ public class VersionHandlerThread {
 
         protected void iterateOnce() {
             Blocker.block(button.blockable, "stop-download");
-
-            while (!handler.downloader.isThreadLocked()) {
-                U.sleepFor(1000L);
-            }
-
+            handler.downloader.stopDownloadAndWait();
             button.stopDownload();
         }
     }

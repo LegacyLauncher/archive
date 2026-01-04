@@ -189,7 +189,7 @@ public class VersionDownloadButton extends ExtendedButton implements VersionHand
 
                 handler.downloading = list;
                 handler.onVersionDownload(list);
-                handler.downloader.startDownloadAndWait();
+                handler.downloader.download();
             } finally {
                 downloading = false;
             }

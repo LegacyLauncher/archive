@@ -90,18 +90,7 @@ public final class BackgroundManager extends ExtendedLayeredPane {
         if (path != null && mediaFxBackground != null && (path.endsWith(".mp4") || path.endsWith(".flv"))) {
             worker.setBackground(mediaFxBackground, path);
         } else {
-            if (beeline) {
-//                if (mediaFxBackground != null) {
-//                    worker.setBackground(mediaFxBackground, ScamCityLanding.class.getResource("video1.mp4").toString());
-//                } else {
-                    try {
-                        URL location = Images.findLocation("beeline-bg.jpg");
-                        worker.setBackground(imageBackground.get(), location.toString());
-                    } catch (ResourceNotFoundException e) {
-                        log.error("Failed to find promotion image", e);
-                    }
-//                }
-            } else if (nostalgic) {
+            if (nostalgic) {
                 OldAnimatedBackground nostalgicBackground = oldBackground.get();
                 nostalgicBackground.getAudioPlayer().value().ifPresent(FxAudioPlayer::play);
                 worker.setBackground(nostalgicBackground, path);
@@ -115,13 +104,6 @@ public final class BackgroundManager extends ExtendedLayeredPane {
 
     public void setNostalgic(boolean state) {
         this.nostalgic = state;
-        this.loadBackground();
-    }
-
-    private boolean beeline;
-
-    public void setBeeline(boolean beeline) {
-        this.beeline = beeline;
         this.loadBackground();
     }
 }

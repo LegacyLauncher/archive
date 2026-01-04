@@ -98,6 +98,8 @@ public final class ConfigurationDefaults {
         d.put("bootstrap.switchToBeta", false);
 
         d.put("experiments.enabled", "none");
+
+        d.put("minecraft.deletePatchy", true);
     }
 
     public static int getVersion() {

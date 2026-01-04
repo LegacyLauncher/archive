@@ -1,16 +1,17 @@
 package net.legacylauncher.ui.editor;
 
 import net.legacylauncher.ui.converter.StringConverter;
-import net.legacylauncher.ui.swing.ConverterCellRenderer;
 import net.legacylauncher.ui.swing.extended.ExtendedComboBox;
+
+import javax.swing.*;
 
 public class EditorComboBox<T> extends ExtendedComboBox<T> implements EditorField {
     private static final long serialVersionUID = -2320340434786516374L;
     private final boolean allowNull;
 
-    public EditorComboBox(ConverterCellRenderer<T> renderer, boolean allowNull) {
+    public EditorComboBox(StringConverter<T> converter, ListCellRenderer<? super T> renderer, boolean allowNull) {
         super(renderer);
-        setConverter(renderer.getConverter());
+        setConverter(converter);
         this.allowNull = allowNull;
     }
 

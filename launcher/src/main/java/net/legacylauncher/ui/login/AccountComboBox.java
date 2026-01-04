@@ -14,12 +14,12 @@ import net.legacylauncher.ui.block.Blockable;
 import net.legacylauncher.ui.listener.AuthUIListener;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.ui.swing.AccountCellRenderer;
-import net.legacylauncher.ui.swing.SimpleComboBoxModel;
 import net.legacylauncher.ui.swing.extended.ExtendedComboBox;
 import net.legacylauncher.user.InvalidCredentialsException;
 import net.legacylauncher.user.User;
 import net.minecraft.launcher.versions.ReleaseType;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -31,14 +31,14 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
     private final ProfileManager manager;
     private final LoginForm loginForm;
     private final AuthenticatorListener<? super User> listener;
-    private final SimpleComboBoxModel<Account<? extends User>> model;
+    private final MutableComboBoxModel<Account<? extends User>> model;
     private Account<? extends User> selectedAccount;
     boolean refreshing;
 
     AccountComboBox(LoginForm lf) {
         super(new AccountCellRenderer());
         loginForm = lf;
-        model = getSimpleModel();
+        model = getMutableModel();
         manager = LegacyLauncher.getInstance().getProfileManager();
         manager.addListener(new SwingProfileManagerListener(this));
         listener = new AuthUIListener<User>(lf) {
@@ -137,7 +137,7 @@ public class AccountComboBox extends ExtendedComboBox<Account<? extends User>> i
             addItem(EMPTY);
         } else {
             refreshing = true;
-            model.addElements(list1);
+            list1.forEach(model::addElement);
 
             for (Account<? extends User> account1 : list1) {
                 if (select != null && select.equals(account1)) {

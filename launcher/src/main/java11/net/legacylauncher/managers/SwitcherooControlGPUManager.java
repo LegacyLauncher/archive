@@ -38,7 +38,13 @@ public class SwitcherooControlGPUManager implements GPUManager {
                 return gpus.stream().map(it -> {
                     String name = ((Variant<String>) it.get("Name")).getValue();
                     Vendor vendor = Vendor.guessVendorByName(name);
-                    boolean isDefault = ((Variant<Boolean>) it.get("Default")).getValue();
+                    boolean isDiscrete;
+                    Variant<Boolean> isDiscreteVar = (Variant<Boolean>) it.get("Discrete");
+                    if (isDiscreteVar != null) {
+                        isDiscrete = isDiscreteVar.getValue();
+                    } else {
+                        isDiscrete = !((Variant<Boolean>) it.get("Default")).getValue();
+                    }
                     List<String> envList = ((Variant<List<String>>) it.get("Environment")).getValue();
                     Map<String, String> env = new HashMap<>();
                     for (int i = 0; i < envList.size() - 1; i += 2) {
@@ -46,8 +52,8 @@ public class SwitcherooControlGPUManager implements GPUManager {
                         String value = envList.get(i + 1);
                         env.put(key, value);
                     }
-                    log.info("Found GPU: {}, vendor: {}, isDefault: {}", name, vendor, isDefault);
-                    return new GPUManager.GPU(name, vendor, isDefault) {
+                    log.info("Found GPU: {}, vendor: {}, isDiscrete: {}", name, vendor, isDiscrete);
+                    return new GPUManager.GPU(name, vendor, isDiscrete) {
                         @Override
                         public String getDisplayName(GPUManager gpuManager) {
                             String name = getName();

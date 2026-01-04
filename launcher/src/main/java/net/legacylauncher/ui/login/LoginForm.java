@@ -291,21 +291,21 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
         Blocker.unblock(reason, settings, accounts, versions, checkbox, buttons, scene.noticePanel);
     }
 
-    public void onDownloaderStart(Downloader d, int files) {
+    public void onDownloaderStart(Downloader downloader, int tasks) {
         Blocker.block(this, "download");
     }
 
-    public void onDownloaderAbort(Downloader d) {
+    public void onDownloaderAbort(Downloader downloader) {
         Blocker.unblock(this, "download");
     }
 
-    public void onDownloaderProgress(Downloader d, double progress, double speed) {
+    public void onDownloaderProgress(Downloader downloader, double progress, double speed) {
     }
 
-    public void onDownloaderFileComplete(Downloader d, Downloadable file) {
+    public void onDownloaderFileComplete(Downloader downloader, Downloadable downloadable) {
     }
 
-    public void onDownloaderComplete(Downloader d) {
+    public void onDownloaderComplete(Downloader downloader) {
         Blocker.unblock(this, "download");
     }
 

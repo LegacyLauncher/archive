@@ -396,6 +396,11 @@ public class MinecraftLauncher implements JavaProcessListener {
 
             log.debug("Looking up replacement libraries for {}", librariesForType = lookupLibrariesForType);
 
+            if (settings.getBoolean("minecraft.deletePatchy")) {
+                log.info("Applying patchy fix. To disable, set minecraft.deletePatchy to false in the launcher config");
+                libraryReplacementKeys.add("patchy"); // magic: LibraryReplaceProcessor.PATCHY_TYPE
+            }
+
             LegacyLauncher.getInstance().getLibraryManager().refreshComponent();
             if (LegacyLauncher.getInstance().getLibraryManager().hasLibraries(deJureVersion, librariesForType.toString())) {
                 libraryReplacementKeys.add(librariesForType.toString());
@@ -845,7 +850,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             e.collectResources(downloader);
         }
 
-        downloader.startDownloadAndWait();
+        downloader.download();
         if (versionContainer.isAborted() || (jreContainer != null && jreContainer.isAborted())) {
             throw new MinecraftLauncherAborted(new AbortedDownloadException());
         } else if (!versionContainer.getErrors().isEmpty() || (jreContainer != null && !jreContainer.getErrors().isEmpty())) {
@@ -858,6 +863,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             ).forEach(d ->
                     log.info("{} :: {}", d.getURL(), String.valueOf(d.getError()))
             );
+            log.info("Version failed to download: {}", versionSync.getID());
             throw new MinecraftException(false, "Cannot download all required files", "download");
         } else {
             deJureVersion.setUpdatedTime(U.getUTC().getTime());
@@ -1671,9 +1677,13 @@ public class MinecraftLauncher implements JavaProcessListener {
         }
         args.add("-XX:+UnlockExperimentalVMOptions");
         args.add("-XX:+DisableExplicitGC"); // Disable System.gc() calls
-        args.add("-XX:MaxGCPauseMillis=200");
+        args.add("-XX:MaxGCPauseMillis=50");
         args.add("-XX:+AlwaysPreTouch");
         args.add("-XX:+ParallelRefProcEnabled");
+        if (isExperimentEnabled(Configuration.Experiments.MORE_GC_THREADS)) {
+            log.warn("Experimental: Apply ConcGCThreads to any GC");
+            args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2));
+        }
 
         if (isExperimentEnabled(Configuration.Experiments.TENURING)) {
             log.warn("Experimental: Use MaxTenuringThreshold for all GCs");
@@ -1688,20 +1698,23 @@ public class MinecraftLauncher implements JavaProcessListener {
         args.add("-XX:+CMSParallelRemarkEnabled");
         args.add("-XX:+CMSClassUnloadingEnabled");
         args.add("-XX:+UseCMSInitiatingOccupancyOnly");
-        args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2)); // we don't have Parallel anymore
+
+        if (!isExperimentEnabled(Configuration.Experiments.MORE_GC_THREADS)) {
+            args.add("-XX:ConcGCThreads=" + Math.max(1, OS.Arch.AVAILABLE_PROCESSORS / 2));
+        }
     }
 
     private void addG1OptimizedArguments(List<String> args) {
         // https://aikar.co/2018/07/02/tuning-the-jvm-g1gc-garbage-collector-flags-for-minecraft/
         args.add("-XX:+UseG1GC"); // enable G1
         if (ramSize < 12288) {
-            args.add("-XX:G1NewSizePercent=30");
+            args.add("-XX:G1NewSizePercent=20");
             args.add("-XX:G1MaxNewSizePercent=40");
             args.add("-XX:G1HeapRegionSize=8M");
             args.add("-XX:G1ReservePercent=20");
             args.add("-XX:InitiatingHeapOccupancyPercent=15");
         } else {
-            args.add("-XX:G1NewSizePercent=40");
+            args.add("-XX:G1NewSizePercent=30");
             args.add("-XX:G1MaxNewSizePercent=50");
             args.add("-XX:G1HeapRegionSize=16M");
             args.add("-XX:G1ReservePercent=15");
@@ -1742,6 +1755,8 @@ public class MinecraftLauncher implements JavaProcessListener {
         args.add("-XX:ShenandoahGCMode=iu");
         args.add("-XX:+UseStringDeduplication");
         args.add("-XX:+OptimizeStringConcat");
+        args.add("-XX:ShenandoahGuaranteedGCInterval=1000000");
+        args.add("-XX:AllocatePrefetchStyle=1");
     }
 
     private static final int ZGC_WINDOWS_BUILD = 17134;

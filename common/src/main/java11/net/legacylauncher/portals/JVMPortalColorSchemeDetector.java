@@ -10,7 +10,7 @@ public class JVMPortalColorSchemeDetector {
         try {
             OsThemeDetector detector = OsThemeDetector.getDetector();
             return detector.isDark() ? Portal.ColorScheme.PREFER_DARK : Portal.ColorScheme.PREFER_LIGHT;
-        } catch (NoClassDefFoundError e) {
+        } catch (NoClassDefFoundError | UnsatisfiedLinkError e) {
             // мы опять проебались, поймите-простите позязя
             return Portal.ColorScheme.NO_PREFERENCE;
         }
@@ -24,7 +24,7 @@ public class JVMPortalColorSchemeDetector {
             };
             detector.registerListener(detectorListener);
             return () -> detector.removeListener(detectorListener);
-        } catch (NoClassDefFoundError e) {
+        } catch (NoClassDefFoundError | UnsatisfiedLinkError e) {
             // мы опять проебались, поймите-простите позязя
             return () -> {
             };

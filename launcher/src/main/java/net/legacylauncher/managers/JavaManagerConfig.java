@@ -126,7 +126,6 @@ public class JavaManagerConfig implements Configurable {
         } else {
             this.useCurrentTrustStore = true;
         }
-
     }
 
     @Override
@@ -157,7 +156,7 @@ public class JavaManagerConfig implements Configurable {
         if (!Objects.equals(jreType, that.jreType)) return false;
         if (!Objects.equals(wrapperCommand, that.wrapperCommand)) return false;
         if (!Objects.equals(optimizedArgumentsType, that.optimizedArgumentsType)) return false;
-        return useCurrentTrustStore == that.useCurrentTrustStore;
+        return Objects.equals(useCurrentTrustStore, that.useCurrentTrustStore);
     }
 
     @Override

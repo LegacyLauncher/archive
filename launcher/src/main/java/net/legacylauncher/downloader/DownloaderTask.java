@@ -6,55 +6,39 @@ import net.legacylauncher.repository.IRepo;
 import net.legacylauncher.repository.RepositoryProxy;
 import net.legacylauncher.util.FileUtil;
 import net.legacylauncher.util.U;
-import net.legacylauncher.util.async.ExtendedThread;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
 @Slf4j
-public class DownloaderThread extends ExtendedThread {
+public class DownloaderTask implements Runnable {
     private static final double SMOOTHING_FACTOR = 0.005D;
-    private static final String ITERATION_BLOCK = "iteration";
     private static final int NOTIFY_TIMER = 15000;
-    private final int ID;
+    private static final byte[] HTML_SIGNATURE = "<!DOCTYPE".getBytes(StandardCharsets.UTF_8);
+
+    private final int id;
+    private final Downloadable downloadable;
     private final Downloader downloader;
-    private final List<Downloadable> list;
-    private double currentProgress;
-    private double doneProgress;
-    private double eachProgress;
     private double speed;
-    private Downloadable current;
-    private boolean launched;
-    private final byte[] HTML_SIGNATURE = {(byte) 0x3c, (byte) 0x21, (byte) 0x44, (byte) 0x4f, (byte) 0x43, (byte) 0x54, (byte) 0x59, (byte) 0x50, (byte) 0x45}; // <!DOCTYPE
 
-    DownloaderThread(Downloader d, int id) {
-        super("DT#" + id);
-        ID = id;
-        downloader = d;
-        list = new ArrayList<>();
-        startAndWait();
+    DownloaderTask(int id, Downloadable downloadable, Downloader downloader) {
+        this.id = id;
+        this.downloadable = downloadable;
+        this.downloader = downloader;
     }
 
-    int getID() {
-        return ID;
+    private static HttpURLConnection openConnection(String url) throws IOException {
+        return (HttpURLConnection) new URL(url).openConnection(U.getProxy());
     }
 
-    void add(Downloadable d) {
-        list.add(d);
-    }
-
-    void startDownload() {
-        launched = true;
-        unlockThread(ITERATION_BLOCK);
-    }
-
-    void stopDownload() {
-        launched = false;
+    public int getId() {
+        return id;
     }
 
     private boolean isHTML(File file) {
@@ -74,87 +58,72 @@ public class DownloaderThread extends ExtendedThread {
         return Arrays.equals(buffer, HTML_SIGNATURE);
     }
 
+    @Override
     public void run() {
-        while (true) {
-            launched = true;
-            eachProgress = 1.0D / (double) list.size();
-            currentProgress = doneProgress = 0.0D;
+        if (downloader.isAborted()) return;
 
-            for (Downloadable d : list) {
-                if (!launched) {
-                    break;
-                }
+        onStart();
+        int attempt = 0;
+        Object error = null;
 
-                current = d;
-                onStart();
-                int attempt = 0;
-                Object error = null;
+        int max = downloadable.isFast() ? 2 : 5;
+        long skip = 0, length = 0;
 
-                int max = d.isFast() ? 2 : 5;
-                long skip = 0, length = 0;
-
-                while (attempt < max) {
-                    ++attempt;
-                    if (log.isTraceEnabled()) {
-                        log.trace("Downloading {}{} [{} / {}]",
-                                d.getURL(),
-                                d.hasRepository() ? " (repo: " + d.getRepository().name() + ")" : "",
-                                attempt, max
-                        );
-                    }
-                    int timeout = attempt * U.getConnectionTimeout();
-
-                    try {
-                        download(timeout, skip, length);
-                        break;
-                    } catch (PartialDownloadException partial) {
-                        log.debug("Partially downloaded file: {}", partial.getMessage());
-                        attempt = -1;
-                        skip = partial.getNextSkip();
-                        length = partial.getLength();
-                    } catch (GaveUpDownloadException e) {
-                        log.debug("Cannot download file: {}", d.getURL());
-
-                        skip = 0;
-                        length = 0;
-
-                        error = e;
-                        if (attempt >= max) {
-                            FileUtil.deleteFile(d.getDestination());
-
-                            for (File downloadable : d.getAdditionalDestinations()) {
-                                FileUtil.deleteFile(downloadable);
-                            }
-
-                            log.debug("Gave up trying to download: {}", d.getURL());
-                            onError(e);
-                        }
-                    } catch (AbortedDownloadException e) {
-                        error = e;
-                        break;
-                    }
-                }
-
-                if (error instanceof AbortedDownloadException) {
-                    log.debug("Thread is aborting...");
-                    for (Downloadable downloadable : list) {
-                        downloadable.onAbort((AbortedDownloadException) error);
-                    }
-                }
+        while (attempt < max) {
+            ++attempt;
+            if (log.isTraceEnabled()) {
+                log.trace("Downloading {}{} [{} / {}]",
+                        downloadable.getURL(),
+                        downloadable.hasRepository() ? " (repo: " + downloadable.getRepository().name() + ")" : "",
+                        attempt, max
+                );
             }
+            int timeout = attempt * U.getConnectionTimeout();
 
-            speed = 0.0D;
-            list.clear();
-            lockThread(ITERATION_BLOCK);
-            launched = false;
+            try {
+                download(timeout, skip, length);
+                break;
+            } catch (PartialDownloadException partial) {
+                log.debug("Partially downloaded file: {}", partial.getMessage());
+                attempt = -1;
+                skip = partial.getNextSkip();
+                length = partial.getLength();
+            } catch (GaveUpDownloadException e) {
+                log.debug("Cannot download file: {}", downloadable.getURL());
+
+                skip = 0;
+                length = 0;
+
+                error = e;
+                if (attempt >= max) {
+                    FileUtil.deleteFile(downloadable.getDestination());
+
+                    for (File downloadable : downloadable.getAdditionalDestinations()) {
+                        FileUtil.deleteFile(downloadable);
+                    }
+
+                    log.debug("Gave up trying to download: {}", downloadable.getURL());
+                    onError(e);
+                }
+            } catch (AbortedDownloadException e) {
+                error = e;
+                break;
+            }
         }
+
+        if (error instanceof AbortedDownloadException) {
+            log.debug("Thread is aborting...");
+            downloadable.onAbort((AbortedDownloadException) error);
+        }
+
+        speed = 0.0D;
     }
 
     private void download(int timeout, long skip, long length) throws PartialDownloadException, GaveUpDownloadException, AbortedDownloadException {
         Throwable cause = null;
 
-        if (current.hasRepository()) {
-            List<IRepo> list = current.getRepository().getRelevant().getList();
+        if (downloadable.hasRepository()) {
+            List<IRepo> list = downloadable.getRepository().getRelevant().getList();
             int attempt = 1, max = 2;
 
             while (attempt <= max) {
@@ -163,22 +132,22 @@ public class DownloaderThread extends ExtendedThread {
                     try {
                         if (repo instanceof RepositoryProxy.ProxyRepo) {
                             connection = ((RepositoryProxy.ProxyRepo) repo)
-                                    .get(current.getURL(), attempt * U.getConnectionTimeout(), U.getProxy(), attempt);
+                                    .get(downloadable.getURL(), attempt * U.getConnectionTimeout(), U.getProxy(), attempt);
                         } else {
-                            connection = repo.get(current.getURL(), attempt * U.getConnectionTimeout(), U.getProxy());
+                            connection = repo.get(downloadable.getURL(), attempt * U.getConnectionTimeout(), U.getProxy());
                         }
                         downloadURL(connection, timeout, skip, length);
                         return;
                     } catch (PartialDownloadException | GaveUpDownloadException | AbortedDownloadException e) {
                         throw e;
                     } catch (LocalIOException e) {
-                        throw new GaveUpDownloadException(current, e);
+                        throw new GaveUpDownloadException(downloadable, e);
                     } catch (IOException e) {
                         log.debug("Failed to download: {}",
-                                connection == null ? current.getURL() : connection.getURL(), e);
+                                connection == null ? downloadable.getURL() : connection.getURL(), e);
                         if (!(e instanceof InvalidResponseCodeException) || !((InvalidResponseCodeException) e).isClientError()) {
                             // only mark repo as invalid if it's server error
-                            current.getRepository().getList().markInvalid(repo);
+                            downloadable.getRepository().getList().markInvalid(repo);
                         }
                         if (cause == null) {
                             cause = e;
@@ -186,7 +155,7 @@ public class DownloaderThread extends ExtendedThread {
                             cause.addSuppressed(e);
                         }
                     } catch (Throwable e) {
-                        log.error("Unknown error occurred while downloading {}", current.getURL(), e);
+                        log.error("Unknown error occurred while downloading {}", downloadable.getURL(), e);
                         if (cause == null) {
                             cause = e;
                         } else {
@@ -199,28 +168,24 @@ public class DownloaderThread extends ExtendedThread {
         } else {
             URLConnection connection = null;
             try {
-                connection = openConnection(current.getURL());
+                connection = openConnection(downloadable.getURL());
                 downloadURL(connection, timeout, skip, length);
                 return;
             } catch (LocalIOException e) {
-                throw new GaveUpDownloadException(current, e);
+                throw new GaveUpDownloadException(downloadable, e);
             } catch (PartialDownloadException | GaveUpDownloadException | AbortedDownloadException e) {
                 throw e;
             } catch (IOException e) {
                 log.debug("Failed to download: {}",
-                        connection == null ? current.getURL() : connection.getURL(), e);
+                        connection == null ? downloadable.getURL() : connection.getURL(), e);
                 cause = e;
             } catch (Throwable e) {
-                log.error("Unknown error occurred while downloading {}", current.getURL(), e);
+                log.error("Unknown error occurred while downloading {}", downloadable.getURL(), e);
                 cause = e;
             }
         }
 
-        throw new GaveUpDownloadException(current, cause);
-    }
-
-    private static HttpURLConnection openConnection(String url) throws IOException {
-        return (HttpURLConnection) new URL(url).openConnection(U.getProxy());
+        throw new GaveUpDownloadException(downloadable, cause);
     }
 
     private void downloadURL(URLConnection urlConnection, int timeout, long skip, long length) throws IOException, AbortedDownloadException {
@@ -234,13 +199,13 @@ public class DownloaderThread extends ExtendedThread {
 
         String contentType = connection.getHeaderField("Content-Type");
         log.debug("Content type: {}", contentType);
-        if (!current.getURL().endsWith("html") && "text/html".equalsIgnoreCase(contentType)) {
+        if (!downloadable.getURL().endsWith("html") && "text/html".equalsIgnoreCase(contentType)) {
             throw new RetryDownloadException("requested file is html");
         }
 
         long reply = System.currentTimeMillis() - reply_s;
         log.debug("Replied in {} ms", reply);
-        File file = current.getDestination();
+        File file = downloadable.getDestination();
 
         File temp = new File(file.getAbsoluteFile() + ".download");
         if (skip == 0) {
@@ -278,11 +243,6 @@ public class DownloaderThread extends ExtendedThread {
                 throw new LocalIOException(temp.getAbsolutePath(), ioE);
             }
             while (curread > -1) {
-                if (!launched) {
-                    out.close();
-                    throw new AbortedDownloadException();
-                }
-
                 totalRead += curread;
                 read += curread;
                 try {
@@ -335,12 +295,12 @@ public class DownloaderThread extends ExtendedThread {
             throw new RetryDownloadException("Downloaded file is HTML");
         }
 
-        List<File> copies = current.getAdditionalDestinations();
+        List<File> copies = downloadable.getAdditionalDestinations();
         if (!copies.isEmpty()) {
 
             for (File copy : copies) {
                 log.debug("Copying {} -> {}", file, copy);
-                FileUtil.copyFile(file, copy, current.isForce());
+                FileUtil.copyFile(file, copy, downloadable.isForce());
             }
 
             log.debug("Copying completed.");
@@ -359,14 +319,11 @@ public class DownloaderThread extends ExtendedThread {
             Set<String> redirects = new LinkedHashSet<>();
             do {
                 log.debug("Downloading: {}", connection.getURL());
-                Downloadable.setUp(connection, timeout, current.getInsertUA());
+                Downloadable.setUp(connection, timeout, downloadable.getInsertUA());
                 if (skip > 0) {
                     String range = skip + "-" + length;
                     log.debug("Requesting range {}", range);
                     connection.setRequestProperty("Range", "bytes=" + range);
-                }
-                if (!launched) {
-                    throw new AbortedDownloadException();
                 }
                 connection.connect();
                 if (skip > 0) {
@@ -403,28 +360,22 @@ public class DownloaderThread extends ExtendedThread {
     }
 
     private void onStart() {
-        current.onStart();
+        downloadable.onStart();
     }
 
     private void onError(Throwable e) {
-        current.onError(e);
-        downloader.onFileComplete(this, current);
+        downloadable.onError(e);
+        downloader.onFileComplete(this, downloadable);
     }
 
-    double curdone;
-
     private void onProgress(double curdone, double curspeed) {
-        this.curdone = curdone;
-        currentProgress = doneProgress + eachProgress * curdone;
         speed = SMOOTHING_FACTOR * speed + (1 - SMOOTHING_FACTOR) * curspeed;
-        double lastProgress = currentProgress;
-        downloader.onProgress(this, currentProgress, curdone, speed);
+        downloader.onProgress(this, curdone, speed);
     }
 
     private void onComplete() throws IOException {
-        doneProgress += eachProgress;
-        current.onComplete();
-        downloader.onProgress(this, doneProgress, 1., speed);
-        downloader.onFileComplete(this, current);
+        downloadable.onComplete();
+        downloader.onProgress(this, 1.0D, speed);
+        downloader.onFileComplete(this, downloadable);
     }
 }

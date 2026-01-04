@@ -1,11 +1,13 @@
 package net.legacylauncher.ui.settings;
 
+import lombok.Getter;
 import net.legacylauncher.managers.GPUManager;
 import net.legacylauncher.ui.converter.StringConverter;
 import net.legacylauncher.ui.editor.EditorComboBox;
 import net.legacylauncher.ui.editor.EditorField;
 import net.legacylauncher.ui.images.ImageIcon;
 import net.legacylauncher.ui.images.Images;
+import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.ui.swing.ConverterCellRenderer;
 import net.legacylauncher.ui.swing.extended.BorderPanel;
 
@@ -13,13 +15,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class GPUComboBox extends BorderPanel implements EditorField {
+public class GPUComboBox extends BorderPanel implements EditorField, LocalizableComponent {
     private final EditorComboBox<GPUManager.GPU> comboBox;
 
     public GPUComboBox(SettingsPanel sp) {
         GPUManager gpuManager = sp.tlauncher.getGpuManager();
         List<GPUManager.GPU> gpus = gpuManager.discoveryGPUs();
-        comboBox = new EditorComboBox<>(new GPUCellRenderer(gpus, gpuManager), false);
+        GPUCellRenderer renderer = new GPUCellRenderer(gpus, gpuManager);
+        comboBox = new EditorComboBox<>(renderer.getConverter(), renderer, false);
         GPUManager.GPU.GLOBAL_DEFINED.forEach(comboBox::addItem);
         gpus.forEach(comboBox::addItem);
 
@@ -51,6 +54,11 @@ public class GPUComboBox extends BorderPanel implements EditorField {
         return comboBox.isValueValid();
     }
 
+    @Override
+    public void updateLocale() {
+
+    }
+
     private static class GPUConverter implements StringConverter<GPUManager.GPU> {
 
         private final List<GPUManager.GPU> gpus;
@@ -69,11 +77,17 @@ public class GPUComboBox extends BorderPanel implements EditorField {
 
         @Override
         public String toString(GPUManager.GPU from) {
+            if (from == null) {
+                return "";
+            }
             return from.getDisplayName(gpuManager);
         }
 
         @Override
         public String toValue(GPUManager.GPU from) {
+            if (from == null) {
+                return "";
+            }
             return from.getName();
         }
 
@@ -83,29 +97,24 @@ public class GPUComboBox extends BorderPanel implements EditorField {
         }
     }
 
-    private static class GPUCellRenderer extends ConverterCellRenderer<GPUManager.GPU> {
-        private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
-        // этот ваш блядский swing дерётся сам с собой и долбится в дырочки,
-        // когда комбобокс лежит в gridbag, я того рот наоборот и тупо отхреначу стринги, а потом ещё и строку подрежу
-        private static final int MAX_LENGTH = 70;
+    private static class GPUCellRenderer extends DefaultListCellRenderer implements ConverterCellRenderer<GPUManager.GPU> {
+        @Getter
+        private final StringConverter<GPUManager.GPU> converter;
+        private final GPUManager gpuManager;
 
         GPUCellRenderer(List<GPUManager.GPU> gpus, GPUManager gpuManager) {
-            super(new GPUConverter(gpus, gpuManager));
+            this.gpuManager = gpuManager;
+            converter = new GPUConverter(gpus, gpuManager);
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends GPUManager.GPU> list, GPUManager.GPU value, int index, boolean isSelected, boolean cellHasFocus) {
-            String text = converter.toString(value), shortText;
-            if (text.length() > MAX_LENGTH) {
-                shortText = text.substring(0, MAX_LENGTH - 3) + "…";
-            } else {
-                shortText = text;
-            }
-            final JLabel label = (JLabel) defaultRenderer.getListCellRendererComponent(list, shortText, index, isSelected, cellHasFocus);
-            label.setToolTipText(text);
-            label.setIconTextGap(2);
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            GPUManager.GPU gpu = (GPUManager.GPU) value;
+            String text = converter.toString(gpu);
+            super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus);
+            setIconTextGap(2);
             final ImageIcon icon;
-            switch (value.getVendor()) {
+            switch (gpu == null ? GPUManager.Vendor.Unknown : gpu.getVendor(gpuManager)) {
                 case AMD:
                     icon = Images.getIcon16("gpu-icon-amd");
                     break;
@@ -120,8 +129,8 @@ public class GPUComboBox extends BorderPanel implements EditorField {
                     icon = null;
                     break;
             }
-            label.setIcon(icon);
-            return label;
+            setIcon(icon);
+            return this;
         }
     }
 }

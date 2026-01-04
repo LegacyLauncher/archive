@@ -1,13 +1,13 @@
 package net.legacylauncher.downloader;
 
 public interface DownloaderListener {
-    void onDownloaderStart(Downloader var1, int var2);
+    void onDownloaderStart(Downloader downloader, int tasks);
 
-    void onDownloaderAbort(Downloader var1);
+    void onDownloaderAbort(Downloader downloader);
 
-    void onDownloaderProgress(Downloader var1, double var2, double var4);
+    void onDownloaderProgress(Downloader downloader, double progress, double speed);
 
-    void onDownloaderFileComplete(Downloader var1, Downloadable var2);
+    void onDownloaderFileComplete(Downloader downloader, Downloadable downloadable);
 
-    void onDownloaderComplete(Downloader var1);
+    void onDownloaderComplete(Downloader downloader);
 }

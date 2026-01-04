@@ -29,23 +29,23 @@ public class DownloaderProgress extends LocalizableProgressBar implements Downlo
         this(parentComp, LegacyLauncher.getInstance().getDownloader());
     }
 
-    public void onDownloaderStart(Downloader d, int files) {
+    public void onDownloaderStart(Downloader downloader, int tasks) {
         startProgress();
         setIndeterminate(true);
         setCenterString("progressBar.init");
-        setEastString("progressBar.downloading", files);
+        setEastString("progressBar.downloading", tasks);
     }
 
-    public void onDownloaderAbort(Downloader d) {
+    public void onDownloaderAbort(Downloader downloader) {
         stopProgress();
     }
 
-    public void onDownloaderProgress(Downloader d, double dprogress, double speed) {
+    public void onDownloaderProgress(Downloader downloader, double dprogress, double speed) {
         if (dprogress > 0.0D) {
             double progress;
 
-            if (d.getRemaining() == 1) {
-                progress = d.getLastProgress() * 100.;
+            if (downloader.getRemaining() == 1) {
+                progress = downloader.getLastProgress() * 100.;
             } else {
                 progress = dprogress * 100.;
 
@@ -61,12 +61,12 @@ public class DownloaderProgress extends LocalizableProgressBar implements Downlo
         }
     }
 
-    public void onDownloaderFileComplete(Downloader d, Downloadable file) {
+    public void onDownloaderFileComplete(Downloader downloader, Downloadable downloadable) {
         setIndeterminate(false);
-        setEastString("progressBar.remaining", d.getRemaining());
+        setEastString("progressBar.remaining", downloader.getRemaining());
     }
 
-    public void onDownloaderComplete(Downloader d) {
+    public void onDownloaderComplete(Downloader downloader) {
         stopProgress();
     }
 

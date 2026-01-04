@@ -14,8 +14,8 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -255,20 +255,6 @@ public class U {
                 return b.toString();
             }
         }
-    }
-
-    public static double getAverage(double[] d, int max) {
-        double a = 0;
-        int k = 0;
-
-        for (double curd : d) {
-            a += curd;
-            ++k;
-            if (k == max) break;
-        }
-
-        if (k == 0) return 0;
-        return a / k;
     }
 
     public static StringBuilder stackTrace(Throwable e) {

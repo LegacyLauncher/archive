@@ -109,30 +109,6 @@ public final class Stats {
         submitDenunciation(newAction("fractureiser_detected"));
     }
 
-    public static void fraudHuntersLandingOpened(boolean compatible) {
-        submitDenunciation(newAction("fraudhunters_landing_opened").add("compatible", String.valueOf(compatible)));
-    }
-
-    public static void fraudHuntersLauncherStarted(Duration timeSpentWaiting) {
-        submitDenunciation(newAction("fraudhunters_launcher_started").add("time_spent_waiting", String.valueOf(timeSpentWaiting.toMillis() / 1000L)));
-    }
-
-    public static void fraudHuntersLauncherStarted(Instant userWaitingSince) {
-        fraudHuntersLauncherStarted(timeFromNow(userWaitingSince));
-    }
-
-    public static void fraudHuntersLauncherFailed(Duration timeSpentWaiting) {
-        submitDenunciation(newAction("fraudhunters_launcher_failed").add("time_spent_waiting", String.valueOf(timeSpentWaiting.toMillis() / 1000L)));
-    }
-
-    public static void fraudHuntersLauncherFailed(Instant userWaitingSince) {
-        fraudHuntersLauncherFailed(timeFromNow(userWaitingSince));
-    }
-
-    public static void fraudHuntersReport(String data) {
-        submitDenunciation(newAction("fraudhunters_report").add("data", data));
-    }
-
     private static Duration timeFromNow(Instant time) {
         return time == null ? Duration.ZERO : Duration.between(time, Instant.now());
     }

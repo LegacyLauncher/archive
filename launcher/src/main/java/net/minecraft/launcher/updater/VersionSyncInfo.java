@@ -214,7 +214,7 @@ public class VersionSyncInfo {
         if (source != null && !source.isRemote()) {
             return neededFiles;
         } else {
-            Collection<Library> libraries = version.getRelevantLibraries(featureMatcher);
+            Collection<Library> libraries = version.getRelevantLibraries(featureMatcher, true);
 
             Iterator<Library> var9 = libraries.iterator();
             while (true) {

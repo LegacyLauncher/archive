@@ -2,6 +2,7 @@ package net.minecraft.launcher.versions;
 
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.managers.VersionManager;
 import net.legacylauncher.repository.Repository;
@@ -63,6 +64,8 @@ public class CompleteVersion implements Version, Cloneable {
     Repository source;
     @Expose
     final Set<String> proceededFor = new HashSet<>();
+    @Getter @Expose
+    List<Library> removedLibraries = new ArrayList<>(); // removed when processed
     @Expose
     VersionList list;
 
@@ -267,6 +270,7 @@ public class CompleteVersion implements Version, Cloneable {
                 .append("source", source)
                 .append("list", list)
                 .append("libraries", libraries == null ? null : "(" + libraries.size() + " items)")
+                .append("processed", proceededFor.toString())
                 .build();
         //return "{id=\'" + id + "\', jar=" + jar + ", inheritsFrom=" + inheritsFrom + ", time=" + time + ", release=" + releaseTime + ", type=" + type + ", url=" + url + ", downloads= " + downloads + ", class=" + mainClass + ", minimumVersion=" + minimumLauncherVersion + ", assetIndex=\'" + assetIndex + "\', source=" + source + ", list=" + list + ", libraries=" + (libraries == null ? null : "(" + libraries.size() + " items") + "}";
     }
@@ -290,6 +294,14 @@ public class CompleteVersion implements Version, Cloneable {
 
     public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher) {
         return libraries.stream()
+                .filter(it -> it.appliesToCurrentEnvironment(matcher))
+                .collect(Collectors.toList());
+    }
+
+    public Collection<Library> getRelevantLibraries(Rule.FeatureMatcher matcher, boolean includeRemoved) {
+        if (!includeRemoved) return getRelevantLibraries(matcher);
+
+        return Stream.concat(libraries.stream(), removedLibraries.stream())
                 .filter(it -> it.appliesToCurrentEnvironment(matcher))
                 .collect(Collectors.toList());
     }
@@ -583,6 +595,10 @@ public class CompleteVersion implements Version, Cloneable {
 
         if (logging != null) {
             result.logging = logging;
+        }
+
+        if (!removedLibraries.isEmpty()) {
+            result.removedLibraries.addAll(removedLibraries);
         }
 
         result.list = list;

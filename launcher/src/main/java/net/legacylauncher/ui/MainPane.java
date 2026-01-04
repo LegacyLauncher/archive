@@ -11,7 +11,6 @@ import net.legacylauncher.ui.background.BackgroundManager;
 import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableButton;
 import net.legacylauncher.ui.loc.LocalizableComponent;
-import net.legacylauncher.ui.pr.beeline.FraudHuntersScene;
 import net.legacylauncher.ui.progress.LaunchProgress;
 import net.legacylauncher.ui.progress.ProgressBar;
 import net.legacylauncher.ui.scenes.*;
@@ -42,7 +41,6 @@ public class MainPane extends ExtendedLayeredPane {
     public final DelayedComponent<VersionManagerScene> versionManager;
     public final DelayedComponent<NoticeScene> noticeScene;
     public final DelayedComponent<RevertFontSize> revertFont;
-    public final DelayedComponent<FraudHuntersScene> fraudHunters;
     public final Map<String, DelayedComponent<? extends PseudoScene>> scenes = new HashMap<>();
 
     MainPane(final LegacyLauncherFrame frame) {
@@ -220,20 +218,6 @@ public class MainPane extends ExtendedLayeredPane {
 
         if (shouldShowRevertFont())
             revertFont.load();
-
-        fraudHunters = new DelayedComponent<>(new DelayedComponentLoader<FraudHuntersScene>() {
-            @Override
-            public FraudHuntersScene loadComponent() {
-                return new FraudHuntersScene(MainPane.this);
-            }
-
-            @Override
-            public void onComponentLoaded(FraudHuntersScene scene) {
-                MainPane.this.add(scene);
-                scene.onResize();
-            }
-        });
-        scenes.put("fraudHunters", fraudHunters);
 
         setScene(defaultScene, false);
         addComponentListener(new ComponentAdapter() {

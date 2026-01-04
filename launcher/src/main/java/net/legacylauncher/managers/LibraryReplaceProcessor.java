@@ -50,7 +50,7 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
     }
 
     public boolean hasLibraries(Version version, String type) {
-        return hasLibrariesExplicitly(version, type) || hasLibrariesExplicitly(version, PATCHY_TYPE);
+        return hasLibrariesExplicitly(version, type);
     }
 
     public boolean hasLibrariesExplicitly(VersionSyncInfo version, String type) {
@@ -115,7 +115,6 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
         for (String type : types) {
             result = processExplicitly(result, type);
         }
-        result = processExplicitly(result, PATCHY_TYPE);
         return result;
     }
 
@@ -149,7 +148,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
                         if (library.getPlainName().equals(requiredLib.getPlainName())) {
                             log.debug("... replacing required at index {}: {} -> {}",
                                     i, library.getName(), requiredLib.getName());
-                            target.getLibraries().set(i, requiredLib);
+                            Library previous = target.getLibraries().set(i, requiredLib);
+                            if (previous != null) {
+                                target.getRemovedLibraries().add(previous);
+                            }
                             requiredIterator.remove();
                         }
                     }
@@ -166,7 +168,10 @@ public class LibraryReplaceProcessor extends InterruptibleComponent {
                     Library library = target.getLibraries().get(i);
                     if (pattern.matcher(library.getName()).matches()) {
                         log.debug("... replacing at index {}: {}", i, library.getName());
-                        target.getLibraries().set(i, replacementLib);
+                        Library previous = target.getLibraries().set(i, replacementLib);
+                        if (previous != null) {
+                            target.getRemovedLibraries().add(previous);
+                        }
                     }
                 }
             } else {

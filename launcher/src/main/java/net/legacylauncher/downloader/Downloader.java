@@ -1,42 +1,41 @@
 package net.legacylauncher.downloader;
 
-import com.google.common.collect.Lists;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.legacylauncher.util.U;
-import net.legacylauncher.util.async.ExtendedThread;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 @Slf4j
-public class Downloader extends ExtendedThread {
+public class Downloader {
     public static final int MAX_THREADS = 6;
-    public static final String DOWNLOAD_BLOCK = "download";
     static final double SMOOTHING_FACTOR = 0.005D;
-    static final String ITERATION_BLOCK = "iteration";
-    private final DownloaderThread[] threads;
-    private final List<Downloadable> list;
-    private final List<DownloaderListener> listeners;
-    private final AtomicInteger remainingObjects;
-    private int workingThreads;
-    private final double[] progressContainer;
+    private final List<DownloaderListener> listeners = new CopyOnWriteArrayList<>();
+    private final AtomicInteger remainingObjects = new AtomicInteger(0);
+    private final List<Downloadable> queue = new CopyOnWriteArrayList<>();
+    private final int parallelism;
+    private ExecutorService executor;
+    private double[] progressContainer;
     private double lastAverageProgress;
-    private double averageProgress;
+    @Getter
+    private double progress;
+    @Getter
     private double lastProgress;
+    @Getter
     private double speed;
+    @Getter
     private boolean aborted;
-    private final Object workLock;
-    private boolean haveWork;
 
-    public Downloader(int numOfThreads) {
-        super("MD");
-        remainingObjects = new AtomicInteger();
-        threads = new DownloaderThread[numOfThreads];
-        list = Collections.synchronizedList(new ArrayList<>());
-        listeners = Collections.synchronizedList(new ArrayList<>());
-        progressContainer = new double[numOfThreads];
-        workLock = new Object();
-        startAndWait();
+    public Downloader(int parallelism) {
+        this.parallelism = parallelism;
     }
 
     public Downloader() {
@@ -47,128 +46,89 @@ public class Downloader extends ExtendedThread {
         return remainingObjects.get();
     }
 
-    public double getLastProgress() {
-        return lastProgress;
-    }
-
-    public double getProgress() {
-        return averageProgress;
-    }
-
-    public double getSpeed() {
-        return speed;
-    }
-
     public void add(Downloadable d) {
         if (d == null) {
             throw new NullPointerException();
-        } else {
-            list.add(d);
         }
+        queue.add(d);
     }
 
     public void add(DownloadableContainer c) {
         if (c == null) {
             throw new NullPointerException();
-        } else {
-            list.addAll(c.list);
         }
+        queue.addAll(c.list);
     }
 
     public void addAll(Downloadable... ds) {
         if (ds == null) {
             throw new NullPointerException();
-        } else {
-            for (int i = 0; i < ds.length; ++i) {
-                if (ds[i] == null) {
-                    throw new NullPointerException("Downloadable at " + i + " is NULL!");
-                }
-
-                list.add(ds[i]);
+        }
+        for (int i = 0; i < ds.length; ++i) {
+            if (ds[i] == null) {
+                throw new NullPointerException("Downloadable at " + i + " is NULL!");
             }
 
+            queue.add(ds[i]);
         }
     }
 
     public void addAll(Collection<Downloadable> coll) {
         if (coll == null) {
             throw new NullPointerException();
-        } else {
-            int i = -1;
+        }
+        int i = -1;
 
-            for (Downloadable d : coll) {
-                ++i;
-                if (d == null) {
-                    throw new NullPointerException("Downloadable at " + i + " is NULL!");
-                }
-
-                list.add(d);
+        for (Downloadable d : coll) {
+            ++i;
+            if (d == null) {
+                throw new NullPointerException("Downloadable at " + i + " is NULL!");
             }
 
+            queue.add(d);
         }
     }
 
     public void addListener(DownloaderListener listener) {
         if (listener == null) {
             throw new NullPointerException();
-        } else {
-            listeners.add(listener);
         }
+        listeners.add(listener);
     }
 
-    public boolean startDownload() {
-        boolean haveWork = !list.isEmpty();
-        if (haveWork) {
-            unlockThread(ITERATION_BLOCK);
-        }
+    public synchronized void download() {
+        while (!queue.isEmpty()) {
+            List<Downloadable> tasks = new ArrayList<>(queue);
+            queue.clear();
+            log.debug("Files in the queue: {}", tasks.size());
+            onStart(tasks.size());
 
-        return haveWork;
-    }
+            executor = Executors.newFixedThreadPool(parallelism);
 
-    public void startDownloadAndWait() {
-        if (startDownload()) {
-            waitWork();
-        }
-    }
+            IntStream.range(0, tasks.size()).mapToObj(i ->
+                    new DownloaderTask(i, tasks.get(i), this)
+            ).forEach(executor::submit);
 
-    private void waitWork() {
-        haveWork = true;
+            executor.shutdown();
+            waitForThreads();
 
-        while (haveWork) {
-            synchronized (workLock) {
-                try {
-                    workLock.wait();
-                } catch (InterruptedException e) {
-                    log.warn("Interrupted during waiting", e);
-                }
+            if (aborted) {
+                onAbort();
+                aborted = false;
             }
-        }
 
-    }
-
-    private void notifyWork() {
-        haveWork = false;
-        synchronized (workLock) {
-            workLock.notifyAll();
+            speed = 0.0D;
+            progress = 0.0D;
+            lastAverageProgress = 0.0D;
+            remainingObjects.set(0);
         }
     }
 
     public void stopDownload() {
-        if (!isThreadLocked()) {
-            throw new IllegalArgumentException();
-        } else {
-            for (int i = 0; i < threads.length; i++) {
-                DownloaderThread thread = threads[i];
-                if (thread != null) {
-                    thread.stopDownload();
-                    threads[i] = null;
-                }
-            }
+        aborted = true;
 
-            aborted = true;
-            if (isThreadLocked()) {
-                tryUnlock(DOWNLOAD_BLOCK);
-            }
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdownNow();
         }
     }
 
@@ -177,89 +137,37 @@ public class Downloader extends ExtendedThread {
         waitForThreads();
     }
 
-    public void run() {
-        checkCurrent();
-
-        while (true) {
-            lockThread(ITERATION_BLOCK);
-            log.debug("Files in the queue: {}", list.size());
-            synchronized (list) {
-                sortOut();
-            }
-
-            for (DownloaderThread thread : threads) {
-                if (thread != null) {
-                    thread.startDownload();
-                }
-            }
-
-            lockThread(DOWNLOAD_BLOCK);
-            if (aborted) {
-                waitForThreads();
-                onAbort();
-                aborted = false;
-            }
-
-            notifyWork();
-            Arrays.fill(progressContainer, 0.0D);
-            speed = 0.0D;
-            averageProgress = 0.0D;
-            lastAverageProgress = 0.0D;
-            workingThreads = 0;
-            remainingObjects.set(0);
-        }
-    }
-
-    private void sortOut() {
-        if (list.isEmpty()) return;
-
-        log.info("Starting to download {} files...", list.size());
-        onStart(list.size());
-
-        boolean[] workers = new boolean[threads.length];
-        Lists.partition(list, threads.length).forEach(chunk -> {
-            for (int i = 0; i < chunk.size(); i++) {
-                if (!workers[i]) {
-                    workers[i] = true;
-                    threads[i] = new DownloaderThread(this, ++workingThreads);
-                }
-                threads[i].add(chunk.get(i));
-            }
-        });
-
-        list.clear();
-    }
-
     private void onStart(int size) {
         for (DownloaderListener listener : listeners) {
             listener.onDownloaderStart(this, size);
         }
 
         remainingObjects.addAndGet(size);
+        progressContainer = new double[size];
     }
 
     void onAbort() {
+        remainingObjects.set(0);
         for (DownloaderListener listener : listeners) {
             listener.onDownloaderAbort(this);
         }
     }
 
-    void onProgress(DownloaderThread thread, double curprogress, double curdone, double curspeed) {
-        int id = thread.getID() - 1;
-        lastProgress = curdone;
-        progressContainer[id] = curprogress;
-        averageProgress = U.getAverage(progressContainer, workingThreads);
-        if (remainingObjects.get() == 1 || averageProgress - lastAverageProgress >= 0.01D) {
+    void onProgress(DownloaderTask task, double curprogress, double curspeed) {
+        lastProgress = curprogress;
+        progressContainer[task.getId()] = curprogress;
+        progress = DoubleStream.of(progressContainer).average().orElse(0);
+        if (remainingObjects.get() == 1 || progress - lastAverageProgress >= 0.01D) {
             speed = SMOOTHING_FACTOR * speed + (1 - SMOOTHING_FACTOR) * curspeed;
-            lastAverageProgress = averageProgress;
+            lastAverageProgress = progress;
 
             for (DownloaderListener listener : listeners) {
-                listener.onDownloaderProgress(this, averageProgress, speed);
+                listener.onDownloaderProgress(this, progress, speed);
             }
         }
     }
 
-    void onFileComplete(DownloaderThread thread, Downloadable file) {
+    void onFileComplete(DownloaderTask task, Downloadable file) {
         int remaining = remainingObjects.decrementAndGet();
         log.debug("Remaining: {}", remaining);
 
@@ -273,28 +181,23 @@ public class Downloader extends ExtendedThread {
     }
 
     private void onComplete() {
-
+        remainingObjects.set(0);
         for (DownloaderListener listener : listeners) {
             listener.onDownloaderComplete(this);
         }
-
-        unlockThread(DOWNLOAD_BLOCK);
     }
 
     private void waitForThreads() {
-        log.debug("Waiting for download threads...");
+        log.debug("Waiting for download tasks...");
 
-        outer:
-        do {
-            for (DownloaderThread thread : threads) {
-                if (thread != null && !thread.isThreadLocked()) {
-                    continue outer;
-                }
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            if (executor != null && !executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+                log.warn("Cannot wait for download threads to finish");
             }
+        } catch (InterruptedException ignored) {
+        }
 
-            break;
-        } while (true);
-
-        log.debug("All threads are blocked by now");
+        log.debug("Download tasks stopped");
     }
 }

@@ -1,20 +1,24 @@
 package net.legacylauncher.ui.swing;
 
+import lombok.Getter;
 import net.legacylauncher.ui.converter.StringConverter;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class DefaultConverterCellRenderer<T> extends ConverterCellRenderer<T> {
-    private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+@Getter
+public class DefaultConverterCellRenderer<T> extends DefaultListCellRenderer implements ConverterCellRenderer<T> {
+    private final StringConverter<T> converter;
 
     public DefaultConverterCellRenderer(StringConverter<T> converter) {
-        super(converter);
+        this.converter = converter;
     }
 
-    public Component getListCellRendererComponent(JList<? extends T> list, T value, int index, boolean isSelected, boolean cellHasFocus) {
-        JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-        renderer.setText(converter.toString(value));
+    @Override
+    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+        JLabel renderer = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        //noinspection unchecked
+        renderer.setText(converter.toString((T) value));
         return renderer;
     }
 }

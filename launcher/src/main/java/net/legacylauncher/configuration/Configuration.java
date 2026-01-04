@@ -520,6 +520,7 @@ public class Configuration extends SimpleConfiguration {
         MAX_XMS, // -Xms = -Xmx
         UPDATED_LWJGL, // Replace LWJGL3 with more recent version
         UPDATED_JNA, // Replace JNA with more recent version
+        MORE_GC_THREADS, // Apply GC threads fix to all GCs
         ;
 
         private static Experiments parse(String string) {

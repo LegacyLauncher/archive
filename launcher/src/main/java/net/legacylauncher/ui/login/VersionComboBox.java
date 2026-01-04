@@ -13,7 +13,6 @@ import net.legacylauncher.ui.loc.Localizable;
 import net.legacylauncher.ui.loc.LocalizableComponent;
 import net.legacylauncher.ui.settings.JREComboBox;
 import net.legacylauncher.ui.settings.MemorySlider;
-import net.legacylauncher.ui.swing.SimpleComboBoxModel;
 import net.legacylauncher.ui.swing.VersionCellRenderer;
 import net.legacylauncher.ui.swing.combobox.ComboBoxFilter;
 import net.legacylauncher.ui.swing.combobox.IconText;
@@ -32,8 +31,8 @@ import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -44,7 +43,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
     private static final VersionSyncInfo EMPTY;
     private final VersionManager manager;
     private final LoginForm loginForm;
-    private final SimpleComboBoxModel<VersionSyncInfo> model;
+    private final MutableComboBoxModel<VersionSyncInfo> model;
     private String selectedVersion;
     ComboBoxFilter<VersionSyncInfo> comboBoxFilter;
     private final VersionSeeker seeker = new VersionSeeker();
@@ -67,7 +66,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             }
         });
         loginForm = lf;
-        model = getSimpleModel();
+        model = getMutableModel();
         manager = LegacyLauncher.getInstance().getVersionManager();
         manager.addListener(new SwingVersionManagerListener(this));
         addItemListener(e -> {
@@ -203,7 +202,7 @@ public class VersionComboBox extends ExtendedComboBox<VersionSyncInfo> implement
             if (list.isEmpty()) {
                 addItem(EMPTY);
             } else {
-                model.addElements(list);
+                list.forEach(model::addElement);
 
                 for (VersionSyncInfo version : list) {
                     if (select != null && version.getID().equals(select)) {

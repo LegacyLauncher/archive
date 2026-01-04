@@ -3,7 +3,6 @@ package net.legacylauncher.ui.swing.extended;
 import net.legacylauncher.ui.LegacyLauncherFrame;
 import net.legacylauncher.ui.converter.StringConverter;
 import net.legacylauncher.ui.swing.DefaultConverterCellRenderer;
-import net.legacylauncher.ui.swing.SimpleComboBoxModel;
 import net.legacylauncher.ui.theme.Theme;
 
 import javax.swing.*;
@@ -12,8 +11,8 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
     private static final long serialVersionUID = -4509947341182373649L;
     private StringConverter<T> converter;
 
-    public ExtendedComboBox(ListCellRenderer<T> renderer) {
-        setModel(new SimpleComboBoxModel<>());
+    public ExtendedComboBox(ListCellRenderer<? super T> renderer) {
+        setModel(new DefaultComboBoxModel<>());
         setRenderer(renderer);
         setOpaque(false);
         setFont(getFont().deriveFont(LegacyLauncherFrame.getFontSize()));
@@ -29,8 +28,8 @@ public class ExtendedComboBox<T> extends JComboBox<T> {
         this((ListCellRenderer<T>) null);
     }
 
-    public SimpleComboBoxModel<T> getSimpleModel() {
-        return (SimpleComboBoxModel<T>) getModel();
+    public MutableComboBoxModel<T> getMutableModel() {
+        return (MutableComboBoxModel<T>) getModel();
     }
 
     @SuppressWarnings("unchecked")
