@@ -5,13 +5,8 @@ import net.legacylauncher.bootstrap.launcher.ForkStarter;
 import net.legacylauncher.bootstrap.launcher.InProcessStarter;
 import net.legacylauncher.bootstrap.launcher.LocalLauncher;
 import net.legacylauncher.bootstrap.task.Task;
-import net.legacylauncher.ipc.Bootstrap1;
-import net.legacylauncher.ipc.DBusConnectionForwarder;
-import net.legacylauncher.ipc.Launcher1;
+import net.legacylauncher.ipc.*;
 import org.apache.commons.lang3.tuple.Pair;
-import org.freedesktop.dbus.errors.PropertyReadOnly;
-import org.freedesktop.dbus.errors.UnknownInterface;
-import org.freedesktop.dbus.errors.UnknownProperty;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.Properties;
 import org.freedesktop.dbus.types.Variant;
@@ -206,6 +201,15 @@ public class DBusBootstrapIPC implements BootstrapIPC {
     }
 
     private class BootstrapImpl implements Bootstrap1, Properties {
+        private final DBusPropertyDispatcher propertyDispatcher = DBusPropertyDispatcher.of(
+                new DBusPropertyHandle<>(this::getBootstrapRelease)
+                        .withRef(Bootstrap1.INTERFACE_NAME, "BootstrapRelease"),
+                new DBusPropertyHandle<>(() -> launcherArgs.toArray(String[]::new))
+                        .withRef(Bootstrap1.INTERFACE_NAME, "LauncherArguments"),
+                new DBusPropertyHandle<>(() -> launcherConfiguration)
+                        .withRef(Bootstrap1.INTERFACE_NAME, "LauncherConfiguration")
+        );
+
         @Override
         public Map<String, ReleaseNotes> GetLauncherReleaseNotes(String launcherVersion) {
             Map<String, ReleaseNotes> releaseNotes = DBusBootstrapIPC.this.releaseNotes.get(launcherVersion);
@@ -224,23 +228,8 @@ public class DBusBootstrapIPC implements BootstrapIPC {
         }
 
         @Override
-        @SuppressWarnings({"unchecked", "SwitchStatementWithTooFewBranches"})
         public <A> A Get(String _interfaceName, String _propertyName) {
-            switch (_interfaceName) {
-                case Bootstrap1.INTERFACE_NAME:
-                    switch (_propertyName) {
-                        case "BootstrapRelease":
-                            return (A) getBootstrapRelease();
-                        case "LauncherArguments":
-                            return (A) launcherArgs.toArray(String[]::new);
-                        case "LauncherConfiguration":
-                            return (A) launcherConfiguration;
-                        default:
-                            throw new UnknownProperty("Unknown property '" + _propertyName + "' of interface '" + _interfaceName + "'");
-                    }
-                default:
-                    throw new UnknownProperty("Unknown interface '" + _interfaceName + "'");
-            }
+            return propertyDispatcher.Get(_interfaceName, _propertyName);
         }
 
         private BootstrapRelease getBootstrapRelease() {
@@ -248,33 +237,13 @@ public class DBusBootstrapIPC implements BootstrapIPC {
         }
 
         @Override
-        @SuppressWarnings("SwitchStatementWithTooFewBranches")
         public <A> void Set(String _interfaceName, String _propertyName, A _value) {
-            switch (_interfaceName) {
-                case Bootstrap1.INTERFACE_NAME:
-                    switch (_propertyName) {
-                        default:
-                            throw new PropertyReadOnly("Property '" + _propertyName + "' is not writable.");
-                    }
-                default:
-                    throw new UnknownProperty("Unknown interface '" + _interfaceName + "'");
-            }
-
+            propertyDispatcher.Set(_interfaceName, _propertyName, _value);
         }
 
         @Override
-        @SuppressWarnings("SwitchStatementWithTooFewBranches")
         public Map<String, Variant<?>> GetAll(String _interfaceName) {
-            switch (_interfaceName) {
-                case Bootstrap1.INTERFACE_NAME:
-                    return Map.of(
-                            "BootstrapRelease", new Variant<>(getBootstrapRelease()),
-                            "LauncherArguments", new Variant<>(launcherArgs),
-                            "LauncherConfiguration", new Variant<>(launcherConfiguration)
-                    );
-                default:
-                    throw new UnknownInterface("Unknown interface '" + _interfaceName + "'");
-            }
+            return propertyDispatcher.GetAll(_interfaceName);
         }
     }
 }
